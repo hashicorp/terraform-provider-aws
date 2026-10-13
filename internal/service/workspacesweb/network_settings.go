@@ -35,7 +35,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_network_settings", name="Network Settings")
 // @Tags(identifierAttribute="network_settings_arn")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.NetworkSettings")
 // @Testing(importStateIdAttribute="network_settings_arn")

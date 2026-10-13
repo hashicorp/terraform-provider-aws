@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ssm_parameter: force create a new SSM parameter when `data_type` is updated.
-```

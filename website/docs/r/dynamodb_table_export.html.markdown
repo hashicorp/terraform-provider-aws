@@ -139,7 +139,7 @@ resource "aws_dynamodb_table_export" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the DynamoDB table export.
+- `arn` (String) ARN of the DynamoDB table export.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB table exports using the `arn`. For example:
 

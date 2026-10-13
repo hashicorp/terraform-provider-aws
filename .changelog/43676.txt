@@ -1,3 +1,0 @@
-```release-note:bug
-ephemeral-resource/aws_lambda_invocation: Fix plan inconsistency issue due to improperly assigned payload values
-```

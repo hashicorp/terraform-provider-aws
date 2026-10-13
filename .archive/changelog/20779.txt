@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_db_instance: Fix updating `license_model`.
-```

@@ -7,7 +7,6 @@ package iam
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -233,6 +232,8 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	// All access keys, MFA devices and login profile for the user must be removed.
 	if d.Get(names.AttrForceDestroy).(bool) {
+		partition := meta.(*conns.AWSClient).Partition(ctx)
+
 		for _, v := range []struct {
 			f      func(context.Context, *iam.Client, string) error
 			format string
@@ -248,9 +249,16 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 			{deleteServiceSpecificCredentials, "removing IAM User (%s) Service Specific Credentials: %s"},
 		} {
 			if err := v.f(ctx, conn, d.Id()); err != nil {
-				if !errs.IsA[*awstypes.NoSuchEntityException](err) {
-					return sdkdiag.AppendErrorf(diags, v.format, d.Id(), err)
+				if errs.IsA[*awstypes.NoSuchEntityException](err) {
+					continue
 				}
+				// Some credential types (e.g. SSH public keys) are not available in all
+				// partitions (e.g. ISO) so List/Delete actions return errors such as
+				// InvalidAction. There's nothing to clean up, so treat it as a no-op.
+				if errs.IsUnsupportedOperationInPartitionError(partition, err) {
+					continue
+				}
+				return sdkdiag.AppendErrorf(diags, v.format, d.Id(), err)
 			}
 		}
 	}
@@ -259,7 +267,10 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	input := iam.DeleteUserInput{
 		UserName: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteUser(ctx, &input)
+
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.DeleteConflictException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteUser(ctx, &input)
+	})
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
@@ -399,6 +410,10 @@ func deleteUserSSHKeys(ctx context.Context, conn *iam.Client, user string) error
 		}
 		_, err := conn.DeleteSSHPublicKey(ctx, &input)
 
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			continue
+		}
+
 		if err != nil {
 			return fmt.Errorf("deleting IAM User (%s) SSH public key (%s): %w", user, v, err)
 		}
@@ -435,6 +450,10 @@ func deleteUserVirtualMFADevices(ctx context.Context, conn *iam.Client, user str
 		}
 		_, err := conn.DeactivateMFADevice(ctx, &inputDeactivate)
 
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			continue
+		}
+
 		if err != nil {
 			return fmt.Errorf("deactivating IAM User (%s) virtual MFA device (%s): %w", user, v, err)
 		}
@@ -443,6 +462,10 @@ func deleteUserVirtualMFADevices(ctx context.Context, conn *iam.Client, user str
 			SerialNumber: aws.String(v),
 		}
 		_, err = conn.DeleteVirtualMFADevice(ctx, &inputDelete)
+
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			continue
+		}
 
 		if err != nil {
 			return fmt.Errorf("deleting IAM Virtual MFA Device (%s): %w", v, err)
@@ -476,6 +499,10 @@ func deactivateUserMFADevices(ctx context.Context, conn *iam.Client, user string
 			UserName:     aws.String(user),
 		}
 		_, err := conn.DeactivateMFADevice(ctx, &input)
+
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			continue
+		}
 
 		if err != nil {
 			return fmt.Errorf("deactivating IAM User (%s) MFA device (%s): %w", user, v, err)
@@ -521,7 +548,6 @@ func deleteUserAccessKeys(ctx context.Context, conn *iam.Client, user string) er
 		return fmt.Errorf("listing IAM User (%s) access keys: %w", user, err)
 	}
 
-	var errs []error
 	for _, v := range accessKeys {
 		accessKeyID := aws.ToString(v.AccessKeyId)
 		input := iam.DeleteAccessKeyInput{
@@ -530,12 +556,16 @@ func deleteUserAccessKeys(ctx context.Context, conn *iam.Client, user string) er
 		}
 		_, err := conn.DeleteAccessKey(ctx, &input)
 
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			continue
+		}
+
 		if err != nil {
 			return fmt.Errorf("deleting IAM User (%s) access key (%s): %w", user, accessKeyID, err)
 		}
 	}
 
-	return errors.Join(errs...)
+	return nil
 }
 
 func deleteUserSigningCertificates(ctx context.Context, conn *iam.Client, user string) error {
@@ -562,6 +592,10 @@ func deleteUserSigningCertificates(ctx context.Context, conn *iam.Client, user s
 			UserName:      aws.String(user),
 		}
 		_, err := conn.DeleteSigningCertificate(ctx, &input)
+
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			continue
+		}
 
 		if err != nil {
 			return fmt.Errorf("deleting IAM User (%s) signing certificate (%s): %w", user, v, err)
@@ -600,6 +634,10 @@ func deleteServiceSpecificCredentials(ctx context.Context, conn *iam.Client, use
 		}
 		_, err := conn.DeleteServiceSpecificCredential(ctx, &input)
 
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			continue
+		}
+
 		if err != nil {
 			return fmt.Errorf("deleting IAM User (%s) service-specific credential (%s): %w", user, v, err)
 		}
@@ -631,6 +669,10 @@ func deleteUserPolicies(ctx context.Context, conn *iam.Client, user string) erro
 		}
 
 		_, err := conn.DeleteUserPolicy(ctx, &input)
+
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			continue
+		}
 
 		if err != nil {
 			return fmt.Errorf("deleting IAM User (%s) policy (%s): %w", user, v, err)

@@ -99,19 +99,18 @@ Implementing name generation requires modifying the following:
 ```go
 func TestAccServiceThing_nameGenerated(t *testing.T) {
   ctx := acctest.Context(t)
-  var thing service.ServiceThing
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ServiceServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckThingDestroy(ctx),
+    CheckDestroy:             testAccCheckThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccThingConfig_nameGenerated(),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckThingExists(ctx, resourceName, &thing),
+          testAccCheckThingExists(ctx, t, resourceName),
           acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
           resource.TestCheckResourceAttr(resourceName, "name_prefix", sdkid.UniqueIdPrefix),
         ),
@@ -128,19 +127,18 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
 
 func TestAccServiceThing_namePrefix(t *testing.T) {
   ctx := acctest.Context(t)
-  var thing service.ServiceThing
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ServiceServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckThingDestroy(ctx),
+    CheckDestroy:             testAccCheckThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccThingConfig_namePrefix("tf-acc-test-prefix-"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckThingExists(ctx, resourceName, &thing),
+          testAccCheckThingExists(ctx, t, resourceName),
           acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
           resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
         ),

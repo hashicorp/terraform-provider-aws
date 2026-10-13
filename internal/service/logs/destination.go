@@ -7,6 +7,8 @@ package logs
 
 import (
 	"context"
+	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -30,17 +32,15 @@ import (
 
 // @SDKResource("aws_cloudwatch_log_destination", name="Destination")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.Destination")
+// @Testing(preIdentityVersion="v6.51.0")
 func resourceDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationCreate,
 		ReadWithoutTimeout:   resourceDestinationRead,
 		UpdateWithoutTimeout: resourceDestinationUpdate,
 		DeleteWithoutTimeout: resourceDestinationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -83,21 +83,21 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &cloudwatchlogs.PutDestinationInput{
+	input := cloudwatchlogs.PutDestinationInput{
 		DestinationName: aws.String(name),
 		RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 		TargetArn:       aws.String(d.Get(names.AttrTargetARN).(string)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutDestination(ctx, input)
+	output, err := tfresource.RetryWhenIsA[*cloudwatchlogs.PutDestinationOutput, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (*cloudwatchlogs.PutDestinationOutput, error) {
+		return conn.PutDestination(ctx, &input)
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Logs Destination (%s): %s", name, err)
 	}
 
-	destination := outputRaw.(*cloudwatchlogs.PutDestinationOutput).Destination
+	destination := output.Destination
 	d.SetId(aws.ToString(destination.DestinationName))
 
 	// Although PutDestinationInput has a Tags field, specifying tags there results in
@@ -138,14 +138,14 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &cloudwatchlogs.PutDestinationInput{
+		input := cloudwatchlogs.PutDestinationInput{
 			DestinationName: aws.String(d.Id()),
 			RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 			TargetArn:       aws.String(d.Get(names.AttrTargetARN).(string)),
 		}
 
 		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-			return conn.PutDestination(ctx, input)
+			return conn.PutDestination(ctx, &input)
 		})
 
 		if err != nil {
@@ -161,9 +161,10 @@ func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Destination: %s", d.Id())
-	_, err := conn.DeleteDestination(ctx, &cloudwatchlogs.DeleteDestinationInput{
+	input := cloudwatchlogs.DeleteDestinationInput{
 		DestinationName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -181,13 +182,13 @@ func findDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, nam
 		DestinationNamePrefix: aws.String(name),
 	}
 
-	return findDestination(ctx, conn, &input, func(v *awstypes.Destination) bool {
+	return findDestination(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.Destination) bool {
 		return aws.ToString(v.DestinationName) == name
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.Destination]())
 }
 
-func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, filter tfslices.Predicate[*awstypes.Destination]) (*awstypes.Destination, error) {
-	output, err := findDestinations(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Destination]) (*awstypes.Destination, error) {
+	output, err := findDestinations(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -196,27 +197,23 @@ func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cl
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, filter tfslices.Predicate[*awstypes.Destination], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.Destination, error) {
-	var output []awstypes.Destination
-	opts := tfslices.NewFinderOptions(optFns)
+func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Destination]) ([]awstypes.Destination, error) {
+	return tfslices.CollectAndConcatWithError(listDestinationPages(ctx, conn, input), optFns...)
+}
 
-	pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+func listDestinationPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.Destination, error] {
+	return func(yield func([]awstypes.Destination, error) bool) {
+		pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Destinations: %w", err))
+				return
+			}
 
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Destinations {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
-				}
+			if !yield(page.Destinations, nil) {
+				return
 			}
 		}
 	}
-
-	return output, nil
 }

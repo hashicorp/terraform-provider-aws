@@ -1337,6 +1337,80 @@ func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_ByteMatchStatement_preParseTextTransformation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_byteMatchStatementPreParseTextTransformation(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                         "1",
+						"statement.0.byte_match_statement.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.#": "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#": "1",
+						"statement.0.byte_match_statement.0.pre_parse_text_transformation.#":        "2",
+						"statement.0.byte_match_statement.0.text_transformation.#":                  "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.byte_match_statement.0.pre_parse_text_transformation.*", map[string]string{
+						names.AttrPriority: "1",
+						names.AttrType:     "URL_DECODE",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.byte_match_statement.0.pre_parse_text_transformation.*", map[string]string{
+						names.AttrPriority: "2",
+						names.AttrType:     "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_byteMatchStatementPreParseTextTransformationUpdated(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                        "1",
+						"statement.0.byte_match_statement.#": "1",
+						"statement.0.byte_match_statement.0.pre_parse_text_transformation.#": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.byte_match_statement.0.pre_parse_text_transformation.*", map[string]string{
+						names.AttrPriority: "0",
+						names.AttrType:     "REPLACE_SEMICOLONS_WITH_AMPERSANDS",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_byteMatchStatement(webACLName, string(awstypes.PositionalConstraintContainsWord), acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                        "1",
+						"statement.0.byte_match_statement.#": "1",
+						"statement.0.byte_match_statement.0.pre_parse_text_transformation.#": "0",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACL_ByteMatchStatement_ja3fingerprint(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
@@ -3886,6 +3960,47 @@ func TestAccWAFV2WebACL_RateBased_ASNMatchStatement(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_monetize(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_monetize(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.currency_mode", "TEST"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.chain", "BASE_SEPOLIA"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.prices.0.amount", "0.001"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.prices.0.currency", "USDC"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.0.price_multiplier", "5"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func testAccCheckWebACLDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
@@ -4182,6 +4297,121 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, rName, positionalConstraint, searchString)
+}
+
+func testAccWebACLConfig_byteMatchStatementPreParseTextTransformation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      byte_match_statement {
+        field_to_match {
+          all_query_arguments {}
+        }
+        positional_constraint = "CONTAINS_WORD"
+        search_string         = "value1"
+
+        pre_parse_text_transformation {
+          priority = 1
+          type     = "URL_DECODE"
+        }
+
+        pre_parse_text_transformation {
+          priority = 2
+          type     = "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA"
+        }
+
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_byteMatchStatementPreParseTextTransformationUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      byte_match_statement {
+        field_to_match {
+          all_query_arguments {}
+        }
+        positional_constraint = "CONTAINS_WORD"
+        search_string         = "value1"
+
+        pre_parse_text_transformation {
+          priority = 0
+          type     = "REPLACE_SEMICOLONS_WITH_AMPERSANDS"
+        }
+
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
 }
 
 func testAccWebACLConfig_byteMatchStatementJA3Fingerprint(rName, fallbackBehavior string) string {
@@ -7764,6 +7994,74 @@ resource "aws_wafv2_web_acl" "test" {
   tags = {
     Tag1 = "Value1"
     Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_monetize(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  monetization_config {
+    currency_mode = "TEST"
+
+    crypto_config {
+      payment_network {
+        chain          = "BASE_SEPOLIA"
+        wallet_address = "0xAf7e757119d123ea29714493A1725724EfCFCc7B"
+
+        prices {
+          amount   = "0.001"
+          currency = "USDC"
+        }
+      }
+    }
+  }
+
+  rule {
+    name     = "monetize-api"
+    priority = 1
+
+    statement {
+      byte_match_statement {
+        search_string         = "/api"
+        positional_constraint = "STARTS_WITH"
+
+        field_to_match {
+          uri_path {}
+        }
+
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    action {
+      monetize {
+        price_multiplier = "5"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "monetize-api"
+      sampled_requests_enabled   = false
+    }
   }
 
   visibility_config {

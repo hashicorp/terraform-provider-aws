@@ -1,3 +1,0 @@
-```release-note:new-list-resource
-aws_cloudwatch_metric_alarm
-```

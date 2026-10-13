@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Support `aws-marketplace` as a valid account ID in ARNs
-```

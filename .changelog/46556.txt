@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_subnet: Fixed IPv6 CIDR block validation and assignment to IPAM-provisioned subnets.
-```

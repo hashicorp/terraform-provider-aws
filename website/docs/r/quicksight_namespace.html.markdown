@@ -40,8 +40,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Namespace.
 * `capacity_region` - Namespace AWS Region.
 * `creation_status` - Creation status of the namespace.
-* `id` - A comma-delimited string joining AWS account ID and namespace.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - Comma-delimited string joining AWS account ID and namespace.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

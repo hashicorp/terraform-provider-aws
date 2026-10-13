@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ecs_service: Fix unspecified `test_listener_rule` incorrectly being set as empty string in `load_balancer.advanced_configuration` block
-```

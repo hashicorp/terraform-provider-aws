@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_amplify_app: Fix crash updating `auto_branch_creation_config`
-```

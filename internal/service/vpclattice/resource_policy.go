@@ -26,7 +26,6 @@ import (
 )
 
 // @SDKResource("aws_vpclattice_resource_policy", name="Resource Policy")
-// @Testing(tagsTest=false)
 func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut,

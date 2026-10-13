@@ -8,7 +8,6 @@ package medialive_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -227,7 +226,5 @@ func TestAccMediaLiveInputDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *test
 }
 
 func expectFullInputDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfmedialive.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrARN,
-	}), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfmedialive.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsAttribute(names.AttrARN), knownValue)
 }

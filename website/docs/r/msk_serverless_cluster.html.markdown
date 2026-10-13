@@ -47,11 +47,11 @@ This resource supports the following arguments:
 
 * `sasl` - (Required) Details for client authentication using SASL. See below.
 
-### sasl Argument Reference
+### `sasl` Argument Reference
 
 * `iam` - (Required) Details for client authentication using IAM. See below.
 
-### iam Argument Reference
+### `iam` Argument Reference
 
 * `enabled` - (Required) Whether SASL/IAM authentication is enabled or not.
 
@@ -97,7 +97,7 @@ resource "aws_msk_serverless_cluster" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the MSK serverless cluster.
+- `arn` (String) ARN of the MSK serverless cluster.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK serverless cluster using the cluster ARN. For example:
 

@@ -52,6 +52,7 @@ func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, regexache.MustCompile(`fs-.+\..+`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "0"),
@@ -953,6 +954,40 @@ func TestAccFSxWindowsFileSystem_diskIops(t *testing.T) {
 	})
 }
 
+func TestAccFSxWindowsFileSystem_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_windows_file_system.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWindowsFileSystemConfig_networkType(rName, domainName, string(awstypes.NetworkTypeDual)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWindowsFileSystemExists(ctx, t, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeDual)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckWindowsFileSystemExists(ctx context.Context, t *testing.T, n string, v *awstypes.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1022,6 +1057,22 @@ func testAccCheckWindowsFileSystemRecreated(i, j *awstypes.FileSystem) resource.
 
 func testAccWindowsFileSystemConfig_base(rName, domain string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  edition  = "Standard"
+  name     = %[1]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    subnet_ids = aws_subnet.test[*].id
+    vpc_id     = aws_vpc.test.id
+  }
+}
+`, domain))
+}
+
+func testAccWindowsFileSystemConfig_baseIPv6(rName, domain string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   edition  = "Standard"
   name     = %[1]q
@@ -1714,4 +1765,18 @@ resource "aws_fsx_windows_file_system" "test" {
   depends_on = [aws_secretsmanager_secret_policy.test]
 }
 `, rName))
+}
+
+func testAccWindowsFileSystemConfig_networkType(rName, domain, networkType string) string {
+	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_baseIPv6(rName, domain), fmt.Sprintf(`
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = aws_directory_service_directory.test.id
+  skip_final_backup   = true
+  storage_capacity    = 32
+  subnet_ids          = [aws_subnet.test[0].id]
+  throughput_capacity = 8
+
+  network_type = "%[1]s"
+}
+`, networkType))
 }

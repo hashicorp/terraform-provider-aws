@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_securityhub_invite_accepter
-```

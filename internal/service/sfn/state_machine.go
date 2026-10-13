@@ -266,61 +266,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.StateMachineArn)
-	if output.CreationDate != nil {
-		d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
-	} else {
-		d.Set(names.AttrCreationDate, nil)
-	}
-	d.Set("definition", output.Definition)
-	d.Set(names.AttrDescription, output.Description)
-	if output.EncryptionConfiguration != nil {
-		if err := d.Set(names.AttrEncryptionConfiguration, []any{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
-		}
-	} else {
-		d.Set(names.AttrEncryptionConfiguration, nil)
-	}
-	if output.LoggingConfiguration != nil {
-		if err := d.Set(names.AttrLoggingConfiguration, []any{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
-		}
-	} else {
-		d.Set(names.AttrLoggingConfiguration, nil)
-	}
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
-	d.Set("publish", d.Get("publish").(bool))
-	d.Set("revision_id", output.RevisionId)
-	d.Set(names.AttrRoleARN, output.RoleArn)
-	d.Set(names.AttrStatus, output.Status)
-	if output.TracingConfiguration != nil {
-		if err := d.Set("tracing_configuration", []any{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tracing_configuration: %s", err)
-		}
-	} else {
-		d.Set("tracing_configuration", nil)
-	}
-	d.Set(names.AttrType, output.Type)
-
-	input := &sfn.ListStateMachineVersionsInput{
-		StateMachineArn: aws.String(d.Id()),
-	}
-	listVersionsOutput, err := conn.ListStateMachineVersions(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machine (%s) Versions: %s", d.Id(), err)
-	}
-
-	// The results are sorted in descending order of the version creation time.
-	// https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListStateMachineVersions.html
-	if len(listVersionsOutput.StateMachineVersions) > 0 {
-		d.Set("state_machine_version_arn", listVersionsOutput.StateMachineVersions[0].StateMachineVersionArn)
-	} else {
-		d.Set("state_machine_version_arn", nil)
-	}
-
-	return diags
+	return append(diags, resourceStateMachineFlatten(ctx, conn, output, d)...)
 }
 
 func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -540,6 +486,66 @@ func flattenTracingConfiguration(apiObject *awstypes.TracingConfiguration) map[s
 	}
 
 	return tfMap
+}
+
+func resourceStateMachineFlatten(ctx context.Context, conn *sfn.Client, output *sfn.DescribeStateMachineOutput, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	d.Set(names.AttrARN, output.StateMachineArn)
+	if output.CreationDate != nil {
+		d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
+	} else {
+		d.Set(names.AttrCreationDate, nil)
+	}
+	d.Set("definition", output.Definition)
+	d.Set(names.AttrDescription, output.Description)
+	if output.EncryptionConfiguration != nil {
+		if err := d.Set(names.AttrEncryptionConfiguration, []any{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
+		}
+	} else {
+		d.Set(names.AttrEncryptionConfiguration, nil)
+	}
+	if output.LoggingConfiguration != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []any{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
+		}
+	} else {
+		d.Set(names.AttrLoggingConfiguration, nil)
+	}
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set("publish", d.Get("publish").(bool))
+	d.Set("revision_id", output.RevisionId)
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrStatus, output.Status)
+	if output.TracingConfiguration != nil {
+		if err := d.Set("tracing_configuration", []any{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tracing_configuration: %s", err)
+		}
+	} else {
+		d.Set("tracing_configuration", nil)
+	}
+	d.Set(names.AttrType, output.Type)
+
+	input := &sfn.ListStateMachineVersionsInput{
+		StateMachineArn: aws.String(d.Id()),
+	}
+	listVersionsOutput, err := conn.ListStateMachineVersions(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machine (%s) Versions: %s", d.Id(), err)
+	}
+
+	// The results are sorted in descending order of the version creation time.
+	// https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListStateMachineVersions.html
+	if len(listVersionsOutput.StateMachineVersions) > 0 {
+		d.Set("state_machine_version_arn", listVersionsOutput.StateMachineVersions[0].StateMachineVersionArn)
+	} else {
+		d.Set("state_machine_version_arn", nil)
+	}
+
+	return diags
 }
 
 func stateMachineUpdateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta any) error {

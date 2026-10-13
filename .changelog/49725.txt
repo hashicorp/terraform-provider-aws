@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Add `pod_gc_controller_config` argument to the `kube_controller_manager_config` configuration block
+```

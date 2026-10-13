@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dms_endpoint: Fix bug where KMS key was ignored for DynamoDB, OpenSearch, Kafka, Kinesis, Oracle, PostgreSQL, and S3 engines.
-```

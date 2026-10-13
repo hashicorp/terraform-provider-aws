@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Fix handling of `user_agent` values where the product name contains a forward slash
-```

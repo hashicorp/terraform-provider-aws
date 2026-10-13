@@ -1,7 +1,0 @@
-```release-note:new-data-source
-aws_oam_link
-```
-
-```release-note:new-data-source
-aws_oam_links
-```

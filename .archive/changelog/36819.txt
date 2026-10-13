@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_datasync_location_object_storage: Allow update to `agent_arns`
-```

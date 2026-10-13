@@ -15,8 +15,6 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 const (
@@ -571,6 +569,32 @@ if err != nil {
 		}
 	}
 
+	if attr, ok := args.Keyword["sshKeyPair"]; ok {
+		if _, err := common.ParseBoolAttr("sshKeyPair", attr); err != nil {
+			return err
+		} else {
+			goVarName := "publicKey"
+			tfVarName := "public_key"
+			stuff.GoImports = append(stuff.GoImports,
+				common.GoImport{
+					Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
+					Alias: "sdkacctest",
+				},
+			)
+			stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
+				Code: fmt.Sprintf(`%s, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+if err != nil {
+	t.Fatalf("error generating random SSH key: %%s", err)
+}
+`, goVarName),
+			})
+			stuff.AdditionalTfVars_[tfVarName] = TFVar{
+				GoVarName: goVarName,
+				Type:      TFVarTypeString,
+			}
+		}
+	}
+
 	if attr, ok := args.Keyword["tlsEcdsaPublicKeyPem"]; ok {
 		if _, err := common.ParseBoolAttr("tlsEcdsaPublicKeyPem", attr); err != nil {
 			return err
@@ -672,9 +696,8 @@ func endpointsConstOrQuote(region string) string {
 	var buf strings.Builder
 	buf.WriteString("endpoints.")
 
-	caser := cases.Title(language.Und, cases.NoLower)
 	for part := range strings.SplitSeq(region, "-") {
-		buf.WriteString(caser.String(part))
+		buf.WriteString(common.Title(part))
 	}
 	buf.WriteString("RegionID")
 

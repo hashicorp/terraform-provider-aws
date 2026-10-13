@@ -1,3 +1,0 @@
-```release-note:bug
-service/apigatewayv2: Retry on `ConflictException: Unable to complete operation due to concurrent modification` errors
-```

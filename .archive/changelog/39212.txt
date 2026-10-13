@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_kinesis_stream: Add `encryption_type` and `kms_key_id` attributes
-```

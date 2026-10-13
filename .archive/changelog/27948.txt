@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_evidently_feature: Fix  `description` attribute to accept strings between `0` and `160` in length
-```

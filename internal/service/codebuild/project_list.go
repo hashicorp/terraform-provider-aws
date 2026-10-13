@@ -31,21 +31,9 @@ type projectListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type projectListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *projectListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.CodeBuildClient(ctx)
-
-	var query projectListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	var input codebuild.ListProjectsInput
 
@@ -100,6 +88,9 @@ func (l *projectListResource) List(ctx context.Context, request list.ListRequest
 						})
 						continue
 					}
+				} else if request.IncludeResource {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
 				}
 				result.DisplayName = projectName
 

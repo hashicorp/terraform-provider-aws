@@ -114,6 +114,7 @@ func resourceLustreFileSystem() *schema.Resource {
 							names.AttrSize: {
 								Type:     schema.TypeInt,
 								Optional: true,
+								Computed: true,
 							},
 							"sizing_mode": {
 								Type:             schema.TypeString,

@@ -24,21 +24,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_log_account_policy", name="Account Policy")
+// @IdentityAttribute("policy_name")
+// @IdentityAttribute("policy_type")
+// @ImportIDHandler("accountPolicyImportID")
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.AccountPolicy")
+// @Testing(importStateIdFunc=testAccAccountPolicyImportStateIDFunc)
+// @Testing(importStateIdAttribute="policy_name")
 func resourceAccountPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountPolicyPut,
 		ReadWithoutTimeout:   resourceAccountPolicyRead,
 		UpdateWithoutTimeout: resourceAccountPolicyPut,
 		DeleteWithoutTimeout: resourceAccountPolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			State: resourceAccountPolicyImport,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -80,7 +84,7 @@ func resourceAccountPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	name := d.Get("policy_name").(string)
-	input := &cloudwatchlogs.PutAccountPolicyInput{
+	input := cloudwatchlogs.PutAccountPolicyInput{
 		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(name),
 		PolicyType:     awstypes.PolicyType(d.Get("policy_type").(string)),
@@ -91,13 +95,15 @@ func resourceAccountPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 		input.SelectionCriteria = aws.String(v.(string))
 	}
 
-	output, err := conn.PutAccountPolicy(ctx, input)
+	output, err := conn.PutAccountPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Account Policy (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.AccountPolicy.PolicyName))
+	if d.IsNewResource() {
+		d.SetId(aws.ToString(output.AccountPolicy.PolicyName))
+	}
 
 	return append(diags, resourceAccountPolicyRead(ctx, d, meta)...)
 }
@@ -106,7 +112,7 @@ func resourceAccountPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	output, err := findAccountPolicyByTwoPartKey(ctx, conn, awstypes.PolicyType(d.Get("policy_type").(string)), d.Id())
+	output, err := findAccountPolicyByTwoPartKey(ctx, conn, d.Id(), awstypes.PolicyType(d.Get("policy_type").(string)))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Account Policy (%s) not found, removing from state", d.Id())
@@ -142,10 +148,11 @@ func resourceAccountPolicyDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Account Policy: %s", d.Id())
-	_, err := conn.DeleteAccountPolicy(ctx, &cloudwatchlogs.DeleteAccountPolicyInput{
+	input := cloudwatchlogs.DeleteAccountPolicyInput{
 		PolicyName: aws.String(d.Id()),
 		PolicyType: awstypes.PolicyType(d.Get("policy_type").(string)),
-	})
+	}
+	_, err := conn.DeleteAccountPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -158,22 +165,7 @@ func resourceAccountPolicyDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceAccountPolicyImport(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), ":")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: '<policy-name>:<policy-type>'", d.Id())
-	}
-
-	policyName := parts[0]
-	policyType := parts[1]
-
-	d.SetId(policyName)
-	d.Set("policy_type", policyType)
-
-	return []*schema.ResourceData{d}, nil
-}
-
-func findAccountPolicyByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, policyType awstypes.PolicyType, policyName string) (*awstypes.AccountPolicy, error) {
+func findAccountPolicyByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, policyName string, policyType awstypes.PolicyType) (*awstypes.AccountPolicy, error) {
 	input := cloudwatchlogs.DescribeAccountPoliciesInput{
 		PolicyName: aws.String(policyName),
 		PolicyType: policyType,
@@ -225,4 +217,40 @@ func findAccountPolicies(ctx context.Context, conn *cloudwatchlogs.Client, input
 	}
 
 	return output, nil
+}
+
+const accountPolicyImportIDSeparator = ":"
+
+func accountPolicyParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, accountPolicyImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected <policy-name>%[2]s<policy-type>", id, accountPolicyImportIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = accountPolicyImportID{}
+)
+
+type accountPolicyImportID struct{}
+
+func (accountPolicyImportID) Parse(id string) (string, map[string]any, error) {
+	policyName, policyType, err := accountPolicyParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"policy_name": policyName,
+		"policy_type": policyType,
+	}
+
+	return policyName, result, nil
+}
+
+func (accountPolicyImportID) Create(d *schema.ResourceData) string {
+	return d.Get("policy_name").(string)
 }

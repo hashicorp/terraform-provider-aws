@@ -3,6 +3,7 @@
  */
 
 import jetbrains.buildServer.configs.kotlin.* // ktlint-disable no-wildcard-imports
+import jetbrains.buildServer.configs.kotlin.buildFeatures.buildCache
 import jetbrains.buildServer.configs.kotlin.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
@@ -15,11 +16,12 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-version = "2024.03"
+version = "2026.1"
 
 val defaultRegion = DslContext.getParameter("default_region")
 val alternateRegion = DslContext.getParameter("alternate_region", "")
 val acmCertificateRootDomain = DslContext.getParameter("acm_certificate_root_domain", "")
+var acctestRootDomain = DslContext.getParameter("acctest_root_domain", "")
 val sweeperRegions = DslContext.getParameter("sweeper_regions")
 val awsAccountID = DslContext.getParameter("aws_account.account_id")
 val acctestParallelism = DslContext.getParameter("acctest_parallelism", "")
@@ -40,21 +42,25 @@ val alternateAccTestRoleARN = DslContext.getParameter("aws_alt_account.role_arn"
 val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.access_key_id") } else { "" }
 val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
+val defaultTerraformVersion = "1.15.8"
+var pullRequestTerraformVersion = DslContext.getParameter("pullrequest_terraform_version", defaultTerraformVersion)
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
         buildType(FullBuild)
     }
 
     if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-        buildType(PullRequest)
+        buildType(PullRequest(pullRequestTerraformVersion))
     }
 
     if (DslContext.getParameter("build_sweeperonly", "").toBoolean()) {
         buildType(Sweeper)
     }
 
-    buildType(Sanity)
+    buildType(SmokeTestsCoreServices)
     buildType(Performance)
+    buildType(SmokeTestsResourceIdentity)
+    buildType(SmokeTestsLogging)
 
     params {
         if (acctestParallelism != "") {
@@ -73,8 +79,16 @@ project {
 
         if (acmCertificateRootDomain != "") {
             text("env.ACM_CERTIFICATE_ROOT_DOMAIN", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
-            text("env.AMPLIFY_DOMAIN_NAME", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
-            text("env.SES_DOMAIN_IDENTITY_ROOT_DOMAIN", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
+         }
+
+        // Defaults acctestRootDomain to acmCertificateRootDomain for migration
+        if (acctestRootDomain == "") {
+            acctestRootDomain = acmCertificateRootDomain
+        }
+        if (acctestRootDomain != "") {
+            text("env.AMPLIFY_DOMAIN_NAME", acctestRootDomain, display = ParameterDisplay.HIDDEN)
+            text("env.APPRUNNER_CUSTOM_DOMAIN", acctestRootDomain, display = ParameterDisplay.HIDDEN)
+            text("env.SES_DOMAIN_IDENTITY_ROOT_DOMAIN", acctestRootDomain, display = ParameterDisplay.HIDDEN)
         }
 
         val securityGroupRulesPerGroup = DslContext.getParameter("security_group_rules_per_group", "")
@@ -113,13 +127,33 @@ project {
 
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
+
+        if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
+            // set variable to false by default
+            text("POST_GITHUB_COMMENT", "false")
+            password("env.GH_TOKEN", DslContext.getParameter("github_token", ""), display = ParameterDisplay.HIDDEN)
+        }
+
+        // Parameters used by `install_terraform.sh`
+        text("env.TERRAFORM_CORE_VERSION", "")
+        text("TOOLS_DIR", "%system.teamcity.build.checkoutDir%/tools", display = ParameterDisplay.HIDDEN, readOnly = true)
+        text("env.TF_ACC_TERRAFORM_PATH", "%TOOLS_DIR%/terraform", display = ParameterDisplay.HIDDEN, readOnly = true)
+
     }
 
     subProject(Services)
 }
 
-object PullRequest : BuildType({
+class PullRequest(terraformVersion: String) : BuildType({
     name = "Pull Request"
+
+    params {
+        text("TERRAFORM_CORE_VERSION", terraformVersion)
+
+        text("env.GOFLAGS", "-modcacherw")
+        text("env.GOMODCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-mod")
+        // text("env.GOCACHE", "%system.teamcity.build.checkoutDir%/.cache/go-build")
+    }
 
     vcs {
         root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
@@ -135,13 +169,35 @@ object PullRequest : BuildType({
     val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
     steps {
         ConfigureGoEnv()
+        InstallTerraform()
+        script {
+            name = "Install Github CLI"
+            scriptContent = File("./scripts/pullrequest_tests/install_gh_cli.sh").readText()
+        }
         script {
             name = "Run Tests"
             scriptContent = File("./scripts/pullrequest_tests/tests.sh").readText()
         }
+        script {
+            name = "Fetch Test Results"
+            scriptContent = File("./scripts/pullrequest_tests/test_results.sh").readText()
+        }
     }
 
     features {
+        golang {
+            testFormat = "json"
+        }
+
+        buildCache {
+            name = "terraform-provider-aws-mod-cache"
+            use = true
+            publish = true
+            rules = """
+                .cache/go-mod
+            """.trimIndent()
+        }
+
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
@@ -180,6 +236,12 @@ object PullRequest : BuildType({
                 firstBuildErrorOccurs = true
                 buildProbablyHanging = false
             }
+        }
+    }
+    
+    cleanup {
+        baseRule {
+            artifacts(days = 7, artifactPatterns = "+:**/*")
         }
     }
 })
@@ -297,13 +359,10 @@ object SetUp : BuildType({
 
     steps {
         ConfigureGoEnv()
+        InstallTerraform()
         script {
-            name = "Run provider unit tests"
-            scriptContent = File("./scripts/provider_tests/unit_tests.sh").readText()
-        }
-        script {
-            name = "Run provider acceptance tests"
-            scriptContent = File("./scripts/provider_tests/acceptance_tests.sh").readText()
+            name = "Run provider tests"
+            scriptContent = File("./scripts/provider_tests/tests.sh").readText()
         }
         script {
             name = "Pre-Sweeper"
@@ -494,8 +553,14 @@ object Sweeper : BuildType({
     }
 })
 
-object Sanity : BuildType({
-    name = "Sanity"
+object SmokeTestsCoreServices : BuildType({
+    name = "Smoke Tests - Core Services"
+
+    params {
+        text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("env.TF_LOG", "")
+    }
 
     vcs {
         root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
@@ -505,62 +570,11 @@ object Sanity : BuildType({
 
     steps {
         ConfigureGoEnv()
+        InstallTerraform()
         script {
-            name = "IAM"
-            scriptContent = File("./scripts/sanity.sh").readText()
+            name = "Smoke Tests - Core Services"
+            scriptContent = File("./scripts/smoke-tests-core-services.sh").readText()
         }
-        script {
-            name = "Logs"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "EC2"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "ECS"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "ELBv2"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "KMS"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "IAM"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Lambda"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Meta"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Route53"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "S3"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "Secrets Manager"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }
-        script {
-            name = "STS"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }  
-        script {
-            name = "Report Success"
-            scriptContent = File("./scripts/sanity.sh").readText()
-        }    
     }
 
     val triggerTimeRaw = DslContext.getParameter("sanity_trigger_time", "")
@@ -588,9 +602,13 @@ object Sanity : BuildType({
     }
 
     features {
+        golang {
+            testFormat = "json"
+        }
+
         feature {
             type = "JetBrains.SharedResources"
-            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
         }
         feature {
             type = "JetBrains.SharedResources"
@@ -609,10 +627,8 @@ object Performance : BuildType({
     }
 
     steps {
-        script {
-            name = "Configure Go"
-            scriptContent = File("./scripts/configure_goenv.sh").readText()
-        }
+        ConfigureGoEnv()
+        InstallTerraform()
         script {
             name = "VPC Main"
             scriptContent = File("./scripts/performance.sh").readText()
@@ -667,6 +683,133 @@ object Performance : BuildType({
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
+        }
+    }
+})
+
+object SmokeTestsResourceIdentity : BuildType({
+    name = "Smoke Tests - Resource Identity"
+
+    params {
+        text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("env.TF_LOG", "")
+    }
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        ConfigureGoEnv()
+        InstallTerraform()
+        script {
+            name = "Run smoke-identity"
+            scriptContent = File("./scripts/smoke-identity.sh").readText()
+        }
+    }
+
+    val triggerTimeRaw = DslContext.getParameter("smoke_identity_trigger_time", "")
+    if (triggerTimeRaw != "") {
+        val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
+        val triggerTime = formatter.parse(triggerTimeRaw)
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = true
+                    enforceCleanCheckoutForDependencies = true
+                }
+            }
+        }
+    }
+
+    features {
+        golang {
+            testFormat = "json"
+        }
+
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
+        }
+    }
+})
+
+object SmokeTestsLogging : BuildType({
+    name = "Smoke Tests - Logging"
+
+    params {
+        text("env.GOFLAGS", "-json", display = ParameterDisplay.HIDDEN, readOnly = true)
+
+        text("env.TF_LOG", "")
+    }
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        ConfigureGoEnv()
+        InstallTerraform()
+        script {
+            name = "Smoke Tests - Logging"
+            scriptContent = File("./scripts/smoke-logging.sh").readText()
+        }
+    }
+
+    val triggerTimeRaw = DslContext.getParameter("smoke_logging_trigger_time", "")
+    if (triggerTimeRaw != "") {
+        val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
+        val triggerTime = formatter.parse(triggerTimeRaw)
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = true
+                    enforceCleanCheckoutForDependencies = true
+                }
+            }
+        }
+    }
+
+    features {
+        golang {
+            testFormat = "json"
+        }
+
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
+        }
+
+        matrix {
+            param("env.TF_LOG", listOf(
+                value("DEBUG"),
+                value("WARN")
+            ))
         }
     }
 })

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -51,6 +52,11 @@ func TestAccIPAMPool_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "create-complete"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -77,6 +83,11 @@ func TestAccIPAMPool_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "modify-complete"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -377,7 +388,7 @@ func TestAccIPAMPool_ResourcePlanningVPC_sourceResourceUpdate(t *testing.T) { //
 	}
 
 	ctx := acctest.Context(t)
-	var pool1, pool2 awstypes.IpamPool
+	var pool awstypes.IpamPool
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool.vpc"
 	vpcResourceName := "aws_vpc.test"
@@ -392,25 +403,34 @@ func TestAccIPAMPool_ResourcePlanningVPC_sourceResourceUpdate(t *testing.T) { //
 			{
 				Config: testAccIPAMPoolConfig_resourcePlanningVPC_IPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool1),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_resource.0.resource_id", vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_owner"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_region"),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.0.resource_type", "vpc"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccIPAMPoolConfig_resourcePlanningVPC_IPv4_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool2),
-					testAccCheckIPAMPoolRecreated(&pool1, &pool2),
+					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_resource.0.resource_id", vpcResourceName2, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_owner"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_resource.0.resource_region"),
 					resource.TestCheckResourceAttr(resourceName, "source_resource.0.resource_type", "vpc"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -459,12 +479,19 @@ func TestAccIPAMPool_ResourcePlanningVPC_crossRegion(t *testing.T) { // nosemgre
 	})
 }
 
+// Prerequisites:
+// * Organization member account
+// * Organizations management account
+// Authenticate with member account as target account and management account as alternate.
+// Required this way since an IPAM admin account has to be a member account and
+// not the management account.
 func TestAccIPAMPool_ResourcePlanningVPC_crossAccount(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
 	var pool awstypes.IpamPool
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool.vpc"
@@ -474,12 +501,21 @@ func TestAccIPAMPool_ResourcePlanningVPC_crossAccount(t *testing.T) { // nosemgr
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccIPAMPoolConfig_resourcePlanningVPC_crossAccountInit,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
 				Config: testAccIPAMPoolConfig_resourcePlanningVPC_crossAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, t, resourceName, &pool),
@@ -580,16 +616,6 @@ func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, t *testing.T, ipampool 
 		_, err := conn.ProvisionIpamPoolCidr(ctx, &input)
 
 		return err
-	}
-}
-
-func testAccCheckIPAMPoolRecreated(before, after *awstypes.IpamPool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.IpamPoolId), aws.ToString(after.IpamPoolId); before == after {
-			return fmt.Errorf("IPAM Pool (%s) was not recreated", before)
-		}
-
-		return nil
 	}
 }
 
@@ -935,16 +961,30 @@ resource "aws_vpc_ipam_pool" "vpc" {
 `, rName))
 }
 
-func testAccIPAMPoolConfig_resourcePlanningVPC_crossAccount(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAlternateAccountProvider(),
-		fmt.Sprintf(`
-data "aws_region" "current" {}
-
+// Initialize all the providers used by cross account IPAM pool test.
+var testAccIPAMPoolConfig_resourcePlanningVPC_crossAccountInit = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 data "aws_caller_identity" "current" {}
 
 data "aws_caller_identity" "alternate" {
   provider = awsalternate
+}
+`)
+
+func testAccIPAMPoolConfig_resourcePlanningVPC_crossAccount(rName string) string {
+	return acctest.ConfigCompose(testAccIPAMPoolConfig_resourcePlanningVPC_crossAccountInit,
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+# Alternate account must be Org admin account
+data "aws_organizations_organization" "test" {
+  provider = awsalternate
+}
+
+# Primary account must be org IPAM admin account
+resource "aws_vpc_ipam_organization_admin_account" "test" {
+  provider = awsalternate
+
+  delegated_admin_account_id = data.aws_caller_identity.current.account_id
 }
 
 # Primary account - IPAM and parent pool
@@ -953,19 +993,15 @@ resource "aws_vpc_ipam" "test" {
     region_name = data.aws_region.current.name
   }
 
-  tags = {
-    Name = %[1]q
-  }
+  depends_on = [
+    aws_vpc_ipam_organization_admin_account.test
+  ]
 }
 
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
   locale         = data.aws_region.current.name
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_vpc_ipam_pool_cidr" "test" {
@@ -973,14 +1009,38 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
   cidr         = "10.0.0.0/16"
 }
 
-# Alternate account - VPC to be managed by IPAM
+# RAM IPAM pool must be shared for other account vpc to use it
+resource "aws_ram_resource_share" "test" {
+  name                      = %[1]q
+  allow_external_principals = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ram_resource_association" "test" {
+  resource_arn       = aws_vpc_ipam_pool.test.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+resource "aws_ram_principal_association" "test" {
+  principal          = data.aws_organizations_organization.test.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+# Alternate account - VPC to be managed by IPAM (same as Org admin account)
 resource "aws_vpc" "test_alternate" {
   provider = awsalternate
 
   ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
   ipv4_netmask_length = 24
 
-  depends_on = [aws_vpc_ipam_pool_cidr.test]
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test,
+    aws_ram_principal_association.test,
+    aws_ram_resource_association.test
+  ]
 
   tags = {
     Name = %[1]q

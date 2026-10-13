@@ -1,3 +1,0 @@
-```release-note:new-ephemeral
-aws_sts_web_identity_token
-```

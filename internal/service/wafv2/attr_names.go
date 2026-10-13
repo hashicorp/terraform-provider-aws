@@ -5,5 +5,6 @@ package wafv2
 
 // Schema attribute name constants used across package
 const (
-	attrTextTransformation = "text_transformation"
+	attrPreParseTextTransformation = "pre_parse_text_transformation"
+	attrTextTransformation         = "text_transformation"
 )

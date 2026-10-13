@@ -102,7 +102,7 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"stopping_conditions": framework.ResourceOptionalComputedListOfObjectsAttribute[labelingJobStoppingConditionsModel](ctx, 1, nil, listplanmodifier.RequiresReplace()),
+			"stopping_conditions": framework.ResourceOptionalComputedForceNewSingleNestedObjectAttribute[labelingJobStoppingConditionsModel](ctx),
 			names.AttrTags:        tftags.TagsAttributeForceNew(),
 			names.AttrTagsAll:     tftags.TagsAttributeComputedOnly(),
 		},

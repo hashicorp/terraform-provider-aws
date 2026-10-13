@@ -4,12 +4,107 @@
 package batch_test
 
 import (
+	"encoding/json"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
+
+func TestFlattenECSProperties(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input string
+		want  string
+	}{
+		"nil":   {input: "null", want: ""},
+		"empty": {input: "{}", want: "{}"},
+		"all fields": {
+			input: `{"taskProperties":[{
+				"containers":[{
+					"command":["sh","-c","echo \"hello\" <&>\n"],
+					"dependsOn":[{"condition":"START","containerName":"other"}],
+					"environment":[{"name":"Z","value":"last"},{"name":"A","value":""}],
+					"essential":true,
+					"firelensConfiguration":{"options":{"MixedCase.Key":"<&>","empty":""},"type":"fluentbit"},
+					"image":"image",
+					"linuxParameters":{"devices":[{"containerPath":"/dev/x","hostPath":"/dev/y","permissions":["READ"]}],"initProcessEnabled":true,"maxSwap":1024,"sharedMemorySize":64,"swappiness":60,"tmpfs":[{"containerPath":"/tmp","mountOptions":["rw"],"size":128}]},
+					"logConfiguration":{"logDriver":"awslogs","options":{"key":"value"},"secretOptions":[{"name":"log-secret","valueFrom":"log-value"}]},
+					"mountPoints":[{"containerPath":"/data","readOnly":true,"sourceVolume":"data"}],
+					"name":"main","privileged":true,"readonlyRootFilesystem":true,
+					"repositoryCredentials":{"credentialsParameter":"credentials"},
+					"resourceRequirements":[{"type":"VCPU","value":"1"}],
+					"secrets":[{"name":"Z","valueFrom":"last"},{"name":"A","valueFrom":"first"}],
+					"startTimeout":10,"stopTimeout":20,"ulimits":[{"hardLimit":1024,"name":"nofile","softLimit":512}],"user":"1000"
+				},{"name":"other","image":"other-image"}],
+				"enableExecuteCommand":true,"ephemeralStorage":{"sizeInGiB":21},"executionRoleArn":"execution-role",
+				"ipcMode":"task","networkConfiguration":{"assignPublicIp":"ENABLED"},"networkMode":"host","pidMode":"task",
+				"platformVersion":"LATEST","runtimePlatform":{"cpuArchitecture":"ARM64","operatingSystemFamily":"LINUX"},
+				"taskRoleArn":"task-role","volumes":[{"name":"data","host":{"sourcePath":"/data"}}]
+			},{"containers":[{"name":"second-task"}]}]}`,
+		},
+		"explicit zero values": {
+			input: `{"taskProperties":[{
+				"containers":[{"command":[""],"dependsOn":[{"condition":"","containerName":""}],"environment":[{"name":"","value":""}],
+					"essential":false,"firelensConfiguration":{"options":{"":""}},"image":"","name":"","privileged":false,"readonlyRootFilesystem":false,
+					"startTimeout":0,"stopTimeout":0,"user":""}],
+				"enableExecuteCommand":false,"executionRoleArn":"","ipcMode":"","networkMode":"","pidMode":"","platformVersion":"","taskRoleArn":""
+			}]}`,
+		},
+		"empty tasks": {input: `{"taskProperties":[]}`},
+		"empty collections": {
+			input: `{"taskProperties":[{},{"containers":[],"ephemeralStorage":{},"networkConfiguration":{},"runtimePlatform":{},"volumes":[]},{"containers":[{
+				"command":[],"dependsOn":[],"environment":[],"firelensConfiguration":{"options":{}},
+				"linuxParameters":{},"logConfiguration":{},"mountPoints":[],"repositoryCredentials":{},"resourceRequirements":[],"secrets":[],"ulimits":[]
+			}]}]}`,
+		},
+		"empty elements": {
+			input: `{"taskProperties":[{"containers":[{},{"dependsOn":[{}],"firelensConfiguration":{}}]}]}`,
+		},
+		"empty enums omitted": {
+			input: `{"taskProperties":[{"containers":[{"firelensConfiguration":{"type":""}}]}]}`,
+			want:  `{"taskProperties":[{"containers":[{"firelensConfiguration":{}}]}]}`,
+		},
+		"unknown enums retained": {
+			input: `{"taskProperties":[{"containers":[{"firelensConfiguration":{"type":"FUTURE"}}]}]}`,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			var input *awstypes.EcsProperties
+			if err := tfjson.DecodeFromString(tc.input, &input); err != nil {
+				t.Fatal(err)
+			}
+			got, err := tfbatch.FlattenECSProperties(input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if input == nil {
+				if got != "" {
+					t.Fatalf("got %q, want empty string", got)
+				}
+				return
+			}
+			want := tc.want
+			if want == "" {
+				want = tc.input
+			}
+			if !json.Valid([]byte(got)) {
+				t.Fatalf("invalid JSON: %s", got)
+			}
+			if diff := jsoncmp.Diff(want, got); diff != "" {
+				t.Errorf("unexpected JSON (+got, -want): %s", diff)
+			}
+		})
+	}
+}
 
 func TestEquivalentECSPropertiesJSON(t *testing.T) {
 	t.Parallel()

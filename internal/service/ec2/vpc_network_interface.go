@@ -36,17 +36,19 @@ import (
 
 // @SDKResource("aws_network_interface", name="Network Interface")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(tagsTest=false)
+// @Testing(generator=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.NetworkInterface")
+// @Testing(preIdentityVersion="v6.53.0")
+// @Testing(importIgnore="private_ip_list_enabled;ipv6_address_list_enabled")
+// @Testing(plannableImportAction="NoOp")
 func resourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceCreate,
 		ReadWithoutTimeout:   resourceNetworkInterfaceRead,
 		UpdateWithoutTimeout: resourceNetworkInterfaceUpdate,
 		DeleteWithoutTimeout: resourceNetworkInterfaceDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -76,6 +78,34 @@ func resourceNetworkInterface() *schema.Resource {
 								Type:     schema.TypeInt,
 								Optional: true,
 								Computed: true,
+							},
+						},
+					},
+				},
+				"connection_tracking_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"tcp_established_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(60, 432000),
+							},
+							"udp_stream_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(60, 180),
+							},
+							"udp_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(30, 60),
 							},
 						},
 					},
@@ -389,6 +419,10 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		SubnetId:    aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
 
+	if v, ok := d.GetOk("connection_tracking_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ConnectionTrackingSpecification = expandConnectionTrackingSpecificationRequest(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -578,63 +612,9 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface (%s): %s", d.Id(), err)
 	}
 
-	ownerID := aws.ToString(eni.OwnerId)
-	d.Set(names.AttrARN, networkInterfaceARN(ctx, c, ownerID, d.Id()))
-	if eni.Attachment != nil {
-		if err := d.Set("attachment", []any{flattenNetworkInterfaceAttachment(eni.Attachment)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting attachment: %s", err)
-		}
-	} else {
-		d.Set("attachment", nil)
+	if err := resourceNetworkInterfaceFlatten(ctx, c, eni, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface (%s): %s", d.Id(), err)
 	}
-	if eni.Attachment != nil && eni.Attachment.EnaSrdSpecification != nil && aws.ToBool(eni.Attachment.EnaSrdSpecification.EnaSrdEnabled) {
-		if err := d.Set("ena_srd_specification", []any{flattenAttachmentEnaSrdSpecification(eni.Attachment.EnaSrdSpecification)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting ena_srd_specification: %s", err)
-		}
-	} else {
-		d.Set("ena_srd_specification", nil)
-	}
-	d.Set(names.AttrDescription, eni.Description)
-	d.Set("interface_type", eni.InterfaceType)
-	if err := d.Set("ipv4_prefixes", flattenIPv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ipv4_prefixes: %s", err)
-	}
-	d.Set("ipv4_prefix_count", len(eni.Ipv4Prefixes))
-	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
-	if len(eni.Ipv6Addresses) > 0 {
-		if err := d.Set("enable_primary_ipv6", eni.Ipv6Addresses[0].IsPrimaryIpv6); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting enable_primary_ipv6: %s", err)
-		}
-	}
-	if err := d.Set("ipv6_address_list", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ipv6 address list: %s", err)
-	}
-	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ipv6_addresses: %s", err)
-	}
-	if err := d.Set("ipv6_prefixes", flattenIPv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ipv6_prefixes: %s", err)
-	}
-	d.Set("ipv6_prefix_count", len(eni.Ipv6Prefixes))
-	d.Set("mac_address", eni.MacAddress)
-	d.Set(names.AttrOutpostARN, eni.OutpostArn)
-	d.Set(names.AttrOwnerID, ownerID)
-	d.Set("private_dns_name", eni.PrivateDnsName)
-	d.Set("private_ip", eni.PrivateIpAddress)
-	if err := d.Set("private_ips", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting private_ips: %s", err)
-	}
-	d.Set("private_ips_count", len(eni.PrivateIpAddresses)-1)
-	if err := d.Set("private_ip_list", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting private_ip_list: %s", err)
-	}
-	if err := d.Set(names.AttrSecurityGroups, flattenGroupIdentifiers(eni.Groups)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
-	}
-	d.Set("source_dest_check", eni.SourceDestCheck)
-	d.Set(names.AttrSubnetID, eni.SubnetId)
-
-	setTagsOut(ctx, eni.TagSet)
 
 	return diags
 }
@@ -1112,6 +1092,21 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) Groups: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("connection_tracking_specification") {
+		if v, ok := d.GetOk("connection_tracking_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input := ec2.ModifyNetworkInterfaceAttributeInput{
+				NetworkInterfaceId:              aws.String(d.Id()),
+				ConnectionTrackingSpecification: expandConnectionTrackingSpecificationRequest(v.([]any)[0].(map[string]any)),
+			}
+
+			_, err := conn.ModifyNetworkInterfaceAttribute(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) connection tracking specification: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -1645,6 +1640,97 @@ func flattenAttachmentEnaSrdUdpSpecification(apiObject *awstypes.AttachmentEnaSr
 	}
 
 	return tfMap
+}
+
+func flattenConnectionTrackingConfiguration(apiObject *awstypes.ConnectionTrackingConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.TcpEstablishedTimeout; v != nil {
+		tfMap["tcp_established_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.UdpStreamTimeout; v != nil {
+		tfMap["udp_stream_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.UdpTimeout; v != nil {
+		tfMap["udp_timeout"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func resourceNetworkInterfaceFlatten(ctx context.Context, awsClient *conns.AWSClient, eni *awstypes.NetworkInterface, d *schema.ResourceData) error {
+	ownerID := aws.ToString(eni.OwnerId)
+	d.Set(names.AttrARN, networkInterfaceARN(ctx, awsClient, ownerID, d.Id()))
+	if eni.Attachment != nil {
+		if err := d.Set("attachment", []any{flattenNetworkInterfaceAttachment(eni.Attachment)}); err != nil {
+			return fmt.Errorf("setting attachment: %w", err)
+		}
+	} else {
+		d.Set("attachment", nil)
+	}
+	if eni.Attachment != nil && eni.Attachment.EnaSrdSpecification != nil && aws.ToBool(eni.Attachment.EnaSrdSpecification.EnaSrdEnabled) {
+		if err := d.Set("ena_srd_specification", []any{flattenAttachmentEnaSrdSpecification(eni.Attachment.EnaSrdSpecification)}); err != nil {
+			return fmt.Errorf("setting ena_srd_specification: %w", err)
+		}
+	} else {
+		d.Set("ena_srd_specification", nil)
+	}
+	if eni.ConnectionTrackingConfiguration != nil {
+		if err := d.Set("connection_tracking_specification", []any{flattenConnectionTrackingConfiguration(eni.ConnectionTrackingConfiguration)}); err != nil {
+			return fmt.Errorf("setting connection_tracking_specification: %w", err)
+		}
+	} else {
+		d.Set("connection_tracking_specification", nil)
+	}
+	d.Set(names.AttrDescription, eni.Description)
+	d.Set("interface_type", eni.InterfaceType)
+	if err := d.Set("ipv4_prefixes", flattenIPv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
+		return fmt.Errorf("setting ipv4_prefixes: %w", err)
+	}
+	d.Set("ipv4_prefix_count", len(eni.Ipv4Prefixes))
+	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
+	if len(eni.Ipv6Addresses) > 0 {
+		if err := d.Set("enable_primary_ipv6", eni.Ipv6Addresses[0].IsPrimaryIpv6); err != nil {
+			return fmt.Errorf("setting enable_primary_ipv6: %w", err)
+		}
+	}
+	if err := d.Set("ipv6_address_list", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
+		return fmt.Errorf("setting ipv6 address list: %w", err)
+	}
+	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
+		return fmt.Errorf("setting ipv6_addresses: %w", err)
+	}
+	if err := d.Set("ipv6_prefixes", flattenIPv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
+		return fmt.Errorf("setting ipv6_prefixes: %w", err)
+	}
+	d.Set("ipv6_prefix_count", len(eni.Ipv6Prefixes))
+	d.Set("mac_address", eni.MacAddress)
+	d.Set(names.AttrOutpostARN, eni.OutpostArn)
+	d.Set(names.AttrOwnerID, ownerID)
+	d.Set("private_dns_name", eni.PrivateDnsName)
+	d.Set("private_ip", eni.PrivateIpAddress)
+	if err := d.Set("private_ips", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
+		return fmt.Errorf("setting private_ips: %w", err)
+	}
+	d.Set("private_ips_count", len(eni.PrivateIpAddresses)-1)
+	if err := d.Set("private_ip_list", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
+		return fmt.Errorf("setting private_ip_list: %w", err)
+	}
+	if err := d.Set(names.AttrSecurityGroups, flattenGroupIdentifiers(eni.Groups)); err != nil {
+		return fmt.Errorf("setting security_groups: %w", err)
+	}
+	d.Set("source_dest_check", eni.SourceDestCheck)
+	d.Set(names.AttrSubnetID, eni.SubnetId)
+
+	setTagsOut(ctx, eni.TagSet)
+
+	return nil
 }
 
 // Some AWS services creates ENIs behind the scenes and keeps these around for a while

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lambda_function: Wait for successful completion of function code update
-```

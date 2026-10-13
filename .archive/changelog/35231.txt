@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ecr_lifecycle_policy: Add missing `tagPatternList` change detection in policy JSON
-```

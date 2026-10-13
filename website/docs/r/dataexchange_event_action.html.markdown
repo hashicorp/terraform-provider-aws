@@ -84,7 +84,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the event action.
+* `arn` - ARN of the event action.
 * `created_at` - Date and time when the resource was created.
 * `id` - Unique identifier for the event action.
 * `updated_at` - Data and time when the resource was last updated.
@@ -100,7 +100,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Data Exchange Event Action using the id. For example:
+Using `terraform import`, import Data Exchange Event Action using the ID. For example:
 
 ```console
 % terraform import aws_dataexchange_event_action.example example-event-action-id

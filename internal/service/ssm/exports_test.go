@@ -31,4 +31,6 @@ var (
 	FindPatchGroupByTwoPartKey                         = findPatchGroupByTwoPartKey
 	FindResourceDataSyncByName                         = findResourceDataSyncByName
 	FindServiceSettingByID                             = findServiceSettingByID
+
+	ExtractPatchBaselineIDFromARN = extractPatchBaselineIDFromARN
 )

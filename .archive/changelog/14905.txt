@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_light_instance_public_ports: Add `cidrs` argument to `port_info`
-```

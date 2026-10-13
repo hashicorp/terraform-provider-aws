@@ -301,7 +301,7 @@ The following arguments are optional:
     * `arn` - (Optional) The ARN of the SQS queue specified as the target for the dead-letter queue.
 * `description` - (Optional) Event bus description.
 * `event_source_name` - (Optional) Partner event source that the new event bus will be matched with. Must match `name`.
-* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt events on this event bus. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt events on this event bus. The identifier can be the key ARN, KeyId, key alias, or key alias ARN.
 * `log_config` - (Optional) Block for logging configuration settings for the event bus.
     * `include_detail` - (Optional) Whether EventBridge include detailed event information in the records it generates. Valid values are `NONE` and `FULL`.
     * `level` - (Optional) Level of logging detail to include. Valid values are `OFF`, `ERROR`, `INFO`, and `TRACE`.
@@ -317,17 +317,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge event buses using the `name` (which can also be a partner event source name). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_event_bus.messenger
-  id = "chat-messages"
+  to = aws_cloudwatch_event_bus.example
+  identity = {
+    name = "example-event-bus"
+  }
+}
+
+resource "aws_cloudwatch_event_bus" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import EventBridge event buses using the name of the event bus (which can also be a partner event source name). For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the event bus.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Buses using `name` (which can also be a partner event source name). For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_bus.example
+  id = "example-event-bus"
+}
+```
+
+Using `terraform import`, import Buses using `name` (which can also be a partner event source name). For example:
 
 ```console
-% terraform import aws_cloudwatch_event_bus.messenger chat-messages
+% terraform import aws_cloudwatch_event_bus.example example-event-bus
 ```

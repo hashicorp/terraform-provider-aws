@@ -15,7 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,14 +38,6 @@ type harnessListResource struct {
 func (l *harnessListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().BedrockAgentCoreClient(ctx)
 
-	var query listHarnessModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input bedrockagentcorecontrol.ListHarnessesInput
 		for item, err := range listHarnesses(ctx, conn, &input) {
@@ -57,20 +51,30 @@ func (l *harnessListResource) List(ctx context.Context, request list.ListRequest
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
 			harnessID := aws.ToString(item.HarnessId)
-			output, err := findHarnessByID(ctx, conn, harnessID)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
+			var output *awstypes.Harness
+			if request.IncludeResource {
+				var err error
+				output, err = findHarnessByID(ctx, conn, harnessID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
 			}
 
 			result := request.NewListResult(ctx)
 
 			var data harnessResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
-				if result.Diagnostics.HasError() {
-					return
+				if request.IncludeResource {
+					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data, true, true))
+					if result.Diagnostics.HasError() {
+						return
+					}
+				} else {
+					data.HarnessID = fwflex.StringValueToFramework(ctx, harnessID)
 				}
 
 				result.DisplayName = aws.ToString(item.HarnessName)
@@ -81,10 +85,6 @@ func (l *harnessListResource) List(ctx context.Context, request list.ListRequest
 			}
 		}
 	}
-}
-
-type listHarnessModel struct {
-	framework.WithRegionModel
 }
 
 func listHarnesses(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListHarnessesInput) iter.Seq2[awstypes.HarnessSummary, error] {

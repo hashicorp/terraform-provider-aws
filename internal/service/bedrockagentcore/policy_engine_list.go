@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,14 +38,6 @@ type policyEngineListResource struct {
 func (l *policyEngineListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().BedrockAgentCoreClient(ctx)
 
-	var query listPolicyEngineModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input bedrockagentcorecontrol.ListPolicyEnginesInput
 		for item, err := range listPolicyEngines(ctx, conn, &input) {
@@ -57,20 +50,30 @@ func (l *policyEngineListResource) List(ctx context.Context, request list.ListRe
 			policyEngineID := aws.ToString(item.PolicyEngineId)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), aws.ToString(item.PolicyEngineArn))
 
-			output, err := findPolicyEngineByID(ctx, conn, policyEngineID)
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
+			var output *bedrockagentcorecontrol.GetPolicyEngineOutput
+			if request.IncludeResource {
+				var err error
+				output, err = findPolicyEngineByID(ctx, conn, policyEngineID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
 			}
 
 			result := request.NewListResult(ctx)
 
 			var data policyEngineResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, output, &data))
-				if result.Diagnostics.HasError() {
-					return
+				if request.IncludeResource {
+					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, output, &data))
+					if result.Diagnostics.HasError() {
+						return
+					}
+				} else {
+					data.PolicyEngineID = fwflex.StringValueToFramework(ctx, policyEngineID)
 				}
 
 				result.DisplayName = aws.ToString(item.Name)
@@ -81,10 +84,6 @@ func (l *policyEngineListResource) List(ctx context.Context, request list.ListRe
 			}
 		}
 	}
-}
-
-type listPolicyEngineModel struct {
-	framework.WithRegionModel
 }
 
 func listPolicyEngines(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListPolicyEnginesInput) iter.Seq2[awstypes.PolicyEngine, error] {

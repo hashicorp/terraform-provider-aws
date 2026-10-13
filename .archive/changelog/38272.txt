@@ -1,3 +1,0 @@
-```release-note:bug
-data-source/aws_ecr_repository: Fix issue where the `tags` attribute is not set
-```

@@ -39,7 +39,7 @@ import (
 
 // @FrameworkResource("aws_cloudfront_anycast_ip_list", name="Anycast IP List")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(serialize=true)
 func newAnycastIPListResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &anycastIPListResource{}
 

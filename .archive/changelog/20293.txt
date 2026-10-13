@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_secretsmanager_secret: Add replica support
-```

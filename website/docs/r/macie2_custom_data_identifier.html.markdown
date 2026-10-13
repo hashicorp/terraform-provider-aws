@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The unique identifier (ID) of the macie custom data identifier.
 * `deleted` - Specifies whether the custom data identifier was deleted. If you delete a custom data identifier, Amazon Macie doesn't delete it permanently. Instead, it soft deletes the identifier.
 * `created_at` - The date and time, in UTC and extended RFC 3339 format, when the Amazon Macie account was created.
-* `arn` - The Amazon Resource Name (ARN) of the custom data identifier.
+* `arn` - ARN of the custom data identifier.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_custom_data_identifier` using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_custom_data_identifier` using the ID. For example:
 
 ```terraform
 import {
@@ -68,7 +68,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_macie2_custom_data_identifier` using the id. For example:
+Using `terraform import`, import `aws_macie2_custom_data_identifier` using the ID. For example:
 
 ```console
 % terraform import aws_macie2_custom_data_identifier.example abcd1

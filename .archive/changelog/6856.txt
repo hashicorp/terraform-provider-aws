@@ -1,3 +1,0 @@
-```release-note:new-data-source
-aws_service_discovery_dns_namespace
-```

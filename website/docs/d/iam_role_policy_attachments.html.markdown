@@ -34,9 +34,9 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `attached_policies` - List of attached managed policies. See [below](#attached_policies-attribute-reference).
+* `attached_policies` - List of attached managed policies. See [below](#attached_policies-block).
 
-### `attached_policies` Attribute Reference
+### `attached_policies` Block
 
 * `policy_arn` - ARN of the attached managed policy.
 * `policy_name` - Name of the attached managed policy.

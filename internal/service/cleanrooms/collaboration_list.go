@@ -37,14 +37,6 @@ type listResourceCollaboration struct {
 func (l *listResourceCollaboration) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().CleanRoomsClient(ctx)
 
-	var query listCollaborationModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Clean Rooms Collaboration")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input cleanrooms.ListCollaborationsInput
@@ -92,10 +84,6 @@ func (l *listResourceCollaboration) List(ctx context.Context, request list.ListR
 			}
 		}
 	}
-}
-
-type listCollaborationModel struct {
-	framework.WithRegionModel
 }
 
 func listCollaborations(ctx context.Context, conn *cleanrooms.Client, input *cleanrooms.ListCollaborationsInput) iter.Seq2[awstypes.CollaborationSummary, error] {

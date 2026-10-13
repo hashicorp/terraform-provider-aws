@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Add `target_configuration.mcp.connector` configuration block
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway_target: Add Resource Identity support
+```

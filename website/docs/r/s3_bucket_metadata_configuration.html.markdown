@@ -84,14 +84,25 @@ The `record_expiration` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `metadata_configuration.0.destination` - Destination information for the S3 Metadata configuration.
-    * `table_bucket_arn` - ARN of the table bucket where the metadata configuration is stored.
-    * `table_bucket_type` - Type of the table bucket where the metadata configuration is stored.
-    * `table_namespace` - Namespace in the table bucket where the metadata tables for the metadata configuration are stored.
-* `metadata_configuration.0.inventory_table_configuration.0.table_arn` - Inventory table ARN.
-* `metadata_configuration.0.inventory_table_configuration.0.table_name` - Inventory table name.
-* `metadata_configuration.0.journal_table_configuration.0.table_arn` - Journal table ARN.
-* `metadata_configuration.0.journal_table_configuration.0.table_name` - Journal table name.
+### `metadata_configuration` Block
+
+* `destination` - Destination information for the S3 Metadata configuration. See [`destination` Block](#destination-block) for details.
+
+### `destination` Block
+
+* `table_bucket_arn` - ARN of the table bucket where the metadata configuration is stored.
+* `table_bucket_type` - Type of the table bucket where the metadata configuration is stored.
+* `table_namespace` - Namespace in the table bucket where the metadata tables for the metadata configuration are stored.
+
+### `inventory_table_configuration` Block
+
+* `table_arn` - Inventory table ARN.
+* `table_name` - Inventory table name.
+
+### `journal_table_configuration` Block
+
+* `table_arn` - Journal table ARN.
+* `table_name` - Journal table name.
 
 ## Timeouts
 

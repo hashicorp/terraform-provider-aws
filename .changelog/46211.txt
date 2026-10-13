@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_network_interface: Fix `UnauthorizedOperation` error when detaching resource that does not have an attachment
-```

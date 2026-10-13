@@ -26,14 +26,16 @@ func TestAccObservabilityAdmin_serial(t *testing.T) {
 			"Identity":           testAccObservabilityAdminTelemetryEnrichment_identitySerial,
 		},
 		"TelemetryEvaluation": {
-			acctest.CtBasic:      testAccTelemetryEvaluation_basic,
-			acctest.CtDisappears: testAccTelemetryEvaluation_disappears,
-			"Identity":           testAccObservabilityAdminTelemetryEvaluation_identitySerial,
+			acctest.CtBasic:                testAccTelemetryEvaluation_basic,
+			acctest.CtDisappears:           testAccTelemetryEvaluation_disappears,
+			"allRegionsAndRegionsConflict": testAccTelemetryEvaluation_allRegionsAndRegionsConflict,
+			"Identity":                     testAccObservabilityAdminTelemetryEvaluation_identitySerial,
 		},
 		"TelemetryEvaluationForOrganization": {
-			acctest.CtBasic:      testAccTelemetryEvaluationForOrganization_basic,
-			acctest.CtDisappears: testAccTelemetryEvaluationForOrganization_disappears,
-			"Identity":           testAccObservabilityAdminTelemetryEvaluationForOrganization_identitySerial,
+			acctest.CtBasic:                testAccTelemetryEvaluationForOrganization_basic,
+			acctest.CtDisappears:           testAccTelemetryEvaluationForOrganization_disappears,
+			"allRegionsAndRegionsConflict": testAccTelemetryEvaluationForOrganization_allRegionsAndRegionsConflict,
+			"Identity":                     testAccObservabilityAdminTelemetryEvaluationForOrganization_identitySerial,
 		},
 		"TelemetryRule": {
 			acctest.CtBasic:       testAccTelemetryRule_basic,

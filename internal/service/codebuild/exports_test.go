@@ -19,4 +19,13 @@ var (
 	FindSourceCredentialsByARN = findSourceCredentialsByARN
 	FindSourceCredentials      = findSourceCredentials
 	FindWebhookByProjectName   = findWebhookByProjectName
+
+	ExpandProjectEnvironment  = expandProjectEnvironment
+	FlattenProjectEnvironment = flattenProjectEnvironment
 )
+
+// StartBuildActionModel is exported for testing.
+type StartBuildActionModel = startBuildActionModel
+
+// EnvironmentVariableModel is exported for testing.
+type EnvironmentVariableModel = environmentVariableModel

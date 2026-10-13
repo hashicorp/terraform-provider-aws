@@ -336,7 +336,7 @@ func TestAccS3BucketPublicAccessBlock_directoryBucket(t *testing.T) {
 	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt(t))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),

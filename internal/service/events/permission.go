@@ -29,16 +29,14 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_event_permission", name="Permission")
+// @IdentityAttribute("statement_id")
+// @Testing(preIdentityVersion="v6.53.0")
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionCreate,
 		ReadWithoutTimeout:   resourcePermissionRead,
 		UpdateWithoutTimeout: resourcePermissionUpdate,
 		DeleteWithoutTimeout: resourcePermissionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -77,7 +75,7 @@ func resourcePermission() *schema.Resource {
 					Optional:     true,
 					ForceNew:     true,
 					ValidateFunc: validBusName,
-					Default:      DefaultEventBusName,
+					Default:      defaultEventBusName,
 				},
 				names.AttrPrincipal: {
 					Type:         schema.TypeString,
@@ -102,7 +100,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	eventBusName := d.Get("event_bus_name").(string)
 	statementID := d.Get("statement_id").(string)
 	id := permissionCreateResourceID(eventBusName, statementID)
-	input := &eventbridge.PutPermissionInput{
+	input := eventbridge.PutPermissionInput{
 		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		Condition:    expandCondition(d.Get(names.AttrCondition).([]any)),
 		EventBusName: aws.String(eventBusName),
@@ -110,7 +108,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		StatementId:  aws.String(statementID),
 	}
 
-	_, err := conn.PutPermission(ctx, input)
+	_, err := conn.PutPermission(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Permission (%s): %s", id, err)
@@ -131,9 +129,9 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyStatement, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (*permissionPolicyStatement, error) {
+	policyStatement, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*permissionPolicyStatement, error) {
 		return findPermissionByTwoPartKey(ctx, conn, eventBusName, statementID)
-	})
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Permission (%s) not found, removing from state", d.Id())
@@ -181,7 +179,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &eventbridge.PutPermissionInput{
+	input := eventbridge.PutPermissionInput{
 		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		Condition:    expandCondition(d.Get(names.AttrCondition).([]any)),
 		EventBusName: aws.String(eventBusName),
@@ -189,7 +187,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		StatementId:  aws.String(statementID),
 	}
 
-	_, err = conn.PutPermission(ctx, input)
+	_, err = conn.PutPermission(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EventBridge Permission (%s): %s", d.Id(), err)
@@ -208,10 +206,11 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting EventBridge Permission: %s", d.Id())
-	_, err = conn.RemovePermission(ctx, &eventbridge.RemovePermissionInput{
+	input := eventbridge.RemovePermissionInput{
 		EventBusName: aws.String(eventBusName),
 		StatementId:  aws.String(statementID),
-	})
+	}
+	_, err = conn.RemovePermission(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -247,7 +246,7 @@ func findPermissionByTwoPartKey(ctx context.Context, conn *eventbridge.Client, e
 const permissionResourceIDSeparator = "/"
 
 func permissionCreateResourceID(eventBusName, statementID string) string {
-	if eventBusName == "" || eventBusName == DefaultEventBusName {
+	if eventBusName == "" || eventBusName == defaultEventBusName {
 		return statementID
 	}
 
@@ -261,7 +260,7 @@ func permissionParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, permissionResourceIDSeparator)
 
 	if len(parts) == 1 && parts[0] != "" {
-		return DefaultEventBusName, parts[0], nil
+		return defaultEventBusName, parts[0], nil
 	}
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil

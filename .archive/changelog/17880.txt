@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_storagegateway_upload_buffer: Replace `Provider produced inconsistent result after apply` with actual error message
-```

@@ -1,6 +1,0 @@
-```release-note:new-resource
-aws_detective_member
-```
-```release-note:new-resource
-aws_detective_invitation_accepter
-```

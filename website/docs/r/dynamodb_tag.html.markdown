@@ -10,7 +10,7 @@ description: |-
 
 Manages an individual DynamoDB resource tag. This resource should only be used in cases where DynamoDB resources are created outside Terraform (e.g., Table replicas in other regions).
 
-~> **NOTE:** This tagging resource should not be combined with the Terraform resource for managing the parent resource. For example, using `aws_dynamodb_table` and `aws_dynamodb_tag` to manage tags of the same DynamoDB Table in the same region will cause a perpetual difference where the `aws_dynamodb_cluster` resource will try to remove the tag being added by the `aws_dynamodb_tag` resource.
+~> **NOTE:** This tagging resource should not be combined with the Terraform resource for managing the parent resource. For example, using `aws_dynamodb_table` and `aws_dynamodb_tag` to manage tags of the same DynamoDB Table in the same region will cause a perpetual difference where the `aws_dynamodb_table` resource will try to remove the tag being added by the `aws_dynamodb_tag` resource.
 
 ~> **NOTE:** This tagging resource does not use the [provider `ignore_tags` configuration](/docs/providers/aws/index.html#ignore_tags).
 
@@ -54,7 +54,7 @@ resource "aws_dynamodb_tag" "test" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `resource_arn` - (Required) Amazon Resource Name (ARN) of the DynamoDB resource to tag.
+* `resource_arn` - (Required) ARN of the DynamoDB resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
 

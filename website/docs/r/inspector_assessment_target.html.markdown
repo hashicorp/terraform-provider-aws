@@ -32,7 +32,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the assessment target.
-* `resource_group_arn` (Optional) Inspector Resource Group Amazon Resource Name (ARN) stating tags for instance matching. If not specified, all EC2 instances in the current AWS account and region are included in the assessment target.
+* `resource_group_arn` (Optional) Inspector Resource Group ARN stating tags for instance matching. If not specified, all EC2 instances in the current AWS account and region are included in the assessment target.
 
 ## Attribute Reference
 
@@ -61,9 +61,9 @@ resource "aws_inspector_assessment_target" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Inspector assessment target.
+- `arn` (String) ARN of the Inspector assessment target.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Classic Assessment Targets using their Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Classic Assessment Targets using their ARN. For example:
 
 ```terraform
 import {
@@ -72,7 +72,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Inspector Classic Assessment Targets using their Amazon Resource Name (ARN). For example:
+Using `terraform import`, import Inspector Classic Assessment Targets using their ARN. For example:
 
 ```console
 % terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx

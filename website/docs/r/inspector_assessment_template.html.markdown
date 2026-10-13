@@ -79,7 +79,7 @@ resource "aws_inspector_assessment_template" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Inspector assessment template.
+- `arn` (String) ARN of the Inspector assessment template.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_inspector_assessment_template` using the template assessment ARN. For example:
 

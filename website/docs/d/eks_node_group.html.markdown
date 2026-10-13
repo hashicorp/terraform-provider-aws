@@ -32,7 +32,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
-* `ami_type` - Type of Amazon Machine Image (AMI) associated with the EKS Node Group.
+* `ami_type` - Type of AMI associated with the EKS Node Group.
 * `arn` - ARN of the EKS Node Group.
 * `capacity_type` - Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`.
 * `disk_size` - Disk size in GiB for worker nodes.
@@ -48,8 +48,8 @@ This data source exports the following attributes in addition to the arguments a
     * `ec2_ssh_key` - EC2 Key Pair name that provides access for SSH communication with the worker nodes in the EKS Node Group.
     * `source_security_group_ids` - Set of EC2 Security Group IDs to allow SSH access (port 22) from on the worker nodes.
 * `resources` - List of objects containing information about underlying resources.
-    * `autoscaling_groups` - List of objects containing information about AutoScaling Groups.
-        * `name` - Name of the AutoScaling Group.
+    * `autoscaling_groups` - List of objects containing information about Auto Scaling groups.
+        * `name` - Name of the Auto Scaling group.
     * `remote_access_security_group_id` - Identifier of the remote access EC2 Security Group.
 * `scaling_config` - Configuration block with scaling settings.
     * `desired_size` - Desired number of worker nodes.
@@ -63,3 +63,8 @@ This data source exports the following attributes in addition to the arguments a
     * `effect` - The effect of the taint.
 * `tags` - Key-value map of resource tags.
 * `version` - Kubernetes version.
+* `warm_pool_config` - Configuration block with EC2 Auto Scaling warm pool settings.
+    * `max_group_prepared_capacity` - Maximum number of instances allowed to be in the warm pool combined with the Auto Scaling group.
+    * `min_size` - Minimum number of instances maintained in the warm pool.
+    * `pool_state` - Instance state that warm pool instances are transitioned to.
+    * `reuse_on_scale_in` - Whether instances in the Auto Scaling group are returned to the warm pool on scale in.

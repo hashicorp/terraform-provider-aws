@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_elasticache_reserved_cache_node: Fix `Provider returned invalid result object after apply` errors where computed attributes remained unknown after create
-```

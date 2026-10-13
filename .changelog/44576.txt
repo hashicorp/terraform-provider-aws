@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dynamodb_table: Do not retry on `LimitExceededException`
-```

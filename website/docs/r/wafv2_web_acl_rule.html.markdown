@@ -557,6 +557,11 @@ Combines multiple statements using logical OR. At least one nested statement mus
 * `header_name` - (Required) Name of the header containing the forwarded IP address.
 * `position` - (Required) Position in the header to use. Valid values: `FIRST`, `LAST`, `ANY`.
 
+#### Forwarded IP Config
+
+* `fallback_behavior` - (Required) Action to take when the IP address in the header is invalid. Valid values: `MATCH`, `NO_MATCH`.
+* `header_name` - (Required) Name of the header containing the forwarded IP address.
+
 #### Label Match Statement
 
 * `key` - (Required) String to match against. For `LABEL` scope, include the name and any preceding namespace specifications. For `NAMESPACE` scope, include namespace strings. Labels are case sensitive and components must be separated by colon (e.g., `NS1:NS2:name`).
@@ -673,7 +678,7 @@ Exactly one of the following field to match blocks must be specified:
 * `match_scope` - (Required) Parts of the cookies to inspect. Valid values: `ALL`, `KEY`, `VALUE`.
 * `oversize_handling` - (Required) How to handle requests with cookies larger than the inspection limit. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`.
 
-##### Cookies Match Pattern
+#### Cookies Match Pattern
 
 Exactly one of the following must be specified:
 
@@ -691,7 +696,7 @@ Exactly one of the following must be specified:
 * `match_scope` - (Required) Parts of the headers to inspect. Valid values: `ALL`, `KEY`, `VALUE`.
 * `oversize_handling` - (Required) How to handle requests with headers larger than the inspection limit. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`.
 
-##### Headers Match Pattern
+#### Headers Match Pattern
 
 Exactly one of the following must be specified:
 
@@ -714,7 +719,7 @@ Exactly one of the following must be specified:
 * `invalid_fallback_behavior` - (Optional) How to handle requests with invalid JSON body. Valid values: `EVALUATE_AS_STRING`, `MATCH`, `NO_MATCH`.
 * `oversize_handling` - (Optional) How to handle requests with a body larger than the inspection limit. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`. Defaults to `CONTINUE`.
 
-##### JSON Body Match Pattern
+#### JSON Body Match Pattern
 
 Exactly one of the following must be specified:
 

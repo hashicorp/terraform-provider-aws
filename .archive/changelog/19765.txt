@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_athena_database: Read the database name from the `AwsDataCatalog`
-```

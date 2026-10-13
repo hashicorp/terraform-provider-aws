@@ -37,6 +37,7 @@ func TestAccDirectConnectConnectionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "partner_name", resourceName, "partner_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrProviderName, resourceName, names.AttrProviderName),
 					resource.TestCheckResourceAttrPair(datasourceName, "vlan_id", resourceName, "vlan_id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "rate_limiter_status.#"),
 				),
 			},
 		},

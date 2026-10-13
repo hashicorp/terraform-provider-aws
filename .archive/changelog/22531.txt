@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_subnet: Resource-based naming is not available in the `ap-southeast-3` region
-```

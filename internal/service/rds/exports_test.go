@@ -103,4 +103,8 @@ var (
 	ValidParamGroupNamePrefix        = validParamGroupNamePrefix
 	ValidSubnetGroupName             = validSubnetGroupName
 	ValidSubnetGroupNamePrefix       = validSubnetGroupNamePrefix
+
+	WaitDBClusterUpdated = waitDBClusterUpdated
+
+	EngineVersionIsNewer = engineVersionIsNewer
 )

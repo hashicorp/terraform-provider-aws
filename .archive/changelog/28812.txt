@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_sesv2_configuration_set: Add `vdm_options` argument
-```

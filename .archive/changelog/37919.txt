@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_guardduty_malware_protection_plan
-```

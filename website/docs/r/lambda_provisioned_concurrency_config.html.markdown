@@ -38,7 +38,7 @@ resource "aws_lambda_provisioned_concurrency_config" "example" {
 
 The following arguments are required:
 
-* `function_name` - (Required) Name or Amazon Resource Name (ARN) of the Lambda Function.
+* `function_name` - (Required) Name or ARN of the Lambda Function.
 * `provisioned_concurrent_executions` - (Required) Amount of capacity to allocate. Must be greater than or equal to 1.
 * `qualifier` - (Required) Lambda Function version or Lambda Alias name.
 

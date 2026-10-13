@@ -41,7 +41,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - the Amazon Resource Name (ARN) of the worker configuration.
+* `arn` - the ARN of the worker configuration.
 * `latest_revision` - an ID of the latest successfully created revision of the worker configuration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

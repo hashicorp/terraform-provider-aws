@@ -27,7 +27,7 @@ This resource supports the following arguments:
 * `account` - (Required) The Amazon Web Services account ID to grant access to.
 * `cluster_identifier` - (Required) The cluster identifier of the cluster to grant access to.
 * `force_delete` - (Optional) Indicates whether to force the revoke action. If true, the Redshift-managed VPC endpoints associated with the endpoint authorization are also deleted. Default value is `false`.
-* `vpc_ids` - (Optional) The virtual private cloud (VPC) identifiers to grant access to. If none are specified all VPCs in shared account are allowed.
+* `vpc_ids` - (Optional) VPC identifiers to grant access to. If none are specified all VPCs in shared account are allowed.
 
 ## Attribute Reference
 

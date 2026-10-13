@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_elasticsearch_domain: Fix tagging on creation
-```

@@ -32,13 +32,13 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie account.
-* `service_role` - The Amazon Resource Name (ARN) of the service-linked role that allows Macie to monitor and analyze data in AWS resources for the account.
+* `service_role` - ARN of the service-linked role that allows Macie to monitor and analyze data in AWS resources for the account.
 * `created_at` - The date and time, in UTC and extended RFC 3339 format, when the Amazon Macie account was created.
 * `updated_at` - The date and time, in UTC and extended RFC 3339 format, of the most recent change to the status of the Macie account.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_account` using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_account` using the ID. For example:
 
 ```terraform
 import {
@@ -47,7 +47,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_macie2_account` using the id. For example:
+Using `terraform import`, import `aws_macie2_account` using the ID. For example:
 
 ```console
 % terraform import aws_macie2_account.example abcd1

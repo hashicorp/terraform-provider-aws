@@ -90,7 +90,7 @@ The `queue_configs` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Routing Profile.
+* `arn` - ARN of the Routing Profile.
 * `id` - Identifier of the hosting Amazon Connect Instance and identifier of the Routing Profile separated by a colon (`:`).
 * `queue_configs` - In addition to the arguments used in the `queue_configs` argument block, there are additional attributes exported within the `queue_configs` block. These additional attributes are documented below.
 * `routing_profile_id` - Identifier for the Routing Profile.

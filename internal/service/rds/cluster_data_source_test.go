@@ -30,6 +30,7 @@ func TestAccRDSClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "backtrack_window", resourceName, "backtrack_window"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrClusterIdentifier, resourceName, names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDatabaseName, resourceName, names.AttrDatabaseName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDeletionProtection, resourceName, names.AttrDeletionProtection),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_parameter_group_name", resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group_name", resourceName, "db_subnet_group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_system_id", resourceName, "db_system_id"),
@@ -66,6 +67,7 @@ func TestAccRDSClusterDataSource_ManagedMasterPassword_managed(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "backtrack_window", resourceName, "backtrack_window"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrClusterIdentifier, resourceName, names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDatabaseName, resourceName, names.AttrDatabaseName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDeletionProtection, resourceName, names.AttrDeletionProtection),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_parameter_group_name", resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group_name", resourceName, "db_subnet_group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngine, resourceName, names.AttrEngine),
@@ -79,6 +81,35 @@ func TestAccRDSClusterDataSource_ManagedMasterPassword_managed(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSClusterDataSource_deletionProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_rds_cluster.test"
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterDataSourceConfig_deletionProtection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDeletionProtection, resourceName, names.AttrDeletionProtection),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDeletionProtection, acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterDataSourceConfig_deletionProtection(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDeletionProtection, resourceName, names.AttrDeletionProtection),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -118,7 +149,6 @@ resource "aws_db_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
 }
-
 resource "aws_rds_cluster" "test" {
   cluster_identifier          = %[1]q
   database_name               = "test"
@@ -137,4 +167,28 @@ data "aws_rds_cluster" "test" {
   cluster_identifier = aws_rds_cluster.test.cluster_identifier
 }
 `, rName))
+}
+
+func testAccClusterDataSourceConfig_deletionProtection(rName string, deletionProtection bool) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = %[1]q
+  database_name        = "test"
+  engine               = "aurora-mysql"
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
+  skip_final_snapshot  = true
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  deletion_protection  = %[2]t
+}
+
+data "aws_rds_cluster" "test" {
+  cluster_identifier = aws_rds_cluster.test.cluster_identifier
+}
+`, rName, deletionProtection))
 }

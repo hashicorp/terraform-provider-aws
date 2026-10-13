@@ -275,7 +275,7 @@ Acceptance tests for Resource Identity are generated, as they follow the same pa
 See the [acceptance test generation documentation](acc-test-generation.md) for more information on generating Resource Identity tests.
 Some common annotations are documented below.
 
-By convention, the `Exists` check function returns a value from an API call for the remote resource.
+Some `Exists` check functions return a value from an API call for the remote resource.
 This type is specified using the annotation `@Testing(existsType=<reference>)`.
 This references a Go type and package path with optional package alias, using the format
 `<package path>;[<package alias>;]<type>`.

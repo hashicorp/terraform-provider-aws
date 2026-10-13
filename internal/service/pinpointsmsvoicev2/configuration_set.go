@@ -34,6 +34,7 @@ import (
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_configuration_set", name="Configuration Set")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newConfigurationSetResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &configurationSetResource{}
 

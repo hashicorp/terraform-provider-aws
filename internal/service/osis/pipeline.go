@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -273,6 +274,8 @@ func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRe
 	data.PipelineARN = fwflex.StringToFramework(ctx, pipeline.PipelineArn)
 	data.PipelineRoleARN = fwflex.StringToFrameworkARN(ctx, pipeline.PipelineRoleArn)
 
+	setTagsOut(ctx, pipeline.Tags)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -301,7 +304,7 @@ func (r *pipelineResource) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, pipeline, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, pipeline, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -329,7 +332,7 @@ func (r *pipelineResource) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if diff.HasChanges() {
-		input := osis.UpdatePipelineInput{}
+		var input osis.UpdatePipelineInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -385,6 +388,17 @@ func (r *pipelineResource) Delete(ctx context.Context, request resource.DeleteRe
 
 		return
 	}
+}
+
+func (r *pipelineResource) flatten(ctx context.Context, pipeline *awstypes.Pipeline, data *pipelineResourceModel) diag.Diagnostics {
+	diags := fwflex.Flatten(ctx, pipeline, data)
+	if diags.HasError() {
+		return diags
+	}
+
+	setTagsOut(ctx, pipeline.Tags)
+
+	return diags
 }
 
 func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*awstypes.Pipeline, error) {

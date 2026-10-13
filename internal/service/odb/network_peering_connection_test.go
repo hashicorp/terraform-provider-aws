@@ -13,13 +13,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -99,24 +96,24 @@ func TestAccODBNetworkPeeringConnection_basic(t *testing.T) {
 	}
 
 	var odbPeeringResource odb.GetOdbPeeringConnectionOutput
-	odbPeeringDisplayName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
-	vpcName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.vpcNamePrefix)
-	odbNetName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
+	odbPeeringDisplayName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
+	vpcName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
 	resourceName := "aws_odb_network_peering_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNwkPeeringTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNwkPeeringTestResource.basicConfig(vpcName, odbNetName, odbPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeeringResource),
+					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &odbPeeringResource),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
@@ -138,24 +135,24 @@ func TestAccODBNetworkPeeringConnection_withARN(t *testing.T) {
 	}
 
 	var odbPeeringResource odb.GetOdbPeeringConnectionOutput
-	odbPeeringDisplayName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
-	vpcName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.vpcNamePrefix)
-	odbNetName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
+	odbPeeringDisplayName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
+	vpcName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
 	resourceName := "aws_odb_network_peering_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNwkPeeringTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNwkPeeringTestResource.basicConfigWithARN(vpcName, odbNetName, odbPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeeringResource),
+					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &odbPeeringResource),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
@@ -175,18 +172,18 @@ func TestAccODBNetworkPeeringConnection_variables(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	odbPeeringDisplayName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
-	vpcName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.vpcNamePrefix)
-	odbNetName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
+	odbPeeringDisplayName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
+	vpcName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmClusterTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
@@ -206,24 +203,24 @@ func TestAccODBNetworkPeeringConnection_tagging(t *testing.T) {
 	}
 
 	var odbPeeringResource odb.GetOdbPeeringConnectionOutput
-	odbPeeringDisplayName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
-	vpcName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.vpcNamePrefix)
-	odbNetName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
+	odbPeeringDisplayName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
+	vpcName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
 	resourceName := "aws_odb_network_peering_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNwkPeeringTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNwkPeeringTestResource.basicConfig(vpcName, odbNetName, odbPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeeringResource),
+					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &odbPeeringResource),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
@@ -236,7 +233,7 @@ func TestAccODBNetworkPeeringConnection_tagging(t *testing.T) {
 			{
 				Config: oracleDBNwkPeeringTestResource.basicConfigNoTag(vpcName, odbNetName, odbPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeeringResource),
+					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &odbPeeringResource),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -257,25 +254,25 @@ func TestAccODBNetworkPeeringConnection_addRemovePeeredCIDR(t *testing.T) {
 	}
 
 	var peering1, peering2, peering3 odb.GetOdbPeeringConnectionOutput
-	odbPeeringDisplayName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
-	vpcName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.vpcNamePrefix)
-	odbNetName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
+	odbPeeringDisplayName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
+	vpcName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
 	resourceName := "aws_odb_network_peering_connection.test"
 	basicConfig, removedCidr, addedCidr := oracleDBNwkPeeringTestResource.addRemovePeeredNetworkCIDRConfig(vpcName, odbNetName, odbPeeringDisplayName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNwkPeeringTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: basicConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &peering1),
+					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &peering1),
 				),
 			},
 			{
@@ -286,7 +283,7 @@ func TestAccODBNetworkPeeringConnection_addRemovePeeredCIDR(t *testing.T) {
 			{
 				Config: removedCidr,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &peering2),
+					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &peering2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(peering1.OdbPeeringConnection.OdbPeeringConnectionId), *(peering2.OdbPeeringConnection.OdbPeeringConnectionId)) != 0 {
 							return errors.New("should not  create a new odb network peering connection")
@@ -303,7 +300,7 @@ func TestAccODBNetworkPeeringConnection_addRemovePeeredCIDR(t *testing.T) {
 			{
 				Config: addedCidr,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &peering3),
+					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &peering3),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(peering1.OdbPeeringConnection.OdbPeeringConnectionId), *(peering3.OdbPeeringConnection.OdbPeeringConnectionId)) != 0 {
 							return errors.New("should not  create a new odb network peering connection")
@@ -327,25 +324,25 @@ func TestAccODBNetworkPeeringConnection_updateTagAndRemovePeeredCIDR(t *testing.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	vpcName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.vpcNamePrefix)
-	odbNetName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
+	vpcName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
 	resourceName := "aws_odb_network_peering_connection.test"
 	var peering1, peering2 odb.GetOdbPeeringConnectionOutput
 	basicConfig, removedCidr := oracleDBNwkPeeringTestResource.basicConfigWithMultiplePeerCIDR(vpcName, odbNetName, resourceName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNwkPeeringTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: basicConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &peering1),
+					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &peering1),
 				),
 			},
 			{
@@ -356,7 +353,7 @@ func TestAccODBNetworkPeeringConnection_updateTagAndRemovePeeredCIDR(t *testing.
 			{
 				Config: removedCidr,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &peering2),
+					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &peering2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(peering1.OdbPeeringConnection.OdbPeeringConnectionId), *(peering2.OdbPeeringConnection.OdbPeeringConnectionId)) != 0 {
 							return errors.New("should not  create a new odb network peering connection")
@@ -381,24 +378,24 @@ func TestAccODBNetworkPeeringConnection_disappears(t *testing.T) {
 	}
 
 	var odbPeering odb.GetOdbPeeringConnectionOutput
-	odbPeeringDisplayName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
-	vpcName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.vpcNamePrefix)
-	odbNetDisplayName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
+	odbPeeringDisplayName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
+	vpcName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetDisplayName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
 	resourceName := "aws_odb_network_peering_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			oracleDBNwkPeeringTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: oracleDBNwkPeeringTestResource.basicConfig(vpcName, odbNetDisplayName, odbPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeering),
+					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &odbPeering),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.OracleDBNetworkPeeringConnection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -415,9 +412,9 @@ func TestAccODBNetworkPeeringConnection_disappears(t *testing.T) {
 	})
 }
 
-func (oracleDBNwkPeeringResourceTest) testAccCheckNetworkPeeringConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
+func (oracleDBNwkPeeringResourceTest) testAccCheckNetworkPeeringConnectionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_network_peering_connection" {
 				continue
@@ -435,7 +432,7 @@ func (oracleDBNwkPeeringResourceTest) testAccCheckNetworkPeeringConnectionDestro
 	}
 }
 
-func testAccCheckNetworkPeeringConnectionExists(ctx context.Context, name string, odbPeeringConnection *odb.GetOdbPeeringConnectionOutput) resource.TestCheckFunc {
+func testAccCheckNetworkPeeringConnectionExists(ctx context.Context, t *testing.T, name string, odbPeeringConnection *odb.GetOdbPeeringConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -444,7 +441,7 @@ func testAccCheckNetworkPeeringConnectionExists(ctx context.Context, name string
 		if rs.Primary.ID == "" {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameNetworkPeeringConnection, name, errors.New("not set"))
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		resp, err := oracleDBNwkPeeringTestResource.findOracleDBNetworkPeering(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -456,7 +453,7 @@ func testAccCheckNetworkPeeringConnectionExists(ctx context.Context, name string
 }
 
 func (oracleDBNwkPeeringResourceTest) testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 	input := odb.ListOdbPeeringConnectionsInput{}
 	_, err := conn.ListOdbPeeringConnections(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
@@ -474,9 +471,8 @@ func (oracleDBNwkPeeringResourceTest) findOracleDBNetworkPeering(ctx context.Con
 	out, err := conn.GetOdbPeeringConnection(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		return nil, err

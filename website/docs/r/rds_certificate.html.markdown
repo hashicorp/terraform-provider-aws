@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_rds_certificate
 
-Provides a resource to override the system-default Secure Sockets Layer/Transport Layer Security (SSL/TLS) certificate for Amazon RDS for new DB instances in the current AWS region.
+Provides a resource to override the system-default SSL/TLS certificate for Amazon RDS for new DB instances in the current AWS region.
 
 ~> **NOTE:** Removing this Terraform resource removes the override. New DB instances will use the system-default certificate for the current AWS region.
 
@@ -32,6 +32,28 @@ This resource supports the following arguments:
 This resource exports no additional attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_rds_certificate.example
+  identity = {
+    region = "us-west-2"
+  }
+}
+
+resource "aws_rds_certificate" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the RDS certificate override using the `region`. For example:
 

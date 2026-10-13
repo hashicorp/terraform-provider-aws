@@ -1,5 +1,4 @@
 resource "aws_cloudfront_realtime_log_config" "test" {
-{{- template "region" }}
   name          = var.rName
   sampling_rate = 1
   fields        = ["timestamp", "c-ip"]
@@ -19,7 +18,6 @@ resource "aws_cloudfront_realtime_log_config" "test" {
 # testAccRealtimeLogBaseConfig
 
 resource "aws_kinesis_stream" "test" {
-{{- template "region" }}
   name        = var.rName
   shard_count = 2
 }

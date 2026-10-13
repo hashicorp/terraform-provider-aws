@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_prometheus_scraper: Allow `alias`, `destination`, `role_configuration`, and `scrape_configuration` to be updated in-place
-```

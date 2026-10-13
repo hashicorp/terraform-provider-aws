@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -32,6 +34,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -49,10 +52,6 @@ func newVPCEndpointResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 	return &r, nil
 }
-
-const (
-	resNameVPCEndpoint = "VPC Endpoint"
-)
 
 type vpcEndpointResource struct {
 	framework.ResourceWithModel[vpcEndpointResourceModel]
@@ -116,7 +115,7 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 
 func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data vpcEndpointResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -124,7 +123,7 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.CreateVpcEndpointInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, data, input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -133,10 +132,7 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 
 	output, err := conn.CreateVpcEndpoint(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, resNameVPCEndpoint, data.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 
@@ -144,10 +140,7 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 
 	if _, err := waitVPCEndpointCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForCreation, resNameVPCEndpoint, data.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 
@@ -155,10 +148,7 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), data.ID.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, data.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.ValueString())
 		return
 	}
 
@@ -167,17 +157,17 @@ func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateReq
 		securityGroupIDs = append(securityGroupIDs, group.GroupId)
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data vpcEndpointResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -193,27 +183,29 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, data.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.ValueString())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, r.Meta(), output, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Security Group IDs are not returned and must be retrieved from the EC2 API.
-	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), data.ID.ValueString())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
+}
 
+func (r *vpcEndpointResource) flatten(ctx context.Context, meta *conns.AWSClient, output *awstypes.VpcEndpointDetail, data *vpcEndpointResourceModel) (diags diag.Diagnostics) {
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, output, data))
+	if diags.HasError() {
+		return diags
+	}
+
+	// Security Group IDs are not returned by the OpenSearch Serverless API and must be retrieved from the EC2 API.
+	vpce, err := tfec2.FindVPCEndpointByID(ctx, meta.EC2Client(ctx), data.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, data.ID.ValueString(), err),
-			err.Error(),
-		)
-		return
+		smerr.AddError(ctx, &diags, err, smerr.ID, data.ID.ValueString())
+		return diags
 	}
 
 	var securityGroupIDs []*string
@@ -221,21 +213,14 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 		securityGroupIDs = append(securityGroupIDs, group.GroupId)
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs))
+	return diags
 }
 
 func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var new, old vpcEndpointResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &old))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &new))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -276,18 +261,12 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 	_, err := conn.UpdateVpcEndpoint(ctx, input)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, resNameVPCEndpoint, new.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.Name.ValueString())
 		return
 	}
 
 	if _, err := waitVPCEndpointUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForUpdate, resNameVPCEndpoint, new.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.Name.ValueString())
 		return
 	}
 
@@ -295,10 +274,7 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), new.ID.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, new.ID.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.ID.ValueString())
 		return
 	}
 
@@ -307,17 +283,17 @@ func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateReq
 		securityGroupIDs = append(securityGroupIDs, group.GroupId)
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &new.SecurityGroupIDs)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, securityGroupIDs, &new.SecurityGroupIDs))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &new))
 }
 
 func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data vpcEndpointResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -334,18 +310,12 @@ func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, resNameVPCEndpoint, data.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 
 	if _, err := waitVPCEndpointDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForDeletion, resNameVPCEndpoint, data.Name.String(), nil),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 		return
 	}
 }

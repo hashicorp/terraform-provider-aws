@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_efs_file_system_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
-```

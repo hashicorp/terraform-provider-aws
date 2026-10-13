@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_dms_data_provider
+```
+
+```release-note:new-list-resource
+aws_dms_data_provider
+```

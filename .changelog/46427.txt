@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_athena_workgroup: Allows unsetting `configuration.result_configuration` or child attributes.
-```

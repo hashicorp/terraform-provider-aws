@@ -1,3 +1,0 @@
-```release-note:breaking-change
-provider: The `aws_subnet_ids` data source has been removed
-```

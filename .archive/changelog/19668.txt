@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudwatch_metric_alarm: Allow extended statistics in the `stat` argument of the `metric` configuration block
-```

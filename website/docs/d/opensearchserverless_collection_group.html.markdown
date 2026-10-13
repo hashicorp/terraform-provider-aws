@@ -34,7 +34,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the collection group.
+* `arn` - ARN of the collection group.
 * `capacity_limits` - Capacity limits configured for the collection group. See [`capacity_limits`](#capacity_limits) below for details.
 * `created_date` - Date the collection group was created.
 * `description` - Description of the collection group.

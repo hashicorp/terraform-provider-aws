@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_mq_broker: default `replication_user` to `false`
-```

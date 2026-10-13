@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Support `ap-south-2` as a valid AWS Region
-```

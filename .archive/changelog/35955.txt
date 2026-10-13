@@ -1,7 +1,0 @@
-```release-note:enhancement
-resource/aws_instance: Add configurable `read` timeout
-```
-
-```release-note:enhancement
-resource/aws_spot_instance_request: Add configurable `read` timeout
-```

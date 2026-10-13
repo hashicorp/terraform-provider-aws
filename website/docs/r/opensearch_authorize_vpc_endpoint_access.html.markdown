@@ -3,12 +3,12 @@ subcategory: "OpenSearch"
 layout: "aws"
 page_title: "AWS: aws_opensearch_authorize_vpc_endpoint_access"
 description: |-
-  Terraform resource for managing an AWS OpenSearch Authorize Vpc Endpoint Access.
+  Terraform resource for managing an AWS OpenSearch Authorize VPC Endpoint Access.
 ---
 
 # Resource: aws_opensearch_authorize_vpc_endpoint_access
 
-Terraform resource for managing an AWS OpenSearch Authorize Vpc Endpoint Access.
+Terraform resource for managing an AWS OpenSearch Authorize VPC Endpoint Access.
 
 ## Example Usage
 
@@ -35,16 +35,16 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `authorized_principal` - Information about the Amazon Web Services account or service that was provided access to the domain. See [authorized principal](#authorized_principal) attribute for further details.
+* `authorized_principal` - Information about the Amazon Web Services account or service that was provided access to the domain. See [`authorized_principal` Block](#authorized_principal-block) for further details.
 
-### authorized_principal
+### `authorized_principal` Block
 
 * `principal` - IAM principal that is allowed to access to the domain.
 * `principal_type` - Type of principal.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Authorize Vpc Endpoint Access using the `domain_name` and `account` separated by a comma (,). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Authorize VPC Endpoint Access using the `domain_name` and `account` separated by a comma (,). For example:
 
 ```terraform
 import {
@@ -53,7 +53,7 @@ import {
 }
 ```
 
-Using `terraform import`, import OpenSearch Authorize Vpc Endpoint Access using the `domain_name` and `account` separated by a comma (,). For example:
+Using `terraform import`, import OpenSearch Authorize VPC Endpoint Access using the `domain_name` and `account` separated by a comma (,). For example:
 
 ```console
 % terraform import aws_opensearch_authorize_vpc_endpoint_access.example authorize_vpc_endpoint_access-id-12345678,123456789012

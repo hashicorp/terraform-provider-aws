@@ -45,7 +45,7 @@ func newDescribeVpcEncryptionControlsPaginator(client describeVpcEncryptionContr
 
 	options := describeVpcEncryptionControlsPaginatorOptions{}
 	if params.MaxResults != nil {
-		options.Limit = *params.MaxResults // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+		options.Limit = *params.MaxResults // nosemgrep:ci.semgrep.aws.pointer-conversion-on-assignment
 	}
 
 	for _, fn := range optFns {
@@ -72,7 +72,7 @@ func (p *describeVpcEncryptionControlsPaginator) NextPage(ctx context.Context, o
 		return nil, fmt.Errorf("no more pages available")
 	}
 
-	params := *p.params // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+	params := *p.params
 	params.NextToken = p.nextToken
 
 	var limit *int32
@@ -93,7 +93,7 @@ func (p *describeVpcEncryptionControlsPaginator) NextPage(ctx context.Context, o
 	if p.options.StopOnDuplicateToken &&
 		prevToken != nil &&
 		p.nextToken != nil &&
-		*prevToken == *p.nextToken { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+		*prevToken == *p.nextToken {
 		p.nextToken = nil
 	}
 

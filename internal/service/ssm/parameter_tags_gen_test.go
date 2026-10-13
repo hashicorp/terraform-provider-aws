@@ -78,9 +78,6 @@ func TestAccSSMParameter_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Parameter/tags/"),
@@ -130,9 +127,6 @@ func TestAccSSMParameter_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Parameter/tags/"),
@@ -176,9 +170,6 @@ func TestAccSSMParameter_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Parameter/tags/"),
@@ -210,9 +201,6 @@ func TestAccSSMParameter_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -269,9 +257,6 @@ func TestAccSSMParameter_Tags_null(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Parameter/tags/"),
@@ -339,9 +324,6 @@ func TestAccSSMParameter_Tags_emptyMap(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Parameter/tags/"),
@@ -442,9 +424,6 @@ func TestAccSSMParameter_Tags_addOnUpdate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -507,9 +486,6 @@ func TestAccSSMParameter_Tags_EmptyTag_onCreate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Parameter/tags/"),
@@ -541,9 +517,6 @@ func TestAccSSMParameter_Tags_EmptyTag_onCreate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -642,9 +615,6 @@ func TestAccSSMParameter_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Parameter/tags/"),
@@ -688,9 +658,6 @@ func TestAccSSMParameter_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -784,9 +751,6 @@ func TestAccSSMParameter_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -849,9 +813,6 @@ func TestAccSSMParameter_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -899,9 +860,6 @@ func TestAccSSMParameter_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -945,9 +903,6 @@ func TestAccSSMParameter_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -981,9 +936,6 @@ func TestAccSSMParameter_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -1056,9 +1008,6 @@ func TestAccSSMParameter_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1118,9 +1067,6 @@ func TestAccSSMParameter_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1154,9 +1100,6 @@ func TestAccSSMParameter_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -1227,9 +1170,6 @@ func TestAccSSMParameter_Tags_DefaultTags_overlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1289,9 +1229,6 @@ func TestAccSSMParameter_Tags_DefaultTags_overlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1343,9 +1280,6 @@ func TestAccSSMParameter_Tags_DefaultTags_overlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -1440,9 +1374,6 @@ func TestAccSSMParameter_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -1536,9 +1467,6 @@ func TestAccSSMParameter_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -1608,9 +1536,6 @@ func TestAccSSMParameter_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -1672,9 +1597,6 @@ func TestAccSSMParameter_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -1741,9 +1663,6 @@ func TestAccSSMParameter_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -1810,9 +1729,6 @@ func TestAccSSMParameter_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testi
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -1872,9 +1788,6 @@ func TestAccSSMParameter_Tags_ComputedTag_onCreate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -1976,9 +1889,6 @@ func TestAccSSMParameter_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})
@@ -2070,9 +1980,6 @@ func TestAccSSMParameter_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"has_value_wo",
-				},
 			},
 		},
 	})

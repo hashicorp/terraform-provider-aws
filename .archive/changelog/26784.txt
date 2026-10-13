@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_acm_certificate: Add `early_renewal_duration`, `pending_renewal`, `renewal_eligibility`, `renewal_summary` and `type` attributes
-```

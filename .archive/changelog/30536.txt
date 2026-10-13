@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_rds_cluster_parameter_group: Fixes differences being reported on every apply when setting system-source parameters
-```

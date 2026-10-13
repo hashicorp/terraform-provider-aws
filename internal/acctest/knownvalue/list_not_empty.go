@@ -29,7 +29,7 @@ func (v listNotEmpty) CheckValue(other any) error {
 
 // String returns the string representation of the value.
 func (v listNotEmpty) String() string {
-	return "stuff"
+	return "non-empty list"
 }
 
 // ListNotEmpty returns a Check for asserting that a list is not empty.

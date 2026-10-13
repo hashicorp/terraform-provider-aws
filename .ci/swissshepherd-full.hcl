@@ -6,7 +6,7 @@ provider_dir    = "."
 schema_json     = "terraform-providers-schema/schema.json"
 
 file_aliases = {
-  "list_resource/aws_ebs_volume" = "aws_ec2_ebs_volume"
+  "list_resource/aws_ami_launch_permission" = "aws_ec2_ami_launch_permission"
 }
 
 ignore_contents_check = [
@@ -32,13 +32,13 @@ type "resource" {
     "This resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     {}
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" {}
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -62,13 +62,13 @@ type "data_source" {
     "This data source exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   {}
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" {}
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -92,13 +92,13 @@ type "ephemeral" {
     "This ephemeral resource exports no additional attributes.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { required = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -114,13 +114,13 @@ type "function" {
   arguments_heading              = "Arguments"
   allow_missing_arguments_byline = true
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "signature"  { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "signature" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -140,13 +140,13 @@ type "list_resource" {
     "This list resource does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -166,14 +166,14 @@ type "action" {
     "This action does not support any arguments.",
   ]
 
-  section "title"      { required = true }
-  section "example"    { required = true }
-  section "dependency_management" { }
-  section "arguments"  { required = true }
+  section "title" { required = true }
+  section "example" { required = true }
+  section "dependency_management" {}
+  section "arguments" { required = true }
   section "attributes" { forbidden = true }
-  section "timeouts"   { forbidden = true }
-  section "import"     { forbidden = true }
-  section "signature"  { forbidden = true }
+  section "timeouts" { forbidden = true }
+  section "import" { forbidden = true }
+  section "signature" { forbidden = true }
 
   frontmatter_require = ["description", "page_title", "subcategory"]
   frontmatter_forbid  = ["sidebar_current"]
@@ -182,6 +182,81 @@ type "action" {
 }
 
 # ─── Check blocks ───────────────────────────────────────────────────────────
+
+check "banned_glosses" {
+  enabled = true
+
+  # Lexical item. When an abbreviation stops functioning primarily as an abbreviation and becomes a
+  # "lexical item," glossing makes documentation _less_ readable. The expansion contributes no
+  # information. E.g., a typical reader understands what a URL is. Glossing it adds no information.
+  # Therefore, "URL" is a lexical item.
+  #
+  # Test for whether to add a banned gloss:
+  #   - Does the expansion materially improve the reader's understanding?
+
+  banned_glosses = {
+    "Amazon Machine Image"              = "AMI"
+    "Amazon Resource Name"              = "ARN"
+    "Amazon Resource Names"             = "ARNs"
+    "Application Programming Interface" = "API"
+    "Central Processing Unit"           = "CPU"
+    "Command-Line Interface"            = "CLI"
+    "Domain Name System"                = "DNS"
+    "Elastic Compute Cloud"             = "EC2"
+    "Extensible Markup Language"        = "XML"
+    "Graphics Processing Unit"          = "GPU"
+    "HyperText Markup Language"         = "HTML"
+    "Hypertext Transfer Protocol"       = "HTTP"
+    "Internet Protocol"                 = "IP"
+    "JavaScript Object Notation"        = "JSON"
+    "Key Management Service"            = "KMS"
+    "Relational Database Service"       = "RDS"
+    "Simple Storage Service"            = "S3"
+    "Software Development Kit"          = "SDK"
+    "Structured Query Language"         = "SQL"
+    "Transmission Control Protocol"     = "TCP"
+    "Transport Layer Security"          = "TLS"
+    "Unicode Transformation Format"     = "UTF"
+    "Uniform Resource Identifier"       = "URI"
+    "Uniform Resource Locator"          = "URL"
+    "Universal Serial Bus"              = "USB"
+    "Virtual Private Cloud"             = "VPC"
+    "Virtual Private Network"           = "VPN"
+    "YAML Ain't Markup Language"        = "YAML"
+  }
+
+  skip_frontmatter = true
+  severity         = "error"
+}
+
+check "prose_casing" {
+  enabled  = true
+  severity = "warning"
+
+  enforce_casing = [
+    "ACL", "ACM", "ACMPCA", "Amazon WorkSpaces", "AMI", "API Gateway",
+    "App Mesh", "App Runner", "AppConfig", "AppFabric", "AppFlow",
+    "Application Auto Scaling", "AppStream", "AppSync", "ARN", "ASG", "ASN",
+    "Auto Scaling group", "Auto Scaling groups", "AWS Auto Scaling",
+    "AWS WorkSpaces", "BGP", "BYOIP", "CIDR", "CloudFormation", "CloudFront",
+    "CloudHSM", "CloudTrail", "CloudWatch", "CMK", "CNAME", "CodeArtifact",
+    "CodeBuild", "CodeCatalyst", "CodeCommit", "CodeConnections",
+    "CodeDeploy", "CodeGuru", "CodePipeline", "CoIP", "CSV", "DataBrew",
+    "DataSync", "DataZone", "DAX", "DB", "DHCP", "DKIM", "DLM", "DMS",
+    "DNSSEC", "DocDB", "DynamoDB", "EBS", "EC2", "EC2 Auto Scaling", "ECMP",
+    "ECR", "ECS", "EFS", "EIP", "EKS", "ElastiCache", "Elasticsearch", "ELB",
+    "EMR", "EventBridge", "FIFO", "FMS", "FQDNs", "FSx", "GameLift", "GCM",
+    "GraphQL", "gRPC", "GuardDuty", "HAProxy", "HSM", "HVM", "IAM", "IoT",
+    "IPAM", "IPSet", "iSCSI", "JDBC", "KMS", "Lake Formation", "MFA",
+    "MicroVMs", "MSK", "MWAA", "MySQL", "NFS", "OAuth", "OIDC", "OpsWorks",
+    "PHP", "PITR", "POSIX", "QLDB", "QuickSight", "RabbitMQ", "RDS", "RFC",
+    "SageMaker", "SASL", "Security Hub", "SFN", "SMB", "SMS", "SMTP", "SNS",
+    "SQS", "SSM", "SSO", "STS", "SWF", "TTL", "VGW", "VoIP", "VPC", "VPN",
+    "WAF", "WAFv2", "WorkLink", "WorkMail", "XSS", "YAML",
+  ]
+
+  skip_frontmatter = true
+}
 
 check "schema_docs" {
   enabled = true
@@ -195,8 +270,12 @@ check "schema_docs" {
   ordering    = true
   deprecated  = true
 
+  nested_object_attributes = true
+  allow_inline_read_only   = true
+
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
+    "`{Path}` Block",
     "`{Block}` Block",
     "{Block} Block",
     "{Block} block",
@@ -206,19 +285,30 @@ check "schema_docs" {
     "{Title} Arguments",
     "{Title} Argument Reference",
     "{Title} Attribute Reference",
+    "Nested Schema for `{Path}`",
+    "`{Path}`",
     "`{Block}`",
     "{Block}",
     "{Title}",
   ]
 
   prefer_block_heading_styles = [
+    "`{Path}` Block",
     "`{Parent}` `{Block}` Block",
     "`{Block}` Block",
   ]
+
+  # Mirrors the QuickSight API's visual model, a reuse graph rather than a tree:
+  # with nested_object_attributes, path-keyed `coverage` wants ~21,000 Read-Only
+  # entries. Only `coverage` is off; every other sub-check runs. See swissshepherd#74.
+  override {
+    targets  = ["data_source/aws_quicksight_analysis"]
+    coverage = false
+  }
 }
 
 check "import_section" {
-  enabled = true
+  enabled                  = true
   require_identity_section = true
 }
 
@@ -255,11 +345,11 @@ check "region_argument" {
 }
 
 check "file_check" {
-  enabled = true
-  max_file_size = 500000
-  allow_extensions = [".html.markdown"]
+  enabled                   = true
+  max_file_size             = 500000
+  allow_extensions          = [".html.markdown"]
   allow_registry_extensions = [".md"]
-  inline_links = true
+  inline_links              = true
 }
 
 check "file_match" {

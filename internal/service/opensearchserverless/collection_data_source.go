@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,10 +30,6 @@ import (
 func newCollectionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &collectionDataSource{}, nil
 }
-
-const (
-	DSNameCollection = "Collection Data Source"
-)
 
 type collectionDataSource struct {
 	framework.DataSourceWithModel[collectionDataSourceModel]
@@ -114,7 +110,7 @@ func (d *collectionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
 	var data collectionDataSourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -124,10 +120,7 @@ func (d *collectionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if !data.ID.IsNull() && !data.ID.IsUnknown() {
 		output, err := findCollectionByID(ctx, conn, data.ID.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.ValueString())
 			return
 		}
 
@@ -137,17 +130,14 @@ func (d *collectionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		output, err := findCollectionByName(ctx, conn, data.Name.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.ValueString())
 			return
 		}
 
 		out = output
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithIgnoredFieldNames([]string{"CreatedDate", "LastModifiedDate"}))...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data, flex.WithIgnoredFieldNames([]string{"CreatedDate", "LastModifiedDate"})))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -156,7 +146,7 @@ func (d *collectionDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.CreatedDate = flex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.CreatedDate)).Format(time.RFC3339))
 	data.LastModifiedDate = flex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.LastModifiedDate)).Format(time.RFC3339))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 type collectionDataSourceModel struct {

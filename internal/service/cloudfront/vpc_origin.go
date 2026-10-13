@@ -33,7 +33,8 @@ import (
 
 // @FrameworkResource("aws_cloudfront_vpc_origin", name="VPC Origin")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.VpcOrigin")
+// @Testing(importIgnore="etag")
 func newVPCOriginResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcOriginResource{}
 

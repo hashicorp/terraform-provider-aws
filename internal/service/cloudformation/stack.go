@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -388,9 +387,8 @@ func findStackByName(ctx context.Context, conn *cloudformation.Client, name stri
 	}
 
 	if status := output.StackStatus; status == awstypes.StackStatusDeleteComplete {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-			Message:     string(status),
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -415,9 +413,8 @@ func findStacks(ctx context.Context, conn *cloudformation.Client, input *cloudfo
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "does not exist") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -431,8 +428,8 @@ func findStacks(ctx context.Context, conn *cloudformation.Client, input *cloudfo
 	return output, nil
 }
 
-func statusStack(ctx context.Context, conn *cloudformation.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStack(conn *cloudformation.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		// Don't call FindStackByName as it maps useful status codes to NotFoundError.
 		output, err := findStack(ctx, conn, &cloudformation.DescribeStacksInput{
 			StackName: aws.String(name),
@@ -454,13 +451,13 @@ func waitStackCreated(ctx context.Context, conn *cloudformation.Client, name, re
 	const (
 		minTimeout = 1 * time.Second
 	)
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StackStatusCreateInProgress, awstypes.StackStatusDeleteInProgress, awstypes.StackStatusRollbackInProgress),
 		Target:     enum.Slice(awstypes.StackStatusCreateComplete, awstypes.StackStatusCreateFailed, awstypes.StackStatusDeleteComplete, awstypes.StackStatusDeleteFailed, awstypes.StackStatusRollbackComplete, awstypes.StackStatusRollbackFailed),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 		Delay:      10 * time.Second,
-		Refresh:    statusStack(ctx, conn, name),
+		Refresh:    statusStack(conn, name),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -512,13 +509,13 @@ func waitStackUpdated(ctx context.Context, conn *cloudformation.Client, name, re
 	const (
 		minTimeout = 5 * time.Second
 	)
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StackStatusUpdateCompleteCleanupInProgress, awstypes.StackStatusUpdateInProgress, awstypes.StackStatusUpdateRollbackInProgress, awstypes.StackStatusUpdateRollbackCompleteCleanupInProgress),
 		Target:     enum.Slice(awstypes.StackStatusCreateComplete, awstypes.StackStatusUpdateComplete, awstypes.StackStatusUpdateRollbackComplete, awstypes.StackStatusUpdateRollbackFailed),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 		Delay:      10 * time.Second,
-		Refresh:    statusStack(ctx, conn, name),
+		Refresh:    statusStack(conn, name),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -553,13 +550,13 @@ func waitStackDeleted(ctx context.Context, conn *cloudformation.Client, name, re
 	const (
 		minTimeout = 5 * time.Second
 	)
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.StackStatusDeleteInProgress, awstypes.StackStatusRollbackInProgress),
 		Target:         enum.Slice(awstypes.StackStatusDeleteComplete, awstypes.StackStatusDeleteFailed),
 		Timeout:        timeout,
 		MinTimeout:     minTimeout,
 		Delay:          10 * time.Second,
-		Refresh:        statusStack(ctx, conn, name),
+		Refresh:        statusStack(conn, name),
 		NotFoundChecks: 1,
 	}
 

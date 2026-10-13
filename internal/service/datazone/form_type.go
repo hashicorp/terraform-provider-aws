@@ -28,13 +28,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -171,30 +171,24 @@ func (r *formTypeResource) Create(ctx context.Context, req resource.CreateReques
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var plan formTypeResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := datazone.CreateFormTypeInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &in))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := conn.CreateFormType(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameFormType, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameFormType, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
@@ -203,46 +197,41 @@ func (r *formTypeResource) Create(ctx context.Context, req resource.CreateReques
 		return findFormTypeByID(ctx, conn, *out.DomainId, *out.Name, *out.Revision)
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameFormType, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 
 	option := flex.WithIgnoredFieldNames([]string{"Model"})
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan, option)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, output, &plan, option))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *formTypeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var state formTypeResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findFormTypeByID(ctx, conn, state.DomainIdentifier.ValueString(), state.Name.ValueString(), state.Revision.ValueString())
 	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameFormType, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
 	option := flex.WithIgnoredFieldNames([]string{"Model"})
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, option)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, option))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -251,21 +240,21 @@ func (r *formTypeResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	if m, ok := out.Model.(*awstypes.ModelMemberSmithy); ok {
 		modelVal, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []modelData{{Smithy: flex.StringValueToFramework(ctx, m.Value)}})
-		resp.Diagnostics.Append(diags...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 		state.Model = modelVal
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *formTypeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var state formTypeResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -277,13 +266,10 @@ func (r *formTypeResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	_, err := conn.DeleteFormType(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
+		if isResourceMissing(err) {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameFormType, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.ValueString())
 		return
 	}
 }
@@ -295,7 +281,7 @@ func findFormTypeByID(ctx context.Context, conn *datazone.Client, domainId strin
 	}
 
 	out, err := conn.GetFormType(ctx, in)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
+	if isResourceMissing(err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}

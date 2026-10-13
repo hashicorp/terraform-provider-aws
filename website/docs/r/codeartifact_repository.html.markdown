@@ -115,7 +115,7 @@ resource "aws_codeartifact_repository" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the CodeArtifact repository.
+- `arn` (String) ARN of the CodeArtifact repository.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Repository using the CodeArtifact Repository ARN. For example:
 

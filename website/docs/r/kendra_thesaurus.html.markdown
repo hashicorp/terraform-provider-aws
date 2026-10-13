@@ -33,30 +33,31 @@ resource "aws_kendra_thesaurus" "example" {
 
 The following arguments are required:
 
-* `index_id`- (Required, Forces new resource) The identifier of the index for a thesaurus.
-* `name` - (Required) The name for the thesaurus.
-* `role_arn` - (Required) The IAM (Identity and Access Management) role used to access the thesaurus file in S3.
-* `source_s3_path` - (Required) The S3 path where your thesaurus file sits in S3. Detailed below.
-
-The `source_s3_path` configuration block supports the following arguments:
-
-* `bucket` - (Required) The name of the S3 bucket that contains the file.
-* `key` - (Required) The name of the file.
+* `index_id` - (Required, Forces new resource) Identifier of the index for a thesaurus.
+* `name` - (Required) Name for the thesaurus.
+* `role_arn` - (Required) IAM (Identity and Access Management) role used to access the thesaurus file in S3.
+* `source_s3_path` - (Required) S3 path where your thesaurus file sits in S3. [Detailed below](#source_s3_path-block).
 
 The following arguments are optional:
 
+* `description` - (Optional) Description for a thesaurus.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional) The description for a thesaurus.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `source_s3_path` Block
+
+* `bucket` - (Required) Name of the S3 bucket that contains the file.
+* `key` - (Required) Name of the file.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the thesaurus.
-* `id` - The unique identifiers of the thesaurus and index separated by a slash (`/`).
-* `status` - The current status of the thesaurus.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - Unique identifiers of the thesaurus and index separated by a slash (`/`).
+* `status` - Current status of the thesaurus.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `thesaurus_id` - Unique identifier of the thesaurus.
 
 ## Timeouts
 

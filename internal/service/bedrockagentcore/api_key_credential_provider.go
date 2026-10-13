@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -35,9 +37,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_bedrockagentcore_api_key_credential_provider", name="Api Key Credential Provider")
+// Standard Bedrock AgentCore outbound auth provider resource name validator.
+var validOutboundAuthProviderResourceName validator.String = stringvalidator.RegexMatches(
+	regexache.MustCompile(`^[a-zA-Z0-9\-_]{1,128}$`),                                                            // AWS API definition.
+	`Valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 50 characters.`, // AWS Console text.
+)
+
+// @FrameworkResource("aws_bedrockagentcore_api_key_credential_provider", name="API Key Credential Provider")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="credential_provider_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput")
+// @Testing(importIgnore="api_key")
+// @Testing(importStateIdAttribute="name")
+// @Testing(preCheck="testAccPreCheckAPIKeyCredentialProviders")
+// @Testing(preIdentityVersion="v6.65.0")
 func newAPIKeyCredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &apiKeyCredentialProviderResource{}
 	return r, nil
@@ -45,6 +58,7 @@ func newAPIKeyCredentialProviderResource(_ context.Context) (resource.ResourceWi
 
 type apiKeyCredentialProviderResource struct {
 	framework.ResourceWithModel[apiKeyCredentialProviderResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -56,12 +70,33 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 				Validators: []validator.String{
 					stringvalidator.ExactlyOneOf(
 						path.MatchRoot("api_key"),
+						path.MatchRoot("api_key_secret_config"),
 						path.MatchRoot("api_key_wo"),
 					),
-					stringvalidator.ConflictsWith(path.Expressions{
+					stringvalidator.ConflictsWith(
 						path.MatchRoot("api_key_wo"),
-					}...),
+					),
 					stringvalidator.PreferWriteOnlyAttribute(path.MatchRoot("api_key_wo")),
+				},
+			},
+			"api_key_secret_arn": framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
+			"api_key_secret_source": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.SecretSourceType](),
+				Optional:   true,
+				Computed:   true,
+				Validators: []validator.String{
+					tfstringvalidator.AlsoRequiresWhenEquals(
+						awstypes.SecretSourceTypeExternal,
+						path.MatchRoot("api_key_secret_config"),
+					),
+					tfstringvalidator.ExactlyOneOfWhenEquals(
+						awstypes.SecretSourceTypeManaged,
+						path.MatchRoot("api_key"),
+						path.MatchRoot("api_key_wo"),
+					),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"api_key_wo": schema.StringAttribute{
@@ -69,30 +104,24 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 				WriteOnly: true,
 				Sensitive: true,
 				Validators: []validator.String{
-					stringvalidator.ExactlyOneOf(
-						path.MatchRoot("api_key"),
-						path.MatchRoot("api_key_wo"),
-					),
-					stringvalidator.AlsoRequires(path.Expressions{
+					stringvalidator.AlsoRequires(
 						path.MatchRoot("api_key_wo_version"),
-					}...),
+					),
 				},
 			},
 			"api_key_wo_version": schema.Int64Attribute{
 				Optional: true,
 				Validators: []validator.Int64{
-					int64validator.AlsoRequires(path.Expressions{
+					int64validator.AlsoRequires(
 						path.MatchRoot("api_key_wo"),
-					}...),
+					),
 				},
 			},
-			"api_key_secret_arn":      framework.ResourceComputedListOfObjectsAttribute[secretModel](ctx, listplanmodifier.UseStateForUnknown()),
 			"credential_provider_arn": framework.ARNAttributeComputedOnly(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-_]+$`), ""),
+					validOutboundAuthProviderResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -100,6 +129,9 @@ func (r *apiKeyCredentialProviderResource) Schema(ctx context.Context, request r
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"api_key_secret_config": secretReferenceBlock(ctx, listvalidator.AlsoRequires(path.MatchRoot("api_key_secret_source"))),
 		},
 	}
 }
@@ -238,8 +270,48 @@ func (r *apiKeyCredentialProviderResource) Delete(ctx context.Context, request r
 	}
 }
 
-func (r *apiKeyCredentialProviderResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
+func (r *apiKeyCredentialProviderResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if request.State.Raw.IsNull() || request.Plan.Raw.IsNull() {
+		return
+	}
+
+	var config, state apiKeyCredentialProviderResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if config.APIKeySecretSource.IsUnknown() || state.APIKeySecretSource.IsNull() || state.APIKeySecretSource.IsUnknown() {
+		return
+	}
+
+	// Derive the effective secret source from configuration: api_key/api_key_wo
+	// imply MANAGED, api_key_secret_config implies EXTERNAL. This cannot rely on
+	// the planned value alone: api_key_secret_source is Optional+Computed, so when
+	// it's absent from configuration, UseStateForUnknown fills it from state.
+	var effective awstypes.SecretSourceType
+	switch {
+	case !config.APIKeySecretSource.IsNull():
+		effective = config.APIKeySecretSource.ValueEnum()
+	case !config.APIKeySecretConfig.IsNull():
+		effective = awstypes.SecretSourceTypeExternal
+	case !config.APIKey.IsNull() || !config.APIKeyWO.IsNull():
+		effective = awstypes.SecretSourceTypeManaged
+	default:
+		return
+	}
+
+	// The API rejects switching the secret source between MANAGED and EXTERNAL in place.
+	if effective != state.APIKeySecretSource.ValueEnum() {
+		// Overwrite the UseStateForUnknown-filled plan value; without a value diff,
+		// Terraform Core ignores RequiresReplace.
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.Plan.SetAttribute(ctx, path.Root("api_key_secret_source"), fwtypes.StringEnumValue(effective)))
+		if response.Diagnostics.HasError() {
+			return
+		}
+		response.RequiresReplace = append(response.RequiresReplace, path.Root("api_key_secret_source"))
+	}
 }
 
 func findAPIKeyCredentialProviderByName(ctx context.Context, conn *bedrockagentcorecontrol.Client, name string) (*bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput, error) {
@@ -272,14 +344,16 @@ func findAPIKeyCredentialProvider(ctx context.Context, conn *bedrockagentcorecon
 
 type apiKeyCredentialProviderResourceModel struct {
 	framework.WithRegionModel
-	APIKey                types.String                                 `tfsdk:"api_key"`
-	APIKeySecretARN       fwtypes.ListNestedObjectValueOf[secretModel] `tfsdk:"api_key_secret_arn"`
-	APIKeyWO              types.String                                 `tfsdk:"api_key_wo"`
-	APIKeyWOVersion       types.Int64                                  `tfsdk:"api_key_wo_version"`
-	CredentialProviderARN types.String                                 `tfsdk:"credential_provider_arn"`
-	Name                  types.String                                 `tfsdk:"name"`
-	Tags                  tftags.Map                                   `tfsdk:"tags"`
-	TagsAll               tftags.Map                                   `tfsdk:"tags_all"`
+	APIKey                types.String                                          `tfsdk:"api_key"`
+	APIKeySecretARN       fwtypes.ListNestedObjectValueOf[secretModel]          `tfsdk:"api_key_secret_arn"`
+	APIKeySecretConfig    fwtypes.ListNestedObjectValueOf[secretReferenceModel] `tfsdk:"api_key_secret_config"`
+	APIKeySecretSource    fwtypes.StringEnum[awstypes.SecretSourceType]         `tfsdk:"api_key_secret_source"`
+	APIKeyWO              types.String                                          `tfsdk:"api_key_wo"`
+	APIKeyWOVersion       types.Int64                                           `tfsdk:"api_key_wo_version"`
+	CredentialProviderARN types.String                                          `tfsdk:"credential_provider_arn"`
+	Name                  types.String                                          `tfsdk:"name"`
+	Tags                  tftags.Map                                            `tfsdk:"tags"`
+	TagsAll               tftags.Map                                            `tfsdk:"tags_all"`
 }
 
 type secretModel struct {

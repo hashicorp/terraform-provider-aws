@@ -198,6 +198,7 @@ The following arguments are optional:
 
 * `build_id` - (Optional) ID of the started build.
 * `environment_variables_override` - (Optional) Environment variables to override for this build. See [`environment_variables_override` Block](#environment_variables_override-block) below.
+* `host_kernel_override` - (Optional) Overrides the host operating system kernel for this build. This controls the kernel of the underlying build host; it does not change the build environment operating system, which is determined by the project's image. Valid values: `LINUX_KERNEL_4` (Amazon Linux 2 host, kernel 4.x), `LINUX_KERNEL_6` (Amazon Linux 2023 host, kernel 6.x), `LINUX_KERNEL_LATEST`. Applies to the `LINUX_CONTAINER`, `ARM_CONTAINER`, `LINUX_EC2`, and `ARM_EC2` environment types.
 * `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_version` - (Optional) Version of the build input to be built. For GitHub, this can be a commit SHA, branch name, or tag name.
 * `timeout` - (Optional) Timeout in seconds for the build operation. Defaults to 1800 seconds (30 minutes).

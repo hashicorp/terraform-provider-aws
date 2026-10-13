@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_apigateway_usage_plan : Add `throttle` argument for `api_stages` block.
-```
