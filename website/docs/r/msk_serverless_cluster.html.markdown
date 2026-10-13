@@ -47,11 +47,11 @@ This resource supports the following arguments:
 
 * `sasl` - (Required) Details for client authentication using SASL. See below.
 
-### sasl Argument Reference
+### `sasl` Argument Reference
 
 * `iam` - (Required) Details for client authentication using IAM. See below.
 
-### iam Argument Reference
+### `iam` Argument Reference
 
 * `enabled` - (Required) Whether SASL/IAM authentication is enabled or not.
 

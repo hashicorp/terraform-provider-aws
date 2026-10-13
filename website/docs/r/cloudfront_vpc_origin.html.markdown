@@ -81,7 +81,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Cloudfront VPC origins using the `id`. For example:
+Using `terraform import`, import CloudFront VPC origins using the `id`. For example:
 
 ```console
 % terraform import aws_cloudfront_vpc_origin vo_JQEa410sssUFoY6wMkx69j

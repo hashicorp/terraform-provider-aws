@@ -37,7 +37,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `engine_version` - Version of the database engine for this DocumentDB cluster snapshot.
 * `kms_key_id` - If storage_encrypted is true, the AWS KMS key identifier for the encrypted DocumentDB cluster snapshot.
 * `port` - Port that the DocumentDB cluster was listening on at the time of the snapshot.
-* `source_db_cluster_snapshot_identifier` - The DocumentDB Cluster Snapshot Arn that the DocumentDB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `source_db_cluster_snapshot_identifier` - The DocumentDB Cluster Snapshot ARN that the DocumentDB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `storage_encrypted` - Specifies whether the DocumentDB cluster snapshot is encrypted.
 * `status` - The status of this DocumentDB Cluster Snapshot.
 * `vpc_id` - The VPC ID associated with the DocumentDB cluster snapshot.

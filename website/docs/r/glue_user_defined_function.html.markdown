@@ -54,7 +54,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id`- The id of the Glue User Defined Function.
+* `id`- The ID of the Glue User Defined Function.
 * `arn`- The ARN of the Glue User Defined Function.
 * `create_time`- The time at which the function was created.
 

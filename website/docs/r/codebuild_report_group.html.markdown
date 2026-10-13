@@ -114,7 +114,7 @@ resource "aws_codebuild_report_group" "example" {
 
 - `arn` (String) ARN of the CodeBuild report group.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Report Group using the CodeBuild Report Group arn. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Report Group using the CodeBuild Report Group ARN. For example:
 
 ```terraform
 import {
@@ -123,7 +123,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CodeBuild Report Group using the CodeBuild Report Group arn. For example:
+Using `terraform import`, import CodeBuild Report Group using the CodeBuild Report Group ARN. For example:
 
 ```console
 % terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name

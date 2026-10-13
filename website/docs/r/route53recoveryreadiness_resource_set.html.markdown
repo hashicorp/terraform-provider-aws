@@ -45,7 +45,7 @@ The following arguments are optional:
 
 * `domain_name` - (Optional) DNS Name that acts as the ingress point to a portion of application.
 * `hosted_zone_arn` - (Optional) Hosted Zone ARN that contains the DNS record with the provided name of target resource.
-* `record_set_id` - (Optional) Route53 record set id to uniquely identify a record given a `domain_name` and a `record_type`.
+* `record_set_id` - (Optional) Route53 record set ID to uniquely identify a record given a `domain_name` and a `record_type`.
 * `record_type` - (Optional) Type of DNS Record of target resource.
 * `target_resource` - (Optional) Target resource the R53 record specified with the above params points to.
 

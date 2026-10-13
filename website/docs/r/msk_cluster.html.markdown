@@ -243,10 +243,10 @@ This resource supports the following arguments:
 
 ### vpc_connectivity client_authentication Argument Reference
 
-* `sasl` - (Optional) SASL authentication type details for VPC connectivity. See [vpc_connectivity client_authentication sasl Argument Reference](#vpc_connectivity-client_authentication-sasl-argument-reference) below.
+* `sasl` - (Optional) SASL authentication type details for VPC connectivity. See [vpc_connectivity client_authentication `sasl` Argument Reference](#vpc_connectivity-client_authentication-sasl-argument-reference) below.
 * `tls` - (Optional) Enables TLS authentication for VPC connectivity.
 
-### vpc_connectivity client_authentication sasl Argument Reference
+### vpc_connectivity client_authentication `sasl` Argument Reference
 
 * `iam` - (Optional) Enables SASL/IAM authentication for VPC connectivity.
 * `scram` - (Optional) Enables SASL/SCRAM authentication for VPC connectivity.
@@ -267,16 +267,16 @@ This resource supports the following arguments:
 
 ### client_authentication Argument Reference
 
-* `sasl` - (Optional) Configuration block for specifying SASL client authentication. See [client_authentication sasl Argument Reference](#client_authentication-sasl-argument-reference) below.
-* `tls` - (Optional) Configuration block for specifying TLS client authentication. See [client_authentication tls Argument Reference](#client_authentication-tls-argument-reference) below.
+* `sasl` - (Optional) Configuration block for specifying SASL client authentication. See [client_authentication `sasl` Argument Reference](#client_authentication-sasl-argument-reference) below.
+* `tls` - (Optional) Configuration block for specifying TLS client authentication. See [client_authentication `tls` Argument Reference](#client_authentication-tls-argument-reference) below.
 * `unauthenticated` - (Optional) Enables unauthenticated access.
 
-#### client_authentication sasl Argument Reference
+#### client_authentication `sasl` Argument Reference
 
 * `iam` - (Optional) Enables IAM client authentication. Defaults to `false`.
 * `scram` - (Optional) Enables SCRAM client authentication via AWS Secrets Manager. Defaults to `false`.
 
-#### client_authentication tls Argument Reference
+#### client_authentication `tls` Argument Reference
 
 * `certificate_authority_arns` - (Optional) List of ACM Certificate Authority ARNs.
 
@@ -318,14 +318,14 @@ This resource supports the following arguments:
 
 #### logging_info broker_logs Argument Reference
 
-* `cloudwatch_logs` - (Optional) Configuration block for Cloudwatch Logs settings. See [logging_info broker_logs cloudwatch_logs Argument Reference](#logging_info-broker_logs-cloudwatch_logs-argument-reference) below.
+* `cloudwatch_logs` - (Optional) Configuration block for CloudWatch Logs settings. See [logging_info broker_logs cloudwatch_logs Argument Reference](#logging_info-broker_logs-cloudwatch_logs-argument-reference) below.
 * `firehose` - (Optional) Configuration block for Kinesis Data Firehose settings. See [logging_info broker_logs firehose Argument Reference](#logging_info-broker_logs-firehose-argument-reference) below.
 * `s3` - (Optional) Configuration block for S3 settings. See [logging_info broker_logs s3 Argument Reference](#logging_info-broker_logs-s3-argument-reference) below.
 
 #### logging_info broker_logs cloudwatch_logs Argument Reference
 
-* `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to Cloudwatch Logs.
-* `log_group` - (Optional) Name of the Cloudwatch Log Group to deliver logs to.
+* `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to CloudWatch Logs.
+* `log_group` - (Optional) Name of the CloudWatch Log Group to deliver logs to.
 
 #### logging_info broker_logs firehose Argument Reference
 
