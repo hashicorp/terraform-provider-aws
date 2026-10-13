@@ -1315,17 +1315,17 @@ func TestAccEC2Instance_placementGroupUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_placementGroupUpdate(rName, `""`, "null"),
+				Config: testAccInstanceConfig_placementGroupUpdate(rName, `""`, "2"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, t, resourceName, &v4),
 					testAccCheckInstanceNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
-					resource.TestCheckResourceAttr(resourceName, "placement_group_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+					resource.TestCheckResourceAttr(resourceName, "placement_partition_number", "2"),
 				),
 			},
 			{
@@ -8483,6 +8483,9 @@ resource "aws_instance" "test" {
   associate_public_ip_address = true
   placement_group             = %[2]s
   placement_partition_number  = %[3]s
+
+  # Not every step references the placement group, so keep it from being destroyed while still in use.
+  depends_on = [aws_placement_group.test]
 
   tags = {
     Name = %[1]q
