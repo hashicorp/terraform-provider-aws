@@ -180,7 +180,7 @@ The following arguments are optional:
 
 ### `video_black_settings` Block
 
-* `black_detect_threshold` - (Optional) Threshold below which MediaLive considers a pixel to be black, expressed as a decimal fraction of white. For example, `0.1` means 10% white (90% black).
+* `black_detect_threshold` - (Optional) Threshold below which MediaLive considers a pixel to be black, expressed as a decimal fraction of white. For example, `0.1` means 10% white (90% black). For the input to be considered black, every pixel in a frame must be below this threshold. The range is 0.0 to 1.0, with any number of decimal places.
 * `video_black_threshold_msec` - (Optional) Amount of time, in milliseconds, that the active input must be black before automatic input failover occurs.
 
 ### `input_settings` Block
@@ -217,7 +217,7 @@ The following arguments are optional:
 ### `audio_language_selection` Block
 
 * `language_code` - (Required) Three-letter language code from within an audio source.
-* `language_selection_policy` - (Optional) How to handle a change in the language of the audio stream after it is selected. When set to `strict`, the transport stream demux strictly identifies audio streams by their language descriptor. When set to `loose`, the demux chooses another audio stream in the program with the same stream type on a PMT update if it cannot find one with the same language.
+* `language_selection_policy` - (Optional) How to handle a change in the language of the audio stream after it is selected. When set to `strict`, the transport stream demux strictly identifies audio streams by their language descriptor. If a PMT update occurs such that an audio stream matching the initially selected language is no longer present, then mute is encoded until the language returns. When set to `loose`, the demux chooses another audio stream in the program with the same stream type on a PMT update if it cannot find one with the same language.
 
 ### `audio_pid_selection` Block
 
@@ -225,12 +225,12 @@ The following arguments are optional:
 
 ### `audio_track_selection` Block
 
-* `dolby_e_decode` - (Optional) Decoding options for Dolby E streams. See [`dolby_e_decode` Block](#dolby_e_decode-block) for details.
-* `tracks` - (Required) One or more audio tracks from within a source. See [`tracks` Block](#tracks-block) for details.
+* `dolby_e_decode` - (Optional) Decoding options for Dolby E streams. These should be Dolby E frames carried in PCM streams tagged with SMPTE-337. See [`dolby_e_decode` Block](#dolby_e_decode-block) for details.
+* `tracks` - (Required) One or more unique audio tracks from within a source. See [`tracks` Block](#tracks-block) for details.
 
 ### `dolby_e_decode` Block
 
-* `program_selection` - (Required) Program ID of the Dolby E program to extract from the specified track.
+* `program_selection` - (Required) Program ID of the Dolby E program to extract from the specified track. Applies only to Dolby E. One program is extracted per audio selector. To select multiple programs, create multiple selectors with the same track and different program numbers. `All channels` ignores the program IDs and includes all the channels in this selector; useful if metadata is known to be incorrect.
 
 ### `tracks` Block
 
@@ -254,40 +254,40 @@ The following arguments are optional:
 
 ### `ancillary_source_settings` Block
 
-* `source_ancillary_channel_number` - (Optional) Captions channel, from 1 to 4, to extract from the ancillary captions.
+* `source_ancillary_channel_number` - (Optional) Captions channel, from 1 to 4, to extract from the ancillary captions. Complete this field if you plan to convert the ancillary captions to another format. Leave blank if you plan to choose Embedded as the captions destination in the output, because MediaLive ignores the field.
 
 ### `dvb_sub_source_settings` Block
 
 * `ocr_language` - (Optional) Language to consider when translating the image-based source to text, for a referencing WebVTT caption description.
-* `pid` - (Optional) PID for the source content when using DVB-Sub with Burn-In or SMPTE-TT.
+* `pid` - (Optional) PID for the source content when using DVB-Sub with Burn-In or SMPTE-TT. Unused for DVB-Sub passthrough. All DVB-Sub content is passed through, regardless of selectors.
 
 ### `embedded_source_settings` Block
 
-* `convert_608_to_708` - (Optional) When set to `upconvert`, 608 data is both passed through and translated into 708.
+* `convert_608_to_708` - (Optional) When set to `upconvert`, 608 data is both passed through via the "608 compatibility bytes" fields of the 708 wrapper and translated into 708. 708 data present in the source content is discarded.
 * `scte20_detection` - (Optional) Set to `auto` to handle streams with intermittent or non-aligned SCTE-20 and Embedded captions.
-* `source_608_channel_number` - (Optional) 608/708 channel number within the video track from which to extract captions.
+* `source_608_channel_number` - (Optional) 608/708 channel number within the video track from which to extract captions. Unused for passthrough.
 
 ### `scte20_source_settings` Block
 
-* `convert_608_to_708` - (Optional) When set to `upconvert`, 608 data is both passed through and translated into 708.
-* `source_608_channel_number` - (Optional) 608/708 channel number within the video track from which to extract captions.
+* `convert_608_to_708` - (Optional) When set to `upconvert`, 608 data is both passed through via the "608 compatibility bytes" fields of the 708 wrapper and translated into 708. 708 data present in the source content is discarded.
+* `source_608_channel_number` - (Optional) 608/708 channel number within the video track from which to extract captions. Unused for passthrough.
 
 ### `scte27_source_settings` Block
 
 * `ocr_language` - (Optional) Language to consider when translating the image-based source to text, for a referencing WebVTT caption description.
-* `pid` - (Optional) PID field used with the caption selector `language_code` field. Specify the PID to extract captions from that PID.
+* `pid` - (Optional) PID field used with the caption selector `language_code` field as follows. Specify PID and language: extracts captions from that PID; the language is informational. Specify PID and omit language: extracts the specified PID. Omit PID and specify language: extracts the specified language, whichever PID that happens to be. Omit PID and omit language: valid only if the source is DVB-Sub that is being passed through; all languages are passed through.
 
 ### `teletext_source_settings` Block
 
 * `output_rectangle` - (Optional) Region where TTML style captions are displayed. See [`output_rectangle` Block](#output_rectangle-block) for details.
-* `page_number` - (Optional) Teletext page number within the data stream from which to extract captions. Range of 0x100 (256) to 0x8FF (2303), specified as a hexadecimal string with no `0x` prefix.
+* `page_number` - (Optional) Teletext page number within the data stream from which to extract captions. Range of 0x100 (256) to 0x8FF (2303), specified as a hexadecimal string with no `0x` prefix. Unused for passthrough.
 
 ### `output_rectangle` Block
 
-* `height` - (Required) Height of the rectangle as a percentage of the underlying frame height.
-* `left_offset` - (Required) Position of the left edge of the rectangle as a percentage of the underlying frame width, relative to the left edge of the frame.
-* `top_offset` - (Required) Position of the top edge of the rectangle as a percentage of the underlying frame height, relative to the top edge of the frame.
-* `width` - (Required) Width of the rectangle as a percentage of the underlying frame width.
+* `height` - (Required) Height of the rectangle as a percentage of the underlying frame height. The `top_offset` and rectangle height must add up to 100% or less. This field corresponds to `tts:extent` - Y in the TTML standard.
+* `left_offset` - (Required) Position of the left edge of the rectangle as a percentage of the underlying frame width, relative to the left edge of the frame. Applies only if you plan to convert these source captions to EBU-TT-D or TTML in an output. You can define a display rectangle smaller than the underlying video frame; if you specify a value for one of the offset or dimension fields, you must specify a value for all of them. This field corresponds to `tts:origin` - X in the TTML standard.
+* `top_offset` - (Required) Position of the top edge of the rectangle as a percentage of the underlying frame height, relative to the top edge of the frame. This field corresponds to `tts:origin` - Y in the TTML standard.
+* `width` - (Required) Width of the rectangle as a percentage of the underlying frame width. The `left_offset` and rectangle width must add up to 100% or less. This field corresponds to `tts:extent` - X in the TTML standard.
 
 ### `network_input_settings` Block
 
@@ -399,7 +399,7 @@ The following arguments are optional:
 * `bitstream_mode` - (Optional) Bitstream mode (bsmod) for the emitted AC-3 stream.
 * `coding_mode` - (Optional) Dolby Digital coding mode.
 * `dialnorm` - (Optional) Sets the dialnorm of the output.
-* `drc_profile` - (Optional) When set to `filmStandard`, adds dynamic range compression signaling to the output bitstream.
+* `drc_profile` - (Optional) When set to `filmStandard`, adds dynamic range compression signaling to the output bitstream as defined in the Dolby Digital specification.
 * `lfe_filter` - (Optional) When set to `enabled`, applies a 120Hz lowpass filter to the LFE channel prior to encoding.
 * `metadata_control` - (Optional) Metadata control.
 
@@ -1008,11 +1008,11 @@ The following arguments are optional:
 ### `caption_descriptions` Block
 
 * `accessibility` - (Optional) Whether the caption track implements accessibility features such as written descriptions of spoken dialog, music, and sounds.
-* `caption_selector_name` - (Required) Input caption selector to use as a caption source when generating output captions.
+* `caption_selector_name` - (Required) Input caption selector to use as a caption source when generating output captions. Must match a caption selector name.
 * `destination_settings` - (Optional) Additional settings for the captions destination that depend on the destination type. See [`destination_settings` Block](#destination_settings-block) for details.
 * `language_code` - (Optional) ISO 639-2 three-digit code.
-* `language_description` - (Optional) Human-readable information to indicate the captions available for players.
-* `name` - (Required) Name of the caption description. Must be unique within an event.
+* `language_description` - (Optional) Human-readable information to indicate the captions available for players. For example, English or Spanish.
+* `name` - (Required) Name of the caption description. Used to associate a caption description with an output. Must be unique within an event.
 
 ### `destination_settings` Block
 
@@ -1032,23 +1032,25 @@ The following arguments are optional:
 
 ### `burn_in_destination_settings` Block
 
-* `alignment` - (Optional) Justification of the caption text. When no explicit `x_position` or `y_position` is provided, `centered` places the captions at the bottom center of the output and `left` aligns captions to the bottom left.
+~> **Note:** All burn-in and DVB-Sub font settings must match.
+
+* `alignment` - (Optional) Justification of the caption text. When no explicit `x_position` or `y_position` is provided, `centered` places the captions at the bottom center of the output and `left` aligns captions to the bottom left. If `x_position` and `y_position` are given with the alignment parameter, the font is justified (left or centered) relative to those coordinates. Selecting `smart` justification left-justifies live subtitles and center-justifies pre-recorded subtitles.
 * `background_color` - (Optional) Color of the rectangle behind the captions.
-* `background_opacity` - (Optional) Opacity of the background rectangle. 255 is opaque; 0 is transparent.
-* `font` - (Optional) External font file used for caption burn-in. See [`font` Block](#font-block) for details.
-* `font_color` - (Optional) Color of the burned-in captions.
+* `background_opacity` - (Optional) Opacity of the background rectangle. 255 is opaque; 0 is transparent. Leaving this parameter out is equivalent to setting it to 0 (transparent).
+* `font` - (Optional) External font file used for caption burn-in. File extension must be `ttf` or `tte`. Although you can select output fonts for many different types of input captions, embedded, STL, and teletext sources use a strict grid system; using external fonts with these caption sources could cause unexpected display of proportional fonts. See [`font` Block](#font-block) for details.
+* `font_color` - (Optional) Color of the burned-in captions. This option is not valid for source captions that are STL, 608/embedded, or teletext. These source settings are already pre-defined by the caption stream.
 * `font_opacity` - (Optional) Opacity of the burned-in captions. 255 is opaque; 0 is transparent.
-* `font_resolution` - (Optional) Font resolution in DPI (dots per inch).
+* `font_resolution` - (Optional) Font resolution in DPI (dots per inch). Default is 96 dpi.
 * `font_size` - (Optional) When set to `auto`, font size scales depending on the size of the output. A positive integer sets the exact font size in points.
-* `outline_color` - (Required) Font outline color.
-* `outline_size` - (Optional) Font outline size in pixels.
+* `outline_color` - (Required) Font outline color. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream.
+* `outline_size` - (Optional) Font outline size in pixels. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream.
 * `shadow_color` - (Optional) Color of the shadow cast by the captions.
-* `shadow_opacity` - (Optional) Opacity of the shadow. 255 is opaque; 0 is transparent.
-* `shadow_x_offset` - (Optional) Horizontal offset, in pixels, of the shadow relative to the captions.
-* `shadow_y_offset` - (Optional) Vertical offset, in pixels, of the shadow relative to the captions.
-* `teletext_grid_control` - (Required) Whether a fixed grid size is used to generate the output subtitles bitmap.
-* `x_position` - (Optional) Horizontal position, in pixels, of the caption relative to the left side of the output.
-* `y_position` - (Optional) Vertical position, in pixels, of the caption relative to the top of the output.
+* `shadow_opacity` - (Optional) Opacity of the shadow. 255 is opaque; 0 is transparent. Leaving this parameter out is equivalent to setting it to 0 (transparent).
+* `shadow_x_offset` - (Optional) Horizontal offset, in pixels, of the shadow relative to the captions. A value of -2 results in a shadow offset 2 pixels to the left.
+* `shadow_y_offset` - (Optional) Vertical offset, in pixels, of the shadow relative to the captions. A value of -2 results in a shadow offset 2 pixels above the text.
+* `teletext_grid_control` - (Required) Whether a fixed grid size is used to generate the output subtitles bitmap. Only applicable for Teletext inputs and DVB-Sub/Burn-in outputs.
+* `x_position` - (Optional) Horizontal position, in pixels, of the caption relative to the left side of the output. A value of 10 results in the captions starting 10 pixels from the left of the output. If no explicit `x_position` is provided, the horizontal caption position is determined by the alignment parameter.
+* `y_position` - (Optional) Vertical position, in pixels, of the caption relative to the top of the output. A value of 10 results in the captions starting 10 pixels from the top of the output. If no explicit `y_position` is provided, the caption is positioned towards the bottom of the output.
 
 ### `font` Block
 
@@ -1058,47 +1060,49 @@ The following arguments are optional:
 
 ### `dvb_sub_destination_settings` Block
 
-* `alignment` - (Optional) Justification of the caption text. When no explicit `x_position` or `y_position` is provided, `centered` places the captions at the bottom center of the output and `left` aligns captions to the bottom left.
+~> **Note:** All burn-in and DVB-Sub font settings must match.
+
+* `alignment` - (Optional) Justification of the caption text. When no explicit `x_position` or `y_position` is provided, `centered` places the captions at the bottom center of the output and `left` aligns captions to the bottom left. If `x_position` and `y_position` are given with the alignment parameter, the font is justified (left or centered) relative to those coordinates. Selecting `smart` justification left-justifies live subtitles and center-justifies pre-recorded subtitles. This option is not valid for source captions that are STL or 608/embedded. These source settings are already pre-defined by the caption stream.
 * `background_color` - (Optional) Color of the rectangle behind the captions.
-* `background_opacity` - (Optional) Opacity of the background rectangle. 255 is opaque; 0 is transparent.
-* `font` - (Optional) External font file used for caption burn-in. See [`font` Block](#font-block) for details.
-* `font_color` - (Optional) Color of the burned-in captions.
+* `background_opacity` - (Optional) Opacity of the background rectangle. 255 is opaque; 0 is transparent. Leaving this parameter blank is equivalent to setting it to 0 (transparent).
+* `font` - (Optional) External font file used for caption burn-in. File extension must be `ttf` or `tte`. Although you can select output fonts for many different types of input captions, embedded, STL, and teletext sources use a strict grid system; using external fonts with these caption sources could cause unexpected display of proportional fonts. See [`font` Block](#font-block) for details.
+* `font_color` - (Optional) Color of the burned-in captions. This option is not valid for source captions that are STL, 608/embedded, or teletext. These source settings are already pre-defined by the caption stream.
 * `font_opacity` - (Optional) Opacity of the burned-in captions. 255 is opaque; 0 is transparent.
-* `font_resolution` - (Optional) Font resolution in DPI (dots per inch).
+* `font_resolution` - (Optional) Font resolution in DPI (dots per inch). Default is 96 dpi.
 * `font_size` - (Optional) When set to `auto`, font size scales depending on the size of the output. A positive integer sets the exact font size in points.
-* `outline_color` - (Optional) Font outline color.
-* `outline_size` - (Optional) Font outline size in pixels.
+* `outline_color` - (Optional) Font outline color. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream.
+* `outline_size` - (Optional) Font outline size in pixels. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream.
 * `shadow_color` - (Optional) Color of the shadow cast by the captions.
-* `shadow_opacity` - (Optional) Opacity of the shadow. 255 is opaque; 0 is transparent.
-* `shadow_x_offset` - (Optional) Horizontal offset, in pixels, of the shadow relative to the captions.
-* `shadow_y_offset` - (Optional) Vertical offset, in pixels, of the shadow relative to the captions.
-* `teletext_grid_control` - (Optional) Whether a fixed grid size is used to generate the output subtitles bitmap.
-* `x_position` - (Optional) Horizontal position, in pixels, of the caption relative to the left side of the output.
-* `y_position` - (Optional) Vertical position, in pixels, of the caption relative to the top of the output.
+* `shadow_opacity` - (Optional) Opacity of the shadow. 255 is opaque; 0 is transparent. Leaving this parameter blank is equivalent to setting it to 0 (transparent).
+* `shadow_x_offset` - (Optional) Horizontal offset, in pixels, of the shadow relative to the captions. A value of -2 results in a shadow offset 2 pixels to the left.
+* `shadow_y_offset` - (Optional) Vertical offset, in pixels, of the shadow relative to the captions. A value of -2 results in a shadow offset 2 pixels above the text.
+* `teletext_grid_control` - (Optional) Whether a fixed grid size is used to generate the output subtitles bitmap. Only applicable for Teletext inputs and DVB-Sub/Burn-in outputs.
+* `x_position` - (Optional) Horizontal position, in pixels, of the caption relative to the left side of the output. A value of 10 results in the captions starting 10 pixels from the left of the output. If no explicit `x_position` is provided, the horizontal caption position is determined by the alignment parameter. This option is not valid for source captions that are STL, 608/embedded, or teletext. These source settings are already pre-defined by the caption stream.
+* `y_position` - (Optional) Vertical position, in pixels, of the caption relative to the top of the output. A value of 10 results in the captions starting 10 pixels from the top of the output. If no explicit `y_position` is provided, the caption is positioned towards the bottom of the output. This option is not valid for source captions that are STL, 608/embedded, or teletext. These source settings are already pre-defined by the caption stream.
 
 ### `ebu_tt_d_destination_settings` Block
 
 * `copyright_holder` - (Optional) Name of the copyright holder to include in the copyright tag in the captions metadata.
-* `fill_line_gap` - (Optional) How to handle the gap between the lines in multi-line captions.
-* `font_family` - (Optional) Font family to include in the font data attached to the EBU-TT captions.
-* `style_control` - (Optional) Style information to include in the font data that is attached to the EBU-TT captions.
+* `fill_line_gap` - (Optional) How to handle the gap between the lines in multi-line captions. `enabled` fills the gap with the captions background color as specified in the input captions; `disabled` leaves the gap unfilled.
+* `font_family` - (Optional) Font family to include in the font data attached to the EBU-TT captions. Valid only if `style_control` is set to `include`. If you leave this field empty, the font family is set to monospaced. You specify only the font family; all other style information (color, bold, position, and so on) is copied from the input captions, and the size is always set to 100% to allow the downstream player to choose the size. Enter a comma-separated list of font names in order of preference, a generic font family such as serif, or default to let the downstream player choose the font.
+* `style_control` - (Optional) Style information to include in the font data that is attached to the EBU-TT captions. `include` takes the style information from the source captions and includes it in the font data, valid only if the source captions are Embedded or Teletext. `exclude` sets the font family to monospaced and does not include any other style information.
 
 ### `ttml_destination_settings` Block
 
-* `style_control` - (Required) Whether to include style information when writing the TTML captions. Leave the default value.
+* `style_control` - (Required) Whether to include style information when writing the TTML captions. This field is not currently supported and does not affect the output styling. Leave the default value.
 
 ### `webvtt_destination_settings` Block
 
-* `style_control` - (Required) Whether the color and position of the source captions is passed through to the WebVTT output captions.
+* `style_control` - (Required) Whether the color and position of the source captions is passed through to the WebVTT output captions. `PASSTHROUGH` is valid only if the source captions are EMBEDDED or TELETEXT. `NO_STYLE_DATA` does not pass through the style, and the output captions do not contain any font styling information.
 
 ### `global_configuration` Block
 
 * `initial_audio_gain` - (Optional) Value to set the initial audio gain for the live event.
-* `input_end_action` - (Optional) Action to take when the current input completes. When `switchAndLoopInputs` is configured, the encoder restarts at the beginning of the first input.
+* `input_end_action` - (Optional) Action to take when the current input completes. When `switchAndLoopInputs` is configured, the encoder restarts at the beginning of the first input. When `none` is configured, the encoder transcodes black, a solid color, or a user-specified slate image per the input loss behavior configuration until the next input switch occurs, which is controlled through the Channel Schedule API.
 * `input_loss_behavior` - (Optional) Settings for system actions when input is lost. See [`input_loss_behavior` Block](#input_loss_behavior-block) for details.
-* `output_locking_mode` - (Optional) How MediaLive pipelines are synchronized.
-* `output_timing_source` - (Optional) Whether the rate of frames emitted by the live encoder is paced by its system clock or locked to the clock of the input source.
-* `support_low_framerate_inputs` - (Optional) Adjusts the video input buffer for streams with very low video framerates.
+* `output_locking_mode` - (Optional) How MediaLive pipelines are synchronized. `PIPELINE_LOCKING` attempts to synchronize the output of each pipeline to the other. `EPOCH_LOCKING` attempts to synchronize the output of each pipeline to the Unix epoch.
+* `output_timing_source` - (Optional) Whether the rate of frames emitted by the live encoder is paced by its system clock, which optionally may be locked to another source via NTP, or locked to the clock of the input source.
+* `support_low_framerate_inputs` - (Optional) Adjusts the video input buffer for streams with very low video framerates. This is commonly set to enabled for music channels with less than one video frame per second.
 
 ### `input_loss_behavior` Block
 
