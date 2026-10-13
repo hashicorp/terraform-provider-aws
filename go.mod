@@ -279,7 +279,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.52.4
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.29.4
-	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.44.3
+	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.44.4
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.66.3
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.85.2
