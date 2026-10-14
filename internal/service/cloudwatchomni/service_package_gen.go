@@ -28,6 +28,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAccessProfileResource,
+			TypeName: "aws_cloudwatchomni_access_profile",
+			Name:     "Access Profile",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("profile_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      accessProfileImportID{},
+			},
+		},
+		{
 			Factory:  newDomainResource,
 			TypeName: "aws_cloudwatchomni_domain",
 			Name:     "Domain",
@@ -52,6 +66,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newAccessProfileResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_access_profile",
+			Name:     "Access Profile",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("profile_id", true),
+			}),
+		},
 		{
 			Factory:  newDomainResourceAsListResource,
 			TypeName: "aws_cloudwatchomni_domain",

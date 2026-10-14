@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Tests are serialized because an account can have at most one CloudWatch Omni domain.
@@ -16,6 +17,16 @@ func TestAccCloudWatchOmni_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"AccessProfile": {
+			acctest.CtBasic:        testAccAccessProfile_basic,
+			acctest.CtDisappears:   testAccAccessProfile_disappears,
+			acctest.CtName:         testAccAccessProfile_name,
+			names.AttrDescription:  testAccAccessProfile_description,
+			"Identity":             testAccCloudWatchOmniAccessProfile_identitySerial,
+			"List_basic":           testAccAccessProfile_List_basic,
+			"List_includeResource": testAccAccessProfile_List_includeResource,
+			"List_regionOverride":  testAccAccessProfile_List_regionOverride,
+		},
 		"Domain": {
 			acctest.CtBasic:        testAccDomain_basic,
 			acctest.CtDisappears:   testAccDomain_disappears,
