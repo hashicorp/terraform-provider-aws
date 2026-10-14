@@ -57,3 +57,4 @@ awssdk.patch
 
 # go-vcr recordings
 /testdata
+sdkmap.json
