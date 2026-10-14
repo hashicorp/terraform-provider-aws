@@ -39,4 +39,3 @@ This data source exports the following attributes in addition to the arguments a
 * `client_vpc_ip_address` - Client VPC IP address.
 * `endpoints` - Set of endpoints for accessing the broker. This does not include ports.
 * `node_arn` - ARN of the node.
-
