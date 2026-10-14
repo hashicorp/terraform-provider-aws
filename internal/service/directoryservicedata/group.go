@@ -24,6 +24,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -69,16 +70,12 @@ func (r *groupResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"group_scope": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Validators: []validator.String{
-					stringvalidator.OneOf("DomainLocal", "Global", "Universal", "BuiltinLocal"),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.GroupScope](),
 			},
 			"group_type": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Validators: []validator.String{
-					stringvalidator.OneOf("Distribution", "Security"),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.GroupType](),
 			},
 			"sam_account_name": schema.StringAttribute{
 				Required: true,
@@ -197,7 +194,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			inputs = append(inputs, directoryservicedata.UpdateGroupInput{
 				DirectoryId:    plan.DirectoryID.ValueStringPointer(),
 				SAMAccountName: plan.SAMAccountName.ValueStringPointer(),
-				GroupScope:     awstypes.GroupScope(plan.GroupScope.ValueString()),
+				GroupScope:     awstypes.GroupScope(plan.GroupScope.ValueEnum()),
 				UpdateType:     awstypes.UpdateTypeReplace,
 			})
 		}
@@ -209,7 +206,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			inputs = append(inputs, directoryservicedata.UpdateGroupInput{
 				DirectoryId:    plan.DirectoryID.ValueStringPointer(),
 				SAMAccountName: plan.SAMAccountName.ValueStringPointer(),
-				GroupType:      awstypes.GroupType(plan.GroupType.ValueString()),
+				GroupType:      awstypes.GroupType(plan.GroupType.ValueEnum()),
 				UpdateType:     awstypes.UpdateTypeReplace,
 			})
 		}
@@ -284,12 +281,12 @@ func findGroupByTwoPartKey(ctx context.Context, conn *directoryservicedata.Clien
 
 type groupResourceModel struct {
 	framework.WithRegionModel
-	DirectoryID       types.String `tfsdk:"directory_id"`
-	DistinguishedName types.String `tfsdk:"distinguished_name"`
-	GroupScope        types.String `tfsdk:"group_scope"`
-	GroupType         types.String `tfsdk:"group_type"`
-	SAMAccountName    types.String `tfsdk:"sam_account_name"`
-	SID               types.String `tfsdk:"sid"`
+	DirectoryID       types.String                            `tfsdk:"directory_id"`
+	DistinguishedName types.String                            `tfsdk:"distinguished_name"`
+	GroupScope        fwtypes.StringEnum[awstypes.GroupScope] `tfsdk:"group_scope"`
+	GroupType         fwtypes.StringEnum[awstypes.GroupType]  `tfsdk:"group_type"`
+	SAMAccountName    types.String                            `tfsdk:"sam_account_name"`
+	SID               types.String                            `tfsdk:"sid"`
 }
 
 var (
