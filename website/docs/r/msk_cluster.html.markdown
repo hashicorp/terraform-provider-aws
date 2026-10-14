@@ -239,14 +239,14 @@ This resource supports the following arguments:
 
 ### `vpc_connectivity` Block
 
-* `client_authentication` - (Optional) Client authentication information for VPC connectivity. See [`broker_node_group_info.connectivity_info.vpc_connectivity.client_authentication` Block](#broker_node_group_infoconnectivity_infovpc_connectivityclient_authentication-block) below.
+* `client_authentication` - (Optional) Client authentication information for VPC connectivity. See [`vpc_connectivity.client_authentication` Block](#vpc_connectivityclient_authentication-block) below.
 
-### `broker_node_group_info.connectivity_info.vpc_connectivity.client_authentication` Block
+### `vpc_connectivity.client_authentication` Block
 
-* `sasl` - (Optional) SASL authentication type details for VPC connectivity. See [`broker_node_group_info.connectivity_info.vpc_connectivity.client_authentication.sasl` Block](#broker_node_group_infoconnectivity_infovpc_connectivityclient_authenticationsasl-block) below.
+* `sasl` - (Optional) SASL authentication type details for VPC connectivity. See [`vpc_connectivity.client_authentication.sasl` Block](#vpc_connectivityclient_authenticationsasl-block) below.
 * `tls` - (Optional) Whether to enable TLS authentication for VPC connectivity.
 
-### `broker_node_group_info.connectivity_info.vpc_connectivity.client_authentication.sasl` Block
+### `vpc_connectivity.client_authentication.sasl` Block
 
 * `iam` - (Optional) Whether to enable SASL/IAM authentication for VPC connectivity.
 * `scram` - (Optional) Whether to enable SASL/SCRAM authentication for VPC connectivity.
