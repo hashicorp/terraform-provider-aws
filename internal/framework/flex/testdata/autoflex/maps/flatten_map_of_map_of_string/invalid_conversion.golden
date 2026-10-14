@@ -62,6 +62,6 @@
     "autoflex.source.size": 1,
     "autoflex.source.type": "map[string]string",
     "autoflex.target.path": "Field1[\"x\"]",
-    "autoflex.target.type": "map[string]github.com/hashicorp/terraform-plugin-framework/attr.Value"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int32Value]"
   }
 ]
