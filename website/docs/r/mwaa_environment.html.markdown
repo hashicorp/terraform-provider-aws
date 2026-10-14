@@ -158,47 +158,15 @@ This resource supports the following arguments:
 
 The `logging_configuration` configuration block supports the following arguments.
 
-* `dag_processing_logs` - (Optional) Log configuration options for processing DAGs. See [`dag_processing_logs` Block](#dag_processing_logs-block) for details. Disabled by default.
-* `scheduler_logs` - (Optional) Log configuration options for the schedulers. See [`scheduler_logs` Block](#scheduler_logs-block) for details. Disabled by default.
-* `task_logs` - (Optional) Log configuration options for DAG tasks. See [`task_logs` Block](#task_logs-block) for details. Enabled by default with `INFO` log level.
-* `webserver_logs` - (Optional) Log configuration options for the webservers. See [`webserver_logs` Block](#webserver_logs-block) for details. Disabled by default.
-* `worker_logs` - (Optional) Log configuration options for the workers. See [`worker_logs` Block](#worker_logs-block) for details. Disabled by default.
+* `dag_processing_logs` - (Optional) Log configuration options for processing DAGs. See [Module logging configuration blocks](#dag_processing_logs-scheduler_logs-task_logs-webserver_logs-and-worker_logs-block) for details. Disabled by default.
+* `scheduler_logs` - (Optional) Log configuration options for the schedulers. See [Module logging configuration blocks](#dag_processing_logs-scheduler_logs-task_logs-webserver_logs-and-worker_logs-block) for details. Disabled by default.
+* `task_logs` - (Optional) Log configuration options for DAG tasks. See [Module logging configuration blocks](#dag_processing_logs-scheduler_logs-task_logs-webserver_logs-and-worker_logs-block) for details. Enabled by default with `INFO` log level.
+* `webserver_logs` - (Optional) Log configuration options for the webservers. See [Module logging configuration blocks](#dag_processing_logs-scheduler_logs-task_logs-webserver_logs-and-worker_logs-block) for details. Disabled by default.
+* `worker_logs` - (Optional) Log configuration options for the workers. See [Module logging configuration blocks](#dag_processing_logs-scheduler_logs-task_logs-webserver_logs-and-worker_logs-block) for details. Disabled by default.
 
-### `dag_processing_logs` Block
+### `dag_processing_logs`, `scheduler_logs`, `task_logs`, `webserver_logs`, and `worker_logs` Block
 
-The `dag_processing_logs` configuration block supports the following arguments.
-
-* `cloud_watch_log_group_arn` - (Read-Only) ARN of the CloudWatch Logs log group where the logs are published.
-* `enabled` - (Optional) Whether to enable the collection of logs.
-* `log_level` - (Optional) Logging level. Valid values: `CRITICAL`, `ERROR`, `WARNING`, `INFO`, `DEBUG`. Will be `INFO` by default.
-
-### `scheduler_logs` Block
-
-The `scheduler_logs` configuration block supports the following arguments.
-
-* `cloud_watch_log_group_arn` - (Read-Only) ARN of the CloudWatch Logs log group where the logs are published.
-* `enabled` - (Optional) Whether to enable the collection of logs.
-* `log_level` - (Optional) Logging level. Valid values: `CRITICAL`, `ERROR`, `WARNING`, `INFO`, `DEBUG`. Will be `INFO` by default.
-
-### `task_logs` Block
-
-The `task_logs` configuration block supports the following arguments.
-
-* `cloud_watch_log_group_arn` - (Read-Only) ARN of the CloudWatch Logs log group where the logs are published.
-* `enabled` - (Optional) Whether to enable the collection of logs.
-* `log_level` - (Optional) Logging level. Valid values: `CRITICAL`, `ERROR`, `WARNING`, `INFO`, `DEBUG`. Will be `INFO` by default.
-
-### `webserver_logs` Block
-
-The `webserver_logs` configuration block supports the following arguments.
-
-* `cloud_watch_log_group_arn` - (Read-Only) ARN of the CloudWatch Logs log group where the logs are published.
-* `enabled` - (Optional) Whether to enable the collection of logs.
-* `log_level` - (Optional) Logging level. Valid values: `CRITICAL`, `ERROR`, `WARNING`, `INFO`, `DEBUG`. Will be `INFO` by default.
-
-### `worker_logs` Block
-
-The `worker_logs` configuration block supports the following arguments.
+Each module logging configuration block supports the following arguments.
 
 * `cloud_watch_log_group_arn` - (Read-Only) ARN of the CloudWatch Logs log group where the logs are published.
 * `enabled` - (Optional) Whether to enable the collection of logs.
