@@ -194,7 +194,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			inputs = append(inputs, directoryservicedata.UpdateGroupInput{
 				DirectoryId:    plan.DirectoryID.ValueStringPointer(),
 				SAMAccountName: plan.SAMAccountName.ValueStringPointer(),
-				GroupScope:     awstypes.GroupScope(plan.GroupScope.ValueEnum()),
+				GroupScope:     plan.GroupScope.ValueEnum(),
 				UpdateType:     awstypes.UpdateTypeReplace,
 			})
 		}
@@ -206,7 +206,7 @@ func (r *groupResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			inputs = append(inputs, directoryservicedata.UpdateGroupInput{
 				DirectoryId:    plan.DirectoryID.ValueStringPointer(),
 				SAMAccountName: plan.SAMAccountName.ValueStringPointer(),
-				GroupType:      awstypes.GroupType(plan.GroupType.ValueEnum()),
+				GroupType:      plan.GroupType.ValueEnum(),
 				UpdateType:     awstypes.UpdateTypeReplace,
 			})
 		}
