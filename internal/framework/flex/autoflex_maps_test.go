@@ -89,6 +89,10 @@ type tfMapOfListOfString struct {
 	Field1 fwtypes.MapValueOf[fwtypes.ListValueOf[types.String]] `tfsdk:"field1"`
 }
 
+type tfMapOfListOfInt32 struct {
+	Field1 fwtypes.MapValueOf[fwtypes.ListValueOf[types.Int32]] `tfsdk:"field1"`
+}
+
 type awsMapOfListOfString struct {
 	Field1 map[string][]string
 }
@@ -1339,6 +1343,60 @@ func TestFlattenMapOfInt32Pointer(t *testing.T) {
 			},
 			Target:        &tfMapOf[types.String]{},
 			ExpectedDiags: diagInvalidMapElementType(types.Int32Type, "x", types.StringType),
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{})
+}
+
+func TestFlattenMapOfListOfString(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"single value": {
+			Source: &awsMapOfListOfString{
+				Field1: map[string][]string{
+					"x": {"y", "z"},
+				},
+			},
+			Target: &tfMapOfListOfString{},
+			WantTarget: &tfMapOfListOfString{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.ListValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
+						types.StringValue("y"),
+						types.StringValue("z"),
+					}),
+				}),
+			},
+		},
+		"empty value": {
+			Source: &awsMapOfListOfString{
+				Field1: map[string][]string{},
+			},
+			Target: &tfMapOfListOfString{},
+			WantTarget: &tfMapOfListOfString{
+				Field1: fwtypes.NewMapValueOfEmpty[fwtypes.ListValueOf[types.String]](ctx),
+			},
+		},
+		"null value": {
+			Source: &awsMapOfListOfString{
+				Field1: nil,
+			},
+			Target: &tfMapOfListOfString{},
+			WantTarget: &tfMapOfListOfString{
+				Field1: fwtypes.NewMapValueOfNull[fwtypes.ListValueOf[types.String]](ctx),
+			},
+		},
+		"invalid conversion": {
+			Source: &awsMapOfListOfString{
+				Field1: map[string][]string{
+					"x": {"y"},
+				},
+			},
+			Target:        &tfMapOfListOfInt32{},
+			ExpectedDiags: diagInvalidMapElementType(fwtypes.ListOfStringType, "x", fwtypes.ListOfInt32Type),
 		},
 	}
 
