@@ -43,21 +43,21 @@ var (
 	paginatorRegexp = regexp.MustCompile(`^New([0-9A-Za-z]+)Paginator$`)
 )
 
-// plugin is the Terraform plugin library a resource is implemented with.
-type plugin string
+// pluginType is the Terraform plugin library a resource is implemented with.
+type pluginType string
 
 const (
-	pluginSDKv2 plugin = "SDKv2"
+	pluginTypeSDKv2 pluginType = "SDKv2"
 )
 
 // resource is a resource and the functions that implement it.
 type resource struct {
-	Service  string `json:"service"`
-	TypeName string `json:"type_name"`
-	Plugin   plugin `json:"plugin"`
-	// Function is the factory function annotated with the resource's annotation, e.g. @SDKResource.
-	Function string `json:"function"`
-	// Location is where Function is declared, as "<file>:<line>" relative to the repository root.
+	Service      string     `json:"service"`
+	ResourceType string     `json:"resource_type"`
+	PluginType   pluginType `json:"plugin_type"`
+	// Expr is the factory function annotated with the resource's annotation, e.g. @SDKResource.
+	Expr string `json:"expr"`
+	// Location is where Expr is declared, as "<file>:<line>" relative to the repository root.
 	Location string `json:"location"`
 
 	Create        *funcRef `json:"create,omitempty"`
@@ -320,18 +320,18 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 			}
 
 			r := resource{
-				Service:  pkg.name,
-				Plugin:   pluginSDKv2,
-				Function: fn.Name.Name,
-				Location: a.location(fn),
+				Service:    pkg.name,
+				PluginType: pluginTypeSDKv2,
+				Expr:       fn.Name.Name,
+				Location:   a.location(fn),
 			}
 			if lit := returnedResource(fn); lit != nil {
 				a.addFuncRefs(pkg, &r, lit, a.factoryVarTypes(pkg, fn))
 			} else {
-				log.Printf("%s: %s does not return a schema.Resource literal", r.Location, r.Function)
+				log.Printf("%s: %s does not return a schema.Resource literal", r.Location, r.Expr)
 			}
 			if !slices.ContainsFunc(r.funcRefs(), func(ref *funcRef) bool { return len(ref.SDKCalls) > 0 }) {
-				log.Printf("%s: no AWS SDK calls found for %s", r.Location, r.Function)
+				log.Printf("%s: no AWS SDK calls found for %s", r.Location, r.Expr)
 			}
 			if tagged {
 				// The tags interceptor lists and updates tags through the service package's ListTags and UpdateTags.
@@ -343,7 +343,7 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 
 			// A factory function can be registered under several type names.
 			for _, typeName := range typeNames {
-				r.TypeName = typeName
+				r.ResourceType = typeName
 				resources = append(resources, r)
 			}
 		}
