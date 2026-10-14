@@ -22,27 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findFunctionByName(ctx context.Context, conn *lambdaweb.Client, name string) (*lambdaweb.GetWebFunctionOutput, error) {
-	input := lambdaweb.GetWebFunctionInput{
-		FunctionName: aws.String(name),
-	}
-
-	out, err := conn.GetWebFunction(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{
-			LastError: err,
-		})
-	}
-	if err != nil {
-		return nil, smarterr.NewError(err)
-	}
-	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
-	}
-
-	return out, nil
-}
-
 func findEndpointByName(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
 	input := lambdaweb.GetWebFunctionEndpointInput{
 		FunctionName: aws.String(functionName),
@@ -121,20 +100,6 @@ func createdBefore(a, b *time.Time) bool {
 	return aws.ToTime(a).Before(aws.ToTime(b))
 }
 
-func statusFunction(conn *lambdaweb.Client, name string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		out, err := findFunctionByName(ctx, conn, name)
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", smarterr.NewError(err)
-		}
-
-		return out, string(out.State), nil
-	}
-}
-
 func statusEndpoint(conn *lambdaweb.Client, functionName, endpointName string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findEndpointByName(ctx, conn, functionName, endpointName)
@@ -189,67 +154,6 @@ func waitRevisionActive(ctx context.Context, conn *lambdaweb.Client, functionNam
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionRevisionOutput); ok {
-		if reason := aws.ToString(out.StateReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-func waitFunctionCreated(ctx context.Context, conn *lambdaweb.Client, name string, timeout time.Duration) (*lambdaweb.GetWebFunctionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.FunctionStatePending),
-		Target:                    enum.Slice(awstypes.FunctionStateActive),
-		Refresh:                   statusFunction(conn, name),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionOutput); ok {
-		if reason := aws.ToString(out.StateReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-func waitFunctionUpdated(ctx context.Context, conn *lambdaweb.Client, name string, timeout time.Duration) (*lambdaweb.GetWebFunctionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.FunctionStatePending),
-		Target:                    enum.Slice(awstypes.FunctionStateActive),
-		Refresh:                   statusFunction(conn, name),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionOutput); ok {
-		if reason := aws.ToString(out.StateReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-func waitFunctionDeleted(ctx context.Context, conn *lambdaweb.Client, name string, timeout time.Duration) (*lambdaweb.GetWebFunctionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.FunctionStateActive, awstypes.FunctionStateDeleting),
-		Target:  []string{},
-		Refresh: statusFunction(conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionOutput); ok {
 		if reason := aws.ToString(out.StateReason); reason != "" {
 			retry.SetLastError(err, errors.New(reason))
 		}

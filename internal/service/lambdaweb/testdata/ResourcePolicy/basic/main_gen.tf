@@ -1,6 +1,23 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_lambdaweb_resource_policy" "test" {
+  resource_arn = aws_lambdaweb_function.test.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowAccount"
+      Effect = "Allow"
+      Principal = {
+        AWS = data.aws_caller_identity.current.account_id
+      }
+      Action   = "lambda:InvokeWebFunction"
+      Resource = aws_lambdaweb_function.test.arn
+    }]
+  })
+}
+
 data "aws_partition" "current" {}
 
 data "aws_caller_identity" "current" {}
@@ -90,23 +107,6 @@ resource "aws_lambdaweb_function" "test" {
     endpoint_type = "HomeRegion"
     auth_type     = "ApplicationManaged"
   }
-}
-
-resource "aws_lambdaweb_resource_policy" "test" {
-  resource_arn = aws_lambdaweb_function.test.arn
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Sid    = "AllowAccount"
-      Effect = "Allow"
-      Principal = {
-        AWS = data.aws_caller_identity.current.account_id
-      }
-      Action   = "lambda:InvokeWebFunction"
-      Resource = aws_lambdaweb_function.test.arn
-    }]
-  })
 }
 
 variable "rName" {

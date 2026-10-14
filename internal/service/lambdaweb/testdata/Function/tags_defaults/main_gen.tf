@@ -7,6 +7,39 @@ provider "aws" {
   }
 }
 
+resource "aws_lambdaweb_function" "test" {
+  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
+
+  function_name = var.rName
+
+  revision_config {
+    build_config {
+      runtime_config {
+        runtime = "nodejs24.x"
+      }
+
+      code_config {
+        s3_object {
+          bucket = aws_s3_object.test.bucket
+          key    = aws_s3_object.test.key
+        }
+      }
+    }
+
+    service_config {
+      execution_role_arn = aws_iam_role.test.arn
+    }
+  }
+
+  endpoint_config {
+    endpoint_name = "default"
+    endpoint_type = "HomeRegion"
+    auth_type     = "ApplicationManaged"
+  }
+
+  tags = var.resource_tags
+}
+
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
@@ -63,39 +96,6 @@ resource "aws_iam_role" "test" {
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-resource "aws_lambdaweb_function" "test" {
-  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
-
-  function_name = var.rName
-
-  revision_config {
-    build_config {
-      runtime_config {
-        runtime = "nodejs24.x"
-      }
-
-      code_config {
-        s3_object {
-          bucket = aws_s3_object.test.bucket
-          key    = aws_s3_object.test.key
-        }
-      }
-    }
-
-    service_config {
-      execution_role_arn = aws_iam_role.test.arn
-    }
-  }
-
-  endpoint_config {
-    endpoint_name = "default"
-    endpoint_type = "HomeRegion"
-    auth_type     = "ApplicationManaged"
-  }
-
-  tags = var.resource_tags
 }
 
 variable "rName" {

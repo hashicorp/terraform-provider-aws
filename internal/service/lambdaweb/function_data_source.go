@@ -60,7 +60,7 @@ func (d *functionDataSource) Read(ctx context.Context, request datasource.ReadRe
 	conn := d.Meta().LambdaWebClient(ctx)
 	name := data.FunctionName.ValueString()
 
-	out, err := findFunctionByName(ctx, conn, name)
+	out, err := findWebFunctionByName(ctx, conn, name)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return

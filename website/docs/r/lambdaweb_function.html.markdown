@@ -183,8 +183,8 @@ The following arguments are optional:
 * `endpoint_name` - (Required) Name of the endpoint (typically `default`), up to 64 characters. Changing this forces a new resource to be created.
 * `endpoint_type` - (Required) Endpoint type. Valid values: `HomeRegion`, `MultiRegion`, `PerRegion`. Changing this forces a new resource to be created.
 * `regions` - (Optional) List of Regions for the endpoint. The maximum number of Regions per endpoint is a service quota, enforced by the API. Required for `PerRegion` endpoints, which need at least 2 distinct Regions: the home Region is added automatically, so list at least one other Region. Changing this forces a new resource to be created.
-* `scaling_config` - (Optional) Scaling limits for the endpoint, an object assigned with `=`. When unset, the service applies account-level defaults and reports no value. [See below](#scaling_config-block).
-* `throttle_config` - (Optional) Request throttling for the endpoint, an object assigned with `=`. When unset, the service applies account-level defaults and reports no value. [See below](#throttle_config-block).
+* `scaling_config` - (Optional) Scaling limits for the endpoint. When unset, the service applies account-level defaults and reports no value. [See below](#scaling_config-block).
+* `throttle_config` - (Optional) Request throttling for the endpoint. When unset, the service applies account-level defaults and reports no value. [See below](#throttle_config-block).
 
 #### `scaling_config` Block
 
@@ -202,8 +202,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `domain_name` - Domain name of the endpoint described by `endpoint_config`.
 * `latest_revision_id` - ID of the most recently published revision. Reference this from `aws_lambdaweb_endpoint` `revision_weights` to route traffic.
 * `regional_domain_names` - Map of Region to domain name. Populated for `PerRegion` endpoints, which serve an independent domain per Region; `MultiRegion` endpoints route through the single global `domain_name`.
-* `state` - Current state of the function.
-* `state_reason` - Reason for the current state, useful when the function is `Pending` or `Failed`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

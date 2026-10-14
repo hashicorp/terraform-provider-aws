@@ -581,11 +581,3 @@ type revisionWeightModel struct {
 	RevisionID types.String `tfsdk:"revision_id"`
 	Weight     types.Int64  `tfsdk:"weight"`
 }
-
-type scalingConfigModel struct {
-	MaxEnvironments types.Int64 `tfsdk:"max_environments"`
-}
-
-type throttleConfigModel struct {
-	RateLimit types.Int64 `tfsdk:"rate_limit"`
-}

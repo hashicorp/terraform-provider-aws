@@ -5,12 +5,11 @@ package lambdaweb
 
 // Exports for use in tests only.
 var (
-	ResourceFunction = newFunctionResource
-	ResourceEndpoint = newEndpointResource
+	ResourceEndpoint       = newEndpointResource
+	ResourceFunction       = newFunctionResource
+	ResourceResourcePolicy = newResourcePolicyResource
 
-	FindFunctionByName = findFunctionByName
-	FindEndpointByName = findEndpointByName
-
-	ResourceResourcePolicy  = newResourcePolicyResource
+	FindEndpointByName      = findEndpointByName
 	FindResourcePolicyByARN = findResourcePolicyByARN
+	FindWebFunctionByName   = findWebFunctionByName
 )

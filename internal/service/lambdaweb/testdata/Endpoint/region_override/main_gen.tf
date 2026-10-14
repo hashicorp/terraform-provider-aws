@@ -1,6 +1,15 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_lambdaweb_endpoint" "test" {
+  region = var.region
+
+  function_name = aws_lambdaweb_function.test.function_name
+  endpoint_name = "extra"
+  endpoint_type = "HomeRegion"
+  auth_type     = "ApplicationManaged"
+}
+
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
@@ -90,15 +99,6 @@ resource "aws_lambdaweb_function" "test" {
     endpoint_type = "HomeRegion"
     auth_type     = "ApplicationManaged"
   }
-}
-
-resource "aws_lambdaweb_endpoint" "test" {
-  region = var.region
-
-  function_name = aws_lambdaweb_function.test.function_name
-  endpoint_name = "extra"
-  endpoint_type = "HomeRegion"
-  auth_type     = "ApplicationManaged"
 }
 
 variable "rName" {

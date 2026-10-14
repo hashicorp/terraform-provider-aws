@@ -72,26 +72,18 @@ func TestAccLambdaWebFunction_basic(t *testing.T) {
 					testAccCheckFunctionExists(ctx, t, resourceName, &function),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`web-function/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "function_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FunctionStateActive)),
-					// The service explains every state, including the healthy one,
-					// and the attribute is what surfaces a Pending or Failed cause.
-					resource.TestCheckResourceAttrWith(resourceName, "state_reason", func(v string) error {
-						if v == "" {
-							return errors.New("state_reason should not be empty")
-						}
-						return nil
-					}),
 					// Unset scaling and throttling are not reported by the API:
 					// account-level defaults apply server-side, invisibly.
-					resource.TestCheckNoResourceAttr(resourceName, "endpoint_config.0.scaling_config.max_environments"),
-					resource.TestCheckNoResourceAttr(resourceName, "endpoint_config.0.throttle_config.rate_limit"),
+					resource.TestCheckNoResourceAttr(resourceName, "endpoint_config.0.scaling_config.0.max_environments"),
+					resource.TestCheckNoResourceAttr(resourceName, "endpoint_config.0.throttle_config.0.rate_limit"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateId:     rName,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "function_name"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "function_name",
 			},
 		},
 	})
@@ -130,7 +122,6 @@ func TestAccLambdaWebFunction_update(t *testing.T) {
 				Config: testAccFunctionConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &function),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FunctionStateActive)),
 					// A revision_config change must roll a new immutable revision.
 					resource.TestCheckResourceAttrWith(resourceName, "latest_revision_id", func(v string) error {
 						if v == "" {
@@ -230,16 +221,16 @@ func TestAccLambdaWebFunction_egressNetworkConnector(t *testing.T) {
 				Config: testAccFunctionConfig_egressNetworkConnector(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &function),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FunctionStateActive)),
 					resource.TestCheckResourceAttrPair(resourceName, "revision_config.0.service_config.0.egress_network_connector_arn", connectorResourceName, "latest_version_arn"),
 					resource.TestCheckResourceAttr(connectorResourceName, "latest_version", "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateId:     rName,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "function_name"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "function_name",
 			},
 			{
 				// Removing the reference creates a revision on the default
@@ -295,7 +286,7 @@ func testAccCheckFunctionDestroy(ctx context.Context, t *testing.T) resource.Tes
 				continue
 			}
 
-			_, err := tflambdaweb.FindFunctionByName(ctx, conn, rs.Primary.Attributes["function_name"])
+			_, err := tflambdaweb.FindWebFunctionByName(ctx, conn, rs.Primary.Attributes["function_name"])
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -319,7 +310,7 @@ func testAccCheckFunctionExists(ctx context.Context, t *testing.T, n string, v *
 
 		conn := acctest.ProviderMeta(ctx, t).LambdaWebClient(ctx)
 
-		out, err := tflambdaweb.FindFunctionByName(ctx, conn, rs.Primary.Attributes["function_name"])
+		out, err := tflambdaweb.FindWebFunctionByName(ctx, conn, rs.Primary.Attributes["function_name"])
 		if err != nil {
 			return smarterr.NewError(err)
 		}
