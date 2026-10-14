@@ -288,9 +288,8 @@ type groupResourceModel struct {
 	DistinguishedName types.String `tfsdk:"distinguished_name"`
 	GroupScope        types.String `tfsdk:"group_scope"`
 	GroupType         types.String `tfsdk:"group_type"`
-	// OtherAttributes   types.Map    `tfsdk:"other_attributes"`
-	SAMAccountName types.String `tfsdk:"sam_account_name"`
-	SID            types.String `tfsdk:"sid"`
+	SAMAccountName    types.String `tfsdk:"sam_account_name"`
+	SID               types.String `tfsdk:"sid"`
 }
 
 var (
@@ -302,7 +301,7 @@ type groupImportID struct{}
 func (groupImportID) Parse(id string) (string, map[string]any, error) {
 	parts, err := intflex.ExpandResourceId(id, groupResourceIDPartCount, false)
 	if err != nil {
-		return "", nil, smarterr.NewError(err)
+		return "", nil, smarterr.Errorf("unexpected import ID %q: expected format <directory_id>,<sam_account_name>: %w", id, err)
 	}
 
 	result := map[string]any{
