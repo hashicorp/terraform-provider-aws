@@ -9,7 +9,9 @@ on:
       - main
   pull_request:
     paths:
-      - .ci/swissshepherd.hcl
+      - .ci/swissshepherd-*.hcl
+      - .ci/tools/go.mod
+      - .ci/tools/go.sum
       - .github/workflows/swissshepherd.yml
       - website/docs/**
 

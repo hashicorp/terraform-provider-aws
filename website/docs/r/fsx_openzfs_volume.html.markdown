@@ -51,7 +51,7 @@ The `nfs_exports` configuration block supports the following arguments:
 The `client_configurations` configuration block supports the following arguments:
 
 * `clients` - (Required) - A value that specifies who can mount the file system. You can provide a wildcard character (*), an IP address (0.0.0.0), or a CIDR address (192.0.2.0/24. By default, Amazon FSx uses the wildcard character when specifying the client.
-* `options` - (Required) -  The options to use when mounting the file system. Maximum of 20 items. See the [Linix NFS exports man page](https://linux.die.net/man/5/exports) for more information. `crossmount` and `sync` are used by default.
+* `options` - (Required) -  The options to use when mounting the file system. Maximum of 20 items. See the [Linux NFS exports man page](https://linux.die.net/man/5/exports) for more information. `crossmount` and `sync` are used by default.
 
 ### `origin_snapshot` Block
 

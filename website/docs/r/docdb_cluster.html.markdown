@@ -49,13 +49,15 @@ This resource supports the following arguments:
 * `availability_zones` - (Optional) A list of EC2 Availability Zones that instances in the DB cluster can be created in.
   DocumentDB automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply.
   We recommend specifying 3 AZs or using [the `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary.
+  At most 3 AZs can be configured.
+  **Note:** Do not set `availability_zones` to the output of a data source such as [`aws_availability_zones`](/docs/providers/aws/d/availability_zones.html), as this may be subject to change (for example, when a new AZ is added to a Region). Because changing `availability_zones` forces replacement, any change to the set of values will plan to destroy and recreate the cluster. Always use an explicit, static list of AZs.
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance.
 * `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
 * `deletion_protection` - (Optional) A boolean value that indicates whether the DB cluster has deletion protection enabled. The database can't be deleted when deletion protection is enabled. Defaults to `false`.
-* `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
+* `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to CloudWatch. If omitted, no logs will be exported.
    The following log types are supported: `audit`, `profiler`.
 * `engine_version` - (Optional) The database engine version. Updating this argument results in an outage.
 * `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `docdb`. Valid values: `docdb`.

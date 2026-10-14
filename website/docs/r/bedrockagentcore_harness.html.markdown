@@ -148,7 +148,7 @@ resource "aws_bedrockagentcore_harness" "example" {
 The following arguments are required:
 
 * `execution_role_arn` - (Required) ARN of the IAM role that the harness assumes to access AWS services.
-* `harness_name` - (Required, Forces new resource) Name of the harness. Must be 1-40 characters, alphanumeric and underscores only.
+* `harness_name` - (Required, Forces new resource) Name of the harness. Must be 1-40 characters, start with a letter, and contain only alphanumeric characters and underscores.
 * `model` - (Required) Model configuration for the harness. See [`model` Block](#model-block) below.
 * `system_prompt` - (Required) System prompt blocks for the harness. See [`system_prompt` Block](#system_prompt-block) below.
 
@@ -156,11 +156,11 @@ The following arguments are optional:
 
 * `allowed_tools` - (Optional) List of tool names allowed for the harness. Use `["*"]` to allow all tools.
 * `authorizer_configuration` - (Optional) Authorization configuration for authenticating requests. See [`authorizer_configuration` Block](#authorizer_configuration-block) below.
-* `environment` - (Optional) Compute environment configuration. See [`environment` Block](#environment-block) below.If not specified, configured values can be found in `environment_actual`. Clearing this value will leave the environment configuration as is, but Terraform will not track changes.
+* `environment` - (Optional) Compute environment configuration. See [`environment` Block](#environment-block) below. If not specified, configured values can be found in `environment_actual`. Clearing this value will leave the environment configuration as is, but Terraform will not track changes.
 * `environment_artifact` - (Optional) Environment artifact configuration. See [`environment_artifact` Block](#environment_artifact-block) below.
 * `environment_variables` - (Optional, Sensitive) Map of environment variables. Set to an empty map (`{}`) to remove all environment variables.
 * `max_iterations` - (Optional) Maximum number of iterations the agent loop can perform.
-* `max_tokens` - (Optional) Maximum number of tokens in the model response.
+* `max_tokens` - (Optional) Maximum total number of output tokens the agent can generate across all model calls within a single invocation.
 * `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below. If not specified, configured values can be found in `memory_actual`. Clearing this value will reset the memory configuration to default values.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skill` - (Optional) Skill configurations. See [`skill` Block](#skill-block) below.
@@ -255,8 +255,8 @@ The `config` block supports exactly one of the following:
 
 The `outbound_auth` block supports exactly one of the following:
 
-* `aws_iam` - (Optional) Set to `true` to use AWS IAM authentication.
-* `none` - (Optional) Set to `true` to disable authentication.
+* `aws_iam` - (Optional) Whether to use AWS IAM authentication. Must be `true` if set.
+* `none` - (Optional) Whether to disable authentication. Must be `true` if set.
 * `oauth` - (Optional) OAuth credential provider configuration. See [`oauth` Block](#oauth-block) below.
 
 ### `oauth` Block
@@ -391,7 +391,7 @@ The `session_storage` block supports the following:
 
 The `authorizer_configuration` block supports the following:
 
-* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer` Block](#custom_jwt_authorizer-block) below.
+* `custom_jwt_authorizer` - (Required) JWT-based authorization configuration block. See [`custom_jwt_authorizer` Block](#custom_jwt_authorizer-block) below.
 
 ### `custom_jwt_authorizer` Block
 
@@ -438,7 +438,7 @@ Exactly one of the following must be specified:
 
 ### `self_managed_lattice_resource` Block
 
-* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration.
+* `resource_configuration_identifier` - (Optional) Identifier of the VPC Lattice resource configuration.
 
 ### `custom_claim` Block
 
@@ -494,7 +494,7 @@ The `disabled` block takes no arguments. Use this to explicitly opt out of memor
 
 * `encryption_key_arn` - (Optional) ARN of a customer-managed KMS key used to encrypt the memory. Defaults to an AWS-owned key. Cannot be changed after creation.
 * `event_expiry_duration` - (Optional, Computed) Event retention in days. Defaults to `30`.
-* `strategies` - (Optional, Computed) Set of strategy types to enable. Valid values are `SEMANTIC`, `SUMMARIZATION`, and `USER_PREFERENCE`. Defaults to `["SEMANTIC", "SUMMARIZATION"]`.
+* `strategies` - (Optional, Computed) Set of strategy types to enable. Valid values are `SEMANTIC`, `SUMMARIZATION`, `USER_PREFERENCE`, and `EPISODIC`. Defaults to `["SEMANTIC", "SUMMARIZATION"]`.
 
 ## Attribute Reference
 
@@ -661,7 +661,7 @@ resource "aws_bedrockagentcore_harness" "example" {
 
 #### Required
 
-- `harness_id` (String) ID of the harness.
+* `harness_id` (String) ID of the harness.
 
 #### Optional
 

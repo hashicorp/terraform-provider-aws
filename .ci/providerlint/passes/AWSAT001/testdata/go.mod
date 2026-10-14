@@ -1,6 +1,6 @@
 module testdata
 
-go 1.26.8
+go 1.26.9
 
 require (
 	github.com/YakDriver/regexache v0.24.0

@@ -47,6 +47,7 @@ import (
 
 // @FrameworkResource("aws_odb_cloud_vm_cluster", name="Cloud Vm Cluster")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newResourceCloudVmCluster(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCloudVmCluster{}
 

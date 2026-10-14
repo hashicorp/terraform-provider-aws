@@ -202,8 +202,8 @@ This resource supports the following arguments:
 
 ### network_configuration Arguments
 
-* `security_group_ids` - (Optional) The array of security group Ids for customer VPC connectivity.
-* `subnet_ids` - (Optional) The array of subnet Ids for customer VPC connectivity.
+* `security_group_ids` - (Optional) The array of security group IDs for customer VPC connectivity.
+* `subnet_ids` - (Optional) The array of subnet IDs for customer VPC connectivity.
 
 #### image_configuration Arguments
 
@@ -243,7 +243,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR Severless applications using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR Serverless applications using the `id`. For example:
 
 ```terraform
 import {

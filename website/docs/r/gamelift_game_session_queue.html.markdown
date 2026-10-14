@@ -40,16 +40,16 @@ resource "aws_gamelift_game_session_queue" "test" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) Name of the session queue.
-* `timeout_in_seconds` - (Required) Maximum time a game session request can remain in the queue.
 * `custom_event_data` - (Optional) Information to be added to all events that are related to this game session queue.
 * `destinations` - (Optional) List of fleet/alias ARNs used by session queue for placing game sessions.
-* `notification_target` - (Optional) An SNS topic ARN that is set up to receive game session placement notifications.
+* `name` - (Required) Name of the session queue.
+* `notification_target` - (Optional) SNS topic ARN that is set up to receive game session placement notifications.
 * `player_latency_policy` - (Optional) One or more policies used to choose fleet based on player latency. See below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `timeout_in_seconds` - (Optional) Maximum time a game session request can remain in the queue.
 
-#### `player_latency_policy`
+#### `player_latency_policy` Block
 
 * `maximum_individual_player_latency_milliseconds` - (Required) Maximum latency value that is allowed for any player.
 * `policy_duration_seconds` - (Optional) Length of time that the policy is enforced while placing a new game session. Absence of value for this attribute means that the policy is enforced until the queue times out.
@@ -59,7 +59,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Game Session Queue ARN.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

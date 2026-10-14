@@ -3,18 +3,18 @@ subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_custom_model"
 description: |-
-  Returns properties of a specific Amazon Bedrock custom model.
+  Provides details about a specific Amazon Bedrock custom model.
 ---
 
 # Data Source: aws_bedrock_custom_model
 
-Returns properties of a specific Amazon Bedrock custom model.
+Provides details about a specific Amazon Bedrock custom model.
 
 ## Example Usage
 
 ```terraform
-data "aws_bedrock_custom_model" "test" {
-  model_id = "arn:aws:bedrock:us-west-2:123456789012:custom-model/amazon.titan-text-express-v1:0:8k/ly16hhi765j4 "
+data "aws_bedrock_custom_model" "example" {
+  model_id = "arn:aws:bedrock:us-west-2:123456789012:custom-model/amazon.titan-text-express-v1:0:8k/ly16hhi765j4"
 }
 ```
 
@@ -34,7 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `hyperparameters` - Hyperparameter values associated with this model.
 * `job_arn` - Job ARN associated with this model.
 * `job_name` - Job name associated with this model.
-* `job_tags` - Key-value mapping of tags for the fine-tuning job.
+* `job_tags` - Key-value mapping of tags for the customization job.
 * `model_arn` - ARN associated with this model.
 * `model_kms_key_arn` - Key used to encrypt the custom model at rest.
 * `model_name` - Model name associated with this model.
