@@ -68,13 +68,13 @@ func (r *groupResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed: true,
 			},
 			"group_scope": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:   true,
+				Computed:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.GroupScope](),
 			},
 			"group_type": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:   true,
+				Computed:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.GroupType](),
 			},
 			"sam_account_name": schema.StringAttribute{
