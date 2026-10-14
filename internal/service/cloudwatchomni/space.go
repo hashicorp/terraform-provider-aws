@@ -309,7 +309,7 @@ func (r *spaceResource) flatten(ctx context.Context, space *awstypes.Space, data
 	if data.EncryptionConfiguration.IsNull() && space.EncryptionConfiguration != nil && space.EncryptionConfiguration.EncryptionStrategy == awstypes.EncryptionStrategyAwsOwned {
 		space.EncryptionConfiguration = nil
 	}
-	diags.Append(fwflex.Flatten(ctx, space, data)...)
+	diags.Append(fwflex.Flatten(ctx, space, data, fwflex.WithIgnoredFieldNamesAppend("Region"))...)
 	// Recover the domain ID from the ARN.
 	if domainID, ok := domainIDFromARN(aws.ToString(space.DomainArn)); ok {
 		data.DomainID = fwflex.StringValueToFramework(ctx, domainID)

@@ -253,12 +253,13 @@ func (r *domainResource) Delete(ctx context.Context, req resource.DeleteRequest,
 }
 
 func (r *domainResource) flatten(ctx context.Context, domain *awstypes.Domain, data *domainResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
 	// IAM-only domains return an empty identity provider configuration; treat it as absent.
 	if v := domain.IdentityProviderConfiguration; v != nil && v.IdentityCenterConfiguration == nil {
 		domain.IdentityProviderConfiguration = nil
 	}
-
-	return fwflex.Flatten(ctx, domain, data)
+	diags.Append(fwflex.Flatten(ctx, domain, data, fwflex.WithIgnoredFieldNamesAppend("Region"))...)
+	return diags
 }
 
 func findDomainByID(ctx context.Context, conn *cloudwatchomni.Client, id string) (*awstypes.Domain, error) {
