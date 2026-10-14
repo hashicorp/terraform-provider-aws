@@ -606,7 +606,11 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 	domain := acctest.RandomDomainName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx, t),
