@@ -146,8 +146,8 @@ func testAccAccessProfile_description(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessProfile/description/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:       config.StringVariable(rName),
-					names.AttrDescription: config.StringVariable("description1"),
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("description1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessProfileExists(ctx, t, resourceName, &v),
@@ -164,8 +164,8 @@ func testAccAccessProfile_description(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessProfile/description/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:       config.StringVariable(rName),
-					names.AttrDescription: config.StringVariable("description1"),
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("description1"),
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
@@ -176,8 +176,8 @@ func testAccAccessProfile_description(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessProfile/description/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:       config.StringVariable(rName),
-					names.AttrDescription: config.StringVariable("description2"),
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("description2"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessProfileExists(ctx, t, resourceName, &v),

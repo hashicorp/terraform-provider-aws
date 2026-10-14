@@ -286,14 +286,14 @@ func findAccessProfileByTwoPartKey(ctx context.Context, conn *cloudwatchomni.Cli
 
 func findAccessProfile(ctx context.Context, conn *cloudwatchomni.Client, input *cloudwatchomni.GetAccessProfileInput) (*awstypes.AccessProfile, error) {
 	out, err := conn.GetAccessProfile(ctx, input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	switch {
+	case errs.IsA[*awstypes.ResourceNotFoundException](err):
 		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
 		})
-	}
 	// GetAccessProfile reports a missing parent space as AccessDeniedException,
 	// so confirm the space's absence before treating the profile as not found.
-	if errs.IsA[*awstypes.AccessDeniedException](err) {
+	case errs.IsA[*awstypes.AccessDeniedException](err):
 		_, serr := findSpaceByID(ctx, conn, aws.ToString(input.SpaceId))
 		if retry.NotFound(serr) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
@@ -303,8 +303,8 @@ func findAccessProfile(ctx context.Context, conn *cloudwatchomni.Client, input *
 		if serr != nil {
 			return nil, smarterr.NewError(serr)
 		}
-	}
-	if err != nil {
+		return nil, smarterr.NewError(err)
+	case err != nil:
 		return nil, smarterr.NewError(err)
 	}
 
