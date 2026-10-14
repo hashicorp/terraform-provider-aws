@@ -1888,6 +1888,7 @@ func domainErrorRetryable(err error) (bool, error) {
 	switch {
 	case errs.IsAErrorMessageContains[*awstypes.InvalidTypeException](err, "Error setting policy"),
 		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "enable a service-linked role to give Amazon ES permissions"),
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "enable a service-linked role to give Amazon OpenSearch Service permissions"),
 		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Domain is still being deleted"),
 		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Amazon OpenSearch Service must be allowed to use the passed role"),
 		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role has not propagated yet"),
