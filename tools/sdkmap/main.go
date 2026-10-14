@@ -42,11 +42,19 @@ var (
 	paginatorRegexp = regexp.MustCompile(`^New([0-9A-Za-z]+)Paginator$`)
 )
 
-// sdkResource is an SDK resource and the functions that implement it.
-type sdkResource struct {
+// plugin is the Terraform plugin library a resource is implemented with.
+type plugin string
+
+const (
+	pluginSDKv2 plugin = "SDKv2"
+)
+
+// resource is a resource and the functions that implement it.
+type resource struct {
 	Service  string
 	TypeName string
-	// Function is the factory function annotated with @SDKResource.
+	Plugin   plugin
+	// Function is the factory function annotated with the resource's annotation, e.g. @SDKResource.
 	Function string
 	Position token.Position
 
@@ -79,7 +87,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var resources []sdkResource
+	var resources []resource
 	for _, pkg := range a.services {
 		resources = append(resources, a.findSDKResources(pkg)...)
 	}
@@ -269,8 +277,8 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 }
 
 // findSDKResources returns the resources annotated with @SDKResource in pkg.
-func (a *analyzer) findSDKResources(pkg *servicePackage) []sdkResource {
-	var resources []sdkResource
+func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
+	var resources []resource
 
 	for _, file := range pkg.files {
 		for _, decl := range file.Decls {
@@ -283,8 +291,9 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []sdkResource {
 				continue
 			}
 
-			r := sdkResource{
+			r := resource{
 				Service:  pkg.name,
+				Plugin:   pluginSDKv2,
 				Function: fn.Name.Name,
 				Position: a.fset.Position(fn.Pos()),
 			}
@@ -355,7 +364,7 @@ func returnedResource(fn *ast.FuncDecl) *ast.CompositeLit {
 }
 
 // addFuncRefs records the functions referenced by the fields of a schema.Resource literal.
-func (a *analyzer) addFuncRefs(pkg *servicePackage, r *sdkResource, lit *ast.CompositeLit) {
+func (a *analyzer) addFuncRefs(pkg *servicePackage, r *resource, lit *ast.CompositeLit) {
 	for field, value := range fieldValues(lit) {
 		switch field {
 		case "Create", "CreateContext", "CreateWithoutTimeout":
@@ -635,7 +644,7 @@ func isSDKPackage(importPath string) bool {
 }
 
 // printResources writes resources to stdout, with paths relative to root.
-func printResources(root string, resources []sdkResource) {
+func printResources(root string, resources []resource) {
 	location := func(pos token.Position) string {
 		if !pos.IsValid() {
 			return ""
