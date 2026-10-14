@@ -3,7 +3,7 @@
 
 // sdkmap walks internal/service/* and reports every resource annotated with @SDKResource,
 // along with the functions it uses for CRUD, CustomizeDiff, and custom import,
-// and the AWS SDK client methods it calls.
+// the AWS SDK client methods each of those functions calls, and those the tags interceptor calls.
 //
 // Annotations are recognized using the same rules as the service package generator
 // (internal/generate/servicepackage), so the output matches what the provider registers.
@@ -60,19 +60,19 @@ type resource struct {
 	// Location is where Function is declared, as "<file>:<line>" relative to the repository root.
 	Location string `json:"location"`
 
-	Create        *funcRef   `json:"create,omitempty"`
-	Read          *funcRef   `json:"read,omitempty"`
-	Update        *funcRef   `json:"update,omitempty"`
-	Delete        *funcRef   `json:"delete,omitempty"`
-	CustomizeDiff []*funcRef `json:"customize_diff,omitempty"`
+	Create        *funcRef `json:"create,omitempty"`
+	Read          *funcRef `json:"read,omitempty"`
+	Update        *funcRef `json:"update,omitempty"`
+	Delete        *funcRef `json:"delete,omitempty"`
+	CustomizeDiff *funcRef `json:"customize_diff,omitempty"`
 	// Import is nil if the resource has no importer or uses schema.ImportStatePassthroughContext.
 	Import *funcRef `json:"import,omitempty"`
 
-	// SDKCalls is the sorted set of AWS SDK client methods reachable from the factory function, e.g. "s3.PutObjectAcl".
-	SDKCalls []string `json:"sdk_calls"`
+	// Tags is nil unless the resource is annotated with @Tags(identifierAttribute=...).
+	Tags *resourceTags `json:"tags,omitempty"`
 }
 
-// funcRef is a reference to a function from a resource's schema.Resource.
+// funcRef is a reference to a function from a resource's schema.Resource, or to a service package method.
 type funcRef struct {
 	// Expr is the reference as written, e.g. "resourceObjectCreate" or "verify.SetTagsDiff".
 	Expr string `json:"expr"`
@@ -80,6 +80,19 @@ type funcRef struct {
 	// a package-level declaration (for a call, the called function's declaration), or else the function literal
 	// or call expression itself. It is empty if the function is not declared in the package, e.g. verify.SetTagsDiff or a method value.
 	Location string `json:"location,omitempty"`
+	// SDKCalls is the sorted set of AWS SDK client methods reachable from the function, e.g. "s3.PutObjectAcl".
+	SDKCalls []string `json:"sdk_calls"`
+	// Functions lists the functions combined by customdiff.All or customdiff.Sequence, flattened.
+	Functions []*funcRef `json:"functions,omitempty"`
+}
+
+// resourceTags holds the service package methods through which the tags interceptor lists and updates
+// a resource's tags around its CRUD functions.
+type resourceTags struct {
+	// List is the service package's ListTags, called after Create, Read, and Update.
+	List *funcRef `json:"list,omitempty"`
+	// Update is the service package's UpdateTags, called during Update.
+	Update *funcRef `json:"update,omitempty"`
 }
 
 func main() {
@@ -313,13 +326,19 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 				Location: a.location(fn),
 			}
 			if lit := returnedResource(fn); lit != nil {
-				a.addFuncRefs(pkg, &r, lit)
+				a.addFuncRefs(pkg, &r, lit, a.factoryVarTypes(pkg, fn))
 			} else {
 				log.Printf("%s: %s does not return a schema.Resource literal", r.Location, r.Function)
 			}
-			r.SDKCalls = a.findSDKCalls(pkg, fn, tagged)
-			if len(r.SDKCalls) == 0 {
+			if !slices.ContainsFunc(r.funcRefs(), func(ref *funcRef) bool { return len(ref.SDKCalls) > 0 }) {
 				log.Printf("%s: no AWS SDK calls found for %s", r.Location, r.Function)
+			}
+			if tagged {
+				// The tags interceptor lists and updates tags through the service package's ListTags and UpdateTags.
+				r.Tags = &resourceTags{
+					List:   a.newMethodRef(pkg, "servicePackage", "ListTags"),
+					Update: a.newMethodRef(pkg, "servicePackage", "UpdateTags"),
+				}
 			}
 
 			// A factory function can be registered under several type names.
@@ -379,20 +398,28 @@ func returnedResource(fn *ast.FuncDecl) *ast.CompositeLit {
 }
 
 // addFuncRefs records the functions referenced by the fields of a schema.Resource literal.
-func (a *analyzer) addFuncRefs(pkg *servicePackage, r *resource, lit *ast.CompositeLit) {
+// varTypes holds the types of the factory function's variables, which the functions may use.
+func (a *analyzer) addFuncRefs(pkg *servicePackage, r *resource, lit *ast.CompositeLit, varTypes map[string]string) {
+	newFuncRef := func(expr ast.Expr) *funcRef {
+		return a.newFuncRef(pkg, expr, varTypes)
+	}
+
 	for field, value := range fieldValues(lit) {
 		switch field {
 		case "Create", "CreateContext", "CreateWithoutTimeout":
-			r.Create = a.newFuncRef(pkg, value)
+			r.Create = newFuncRef(value)
 		case "Read", "ReadContext", "ReadWithoutTimeout":
-			r.Read = a.newFuncRef(pkg, value)
+			r.Read = newFuncRef(value)
 		case "Update", "UpdateContext", "UpdateWithoutTimeout":
-			r.Update = a.newFuncRef(pkg, value)
+			r.Update = newFuncRef(value)
 		case "Delete", "DeleteContext", "DeleteWithoutTimeout":
-			r.Delete = a.newFuncRef(pkg, value)
+			r.Delete = newFuncRef(value)
 		case "CustomizeDiff":
-			for _, expr := range customizeDiffFuncs(value) {
-				r.CustomizeDiff = append(r.CustomizeDiff, a.newFuncRef(pkg, expr))
+			r.CustomizeDiff = newFuncRef(value)
+			if isCustomDiffCombinator(value) {
+				for _, expr := range customizeDiffFuncs(value) {
+					r.CustomizeDiff.Functions = append(r.CustomizeDiff.Functions, newFuncRef(expr))
+				}
 			}
 		case "Importer":
 			importer := schemaLiteral(value, "ResourceImporter")
@@ -401,29 +428,39 @@ func (a *analyzer) addFuncRefs(pkg *servicePackage, r *resource, lit *ast.Compos
 			}
 			for field, value := range fieldValues(importer) {
 				if (field == "State" || field == "StateContext") && !isSelector(value, "schema", "ImportStatePassthrough", "ImportStatePassthroughContext") {
-					r.Import = a.newFuncRef(pkg, value)
+					r.Import = newFuncRef(value)
 				}
 			}
 		}
 	}
 }
 
+// funcRefs returns the functions a resource references.
+func (r *resource) funcRefs() []*funcRef {
+	return slices.DeleteFunc([]*funcRef{r.Create, r.Read, r.Update, r.Delete, r.CustomizeDiff, r.Import}, func(ref *funcRef) bool { return ref == nil })
+}
+
+// isCustomDiffCombinator reports whether expr is a call to customdiff.All or customdiff.Sequence.
+func isCustomDiffCombinator(expr ast.Expr) bool {
+	call, ok := expr.(*ast.CallExpr)
+	return ok && isSelector(call.Fun, "customdiff", "All", "Sequence")
+}
+
 // customizeDiffFuncs flattens customdiff.All and customdiff.Sequence into the functions they combine.
 func customizeDiffFuncs(expr ast.Expr) []ast.Expr {
-	call, ok := expr.(*ast.CallExpr)
-	if !ok || !isSelector(call.Fun, "customdiff", "All", "Sequence") {
+	if !isCustomDiffCombinator(expr) {
 		return []ast.Expr{expr}
 	}
 
 	var exprs []ast.Expr
-	for _, arg := range call.Args {
+	for _, arg := range expr.(*ast.CallExpr).Args {
 		exprs = append(exprs, customizeDiffFuncs(arg)...)
 	}
 	return exprs
 }
 
-func (a *analyzer) newFuncRef(pkg *servicePackage, expr ast.Expr) *funcRef {
-	ref := &funcRef{Expr: types.ExprString(expr)}
+func (a *analyzer) newFuncRef(pkg *servicePackage, expr ast.Expr, varTypes map[string]string) *funcRef {
+	ref := &funcRef{Expr: types.ExprString(expr), SDKCalls: a.findSDKCalls(pkg, expr, varTypes)}
 
 	switch e := expr.(type) {
 	case *ast.Ident:
@@ -446,6 +483,21 @@ func (a *analyzer) newFuncRef(pkg *servicePackage, expr ast.Expr) *funcRef {
 	return ref
 }
 
+// newMethodRef returns a reference to the method name on the type recv in pkg, e.g. "(*servicePackage).ListTags",
+// or nil if there is no such method.
+func (a *analyzer) newMethodRef(pkg *servicePackage, recv, name string) *funcRef {
+	m, ok := pkg.methods[recv][name]
+	if !ok {
+		return nil
+	}
+
+	expr := types.ExprString(m.Recv.List[0].Type)
+	if strings.HasPrefix(expr, "*") {
+		expr = "(" + expr + ")"
+	}
+	return &funcRef{Expr: expr + "." + name, Location: a.location(m), SDKCalls: a.findSDKCalls(pkg, m, nil)}
+}
+
 // location returns where node is, as "<file>:<line>" relative to the repository root.
 func (a *analyzer) location(node ast.Node) string {
 	pos := a.fset.Position(node.Pos())
@@ -463,23 +515,39 @@ type callFinder struct {
 	calls   map[string]bool
 }
 
-// findSDKCalls returns the sorted set of AWS SDK client methods reachable from a resource's factory function.
-func (a *analyzer) findSDKCalls(pkg *servicePackage, factory *ast.FuncDecl, tagged bool) []string {
+// findSDKCalls returns the sorted set of AWS SDK client methods reachable from node,
+// e.g. a declaration or a function reference from a resource's schema.Resource.
+// varTypes holds the types of variables in scope at node, e.g. from factoryVarTypes, and may be nil.
+func (a *analyzer) findSDKCalls(pkg *servicePackage, node ast.Node, varTypes map[string]string) []string {
 	f := &callFinder{analyzer: a, visited: make(map[ast.Node]bool), calls: make(map[string]bool)}
 
-	f.follow(pkg, factory)
-	if tagged {
-		// The tags interceptor lists and updates tags through the service package's ListTags and UpdateTags.
-		for _, name := range []string{"ListTags", "UpdateTags"} {
-			if m, ok := pkg.methods["servicePackage"][name]; ok {
-				f.follow(pkg, m)
-			}
-		}
-	}
+	v := f.newVisitor(pkg, node)
+	maps.Copy(v.varTypes, varTypes)
+	f.visited[node] = true
+	ast.Walk(v, node)
 
 	calls := slices.AppendSeq(make([]string, 0, len(f.calls)), maps.Keys(f.calls))
 	slices.Sort(calls)
 	return calls
+}
+
+// factoryVarTypes returns the types of the variables declared in the body of a resource's factory function,
+// outside any nested function, so that the functions it references can use them, e.g. a method value such as h.Upsert.
+func (a *analyzer) factoryVarTypes(pkg *servicePackage, factory *ast.FuncDecl) map[string]string {
+	v := (&callFinder{analyzer: a}).newVisitor(pkg, factory)
+	for _, stmt := range factory.Body.List {
+		switch s := stmt.(type) {
+		case *ast.AssignStmt:
+			v.setDeclaredTypes(s)
+		case *ast.DeclStmt:
+			if d, ok := s.Decl.(*ast.GenDecl); ok {
+				for _, spec := range d.Specs {
+					v.setDeclaredTypes(spec)
+				}
+			}
+		}
+	}
+	return v.varTypes
 }
 
 // follow walks a declaration in pkg, once.
@@ -488,7 +556,12 @@ func (f *callFinder) follow(pkg *servicePackage, decl ast.Node) {
 		return
 	}
 	f.visited[decl] = true
-	ast.Walk(&declVisitor{finder: f, pkg: pkg, imports: f.importsOf(decl), varTypes: make(map[string]string)}, decl)
+	ast.Walk(f.newVisitor(pkg, decl), decl)
+}
+
+// newVisitor returns a visitor for node in pkg, with no variable types known.
+func (f *callFinder) newVisitor(pkg *servicePackage, node ast.Node) *declVisitor {
+	return &declVisitor{finder: f, pkg: pkg, imports: f.importsOf(node), varTypes: make(map[string]string)}
 }
 
 // declVisitor records the SDK client method calls in a declaration, and follows the declarations it references:
@@ -516,22 +589,8 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 	case *ast.FuncType:
 		v.setParamTypes(n.Params)
 
-	case *ast.AssignStmt:
-		// With several values on the left and one on the right (e.g. conn, err := f()), only the first value's type is known.
-		for i, lhs := range n.Lhs {
-			if id, ok := lhs.(*ast.Ident); ok && (len(n.Lhs) == len(n.Rhs) || i == 0) {
-				v.setVarType(id.Name, v.typeOf(n.Rhs[i]))
-			}
-		}
-
-	case *ast.ValueSpec:
-		for i, id := range n.Names {
-			if n.Type != nil {
-				v.setVarType(id.Name, resolveType(n.Type, v.imports))
-			} else if i < len(n.Values) {
-				v.setVarType(id.Name, v.typeOf(n.Values[i]))
-			}
-		}
+	case *ast.AssignStmt, *ast.ValueSpec:
+		v.setDeclaredTypes(n)
 
 	case *ast.CallExpr:
 		sel, ok := n.Fun.(*ast.SelectorExpr)
@@ -577,6 +636,28 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 	}
 
 	return v
+}
+
+// setDeclaredTypes records the types of the variables assigned or declared by an *ast.AssignStmt or *ast.ValueSpec.
+func (v *declVisitor) setDeclaredTypes(node ast.Node) {
+	switch n := node.(type) {
+	case *ast.AssignStmt:
+		// With several values on the left and one on the right (e.g. conn, err := f()), only the first value's type is known.
+		for i, lhs := range n.Lhs {
+			if id, ok := lhs.(*ast.Ident); ok && (len(n.Lhs) == len(n.Rhs) || i == 0) {
+				v.setVarType(id.Name, v.typeOf(n.Rhs[i]))
+			}
+		}
+
+	case *ast.ValueSpec:
+		for i, id := range n.Names {
+			if n.Type != nil {
+				v.setVarType(id.Name, resolveType(n.Type, v.imports))
+			} else if i < len(n.Values) {
+				v.setVarType(id.Name, v.typeOf(n.Values[i]))
+			}
+		}
+	}
 }
 
 // setParamTypes records the types of a function's named parameters or receiver.
