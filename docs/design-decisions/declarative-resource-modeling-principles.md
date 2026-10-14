@@ -23,6 +23,45 @@ They don't adopt or retire any syntax. They're the constraints a representation 
 
 **A specification can't always express the contract.** CloudFormation doesn't expose property defaults consistently, so awscc marks optional values `Computed`. That avoids spurious diffs, but it stops detecting drift when a practitioner omits a value. Generating a provider from an upstream specification doesn't automatically keep the Terraform semantics a hand-written provider implements.
 
+**Comment markers go unchecked unless someone builds the checker.** Kubernetes `controller-gen` generates resource definitions from Go marker comments and silently ignores markers it doesn't recognize, so `validation:enum` instead of `validation:Enum` does nothing at all. A [production write-up](https://ahmet.im/blog/crd-generation-pitfalls/) links a code search finding many projects that hit exactly that, counts four different ways to mark a field optional, and concludes that a weakly typed marker system needs a separate static analysis tool beside it. That project has more resources behind it than this one and the same failure mode. Unchecked references are a property of the mechanism, not of the team using it.
+
+## Terminology
+
+Three distinctions carry most of the weight here, and each is commonly read narrower than intended.
+
+**Model and implementation.** A model is data describing a resource; an implementation is code that acts. The test is control flow. A composite literal has none, and something else decides what to do with it. A function with loops and branches is the thing doing. Both are written in Go in this provider, and that isn't a contradiction.
+
+**Declarative describes the artifact, not the language hosting it.** Go struct tags are the existence proof: `json:"name,omitempty"` is metadata nobody mistakes for implementation, and it is Go. The converse holds too — a CI pipeline in YAML with conditional steps and inline shell is imperative code in a format that merely looks declarative. So "it's Go, therefore it's implementation" doesn't follow. What matters is whether the artifact describes or executes. Typed Go declarations are a specification whose file extension is `.go`.
+
+There is a real objection inside that one, and principle 5 is the guard for it: a Go declaration *can* slide into implementation by carrying closures that do work rather than name it. That's a failure mode to prevent, not evidence the category doesn't exist.
+
+**Three things get called configuration, and only one is this document's subject.**
+
+| | Written by | Read | Must it serialize? |
+|---|---|---|---|
+| Practitioner configuration | practitioners | at Terraform runtime | yes — it crosses a process and trust boundary |
+| **Resource model** | us | at build time, by a generator or the compiler | no — it never leaves the repository |
+| Implementation | us | executed | not applicable |
+
+Intuitions from the first row don't transfer to the second. Practitioner configuration has to be a text format because it crosses a boundary and is written by people without our toolchain. A resource model crosses no boundary, so serializing it buys nothing and gives up the checking a compiler does for free.
+
+**Generated implementation and shared implementation.** Both remove duplication. They differ in where the behavior ends up.
+
+| | Generated | Shared |
+|---|---|---|
+| What exists after the build | N copies of similar code | one implementation plus N declarations |
+| Where behavior lives | in each resource | in one place, away from the resource |
+| Changing that behavior | edit the generator, regenerate everything | edit one function |
+| Explaining one resource | read its generated code | read the shared code and the declaration |
+| Merge conflicts | frequent, resolved by regenerating | rare, resolved by hand |
+
+**These two choices are independent,** which is why principles 3 and 4 are separate principles rather than one. Principle 3 picks a row below; principle 4 picks a column. Every cell is occupied by a real system:
+
+| | Consumed by a generator | Consumed by a shared implementation |
+|---|---|---|
+| **Typed host-language values** | ent: Go schema to typed client | Upjet: Go configuration to one generic reconciler |
+| **Serialized format or markers** | Magic Modules: YAML to provider | Kubernetes: resource definition to one API server |
+
 ## Decision
 
 A resource model is worth having only after elimination, only for durable resource semantics, with one authority, with checked references into the implementation, and without absorbing imperative behavior.
@@ -59,9 +98,11 @@ A default pays off most when adopting it also deletes existing authored values. 
 
 Defaults that omit are therefore the hazardous direction. One that skips a test scenario loses coverage invisibly, because nothing runs and no one can tell an unsupported scenario from an overlooked one. Orient the default so silence is the safe answer: absence means the scenario is exercised, and skipping is authored where a reviewer sees it. Where the common case genuinely is "off," defaulting can't be made safe, and the fact should be derived from something already true about the resource.
 
-### 1. Model only what survives elimination
+### 1. Model the resource, not our implementation
 
 A fact belongs in a model when it describes the resource rather than our implementation, is durable, and either is part of the public contract or fills a slot that a shared consumer already has. A special case added to one consumer doesn't qualify.
+
+**This asks a different question than principle 0.** Principle 0 asks whether a fact needs to be authored at all. Principle 1 asks where an authored fact belongs. A fact can survive elimination and still not belong in a resource model — test policy is the clearest instance.
 
 The first test does most of the work. A fact about the resource stays true if we rewrite the Go; a fact about our implementation doesn't. The Terraform type name, taggability, and identity composition are resource facts. A factory's name, or the Go type a finder happens to return, is implementation. If a model needs an implementation detail, it binds to it by checked reference (principle 3) and never transcribes it.
 
@@ -73,7 +114,7 @@ The last test is about the consumer's shape, not how many consumers there are. P
 
 Each fact has exactly one authority, either the declarative model or the imperative implementation. Every other copy is generated from it or checked against it by a compiler, a failing generator, a lint pass, or a test.
 
-The line is declarative versus imperative, not Go versus not-Go. A `resource.Spec{…}` literal in a `.go` file is model; `findThingByID` is implementation. Both are Go.
+A `resource.Spec{…}` literal in a `.go` file is model; `findThingByID` is implementation. Both are Go.
 
 A view that aggregates facts from many authorities — an index, a census, a registry — is a derived copy and belongs to whatever generates it. Authoring one alongside the declarations it summarizes creates the duplication this principle exists to prevent.
 
@@ -97,9 +138,11 @@ factory = "newThingResource" // nothing checks it exists; rename and delete leav
 Factory: newThingResource    // checked by the compiler; renames with the function
 ```
 
-Typed Go composite literals are still a model: data, not control flow, readable as one structure, and validatable. They're a specification whose file extension is `.go`.
-
 The default comes from an asymmetry. Typed declarations can be serialized to JSON or YAML for an outside consumer with a little code. A serialized format gets type checking back only by adding a schema, a validator, positional diagnostics, editor support, and schema migrations. Typed Go has its own cost: generators have to interpret literals or load packages to read values, and that has to stay fast enough for `make gen PKG=xyz`.
+
+Protobuf is the measure of that second cost. The format existed for over a decade before Buf supplied the linting, formatting, and [breaking-change detection](https://buf.build/docs/breaking/) that make it pleasant to work in, and that took a company. Choosing Go starts with the toolchain already built.
+
+Typed Go checks references to Go symbols. It does not automatically check references to schema attributes, which stay strings unless constants exist for them — Upjet's per-resource configuration is typed Go and still carries `OmittedFields []string`. This provider generates `names.Attr*` constants, and a model naming attributes should use them rather than literals.
 
 A serialized format earns the trade when the data has no references into code and either needs language-independent consumption or is naturally maintained as bulk domain data rather than program structure. Service-level naming data is the second kind: a table of scalars for every service, read by many generators and projected into Go constants, CI configuration, repository labels, and website metadata. Nothing in it names a Go symbol, so Go's type system has nothing to check, and writing it as composite literals would add thousands of lines of syntax and verify none of it.
 
@@ -108,6 +151,8 @@ A serialized format earns the trade when the data has no references into code an
 Express common behavior once and drive it from data where practical. Generate code when static types or methods require it, or when generating produces a materially simpler or safer system than the runtime indirection it would replace.
 
 Generated code is volume that has to be stored, reviewed, regenerated, and kept consistent. A generic implementation parameterized by typed data avoids that, and the provider does this where behavior is uniform. Two things argue the other way. Generated code can be read, diffed, debugged, and compared against its inputs when behavior is surprising. That isn't the same as being reviewed (nobody reads a two-thousand-line generated test file line by line), but it's what makes a failure tractable. And some things need static types or methods that no runtime indirection supplies. Almost anything can be made generic with enough indirection, so the question is whether it's simpler and safer, and sometimes it isn't.
+
+This provider has attempted it before. [PR 34448](https://github.com/hashicorp/terraform-provider-aws/pull/34448) proposed a generic embedded structure supplying the Framework CRUD methods and upcalling to simplified per-resource methods, across 21 files. It was closed unmerged with no recorded rationale, so it says nothing about whether the approach works. Its ergonomics do say something: instantiating the shared type read `framework.NewResource[indexResource, indexResourceModel, *indexResource]()` — three type parameters to declare one resource. Generic shared implementations in Go tend to pay for their reach at the declaration site, and that cost belongs in the comparison.
 
 ### 5. Keep imperative behavior in Go
 
@@ -149,7 +194,7 @@ The principles form a sequence, and each step matters only if the previous answe
 
 ```text
 0  Does this fact need to exist as authored data?   usually no, stop here
-1  Is it durable resource semantics worth modeling?
+1  Does it belong in the model, or somewhere else?
 2  What is its single authority?
 3  What representation keeps its references checked?
 4  Should the data drive shared behavior or generated behavior?
@@ -179,3 +224,6 @@ Follow-up work, none of it required by this decision:
 - [Magic Modules resource reference](https://googlecloudplatform.github.io/magic-modules/reference/resource/)
 - [Magic Modules custom code](https://googlecloudplatform.github.io/magic-modules/develop/custom-code/): the escape hatches a spec-generated provider needs
 - [`terraform-provider-awscc`](https://github.com/hashicorp/terraform-provider-awscc)
+- [Kubernetes CRD generation pitfalls](https://ahmet.im/blog/crd-generation-pitfalls/): what an unchecked marker system costs at scale
+- [Upjet resource configuration](https://github.com/crossplane/upjet/blob/main/docs/configuring-a-resource.md): typed Go declarations driving a generic runtime
+- [PR 34448](https://github.com/hashicorp/terraform-provider-aws/pull/34448): this provider's earlier shared-implementation proposal
