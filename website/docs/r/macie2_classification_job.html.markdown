@@ -49,31 +49,31 @@ This resource supports the following arguments:
 
 The `s3_job_definition` configuration block supports the following arguments:
 
-* `bucket_criteria` - (Optional) Property- and tag-based conditions that determine which S3 buckets to include or exclude from the analysis. Conflicts with `bucket_definitions`. See [`s3_job_definition.bucket_criteria` Block](#s3_job_definitionbucket_criteria-block) for details.
-* `bucket_definitions` - (Optional) Array of objects, one for each AWS account that owns buckets to analyze. Each object specifies the account ID for an account and one or more buckets to analyze for the account. Conflicts with `bucket_criteria`. See [`s3_job_definition.bucket_definitions` Block](#s3_job_definitionbucket_definitions-block) for details.
-* `scoping` - (Optional) Property- and tag-based conditions that determine which objects to include or exclude from the analysis. See [`s3_job_definition.scoping` Block](#s3_job_definitionscoping-block) for details.
+* `bucket_criteria` - (Optional) Property- and tag-based conditions that determine which S3 buckets to include or exclude from the analysis. Conflicts with `bucket_definitions`. See [`bucket_criteria` Block](#bucket_criteria-block) for details.
+* `bucket_definitions` - (Optional) Array of objects, one for each AWS account that owns buckets to analyze. Each object specifies the account ID for an account and one or more buckets to analyze for the account. Conflicts with `bucket_criteria`. See [`bucket_definitions` Block](#bucket_definitions-block) for details.
+* `scoping` - (Optional) Property- and tag-based conditions that determine which objects to include or exclude from the analysis. See [`scoping` Block](#scoping-block) for details.
 
-### `s3_job_definition.bucket_criteria` Block
+### `bucket_criteria` Block
 
 The `bucket_criteria` configuration block supports the following arguments:
 
-* `excludes` - (Optional) Property- or tag-based conditions that determine which S3 buckets to exclude from the analysis. See [`s3_job_definition.bucket_criteria.excludes` Block](#s3_job_definitionbucket_criteriaexcludes-block) for details.
-* `includes` - (Optional) Property- or tag-based conditions that determine which S3 buckets to include in the analysis. See [`s3_job_definition.bucket_criteria.includes` Block](#s3_job_definitionbucket_criteriaincludes-block) for details.
+* `excludes` - (Optional) Property- or tag-based conditions that determine which S3 buckets to exclude from the analysis. See [`bucket_criteria.excludes` Block](#bucket_criteriaexcludes-block) for details.
+* `includes` - (Optional) Property- or tag-based conditions that determine which S3 buckets to include in the analysis. See [`bucket_criteria.includes` Block](#bucket_criteriaincludes-block) for details.
 
-### `s3_job_definition.bucket_criteria.excludes` Block
+### `bucket_criteria.excludes` Block
 
 The `excludes` configuration block supports the following arguments:
 
-* `and` - (Optional) Array of conditions, one for each condition that determines which S3 buckets to include or exclude from the job. See [`s3_job_definition.bucket_criteria.excludes.and` Block](#s3_job_definitionbucket_criteriaexcludesand-block) for details.
+* `and` - (Optional) Array of conditions, one for each condition that determines which S3 buckets to include or exclude from the job. See [`bucket_criteria.excludes.and` Block](#bucket_criteriaexcludesand-block) for details.
 
-### `s3_job_definition.bucket_criteria.excludes.and` Block
+### `bucket_criteria.excludes.and` Block
 
 The `and` configuration block supports the following arguments:
 
-* `simple_criterion` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an S3 bucket from the job. See [`s3_job_definition.bucket_criteria.excludes.and.simple_criterion` Block](#s3_job_definitionbucket_criteriaexcludesandsimple_criterion-block) for details.
-* `tag_criterion` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an S3 bucket from the job. See [`s3_job_definition.bucket_criteria.excludes.and.tag_criterion` Block](#s3_job_definitionbucket_criteriaexcludesandtag_criterion-block) for details.
+* `simple_criterion` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an S3 bucket from the job. See [`excludes.simple_criterion` Block](#excludessimple_criterion-block) for details.
+* `tag_criterion` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an S3 bucket from the job. See [`excludes.tag_criterion` Block](#excludestag_criterion-block) for details.
 
-### `s3_job_definition.bucket_criteria.excludes.and.simple_criterion` Block
+### `excludes.simple_criterion` Block
 
 The `simple_criterion` configuration block supports the following arguments:
 
@@ -81,7 +81,7 @@ The `simple_criterion` configuration block supports the following arguments:
 * `key` - (Optional) Object property to use in the condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionkeyforjob).
 * `values` - (Optional) Array that lists the values to use in the condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionforjob).
 
-### `s3_job_definition.bucket_criteria.excludes.and.tag_criterion` Block
+### `excludes.tag_criterion` Block
 
 The `tag_criterion` configuration block supports the following arguments:
 
@@ -95,20 +95,20 @@ The `tag_values` configuration block supports the following arguments:
 * `key` - (Optional) Tag key.
 * `value` - (Optional) Tag value.
 
-### `s3_job_definition.bucket_criteria.includes` Block
+### `bucket_criteria.includes` Block
 
 The `includes` configuration block supports the following arguments:
 
-* `and` - (Optional) Array of conditions, one for each condition that determines which S3 buckets to include or exclude from the job. See [`s3_job_definition.bucket_criteria.includes.and` Block](#s3_job_definitionbucket_criteriaincludesand-block) for details.
+* `and` - (Optional) Array of conditions, one for each condition that determines which S3 buckets to include or exclude from the job. See [`bucket_criteria.includes.and` Block](#bucket_criteriaincludesand-block) for details.
 
-### `s3_job_definition.bucket_criteria.includes.and` Block
+### `bucket_criteria.includes.and` Block
 
 The `and` configuration block supports the following arguments:
 
-* `simple_criterion` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an S3 bucket from the job. See [`s3_job_definition.bucket_criteria.includes.and.simple_criterion` Block](#s3_job_definitionbucket_criteriaincludesandsimple_criterion-block) for details.
-* `tag_criterion` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an S3 bucket from the job. See [`s3_job_definition.bucket_criteria.includes.and.tag_criterion` Block](#s3_job_definitionbucket_criteriaincludesandtag_criterion-block) for details.
+* `simple_criterion` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an S3 bucket from the job. See [`includes.simple_criterion` Block](#includessimple_criterion-block) for details.
+* `tag_criterion` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an S3 bucket from the job. See [`includes.tag_criterion` Block](#includestag_criterion-block) for details.
 
-### `s3_job_definition.bucket_criteria.includes.and.simple_criterion` Block
+### `includes.simple_criterion` Block
 
 The `simple_criterion` configuration block supports the following arguments:
 
@@ -116,7 +116,7 @@ The `simple_criterion` configuration block supports the following arguments:
 * `key` - (Optional) Object property to use in the condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionkeyforjob).
 * `values` - (Optional) Array that lists the values to use in the condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionforjob).
 
-### `s3_job_definition.bucket_criteria.includes.and.tag_criterion` Block
+### `includes.tag_criterion` Block
 
 The `tag_criterion` configuration block supports the following arguments:
 
@@ -130,34 +130,34 @@ The `tag_values` configuration block supports the following arguments:
 * `key` - (Optional) Tag key.
 * `value` - (Optional) Tag value.
 
-### `s3_job_definition.bucket_definitions` Block
+### `bucket_definitions` Block
 
 The `bucket_definitions` configuration block supports the following arguments:
 
 * `account_id` - (Required) Unique identifier for the AWS account that owns the buckets.
 * `buckets` - (Required) Array that lists the names of the buckets.
 
-### `s3_job_definition.scoping` Block
+### `scoping` Block
 
 The `scoping` configuration block supports the following arguments:
 
-* `excludes` - (Optional) Property- or tag-based conditions that determine which objects to exclude from the analysis. See [`s3_job_definition.scoping.excludes` Block](#s3_job_definitionscopingexcludes-block) for details.
-* `includes` - (Optional) Property- or tag-based conditions that determine which objects to include in the analysis. See [`s3_job_definition.scoping.includes` Block](#s3_job_definitionscopingincludes-block) for details.
+* `excludes` - (Optional) Property- or tag-based conditions that determine which objects to exclude from the analysis. See [`scoping.excludes` Block](#scopingexcludes-block) for details.
+* `includes` - (Optional) Property- or tag-based conditions that determine which objects to include in the analysis. See [`scoping.includes` Block](#scopingincludes-block) for details.
 
-### `s3_job_definition.scoping.excludes` Block
+### `scoping.excludes` Block
 
 The `excludes` configuration block supports the following arguments:
 
-* `and` - (Optional) Array of conditions, one for each condition that determines which objects to include or exclude from the job. See [`s3_job_definition.scoping.excludes.and` Block](#s3_job_definitionscopingexcludesand-block) for details.
+* `and` - (Optional) Array of conditions, one for each condition that determines which objects to include or exclude from the job. See [`scoping.excludes.and` Block](#scopingexcludesand-block) for details.
 
-### `s3_job_definition.scoping.excludes.and` Block
+### `scoping.excludes.and` Block
 
 The `and` configuration block supports the following arguments:
 
-* `simple_scope_term` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an object from the job. See [`s3_job_definition.scoping.excludes.and.simple_scope_term` Block](#s3_job_definitionscopingexcludesandsimple_scope_term-block) for details.
-* `tag_scope_term` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an object from the job. See [`s3_job_definition.scoping.excludes.and.tag_scope_term` Block](#s3_job_definitionscopingexcludesandtag_scope_term-block) for details.
+* `simple_scope_term` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an object from the job. See [`excludes.simple_scope_term` Block](#excludessimple_scope_term-block) for details.
+* `tag_scope_term` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an object from the job. See [`excludes.tag_scope_term` Block](#excludestag_scope_term-block) for details.
 
-### `s3_job_definition.scoping.excludes.and.simple_scope_term` Block
+### `excludes.simple_scope_term` Block
 
 The `simple_scope_term` configuration block supports the following arguments:
 
@@ -165,7 +165,7 @@ The `simple_scope_term` configuration block supports the following arguments:
 * `key` - (Optional) Object property to use in the condition.
 * `values` - (Optional) Array that lists the values to use in the condition.
 
-### `s3_job_definition.scoping.excludes.and.tag_scope_term` Block
+### `excludes.tag_scope_term` Block
 
 The `tag_scope_term` configuration block supports the following arguments:
 
@@ -181,20 +181,20 @@ The `tag_values` configuration block supports the following arguments:
 * `key` - (Optional) Tag key.
 * `value` - (Optional) Tag value.
 
-### `s3_job_definition.scoping.includes` Block
+### `scoping.includes` Block
 
 The `includes` configuration block supports the following arguments:
 
-* `and` - (Optional) Array of conditions, one for each condition that determines which objects to include or exclude from the job. See [`s3_job_definition.scoping.includes.and` Block](#s3_job_definitionscopingincludesand-block) for details.
+* `and` - (Optional) Array of conditions, one for each condition that determines which objects to include or exclude from the job. See [`scoping.includes.and` Block](#scopingincludesand-block) for details.
 
-### `s3_job_definition.scoping.includes.and` Block
+### `scoping.includes.and` Block
 
 The `and` configuration block supports the following arguments:
 
-* `simple_scope_term` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an object from the job. See [`s3_job_definition.scoping.includes.and.simple_scope_term` Block](#s3_job_definitionscopingincludesandsimple_scope_term-block) for details.
-* `tag_scope_term` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an object from the job. See [`s3_job_definition.scoping.includes.and.tag_scope_term` Block](#s3_job_definitionscopingincludesandtag_scope_term-block) for details.
+* `simple_scope_term` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an object from the job. See [`includes.simple_scope_term` Block](#includessimple_scope_term-block) for details.
+* `tag_scope_term` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an object from the job. See [`includes.tag_scope_term` Block](#includestag_scope_term-block) for details.
 
-### `s3_job_definition.scoping.includes.and.simple_scope_term` Block
+### `includes.simple_scope_term` Block
 
 The `simple_scope_term` configuration block supports the following arguments:
 
@@ -202,7 +202,7 @@ The `simple_scope_term` configuration block supports the following arguments:
 * `key` - (Optional) Object property to use in the condition.
 * `values` - (Optional) Array that lists the values to use in the condition.
 
-### `s3_job_definition.scoping.includes.and.tag_scope_term` Block
+### `includes.tag_scope_term` Block
 
 The `tag_scope_term` configuration block supports the following arguments:
 
