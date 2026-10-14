@@ -1138,6 +1138,7 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 							innerMap, d := fwtypes.NewMapValueOf[types.String](innerCtx, innerElements)
 							diags.Append(d...)
 							if diags.HasError() {
+								tflog.SubsystemError(innerCtx, subsystemName, "Error flattening with NewMapValueOf")
 								return diags
 							}
 
@@ -1146,12 +1147,14 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 						map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
 						diags.Append(d...)
 						if diags.HasError() {
+							tflog.SubsystemError(ctx, subsystemName, "Error flattening outer map")
 							return diags
 						}
 
 						to, d := tTo.ValueFromMap(ctx, map_.MapValue)
 						diags.Append(d...)
 						if diags.HasError() {
+							tflog.SubsystemError(ctx, subsystemName, "Error populating map")
 							return diags
 						}
 
@@ -1189,6 +1192,7 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 							innerMap, d := fwtypes.NewMapValueOf[types.String](innerCtx, innerElements)
 							diags.Append(d...)
 							if diags.HasError() {
+								tflog.SubsystemError(innerCtx, subsystemName, "Error flattening with NewMapValueOf")
 								return diags
 							}
 
@@ -1197,12 +1201,14 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 						map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
 						diags.Append(d...)
 						if diags.HasError() {
+							tflog.SubsystemError(ctx, subsystemName, "Error flattening outer map")
 							return diags
 						}
 
 						to, d := tTo.ValueFromMap(ctx, map_.MapValue)
 						diags.Append(d...)
 						if diags.HasError() {
+							tflog.SubsystemError(ctx, subsystemName, "Error populating map")
 							return diags
 						}
 
