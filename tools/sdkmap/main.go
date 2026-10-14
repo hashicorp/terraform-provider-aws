@@ -10,6 +10,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -51,35 +52,40 @@ const (
 
 // resource is a resource and the functions that implement it.
 type resource struct {
-	Service  string
-	TypeName string
-	Plugin   plugin
+	Service  string `json:"service"`
+	TypeName string `json:"type_name"`
+	Plugin   plugin `json:"plugin"`
 	// Function is the factory function annotated with the resource's annotation, e.g. @SDKResource.
-	Function string
-	Position token.Position
+	Function string `json:"function"`
+	// Location is where Function is declared, as "<file>:<line>" relative to the repository root.
+	Location string `json:"location"`
 
-	Create, Read, Update, Delete *funcRef
-	CustomizeDiff                []*funcRef
+	Create        *funcRef   `json:"create,omitempty"`
+	Read          *funcRef   `json:"read,omitempty"`
+	Update        *funcRef   `json:"update,omitempty"`
+	Delete        *funcRef   `json:"delete,omitempty"`
+	CustomizeDiff []*funcRef `json:"customize_diff,omitempty"`
 	// Import is nil if the resource has no importer or uses schema.ImportStatePassthroughContext.
-	Import *funcRef
+	Import *funcRef `json:"import,omitempty"`
 
 	// SDKCalls is the sorted set of AWS SDK client methods reachable from the factory function, e.g. "s3.PutObjectAcl".
-	SDKCalls []string
+	SDKCalls []string `json:"sdk_calls"`
 }
 
 // funcRef is a reference to a function from a resource's schema.Resource.
 type funcRef struct {
 	// Expr is the reference as written, e.g. "resourceObjectCreate" or "verify.SetTagsDiff".
-	Expr string
-	// Position is where the function is defined: a package-level declaration (for a call, the called
-	// function's declaration), or else the function literal or call expression itself.
-	// It is the zero value if the function is not declared in the package, e.g. verify.SetTagsDiff or a method value.
-	Position token.Position
+	Expr string `json:"expr"`
+	// Location is where the function is defined, as "<file>:<line>" relative to the repository root:
+	// a package-level declaration (for a call, the called function's declaration), or else the function literal
+	// or call expression itself. It is empty if the function is not declared in the package, e.g. verify.SetTagsDiff or a method value.
+	Location string `json:"location,omitempty"`
 }
 
 func main() {
 	log.SetFlags(0)
 	root := flag.String("root", ".", "path to the root of the terraform-provider-aws repository")
+	out := flag.String("out", "sdkmap.json", "path of the JSON file to write")
 	flag.Parse()
 
 	a, err := load(*root)
@@ -87,17 +93,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var resources []resource
+	resources := []resource{}
 	for _, pkg := range a.services {
 		resources = append(resources, a.findSDKResources(pkg)...)
 	}
 
-	printResources(*root, resources)
-	log.Printf("found %d @SDKResource resources in %d packages", len(resources), len(a.services))
+	data, err := json.MarshalIndent(resources, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := os.WriteFile(*out, append(data, '\n'), 0o644); err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("found %d @SDKResource resources in %d packages, wrote %s", len(resources), len(a.services), *out)
 }
 
 // analyzer holds the parsed source shared by every resource.
 type analyzer struct {
+	// root is the path to the root of the repository, which locations are relative to.
+	root string
 	fset *token.FileSet
 	// imports maps each parsed file to its imports, keyed by the name each import is referred to by.
 	imports map[*token.File]map[string]string
@@ -127,6 +141,7 @@ type servicePackage struct {
 // load parses conns.AWSClient and every service package under root.
 func load(root string) (*analyzer, error) {
 	a := &analyzer{
+		root:           root,
 		fset:           token.NewFileSet(),
 		imports:        make(map[*token.File]map[string]string),
 		clientMethods:  make(map[string]string),
@@ -295,16 +310,16 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 				Service:  pkg.name,
 				Plugin:   pluginSDKv2,
 				Function: fn.Name.Name,
-				Position: a.fset.Position(fn.Pos()),
+				Location: a.location(fn),
 			}
 			if lit := returnedResource(fn); lit != nil {
 				a.addFuncRefs(pkg, &r, lit)
 			} else {
-				log.Printf("%s: %s does not return a schema.Resource literal", r.Position, r.Function)
+				log.Printf("%s: %s does not return a schema.Resource literal", r.Location, r.Function)
 			}
 			r.SDKCalls = a.findSDKCalls(pkg, fn, tagged)
 			if len(r.SDKCalls) == 0 {
-				log.Printf("%s: no AWS SDK calls found for %s", r.Position, r.Function)
+				log.Printf("%s: no AWS SDK calls found for %s", r.Location, r.Function)
 			}
 
 			// A factory function can be registered under several type names.
@@ -413,22 +428,32 @@ func (a *analyzer) newFuncRef(pkg *servicePackage, expr ast.Expr) *funcRef {
 	switch e := expr.(type) {
 	case *ast.Ident:
 		if d, ok := pkg.decls[e.Name]; ok {
-			ref.Position = a.fset.Position(d.Pos())
+			ref.Location = a.location(d)
 		}
 	case *ast.FuncLit:
 		ref.Expr = "func literal"
-		ref.Position = a.fset.Position(e.Pos())
+		ref.Location = a.location(e)
 	case *ast.CallExpr:
 		ref.Expr = types.ExprString(e.Fun) + "(...)"
-		ref.Position = a.fset.Position(e.Pos())
+		ref.Location = a.location(e)
 		if fn, ok := e.Fun.(*ast.Ident); ok {
 			if d, ok := pkg.decls[fn.Name]; ok {
-				ref.Position = a.fset.Position(d.Pos())
+				ref.Location = a.location(d)
 			}
 		}
 	}
 
 	return ref
+}
+
+// location returns where node is, as "<file>:<line>" relative to the repository root.
+func (a *analyzer) location(node ast.Node) string {
+	pos := a.fset.Position(node.Pos())
+	rel, err := filepath.Rel(a.root, pos.Filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return fmt.Sprintf("%s:%d", filepath.ToSlash(rel), pos.Line)
 }
 
 // callFinder collects the AWS SDK client methods called from the declarations it follows.
@@ -452,7 +477,9 @@ func (a *analyzer) findSDKCalls(pkg *servicePackage, factory *ast.FuncDecl, tagg
 		}
 	}
 
-	return slices.Sorted(maps.Keys(f.calls))
+	calls := slices.AppendSeq(make([]string, 0, len(f.calls)), maps.Keys(f.calls))
+	slices.Sort(calls)
+	return calls
 }
 
 // follow walks a declaration in pkg, once.
@@ -641,40 +668,6 @@ func resolveType(expr ast.Expr, imports map[string]string) string {
 // isSDKPackage reports whether importPath is an AWS SDK service package.
 func isSDKPackage(importPath string) bool {
 	return strings.HasPrefix(importPath, sdkPathPrefix)
-}
-
-// printResources writes resources to stdout, with paths relative to root.
-func printResources(root string, resources []resource) {
-	location := func(pos token.Position) string {
-		if !pos.IsValid() {
-			return ""
-		}
-		rel, err := filepath.Rel(root, pos.Filename)
-		if err != nil {
-			log.Fatal(err)
-		}
-		return fmt.Sprintf("%s:%d", filepath.ToSlash(rel), pos.Line)
-	}
-	printRef := func(kind string, ref *funcRef) {
-		if ref != nil {
-			fmt.Printf("\t%s\t%s\t%s\n", kind, ref.Expr, location(ref.Position))
-		}
-	}
-
-	for _, r := range resources {
-		fmt.Printf("%s\t%s\t%s\t%s\n", r.Service, r.TypeName, r.Function, location(r.Position))
-		printRef("Create", r.Create)
-		printRef("Read", r.Read)
-		printRef("Update", r.Update)
-		printRef("Delete", r.Delete)
-		for _, ref := range r.CustomizeDiff {
-			printRef("CustomizeDiff", ref)
-		}
-		printRef("Import", r.Import)
-		for _, call := range r.SDKCalls {
-			fmt.Printf("\tSDKCall\t%s\n", call)
-		}
-	}
 }
 
 // schemaLiteral returns the literal if expr is &schema.typeName{...}, or nil.
