@@ -23,6 +23,9 @@ import (
 
 func TestAccDirectoryServiceDataGroup_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resourceName1 := "aws_directoryservicedata_group.test[0]"
 	resourceName2 := "aws_directoryservicedata_group.test[1]"
@@ -90,6 +93,9 @@ func TestAccDirectoryServiceDataGroup_List_basic(t *testing.T) {
 
 func TestAccDirectoryServiceDataGroup_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resourceName1 := "aws_directoryservicedata_group.test[0]"
 	domainName := acctest.RandomDomainName(t)
@@ -156,6 +162,9 @@ func TestAccDirectoryServiceDataGroup_List_includeResource(t *testing.T) {
 
 func TestAccDirectoryServiceDataGroup_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resourceName1 := "aws_directoryservicedata_group.test[0]"
 	resourceName2 := "aws_directoryservicedata_group.test[1]"
