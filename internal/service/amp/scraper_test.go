@@ -377,6 +377,22 @@ func TestAccAMPScraper_cloudWatchDestination(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccScraperConfig_cloudWatchDestination(rName, "60s"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.cloudwatch.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination.0.cloudwatch.0.dataset_arn"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.vpc.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -896,7 +912,12 @@ resource "aws_prometheus_workspace" "test" {
 `, rName))
 }
 
-func testAccScraperConfig_cloudWatchDestination(rName string) string {
+func testAccScraperConfig_cloudWatchDestination(rName string, interval ...string) string {
+	scrapeInterval := "30s"
+	if len(interval) > 0 {
+		scrapeInterval = interval[0]
+	}
+
 	return acctest.ConfigCompose(testAccScraperConfig_baseVPC(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
@@ -923,7 +944,7 @@ resource "aws_service_discovery_service" "test" {
 resource "aws_prometheus_scraper" "test" {
   scrape_configuration = <<EOT
 global:
-  scrape_interval: 30s
+  scrape_interval: %[2]s
   scrape_timeout: 10s
 
 scrape_configs:
@@ -948,5 +969,5 @@ EOT
     }
   }
 }
-`, rName))
+`, rName, scrapeInterval))
 }
