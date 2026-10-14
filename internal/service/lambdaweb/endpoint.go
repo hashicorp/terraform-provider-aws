@@ -6,6 +6,7 @@ package lambdaweb
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 	"time"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -568,13 +569,11 @@ func setRegionalDomainNames(ctx context.Context, m *endpointResourceModel, regio
 // per-region domains: MultiRegion regional entries have no domain of their own
 // because traffic uses the global domain.
 func regionalDomainNames(ctx context.Context, regionalEndpoints map[string]awstypes.RegionalEndpoint) fwtypes.MapOfString {
-	elems := map[string]attr.Value{}
-	for region, ep := range regionalEndpoints {
-		if ep.DomainName != nil {
-			elems[region] = fwflex.StringToFramework(ctx, ep.DomainName)
-		}
-	}
-	return fwtypes.NewMapValueOfMust[types.String](ctx, elems)
+	m := tfmaps.ApplyToAllValues(regionalEndpoints, func(v awstypes.RegionalEndpoint) string {
+		return aws.ToString(v.DomainName)
+	})
+	maps.DeleteFunc(m, func(k string, v string) bool { return v == "" })
+	return fwflex.FlattenFrameworkStringValueMapOfString(ctx, m)
 }
 
 type revisionWeightModel struct {

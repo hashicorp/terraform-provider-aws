@@ -12,19 +12,27 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambdaweb "github.com/hashicorp/terraform-provider-aws/internal/service/lambdaweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkFunctionARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`web-function/`+name))
+}
 
 // testAccPreCheck skips acceptance tests in regions where the Lambda Web API
 // is not available.
@@ -67,23 +75,111 @@ func TestAccLambdaWebFunction_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Function/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &function),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`web-function/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "function_name", rName),
-					// Unset scaling and throttling are not reported by the API:
-					// account-level defaults apply server-side, invisibly.
-					resource.TestCheckNoResourceAttr(resourceName, "endpoint_config.0.scaling_config.0.max_environments"),
-					resource.TestCheckNoResourceAttr(resourceName, "endpoint_config.0.throttle_config.0.rate_limit"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkFunctionARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomainName), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("endpoint_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"auth_type":            tfknownvalue.StringExact(awstypes.AuthTypeApplicationManaged),
+						"auto_deployment_mode": tfknownvalue.StringExact(awstypes.AutoDeploymentModeLatestRevision),
+						names.AttrDescription:  knownvalue.Null(),
+						"endpoint_name":        knownvalue.StringExact("default"),
+						"endpoint_type":        tfknownvalue.StringExact(awstypes.EndpointTypeHomeRegion),
+						"regions": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.StringExact(acctest.Region()),
+						}),
+						"scaling_config":  knownvalue.Null(),
+						"throttle_config": knownvalue.Null(),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("latest_revision_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regional_domain_names"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"build_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"code_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"s3_object": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									names.AttrBucket: knownvalue.StringExact(rName),
+									names.AttrKey:    knownvalue.StringExact("function.zip"),
+									"version_id":     knownvalue.Null(),
+								})}),
+							})}),
+							"runtime_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"runtime": knownvalue.StringExact("nodejs24.x"),
+							})}),
+						})}),
+						names.AttrDescription: knownvalue.Null(),
+						names.AttrKMSKeyARN:   knownvalue.Null(),
+						"service_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"egress_network_connector_arn":    knownvalue.Null(),
+							"environment_variables":           knownvalue.Null(),
+							names.AttrExecutionRoleARN:        knownvalue.NotNull(),
+							"max_concurrency_per_environment": knownvalue.Int64Exact(64),
+							"telemetry_config":                knownvalue.ListSizeExact(0),
+							"timeout_seconds":                 knownvalue.Int64Exact(30),
+						})}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Function/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "function_name"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "function_name",
+			},
+		},
+	})
+}
+
+func TestAccLambdaWebFunction_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var function lambdaweb.GetWebFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Function/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &function),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambdaweb.ResourceFunction, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -245,38 +341,6 @@ func TestAccLambdaWebFunction_egressNetworkConnector(t *testing.T) {
 	})
 }
 
-func TestAccLambdaWebFunction_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var function lambdaweb.GetWebFunctionOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambdaweb_function.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFunctionConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionExists(ctx, t, resourceName, &function),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambdaweb.ResourceFunction, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-		},
-	})
-}
-
 func testAccCheckFunctionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LambdaWebClient(ctx)
@@ -287,14 +351,16 @@ func testAccCheckFunctionDestroy(ctx context.Context, t *testing.T) resource.Tes
 			}
 
 			_, err := tflambdaweb.FindWebFunctionByName(ctx, conn, rs.Primary.Attributes["function_name"])
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return nil
-			}
-			if err != nil {
-				return smarterr.NewError(err)
+
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return fmt.Errorf("Web Functions Function %s still exists", rs.Primary.Attributes["function_name"])
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Lambda Web Function %s still exists", rs.Primary.Attributes["function_name"])
 		}
 
 		return nil
@@ -310,12 +376,12 @@ func testAccCheckFunctionExists(ctx context.Context, t *testing.T, n string, v *
 
 		conn := acctest.ProviderMeta(ctx, t).LambdaWebClient(ctx)
 
-		out, err := tflambdaweb.FindWebFunctionByName(ctx, conn, rs.Primary.Attributes["function_name"])
+		output, err := tflambdaweb.FindWebFunctionByName(ctx, conn, rs.Primary.Attributes["function_name"])
 		if err != nil {
-			return smarterr.NewError(err)
+			return err
 		}
 
-		*v = *out
+		*v = *output
 
 		return nil
 	}

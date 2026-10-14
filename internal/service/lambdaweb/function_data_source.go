@@ -72,8 +72,8 @@ func (d *functionDataSource) Read(ctx context.Context, request datasource.ReadRe
 	}
 	data.ARN = fwflex.StringToFramework(ctx, out.FunctionArn)
 
-	if revisionID, err := findLatestRevisionID(ctx, conn, name); err == nil && revisionID != nil {
-		data.LatestRevisionID = fwflex.StringToFramework(ctx, revisionID)
+	if revision, err := findNewestRevision(ctx, conn, name); err == nil && revision != nil {
+		data.LatestRevisionID = fwflex.StringToFramework(ctx, revision.RevisionId)
 	} else if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return

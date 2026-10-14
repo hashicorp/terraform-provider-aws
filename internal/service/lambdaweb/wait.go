@@ -44,62 +44,6 @@ func findEndpointByName(ctx context.Context, conn *lambdaweb.Client, functionNam
 	return out, nil
 }
 
-func findRevisionByID(ctx context.Context, conn *lambdaweb.Client, functionName, revisionID string) (*lambdaweb.GetWebFunctionRevisionOutput, error) {
-	input := lambdaweb.GetWebFunctionRevisionInput{
-		FunctionName: aws.String(functionName),
-		RevisionId:   aws.String(revisionID),
-	}
-
-	out, err := conn.GetWebFunctionRevision(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{
-			LastError: err,
-		})
-	}
-	if err != nil {
-		return nil, smarterr.NewError(err)
-	}
-	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
-	}
-
-	return out, nil
-}
-
-func findLatestRevisionID(ctx context.Context, conn *lambdaweb.Client, functionName string) (*string, error) {
-	input := lambdaweb.ListWebFunctionRevisionsInput{
-		FunctionName: aws.String(functionName),
-	}
-
-	var latest *awstypes.FunctionRevisionSummary
-	for {
-		out, err := conn.ListWebFunctionRevisions(ctx, &input)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-		for i := range out.Revisions {
-			if latest == nil || createdBefore(latest.CreatedAt, out.Revisions[i].CreatedAt) {
-				latest = &out.Revisions[i]
-			}
-		}
-		if out.NextToken == nil {
-			break
-		}
-		input.NextToken = out.NextToken
-	}
-
-	if latest == nil {
-		return nil, nil
-	}
-	return latest.RevisionId, nil
-}
-
-// createdBefore reports whether timestamp a is earlier than b. A nil
-// timestamp is treated as the zero time (earliest).
-func createdBefore(a, b *time.Time) bool {
-	return aws.ToTime(a).Before(aws.ToTime(b))
-}
-
 func statusEndpoint(conn *lambdaweb.Client, functionName, endpointName string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findEndpointByName(ctx, conn, functionName, endpointName)
@@ -126,41 +70,6 @@ func statusEndpointUpdate(conn *lambdaweb.Client, functionName, endpointName str
 
 		return out, string(out.UpdateStatus), nil
 	}
-}
-
-func statusRevision(conn *lambdaweb.Client, functionName, revisionID string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		out, err := findRevisionByID(ctx, conn, functionName, revisionID)
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", smarterr.NewError(err)
-		}
-
-		return out, string(out.State), nil
-	}
-}
-
-func waitRevisionActive(ctx context.Context, conn *lambdaweb.Client, functionName, revisionID string, timeout time.Duration) (*lambdaweb.GetWebFunctionRevisionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.RevisionStatePending),
-		Target:                    enum.Slice(awstypes.RevisionStateActive),
-		Refresh:                   statusRevision(conn, functionName, revisionID),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionRevisionOutput); ok {
-		if reason := aws.ToString(out.StateReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
 }
 
 func waitEndpointActive(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {

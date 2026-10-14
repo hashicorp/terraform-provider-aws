@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"iter"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -37,6 +39,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -188,13 +191,6 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 						names.AttrKMSKeyARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
-							Validators: []validator.String{
-								// Key ARNs only: the service rejects alias ARNs.
-								stringvalidator.RegexMatches(
-									regexache.MustCompile(`^arn:(aws[a-z-]*):kms:[a-z0-9-]+:\d{12}:key/[a-z0-9-]+$`),
-									"must be a KMS key ARN (arn:<partition>:kms:<region>:<account>:key/<key-id>); alias ARNs are not accepted",
-								),
-							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -202,14 +198,52 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.NewListNestedObjectTypeOf[buildConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
+									"code_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[codeConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"s3_object": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[s3ObjectModel](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrBucket: schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	fwvalidators.S3BucketName,
+																},
+															},
+															names.AttrKey: schema.StringAttribute{
+																Required: true,
+															},
+															"version_id": schema.StringAttribute{
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"runtime_config": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[runtimeConfigModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
@@ -226,37 +260,6 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 											},
 										},
 									},
-									"code_config": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[codeConfigModel](ctx),
-										Validators: []validator.List{
-											listvalidator.IsRequired(),
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"s3_object": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[s3ObjectModel](ctx),
-													Validators: []validator.List{
-														listvalidator.IsRequired(),
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															names.AttrBucket: schema.StringAttribute{
-																Required: true,
-															},
-															names.AttrKey: schema.StringAttribute{
-																Required: true,
-															},
-															"version_id": schema.StringAttribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
 								},
 							},
 						},
@@ -264,39 +267,11 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.NewListNestedObjectTypeOf[serviceConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrExecutionRoleARN: schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-									},
-									"timeout_seconds": schema.Int64Attribute{
-										Optional: true,
-										// Assigned by the service (30) when unset: must be
-										// Computed, otherwise the value read back produces a
-										// perpetual diff.
-										Computed: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.UseStateForUnknown(),
-										},
-										Validators: []validator.Int64{
-											int64validator.Between(3, 900),
-										},
-									},
-									"max_concurrency_per_environment": schema.Int64Attribute{
-										Optional: true,
-										// Assigned by the service (64) when unset: see
-										// timeout_seconds above.
-										Computed: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.UseStateForUnknown(),
-										},
-										Validators: []validator.Int64{
-											int64validator.Between(1, 128),
-										},
-									},
 									// VPC egress. The API takes only a version-qualified connector
 									// ARN, which pins the revision to that connector version, and
 									// accepts it only for HomeRegion endpoints.
@@ -310,10 +285,38 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 										},
 									},
 									"environment_variables": schema.MapAttribute{
-										CustomType:  fwtypes.MapOfStringType,
-										Optional:    true,
-										Sensitive:   true,
-										ElementType: types.StringType,
+										CustomType: fwtypes.MapOfStringType,
+										Optional:   true,
+										Sensitive:  true,
+									},
+									names.AttrExecutionRoleARN: schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+									"max_concurrency_per_environment": schema.Int64Attribute{
+										Optional: true,
+										// Assigned by the service (64) when unset: see
+										// timeout_seconds above.
+										Computed: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
+										Validators: []validator.Int64{
+											int64validator.Between(1, 128),
+										},
+									},
+									"timeout_seconds": schema.Int64Attribute{
+										Optional: true,
+										// Assigned by the service (30) when unset: must be
+										// Computed, otherwise the value read back produces a
+										// perpetual diff.
+										Computed: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.UseStateForUnknown(),
+										},
+										Validators: []validator.Int64{
+											int64validator.Between(3, 900),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -331,12 +334,12 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"log_group": schema.StringAttribute{
-																Optional: true,
-															},
 															"application_log_level": schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.ApplicationLogLevel](),
 																Optional:   true,
+															},
+															"log_group": schema.StringAttribute{
+																Optional: true,
 															},
 															"system_log_level": schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.SystemLogLevel](),
@@ -514,6 +517,7 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 
 	conn := r.Meta().LambdaWebClient(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, plan.FunctionName)
 	var input lambdaweb.CreateWebFunctionInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -532,12 +536,10 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		ep.AutoDeploymentMode = awstypes.AutoDeploymentModeLatestRevision
 	}
 
-	name := plan.FunctionName.ValueString()
-
 	// IAM/S3-policy eventual consistency: a freshly created execution role or
 	// bucket policy can take tens of seconds to become visible to the service.
-	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func(ctx context.Context) (any, error) {
+	output, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
+		func(ctx context.Context) (*lambdaweb.CreateWebFunctionOutput, error) {
 			return conn.CreateWebFunction(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -556,35 +558,24 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
-	createOut := outputRaw.(*lambdaweb.CreateWebFunctionOutput)
 
-	// Set partial state so a failed wait below does not orphan the function.
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), name)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := waitFunctionCreated(ctx, conn, name, r.CreateTimeout(ctx, plan.Timeouts))
-	if err != nil {
+	if _, err := waitFunctionCreated(ctx, conn, name, r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root("function_name"), name)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	plan.FunctionARN = fwflex.StringToFramework(ctx, output.FunctionArn)
 
-	plan.FunctionARN = fwflex.StringToFramework(ctx, out.FunctionArn)
-
-	plan.LatestRevisionID = types.StringNull()
-	if createOut.Revision != nil {
-		plan.LatestRevisionID = fwflex.StringToFramework(ctx, createOut.Revision.RevisionId)
+	if output.Revision != nil {
+		revisionID := aws.ToString(output.Revision.RevisionId)
+		plan.LatestRevisionID = fwflex.StringValueToFramework(ctx, revisionID)
 
 		// Read the revision back: the function-level output carries no build or
 		// service configuration, so server-assigned values inside
 		// revision_config would otherwise remain unknown after apply.
-		rev, err := findRevisionByID(ctx, conn, name, aws.ToString(createOut.Revision.RevisionId))
+		rev, err := findWebFunctionRevisionByTwoPartKey(ctx, conn, name, revisionID)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
@@ -597,6 +588,8 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		}
 		restoreTelemetryConfig(ctx, &revModel, plan.RevisionConfig)
 		plan.RevisionConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &revModel)
+	} else {
+		plan.LatestRevisionID = types.StringNull()
 	}
 
 	plan.DomainName = types.StringNull()
@@ -654,30 +647,29 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	state.FunctionARN = fwflex.StringToFramework(ctx, out.FunctionArn)
-
-	revisionID, err := findLatestRevisionID(ctx, conn, name)
+	revision, err := findNewestRevision(ctx, conn, name)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
-	state.LatestRevisionID = fwflex.StringToFramework(ctx, revisionID)
 
-	// Refresh revision_config from the latest revision. GetWebFunction does not
-	// return the build and service configuration, but GetWebFunctionRevision
-	// does, so read it explicitly: otherwise revision_config is never
-	// reconciled with the service (no drift detection on code, environment
-	// variables, description or the KMS key) and cannot be populated on import.
-	priorRevisionConfig := state.RevisionConfig
-	state.RevisionConfig = fwtypes.NewListNestedObjectValueOfNull[revisionConfigModel](ctx)
-	if revisionID != nil {
-		rev, err := findRevisionByID(ctx, conn, name, aws.ToString(revisionID))
+	if revision != nil {
+		revisionID := aws.ToString(revision.RevisionId)
+		state.LatestRevisionID = fwflex.StringValueToFramework(ctx, revisionID)
+
+		rev, err := findWebFunctionRevisionByTwoPartKey(ctx, conn, name, revisionID)
 		switch {
 		case retry.NotFound(err):
 		case err != nil:
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
 		default:
+			// Refresh revision_config from the latest revision. GetWebFunction does not
+			// return the build and service configuration, but GetWebFunctionRevision
+			// does, so read it explicitly: otherwise revision_config is never
+			// reconciled with the service (no drift detection on code, environment
+			// variables, description or the KMS key) and cannot be populated on import.
+			priorRevisionConfig := state.RevisionConfig
 			var revModel revisionConfigModel
 			smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, rev, &revModel))
 			if resp.Diagnostics.HasError() {
@@ -686,6 +678,9 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 			restoreTelemetryConfig(ctx, &revModel, priorRevisionConfig)
 			state.RevisionConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &revModel)
 		}
+	} else {
+		state.LatestRevisionID = types.StringNull()
+		state.RevisionConfig = fwtypes.NewListNestedObjectValueOfNull[revisionConfigModel](ctx)
 	}
 
 	state.DomainName = types.StringNull()
@@ -761,7 +756,7 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 
 		revisionID := aws.ToString(revOut.RevisionId)
-		if _, err := waitRevisionActive(ctx, conn, name, revisionID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+		if _, err := waitFunctionRevisionActive(ctx, conn, name, revisionID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
 		}
@@ -871,6 +866,49 @@ func (r *functionResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
+func (r *functionResource) flatten(ctx context.Context, function *lambdaweb.GetWebFunctionOutput, revision *lambdaweb.GetWebFunctionRevisionOutput, endpoint *lambdaweb.GetWebFunctionEndpointOutput, data *functionResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, function, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if revision != nil {
+		data.LatestRevisionID = fwflex.StringToFramework(ctx, revision.RevisionId)
+
+		priorRevisionConfig := data.RevisionConfig
+		model, d := fwtypes.Nullified[revisionConfigModel](ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		diags.Append(fwflex.Flatten(ctx, revision, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		restoreTelemetryConfig(ctx, &model, priorRevisionConfig)
+
+		data.RevisionConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+	} else {
+		data.LatestRevisionID = types.StringNull()
+		data.RevisionConfig = fwtypes.NewListNestedObjectValueOfNull[revisionConfigModel](ctx)
+	}
+
+	if endpoint != nil {
+		data.DomainName = fwflex.StringToFramework(ctx, endpoint.DomainName)
+		data.RegionalDomainNames = regionalDomainNames(ctx, endpoint.RegionalEndpoints)
+	} else {
+		data.DomainName = types.StringNull()
+		data.EndpointConfig = fwtypes.NewListNestedObjectValueOfNull[endpointConfigModel](ctx)
+	}
+
+	return diags
+}
+
 func findWebFunctionByName(ctx context.Context, conn *lambdaweb.Client, name string) (*lambdaweb.GetWebFunctionOutput, error) {
 	input := lambdaweb.GetWebFunctionInput{
 		FunctionName: aws.String(name),
@@ -968,6 +1006,143 @@ func waitFunctionDeleted(ctx context.Context, conn *lambdaweb.Client, name strin
 	return nil, smarterr.NewError(err)
 }
 
+func findWebFunctionRevisionByTwoPartKey(ctx context.Context, conn *lambdaweb.Client, functionName, revisionID string) (*lambdaweb.GetWebFunctionRevisionOutput, error) {
+	input := lambdaweb.GetWebFunctionRevisionInput{
+		FunctionName: aws.String(functionName),
+		RevisionId:   aws.String(revisionID),
+	}
+	return findWebFunctionRevision(ctx, conn, &input)
+}
+
+func findWebFunctionRevision(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.GetWebFunctionRevisionInput) (*lambdaweb.GetWebFunctionRevisionOutput, error) {
+	out, err := conn.GetWebFunctionRevision(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+	if out == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	}
+
+	return out, nil
+}
+
+func statusFunctionRevision(conn *lambdaweb.Client, functionName, revisionID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findWebFunctionRevisionByTwoPartKey(ctx, conn, functionName, revisionID)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		return out, string(out.State), nil
+	}
+}
+
+func waitFunctionRevisionActive(ctx context.Context, conn *lambdaweb.Client, functionName, revisionID string, timeout time.Duration) (*lambdaweb.GetWebFunctionRevisionOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.RevisionStatePending),
+		Target:                    enum.Slice(awstypes.RevisionStateActive),
+		Refresh:                   statusFunctionRevision(conn, functionName, revisionID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionRevisionOutput); ok {
+		if reason := aws.ToString(out.StateReason); reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func findNewestRevision(ctx context.Context, conn *lambdaweb.Client, functionName string) (*awstypes.FunctionRevisionSummary, error) {
+	var newest *awstypes.FunctionRevisionSummary
+	input := lambdaweb.ListWebFunctionRevisionsInput{
+		FunctionName: aws.String(functionName),
+	}
+	for item, err := range listFunctionRevisions(ctx, conn, &input) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		if newest == nil || item.CreatedAt.After(aws.ToTime(newest.CreatedAt)) {
+			newest = &item
+		}
+	}
+
+	return newest, nil
+}
+
+func listFunctionRevisions(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionRevisionsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[awstypes.FunctionRevisionSummary, error] {
+	return tfiter.ConcatValuesWithError(listFunctionRevisionPages(ctx, conn, input, optFns...))
+}
+
+func listFunctionRevisionPages(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionRevisionsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[[]awstypes.FunctionRevisionSummary, error] {
+	return func(yield func([]awstypes.FunctionRevisionSummary, error) bool) {
+		pages := lambdaweb.NewListWebFunctionRevisionsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing Lambda Web Function Revisions: %w", err))
+				return
+			}
+
+			if !yield(page.Revisions, nil) {
+				return
+			}
+		}
+	}
+}
+
+func findOldestEndpoint(ctx context.Context, conn *lambdaweb.Client, functionName string) (*awstypes.FunctionEndpointSummary, error) {
+	var oldest *awstypes.FunctionEndpointSummary
+	input := lambdaweb.ListWebFunctionEndpointsInput{
+		FunctionName: aws.String(functionName),
+	}
+	for item, err := range listFunctionEndpoints(ctx, conn, &input) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		if oldest == nil || item.CreatedAt.Before(aws.ToTime(oldest.CreatedAt)) {
+			oldest = &item
+		}
+	}
+
+	return oldest, nil
+}
+
+func listFunctionEndpoints(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionEndpointsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[awstypes.FunctionEndpointSummary, error] {
+	return tfiter.ConcatValuesWithError(listFunctionEndpointPages(ctx, conn, input, optFns...))
+}
+
+func listFunctionEndpointPages(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionEndpointsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[[]awstypes.FunctionEndpointSummary, error] {
+	return func(yield func([]awstypes.FunctionEndpointSummary, error) bool) {
+		pages := lambdaweb.NewListWebFunctionEndpointsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing Lambda Web Function Endpoints: %w", err))
+				return
+			}
+
+			if !yield(page.Endpoints, nil) {
+				return
+			}
+		}
+	}
+}
+
 func readEndpointName(ctx context.Context, conn *lambdaweb.Client, functionName string, cfg fwtypes.ListNestedObjectValueOf[endpointConfigModel]) (string, error) {
 	if !cfg.IsNull() {
 		return endpointNameFromConfig(ctx, cfg)
@@ -981,30 +1156,11 @@ func readEndpointName(ctx context.Context, conn *lambdaweb.Client, functionName 
 	// on endpoint_name and endpoint_type: the first apply after import would
 	// then replace the function, silently deleting every other endpoint it
 	// owns along with their domain names.
-	input := lambdaweb.ListWebFunctionEndpointsInput{
-		FunctionName: aws.String(functionName),
+	oldest, err := findOldestEndpoint(ctx, conn, functionName)
+	if err != nil || oldest == nil {
+		return "", err
 	}
 
-	var oldest *awstypes.FunctionEndpointSummary
-	for {
-		out, err := conn.ListWebFunctionEndpoints(ctx, &input)
-		if err != nil {
-			return "", err
-		}
-		for i := range out.Endpoints {
-			if oldest == nil || createdBefore(out.Endpoints[i].CreatedAt, oldest.CreatedAt) {
-				oldest = &out.Endpoints[i]
-			}
-		}
-		if out.NextToken == nil {
-			break
-		}
-		input.NextToken = out.NextToken
-	}
-
-	if oldest == nil {
-		return "", nil
-	}
 	return aws.ToString(oldest.EndpointName), nil
 }
 
@@ -1085,9 +1241,9 @@ type throttleConfigModel struct {
 }
 
 type revisionConfigModel struct {
+	BuildConfig   fwtypes.ListNestedObjectValueOf[buildConfigModel]   `tfsdk:"build_config"`
 	Description   types.String                                        `tfsdk:"description"`
 	KMSKeyARN     fwtypes.ARN                                         `tfsdk:"kms_key_arn"`
-	BuildConfig   fwtypes.ListNestedObjectValueOf[buildConfigModel]   `tfsdk:"build_config"`
 	ServiceConfig fwtypes.ListNestedObjectValueOf[serviceConfigModel] `tfsdk:"service_config"`
 }
 
@@ -1111,12 +1267,12 @@ type runtimeConfigModel struct {
 }
 
 type serviceConfigModel struct {
-	ExecutionRoleARN             fwtypes.ARN                                           `tfsdk:"execution_role_arn"`
 	EgressNetworkConnectorARN    types.String                                          `tfsdk:"egress_network_connector_arn"`
-	TimeoutSeconds               types.Int64                                           `tfsdk:"timeout_seconds"`
-	MaxConcurrencyPerEnvironment types.Int64                                           `tfsdk:"max_concurrency_per_environment"`
 	EnvironmentVariables         fwtypes.MapOfString                                   `tfsdk:"environment_variables"`
+	ExecutionRoleARN             fwtypes.ARN                                           `tfsdk:"execution_role_arn"`
+	MaxConcurrencyPerEnvironment types.Int64                                           `tfsdk:"max_concurrency_per_environment"`
 	TelemetryConfig              fwtypes.ListNestedObjectValueOf[telemetryConfigModel] `tfsdk:"telemetry_config"`
+	TimeoutSeconds               types.Int64                                           `tfsdk:"timeout_seconds"`
 }
 
 type telemetryConfigModel struct {
