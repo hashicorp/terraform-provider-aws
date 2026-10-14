@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1726,4 +1727,182 @@ data "aws_iam_role" "workspaces-default" {
 }
 `, rName),
 	)
+}
+
+func testAccDirectory_entra(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.WorkspaceDirectory
+	rName := acctest.RandString(t, 8)
+	tenant_id := create.UUID(ctx)
+
+	resourceName := "aws_workspaces_directory.entra"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckWorkSpacesBYOLEnabled(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_entra(rName, tenant_id),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_type", "PERSONAL"),
+					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "AWS_IAM_IDENTITY_CENTER"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_directory_name", fmt.Sprintf("tf-testacc-workspaces-directory-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "workspace_directory_description", fmt.Sprintf("tf-testacc-workspaces-directory-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "microsoft_entra_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "microsoft_entra_config.0.application_config_secret_arn", "aws_secretsmanager_secret.main", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "microsoft_entra_config.0.tenant_id", tenant_id),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDirectoryConfig_entra(rName, tenant_id string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		//lintignore:AWSAT003
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+data "aws_iam_policy_document" "kms_policy" {
+  statement {
+    sid       = "EnableIAMUserPermissions"
+    effect    = "Allow"
+    actions   = ["kms:*"]
+    resources = ["*"]
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+  statement {
+    sid       = "AllowAccessForWorkspacesSP"
+    effect    = "Allow"
+    actions   = ["kms:Decrypt"]
+    resources = ["*"]
+    principals {
+      type        = "Service"
+      identifiers = ["workspaces.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "secretsmanager_policy" {
+  statement {
+    sid       = "AllowAccessForWorkspacesSP"
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = ["*"]
+    principals {
+      type        = "Service"
+      identifiers = ["workspaces.amazonaws.com"]
+    }
+  }
+}
+locals {
+  region_workspaces_az_ids = {
+    "us-east-1" = formatlist("use1-az%%d", [2, 4, 6])
+    "eu-west-1" = formatlist("euw1-az%%d", [1, 2, 3])
+    "eu-west-2" = formatlist("euw2-az%%d", [2, 3])
+  }
+
+  workspaces_az_ids = lookup(local.region_workspaces_az_ids, data.aws_region.current.region, data.aws_availability_zones.available.zone_ids)
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+
+resource "aws_subnet" "primary" {
+  vpc_id               = aws_vpc.main.id
+  availability_zone_id = local.workspaces_az_ids[0]
+  cidr_block           = "10.0.1.0/24"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s-primary"
+  }
+}
+
+resource "aws_subnet" "secondary" {
+  vpc_id               = aws_vpc.main.id
+  availability_zone_id = local.workspaces_az_ids[1]
+  cidr_block           = "10.0.2.0/24"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s-secondary"
+  }
+}
+
+resource "aws_kms_key" "main" {
+  description             = "tf-testacc-workspaces-directory-%[1]s"
+  enable_key_rotation     = false
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key_policy" "main" {
+  key_id = aws_kms_key.main.key_id
+  policy = data.aws_iam_policy_document.kms_policy.json
+}
+
+resource "aws_secretsmanager_secret" "main" {
+  name                    = "tf-testacc-workspaces-directory-%[1]s"
+  kms_key_id              = aws_kms_key.main.arn
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_policy" "main" {
+  secret_arn = aws_secretsmanager_secret.main.arn
+  policy     = data.aws_iam_policy_document.secretsmanager_policy.json
+}
+
+resource "aws_secretsmanager_secret_version" "main" {
+  secret_id = aws_secretsmanager_secret.main.id
+  secret_string = jsonencode({
+    "application_id"       = "application_id",
+    "application_password" = "application_password"
+  })
+}
+
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_workspaces_directory" "entra" {
+  subnet_ids                      = [aws_subnet.primary.id, aws_subnet.secondary.id]
+  workspace_type                  = "PERSONAL"
+  user_identity_type              = "AWS_IAM_IDENTITY_CENTER"
+  workspace_directory_name        = "tf-testacc-workspaces-directory-%[1]s"
+  workspace_directory_description = "tf-testacc-workspaces-directory-%[1]s"
+
+  idc_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  microsoft_entra_config {
+    application_config_secret_arn = aws_secretsmanager_secret.main.arn
+    tenant_id                     = %[2]q
+  }
+
+  tenancy = "DEDICATED"
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName, tenant_id))
 }
