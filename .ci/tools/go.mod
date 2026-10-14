@@ -8,10 +8,16 @@ require (
 	github.com/golangci/golangci-lint/v2 v2.14.0
 	github.com/golangci/misspell v0.8.0
 	github.com/hashicorp/go-changelog v0.0.0-20250127101332-effe3832fb0b
+	// Fork of rhysd/actionlint, dormant upstream since April 2026. This is v1.7.12 plus two open
+	// upstream PRs we need: #732 (`$/` self-repository `uses:` syntax, which zizmor wants and
+	// upstream rejects as malformed) and #735 (go.yaml.in/yaml/v4 rc.6, so actionlint and
+	// golangci-lint can share it without a replace directive). Switch back to
+	// rhysd/actionlint if it starts releasing again; otherwise re-evaluate it and the other forks
+	// around mid-2027.
+	github.com/katbyte/actionlint v1.7.13
 	github.com/katbyte/tctest v1.3.4
 	github.com/katbyte/terrafmt v1.0.1
 	github.com/pavius/impi v0.0.3
-	github.com/rhysd/actionlint v1.7.12
 	github.com/terraform-linters/tflint v0.64.0
 	golang.org/x/tools v0.52.0
 	mvdan.cc/gofumpt v0.12.0
