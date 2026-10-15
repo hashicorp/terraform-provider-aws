@@ -1,6 +1,14 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_directory_service_directory_setting" "test" {
+  region = var.region
+
+  directory_id = aws_directory_service_directory.test.id
+  name         = "TLS_1_0"
+  value        = "Disable"
+}
+
 data "aws_availability_zones" "available" {
   region = var.region
 

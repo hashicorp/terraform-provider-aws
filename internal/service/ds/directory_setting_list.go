@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 )
 
-// @FrameworkListResource("aws_directory_service_directory_settings")
+// @FrameworkListResource("aws_directory_service_directory_setting")
 func newDirectorySettingsResourceAsListResource() list.ListResourceWithConfigure {
 	return &directorySettingsListResource{}
 }
@@ -75,7 +75,7 @@ func (l *directorySettingsListResource) List(ctx context.Context, request list.L
 		}
 
 		// Each requested (non-default) setting maps to its own
-		// aws_directory_service_directory_settings resource instance.
+		// aws_directory_service_directory_setting resource instance.
 		for _, entry := range entries {
 			if entry.RequestedValue == nil {
 				continue

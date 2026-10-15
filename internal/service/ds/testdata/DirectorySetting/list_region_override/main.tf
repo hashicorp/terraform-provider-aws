@@ -1,7 +1,17 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_directory_service_directory_setting" "test" {
+  region = var.region
+
+  directory_id = aws_directory_service_directory.test.id
+  name         = "TLS_1_0"
+  value        = "Disable"
+}
+
 data "aws_availability_zones" "available" {
+  region = var.region
+
   exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
   state            = "available"
 
@@ -12,6 +22,8 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "test" {
+  region = var.region
+
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -20,7 +32,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count = 2
+  count  = 2
+  region = var.region
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
@@ -32,6 +45,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_directory_service_directory" "test" {
+  region = var.region
+
   name     = "corp.${var.rName}.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
@@ -43,17 +58,14 @@ resource "aws_directory_service_directory" "test" {
   }
 }
 
-resource "aws_directory_service_directory_settings" "test" {
-  directory_id = aws_directory_service_directory.test.id
-
-  setting {
-    name  = "TLS_1_0"
-    value = "Disable"
-  }
-}
-
 variable "rName" {
   description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
   type        = string
   nullable    = false
 }

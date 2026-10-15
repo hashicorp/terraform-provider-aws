@@ -33,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_directory_service_directory_settings", name="Directory Settings")
+// @FrameworkResource("aws_directory_service_directory_setting", name="Directory Setting")
 // @IdentityAttribute("directory_id")
 // @IdentityAttribute("name")
 // @ImportIDHandler("directorySettingsImportID")

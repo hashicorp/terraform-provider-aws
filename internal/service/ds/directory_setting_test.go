@@ -30,7 +30,7 @@ func TestAccDSDirectorySettings_basic(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
-	resourceName := "aws_directory_service_directory_settings.test"
+	resourceName := "aws_directory_service_directory_setting.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -40,12 +40,12 @@ func TestAccDSDirectorySettings_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectorySettingsDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDirectorySettingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectorySettingsConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectorySettingsExists(ctx, t, resourceName),
+					testAccCheckDirectorySettingExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("directory_id"), knownvalue.NotNull()),
@@ -74,7 +74,7 @@ func TestAccDSDirectorySettings_update(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
-	resourceName := "aws_directory_service_directory_settings.test"
+	resourceName := "aws_directory_service_directory_setting.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -84,7 +84,7 @@ func TestAccDSDirectorySettings_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectorySettingsDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDirectorySettingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectorySettingsConfig_value(rName, domainName, "Disable"),
@@ -119,7 +119,7 @@ func TestAccDSDirectorySettings_disappears_Directory(t *testing.T) {
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName(t)
-	resourceName := "aws_directory_service_directory_settings.test"
+	resourceName := "aws_directory_service_directory_setting.test"
 	directoryResourceName := "aws_directory_service_directory.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -130,12 +130,12 @@ func TestAccDSDirectorySettings_disappears_Directory(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectorySettingsDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDirectorySettingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectorySettingsConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectorySettingsExists(ctx, t, resourceName),
+					testAccCheckDirectorySettingExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceDirectory(), directoryResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -152,12 +152,12 @@ func TestAccDSDirectorySettings_disappears_Directory(t *testing.T) {
 	})
 }
 
-func testAccCheckDirectorySettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckDirectorySettingDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_directory_service_directory_settings" {
+			if rs.Type != "aws_directory_service_directory_setting" {
 				continue
 			}
 
@@ -179,7 +179,7 @@ func testAccCheckDirectorySettingsDestroy(ctx context.Context, t *testing.T) res
 	}
 }
 
-func testAccCheckDirectorySettingsExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
+func testAccCheckDirectorySettingExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -219,7 +219,7 @@ resource "aws_directory_service_directory" "test" {
   }
 }
 
-resource "aws_directory_service_directory_settings" "test" {
+resource "aws_directory_service_directory_setting" "test" {
   directory_id = aws_directory_service_directory.test.id
   name         = "TLS_1_0"
   value        = %[2]q

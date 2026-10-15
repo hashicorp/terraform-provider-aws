@@ -1,7 +1,7 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-list "aws_directory_service_directory_settings" "test" {
+list "aws_directory_service_directory_setting" "test" {
   provider = aws
 
   config {

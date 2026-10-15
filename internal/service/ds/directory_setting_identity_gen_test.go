@@ -20,10 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDSDirectorySettings_Identity_basic(t *testing.T) {
+func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_directory_service_directory_settings.test"
+	resourceName := "aws_directory_service_directory_setting.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -35,17 +35,17 @@ func TestAccDSDirectorySettings_Identity_basic(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
-		CheckDestroy:             testAccCheckDirectorySettingsDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDirectorySettingDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectorySettingsExists(ctx, t, resourceName),
+					testAccCheckDirectorySettingExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -53,14 +53,16 @@ func TestAccDSDirectorySettings_Identity_basic(t *testing.T) {
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 						"directory_id":      knownvalue.NotNull(),
+						names.AttrName:      knownvalue.NotNull(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("directory_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
 				},
 			},
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -74,7 +76,7 @@ func TestAccDSDirectorySettings_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -85,6 +87,7 @@ func TestAccDSDirectorySettings_Identity_basic(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("directory_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -92,7 +95,7 @@ func TestAccDSDirectorySettings_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -102,6 +105,7 @@ func TestAccDSDirectorySettings_Identity_basic(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("directory_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -110,10 +114,10 @@ func TestAccDSDirectorySettings_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccDSDirectorySettings_Identity_regionOverride(t *testing.T) {
+func TestAccDSDirectorySetting_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_directory_service_directory_settings.test"
+	resourceName := "aws_directory_service_directory_setting.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -130,7 +134,7 @@ func TestAccDSDirectorySettings_Identity_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -141,14 +145,16 @@ func TestAccDSDirectorySettings_Identity_regionOverride(t *testing.T) {
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 						"directory_id":      knownvalue.NotNull(),
+						names.AttrName:      knownvalue.NotNull(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("directory_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
 				},
 			},
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -163,7 +169,7 @@ func TestAccDSDirectorySettings_Identity_regionOverride(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -175,6 +181,7 @@ func TestAccDSDirectorySettings_Identity_regionOverride(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("directory_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
@@ -182,7 +189,7 @@ func TestAccDSDirectorySettings_Identity_regionOverride(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -193,6 +200,7 @@ func TestAccDSDirectorySettings_Identity_regionOverride(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("directory_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},

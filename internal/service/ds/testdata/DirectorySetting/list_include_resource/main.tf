@@ -1,5 +1,13 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_directory_service_directory_setting" "test" {
+  directory_id = aws_directory_service_directory.test.id
+  name         = "TLS_1_0"
+  value        = "Disable"
+}
+
 data "aws_availability_zones" "available" {
-{{- template "region" }}
   exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
   state            = "available"
 
@@ -10,7 +18,6 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "test" {
-{{- template "region" }}
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -19,7 +26,6 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-{{- template "region" }}
   count = 2
 
   vpc_id            = aws_vpc.test.id
@@ -32,14 +38,19 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_directory_service_directory" "test" {
-{{- template "region" }}
-  name     = "${var.rName}.test"
+  name     = "corp.${var.rName}.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
-  size     = "Small"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = aws_subnet.test[*].id
   }
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
