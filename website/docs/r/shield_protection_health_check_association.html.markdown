@@ -31,7 +31,7 @@ resource "aws_eip" "example" {
 
 resource "aws_shield_protection" "example" {
   name         = "example-protection"
-  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.example.id}"
+  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.example.id}"
 }
 
 resource "aws_route53_health_check" "example" {
@@ -57,7 +57,7 @@ resource "aws_shield_protection_health_check_association" "example" {
 
 This resource supports the following arguments:
 
-* `health_check_arn` - (Required) The ARN (Amazon Resource Name) of the Route53 Health Check resource which will be associated to the protected resource.
+* `health_check_arn` - (Required) ARN of the Route53 Health Check resource which will be associated to the protected resource.
 * `shield_protection_id` - (Required) The ID of the protected resource.
 
 ## Attribute Reference

@@ -26,27 +26,49 @@ resource "aws_xray_group" "example" {
 
 ## Argument Reference
 
-* `group_name` - (Required) The name of the group.
-* `filter_expression` - (Required) The filter expression defining criteria by which to group traces. more info can be found in official [docs](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html).
+This resource supports the following arguments:
+
+* `filter_expression` - (Required) Filter expression defining criteria by which to group traces. More info can be found in official [docs](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html).
+* `group_name` - (Required) Name of the group.
 * `insights_configuration` - (Optional) Configuration options for enabling insights.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Nested fields
+### `insights_configuration` Block
 
-#### `insights_configuration`
-
-* `insights_enabled` - (Required) Specifies whether insights are enabled.
-* `notifications_enabled` - (Optional) Specifies whether insight notifications are enabled.
+* `insights_enabled` - (Required) Whether insights are enabled.
+* `notifications_enabled` - (Optional) Whether insight notifications are enabled.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ARN of the Group.
-* `arn` - The ARN of the Group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the Group.
+* `id` - ARN of the Group.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_xray_group.example
+  identity = {
+    "arn" = "arn:aws:xray:us-west-2:123456789012:group/example-group/AFAEAFE"
+  }
+}
+
+resource "aws_xray_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the X-Ray group.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import XRay Groups using the ARN. For example:
 

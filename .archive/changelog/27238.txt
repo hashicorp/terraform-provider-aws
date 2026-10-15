@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_organizations_policy_attachment: Handle missing policy when reading policy attachment
-```

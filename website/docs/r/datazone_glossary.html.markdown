@@ -72,7 +72,6 @@ resource "aws_datazone_project" "test" {
   skip_deletion_check = true
 }
 
-
 resource "aws_datazone_glossary" "test" {
   description               = "description"
   name                      = "example_name"
@@ -103,6 +102,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the glossary. Must have a length between 0 and 4096.
 * `status` - (Optional) Status of business glossary. Valid values are DISABLED and ENABLED.
 
@@ -110,11 +110,39 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Id of the Glossary.
+* `id` - ID of the Glossary.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Glossary using the `example_id_arg`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datazone_glossary.example
+  identity = {
+    domain_identifier = "domain-id-12345678"
+    id                = "glossary-id-12345678"
+  }
+}
+
+resource "aws_datazone_glossary" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_identifier` - (String) Identifier of the DataZone domain.
+* `id` - (String) ID of the glossary.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Glossary using a comma-delimited string combining the domain ID, glossary ID, and the ID of the project it's under. For example:
 
 ```terraform
 import {
@@ -123,7 +151,7 @@ import {
 }
 ```
 
-Using `terraform import`, import DataZone Glossary using the import Datazone Glossary using a comma-delimited string combining the domain id, glossary id, and the id of the project it's under. For example:
+Using `terraform import`, import DataZone Glossary using the import DataZone Glossary using a comma-delimited string combining the domain ID, glossary ID, and the ID of the project it's under. For example:
 
 ```console
 % terraform import aws_datazone_glossary.example domain-id,glossary-id,owning-project-identifier

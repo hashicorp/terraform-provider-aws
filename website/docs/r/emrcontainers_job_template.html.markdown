@@ -33,11 +33,12 @@ resource "aws_emrcontainers_job_template" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `job_template_data` - (Required) The job template data which holds values of StartJobRun API request.
 * `kms_key_arn` - (Optional) The KMS key ARN used to encrypt the job template.
-* `name` – (Required) The specified name of the job template.
+* `name` - (Required) The specified name of the job template.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### job_template_data Arguments
@@ -53,24 +54,24 @@ The following arguments are required:
 * `application_configuration` - (Optional) The configurations for the application running by the job run.
 * `monitoring_configuration` - (Optional) The configurations for monitoring.
 
-##### application_configuration Arguments
+#### application_configuration Arguments
 
 * `classification` - (Required) The classification within a configuration.
 * `configurations` - (Optional) A list of additional configurations to apply within a configuration object.
 * `properties` - (Optional) A set of properties specified within a configuration classification.
 
-##### monitoring_configuration Arguments
+#### monitoring_configuration Arguments
 
 * `cloud_watch_monitoring_configuration` - (Optional) Monitoring configurations for CloudWatch.
 * `persistent_app_ui` - (Optional)  Monitoring configurations for the persistent application UI.
 * `s3_monitoring_configuration` - (Optional) Amazon S3 configuration for monitoring log publishing.
 
-###### cloud_watch_monitoring_configuration Arguments
+#### cloud_watch_monitoring_configuration Arguments
 
 * `log_group_name` - (Required) The name of the log group for log publishing.
 * `log_stream_name_prefix` - (Optional) The specified name prefix for log streams.
 
-###### s3_monitoring_configuration Arguments
+#### s3_monitoring_configuration Arguments
 
 * `log_uri` - (Optional) Amazon S3 destination URI for log publishing.
 
@@ -79,12 +80,12 @@ The following arguments are required:
 * `spark_sql_job_driver` - (Optional) The job driver for job type.
 * `spark_submit_job_driver` - (Optional) The job driver parameters specified for spark submit.
 
-##### spark_sql_job_driver Arguments
+#### spark_sql_job_driver Arguments
 
 * `entry_point` - (Optional) The SQL file to be executed.
 * `spark_sql_parameters` - (Optional) The Spark parameters to be included in the Spark SQL command.
 
-##### spark_submit_job_driver Arguments
+#### spark_submit_job_driver Arguments
 
 * `entry_point` - (Required) The entry point of job application.
 * `entry_point_arguments` - (Optional) The arguments for job application.
@@ -97,6 +98,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the job template.
 * `id` - The ID of the job template.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `delete` - (Default `90m`)
 
 ## Import
 

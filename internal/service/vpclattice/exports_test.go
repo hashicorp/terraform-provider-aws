@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice
@@ -6,9 +6,13 @@ package vpclattice
 // Exports for use in tests only.
 var (
 	ResourceAccessLogSubscription             = resourceAccessLogSubscription
+	ResourceAuthPolicy                        = resourceAuthPolicy
+	ResourceDomainVerification                = newDomainVerificationResource
 	ResourceListener                          = resourceListener
+	ResourceListenerRule                      = resourceListenerRule
 	ResourceResourceConfiguration             = newResourceConfigurationResource
 	ResourceResourceGateway                   = newResourceGatewayResource
+	ResourceResourcePolicy                    = resourceResourcePolicy
 	ResourceService                           = resourceService
 	ResourceServiceNetwork                    = resourceServiceNetwork
 	ResourceServiceNetworkResourceAssociation = newServiceNetworkResourceAssociationResource
@@ -18,9 +22,13 @@ var (
 	ResourceTargetGroupAttachment             = resourceTargetGroupAttachment
 
 	FindAccessLogSubscriptionByID             = findAccessLogSubscriptionByID
+	FindAuthPolicyByID                        = findAuthPolicyByID
+	FindDomainVerificationByID                = findDomainVerificationByID
 	FindListenerByTwoPartKey                  = findListenerByTwoPartKey
+	FindListenerRuleByThreePartKey            = findListenerRuleByThreePartKey
 	FindResourceConfigurationByID             = findResourceConfigurationByID
 	FindResourceGatewayByID                   = findResourceGatewayByID
+	FindResourcePolicyByID                    = findResourcePolicyByID
 	FindServiceByID                           = findServiceByID
 	FindServiceNetworkByID                    = findServiceNetworkByID
 	FindServiceNetworkResourceAssociationByID = findServiceNetworkResourceAssociationByID
@@ -29,7 +37,6 @@ var (
 	FindTargetByThreePartKey                  = findTargetByThreePartKey
 	FindTargetGroupByID                       = findTargetGroupByID
 
-	IDFromIDOrARN                               = idFromIDOrARN
-	SuppressEquivalentCloudWatchLogsLogGroupARN = suppressEquivalentCloudWatchLogsLogGroupARN
-	SuppressEquivalentIDOrARN                   = suppressEquivalentIDOrARN
+	IDFromIDOrARN             = idFromIDOrARN
+	SuppressEquivalentIDOrARN = suppressEquivalentIDOrARN
 )

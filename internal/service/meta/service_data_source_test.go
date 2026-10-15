@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package meta_test
@@ -19,7 +19,7 @@ func TestAccMetaServiceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_service.test"
 	serviceID := "ec2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -28,6 +28,7 @@ func TestAccMetaServiceDataSource_basic(t *testing.T) {
 				Config: testAccServiceDataSourceConfig_serviceID(serviceID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", serviceID, acctest.Region(), "amazonaws.com")),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, dataSourceName, "reverse_dns_name"),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", acctest.Partition()),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
@@ -45,7 +46,7 @@ func TestAccMetaServiceDataSource_irregularServiceID(t *testing.T) {
 	dataSourceName := "data.aws_service.test"
 	serviceID := "resource-explorer-2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -70,7 +71,7 @@ func TestAccMetaServiceDataSource_irregularServiceIDUnsupported(t *testing.T) {
 	dataSourceName := "data.aws_service.test"
 	serviceID := "resourceexplorer2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -95,7 +96,7 @@ func TestAccMetaServiceDataSource_byReverseDNSName(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -118,7 +119,7 @@ func TestAccMetaServiceDataSource_byDNSName(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -141,7 +142,7 @@ func TestAccMetaServiceDataSource_byParts(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -162,7 +163,7 @@ func TestAccMetaServiceDataSource_unsupported(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -215,7 +216,7 @@ data "aws_region" "current" {}
 
 data "aws_service" "test" {
   reverse_dns_prefix = "com.amazonaws"
-  region             = data.aws_region.current.name
+  region             = data.aws_region.current.region
   service_id         = "s3"
 }
 `

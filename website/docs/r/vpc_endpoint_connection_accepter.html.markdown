@@ -43,6 +43,7 @@ resource "aws_vpc_endpoint_connection_accepter" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_endpoint_id` - (Required) AWS VPC Endpoint ID.
 * `vpc_endpoint_service_id` - (Required) AWS VPC Endpoint Service ID.
 
@@ -50,7 +51,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the VPC Endpoint Connection.
+* `id` - ID of the VPC Endpoint Connection.
 * `vpc_endpoint_state` - State of the VPC Endpoint.
 
 ## Import

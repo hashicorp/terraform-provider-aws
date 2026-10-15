@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds
@@ -12,8 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -30,8 +32,14 @@ func RegisterSweepers() {
 			"aws_fsx_windows_file_system",
 			"aws_transfer_server",
 			"aws_workspaces_directory",
+			"aws_directory_service_ip_route",
 			"aws_directory_service_region",
 		},
+	})
+
+	resource.AddTestSweepers("aws_directory_service_ip_route", &resource.Sweeper{
+		Name: "aws_directory_service_ip_route",
+		F:    sweepIPRoutes,
 	})
 
 	resource.AddTestSweepers("aws_directory_service_region", &resource.Sweeper{
@@ -44,7 +52,7 @@ func sweepDirectories(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DSClient(ctx)
 	input := &directoryservice.DescribeDirectoriesInput{}
@@ -85,7 +93,7 @@ func sweepRegions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DSClient(ctx)
 	input := &directoryservice.DescribeDirectoriesInput{}
@@ -138,6 +146,69 @@ func sweepRegions(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Directory Service Regions (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepIPRoutes(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	conn := client.DSClient(ctx)
+	var input directoryservice.DescribeDirectoriesInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := directoryservice.NewDescribeDirectoriesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Directory Service IP Route sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Directory Service Directories (%s): %w", region, err)
+		}
+
+		for _, v := range page.DirectoryDescriptions {
+			// IP routes are only supported on AWS Managed Microsoft AD; listing them
+			// on other directory types errors and would abort the sweep.
+			if v.Type != awstypes.DirectoryTypeMicrosoftAd {
+				continue
+			}
+
+			directoryID := aws.ToString(v.DirectoryId)
+
+			routes, err := findIPRoutesByDirectoryID(ctx, conn, directoryID)
+			if retry.NotFound(err) {
+				continue
+			}
+			if err != nil {
+				return fmt.Errorf("error listing Directory Service IP Routes (%s): %w", directoryID, err)
+			}
+
+			for _, route := range routes {
+				cidr := framework.NewAttribute("cidr_ip", aws.ToString(route.CidrIp))
+				if route.CidrIp == nil {
+					cidr = framework.NewAttribute("cidr_ipv6", aws.ToString(route.CidrIpv6))
+				}
+
+				sweepResources = append(sweepResources, framework.NewSweepResource(newIPRouteResource, client,
+					framework.NewAttribute("directory_id", directoryID),
+					cidr,
+				))
+			}
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithMinPollInterval(10*time.Second))
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Directory Service IP Routes (%s): %w", region, err)
 	}
 
 	return nil

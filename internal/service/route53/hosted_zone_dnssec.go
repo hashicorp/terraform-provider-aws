@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -14,12 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,21 +46,23 @@ func resourceHostedZoneDNSSEC() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"signing_status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  serveSignatureSigning,
-				ValidateFunc: validation.StringInSlice([]string{
-					serveSignatureSigning,
-					serveSignatureNotSigning,
-				}, false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"signing_status": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  serveSignatureSigning,
+					ValidateFunc: validation.StringInSlice([]string{
+						serveSignatureSigning,
+						serveSignatureNotSigning,
+					}, false),
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -102,7 +106,7 @@ func resourceHostedZoneDNSSECRead(ctx context.Context, d *schema.ResourceData, m
 
 	hostedZoneDNSSEC, err := findHostedZoneDNSSECByZoneID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Hosted Zone DNSSEC (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -178,7 +182,7 @@ func hostedZoneDNSSECDisable(ctx context.Context, conn *route53.Client, hostedZo
 	const (
 		timeout = 5 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.KeySigningKeyInParentDSRecord](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.KeySigningKeyInParentDSRecord](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DisableHostedZoneDNSSEC(ctx, input)
 	})
 
@@ -224,8 +228,7 @@ func findHostedZoneDNSSECByZoneID(ctx context.Context, conn *route53.Client, hos
 
 	if errs.IsA[*awstypes.DNSSECNotFound](err) || errs.IsA[*awstypes.NoSuchHostedZone](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -234,17 +237,17 @@ func findHostedZoneDNSSECByZoneID(ctx context.Context, conn *route53.Client, hos
 	}
 
 	if output == nil || output.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Client, hostedZoneID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusHostedZoneDNSSEC(conn *route53.Client, hostedZoneID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findHostedZoneDNSSECByZoneID(ctx, conn, hostedZoneID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -262,7 +265,7 @@ func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Client
 	)
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{status},
-		Refresh:    statusHostedZoneDNSSEC(ctx, conn, hostedZoneID),
+		Refresh:    statusHostedZoneDNSSEC(conn, hostedZoneID),
 		MinTimeout: 5 * time.Second,
 		Timeout:    timeout,
 	}
@@ -271,7 +274,7 @@ func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Client
 
 	if output, ok := outputRaw.(*awstypes.DNSSECStatus); ok {
 		if serveSignature := aws.ToString(output.ServeSignature); serveSignature == serveSignatureInternalFailure {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

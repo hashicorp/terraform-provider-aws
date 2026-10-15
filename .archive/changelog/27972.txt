@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_instance: Change `iam_instance_profile` to `Computed` as the value may be configured via a launch template
-```

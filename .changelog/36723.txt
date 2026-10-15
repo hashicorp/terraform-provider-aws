@@ -1,3 +1,0 @@
-```release-note:new-function
-trim_iam_role_path
-```

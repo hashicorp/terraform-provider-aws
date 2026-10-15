@@ -26,15 +26,16 @@ data "aws_iam_policy_document" "example" {
   }
 }
 
-resource "aws_s3tables_table_bucket" "test" {
+resource "aws_s3tables_table_bucket" "example" {
   name = "example-bucket"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_policy` - (Required) Amazon Web Services resource-based policy document in JSON format.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that owns this policy.
 
@@ -43,6 +44,27 @@ The following arguments are required:
 This resource exports no additional attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3tables_table_bucket_policy.example
+  identity = {
+    table_bucket_arn = "arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace"
+  }
+}
+
+resource "aws_s3tables_table_bucket_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `table_bucket_arn` (String) ARN of the S3 Tables Table Bucket.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Tables Table Bucket Policy using the `table_bucket_arn`. For example:
 

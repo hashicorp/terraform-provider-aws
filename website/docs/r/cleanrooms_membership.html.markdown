@@ -40,6 +40,7 @@ resource "aws_cleanrooms_membership" "test_membership" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `collaboration_id` - (Required - Forces new resource) - The ID of the collaboration to which the member was invited.
 * `query_log_status` - (Required) - An indicator as to whether query logging has been enabled or disabled for the membership.
 * `default_result_configuration` - (Optional) - The default configuration for a query result.
@@ -67,6 +68,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `update_time` - The date and time the membership was last updated.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cleanrooms_membership.membership
+  identity = {
+    id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+  }
+}
+
+resource "aws_cleanrooms_membership" "membership" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the membership.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_cleanrooms_membership` using the `id`. For example:
 

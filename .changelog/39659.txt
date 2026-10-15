@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_vpc_endpoint_service: Add `private_dns_names` attribute
-```

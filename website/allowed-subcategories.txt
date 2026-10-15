@@ -4,7 +4,11 @@ ACM PCA (Certificate Manager Private Certificate Authority)
 AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
+ARC (Application Recovery Controller) Region Switch
+ARC (Application Recovery Controller) Zonal Shift
+Account Access
 Account Management
+Agent Registry
 Amazon Q Business
 Amplify
 App Mesh
@@ -26,7 +30,9 @@ BCM Data Exports
 Backup
 Batch
 Bedrock
+Bedrock AgentCore
 Bedrock Agents
+Bedrock Runtime
 Billing
 CE (Cost Explorer)
 Chatbot
@@ -49,7 +55,10 @@ CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
 CloudWatch Network Monitor
+CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
+CloudWatch Observability Admin
+CloudWatch Omni
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
@@ -83,10 +92,12 @@ Data Pipeline
 DataSync
 DataZone
 Detective
+DevOps Agent
 DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
+Directory Service Data
 DocumentDB
 DocumentDB Elastic
 DynamoDB
@@ -107,6 +118,7 @@ EMR Serverless
 ElastiCache
 Elastic Beanstalk
 Elastic Transcoder
+Elastic VMware
 Elasticsearch
 Elemental MediaConnect
 Elemental MediaConvert
@@ -115,11 +127,13 @@ Elemental MediaPackage
 Elemental MediaPackage VOD
 Elemental MediaPackage Version 2
 Elemental MediaStore
+End User Messaging
 End User Messaging SMS
 EventBridge
 EventBridge Pipes
 EventBridge Scheduler
 EventBridge Schemas
+EventBridge V2
 FIS (Fault Injection Simulator)
 FMS (Firewall Manager)
 FSx
@@ -137,10 +151,9 @@ IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
+Interconnect
 Invoicing
-IoT Analytics
 IoT Core
-IoT Events
 IoT Greengrass
 KMS (Key Management)
 Kendra
@@ -152,15 +165,18 @@ Kinesis Firehose
 Kinesis Video
 Lake Formation
 Lambda
+Lambda Core
+Lambda MicroVMs
+Lambda Web
 Launch Wizard
 Lex Model Building
 Lex V2 Models
 License Manager
 Lightsail
 Location
-Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
+MWAA (Managed Workflows for Apache Airflow) Serverless
 Macie
 Mainframe Modernization
 Managed Grafana
@@ -168,33 +184,37 @@ Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
 MemoryDB
 Meta Data Sources
+Multi-party Approval
 Neptune
 Neptune Analytics
 Network Firewall
 Network Manager
+Network Security Manager
 OpenSearch
-OpenSearch Ingestion
+OpenSearch Ingestion (OSIS)
 OpenSearch Serverless
-OpsWorks
+Oracle Database@AWS
 Organizations
 Outposts
 Outposts (EC2)
 Parallel Computing Service
 Payment Cryptography Control Plane
-Pinpoint
 Polly
 Pricing Calculator
+Pricing Plan Manager
 Private CA Connector for Active Directory
 QLDB (Quantum Ledger Database)
 QuickSight
 RAM (Resource Access Manager)
 RDS (Relational Database)
+RDS Data
 Recycle Bin (RBin)
 Redshift
 Redshift Data
 Redshift Serverless
 Rekognition
 Resilience Hub
+Resilience Hub V2
 Resource Explorer
 Resource Groups
 Resource Groups Tagging
@@ -207,11 +227,13 @@ Route 53 Recovery Readiness
 Route 53 Resolver
 S3 (Simple Storage)
 S3 Control
+S3 Files
 S3 Glacier
 S3 Tables
+S3 Vectors
 S3 on Outposts
-SDB (SimpleDB)
 SES (Simple Email)
+SES Mail Manager
 SESv2 (Simple Email V2)
 SFN (Step Functions)
 SNS (Simple Notification)
@@ -225,6 +247,7 @@ SSO Identity Store
 STS (Security Token)
 SWF (Simple Workflow)
 SageMaker AI
+Savings Plans
 Secrets Manager
 Security Hub
 Security Lake
@@ -243,6 +266,9 @@ Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
+User Experience Customization
+User Notifications
+User Notifications Contacts
 VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
 VPC Lattice
@@ -256,7 +282,7 @@ WAF Classic Regional
 Wavelength
 Web Services Budgets
 Well-Architected Tool
-WorkLink
+WorkMail
 WorkSpaces
 WorkSpaces Web
 X-Ray

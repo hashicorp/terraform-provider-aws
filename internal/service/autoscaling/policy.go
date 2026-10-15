@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package autoscaling
 
@@ -14,29 +16,32 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_policy", name="Policy")
+// @IdentityAttribute("autoscaling_group_name")
+// @IdentityAttribute("name")
+// @ImportIDHandler("policyImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/autoscaling/types;awstypes;awstypes.ScalingPolicy")
+// @Testing(importStateIdFunc=testAccPolicyImportStateIDFunc)
+// @Testing(preIdentityVersion="v6.40.0")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
 		UpdateWithoutTimeout: resourcePolicyUpdate,
 		DeleteWithoutTimeout: resourcePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourcePolicyImport,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			// All predictive scaling customized metrics shares same metric data query schema
@@ -537,7 +542,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	p, err := findScalingPolicyByTwoPartKey(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -611,22 +616,6 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
-func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<policy-name>", d.Id())
-	}
-
-	asgName := idParts[0]
-	policyName := idParts[1]
-
-	d.Set(names.AttrName, policyName)
-	d.Set("autoscaling_group_name", asgName)
-	d.SetId(policyName)
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func findScalingPolicy(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribePoliciesInput) (*awstypes.ScalingPolicy, error) {
 	output, err := findScalingPolicies(ctx, conn, input)
 
@@ -646,8 +635,7 @@ func findScalingPolicies(ctx context.Context, conn *autoscaling.Client, input *a
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -662,12 +650,12 @@ func findScalingPolicies(ctx context.Context, conn *autoscaling.Client, input *a
 }
 
 func findScalingPolicyByTwoPartKey(ctx context.Context, conn *autoscaling.Client, asgName, policyName string) (*awstypes.ScalingPolicy, error) {
-	input := &autoscaling.DescribePoliciesInput{
+	input := autoscaling.DescribePoliciesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		PolicyNames:          []string{policyName},
 	}
 
-	return findScalingPolicy(ctx, conn, input)
+	return findScalingPolicy(ctx, conn, &input)
 }
 
 // PutScalingPolicy can safely resend all parameters without destroying the
@@ -1385,4 +1373,40 @@ func flattenStepAdjustments(apiObjects []awstypes.StepAdjustment) []any {
 	}
 
 	return tfList
+}
+
+const policyImportIDSeparator = "/"
+
+func policyParseImportID(id string) (string, string, error) {
+	parts := strings.Split(id, policyImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected auto-scaling-group-name%[2]spolicy-name", id, policyImportIDSeparator)
+}
+
+var (
+	_ inttypes.SDKv2ImportID = policyImportID{}
+)
+
+type policyImportID struct{}
+
+func (policyImportID) Parse(id string) (string, map[string]any, error) {
+	asgName, policyName, err := policyParseImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"autoscaling_group_name": asgName,
+		names.AttrName:           policyName,
+	}
+
+	return policyName, result, nil
+}
+
+func (policyImportID) Create(d *schema.ResourceData) string {
+	return d.Get(names.AttrName).(string)
 }

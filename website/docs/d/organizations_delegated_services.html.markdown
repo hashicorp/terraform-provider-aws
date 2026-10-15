@@ -20,6 +20,8 @@ data "aws_organizations_delegated_services" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `account_id` - (Required) Account ID number of a delegated administrator account in the organization.
 
 ## Attribute Reference

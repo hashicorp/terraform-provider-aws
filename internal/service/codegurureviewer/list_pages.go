@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codegurureviewer
@@ -12,9 +12,9 @@ import (
 
 // Custom CodeGuruReviewer service lister functions using the same format as generated code.
 
-func listRepositoryAssociationsPages(ctx context.Context, conn *codegurureviewer.Client, input *codegurureviewer.ListRepositoryAssociationsInput, fn func(*codegurureviewer.ListRepositoryAssociationsOutput, bool) bool) error {
+func listRepositoryAssociationsPages(ctx context.Context, conn *codegurureviewer.Client, input *codegurureviewer.ListRepositoryAssociationsInput, fn func(*codegurureviewer.ListRepositoryAssociationsOutput, bool) bool, optFns ...func(*codegurureviewer.Options)) error {
 	for {
-		output, err := conn.ListRepositoryAssociations(ctx, input)
+		output, err := conn.ListRepositoryAssociations(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

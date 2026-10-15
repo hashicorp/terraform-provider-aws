@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package meta
 
@@ -12,11 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/datasourceattribute"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_service_principal", name="Service Principal")
+// @Region(validateOverrideInPartition=false)
 func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &servicePrincipalDataSource{}
 
@@ -24,20 +28,14 @@ func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithCo
 }
 
 type servicePrincipalDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[servicePrincipalDataSourceModel]
 }
 
 func (d *servicePrincipalDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrID: datasourceattribute.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrRegion: schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 			},
 			names.AttrServiceName: schema.StringAttribute{
@@ -57,34 +55,13 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
-	var region *endpoints.Region
+	name := d.Meta().Region(ctx)
+	region, err := findRegionByName(ctx, name)
 
-	// find the region given by the user
-	if !data.Region.IsNull() {
-		name := data.Region.ValueString()
-		matchingRegion, err := findRegionByName(ctx, name)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
 
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
-
-			return
-		}
-
-		region = matchingRegion
-	}
-
-	// Default to provider current Region if no other filters matched.
-	if region == nil {
-		name := d.Meta().Region(ctx)
-		matchingRegion, err := findRegionByName(ctx, name)
-
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
-
-			return
-		}
-
-		region = matchingRegion
+		return
 	}
 
 	regionID := region.ID()
@@ -100,9 +77,9 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 }
 
 type servicePrincipalDataSourceModel struct {
+	framework.WithRegionModel
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
-	Region      types.String `tfsdk:"region"`
 	ServiceName types.String `tfsdk:"service_name"`
 	Suffix      types.String `tfsdk:"suffix"`
 }
@@ -130,7 +107,9 @@ func servicePrincipalNameForPartition(service string, partition endpoints.Partit
 			switch service {
 			case "codedeploy",
 				"elasticmapreduce",
-				"logs":
+				"logs",
+				"ec2",
+				"s3":
 				return partition.DNSSuffix()
 			}
 		}

@@ -55,6 +55,7 @@ resource "aws_connect_user_hierarchy_group" "child" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - (Required) The name of the user hierarchy group. Must not be more than 100 characters.
 * `parent_group_id` - (Optional) The identifier for the parent hierarchy group. The user hierarchy is created at level one if the parent group ID is null.
@@ -65,7 +66,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the hierarchy group.
+* `arn` - ARN of the hierarchy group.
 * `hierarchy_group_id` - The identifier for the hierarchy group.
 * `hierarchy_path` - A block that contains information about the levels in the hierarchy group. The `hierarchy_path` block is documented below.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the hierarchy group
@@ -83,7 +84,7 @@ A `hierarchy_path` block supports the following attributes:
 
 A level block supports the following attributes:
 
-* `arn` -  The Amazon Resource Name (ARN) of the hierarchy group.
+* `arn` -  The ARN of the hierarchy group.
 * `id` -  The identifier of the hierarchy group.
 * `name` - The name of the hierarchy group.
 

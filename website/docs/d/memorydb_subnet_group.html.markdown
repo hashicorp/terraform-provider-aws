@@ -6,7 +6,7 @@ description: |-
   Provides information about a MemoryDB Subnet Group.
 ---
 
-# Resource: aws_memorydb_subnet_group
+# Data Source: aws_memorydb_subnet_group
 
 Provides information about a MemoryDB Subnet Group.
 
@@ -20,17 +20,18 @@ data "aws_memorydb_subnet_group" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the subnet group.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - Name of the subnet group.
 * `arn` - ARN of the subnet group.
 * `description` - Description of the subnet group.
+* `id` - Name of the subnet group.
 * `subnet_ids` - Set of VPC Subnet ID-s of the subnet group.
-* `vpc_id` - VPC in which the subnet group exists.
 * `tags` - Map of tags assigned to the subnet group.
+* `vpc_id` - VPC in which the subnet group exists.

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package meta
 
@@ -11,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -26,7 +29,7 @@ func newServiceDataSource(context.Context) (datasource.DataSourceWithConfigure, 
 }
 
 type serviceDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[serviceDataSourceModel]
 }
 
 func (d *serviceDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -36,15 +39,8 @@ func (d *serviceDataSource) Schema(ctx context.Context, request datasource.Schem
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			names.AttrID: idAttributeDeprecatedWithAlternate(path.Root("reverse_dns_name")),
 			"partition": schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrRegion: schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 			},
 			"reverse_dns_name": schema.StringAttribute{
@@ -141,10 +137,10 @@ func (d *serviceDataSource) Read(ctx context.Context, request datasource.ReadReq
 }
 
 type serviceDataSourceModel struct {
+	framework.WithRegionModel
 	DNSName          types.String `tfsdk:"dns_name"`
 	ID               types.String `tfsdk:"id"`
 	Partition        types.String `tfsdk:"partition"`
-	Region           types.String `tfsdk:"region"`
 	ReverseDNSName   types.String `tfsdk:"reverse_dns_name"`
 	ReverseDNSPrefix types.String `tfsdk:"reverse_dns_prefix"`
 	ServiceID        types.String `tfsdk:"service_id"`

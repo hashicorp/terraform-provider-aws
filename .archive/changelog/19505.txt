@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_batch_job_definition: Don't crash when setting `timeout.attempt_duration_seconds` to `null`
-```

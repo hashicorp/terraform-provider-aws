@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package location
 
@@ -33,53 +35,55 @@ func ResourcePlaceIndex() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Schema: map[string]*schema.Schema{
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_source": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"data_source_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"intended_use": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.IntendedUse("SingleUse"),
-							ValidateDiagFunc: enum.Validate[awstypes.IntendedUse](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data_source": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"data_source_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"intended_use": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.IntendedUse("SingleUse"),
+								ValidateDiagFunc: enum.Validate[awstypes.IntendedUse](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1000),
-			},
-			"index_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"index_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			"update_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1000),
+				},
+				"index_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"index_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				"update_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -173,9 +177,8 @@ func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChanges("data_source_configuration", names.AttrDescription) {
 		input := &location.UpdatePlaceIndexInput{
-			IndexName: aws.String(d.Id()),
-			// Deprecated but still required by the API
-			PricingPlan: awstypes.PricingPlan("RequestBasedUsage"),
+			IndexName:   aws.String(d.Id()),
+			PricingPlan: awstypes.PricingPlan("RequestBasedUsage"), //nolint:staticcheck // Deprecated but still required by the API.
 		}
 
 		if v, ok := d.GetOk("data_source_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {

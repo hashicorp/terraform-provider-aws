@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagent
 
@@ -7,11 +9,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
@@ -19,35 +23,34 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	hierarchicalLevelConfigurations          = 2
-	hierarchicalMaxTokens                    = 8192
-	semanticBreakpointPercentileThresholdMin = 50
-	semanticBreakpointPercentileThresholdMax = 99
 )
 
 // @FrameworkResource("aws_bedrockagent_data_source", name="Data Source")
@@ -55,18 +58,25 @@ func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, e
 	r := &dataSourceResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
 
 type dataSourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[dataSourceResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
 func (r *dataSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	const (
+		hierarchicalLevelConfigurations          = 2
+		hierarchicalMaxTokens                    = 8192
+		semanticBreakpointPercentileThresholdMin = 50
+		semanticBreakpointPercentileThresholdMax = 99
+	)
 	crawlerConfigurationNestedObjectSchema := schema.NestedBlockObject{
 		Blocks: map[string]schema.Block{
 			"filter_configuration": schema.ListNestedBlock{
@@ -171,10 +181,30 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.AtMostOneOfChildren(
+							path.MatchRelative().AtName("confluence_configuration"),
+							path.MatchRelative().AtName("managed_knowledge_base_connector_configuration"),
+							path.MatchRelative().AtName("s3_configuration"),
+							path.MatchRelative().AtName("salesforce_configuration"),
+							path.MatchRelative().AtName("share_point_configuration"),
+							path.MatchRelative().AtName("web_configuration"),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.DataSourceType](),
 							Required:   true,
+							Validators: []validator.String{
+								tfstringvalidator.DiscriminatorRequires(map[awstypes.DataSourceType]path.Expression{
+									awstypes.DataSourceTypeConfluence:                    path.MatchRelative().AtParent().AtName("confluence_configuration"),
+									awstypes.DataSourceTypeManagedKnowledgeBaseConnector: path.MatchRelative().AtParent().AtName("managed_knowledge_base_connector_configuration"),
+									awstypes.DataSourceTypeS3:                            path.MatchRelative().AtParent().AtName("s3_configuration"),
+									awstypes.DataSourceTypeSalesforce:                    path.MatchRelative().AtParent().AtName("salesforce_configuration"),
+									awstypes.DataSourceTypeSharepoint:                    path.MatchRelative().AtParent().AtName("share_point_configuration"),
+									awstypes.DataSourceTypeWeb:                           path.MatchRelative().AtParent().AtName("web_configuration"),
+								}),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -215,6 +245,178 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.RegexMatches(regexache.MustCompile(`^https://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"managed_knowledge_base_connector_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[managedKnowledgeBaseConnectorConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"connector_parameters": schema.StringAttribute{
+										CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+										Optional:   true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"deletion_protection_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[deletionProtectionConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"deletion_protection_status": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+													Required:   true,
+												},
+												"deletion_protection_threshold": schema.Int32Attribute{
+													Optional: true,
+													Computed: true,
+													Validators: []validator.Int32{
+														int32validator.Between(0, 100),
+													},
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.UseNonNullStateForUnknown(),
+													},
+												},
+											},
+										},
+									},
+									"media_extraction_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[mediaExtractionConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"audio_extraction_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[audioExtractionConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"audio_extraction_status": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+																Required:   true,
+															},
+														},
+													},
+												},
+												"image_extraction_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[imageExtractionConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"image_extraction_status": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+																Required:   true,
+															},
+														},
+													},
+												},
+												"video_extraction_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[videoExtractionConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"video_extraction_status": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+																Required:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"sync_schedule": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[syncScheduleModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.ExactlyOneOfChildren(
+													path.MatchRelative().AtName("daily"),
+													path.MatchRelative().AtName("monthly"),
+													path.MatchRelative().AtName("weekly"),
+												),
+											},
+											Blocks: map[string]schema.Block{
+												"daily": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[dailyScheduleModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{},
+												},
+												"monthly": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[monthlyScheduleModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"day_of_month": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[dayOfMonthModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.IsRequired(),
+																	listvalidator.SizeAtLeast(1),
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Validators: []validator.Object{
+																		tfobjectvalidator.ExactlyOneOfChildren(
+																			path.MatchRelative().AtName("day_number"),
+																			path.MatchRelative().AtName("last_day_of_month"),
+																		),
+																	},
+																	Attributes: map[string]schema.Attribute{
+																		"day_number": schema.Int32Attribute{
+																			Optional: true,
+																			Validators: []validator.Int32{
+																				int32validator.Between(1, 28),
+																			},
+																		},
+																	},
+																	Blocks: map[string]schema.Block{
+																		"last_day_of_month": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[lastDayOfMonthModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(1),
+																			},
+																			NestedObject: schema.NestedBlockObject{},
+																		},
+																	},
+																},
+															}},
+													},
+												},
+												"weekly": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[weeklyScheduleModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"day_of_week": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.DayOfWeek](),
+																Required:   true,
+															},
+														},
 													},
 												},
 											},
@@ -490,6 +692,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 			"vector_ingestion_configuration": schema.ListNestedBlock{
@@ -511,10 +714,24 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.AtMostOneOfChildren(
+										path.MatchRelative().AtName("fixed_size_chunking_configuration"),
+										path.MatchRelative().AtName("hierarchical_chunking_configuration"),
+										path.MatchRelative().AtName("semantic_chunking_configuration"),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									"chunking_strategy": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.ChunkingStrategy](),
 										Required:   true,
+										Validators: []validator.String{
+											tfstringvalidator.DiscriminatorRequires(map[awstypes.ChunkingStrategy]path.Expression{
+												awstypes.ChunkingStrategyFixedSize:    path.MatchRelative().AtParent().AtName("fixed_size_chunking_configuration"),
+												awstypes.ChunkingStrategyHierarchical: path.MatchRelative().AtParent().AtName("hierarchical_chunking_configuration"),
+												awstypes.ChunkingStrategySemantic:     path.MatchRelative().AtParent().AtName("semantic_chunking_configuration"),
+											}),
+										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
@@ -618,6 +835,77 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													Required: true,
 													Validators: []validator.Int32{
 														int32validator.AtLeast(1),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"context_enrichment_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[contextEnrichmentConfigurationModel](ctx),
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrType: schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.ContextEnrichmentType](),
+										Required:   true,
+										Validators: []validator.String{
+											tfstringvalidator.DiscriminatorRequires(map[awstypes.ContextEnrichmentType]path.Expression{
+												awstypes.ContextEnrichmentTypeBedrockFoundationModel: path.MatchRelative().AtParent().AtName("bedrock_foundation_model_configuration"),
+											}),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"bedrock_foundation_model_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockFoundationModelContextEnrichmentConfigurationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"model_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"enrichment_strategy_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[enrichmentStrategyConfigurationModel](ctx),
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"method": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EnrichmentStrategyMethod](),
+																Required:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
 													},
 												},
 											},
@@ -735,16 +1023,47 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.AtMostOneOfChildren(
+										path.MatchRelative().AtName("bedrock_data_automation_configuration"),
+										path.MatchRelative().AtName("bedrock_foundation_model_configuration"),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									"parsing_strategy": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.ParsingStrategy](),
 										Required:   true,
+										Validators: []validator.String{
+											tfstringvalidator.DiscriminatorRequires(map[awstypes.ParsingStrategy]path.Expression{
+												awstypes.ParsingStrategyBedrockFoundationModel: path.MatchRelative().AtParent().AtName("bedrock_foundation_model_configuration"),
+											}),
+										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
 								},
 								Blocks: map[string]schema.Block{
+									"bedrock_data_automation_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockDataAutomationConfigurationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"parsing_modality": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.ParsingModality](),
+													Optional:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
 									"bedrock_foundation_model_configuration": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockFoundationModelConfigurationModel](ctx),
 										PlanModifiers: []planmodifier.List{
@@ -758,6 +1077,13 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 												"model_arn": schema.StringAttribute{
 													CustomType: fwtypes.ARNType,
 													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"parsing_modality": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.ParsingModality](),
+													Optional:   true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
@@ -802,16 +1128,16 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	input := &bedrockagent.CreateDataSourceInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	var input bedrockagent.CreateDataSourceInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
-		return conn.CreateDataSource(ctx, input)
+	output, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (*bedrockagent.CreateDataSourceOutput, error) {
+		return conn.CreateDataSource(ctx, &input)
 	}, errCodeValidationException, "cannot assume role")
 
 	if err != nil {
@@ -820,23 +1146,28 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	data.DataSourceID = fwflex.StringToFramework(ctx, outputRaw.(*bedrockagent.CreateDataSourceOutput).DataSource.DataSourceId)
-	id, err := data.setID()
+	ds := output.DataSource
+	dataSourceID, knowledgeBaseID := aws.ToString(ds.DataSourceId), aws.ToString(ds.KnowledgeBaseId)
+	id := dataSourceCreateResourceID(dataSourceID, knowledgeBaseID)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
+
+	ds, err = waitDataSourceCreated(ctx, conn, dataSourceID, knowledgeBaseID, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
-		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Data Source", err.Error())
-		return
-	}
-	data.ID = types.StringValue(id)
-
-	ds, err := waitDataSourceCreated(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s) create", data.ID.ValueString()), err.Error())
-
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), id)
+		response.State.SetAttribute(ctx, path.Root("data_source_id"), dataSourceID)
+		response.State.SetAttribute(ctx, path.Root("knowledge_base_id"), knowledgeBaseID)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) create", dataSourceID, knowledgeBaseID), err.Error())
 		return
 	}
 
 	data.DataDeletionPolicy = fwtypes.StringEnumValue(ds.DataDeletionPolicy)
+
+	// Set values for unknowns.
+	response.Diagnostics.Append(r.flatten(ctx, ds, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -848,17 +1179,18 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	dataSourceID, knowledgeBaseID, err := dataSourceParseResourceID(id)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
 	}
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	ds, err := findDataSourceByTwoPartKey(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString())
+	ds, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -866,12 +1198,12 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Data Source (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Data Source (%s,%s)", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, ds, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, ds, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -892,18 +1224,25 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	input := &bedrockagent.UpdateDataSourceInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	dataSourceID, knowledgeBaseID := fwflex.StringValueFromFramework(ctx, new.DataSourceID), fwflex.StringValueFromFramework(ctx, new.KnowledgeBaseID)
+	var input bedrockagent.UpdateDataSourceInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
-		return conn.UpdateDataSource(ctx, input)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.UpdateDataSource(ctx, &input)
 	}, errCodeValidationException, "cannot assume role")
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Data Source (%s)", new.DataSourceID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Data Source (%s,%s)", dataSourceID, knowledgeBaseID), err.Error())
+
+		return
+	}
+
+	if _, err := waitDataSourceUpdated(ctx, conn, dataSourceID, knowledgeBaseID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) update", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
 	}
@@ -920,9 +1259,10 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
+	dataSourceID, knowledgeBaseID := fwflex.StringValueFromFramework(ctx, data.DataSourceID), fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
 	input := bedrockagent.DeleteDataSourceInput{
-		DataSourceId:    data.DataSourceID.ValueStringPointer(),
-		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
+		DataSourceId:    aws.String(dataSourceID),
+		KnowledgeBaseId: aws.String(knowledgeBaseID),
 	}
 	_, err := conn.DeleteDataSource(ctx, &input)
 
@@ -931,30 +1271,39 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Data Source (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Data Source (%s,%s)", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
 	}
 
-	if _, err := waitDataSourceDeleted(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s) delete", data.ID.ValueString()), err.Error())
+	if _, err := waitDataSourceDeleted(ctx, conn, dataSourceID, knowledgeBaseID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) delete", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
 	}
 }
 
+func (r *dataSourceResource) flatten(ctx context.Context, ds *awstypes.DataSource, data *dataSourceResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, ds, data)...)
+	return diags
+}
+
 func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) (*awstypes.DataSource, error) {
-	input := &bedrockagent.GetDataSourceInput{
+	input := bedrockagent.GetDataSourceInput{
 		DataSourceId:    aws.String(dataSourceID),
 		KnowledgeBaseId: aws.String(knowledgeBaseID),
 	}
 
+	return findDataSource(ctx, conn, &input)
+}
+
+func findDataSource(ctx context.Context, conn *bedrockagent.Client, input *bedrockagent.GetDataSourceInput) (*awstypes.DataSource, error) {
 	output, err := conn.GetDataSource(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -963,17 +1312,17 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	}
 
 	if output == nil || output.DataSource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataSource, nil
 }
 
-func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDataSource(conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -987,16 +1336,35 @@ func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSource
 
 func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
+		Pending: enum.Slice(awstypes.DataSourceStatusCreating),
 		Target:  enum.Slice(awstypes.DataSourceStatusAvailable),
-		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
+		Refresh: statusDataSource(conn, dataSourceID, knowledgeBaseID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDataSourceUpdated(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DataSourceStatusUpdating),
+		Target:  enum.Slice(awstypes.DataSourceStatusAvailable),
+		Refresh: statusDataSource(conn, dataSourceID, knowledgeBaseID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DataSource); ok {
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -1008,14 +1376,14 @@ func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataS
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataSourceStatusDeleting),
 		Target:  []string{},
-		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
+		Refresh: statusDataSource(conn, dataSourceID, knowledgeBaseID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -1024,6 +1392,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataS
 }
 
 type dataSourceResourceModel struct {
+	framework.WithRegionModel
 	DataDeletionPolicy                fwtypes.StringEnum[awstypes.DataDeletionPolicy]                         `tfsdk:"data_deletion_policy"`
 	DataSourceConfiguration           fwtypes.ListNestedObjectValueOf[dataSourceConfigurationModel]           `tfsdk:"data_source_configuration"`
 	DataSourceID                      types.String                                                            `tfsdk:"data_source_id"`
@@ -1040,34 +1409,296 @@ const (
 	dataSourceResourceIDPartCount = 2
 )
 
-func (m *dataSourceResourceModel) InitFromID() error {
-	parts, err := flex.ExpandResourceId(m.ID.ValueString(), dataSourceResourceIDPartCount, false)
-	if err != nil {
-		return err
-	}
-
-	m.DataSourceID = types.StringValue(parts[0])
-	m.KnowledgeBaseID = types.StringValue(parts[1])
-
-	return nil
+func dataSourceCreateResourceID(dataSourceID, knowledgeBaseID string) string {
+	id, _ := intflex.FlattenResourceId([]string{dataSourceID, knowledgeBaseID}, dataSourceResourceIDPartCount, false)
+	return id
 }
 
-func (m *dataSourceResourceModel) setID() (string, error) {
-	parts := []string{
-		m.DataSourceID.ValueString(),
-		m.KnowledgeBaseID.ValueString(),
+func dataSourceParseResourceID(id string) (string, string, error) {
+	parts, err := intflex.ExpandResourceId(id, dataSourceResourceIDPartCount, false)
+	if err != nil {
+		return "", "", err
 	}
 
-	return flex.FlattenResourceId(parts, dataSourceResourceIDPartCount, false)
+	return parts[0], parts[1], nil
 }
 
 type dataSourceConfigurationModel struct {
-	ConfluenceConfiguration fwtypes.ListNestedObjectValueOf[confluenceDataSourceConfigurationModel] `tfsdk:"confluence_configuration"`
-	S3Configuration         fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel]         `tfsdk:"s3_configuration"`
-	SalesforceConfiguration fwtypes.ListNestedObjectValueOf[salesforceDataSourceConfigurationModel] `tfsdk:"salesforce_configuration"`
-	SharePointConfiguration fwtypes.ListNestedObjectValueOf[sharepointDataSourceConfigurationModel] `tfsdk:"share_point_configuration"`
-	Type                    fwtypes.StringEnum[awstypes.DataSourceType]                             `tfsdk:"type"`
-	WebConfiguration        fwtypes.ListNestedObjectValueOf[webDataSourceConfigurationModel]        `tfsdk:"web_configuration"`
+	ConfluenceConfiguration                    fwtypes.ListNestedObjectValueOf[confluenceDataSourceConfigurationModel]          `tfsdk:"confluence_configuration"`
+	ManagedKnowledgeBaseConnectorConfiguration fwtypes.ListNestedObjectValueOf[managedKnowledgeBaseConnectorConfigurationModel] `tfsdk:"managed_knowledge_base_connector_configuration"`
+	S3Configuration                            fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel]                  `tfsdk:"s3_configuration"`
+	SalesforceConfiguration                    fwtypes.ListNestedObjectValueOf[salesforceDataSourceConfigurationModel]          `tfsdk:"salesforce_configuration"`
+	SharePointConfiguration                    fwtypes.ListNestedObjectValueOf[sharepointDataSourceConfigurationModel]          `tfsdk:"share_point_configuration"`
+	Type                                       fwtypes.StringEnum[awstypes.DataSourceType]                                      `tfsdk:"type"`
+	WebConfiguration                           fwtypes.ListNestedObjectValueOf[webDataSourceConfigurationModel]                 `tfsdk:"web_configuration"`
+}
+
+type managedKnowledgeBaseConnectorConfigurationModel struct {
+	ConnectorParameters             fwtypes.SmithyJSON[document.Interface]                                `tfsdk:"connector_parameters" autoflex:"-"`
+	DeletionProtectionConfiguration fwtypes.ListNestedObjectValueOf[deletionProtectionConfigurationModel] `tfsdk:"deletion_protection_configuration"`
+	MediaExtractionConfiguration    fwtypes.ListNestedObjectValueOf[mediaExtractionConfigurationModel]    `tfsdk:"media_extraction_configuration"`
+	SyncSchedule                    fwtypes.ListNestedObjectValueOf[syncScheduleModel]                    `tfsdk:"sync_schedule"`
+}
+
+var (
+	_ fwflex.Expander  = managedKnowledgeBaseConnectorConfigurationModel{}
+	_ fwflex.Flattener = &managedKnowledgeBaseConnectorConfigurationModel{}
+)
+
+func (m managedKnowledgeBaseConnectorConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.ManagedKnowledgeBaseConnectorConfiguration
+	// To prevent infinite recursion...
+	type modelAlias managedKnowledgeBaseConnectorConfigurationModel
+	alias := modelAlias(m)
+	diags.Append(fwflex.Expand(ctx, alias, &r)...)
+	if !m.ConnectorParameters.IsNull() {
+		v, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.ConnectorParameters), document.NewLazyDocument)
+		if err != nil {
+			diags.Append(fwdiag.NewDecodingJSONErrorDiagnostic(err))
+			return nil, diags
+		}
+		r.ConnectorParameters = v
+	}
+	return &r, diags
+}
+
+func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	// To prevent infinite recursion...
+	type modelAlias *managedKnowledgeBaseConnectorConfigurationModel
+	alias := modelAlias(m)
+	switch t := v.(type) {
+	case awstypes.ManagedKnowledgeBaseConnectorConfiguration:
+		diags.Append(fwflex.Flatten(ctx, t, alias)...)
+		if diags.HasError() {
+			return diags
+		}
+		if v := t.ConnectorParameters; v != nil {
+			v, err := tfsmithy.DocumentToJSONString(v)
+			if err != nil {
+				diags.Append(fwdiag.NewEncodingJSONErrorDiagnostic(err))
+				return diags
+			}
+
+			// The Smithy document comes back as a string containing the JSON document (double quoted).
+			if strings.HasPrefix(v, `"{`) && strings.HasSuffix(v, `}"`) {
+				var inner string
+				if err := tfjson.DecodeFromString(v, &inner); err != nil {
+					diags.Append(fwdiag.NewDecodingJSONErrorDiagnostic(err))
+					return diags
+				}
+				v = inner
+			}
+
+			m.ConnectorParameters = fwtypes.NewSmithyJSONValue(v, document.NewLazyDocument)
+		}
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("managedKnowledgeBaseConnectorConfigurationModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+type deletionProtectionConfigurationModel struct {
+	DeletionProtectionStatus    fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"deletion_protection_status"`
+	DeletionProtectionThreshold types.Int32                                         `tfsdk:"deletion_protection_threshold"`
+}
+
+type mediaExtractionConfigurationModel struct {
+	AudioExtractionConfiguration fwtypes.ListNestedObjectValueOf[audioExtractionConfigurationModel] `tfsdk:"audio_extraction_configuration"`
+	ImageExtractionConfiguration fwtypes.ListNestedObjectValueOf[imageExtractionConfigurationModel] `tfsdk:"image_extraction_configuration"`
+	VideoExtractionConfiguration fwtypes.ListNestedObjectValueOf[videoExtractionConfigurationModel] `tfsdk:"video_extraction_configuration"`
+}
+
+type audioExtractionConfigurationModel struct {
+	AudioExtractionStatus fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"audio_extraction_status"`
+}
+
+type imageExtractionConfigurationModel struct {
+	ImageExtractionStatus fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"image_extraction_status"`
+}
+
+type videoExtractionConfigurationModel struct {
+	VideoExtractionStatus fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"video_extraction_status"`
+}
+
+type syncScheduleModel struct {
+	Daily   fwtypes.ListNestedObjectValueOf[dailyScheduleModel]   `tfsdk:"daily"`
+	Monthly fwtypes.ListNestedObjectValueOf[monthlyScheduleModel] `tfsdk:"monthly"`
+	Weekly  fwtypes.ListNestedObjectValueOf[weeklyScheduleModel]  `tfsdk:"weekly"`
+}
+
+var (
+	_ fwflex.Expander  = syncScheduleModel{}
+	_ fwflex.Flattener = &syncScheduleModel{}
+)
+
+func (m *syncScheduleModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.SyncScheduleMemberDaily:
+		var model dailyScheduleModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Daily, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+
+	case awstypes.SyncScheduleMemberMonthly:
+		var model monthlyScheduleModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Monthly, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+
+	case awstypes.SyncScheduleMemberWeekly:
+		var model weeklyScheduleModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Weekly, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("syncScheduleModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m syncScheduleModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.Daily.IsNull():
+		model, d := m.Daily.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.SyncScheduleMemberDaily
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.Monthly.IsNull():
+		model, d := m.Monthly.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.SyncScheduleMemberMonthly
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.Weekly.IsNull():
+		model, d := m.Weekly.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.SyncScheduleMemberWeekly
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type dailyScheduleModel struct{}
+
+type monthlyScheduleModel struct {
+	DayOfMonth fwtypes.ListNestedObjectValueOf[dayOfMonthModel] `tfsdk:"day_of_month"`
+}
+
+type dayOfMonthModel struct {
+	DayNumber      types.Int32                                          `tfsdk:"day_number"`
+	LastDayOfMonth fwtypes.ListNestedObjectValueOf[lastDayOfMonthModel] `tfsdk:"last_day_of_month"`
+}
+
+var (
+	_ fwflex.Expander  = dayOfMonthModel{}
+	_ fwflex.Flattener = &dayOfMonthModel{}
+)
+
+func (m *dayOfMonthModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.DayOfMonthMemberDayNumber:
+		m.DayNumber = types.Int32Value(t.Value)
+
+	case awstypes.DayOfMonthMemberLastDayOfMonth:
+		var model lastDayOfMonthModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.LastDayOfMonth, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("dayOfMonthModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m dayOfMonthModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.DayNumber.IsNull():
+		r := awstypes.DayOfMonthMemberDayNumber{
+			Value: m.DayNumber.ValueInt32(),
+		}
+		return &r, diags
+
+	case !m.LastDayOfMonth.IsNull():
+		model, d := m.LastDayOfMonth.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DayOfMonthMemberLastDayOfMonth
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type lastDayOfMonthModel struct{}
+
+type weeklyScheduleModel struct {
+	DayOfWeek fwtypes.StringEnum[awstypes.DayOfWeek] `tfsdk:"day_of_week"`
 }
 
 type confluenceDataSourceConfigurationModel struct {
@@ -1102,12 +1733,28 @@ type serverSideEncryptionConfigurationModel struct {
 
 type vectorIngestionConfigurationModel struct {
 	ChunkingConfiguration             fwtypes.ListNestedObjectValueOf[chunkingConfigurationModel]             `tfsdk:"chunking_configuration"`
+	ContextEnrichmentConfiguration    fwtypes.ListNestedObjectValueOf[contextEnrichmentConfigurationModel]    `tfsdk:"context_enrichment_configuration"`
 	CustomTransformationConfiguration fwtypes.ListNestedObjectValueOf[customTransformationConfigurationModel] `tfsdk:"custom_transformation_configuration"`
 	ParsingConfiguration              fwtypes.ListNestedObjectValueOf[parsingConfigurationModel]              `tfsdk:"parsing_configuration"`
 }
 
+type contextEnrichmentConfigurationModel struct {
+	BedrockFoundationModelConfiguration fwtypes.ListNestedObjectValueOf[bedrockFoundationModelContextEnrichmentConfigurationModel] `tfsdk:"bedrock_foundation_model_configuration"`
+	Type                                fwtypes.StringEnum[awstypes.ContextEnrichmentType]                                         `tfsdk:"type"`
+}
+
+type bedrockFoundationModelContextEnrichmentConfigurationModel struct {
+	EnrichmentStrategyConfiguration fwtypes.ListNestedObjectValueOf[enrichmentStrategyConfigurationModel] `tfsdk:"enrichment_strategy_configuration"`
+	ModelARN                        fwtypes.ARN                                                           `tfsdk:"model_arn"`
+}
+
+type enrichmentStrategyConfigurationModel struct {
+	Method fwtypes.StringEnum[awstypes.EnrichmentStrategyMethod] `tfsdk:"method"`
+}
+
 type parsingConfigurationModel struct {
 	ParsingStrategy                     fwtypes.StringEnum[awstypes.ParsingStrategy]                              `tfsdk:"parsing_strategy"`
+	BedrockDataAutomationConfiguration  fwtypes.ListNestedObjectValueOf[bedrockDataAutomationConfigurationModel]  `tfsdk:"bedrock_data_automation_configuration"`
 	BedrockFoundationModelConfiguration fwtypes.ListNestedObjectValueOf[bedrockFoundationModelConfigurationModel] `tfsdk:"bedrock_foundation_model_configuration"`
 }
 
@@ -1121,7 +1768,7 @@ type intermediateStorageModel struct {
 }
 
 type s3LocationModel struct {
-	Uri types.String `tfsdk:"uri"`
+	URI types.String `tfsdk:"uri"`
 }
 
 type transformationModel struct {
@@ -1134,12 +1781,17 @@ type transformationFunctionModel struct {
 }
 
 type transformationLambdaConfigurationModel struct {
-	LambdaArn fwtypes.ARN `tfsdk:"lambda_arn"`
+	LambdaARN fwtypes.ARN `tfsdk:"lambda_arn"`
+}
+
+type bedrockDataAutomationConfigurationModel struct {
+	ParsingModality fwtypes.StringEnum[awstypes.ParsingModality] `tfsdk:"parsing_modality"`
 }
 
 type bedrockFoundationModelConfigurationModel struct {
-	ModelArn      fwtypes.ARN                                         `tfsdk:"model_arn"`
-	ParsingPrompt fwtypes.ListNestedObjectValueOf[parsingPromptModel] `tfsdk:"parsing_prompt"`
+	ModelARN        fwtypes.ARN                                         `tfsdk:"model_arn"`
+	ParsingModality fwtypes.StringEnum[awstypes.ParsingModality]        `tfsdk:"parsing_modality"`
+	ParsingPrompt   fwtypes.ListNestedObjectValueOf[parsingPromptModel] `tfsdk:"parsing_prompt"`
 }
 
 type parsingPromptModel struct {
@@ -1218,67 +1870,6 @@ type patternObjectFilterModel struct {
 	ExclusionFilters fwtypes.SetOfString `tfsdk:"exclusion_filters"`
 	InclusionFilters fwtypes.SetOfString `tfsdk:"inclusion_filters"`
 	ObjectType       types.String        `tfsdk:"object_type"`
-}
-
-func (c crawlFilterConfigurationModel) GetCrawlerSchema(ctx context.Context) schema.NestedBlockObject {
-	return schema.NestedBlockObject{
-		Blocks: map[string]schema.Block{
-			"filter_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[crawlFilterConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrType: schema.StringAttribute{
-							Required: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"pattern_object_filter": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilterConfigurationModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{
-									"filters": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilterModel](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"exclusion_filters": schema.SetAttribute{
-													CustomType:  fwtypes.SetOfStringType,
-													ElementType: types.StringType,
-													Optional:    true,
-													Validators: []validator.Set{
-														setvalidator.SizeBetween(1, 25),
-														setvalidator.ValueStringsAre(
-															stringvalidator.LengthBetween(1, 1000),
-														),
-													},
-												},
-												"inclusion_filters": schema.SetAttribute{
-													CustomType:  fwtypes.SetOfStringType,
-													ElementType: types.StringType,
-													Optional:    true,
-													Validators: []validator.Set{
-														setvalidator.SizeBetween(1, 25),
-														setvalidator.ValueStringsAre(
-															stringvalidator.LengthBetween(1, 1000),
-														),
-													},
-												},
-												"object_type": schema.StringAttribute{
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
 }
 
 type chunkingConfigurationModel struct {

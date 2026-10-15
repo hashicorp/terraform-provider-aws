@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_savingsplans_savings_plan: Mark `upfront_payment_amount` as `Computed` to fix a `Provider produced inconsistent result after apply` error for `No Upfront` savings plans
+```
+```release-note:note
+resource/aws_savingsplans_savings_plan: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package storagegateway
 
@@ -22,26 +24,28 @@ func dataSourceLocalDisk() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalDiskRead,
 
-		Schema: map[string]*schema.Schema{
-			"disk_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"disk_node": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"disk_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"gateway_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"disk_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"disk_node": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"disk_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"gateway_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

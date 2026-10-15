@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr
@@ -22,4 +22,7 @@ var (
 	FindSecurityConfigurationByName    = findSecurityConfigurationByName
 	FindStudioByID                     = findStudioByID
 	FindStudioSessionMappingByIDOrName = findStudioSessionMappingByIDOrName
+
+	SerializeAutoScalingPolicy = serializeAutoScalingPolicy
+	SerializeConfigurations    = serializeConfigurations
 )

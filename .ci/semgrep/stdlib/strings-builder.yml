@@ -1,0 +1,11 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: strings-builder-writestring-sprintf
+    languages: [go]
+    message: Prefer "fmt.Fprintf(&builder, ...)" to "builder.WriteString(fmt.Sprintf(...))"
+    pattern: |
+      ($BUILDER : strings.Builder).WriteString(fmt.Sprintf($...ARGS))
+    fix: fmt.Fprintf(&$BUILDER, $...ARGS)
+    severity: WARNING

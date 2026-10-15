@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_appstream_fleet: Correctly create resource with `stream_view` argument
-```

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package efs
 
@@ -11,19 +13,25 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_efs_file_system_policy", name="File System Policy")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/efs;;efs.DescribeFileSystemPolicyOutput")
+// @Testing(generator=false)
+// @Testing(importIgnore="bypass_policy_lockout_safety_check")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.65.0")
 func resourceFileSystemPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemPolicyPut,
@@ -31,32 +39,20 @@ func resourceFileSystemPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceFileSystemPolicyPut,
 		DeleteWithoutTimeout: resourceFileSystemPolicyDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"bypass_policy_lockout_safety_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"bypass_policy_lockout_safety_check": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
-			},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+			}
 		},
 	}
 }
@@ -71,14 +67,14 @@ func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	fsID := d.Get(names.AttrFileSystemID).(string)
-	input := &efs.PutFileSystemPolicyInput{
+	input := efs.PutFileSystemPolicyInput{
 		BypassPolicyLockoutSafetyCheck: d.Get("bypass_policy_lockout_safety_check").(bool),
 		FileSystemId:                   aws.String(fsID),
 		Policy:                         aws.String(policy),
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidPolicyException](ctx, propagationTimeout, func() (any, error) {
-		return conn.PutFileSystemPolicy(ctx, input)
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidPolicyException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.PutFileSystemPolicy(ctx, &input)
 	}, "Policy contains invalid Principal block")
 
 	if err != nil {
@@ -98,7 +94,7 @@ func resourceFileSystemPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	output, err := findFileSystemPolicyByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EFS File System Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -130,9 +126,10 @@ func resourceFileSystemPolicyDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS File System Policy: %s", d.Id())
-	_, err := conn.DeleteFileSystemPolicy(ctx, &efs.DeleteFileSystemPolicyInput{
+	input := efs.DeleteFileSystemPolicyInput{
 		FileSystemId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteFileSystemPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.FileSystemNotFound](err) {
 		return diags
@@ -146,16 +143,18 @@ func resourceFileSystemPolicyDelete(ctx context.Context, d *schema.ResourceData,
 }
 
 func findFileSystemPolicyByID(ctx context.Context, conn *efs.Client, id string) (*efs.DescribeFileSystemPolicyOutput, error) {
-	input := &efs.DescribeFileSystemPolicyInput{
+	input := efs.DescribeFileSystemPolicyInput{
 		FileSystemId: aws.String(id),
 	}
+	return findFileSystemPolicy(ctx, conn, &input)
+}
 
+func findFileSystemPolicy(ctx context.Context, conn *efs.Client, input *efs.DescribeFileSystemPolicyInput) (*efs.DescribeFileSystemPolicyOutput, error) {
 	output, err := conn.DescribeFileSystemPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.PolicyNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -164,7 +163,7 @@ func findFileSystemPolicyByID(ctx context.Context, conn *efs.Client, id string) 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

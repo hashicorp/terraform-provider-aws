@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mq
@@ -8,11 +8,17 @@ var (
 	ResourceBroker        = resourceBroker
 	ResourceConfiguration = resourceConfiguration
 
-	FindBrokerByID        = findBrokerByID
-	FindConfigurationByID = findConfigurationByID
+	CanonicalXML             = canonicalXML
+	DiffBrokerUsers          = diffBrokerUsers
+	FindBrokerByID           = findBrokerByID
+	FindConfigurationByID    = findConfigurationByID
+	FlattenResourceShareARNs = flattenResourceShareARNs
+	NormalizeEngineVersion   = normalizeEngineVersion
 
-	NormalizeEngineVersion = normalizeEngineVersion
-
-	WaitBrokerRebooted = waitBrokerRebooted
-	WaitBrokerDeleted  = waitBrokerDeleted
+	SharedResourcesUnavailableInPartition = sharedResourcesUnavailableInPartition
+	SortBrokerInstanceEndpoints           = sortBrokerInstanceEndpoints
+	ValidateBrokerName                    = validateBrokerName
+	ValidBrokerPassword                   = validBrokerPassword
+	WaitBrokerRebooted                    = waitBrokerRebooted
+	WaitBrokerDeleted                     = waitBrokerDeleted
 )

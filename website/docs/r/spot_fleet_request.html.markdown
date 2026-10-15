@@ -12,7 +12,7 @@ Provides an EC2 Spot Fleet Request resource. This allows a fleet of Spot
 instances to be requested on the Spot market.
 
 ~> **NOTE [AWS strongly discourages](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-best-practices.html#which-spot-request-method-to-use) the use of the legacy APIs called by this resource.
-We recommend using the [EC2 Fleet](ec2_fleet.html) or [Auto Scaling Group](autoscaling_group.html) resources instead.
+We recommend using the [EC2 Fleet](ec2_fleet.html) or [Auto Scaling group](autoscaling_group.html) resources instead.
 
 ## Example Usage
 
@@ -112,7 +112,7 @@ resource "aws_spot_fleet_request" "foo" {
 }
 ```
 
--> In this example, we use a [`dynamic` block](https://www.terraform.io/language/expressions/dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
+-> In this example, we use a [`dynamic` block](https://www.terraform.io/language/expressions/dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet IDs.
 
 ```terraform
 variable "subnets" {}
@@ -125,7 +125,6 @@ resource "aws_spot_fleet_request" "example" {
   fleet_type                          = "request"
   wait_for_fulfillment                = "true"
   terminate_instances_with_expiration = "true"
-
 
   dynamic "launch_specification" {
     for_each = [for s in var.subnets : {
@@ -197,9 +196,9 @@ resource "aws_spot_fleet_request" "foo" {
 
 ## Argument Reference
 
-Most of these arguments directly correspond to the
-[official API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetRequestConfigData.html).
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `iam_fleet_role` - (Required) Grants the Spot fleet permission to terminate
   Spot instances on your behalf when you cancel its Spot fleet request using
 CancelSpotFleetRequests or when the Spot fleet request expires, if you set
@@ -267,11 +266,11 @@ The `launch_template_config` block supports the following:
 
 * `id` - The ID of the launch template. Conflicts with `name`.
 * `name` - The name of the launch template. Conflicts with `id`.
-* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g., `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
+* `version` - (Optional) Template version. Unlike the AutoScaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g., `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
 
     **Note:** The specified launch template can specify only a subset of the
     inputs of [`aws_launch_template`](launch_template.html).  There are limitations on
-    what you can specify as spot fleet does not support all the attributes that are supported by autoscaling groups. [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#launch-templates-spot-fleet) is currently sparse, but at least `instance_initiated_shutdown_behavior` is confirmed unsupported.
+    what you can specify as spot fleet does not support all the attributes that are supported by Auto Scaling groups. [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#launch-templates-spot-fleet) is currently sparse, but at least `instance_initiated_shutdown_behavior` is confirmed unsupported.
 
 ### spot_maintenance_strategies
 
@@ -308,7 +307,7 @@ This configuration block supports the following:
       * xilinx
     ```
 
-* `accelerator_names` - (Optional) List of accelerator names. Default is any acclerator.
+* `accelerator_names` - (Optional) List of accelerator names. Default is any accelerator.
 
     ```
     Valid names:
@@ -337,14 +336,14 @@ This configuration block supports the following:
 
     ~> **NOTE:** If you specify `allowed_instance_types`, you can't specify `excluded_instance_types`.
 
-* `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
+* `bare_metal` - (Optional) Indicate whether bare metal instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
 * `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
-    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the AMI that you specify in your launch template.
 
     ```
     Valid names:
@@ -413,6 +412,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
+* `update` - (Default `10m`)
 * `delete` - (Default `15m`)
 
 ## Import

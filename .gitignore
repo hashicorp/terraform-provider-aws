@@ -16,6 +16,10 @@
 *.prof
 *.test
 *~
+/.kiro
+/.bob/*
+!/.bob/rules/
+/.opencode
 /pkg/
 aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresource/bin/handler
 bin/
@@ -50,3 +54,6 @@ node_modules
 
 .teamcity/target
 awssdk.patch
+
+# go-vcr recordings
+/testdata

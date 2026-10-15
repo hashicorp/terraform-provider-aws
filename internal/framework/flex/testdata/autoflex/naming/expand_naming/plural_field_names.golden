@@ -1,0 +1,228 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSpecialPluralization",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSpecialPluralization"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSpecialPluralization",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSpecialPluralization"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "City",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSpecialPluralization",
+    "autoflex.target.fieldname": "Cities",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSpecialPluralization"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "City",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Cities",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding with ElementsAs",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "City",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Cities",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Coach",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSpecialPluralization",
+    "autoflex.target.fieldname": "Coaches",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSpecialPluralization"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Coach",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Coaches",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding with ElementsAs",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Coach",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Coaches",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Tomato",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSpecialPluralization",
+    "autoflex.target.fieldname": "Tomatoes",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSpecialPluralization"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Tomato",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Tomatoes",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding with ElementsAs",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Tomato",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Tomatoes",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Vertex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSpecialPluralization",
+    "autoflex.target.fieldname": "Vertices",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSpecialPluralization"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Vertex",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Vertices",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding with ElementsAs",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Vertex",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Vertices",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Criterion",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSpecialPluralization",
+    "autoflex.target.fieldname": "Criteria",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSpecialPluralization"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Criterion",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Criteria",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding with ElementsAs",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Criterion",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Criteria",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Datum",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSpecialPluralization",
+    "autoflex.target.fieldname": "Data",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSpecialPluralization"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Datum",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Data",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding with ElementsAs",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Datum",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Data",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Hive",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSpecialPluralization",
+    "autoflex.target.fieldname": "Hives",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSpecialPluralization"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Hive",
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Hives",
+    "autoflex.target.type": "[]*string"
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding with ElementsAs",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Hive",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue",
+    "autoflex.target.path": "Hives",
+    "autoflex.target.type": "[]*string"
+  }
+]

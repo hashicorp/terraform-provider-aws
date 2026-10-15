@@ -31,6 +31,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) An optional description for the map resource.
 * `tags` - (Optional) Key-value tags for the map. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -45,7 +46,7 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `create_time` - The timestamp for when the map resource was created in ISO 8601 format.
-* `map_arn` - The Amazon Resource Name (ARN) for the map resource. Used to specify a resource across all AWS.
+* `map_arn` - ARN for the map resource. Used to specify a resource across all AWS.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `update_time` - The timestamp for when the map resource was last updated in ISO 8601 format.
 

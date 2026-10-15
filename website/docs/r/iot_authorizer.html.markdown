@@ -32,6 +32,9 @@ resource "aws_iot_authorizer" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizer_function_arn` - (Required) The ARN of the authorizer's Lambda function.
 * `enable_caching_for_http`  - (Optional) Specifies whether the HTTP caching is enabled or not. Default: `false`.
 * `name` - (Required) The name of the authorizer.
@@ -50,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IOT Authorizers using the name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Authorizers using the name. For example:
 
 ```terraform
 import {
@@ -59,7 +62,7 @@ import {
 }
 ```
 
-Using `terraform import`, import IOT Authorizers using the name. For example:
+Using `terraform import`, import IoT Authorizers using the name. For example:
 
 ```console
 % terraform import aws_iot_authorizer.example example

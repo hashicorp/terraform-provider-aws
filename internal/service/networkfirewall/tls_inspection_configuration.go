@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkfirewall
 
@@ -28,13 +30,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,6 +44,12 @@ import (
 
 // @FrameworkResource("aws_networkfirewall_tls_inspection_configuration", name="TLS Inspection Configuration")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnFormat("tls-configuration/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkfirewall;networkfirewall.DescribeTLSInspectionConfigurationOutput")
+// @Testing(subdomainTfVar="common_name;certificate_domain")
+// @Testing(importIgnore="update_token", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v5.100.0")
 func newTLSInspectionConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tlsInspectionConfigurationResource{}
 
@@ -53,8 +61,8 @@ func newTLSInspectionConfigurationResource(_ context.Context) (resource.Resource
 }
 
 type tlsInspectionConfigurationResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[tlsInspectionConfigurationResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -332,17 +340,11 @@ func (r *tlsInspectionConfigurationResource) Read(ctx context.Context, request r
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().NetworkFirewallClient(ctx)
 
 	output, err := findTLSInspectionConfigurationByARN(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -470,8 +472,7 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -480,17 +481,17 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 	}
 
 	if output == nil || output.TLSInspectionConfigurationResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTLSInspectionConfiguration(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -506,11 +507,11 @@ const (
 	resourceStatusPending = "PENDING"
 )
 
-func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTLSInspectionConfigurationCertificates(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -536,7 +537,7 @@ func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfir
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{resourceStatusPending},
 		Target:  enum.Slice(awstypes.ResourceStatusActive),
-		Refresh: statusTLSInspectionConfigurationCertificates(ctx, conn, arn),
+		Refresh: statusTLSInspectionConfigurationCertificates(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -553,7 +554,7 @@ func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfir
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{resourceStatusPending},
 		Target:  enum.Slice(awstypes.ResourceStatusActive),
-		Refresh: statusTLSInspectionConfigurationCertificates(ctx, conn, arn),
+		Refresh: statusTLSInspectionConfigurationCertificates(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -570,7 +571,7 @@ func waitTLSInspectionConfigurationDeleted(ctx context.Context, conn *networkfir
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusActive, awstypes.ResourceStatusDeleting),
 		Target:  []string{},
-		Refresh: statusTLSInspectionConfiguration(ctx, conn, arn),
+		Refresh: statusTLSInspectionConfiguration(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -602,6 +603,7 @@ func flattenDescribeTLSInspectionConfigurationOutput(ctx context.Context, data *
 }
 
 type tlsInspectionConfigurationResourceModel struct {
+	framework.WithRegionModel
 	CertificateAuthority           fwtypes.ListNestedObjectValueOf[tlsCertificateDataModel]         `tfsdk:"certificate_authority"`
 	Certificates                   fwtypes.ListNestedObjectValueOf[tlsCertificateDataModel]         `tfsdk:"certificates"`
 	Description                    types.String                                                     `tfsdk:"description"`
@@ -616,12 +618,6 @@ type tlsInspectionConfigurationResourceModel struct {
 	TLSInspectionConfigurationID   types.String                                                     `tfsdk:"tls_inspection_configuration_id"`
 	TLSInspectionConfigurationName types.String                                                     `tfsdk:"name"`
 	UpdateToken                    types.String                                                     `tfsdk:"update_token"`
-}
-
-func (model *tlsInspectionConfigurationResourceModel) InitFromID() error {
-	model.TLSInspectionConfigurationARN = model.ID
-
-	return nil
 }
 
 func (model *tlsInspectionConfigurationResourceModel) setID() {

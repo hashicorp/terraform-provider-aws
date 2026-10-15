@@ -22,20 +22,21 @@ resource "aws_quicksight_group" "example" {
 
 This resource supports the following arguments:
 
-* `group_name` - (Required) A name for the group.
-* `aws_account_id` - (Optional) The ID for the AWS account that the group is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
-* `description` - (Optional) A description for the group.
-* `namespace` - (Optional) The namespace. Currently, you should set this to `default`.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
+* `description` - (Optional) Description for the group.
+* `group_name` - (Required) Name for the group.
+* `namespace` - (Optional) Namespace. Currently, you should set this to `default`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of group
+* `arn` - ARN of group
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight Group using the aws account id, namespace and group name separated by `/`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight Group using the aws account ID, namespace and group name separated by `/`. For example:
 
 ```terraform
 import {
@@ -44,7 +45,7 @@ import {
 }
 ```
 
-Using `terraform import`, import QuickSight Group using the aws account id, namespace and group name separated by `/`. For example:
+Using `terraform import`, import QuickSight Group using the aws account ID, namespace and group name separated by `/`. For example:
 
 ```console
 % terraform import aws_quicksight_group.example 123456789123/default/tf-example

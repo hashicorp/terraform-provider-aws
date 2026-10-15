@@ -22,13 +22,14 @@ data "aws_glue_registry" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the Glue Registry.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of Glue Registry.
-* `description` - A description of the registry.
+* `arn` - ARN of Glue Registry.
+* `description` - Description of the registry.

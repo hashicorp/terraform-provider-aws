@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_instance: No longer fails when setting `metadata_options.instance_metadata_tags`
-```

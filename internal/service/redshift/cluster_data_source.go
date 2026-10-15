@@ -1,14 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshift
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,194 +22,198 @@ import (
 
 // @SDKDataSource("aws_redshift_cluster", name="Cluster")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
 
-		Schema: map[string]*schema.Schema{
-			"allow_version_upgrade": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"aqua_configuration_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"automated_snapshot_retention_period": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone_relocation_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrBucketName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"cluster_namespace_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_nodes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"node_role": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"private_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"public_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allow_version_upgrade": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"aqua_configuration_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"automated_snapshot_retention_period": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"availability_zone_relocation_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrBucketName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"cluster_namespace_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_nodes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"node_role": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"private_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"public_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"cluster_parameter_group_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_public_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_revision_number": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_subnet_group_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDatabaseName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_iam_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"elastic_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enable_logging": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enhanced_vpc_routing": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"iam_roles": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_username": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"maintenance_track_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"manual_snapshot_retention_period": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"node_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"number_of_nodes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrPreferredMaintenanceWindow: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrS3KeyPrefix: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"log_destination_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"log_exports": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				"cluster_parameter_group_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_public_key": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_revision_number": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_subnet_group_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cluster_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDatabaseName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_iam_role_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"elastic_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enable_logging": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enhanced_vpc_routing": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"iam_roles": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"master_username": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"maintenance_track_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"manual_snapshot_retention_period": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"node_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"number_of_nodes": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrPreferredMaintenanceWindow: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrS3KeyPrefix: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"log_destination_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"log_exports": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.RedshiftClient(ctx)
 
 	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	rsc, err := findClusterByID(ctx, conn, clusterID)
@@ -220,14 +224,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(clusterID)
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.Redshift,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, clusterARN(ctx, c, d.Id()))
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	if rsc.AquaConfiguration != nil {
 		d.Set("aqua_configuration_status", rsc.AquaConfiguration.AquaConfigurationStatus)

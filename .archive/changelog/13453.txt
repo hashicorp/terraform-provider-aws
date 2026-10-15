@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_route53_record: Support `set_identifier` values containing `_`
-```

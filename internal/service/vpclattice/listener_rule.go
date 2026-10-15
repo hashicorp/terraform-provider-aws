@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -12,15 +14,17 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,7 +34,7 @@ import (
 // @SDKResource("aws_vpclattice_listener_rule", name="Listener Rule")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
-func ResourceListenerRule() *schema.Resource {
+func resourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,
 		ReadWithoutTimeout:   resourceListenerRuleRead,
@@ -38,17 +42,15 @@ func ResourceListenerRule() *schema.Resource {
 		DeleteWithoutTimeout: resourceListenerRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-					return nil, fmt.Errorf("unexpected format of ID (%q), expected SERVICE-ID/LISTENER-ID/RULE-ID", d.Id())
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
+				serviceID, listenerID, ruleID, err := listenerRuleParseResourceID(d.Id())
+				if err != nil {
+					return nil, err
 				}
-				serviceIdentifier := idParts[0]
-				listenerIdentifier := idParts[1]
-				ruleId := idParts[2]
-				d.Set("service_identifier", serviceIdentifier)
-				d.Set("listener_identifier", listenerIdentifier)
-				d.Set("rule_id", ruleId)
+
+				d.Set("service_identifier", serviceID)
+				d.Set("listener_identifier", listenerID)
+				d.Set("rule_id", ruleID)
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -60,150 +62,52 @@ func ResourceListenerRule() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"fixed_response": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStatusCode: {
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-								},
-							},
-						},
-						"forward": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"target_groups": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target_group_identifier": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrWeight: {
-													Type:         schema.TypeInt,
-													ValidateFunc: validation.IntBetween(0, 999),
-													Default:      100,
-													Optional:     true,
-												},
-											},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"fixed_response": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStatusCode: {
+											Type:     schema.TypeInt,
+											Required: true,
 										},
 									},
 								},
+								ExactlyOneOf: []string{
+									"action.0.fixed_response",
+									"action.0.forward",
+								},
 							},
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"listener_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"match": {
-				Type:             schema.TypeList,
-				Required:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"http_match": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"method": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"header_matches": {
-										Type:             schema.TypeList,
-										Optional:         true,
-										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-										MinItems:         1,
-										MaxItems:         5,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"case_sensitive": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												"match": {
-													Type:             schema.TypeList,
-													Required:         true,
-													MaxItems:         1,
-													DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"contains": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"exact": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															names.AttrPrefix: {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
+							"forward": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"target_groups": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"target_group_identifier": {
+														Type:     schema.TypeString,
+														Required: true,
 													},
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-									"path_match": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"case_sensitive": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												"match": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"exact": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															names.AttrPrefix: {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
+													names.AttrWeight: {
+														Type:         schema.TypeInt,
+														ValidateFunc: validation.IntBetween(0, 999),
+														Default:      100,
+														Optional:     true,
 													},
 												},
 											},
@@ -214,76 +118,175 @@ func ResourceListenerRule() *schema.Resource {
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
-			},
-			names.AttrPriority: {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 100),
-			},
-			"rule_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"service_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"listener_identifier": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				"match": {
+					Type:             schema.TypeList,
+					Required:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"http_match": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"header_matches": {
+											Type:             schema.TypeList,
+											Optional:         true,
+											DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+											MinItems:         1,
+											MaxItems:         5,
+											AtLeastOneOf: []string{
+												"match.0.http_match.0.header_matches",
+												"match.0.http_match.0.method",
+												"match.0.http_match.0.path_match",
+											},
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"case_sensitive": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+													"match": {
+														Type:             schema.TypeList,
+														Required:         true,
+														MaxItems:         1,
+														DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"contains": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																"exact": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																names.AttrPrefix: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+															},
+														},
+													},
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+										"method": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"path_match": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"case_sensitive": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+													"match": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"exact": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+																names.AttrPrefix: {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 63),
+				},
+				names.AttrPriority: {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 100),
+				},
+				"rule_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"service_identifier": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
-
-const (
-	ResNameListenerRule = "Listener Rule"
-)
 
 func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	in := &vpclattice.CreateRuleInput{
-		Action:             expandRuleAction(d.Get(names.AttrAction).([]any)[0].(map[string]any)),
-		ClientToken:        aws.String(id.UniqueId()),
+	input := vpclattice.CreateRuleInput{
+		Action:             expandRuleActions(d.Get(names.AttrAction).([]any)),
+		ClientToken:        aws.String(create.UniqueId(ctx)),
 		ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
-		Match:              expandRuleMatch(d.Get("match").([]any)[0].(map[string]any)),
+		Match:              expandRuleMatches(d.Get("match").([]any)),
 		Name:               aws.String(name),
+		Priority:           aws.Int32(int32(d.Get(names.AttrPriority).(int))),
 		ServiceIdentifier:  aws.String(d.Get("service_identifier").(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrPriority); ok {
-		in.Priority = aws.Int32(int32(v.(int)))
+		input.Priority = aws.Int32(int32(v.(int)))
 	}
 
-	out, err := conn.CreateRule(ctx, in)
+	output, err := conn.CreateRule(ctx, &input)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameListenerRule, name, err)
+		return sdkdiag.AppendErrorf(diags, "creating VPCLattice Listener Rule (%s): %s", name, err)
 	}
 
-	if out == nil || out.Arn == nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameListenerRule, d.Get(names.AttrName).(string), errors.New("empty output"))
+	serviceID, listenerID, ruleID, err := listenerRuleParseARN(aws.ToString(output.Arn))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating VPCLattice Listener Rule (%s): %s", name, err)
 	}
 
-	d.Set("rule_id", out.Id)
-	d.Set("service_identifier", in.ServiceIdentifier)
-	d.Set("listener_identifier", in.ListenerIdentifier)
-
-	parts := []string{
-		d.Get("service_identifier").(string),
-		d.Get("listener_identifier").(string),
-		d.Get("rule_id").(string),
-	}
-
-	d.SetId(strings.Join(parts, "/"))
+	d.SetId(listenerRuleCreateResourceID(serviceID, listenerID, ruleID))
 
 	return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 }
@@ -292,36 +295,33 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	serviceId := d.Get("service_identifier").(string)
-	listenerId := d.Get("listener_identifier").(string)
-	ruleId := d.Get("rule_id").(string)
+	serviceID, listenerID, ruleID, err := listenerRuleParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
-	out, err := FindListenerRuleByID(ctx, conn, serviceId, listenerId, ruleId)
+	output, err := findListenerRuleByThreePartKey(ctx, conn, serviceID, listenerID, ruleID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] VpcLattice Listener Rule (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] VPCLattice Listener Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameListenerRule, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading VPCLattice Listener Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Arn)
-	d.Set(names.AttrPriority, out.Priority)
-	d.Set(names.AttrName, out.Name)
-	d.Set("listener_identifier", listenerId)
-	d.Set("service_identifier", serviceId)
-	d.Set("rule_id", out.Id)
-
-	if err := d.Set(names.AttrAction, []any{flattenRuleAction(out.Action)}); err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
+	if err := d.Set(names.AttrAction, []any{flattenRuleAction(output.Action)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
-
-	if err := d.Set("match", []any{flattenRuleMatch(out.Match)}); err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
+	d.Set(names.AttrARN, output.Arn)
+	if err := d.Set("match", []any{flattenRuleMatch(output.Match)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting match: %s", err)
 	}
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrPriority, output.Priority)
+	d.Set("rule_id", output.Id)
 
 	return diags
 }
@@ -330,31 +330,33 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	serviceId := d.Get("service_identifier").(string)
-	listenerId := d.Get("listener_identifier").(string)
-	ruleId := d.Get("rule_id").(string)
+	serviceID, listenerID, ruleID, err := listenerRuleParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		in := &vpclattice.UpdateRuleInput{
-			RuleIdentifier:     aws.String(ruleId),
-			ListenerIdentifier: aws.String(listenerId),
-			ServiceIdentifier:  aws.String(serviceId),
+		input := vpclattice.UpdateRuleInput{
+			ListenerIdentifier: aws.String(listenerID),
+			RuleIdentifier:     aws.String(ruleID),
+			ServiceIdentifier:  aws.String(serviceID),
 		}
 
 		if d.HasChange(names.AttrAction) {
 			if v, ok := d.GetOk(names.AttrAction); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				in.Action = expandRuleAction(v.([]any)[0].(map[string]any))
+				input.Action = expandRuleAction(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange("match") {
 			if v, ok := d.GetOk("match"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				in.Match = expandRuleMatch(v.([]any)[0].(map[string]any))
+				input.Match = expandRuleMatch(v.([]any)[0].(map[string]any))
 			}
 		}
-		_, err := conn.UpdateRule(ctx, in)
+		_, err := conn.UpdateRule(ctx, &input)
+
 		if err != nil {
-			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionUpdating, ResNameListenerRule, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating VPCLattice Listener Rule (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -365,53 +367,116 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	serviceId := d.Get("service_identifier").(string)
-	listenerId := d.Get("listener_identifier").(string)
-	ruleId := d.Get("rule_id").(string)
-
-	log.Printf("[INFO] Deleting VpcLattice Listening Rule: %s", d.Id())
-	input := vpclattice.DeleteRuleInput{
-		ListenerIdentifier: aws.String(listenerId),
-		RuleIdentifier:     aws.String(ruleId),
-		ServiceIdentifier:  aws.String(serviceId),
+	serviceID, listenerID, ruleID, err := listenerRuleParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	_, err := conn.DeleteRule(ctx, &input)
+
+	log.Printf("[INFO] Deleting VPCLattice Listener Rule: %s", d.Id())
+	input := vpclattice.DeleteRuleInput{
+		ListenerIdentifier: aws.String(listenerID),
+		RuleIdentifier:     aws.String(ruleID),
+		ServiceIdentifier:  aws.String(serviceID),
+	}
+	_, err = conn.DeleteRule(ctx, &input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
-
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameListenerRule, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting VPCLattice Listener Rule (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindListenerRuleByID(ctx context.Context, conn *vpclattice.Client, serviceIdentifier string, listenerIdentifier string, ruleId string) (*vpclattice.GetRuleOutput, error) {
-	in := &vpclattice.GetRuleInput{
-		ListenerIdentifier: aws.String(listenerIdentifier),
-		RuleIdentifier:     aws.String(ruleId),
-		ServiceIdentifier:  aws.String(serviceIdentifier),
-	}
-	out, err := conn.GetRule(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+const listenerRuleResourceIDSeparator = "/"
 
+func listenerRuleCreateResourceID(serviceID, listenerID, ruleID string) string {
+	parts := []string{serviceID, listenerID, ruleID}
+	id := strings.Join(parts, listenerRuleResourceIDSeparator)
+
+	return id
+}
+
+func listenerRuleParseResourceID(id string) (string, string, string, error) {
+	parts := strings.SplitN(id, listenerRuleResourceIDSeparator, 3)
+
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected SERVICE-ID%[2]sLISTENER-ID%[2]sRULE-ID", id, listenerRuleResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], parts[2], nil
+}
+
+func listenerRuleParseARN(arnS string) (serviceID string, listenerID string, ruleID string, err error) {
+	a, err := arn.Parse(arnS)
+	if err != nil {
+		return
+	}
+
+	resource := a.Resource
+	var ok bool
+
+	resource, ok = strings.CutPrefix(resource, "service/")
+	if !ok {
+		err = errors.New("foo")
+		return
+	}
+
+	serviceID, resource, ok = strings.Cut(resource, "/listener/")
+	if !ok {
+		err = errors.New("foo")
+		return
+	}
+
+	listenerID, ruleID, ok = strings.Cut(resource, "/rule/")
+	if !ok {
+		err = errors.New("foo")
+		return
+	}
+	return
+}
+
+func findListenerRuleByThreePartKey(ctx context.Context, conn *vpclattice.Client, serviceID, listenerID, ruleID string) (*vpclattice.GetRuleOutput, error) {
+	input := vpclattice.GetRuleInput{
+		ListenerIdentifier: aws.String(listenerID),
+		RuleIdentifier:     aws.String(ruleID),
+		ServiceIdentifier:  aws.String(serviceID),
+	}
+
+	output, err := findListenerRule(ctx, conn, &input)
+
+	if err != nil {
 		return nil, err
 	}
-	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+
+	if output.Id == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return out, nil
+	return output, nil
+}
+
+func findListenerRule(ctx context.Context, conn *vpclattice.Client, input *vpclattice.GetRuleInput) (*vpclattice.GetRuleOutput, error) {
+	output, err := conn.GetRule(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
 }
 
 func flattenRuleAction(apiObject types.RuleAction) map[string]any {
@@ -421,10 +486,10 @@ func flattenRuleAction(apiObject types.RuleAction) map[string]any {
 
 	tfMap := make(map[string]any)
 
-	if v, ok := apiObject.(*types.RuleActionMemberFixedResponse); ok {
+	switch v := apiObject.(type) {
+	case *types.RuleActionMemberFixedResponse:
 		tfMap["fixed_response"] = []any{flattenRuleActionMemberFixedResponse(v)}
-	}
-	if v, ok := apiObject.(*types.RuleActionMemberForward); ok {
+	case *types.RuleActionMemberForward:
 		tfMap["forward"] = []any{flattenForwardAction(v)}
 	}
 
@@ -512,12 +577,12 @@ func flattenHTTPMatch(apiObject *types.HttpMatch) map[string]any {
 
 	tfMap := map[string]any{}
 
-	if v := apiObject.Method; v != nil {
-		tfMap["method"] = aws.ToString(v)
-	}
-
 	if v := apiObject.HeaderMatches; v != nil {
 		tfMap["header_matches"] = flattenHeaderMatches(v)
+	}
+
+	if v := apiObject.Method; v != nil {
+		tfMap["method"] = aws.ToString(v)
 	}
 
 	if v := apiObject.PathMatch; v != nil {
@@ -552,12 +617,12 @@ func flattenHeaderMatch(apiObject *types.HeaderMatch) map[string]any {
 		tfMap["case_sensitive"] = aws.ToBool(v)
 	}
 
-	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
-	}
-
 	if v := apiObject.Match; v != nil {
 		tfMap["match"] = []any{flattenHeaderMatchType(v)}
+	}
+
+	if v := apiObject.Name; v != nil {
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -569,11 +634,12 @@ func flattenHeaderMatchType(apiObject types.HeaderMatchType) map[string]any {
 
 	tfMap := make(map[string]any)
 
-	if v, ok := apiObject.(*types.HeaderMatchTypeMemberContains); ok {
+	switch v := apiObject.(type) {
+	case *types.HeaderMatchTypeMemberContains:
 		return flattenHeaderMatchTypeMemberContains(v)
-	} else if v, ok := apiObject.(*types.HeaderMatchTypeMemberExact); ok {
+	case *types.HeaderMatchTypeMemberExact:
 		return flattenHeaderMatchTypeMemberExact(v)
-	} else if v, ok := apiObject.(*types.HeaderMatchTypeMemberPrefix); ok {
+	case *types.HeaderMatchTypeMemberPrefix:
 		return flattenHeaderMatchTypeMemberPrefix(v)
 	}
 
@@ -641,9 +707,10 @@ func flattenPathMatchType(apiObject types.PathMatchType) map[string]any {
 
 	tfMap := make(map[string]any)
 
-	if v, ok := apiObject.(*types.PathMatchTypeMemberExact); ok {
+	switch v := apiObject.(type) {
+	case *types.PathMatchTypeMemberExact:
 		return flattenPathMatchTypeMemberExact(v)
-	} else if v, ok := apiObject.(*types.PathMatchTypeMemberPrefix); ok {
+	case *types.PathMatchTypeMemberPrefix:
 		return flattenPathMatchTypeMemberPrefix(v)
 	}
 
@@ -672,6 +739,14 @@ func flattenPathMatchTypeMemberPrefix(apiObject *types.PathMatchTypeMemberPrefix
 	}
 
 	return tfMap
+}
+
+func expandRuleActions(tfList []any) types.RuleAction {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	return expandRuleAction(tfList[0].(map[string]any))
 }
 
 func expandRuleAction(tfMap map[string]any) types.RuleAction {
@@ -715,14 +790,11 @@ func expandWeightedTargetGroups(tfList []any) []types.WeightedTargetGroup {
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
-
 		if !ok {
 			continue
 		}
 
-		apiObject := expandWeightedTargetGroup(tfMap)
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandWeightedTargetGroup(tfMap))
 	}
 
 	return apiObjects
@@ -740,6 +812,14 @@ func expandWeightedTargetGroup(tfMap map[string]any) types.WeightedTargetGroup {
 	}
 
 	return apiObject
+}
+
+func expandRuleMatches(tfList []any) types.RuleMatch {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	return expandRuleMatch(tfList[0].(map[string]any))
 }
 
 func expandRuleMatch(tfMap map[string]any) types.RuleMatch {
@@ -779,14 +859,11 @@ func expandHeaderMatches(tfList []any) []types.HeaderMatch {
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
-
 		if !ok {
 			continue
 		}
 
-		apiObject := expandHeaderMatch(tfMap)
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandHeaderMatch(tfMap))
 	}
 
 	return apiObjects
@@ -799,21 +876,20 @@ func expandHeaderMatch(tfMap map[string]any) types.HeaderMatch {
 		apiObject.CaseSensitive = aws.Bool(v)
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok {
-		apiObject.Name = aws.String(v)
+	if v, ok := tfMap["match"].([]any); ok && len(v) > 0 {
+		tfMap := v[0].(map[string]any)
+
+		if v, ok := tfMap["exact"].(string); ok && v != "" {
+			apiObject.Match = expandHeaderMatchTypeMemberExact(tfMap)
+		} else if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
+			apiObject.Match = expandHeaderMatchTypeMemberPrefix(tfMap)
+		} else if v, ok := tfMap["contains"].(string); ok && v != "" {
+			apiObject.Match = expandHeaderMatchTypeMemberContains(tfMap)
+		}
 	}
 
-	if v, ok := tfMap["match"].([]any); ok && len(v) > 0 {
-		matchObj := v[0].(map[string]any)
-		if matchV, ok := matchObj["exact"].(string); ok && matchV != "" {
-			apiObject.Match = expandHeaderMatchTypeMemberExact(matchObj)
-		}
-		if matchV, ok := matchObj[names.AttrPrefix].(string); ok && matchV != "" {
-			apiObject.Match = expandHeaderMatchTypeMemberPrefix(matchObj)
-		}
-		if matchV, ok := matchObj["contains"].(string); ok && matchV != "" {
-			apiObject.Match = expandHeaderMatchTypeMemberContains(matchObj)
-		}
+	if v, ok := tfMap[names.AttrName].(string); ok {
+		apiObject.Name = aws.String(v)
 	}
 
 	return apiObject
@@ -825,6 +901,7 @@ func expandHeaderMatchTypeMemberContains(tfMap map[string]any) types.HeaderMatch
 	if v, ok := tfMap["contains"].(string); ok && v != "" {
 		apiObject.Value = v
 	}
+
 	return apiObject
 }
 
@@ -834,6 +911,7 @@ func expandHeaderMatchTypeMemberPrefix(tfMap map[string]any) types.HeaderMatchTy
 	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Value = v
 	}
+
 	return apiObject
 }
 
@@ -843,6 +921,7 @@ func expandHeaderMatchTypeMemberExact(tfMap map[string]any) types.HeaderMatchTyp
 	if v, ok := tfMap["exact"].(string); ok && v != "" {
 		apiObject.Value = v
 	}
+
 	return apiObject
 }
 
@@ -854,12 +933,12 @@ func expandPathMatch(tfMap map[string]any) *types.PathMatch {
 	}
 
 	if v, ok := tfMap["match"].([]any); ok && len(v) > 0 {
-		matchObj := v[0].(map[string]any)
-		if matchV, ok := matchObj["exact"].(string); ok && matchV != "" {
-			apiObject.Match = expandPathMatchTypeMemberExact(matchObj)
-		}
-		if matchV, ok := matchObj[names.AttrPrefix].(string); ok && matchV != "" {
-			apiObject.Match = expandPathMatchTypeMemberPrefix(matchObj)
+		tfMap := v[0].(map[string]any)
+
+		if v, ok := tfMap["exact"].(string); ok && v != "" {
+			apiObject.Match = expandPathMatchTypeMemberExact(tfMap)
+		} else if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
+			apiObject.Match = expandPathMatchTypeMemberPrefix(tfMap)
 		}
 	}
 
@@ -882,5 +961,6 @@ func expandPathMatchTypeMemberPrefix(tfMap map[string]any) types.PathMatchType {
 	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Value = v
 	}
+
 	return apiObject
 }

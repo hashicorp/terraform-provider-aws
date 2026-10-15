@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # ExampleCompany::ExampleService::ExampleResource
 
 This directory contains the source for a valid CloudFormation Type. The files were generated with the [CloudFormation CLI](https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/what-is-cloudformation-cli.html) `cfn init` command.

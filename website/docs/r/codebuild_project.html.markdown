@@ -14,6 +14,8 @@ source (e.g., the "rebuild every time a code change is pushed" option in the Cod
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
@@ -134,9 +136,10 @@ resource "aws_codebuild_project" "example" {
 
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
+    image                       = "aws/codebuild/amazonlinux-x86_64-standard:6.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
+    host_kernel                 = "LINUX_KERNEL_6"
 
     environment_variable {
       name  = "SOME_KEY1"
@@ -260,6 +263,11 @@ resource "aws_codebuild_project" "project-using-github-app" {
 }
 ```
 
+### Runner Project
+
+While no special configuration is required for `aws_codebuild_project` to create a project as a Runner Project, an `aws_codebuild_webhook` resource with an appropriate `filter_group` is required.
+See the [`aws_codebuild_webhook` resource documentation example](/docs/providers/aws/r/codebuild_webhook.html#for-codebuild-runner-project) for more details.
+
 ## Argument Reference
 
 The following arguments are required:
@@ -267,12 +275,15 @@ The following arguments are required:
 * `artifacts` - (Required) Configuration block. Detailed below.
 * `environment` - (Required) Configuration block. Detailed below.
 * `name` - (Required) Project's name.
-* `service_role` - (Required) Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that
+* `service_role` - (Required) ARN of the AWS Identity and Access Management (IAM) role that
   enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `source` - (Required) Configuration block. Detailed below.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `auto_retry_limit` - (Optional) Specify a maximum number of additional automatic retries after a failed build.
+  The default is 0.
 * `badge_enabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as
   `badge_url` attribute when enabled.
 * `build_batch_config` - (Optional) Defines the batch build options for the project.
@@ -285,7 +296,7 @@ The following arguments are optional:
 * `description` - (Optional) Short description of the project.
 * `file_system_locations` - (Optional) A set of file system locations to mount inside the build. File system locations
   are documented below.
-* `encryption_key` - (Optional) AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting
+* `encryption_key` - (Optional) KMS customer master key (CMK) to be used for encrypting
   the build project's build output artifacts.
 * `logs_config` - (Optional) Configuration block. Detailed below.
 * `project_visibility` - (Optional) Specifies the visibility of the project's builds. Possible values are: `PUBLIC_READ`
@@ -346,6 +357,7 @@ The following arguments are optional:
 
 ### cache
 
+* `cache_namespace` - (Optional) Namespace that determines the scope in which a cache is shared across multiple projects.
 * `location` - (Required when cache type is `S3`) Location where the AWS CodeBuild project stores cached resources. For
   type `S3`, the value must be a valid S3 bucket name/prefix.
 * `modes` - (Required when cache type is `LOCAL`) Specifies settings that AWS CodeBuild uses to store and reuse build
@@ -357,13 +369,18 @@ The following arguments are optional:
 
 * `certificate` - (Optional) ARN of the S3 bucket, path prefix and object key that contains the PEM-encoded certificate.
 * `compute_type` - (Required) Information about the compute resources the build project will use. Valid values:
-  `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM`, `BUILD_GENERAL1_LARGE`, `BUILD_GENERAL1_2XLARGE`, `BUILD_LAMBDA_1GB`,
-  `BUILD_LAMBDA_2GB`, `BUILD_LAMBDA_4GB`, `BUILD_LAMBDA_8GB`, `BUILD_LAMBDA_10GB`. `BUILD_GENERAL1_SMALL` is only valid
-  if `type` is set to `LINUX_CONTAINER`. When `type` is set to `LINUX_GPU_CONTAINER`, `compute_type` must be
-  `BUILD_GENERAL1_LARGE`. When `type` is set to `LINUX_LAMBDA_CONTAINER` or `ARM_LAMBDA_CONTAINER`, `compute_type` must
-  be `BUILD_LAMBDA_XGB`.`
+  `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM`, `BUILD_GENERAL1_LARGE`, `BUILD_GENERAL1_XLARGE`, `BUILD_GENERAL1_2XLARGE`, `BUILD_LAMBDA_1GB`,
+  `BUILD_LAMBDA_2GB`, `BUILD_LAMBDA_4GB`, `BUILD_LAMBDA_8GB`, `BUILD_LAMBDA_10GB`. For additional information, see
+  the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+* `docker_server` - (Optional) Configuration block. Detailed below.
 * `fleet` - (Optional) Configuration block. Detailed below.
 * `environment_variable` - (Optional) Configuration block. Detailed below.
+* `host_kernel` - (Optional) Host operating system kernel used for on-demand builds in the build project. This setting
+  controls the kernel of the underlying build host. It does not change the build environment operating system, which is
+  determined by the image you specify. Valid values: `LINUX_KERNEL_4` (runs on an Amazon Linux 2 host, kernel 4.x),
+  `LINUX_KERNEL_6` (runs on an Amazon Linux 2023 host, kernel 6.x), `LINUX_KERNEL_LATEST` (runs on the latest supported
+  host kernel). Applies to the `LINUX_CONTAINER`, `ARM_CONTAINER`, `LINUX_EC2`, and `ARM_EC2` environment types; not
+  applicable to Windows, Lambda, or Mac environment types. If not specified, CodeBuild selects a default.
 * `image_pull_credentials_type` - (Optional) Type of credentials AWS CodeBuild uses to pull images in your build. Valid
   values: `CODEBUILD`, `SERVICE_ROLE`. When you use a cross-account or private registry image, you must use SERVICE_ROLE
   credentials. When you use an AWS CodeBuild curated image, you must use CodeBuild credentials. Defaults to `CODEBUILD`.
@@ -375,10 +392,15 @@ The following arguments are optional:
 * `privileged_mode` - (Optional) Whether to enable running the Docker daemon inside a Docker container. Defaults to
   `false`.
 * `registry_credential` - (Optional) Configuration block. Detailed below.
-* `type` - (Required) Type of build environment to use for related builds. Valid values: `LINUX_CONTAINER`,
-  `LINUX_GPU_CONTAINER`, `WINDOWS_CONTAINER` (deprecated), `WINDOWS_SERVER_2019_CONTAINER`, `ARM_CONTAINER`,
-  `LINUX_LAMBDA_CONTAINER`, `ARM_LAMBDA_CONTAINER`. For additional information, see
+* `type` - (Required) Type of build environment to use for related builds. Valid values: `WINDOWS_CONTAINER` (deprecated), `LINUX_CONTAINER`,
+  `LINUX_GPU_CONTAINER`, `ARM_CONTAINER`, `WINDOWS_SERVER_2019_CONTAINER`, `WINDOWS_SERVER_2022_CONTAINER`,
+  `LINUX_LAMBDA_CONTAINER`, `ARM_LAMBDA_CONTAINER`, `LINUX_EC2`, `ARM_EC2`, `WINDOWS_EC2`, `MAC_ARM`. For additional information, see
   the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+
+#### environment: docker_server
+
+* `compute_type` - (Required) Compute type for the Docker server. Valid values: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM`, `BUILD_GENERAL1_LARGE`, `BUILD_GENERAL1_XLARGE`, and `BUILD_GENERAL1_2XLARGE`.
+* `security_group_ids` - (Optional) List of security group IDs to assign to the Docker server.
 
 #### environment: fleet
 
@@ -404,7 +426,7 @@ See [ProjectFileSystemLocation](https://docs.aws.amazon.com/codebuild/latest/API
 for more details of the fields.
 
 * `identifier` - (Optional) The name used to access a file system created by Amazon EFS. CodeBuild creates an
-  environment variable by appending the identifier in all capital letters to CODEBUILD\_. For example, if you specify
+  environment variable by appending the identifier in all capital letters to `CODEBUILD_`. For example, if you specify
   my-efs for identifier, a new environment variable is create named CODEBUILD_MY-EFS.
 * `location` - (Optional) A string that specifies the location of the file system created by Amazon EFS. Its format is
   `efs-dns-name:/directory-path`.
@@ -506,7 +528,7 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB`, `GITHUB_ENTE
 
 * `context` - (Optional) Specifies the context of the build status CodeBuild sends to the source provider. The usage of
   this parameter depends on the source provider.
-* `target_url` - (Optional) Specifies the target url of the build status CodeBuild sends to the source provider. The
+* `target_url` - (Optional) Specifies the target URL of the build status CodeBuild sends to the source provider. The
   usage of this parameter depends on the source provider.
 
 ### secondary_source_version
@@ -557,7 +579,7 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB`, `GITHUB_ENTE
 
 * `context` - (Optional) Specifies the context of the build status CodeBuild sends to the source provider. The usage of
   this parameter depends on the source provider.
-* `target_url` - (Optional) Specifies the target url of the build status CodeBuild sends to the source provider. The
+* `target_url` - (Optional) Specifies the target URL of the build status CodeBuild sends to the source provider. The
   usage of this parameter depends on the source provider.
 
 ### vpc_config
@@ -578,6 +600,27 @@ This resource exports the following attributes in addition to the arguments abov
   `default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codebuild_project.example
+  identity = {
+    "arn" = "arn:aws:codebuild:us-west-2:123456789012:project/project-name"
+  }
+}
+
+resource "aws_codebuild_project" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the CodeBuild project.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
 import CodeBuild Project using the `name`. For example:

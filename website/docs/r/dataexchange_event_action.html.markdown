@@ -38,8 +38,9 @@ resource "aws_dataexchange_event_action" "example" {
 
 ## Argument Reference
 
-The following blocks are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `action` - (Required) Describes the action to take.
   Described in [`action` Configuration Block](#action-configuration-block) below.
 * `event` - (Required) Describes the event that triggers the `action`.
@@ -83,7 +84,7 @@ The following blocks are supported:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the event action.
+* `arn` - ARN of the event action.
 * `created_at` - Date and time when the resource was created.
 * `id` - Unique identifier for the event action.
 * `updated_at` - Data and time when the resource was last updated.
@@ -99,7 +100,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Data Exchange Event Action using the id. For example:
+Using `terraform import`, import Data Exchange Event Action using the ID. For example:
 
 ```console
 % terraform import aws_dataexchange_event_action.example example-event-action-id

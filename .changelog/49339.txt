@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ssm_parameter: Fixes error where `name` with a leading slash and no other slashes was stripping the leading slash.
+```

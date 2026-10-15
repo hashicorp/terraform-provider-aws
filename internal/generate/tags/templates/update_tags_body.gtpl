@@ -1,3 +1,20 @@
+{{ define "populateFields" -}}
+{{- if not ( .TagTypeIDElem ) }}
+	{{- if .TagInIDNeedValueSlice }}
+		{{ .TagInIDElem }}: []string{identifier},
+	{{- else }}
+		{{ .TagInIDElem }}: aws.String(identifier),
+	{{- end }}
+	{{- if .TagResTypeElem }}
+		{{- if .TagResTypeElemType }}
+			{{ .TagResTypeElem }}: awstypes.{{ .TagResTypeElemType }}(resourceType),
+		{{- else }}
+			{{ .TagResTypeElem }}: aws.String(resourceType),
+		{{- end }}
+	{{- end }}
+{{- end }}
+{{- end }}
+
 // {{ .UpdateTagsFunc }} updates {{ .ServicePackage }} service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -18,7 +35,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	removedTags := oldTags.Removed(newTags)
 	{{- if .UpdateTagsIgnoreSystem }}
 	removedTags = removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
-	{{- end }}
+	{{ end -}}
 	updatedTags := oldTags.Updated(newTags)
 	{{- if .UpdateTagsIgnoreSystem }}
 	updatedTags = updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
@@ -30,20 +47,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	}
 
 	input := {{ .AWSService }}.{{ .TagOp }}Input{
-		{{- if not ( .TagTypeIDElem ) }}
-		{{- if .TagInIDNeedValueSlice }}
-		{{ .TagInIDElem }}: []string{identifier},
-		{{- else }}
-		{{ .TagInIDElem }}:   aws.String(identifier),
-		{{- end }}
-		{{- if .TagResTypeElem }}
-		{{- if .TagResTypeElemType }}
-		{{ .TagResTypeElem }}:      awstypes.{{ .TagResTypeElemType }}(resourceType),
-		{{- else }}
-		{{ .TagResTypeElem }}:      aws.String(resourceType),
-		{{- end }}
-		{{- end }}
-		{{- end }}
+		{{- template "populateFields" . }}
 	}
 
 	if len(updatedTags) > 0 {
@@ -61,11 +65,19 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		input.{{ .UntagInTagsElem }} = removedTags.Keys()
 		{{- end }}
 	}
-
+	{{ if .RetryTagOps -}}
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func(ctx context.Context) (any, error) {
+			return conn.{{ .TagOp }}(ctx, &input, optFns...)
+		},
+		"{{ .RetryErrorMessage }}",
+	)
+	{{ else -}}
 	_, err := conn.{{ .TagOp }}(ctx, &input, optFns...)
+	{{ end -}}
 
 	if err != nil {
-		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+		return smarterr.NewError(err)
 	}
 
 	{{- else }}
@@ -78,21 +90,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- if .TagOpBatchSize }}
 		for _, removedTags := range removedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
-		input := {{ .TagPackage }}.{{ .UntagOp }}Input{
-			{{- if not ( .TagTypeIDElem ) }}
-			{{- if .TagInIDNeedValueSlice }}
-			{{ .TagInIDElem }}: []string{identifier},
-			{{- else }}
-			{{ .TagInIDElem }}:   aws.String(identifier),
-			{{- end }}
-			{{- if .TagResTypeElem }}
-		    {{- if .TagResTypeElemType }}
-			{{ .TagResTypeElem }}: awstypes.{{ .TagResTypeElemType }}(resourceType),
-		    {{- else }}
-			{{ .TagResTypeElem }}: aws.String(resourceType),
-			{{- end }}
-			{{- end }}
-			{{- end }}
+		input := {{ .AWSService }}.{{ .UntagOp }}Input{
+			{{- template "populateFields" . }}
 			{{- if .UntagInNeedTagType }}
 			{{ .UntagInTagsElem }}:       {{ .TagsFunc }}(removedTags),
 			{{- else if .UntagInNeedTagKeyType }}
@@ -103,11 +102,19 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{ .UntagInTagsElem }}:       removedTags.Keys(),
 			{{- end }}
 		}
-
+		{{ if .RetryTagOps -}}
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+			func(ctx context.Context) (any, error) {
+				return conn.{{ .UntagOp }}(ctx, &input, optFns...)
+			},
+			"{{ .RetryErrorMessage }}",
+		)
+		{{ else -}}
 		_, err := conn.{{ .UntagOp }}(ctx, &input, optFns...)
+		{{ end -}}
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 		{{- if .TagOpBatchSize }}
 		}
@@ -122,32 +129,27 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- if .TagOpBatchSize }}
 		for _, updatedTags := range updatedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
-		input := {{ .TagPackage }}.{{ .TagOp }}Input{
-			{{- if not ( .TagTypeIDElem ) }}
-			{{- if .TagInIDNeedValueSlice }}
-			{{ .TagInIDElem }}: []string{identifier},
-			{{- else }}
-			{{ .TagInIDElem }}: aws.String(identifier),
-			{{- end }}
-			{{- if .TagResTypeElem }}
-		    {{- if .TagResTypeElemType }}
-			{{ .TagResTypeElem }}:    awstypes.{{ .TagResTypeElemType }}(resourceType),
-		    {{- else }}
-			{{ .TagResTypeElem }}:    aws.String(resourceType),
-			{{- end }}
-			{{- end }}
-			{{- end }}
+		input := {{ .AWSService }}.{{ .TagOp }}Input{
+			{{- template "populateFields" . }}
 			{{- if .TagInCustomVal }}
 			{{ .TagInTagsElem }}:       {{ .TagInCustomVal }},
 			{{- else }}
 			{{ .TagInTagsElem }}:       {{ .TagsFunc }}(updatedTags),
 			{{- end }}
 		}
-
+		{{ if .RetryTagOps -}}
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+			func(ctx context.Context) (any, error) {
+				return conn.{{ .TagOp }}(ctx, &input, optFns...)
+			},
+			"{{ .RetryErrorMessage }}",
+		)
+		{{ else -}}
 		_, err := conn.{{ .TagOp }}(ctx, &input, optFns...)
+		{{ end -}}
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 		{{- if .TagOpBatchSize }}
 		}
@@ -159,7 +161,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	{{ if .WaitForPropagation }}
 	if len(removedTags) > 0 || len(updatedTags) > 0 {
 		if err := {{ .WaitTagsPropagatedFunc }}(ctx, conn, identifier, newTags, optFns...); err != nil {
-			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 	{{- end }}
@@ -170,7 +172,20 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 {{- if .IsDefaultUpdateTags }}
 // {{ .UpdateTagsFunc | Title }} updates {{ .ServicePackage }} service tags.
 // It is called from outside this package.
-func (p *servicePackage) {{ .UpdateTagsFunc | Title }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTags, newTags any) error {
-	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
+{{- if .TagResTypeElem }}
+{{- if .TagResTypeIsAccountID }}
+func (p *servicePackage) {{ .UpdateTagsFunc | Title }}(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	c := meta.(*conns.AWSClient)
+	return  {{ .UpdateTagsFunc }}(ctx, c.{{ .ProviderNameUpper }}Client(ctx), identifier, c.AccountID(ctx), oldTags, newTags)
 }
+{{- else }}
+func (p *servicePackage) {{ .UpdateTagsFunc | Title }}(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
+	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier, resourceType, oldTags, newTags)
+}
+{{- end }}
+{{- else }}
+func (p *servicePackage) {{ .UpdateTagsFunc | Title }}(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier, oldTags, newTags)
+}
+{{- end }}
 {{- end }}

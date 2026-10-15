@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb
@@ -41,6 +41,47 @@ func TestValidIdentifier(t *testing.T) {
 		_, errors := validIdentifier(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid DocumentDB Identifier", v)
+		}
+	}
+}
+
+func TestValidParamGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		value    string
+		errCount int
+	}{
+		{
+			value: "valid-name",
+		},
+		{
+			value:    "testing123!",
+			errCount: 1,
+		},
+		{
+			value:    "testing_123",
+			errCount: 1,
+		},
+		{
+			value:    "1testing123",
+			errCount: 1,
+		},
+		{
+			value:    "testing--123",
+			errCount: 1,
+		},
+		{
+			value:    strings.Repeat("w", 230),
+			errCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validParamGroupNamePrefix(tc.value, names.AttrNamePrefix)
+
+		if len(errors) != tc.errCount {
+			t.Fatalf("Unexpected error count for value %q. got: %d, want: %d", tc.value, len(errors), tc.errCount)
 		}
 	}
 }

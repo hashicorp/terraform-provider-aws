@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package jsoncmp
@@ -6,17 +6,14 @@ package jsoncmp
 // Inspired by https://github.com/hgsgtk/jsoncmp.
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/google/go-cmp/cmp"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 func Diff(x, y string) string {
-	xform := cmp.Transformer("jsoncmp", func(s string) (m map[string]any) {
-		if err := json.Unmarshal([]byte(s), &m); err != nil {
-			panic(fmt.Sprintf("json.Unmarshal(%s): %s", s, err))
-		}
+	xform := cmp.Transformer("jsoncmp", func(s string) map[string]any {
+		var m map[string]any
+		_ = tfjson.DecodeFromString(s, &m)
 		return m
 	})
 	opt := cmp.FilterPath(func(p cmp.Path) bool {

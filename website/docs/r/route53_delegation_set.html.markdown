@@ -39,7 +39,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the Delegation Set.
+* `arn` - ARN of the Delegation Set.
 * `id` - The delegation set ID
 * `name_servers` - A list of authoritative name servers for the hosted zone
   (effectively a list of NS records).

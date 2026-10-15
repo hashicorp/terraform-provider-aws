@@ -23,6 +23,7 @@ resource "aws_rum_metrics_destination" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_monitor_name` - (Required) The name of the CloudWatch RUM app monitor that will send the metrics.
 * `destination` - (Required)  Defines the destination to send the metrics to. Valid values are `CloudWatch` and `Evidently`. If you specify `Evidently`, you must also specify the ARN of the CloudWatchEvidently experiment that is to be the destination and an IAM role that has permission to write to the experiment.
 * `destination_arn` - (Optional) Use this parameter only if Destination is Evidently. This parameter specifies the ARN of the Evidently experiment that will receive the extended metrics.
@@ -36,7 +37,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch RUM Metrics Destination using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch RUM Metrics Destination using the `id`. For example:
 
 ```terraform
 import {
@@ -45,7 +46,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Cloudwatch RUM Metrics Destination using the `id`. For example:
+Using `terraform import`, import CloudWatch RUM Metrics Destination using the `id`. For example:
 
 ```console
 % terraform import aws_rum_metrics_destination.example example

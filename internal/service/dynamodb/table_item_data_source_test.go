@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,7 +14,7 @@ import (
 
 func TestAccDynamoDBTableItemDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_dynamodb_table_item.test"
 	hashKey := "hashKey"
 	itemContent := `{
@@ -28,7 +27,7 @@ func TestAccDynamoDBTableItemDataSource_basic(t *testing.T) {
 	key := `{
 	"hashKey": {"S": "something"}
 }`
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DynamoDB)
@@ -49,7 +48,7 @@ func TestAccDynamoDBTableItemDataSource_basic(t *testing.T) {
 
 func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_dynamodb_table_item.test"
 	hashKey := "hashKey"
 	projectionExpression := "one,two"
@@ -69,7 +68,7 @@ func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
 	"two": {"N": "22222"}
 }`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DynamoDB)
@@ -91,7 +90,7 @@ func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
 
 func TestAccDynamoDBTableItemDataSource_expressionAttributeNames(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_dynamodb_table_item.test"
 	hashKey := "hashKey"
 	itemContent := `{
@@ -107,7 +106,7 @@ func TestAccDynamoDBTableItemDataSource_expressionAttributeNames(t *testing.T) {
 	"Percentile": {"N": "22222"}
 }`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DynamoDB)

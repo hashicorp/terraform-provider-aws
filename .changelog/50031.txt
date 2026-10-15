@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_wafv2_ip_set: Add Resource Identity support
+```
+
+```release-note:new-list-resource
+aws_wafv2_ip_set
+```

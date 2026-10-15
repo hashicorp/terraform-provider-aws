@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package emrcontainers
 
@@ -13,15 +15,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -45,109 +47,112 @@ func resourceJobTemplate() *schema.Resource {
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"job_template_data": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configuration_overrides": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"application_configuration": {
-										Type:     schema.TypeList,
-										MaxItems: 100,
-										Optional: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"classification": {
-													Type:     schema.TypeString,
-													Required: true,
-													ForceNew: true,
-												},
-												"configurations": {
-													Type:     schema.TypeList,
-													MaxItems: 100,
-													Optional: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"classification": {
-																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
-															},
-															names.AttrProperties: {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"job_template_data": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"configuration_overrides": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"application_configuration": {
+											Type:     schema.TypeList,
+											MaxItems: 100,
+											Optional: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"classification": {
+														Type:     schema.TypeString,
+														Required: true,
+														ForceNew: true,
+													},
+													"configurations": {
+														Type:     schema.TypeList,
+														MaxItems: 100,
+														Optional: true,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"classification": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
+																names.AttrProperties: {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
 															},
 														},
 													},
-												},
-												names.AttrProperties: {
-													Type:     schema.TypeMap,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+													names.AttrProperties: {
+														Type:     schema.TypeMap,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
-									},
-									"monitoring_configuration": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cloud_watch_monitoring_configuration": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrLogGroupName: {
-																Type:     schema.TypeString,
-																Required: true,
-																ForceNew: true,
-															},
-															"log_stream_name_prefix": {
-																Type:     schema.TypeString,
-																Optional: true,
-																ForceNew: true,
+										"monitoring_configuration": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cloud_watch_monitoring_configuration": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrLogGroupName: {
+																	Type:     schema.TypeString,
+																	Required: true,
+																	ForceNew: true,
+																},
+																"log_stream_name_prefix": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	ForceNew: true,
+																},
 															},
 														},
 													},
-												},
-												"persistent_app_ui": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ForceNew:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.PersistentAppUI](),
-												},
-												"s3_monitoring_configuration": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													ForceNew: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"log_uri": {
-																Type:     schema.TypeString,
-																Required: true,
-																ForceNew: true,
+													"persistent_app_ui": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ForceNew:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.PersistentAppUI](),
+													},
+													"s3_monitoring_configuration": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														ForceNew: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"log_uri": {
+																	Type:     schema.TypeString,
+																	Required: true,
+																	ForceNew: true,
+																},
 															},
 														},
 													},
@@ -157,102 +162,102 @@ func resourceJobTemplate() *schema.Resource {
 									},
 								},
 							},
-						},
-						names.AttrExecutionRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"job_driver": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"spark_sql_job_driver": {
-										Type:         schema.TypeList,
-										MaxItems:     1,
-										Optional:     true,
-										ForceNew:     true,
-										ExactlyOneOf: []string{"job_template_data.0.job_driver.0.spark_sql_job_driver", "job_template_data.0.job_driver.0.spark_submit_job_driver"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"entry_point": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
-												},
-												"spark_sql_parameters": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
+							names.AttrExecutionRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"job_driver": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"spark_sql_job_driver": {
+											Type:         schema.TypeList,
+											MaxItems:     1,
+											Optional:     true,
+											ForceNew:     true,
+											ExactlyOneOf: []string{"job_template_data.0.job_driver.0.spark_sql_job_driver", "job_template_data.0.job_driver.0.spark_submit_job_driver"},
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"entry_point": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+													"spark_sql_parameters": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
 												},
 											},
 										},
-									},
-									"spark_submit_job_driver": {
-										Type:         schema.TypeList,
-										MaxItems:     1,
-										Optional:     true,
-										ForceNew:     true,
-										ExactlyOneOf: []string{"job_template_data.0.job_driver.0.spark_sql_job_driver", "job_template_data.0.job_driver.0.spark_submit_job_driver"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"entry_point": {
-													Type:     schema.TypeString,
-													Required: true,
-													ForceNew: true,
-												},
-												"entry_point_arguments": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													ForceNew: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"spark_submit_parameters": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
+										"spark_submit_job_driver": {
+											Type:         schema.TypeList,
+											MaxItems:     1,
+											Optional:     true,
+											ForceNew:     true,
+											ExactlyOneOf: []string{"job_template_data.0.job_driver.0.spark_sql_job_driver", "job_template_data.0.job_driver.0.spark_submit_job_driver"},
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"entry_point": {
+														Type:     schema.TypeString,
+														Required: true,
+														ForceNew: true,
+													},
+													"entry_point_arguments": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														ForceNew: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+													"spark_submit_parameters": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"job_tags": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"release_label": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							"job_tags": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"release_label": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
-				),
-			},
-			names.AttrTags:    tftags.TagsSchemaForceNew(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
+					),
+				},
+				names.AttrTags:    tftags.TagsSchemaForceNew(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -263,7 +268,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	name := d.Get(names.AttrName).(string)
 	input := &emrcontainers.CreateJobTemplateInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}
@@ -293,7 +298,7 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	vc, err := findJobTemplateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Containers Job Template %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -353,8 +358,7 @@ func findJobTemplate(ctx context.Context, conn *emrcontainers.Client, input *emr
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -363,7 +367,7 @@ func findJobTemplate(ctx context.Context, conn *emrcontainers.Client, input *emr
 	}
 
 	if output == nil || output.JobTemplate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.JobTemplate, nil
@@ -499,7 +503,7 @@ func expandCloudWatchMonitoringConfiguration(tfMap map[string]any) *awstypes.Par
 
 	apiObject := &awstypes.ParametricCloudWatchMonitoringConfiguration{}
 
-	if v, ok := tfMap["log_group_mame"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
@@ -620,7 +624,7 @@ func flattenConfigurationOverrides(apiObject *awstypes.ParametricConfigurationOv
 	tfMap := map[string]any{}
 
 	if v := apiObject.ApplicationConfiguration; v != nil {
-		tfMap["application_configuration"] = []any{flattenConfigurations(v)}
+		tfMap["application_configuration"] = flattenConfigurations(v)
 	}
 
 	if v := apiObject.MonitoringConfiguration; v != nil {

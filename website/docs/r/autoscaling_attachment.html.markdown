@@ -10,7 +10,7 @@ description: |-
 
 Attaches a load balancer to an Auto Scaling group.
 
-~> **NOTE on Auto Scaling Groups, Attachments and Traffic Source Attachments:** Terraform provides standalone Attachment (for attaching Classic Load Balancers and Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target groups) and [Traffic Source Attachment](autoscaling_traffic_source_attachment.html) (for attaching Load Balancers and VPC Lattice target groups) resources and an [Auto Scaling Group](autoscaling_group.html) resource with `load_balancers`, `target_group_arns` and `traffic_source` attributes. Do not use the same traffic source in more than one of these resources. Doing so will cause a conflict of attachments. A [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) can be used to suppress differences if necessary.
+~> **NOTE on Auto Scaling groups, Attachments and Traffic Source Attachments:** Terraform provides standalone Attachment (for attaching Classic Load Balancers and Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target groups) and [Traffic Source Attachment](autoscaling_traffic_source_attachment.html) (for attaching Load Balancers and VPC Lattice target groups) resources and an [Auto Scaling group](autoscaling_group.html) resource with `load_balancers`, `target_group_arns` and `traffic_source` attributes. Do not use the same traffic source in more than one of these resources. Doing so will cause a conflict of attachments. A [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) can be used to suppress differences if necessary.
 
 ## Example Usage
 
@@ -34,6 +34,7 @@ resource "aws_autoscaling_attachment" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoscaling_group_name` - (Required) Name of ASG to associate with the ELB.
 * `elb` - (Optional) Name of the ELB.
 * `lb_target_group_arn` - (Optional) ARN of a load balancer target group.

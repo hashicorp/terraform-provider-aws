@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package efs
 
@@ -13,18 +15,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_efs_backup_policy", name="Backup Policy")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/efs/types;awstypes;awstypes.BackupPolicy")
+// @Testing(generator=false)
+// @Testing(preIdentityVersion="v6.65.0")
 func resourceBackupPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBackupPolicyCreate,
@@ -32,33 +38,31 @@ func resourceBackupPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceBackupPolicyUpdate,
 		DeleteWithoutTimeout: resourceBackupPolicyDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"backup_policy": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(
-								awstypes.StatusDisabled,
-								awstypes.StatusEnabled,
-							), false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"backup_policy": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.StringInSlice(enum.Slice(
+									awstypes.StatusDisabled,
+									awstypes.StatusEnabled,
+								), false),
+							},
 						},
 					},
 				},
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -68,7 +72,6 @@ func resourceBackupPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fsID := d.Get(names.AttrFileSystemID).(string)
-
 	if err := putBackupPolicy(ctx, conn, fsID, d.Get("backup_policy").([]any)[0].(map[string]any)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -84,7 +87,7 @@ func resourceBackupPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findBackupPolicyByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EFS Backup Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -133,12 +136,12 @@ func resourceBackupPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func putBackupPolicy(ctx context.Context, conn *efs.Client, fsID string, tfMap map[string]any) error {
-	input := &efs.PutBackupPolicyInput{
+	input := efs.PutBackupPolicyInput{
 		BackupPolicy: expandBackupPolicy(tfMap),
 		FileSystemId: aws.String(fsID),
 	}
 
-	_, err := conn.PutBackupPolicy(ctx, input)
+	_, err := conn.PutBackupPolicy(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("putting EFS Backup Policy (%s): %w", fsID, err)
@@ -158,16 +161,18 @@ func putBackupPolicy(ctx context.Context, conn *efs.Client, fsID string, tfMap m
 }
 
 func findBackupPolicyByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.BackupPolicy, error) {
-	input := &efs.DescribeBackupPolicyInput{
+	input := efs.DescribeBackupPolicyInput{
 		FileSystemId: aws.String(id),
 	}
+	return findBackupPolicy(ctx, conn, &input)
+}
 
+func findBackupPolicy(ctx context.Context, conn *efs.Client, input *efs.DescribeBackupPolicyInput) (*awstypes.BackupPolicy, error) {
 	output, err := conn.DescribeBackupPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.FileSystemNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -176,17 +181,17 @@ func findBackupPolicyByID(ctx context.Context, conn *efs.Client, id string) (*aw
 	}
 
 	if output == nil || output.BackupPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.BackupPolicy, nil
 }
 
-func statusBackupPolicy(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBackupPolicy(conn *efs.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBackupPolicyByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -205,7 +210,7 @@ func waitBackupPolicyEnabled(ctx context.Context, conn *efs.Client, id string) (
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusEnabling),
 		Target:  enum.Slice(awstypes.StatusEnabled),
-		Refresh: statusBackupPolicy(ctx, conn, id),
+		Refresh: statusBackupPolicy(conn, id),
 		Timeout: backupPoltimeoutcyEnabledTimeout,
 	}
 
@@ -225,7 +230,7 @@ func waitBackupPolicyDisabled(ctx context.Context, conn *efs.Client, id string) 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusDisabling),
 		Target:  enum.Slice(awstypes.StatusDisabled),
-		Refresh: statusBackupPolicy(ctx, conn, id),
+		Refresh: statusBackupPolicy(conn, id),
 		Timeout: timeout,
 	}
 

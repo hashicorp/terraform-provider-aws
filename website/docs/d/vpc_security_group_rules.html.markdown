@@ -23,17 +23,18 @@ data "aws_vpc_security_group_rules" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Custom filter block as described below.
-* `tags` - (Optional) Map of tags, each pair of which must exactly match
-  a pair on the desired security group rule.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired security group rule.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+### `filter` Block
 
-* `name` - (Required) Name of the field to filter by, as defined by
-  [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroupRules.html).
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments. Security group rule IDs will be selected if any one of the given values match.
+
+* `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroupRules.html).
 * `values` - (Required) Set of values that are accepted for the given field.
-  Security group rule IDs will be selected if any one of the given values match.
 
 ## Attribute Reference
 

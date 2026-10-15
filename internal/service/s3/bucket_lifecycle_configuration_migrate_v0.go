@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -210,7 +210,7 @@ func upgradeBucketLifeCycleConfigurationResourceStateFromV0(ctx context.Context,
 		return
 	}
 
-	new := resourceBucketLifecycleConfigurationModel{
+	new := bucketLifecycleConfigurationResourceModel{
 		Bucket:                             old.Bucket,
 		ExpectedBucketOwner:                old.ExpectedBucketOwner,
 		ID:                                 old.ID,

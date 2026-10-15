@@ -31,6 +31,7 @@ resource "aws_chime_voice_connector_termination" "default" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `cidr_allow_list` - (Required) The IP addresses allowed to make calls, in CIDR format.
 * `calling_regions` - (Required) The countries to which calls are allowed, in ISO 3166-1 alpha-2 format.

@@ -39,11 +39,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `deletion_window_in_days` - (Optional) Number of days between 3 and 180 to wait after the resource is deleted before the key is deleted.
 * `enabled` - (Optional) Whether to enable the key.
 * `key_check_value_algorithm` - (Optional) Algorithm that AWS Payment Cryptography uses to calculate the key check value (KCV).
-* `tags` - (Optional) Map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags assigned to the key. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### key_attributes
+### `key_attributes` Block
 
 The following arguments are required:
 
@@ -52,7 +54,7 @@ The following arguments are required:
 * `key_modes_of_use`- (Required) List of cryptographic operations that you can perform using the key.
 * `key_usage` - (Required) Cryptographic usage of an AWS Payment Cryptography key as defined in section A.5.2 of the TR-31 spec.
 
-### key_modes_of_use
+### `key_modes_of_use` Block
 
 The following arguments are optional:
 
@@ -85,6 +87,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_paymentcryptography_key.example
+  identity = {
+    "arn" = "arn:aws:payment-cryptography:us-east-1:123456789012:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+  }
+}
+
+resource "aws_paymentcryptography_key" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Payment Cryptography key.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Payment Cryptography Control Plane Key using the `arn:aws:payment-cryptography:us-east-1:123456789012:key/qtbojf64yshyvyzf`. For example:
 

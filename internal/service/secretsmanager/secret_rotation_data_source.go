@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package secretsmanager
 
@@ -19,39 +21,61 @@ func dataSourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretRotationRead,
 
-		Schema: map[string]*schema.Schema{
-			"rotation_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"rotation_lambda_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"rotation_rules": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"automatically_after_days": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrDuration: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrScheduleExpression: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"external_secret_rotation_metadata": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"secret_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"external_secret_rotation_role_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"rotation_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"rotation_lambda_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"rotation_rules": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"automatically_after_days": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrDuration: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrScheduleExpression: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"secret_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -68,9 +92,13 @@ func dataSourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.ToString(output.ARN))
+	if err := d.Set("external_secret_rotation_metadata", flattenExternalSecretRotationMetadataItems(output.ExternalSecretRotationMetadata)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting external_secret_rotation_metadata: %s", err)
+	}
+	d.Set("external_secret_rotation_role_arn", output.ExternalSecretRotationRoleArn)
 	d.Set("rotation_enabled", output.RotationEnabled)
 	d.Set("rotation_lambda_arn", output.RotationLambdaARN)
-	if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
+	if err := d.Set("rotation_rules", flattenRotationRulesType(output.RotationRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rotation_rules: %s", err)
 	}
 

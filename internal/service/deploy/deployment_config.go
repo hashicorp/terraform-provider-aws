@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package deploy
 
@@ -12,12 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,148 +35,150 @@ func resourceDeploymentConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compute_platform": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          types.ComputePlatformServer,
-				ValidateDiagFunc: enum.Validate[types.ComputePlatform](),
-			},
-			"deployment_config_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deployment_config_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"minimum_healthy_hosts": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsType](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compute_platform": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          types.ComputePlatformServer,
+					ValidateDiagFunc: enum.Validate[types.ComputePlatform](),
+				},
+				"deployment_config_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deployment_config_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"minimum_healthy_hosts": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsType](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"traffic_routing_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"time_based_canary": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							ForceNew:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"traffic_routing_config.0.time_based_linear"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrInterval: {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-									"percentage": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-								},
-							},
-						},
-						"time_based_linear": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							ForceNew:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"traffic_routing_config.0.time_based_canary"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrInterval: {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-									"percentage": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
+				"traffic_routing_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"time_based_canary": {
+								Type:          schema.TypeList,
+								Optional:      true,
+								ForceNew:      true,
+								MaxItems:      1,
+								ConflictsWith: []string{"traffic_routing_config.0.time_based_linear"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrInterval: {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
+										"percentage": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          types.TrafficRoutingTypeAllAtOnce,
-							ValidateDiagFunc: enum.Validate[types.TrafficRoutingType](),
+							"time_based_linear": {
+								Type:          schema.TypeList,
+								Optional:      true,
+								ForceNew:      true,
+								MaxItems:      1,
+								ConflictsWith: []string{"traffic_routing_config.0.time_based_canary"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrInterval: {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
+										"percentage": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
+									},
+								},
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          types.TrafficRoutingTypeAllAtOnce,
+								ValidateDiagFunc: enum.Validate[types.TrafficRoutingType](),
+							},
 						},
 					},
 				},
-			},
-			"zonal_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"first_zone_monitor_duration_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-						},
-						"minimum_healthy_hosts_per_zone": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsPerZoneType](),
-									},
-									names.AttrValue: {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
+				"zonal_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"first_zone_monitor_duration_in_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+							},
+							"minimum_healthy_hosts_per_zone": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsPerZoneType](),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						"monitor_duration_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
+							"monitor_duration_in_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -209,7 +213,7 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 	deploymentConfig, err := findDeploymentConfigByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeDeploy Deployment Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -270,8 +274,7 @@ func findDeploymentConfigByName(ctx context.Context, conn *codedeploy.Client, na
 
 	if errs.IsA[*types.DeploymentConfigDoesNotExistException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -280,7 +283,7 @@ func findDeploymentConfigByName(ctx context.Context, conn *codedeploy.Client, na
 	}
 
 	if output == nil || output.DeploymentConfigInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeploymentConfigInfo, nil

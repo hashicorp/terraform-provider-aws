@@ -10,6 +10,8 @@ description: |-
 
 Provides an Elastic Transcoder preset resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead. AWS will [discontinue support for Amazon Elastic Transcoder](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/), effective November 13, 2025.
+
 ## Example Usage
 
 ```terraform
@@ -78,10 +80,9 @@ resource "aws_elastictranscoder_preset" "bar" {
 
 ## Argument Reference
 
-See ["Create Preset"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `audio` - (Optional, Forces new resource) Audio parameters object (documented below).
 * `audio_codec_options` - (Optional, Forces new resource) Codec options for the audio parameters (documented below)
 * `container` - (Required, Forces new resource) The container type for the output file. Valid values are `flac`, `flv`, `fmp4`, `gif`, `mp3`, `mp4`, `mpg`, `mxf`, `oga`, `ogg`, `ts`, and `webm`.
@@ -91,6 +92,8 @@ This resource supports the following arguments:
 * `video` - (Optional, Forces new resource) Video parameters object (documented below)
 * `video_watermarks` - (Optional, Forces new resource) Watermark parameters for the video parameters (documented below)
 * `video_codec_options` (Optional, Forces new resource) Codec options for the video parameters
+
+See ["Create Preset"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
 
 The `audio` object supports the following:
 
@@ -138,7 +141,7 @@ The `video_watermarks` object supports the following:
 
 * `horizontal_align` - The horizontal position of the watermark unless you specify a nonzero value for `horzontal_offset`.
 * `horizontal_offset` - The amount by which you want the horizontal position of the watermark to be offset from the position specified by `horizontal_align`.
-* `id` - A unique identifier for the settings for one watermark. The value of Id can be up to 40 characters long. You can specify settings for up to four watermarks.
+* `id` - A unique identifier for the settings for one watermark. The value of ID can be up to 40 characters long. You can specify settings for up to four watermarks.
 * `max_height` - The maximum height of the watermark.
 * `max_width` - The maximum width of the watermark.
 * `opacity` - A percentage that indicates how much you want a watermark to obscure the video in the location where it appears.
@@ -163,7 +166,7 @@ The `video_codec_options` map supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Elastic Transcoder Preset.
+* `arn` - ARN of the Elastic Transcoder Preset.
 
 ## Import
 

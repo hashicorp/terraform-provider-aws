@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_autoscaling_group: Fix error when `launch_template` name is updated.
-```

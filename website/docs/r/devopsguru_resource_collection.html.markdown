@@ -69,12 +69,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cloudformation` - (Optional) A collection of AWS CloudFormation stacks. See [`cloudformation`](#cloudformation-argument-reference) below for additional details.
 * `tags` - (Optional) AWS tags used to filter the resources in the resource collection. See [`tags`](#tags-argument-reference) below for additional details.
 
 ### `cloudformation` Argument Reference
 
-* `stack_names` - (Required) Array of the names of the AWS CloudFormation stacks. If `type` is `AWS_SERVICE` (all acccount resources) this array should be a single item containing a wildcard (`"*"`).
+* `stack_names` - (Required) Array of the names of the AWS CloudFormation stacks. If `type` is `AWS_SERVICE` (all account resources) this array should be a single item containing a wildcard (`"*"`).
 
 ### `tags` Argument Reference
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package envvar
@@ -6,6 +6,7 @@ package envvar
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	testing "github.com/mitchellh/go-testing-interface"
 )
@@ -59,6 +60,18 @@ const (
 
 	// For tests using a third AWS account, the equivalent of AWS_SECRET_ACCESS_KEY for that account
 	ThirdSecretAccessKey = "AWS_THIRD_SECRET_ACCESS_KEY"
+
+	// For tests using a fourth AWS account, the equivalent of AWS_ACCESS_KEY_ID for that account
+	FourthAccessKeyId = "AWS_FOURTH_ACCESS_KEY_ID"
+
+	// For tests using a fourth AWS account, the equivalent of AWS_PROFILE for that account
+	FourthProfile = "AWS_FOURTH_PROFILE"
+
+	// For tests using a fourth AWS region, the equivalent of AWS_DEFAULT_REGION for that region
+	FourthRegion = "AWS_FOURTH_REGION"
+
+	// For tests using a fourth AWS account, the equivalent of AWS_SECRET_ACCESS_KEY for that account
+	FourthSecretAccessKey = "AWS_FOURTH_SECRET_ACCESS_KEY"
 
 	// For tests requiring GitHub permissions
 	GithubToken = "GITHUB_TOKEN"
@@ -160,7 +173,11 @@ func SkipIfEmpty(t testing.T, name string, usageMessage string) string {
 	value := os.Getenv(name)
 
 	if value == "" {
-		t.Skipf("skipping test; environment variable %s must be set. Usage: %s", name, usageMessage)
+		msg := fmt.Sprintf("skipping test; environment variable %s must be set", name)
+		if usageMessage != "" {
+			msg += ". Usage: " + usageMessage
+		}
+		t.Skip(msg)
 	}
 
 	return value
@@ -179,4 +196,21 @@ func SkipIfAllEmpty(t testing.T, names []string, usageMessage string) (string, s
 	}
 
 	return name, value
+}
+
+// SkipIfNotTrue verifies that an environment variable is set to a true value or skips the test.
+//
+// True values are those accepted by [strconv.ParseBool].
+func SkipIfNotTrue(t testing.T, name string, usageMessage string) {
+	t.Helper()
+
+	value := os.Getenv(name)
+
+	if v, _ := strconv.ParseBool(value); !v {
+		msg := fmt.Sprintf("skipping test; environment variable %s must be set to a true value.", name)
+		if usageMessage != "" {
+			msg += ". Usage: " + usageMessage
+		}
+		t.Skip(msg)
+	}
 }

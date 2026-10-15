@@ -37,21 +37,22 @@ EOF
 This resource supports the following arguments:
 
 * `api_id` - (Required) GraphQL API ID.
-* `format` - (Required) The type format: `SDL` or `JSON`.
-* `definition` - (Required) The type definition.
+* `definition` - (Required) Type definition.
+* `format` - (Required) Type format: `SDL` or `JSON`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the type.
-* `description` - The type description.
-* `id` - The ID is constructed from `api-id:format:name`.
-* `name` - The type name.
+* `arn` - ARN of the type.
+* `description` - Type description.
+* `id` - ID constructed from `api-id:format:name`.
+* `name` - Type name.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Appsync Types using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppSync Types using the `id`. For example:
 
 ```terraform
 import {
@@ -60,7 +61,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Appsync Types using the `id`. For example:
+Using `terraform import`, import AppSync Types using the `id`. For example:
 
 ```console
 % terraform import aws_appsync_type.example api-id:format:name

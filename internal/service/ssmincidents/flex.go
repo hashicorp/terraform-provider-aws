@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmincidents
@@ -10,50 +10,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func expandRegions(regions []any) map[string]types.RegionMapInputValue {
-	if len(regions) == 0 {
-		return nil
-	}
-
-	regionMap := make(map[string]types.RegionMapInputValue)
-	for _, region := range regions {
-		regionData := region.(map[string]any)
-
-		input := types.RegionMapInputValue{}
-
-		if kmsKey := regionData[names.AttrKMSKeyARN].(string); kmsKey != "DefaultKey" {
-			input.SseKmsKeyId = aws.String(kmsKey)
-		}
-
-		regionMap[regionData[names.AttrName].(string)] = input
-	}
-
-	return regionMap
-}
-
-func flattenRegions(regions map[string]types.RegionInfo) []map[string]any {
-	if len(regions) == 0 {
-		return nil
-	}
-
-	tfRegionData := make([]map[string]any, 0)
-	for regionName, regionData := range regions {
-		region := make(map[string]any)
-
-		region[names.AttrName] = regionName
-		region[names.AttrStatus] = regionData.Status
-		region[names.AttrKMSKeyARN] = aws.ToString(regionData.SseKmsKeyId)
-
-		if v := regionData.StatusMessage; v != nil {
-			region[names.AttrStatusMessage] = aws.ToString(v)
-		}
-
-		tfRegionData = append(tfRegionData, region)
-	}
-
-	return tfRegionData
-}
 
 func expandIncidentTemplate(config []any) *types.IncidentTemplate {
 	// we require exactly one item so we grab first in list

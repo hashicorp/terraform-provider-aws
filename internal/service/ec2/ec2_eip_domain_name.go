@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -12,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -20,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,7 +39,7 @@ func newEIPDomainNameResource(_ context.Context) (resource.ResourceWithConfigure
 }
 
 type eipDomainNameResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[eipDomainNameResourceModel]
 	framework.WithTimeouts
 }
 
@@ -120,7 +123,7 @@ func (r *eipDomainNameResource) Read(ctx context.Context, request resource.ReadR
 
 	output, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, data.AllocationID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -136,6 +139,13 @@ func (r *eipDomainNameResource) Read(ctx context.Context, request resource.ReadR
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	data.ID = fwflex.StringToFramework(ctx, output.AllocationId)
+	// The AWS API does not return the DomainName attribute.
+	// Set it from the PTRRecord value when it is missing (for example, during import).
+	if data.DomainName.IsNull() {
+		data.DomainName = fwflex.StringToFramework(ctx, output.PtrRecord)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -211,7 +221,12 @@ func (r *eipDomainNameResource) Delete(ctx context.Context, request resource.Del
 	}
 }
 
+func (r *eipDomainNameResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("allocation_id"), request, response)
+}
+
 type eipDomainNameResourceModel struct {
+	framework.WithRegionModel
 	AllocationID types.String   `tfsdk:"allocation_id"`
 	ID           types.String   `tfsdk:"id"`
 	DomainName   types.String   `tfsdk:"domain_name"`

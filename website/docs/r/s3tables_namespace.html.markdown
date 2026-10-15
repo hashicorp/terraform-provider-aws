@@ -16,7 +16,7 @@ Terraform resource for managing an Amazon S3 Tables Namespace.
 
 ```terraform
 resource "aws_s3tables_namespace" "example" {
-  namespace        = "example-namespace"
+  namespace        = "example_namespace"
   table_bucket_arn = aws_s3tables_table_bucket.example.arn
 }
 
@@ -27,11 +27,10 @@ resource "aws_s3tables_table_bucket" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `namespace` - (Required, Forces new resource) Name of the namespace.
-  Must be between 1 and 255 characters in length.
-  Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
+* `namespace` - (Required, Forces new resource) Name of the namespace. Must be between 1 and 255 characters in length. Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that contains this Namespace.
 
 ## Attribute Reference

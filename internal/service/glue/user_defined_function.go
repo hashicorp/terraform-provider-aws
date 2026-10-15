@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -25,75 +27,78 @@ import (
 )
 
 // @SDKResource("aws_glue_user_defined_function", name="User Defined Function")
-func ResourceUserDefinedFunction() *schema.Resource {
+func resourceUserDefinedFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserDefinedFunctionCreate,
 		ReadWithoutTimeout:   resourceUserDefinedFunctionRead,
 		UpdateWithoutTimeout: resourceUserDefinedFunctionUpdate,
 		DeleteWithoutTimeout: resourceUserDefinedFunctionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			names.AttrDatabaseName: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"class_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"owner_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"owner_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PrincipalType](),
-			},
-			"resource_uris": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1000,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrResourceType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
-						},
-						names.AttrURI: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				names.AttrDatabaseName: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"class_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"owner_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"owner_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PrincipalType](),
+				},
+				"resource_uris": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 1000,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrResourceType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
+							},
+							names.AttrURI: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
 						},
 					},
 				},
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -117,29 +122,6 @@ func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, funcName))
-
-	return append(diags, resourceUserDefinedFunctionRead(ctx, d, meta)...)
-}
-
-func resourceUserDefinedFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueClient(ctx)
-
-	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
-	}
-
-	input := &glue.UpdateUserDefinedFunctionInput{
-		CatalogId:     aws.String(catalogID),
-		DatabaseName:  aws.String(dbName),
-		FunctionName:  aws.String(funcName),
-		FunctionInput: expandUserDefinedFunctionInput(d),
-	}
-
-	if _, err := conn.UpdateUserDefinedFunction(ctx, input); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
-	}
 
 	return append(diags, resourceUserDefinedFunctionRead(ctx, d, meta)...)
 }
@@ -195,6 +177,29 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	return diags
+}
+
+func resourceUserDefinedFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
+
+	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
+	}
+
+	input := &glue.UpdateUserDefinedFunctionInput{
+		CatalogId:     aws.String(catalogID),
+		DatabaseName:  aws.String(dbName),
+		FunctionName:  aws.String(funcName),
+		FunctionInput: expandUserDefinedFunctionInput(d),
+	}
+
+	if _, err := conn.UpdateUserDefinedFunction(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceUserDefinedFunctionRead(ctx, d, meta)...)
 }
 
 func resourceUserDefinedFunctionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -15,14 +15,19 @@ import (
 )
 
 type Results struct {
-	hasChanges            bool
+	changedFieldNames     []string
 	ignoredFieldNames     []string
 	flexIgnoredFieldNames []AutoFlexOptionsFunc
 }
 
 // HasChanges returns whether there are changes between the plan and state values
 func (r *Results) HasChanges() bool {
-	return r.hasChanges
+	return len(r.changedFieldNames) > 0
+}
+
+// ChangedFieldNames returns the list of changed field names
+func (r *Results) ChangedFieldNames() []string {
+	return slices.Clone(r.changedFieldNames)
 }
 
 // IgnoredFieldNamesOpts returns the list of ignored field names as AutoFlexOptionsFunc
@@ -35,7 +40,7 @@ func (r *Results) IgnoredFieldNamesOpts() []AutoFlexOptionsFunc {
 
 // IgnoredFieldNames returns the list of ignored field names
 func (r *Results) IgnoredFieldNames() []string {
-	return r.ignoredFieldNames
+	return slices.Clone(r.ignoredFieldNames)
 }
 
 // Diff compares the plan and state values and returns whether there are changes
@@ -45,7 +50,7 @@ func Diff(ctx context.Context, plan, state any, options ...ChangeOption) (*Resul
 
 	planValue, stateValue := dereferencePointer(reflect.ValueOf(plan)), dereferencePointer(reflect.ValueOf(state))
 	planType, stateType := planValue.Type(), stateValue.Type()
-	var ignoredFields []string
+	var changedFields, ignoredFields []string
 	result := Results{}
 
 	if planType != stateType {
@@ -56,7 +61,6 @@ func Diff(ctx context.Context, plan, state any, options ...ChangeOption) (*Resul
 		return &result, diags
 	}
 
-	var hasChanges bool
 	for field := range tfreflect.ExportedStructFields(planValue.Type()) {
 		fieldName := field.Name
 
@@ -76,21 +80,25 @@ func Diff(ctx context.Context, plan, state any, options ...ChangeOption) (*Resul
 			continue
 		}
 
+		if planFieldValue.IsUnknown() {
+			continue
+		}
+
 		if !planFieldValue.Equal(stateFieldValue) {
-			hasChanges = true
+			changedFields = append(changedFields, fieldName)
 		} else {
 			ignoredFields = append(ignoredFields, fieldName)
 		}
 	}
 
-	result.hasChanges = hasChanges
+	result.changedFieldNames = changedFields
 	result.ignoredFieldNames = ignoredFields
 
 	return &result, diags
 }
 
 func dereferencePointer(value reflect.Value) reflect.Value {
-	if value.Kind() == reflect.Ptr {
+	if value.Kind() == reflect.Pointer {
 		return value.Elem()
 	}
 	return value
@@ -106,6 +114,7 @@ func implementsAttrValue(field reflect.Value) bool {
 
 func skippedFields() []string {
 	return []string{
+		"Region",
 		"Tags",
 		"TagsAll",
 		"Timeouts",

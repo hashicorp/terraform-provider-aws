@@ -1,0 +1,99 @@
+---
+subcategory: "Bedrock AgentCore"
+layout: "aws"
+page_title: "AWS: aws_bedrockagentcore_workload_identity"
+description: |-
+  Manages an AWS Bedrock AgentCore Workload Identity.
+---
+
+# Resource: aws_bedrockagentcore_workload_identity
+
+Manages an AWS Bedrock AgentCore Workload Identity. Workload Identity provides OAuth2-based authentication and authorization for AI agents to access external resources securely.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+resource "aws_bedrockagentcore_workload_identity" "example" {
+  name = "example-workload-identity"
+  allowed_resource_oauth2_return_urls = [
+    "https://example.com/callback"
+  ]
+}
+```
+
+### Workload Identity with Multiple Return URLs
+
+```terraform
+resource "aws_bedrockagentcore_workload_identity" "example" {
+  name = "example-workload-identity"
+  allowed_resource_oauth2_return_urls = [
+    "https://app.example.com/oauth/callback",
+    "https://api.example.com/auth/return",
+    "https://example.com/callback"
+  ]
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `name` - (Required) Name of the workload identity. Must be 3-255 characters and contain only alphanumeric characters, hyphens, periods, and underscores.
+
+The following arguments are optional:
+
+* `allowed_resource_oauth2_return_urls` - (Optional) Set of allowed OAuth2 return URLs for resources associated with this workload identity. These URLs are used as valid redirect targets during OAuth2 authentication flows.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `workload_identity_arn` - ARN of the Workload Identity.
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_workload_identity.example
+  identity = {
+    name = "example-workload-identity"
+  }
+}
+
+resource "aws_bedrockagentcore_workload_identity" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the workload identity.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Workload Identity using the workload identity name. For example:
+
+```terraform
+import {
+  to = aws_bedrockagentcore_workload_identity.example
+  id = "example-workload-identity"
+}
+```
+
+Using `terraform import`, import Bedrock AgentCore Workload Identity using the workload identity name. For example:
+
+```console
+% terraform import aws_bedrockagentcore_workload_identity.example example-workload-identity
+```

@@ -19,7 +19,7 @@ data "aws_region" "current" {}
 
 resource "aws_securityhub_product_subscription" "example" {
   depends_on  = [aws_securityhub_account.example]
-  product_arn = "arn:aws:securityhub:${data.aws_region.current.name}:733251395267:product/alertlogic/althreatmanagement"
+  product_arn = "arn:aws:securityhub:${data.aws_region.current.region}:733251395267:product/alertlogic/althreatmanagement"
 }
 ```
 
@@ -27,6 +27,7 @@ resource "aws_securityhub_product_subscription" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `product_arn` - (Required) The ARN of the product that generates findings that you want to import into Security Hub - see below.
 
 Amazon maintains a list of [Product integrations in AWS Security Hub](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-providers.html) that changes over time. Any of the products on the linked [Available AWS service integrations](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-internal-providers.html) or [Available third-party partner product integrations](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-partner-providers.html) can be configured using `aws_securityhub_product_subscription`.
@@ -75,17 +76,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub product subscriptions using `product_arn,arn`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_securityhub_product_subscription.example
-  id = "arn:aws:securityhub:eu-west-1:733251395267:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement"
+  identity = {
+    product_arn = "arn:aws:securityhub:eu-west-1::product/alertlogic/althreatmanagement"
+    arn         = "arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement"
+  }
+}
+
+resource "aws_securityhub_product_subscription" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import Security Hub product subscriptions using `product_arn,arn`. For example:
+### Identity Schema
+
+#### Required
+
+* `arn` (String) Subscription ARN.
+* `product_arn` (String) Product ARN.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub product subscriptions using `product_arn` and `arn` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_securityhub_product_subscription.example
+  id = "arn:aws:securityhub:eu-west-1::product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement"
+}
+```
+
+Using `terraform import`, import Security Hub product subscriptions using `product_arn` and `arn` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1:733251395267:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement
+% terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1::product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement
 ```

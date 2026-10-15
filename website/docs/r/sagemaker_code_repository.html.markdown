@@ -52,6 +52,7 @@ resource "aws_sagemaker_code_repository" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `code_repository_name` - (Required) The name of the Code Repository (must be unique).
 * `git_config` - (Required) Specifies details about the repository. see [Git Config](#git-config) details below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -60,14 +61,14 @@ This resource supports the following arguments:
 
 * `repository_url` - (Required) The URL where the Git repository is located.
 * `branch` - (Optional) The default branch for the Git repository.
-* `secret_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS Secrets Manager secret that contains the credentials used to access the git repository. The secret must have a staging label of AWSCURRENT and must be in the following format: `{"username": UserName, "password": Password}`
+* `secret_arn` - (Optional) ARN of the AWS Secrets Manager secret that contains the credentials used to access the git repository. The secret must have a staging label of AWSCURRENT and must be in the following format: `{"username": UserName, "password": Password}`
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Code Repository.
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Code Repository.
+* `arn` - ARN assigned by AWS to this Code Repository.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

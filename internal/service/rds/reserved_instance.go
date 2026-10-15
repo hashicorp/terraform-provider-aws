@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -12,11 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -43,89 +45,91 @@ func resourceReservedInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"currency_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_instance_class": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDuration: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"fixed_price": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			names.AttrInstanceCount: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				Default:  1,
-			},
-			"lease_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"offering_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"offering_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"product_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"recurring_charges": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"recurring_charge_amount": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"recurring_charge_frequency": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"currency_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_instance_class": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDuration: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"fixed_price": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				names.AttrInstanceCount: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+					Default:  1,
+				},
+				"lease_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"offering_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"offering_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"product_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"recurring_charges": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"recurring_charge_amount": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"recurring_charge_frequency": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"reservation_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrStartTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_price": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"reservation_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrStartTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"usage_price": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -168,7 +172,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	reservation, err := findReservedDBInstanceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Reserved Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -215,9 +219,7 @@ func findReservedDBInstanceByID(ctx context.Context, conn *rds.Client, id string
 
 	// Eventual consistency check.
 	if aws.ToString(output.ReservedDBInstanceId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -242,8 +244,7 @@ func findReservedDBInstances(ctx context.Context, conn *rds.Client, input *rds.D
 
 		if errs.IsA[*types.ReservedDBInstanceNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -261,11 +262,11 @@ func findReservedDBInstances(ctx context.Context, conn *rds.Client, input *rds.D
 	return output, nil
 }
 
-func statusReservedInstance(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReservedInstance(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReservedDBInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -281,7 +282,7 @@ func waitReservedInstanceCreated(ctx context.Context, conn *rds.Client, id strin
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{reservedInstanceStatePaymentPending},
 		Target:         []string{reservedInstanceStateActive},
-		Refresh:        statusReservedInstance(ctx, conn, id),
+		Refresh:        statusReservedInstance(conn, id),
 		NotFoundChecks: 5,
 		Timeout:        timeout,
 		MinTimeout:     10 * time.Second,

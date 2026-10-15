@@ -22,6 +22,7 @@ resource "aws_ec2_transit_gateway_route_table" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Route Table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -29,7 +30,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - EC2 Transit Gateway Route Table Amazon Resource Name (ARN).
+* `arn` - EC2 Transit Gateway Route Table ARN.
 * `default_association_route_table` - Boolean whether this is the default association route table for the EC2 Transit Gateway.
 * `default_propagation_route_table` - Boolean whether this is the default propagation route table for the EC2 Transit Gateway.
 * `id` - EC2 Transit Gateway Route Table identifier

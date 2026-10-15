@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -8,9 +10,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,144 +32,175 @@ func dataSourceNetworkInterface() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"association": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allocation_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrAssociationID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"carrier_ip": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"customer_owned_ip": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ip_owner_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"public_dns_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"public_ip": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"association": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allocation_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrAssociationID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"carrier_ip": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"customer_owned_ip": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ip_owner_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"public_dns_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"public_ip": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"attachment": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attachment_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"device_index": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrInstanceID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"instance_owner_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"attachment": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attachment_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"device_index": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrInstanceID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"instance_owner_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"network_card_index": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"interface_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_addresses": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"mac_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_ips": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"requester_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"ena_srd_specification": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ena_srd_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"ena_srd_udp_specification": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ena_srd_udp_enabled": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"interface_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_addresses": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"mac_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_ip": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_ips": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"requester_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
 
 func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := &ec2.DescribeNetworkInterfacesInput{}
 
@@ -188,14 +220,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(eni.NetworkInterfaceId))
 	ownerID := aws.ToString(eni.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  "network-interface/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, networkInterfaceARN(ctx, c, ownerID, d.Id()))
 	if eni.Association != nil {
 		if err := d.Set("association", []any{flattenNetworkInterfaceAssociation(eni.Association)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting association: %s", err)
@@ -210,13 +235,20 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("attachment", nil)
 	}
+	if eni.Attachment != nil && eni.Attachment.EnaSrdSpecification != nil && aws.ToBool(eni.Attachment.EnaSrdSpecification.EnaSrdEnabled) {
+		if err := d.Set("ena_srd_specification", []any{flattenAttachmentEnaSrdSpecification(eni.Attachment.EnaSrdSpecification)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ena_srd_specification: %s", err)
+		}
+	} else {
+		d.Set("ena_srd_specification", nil)
+	}
 	d.Set(names.AttrAvailabilityZone, eni.AvailabilityZone)
 	d.Set(names.AttrDescription, eni.Description)
 	d.Set(names.AttrSecurityGroups, flattenGroupIdentifiers(eni.Groups))
 	d.Set("interface_type", eni.InterfaceType)
 	d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses))
 	d.Set("mac_address", eni.MacAddress)
-	d.Set("outpost_arn", eni.OutpostArn)
+	d.Set(names.AttrOutpostARN, eni.OutpostArn)
 	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
@@ -230,7 +262,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func flattenNetworkInterfaceAttachmentForDataSource(apiObject *types.NetworkInterfaceAttachment) map[string]any {
+func flattenNetworkInterfaceAttachmentForDataSource(apiObject *awstypes.NetworkInterfaceAttachment) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
@@ -251,6 +283,10 @@ func flattenNetworkInterfaceAttachmentForDataSource(apiObject *types.NetworkInte
 
 	if v := apiObject.InstanceOwnerId; v != nil {
 		tfMap["instance_owner_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.NetworkCardIndex; v != nil {
+		tfMap["network_card_index"] = aws.ToInt32(v)
 	}
 
 	return tfMap

@@ -3,13 +3,14 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_device"
 description: |-
-  Creates a device in a global network.
+  Manages a Network Manager Device.
 ---
 
 # Resource: aws_networkmanager_device
 
-Creates a device in a global network. If you specify both a site ID and a location,
-the location of the site is used for visualization in the Network Manager console.
+Manages a Network Manager Device.
+
+Use this resource to create a device in a global network. If you specify both a site ID and a location, the location of the site is used for visualization in the Network Manager console.
 
 ## Example Usage
 
@@ -22,36 +23,47 @@ resource "aws_networkmanager_device" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `aws_location` - (Optional) The AWS location of the device. Documented below.
-* `description` - (Optional) A description of the device.
-* `global_network_id` - (Required) The ID of the global network.
-* `location` - (Optional) The location of the device. Documented below.
-* `model` - (Optional) The model of device.
-* `serial_number` - (Optional) The serial number of the device.
-* `site_id` - (Optional) The ID of the site.
+* `global_network_id` - (Required) ID of the global network.
+
+The following arguments are optional:
+
+* `aws_location` - (Optional) AWS location of the device. Documented below.
+* `description` - (Optional) Description of the device.
+* `location` - (Optional) Location of the device. Documented below.
+* `model` - (Optional) Model of device.
+* `serial_number` - (Optional) Serial number of the device.
+* `site_id` - (Optional) ID of the site.
 * `tags` - (Optional) Key-value tags for the device. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) The type of device.
-* `vendor` - (Optional) The vendor of the device.
+* `type` - (Optional) Type of device.
+* `vendor` - (Optional) Vendor of the device.
 
 The `aws_location` object supports the following:
 
-* `subnet_arn` - (Optional) The Amazon Resource Name (ARN) of the subnet that the device is located in.
-* `zone` - (Optional) The Zone that the device is located in. Specify the ID of an Availability Zone, Local Zone, Wavelength Zone, or an Outpost.
+* `subnet_arn` - (Optional) ARN of the subnet that the device is located in.
+* `zone` - (Optional) Zone that the device is located in. Specify the ID of an Availability Zone, Local Zone, Wavelength Zone, or an Outpost.
 
 The `location` object supports the following:
 
-* `address` - (Optional) The physical address.
-* `latitude` - (Optional) The latitude.
-* `longitude` - (Optional) The longitude.
+* `address` - (Optional) Physical address.
+* `latitude` - (Optional) Latitude.
+* `longitude` - (Optional) Longitude.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the device.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the device.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+* `update` - (Default `10m`)
 
 ## Import
 

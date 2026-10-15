@@ -1,0 +1,519 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package lambdamicrovms
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambdamicrovms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdamicrovms/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkResource("aws_lambdamicrovms_image", name="Image")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(importIgnore="base_image_arn;base_image_version;build_role_arn;code_artifact;egress_network_connectors;image_version")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdamicrovms;lambdamicrovms.GetMicrovmImageOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(hasNoPreExistingResource=true)
+func newImageResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &imageResource{}
+
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
+
+	return r, nil
+}
+
+type imageResource struct {
+	framework.ResourceWithModel[imageResourceModel]
+	framework.WithTimeouts
+	framework.WithImportByIdentity
+}
+
+func (r *imageResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"additional_os_capabilities": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringEnumType[awstypes.Capability](),
+				Optional:    true,
+				ElementType: types.StringType,
+			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"base_image_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+			},
+			"base_image_version": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"build_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+			},
+			names.AttrCreatedAt: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
+			},
+			"egress_network_connectors": schema.ListAttribute{
+				CustomType: fwtypes.ListOfStringType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"environment_variables": schema.MapAttribute{
+				CustomType: fwtypes.MapOfStringType,
+				Optional:   true,
+			},
+			"image_version": schema.StringAttribute{
+				Computed: true,
+			},
+			"latest_active_image_version": schema.StringAttribute{
+				Computed: true,
+			},
+			"latest_failed_image_version": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrState: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.MicrovmImageState](),
+				Computed:   true,
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"code_artifact": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[codeArtifactModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrURI: schema.StringAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
+			"cpu_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[cpuConfigurationModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"architecture": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.Architecture](),
+							Required:   true,
+						},
+					},
+				},
+			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
+	}
+}
+
+func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
+
+	var plan imageResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
+	var input lambdamicrovms.CreateMicrovmImageInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Image")))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Additional fields.
+	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.Tags = getTagsIn(ctx)
+
+	out, err := conn.CreateMicrovmImage(ctx, &input)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
+		return
+	}
+
+	arn := aws.ToString(out.ImageArn)
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Image")))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	outWait, err := waitImageCreated(ctx, conn, arn, r.CreateTimeout(ctx, plan.Timeouts))
+	if err != nil {
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, outWait, &plan, fwflex.WithFieldNamePrefix("Image")))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+}
+
+func (r *imageResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
+
+	var state imageResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
+	out, err := findImageByARN(ctx, conn, arn)
+	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+}
+
+func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
+
+	var plan, state imageResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		var input lambdamicrovms.UpdateMicrovmImageInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Image")))
+		input.ImageIdentifier = plan.ARN.ValueStringPointer()
+		input.ClientToken = aws.String(create.UniqueId(ctx))
+
+		// The service resolves base_image_version to a full version (e.g. "0.0")
+		// that UpdateMicrovmImage rejects as input, so only send it when changed.
+		if plan.BaseImageVersion.Equal(state.BaseImageVersion) {
+			input.BaseImageVersion = nil
+		}
+
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		out, err := conn.UpdateMicrovmImage(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.String())
+			return
+		}
+		if out == nil {
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ARN.String())
+			return
+		}
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		outWait, err := waitImageUpdated(ctx, conn, plan.ARN.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
+
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.String())
+			return
+		}
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, outWait, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	} else {
+		// Tag-only update: no API call was made, so carry forward the computed
+		// fields from prior state to avoid "unknown value after apply" errors.
+		plan.ImageVersion = state.ImageVersion
+		plan.LatestActiveImageVersion = state.LatestActiveImageVersion
+		plan.LatestFailedImageVersion = state.LatestFailedImageVersion
+		plan.State = state.State
+		plan.UpdatedAt = state.UpdatedAt
+	}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+func (r *imageResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().LambdaMicroVMsClient(ctx)
+
+	var state imageResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
+	input := lambdamicrovms.DeleteMicrovmImageInput{
+		ImageIdentifier: aws.String(arn),
+	}
+
+	_, err := conn.DeleteMicrovmImage(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+		return
+	}
+
+	if _, err := waitImageDeleted(ctx, conn, arn, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+		return
+	}
+}
+
+func (r *imageResource) flatten(ctx context.Context, image any, data *imageResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, image, data, fwflex.WithFieldNamePrefix("Image"))...)
+
+	if v, ok := image.(*lambdamicrovms.GetMicrovmImageOutput); ok {
+		setTagsOut(ctx, v.Tags)
+	}
+
+	return diags
+}
+
+func waitImageCreated(ctx context.Context, conn *lambdamicrovms.Client, arn string, timeout time.Duration) (*lambdamicrovms.GetMicrovmImageOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.MicrovmImageStateCreating),
+		Target:                    enum.Slice(awstypes.MicrovmImageStateCreated),
+		Refresh:                   statusImage(conn, arn),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*lambdamicrovms.GetMicrovmImageOutput); ok {
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitImageUpdated(ctx context.Context, conn *lambdamicrovms.Client, arn string, timeout time.Duration) (*lambdamicrovms.GetMicrovmImageOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.MicrovmImageStateUpdating),
+		Target:                    enum.Slice(awstypes.MicrovmImageStateUpdated),
+		Refresh:                   statusImage(conn, arn),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*lambdamicrovms.GetMicrovmImageOutput); ok {
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitImageDeleted(ctx context.Context, conn *lambdamicrovms.Client, arn string, timeout time.Duration) (*lambdamicrovms.GetMicrovmImageOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.MicrovmImageStateDeleting),
+		Target:  []string{},
+		Refresh: statusImage(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*lambdamicrovms.GetMicrovmImageOutput); ok {
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func statusImage(conn *lambdamicrovms.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findImageByARN(ctx, conn, arn)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		return out, string(out.State), nil
+	}
+}
+
+func findImageByARN(ctx context.Context, conn *lambdamicrovms.Client, arn string) (*lambdamicrovms.GetMicrovmImageOutput, error) {
+	input := lambdamicrovms.GetMicrovmImageInput{
+		ImageIdentifier: aws.String(arn),
+	}
+
+	return findImage(ctx, conn, &input)
+}
+
+func findImage(ctx context.Context, conn *lambdamicrovms.Client, input *lambdamicrovms.GetMicrovmImageInput) (*lambdamicrovms.GetMicrovmImageOutput, error) {
+	out, err := conn.GetMicrovmImage(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	if out == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	}
+
+	return out, nil
+}
+
+type imageResourceModel struct {
+	framework.WithRegionModel
+	AdditionalOSCapabilities fwtypes.ListOfStringEnum[awstypes.Capability]          `tfsdk:"additional_os_capabilities"`
+	ARN                      types.String                                           `tfsdk:"arn"`
+	BaseImageARN             fwtypes.ARN                                            `tfsdk:"base_image_arn"`
+	BaseImageVersion         types.String                                           `tfsdk:"base_image_version"`
+	BuildRoleARN             fwtypes.ARN                                            `tfsdk:"build_role_arn"`
+	CodeArtifact             fwtypes.ListNestedObjectValueOf[codeArtifactModel]     `tfsdk:"code_artifact"`
+	CPUConfiguration         fwtypes.ListNestedObjectValueOf[cpuConfigurationModel] `tfsdk:"cpu_configuration"`
+	CreatedAt                timetypes.RFC3339                                      `tfsdk:"created_at"`
+	Description              types.String                                           `tfsdk:"description"`
+	EgressNetworkConnectors  fwtypes.ListOfString                                   `tfsdk:"egress_network_connectors"`
+	EnvironmentVariables     fwtypes.MapOfString                                    `tfsdk:"environment_variables"`
+	ImageVersion             types.String                                           `tfsdk:"image_version"`
+	LatestActiveImageVersion types.String                                           `tfsdk:"latest_active_image_version"`
+	LatestFailedImageVersion types.String                                           `tfsdk:"latest_failed_image_version"`
+	Name                     types.String                                           `tfsdk:"name"`
+	State                    fwtypes.StringEnum[awstypes.MicrovmImageState]         `tfsdk:"state"`
+	Tags                     tftags.Map                                             `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                             `tfsdk:"tags_all"`
+	Timeouts                 timeouts.Value                                         `tfsdk:"timeouts"`
+	UpdatedAt                timetypes.RFC3339                                      `tfsdk:"updated_at"`
+}
+
+type codeArtifactModel struct {
+	URI types.String `tfsdk:"uri"`
+}
+
+var (
+	_ fwflex.Expander  = codeArtifactModel{}
+	_ fwflex.Flattener = &codeArtifactModel{}
+)
+
+func (m codeArtifactModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.URI.IsNull():
+		r := awstypes.CodeArtifactMemberUri{
+			Value: fwflex.StringValueFromFramework(ctx, m.URI),
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+func (m *codeArtifactModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch t := v.(type) {
+	case awstypes.CodeArtifactMemberUri:
+		m.URI = fwflex.StringValueToFramework(ctx, t.Value)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("codeArtifactModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+type cpuConfigurationModel struct {
+	Architecture fwtypes.StringEnum[awstypes.Architecture] `tfsdk:"architecture"`
+}

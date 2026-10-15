@@ -22,6 +22,8 @@ data "aws_iam_role" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Friendly IAM role name to match.
 
 ## Attribute Reference

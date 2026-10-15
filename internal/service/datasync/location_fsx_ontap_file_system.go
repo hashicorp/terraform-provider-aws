@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datasync
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +32,11 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_fsx_ontap_file_system", name="Location FSx for NetApp ONTAP File System")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @WrappedImport(false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationFsxOntapOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(importStateIdFunc="testAccLocationFSxONTAPImportStateID")
 func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxONTAPFileSystemCreate,
@@ -44,149 +51,153 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DataSyncLocationArn#FsxSVMArn", d.Id())
 				}
 
-				DSArn := idParts[0]
+				locationARN := idParts[0]
 				FSxArn := idParts[1]
 
+				if err := importer.RegionalARNValue(ctx, d, names.AttrARN, locationARN); err != nil {
+					return nil, err
+				}
 				d.Set("fsx_filesystem_arn", FSxArn)
-				d.SetId(DSArn)
 
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"fsx_filesystem_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"nfs": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							ForceNew:     true,
-							MaxItems:     1,
-							ExactlyOneOf: []string{"protocol.0.nfs", "protocol.0.smb"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"mount_options": {
-										Type:     schema.TypeList,
-										Required: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrVersion: {
-													Type:         schema.TypeString,
-													Default:      awstypes.NfsVersionNfs3,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.NfsVersionNfs3), false),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"fsx_filesystem_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrProtocol: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"nfs": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								ForceNew:     true,
+								MaxItems:     1,
+								ExactlyOneOf: []string{"protocol.0.nfs", "protocol.0.smb"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"mount_options": {
+											Type:     schema.TypeList,
+											Required: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrVersion: {
+														Type:         schema.TypeString,
+														Default:      awstypes.NfsVersionNfs3,
+														Optional:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.NfsVersionNfs3), false),
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"smb": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							ForceNew:     true,
-							MaxItems:     1,
-							ExactlyOneOf: []string{"protocol.0.nfs", "protocol.0.smb"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDomain: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(1, 253),
-									},
-									"mount_options": {
-										Type:     schema.TypeList,
-										Required: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrVersion: {
-													Type:     schema.TypeString,
-													Default:  awstypes.SmbVersionAutomatic,
-													Optional: true,
-													ForceNew: true,
-													ValidateFunc: validation.StringInSlice(enum.Slice(
-														awstypes.SmbVersionAutomatic,
-														awstypes.SmbVersionSmb2,
-														awstypes.SmbVersionSmb3,
-														awstypes.SmbVersionSmb20,
-													), false),
+							"smb": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								ForceNew:     true,
+								MaxItems:     1,
+								ExactlyOneOf: []string{"protocol.0.nfs", "protocol.0.smb"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDomain: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(1, 253),
+										},
+										"mount_options": {
+											Type:     schema.TypeList,
+											Required: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrVersion: {
+														Type:     schema.TypeString,
+														Default:  awstypes.SmbVersionAutomatic,
+														Optional: true,
+														ForceNew: true,
+														ValidateFunc: validation.StringInSlice(enum.Slice(
+															awstypes.SmbVersionAutomatic,
+															awstypes.SmbVersionSmb2,
+															awstypes.SmbVersionSmb3,
+															awstypes.SmbVersionSmb20,
+														), false),
+													},
 												},
 											},
 										},
-									},
-									names.AttrPassword: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										Sensitive:    true,
-										ValidateFunc: validation.StringLenBetween(1, 104),
-									},
-									"user": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(1, 104),
+										names.AttrPassword: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											Sensitive:    true,
+											ValidateFunc: validation.StringLenBetween(1, 104),
+										},
+										"user": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(1, 104),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"security_group_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 5,
-				Elem: &schema.Schema{
+				"security_group_arns": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"storage_virtual_machine_arn": {
 					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"storage_virtual_machine_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"subdirectory": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 4096),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"subdirectory": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 4096),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURI: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -223,7 +234,7 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 
 	output, err := findLocationFSxONTAPByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DataSync Location FSx for NetApp ONTAP File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -298,8 +309,7 @@ func findLocationFSxONTAPByARN(ctx context.Context, conn *datasync.Client, arn s
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -308,7 +318,7 @@ func findLocationFSxONTAPByARN(ctx context.Context, conn *datasync.Client, arn s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -22,7 +22,7 @@ resource "aws_comprehend_document_classifier" "example" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -50,10 +50,11 @@ The following arguments are required:
   One of `en`, `es`, `fr`, `it`, `de`, or `pt`.
 * `name` - (Required) Name for the Document Classifier.
   Has a maximum length of 63 characters.
-  Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+  Can contain upper- and lower-case letters, numbers, and hyphen (`-`).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mode` - (Optional, Default: `MULTI_CLASS`) The document classification mode.
   One of `MULTI_CLASS` or `MULTI_LABEL`.
   `MULTI_CLASS` is also known as "Single Label" in the AWS Console.
@@ -67,11 +68,11 @@ The following arguments are optional:
   If omitted, Terraform will assign a random, unique version name.
   If explicitly set to `""`, no version name will be set.
   Has a maximum length of 63 characters.
-  Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+  Can contain upper- and lower-case letters, numbers, and hyphen (`-`).
   Conflicts with `version_name_prefix`.
 * `version_name_prefix` - (Optional) Creates a unique version name beginning with the specified prefix.
   Has a maximum length of 37 characters.
-  Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+  Can contain upper- and lower-case letters, numbers, and hyphen (`-`).
   Conflicts with `version_name`.
 * `volume_kms_key_id` - (Optional) KMS Key used to encrypt storage volumes during job processing.
   Can be a KMS Key ID or a KMS Key ARN.
@@ -107,7 +108,7 @@ The following arguments are optional:
 
 * `kms_key_id` - (Optional) KMS Key used to encrypt the output documents.
   Can be a KMS Key ID, a KMS Key ARN, a KMS Alias name, or a KMS Alias ARN.
-* `output_s3_uri` - (Computed) Full path for the output documents.
+* `output_s3_uri` - (Read-Only) Full path for the output documents.
 * `s3_uri` - (Required) Destination path for the output documents.
   The full path to the output file will be returned in `output_s3_uri`.
 
@@ -132,6 +133,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Optional, Default: `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_comprehend_document_classifier.example
+  identity = {
+    "arn" = "arn:aws:comprehend:us-west-2:123456789012:document-classifier/example"
+  }
+}
+
+resource "aws_comprehend_document_classifier" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Comprehend document classifier.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Document Classifier using the ARN. For example:
 

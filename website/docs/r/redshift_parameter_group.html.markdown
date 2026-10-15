@@ -38,6 +38,7 @@ resource "aws_redshift_parameter_group" "bar" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Redshift parameter group.
 * `family` - (Required) The family of the Redshift parameter group.
 * `description` - (Optional) The description of the Redshift parameter group. Defaults to "Managed by Terraform".
@@ -55,7 +56,7 @@ You can read more about the parameters that Redshift supports in the [documentat
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of parameter group
+* `arn` - ARN of parameter group
 * `id` - The Redshift parameter group name.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

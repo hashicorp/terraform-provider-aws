@@ -55,8 +55,7 @@ data "aws_vpc_endpoint_service" "test" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC endpoint services.
-The given filters must match exactly one VPC endpoint service whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `service` - (Optional) Common name of an AWS service (e.g., `s3`).
@@ -67,7 +66,7 @@ The given filters must match exactly one VPC endpoint service whose data will be
 
 ~> **NOTE:** Specifying `service` will not work for non-AWS services or AWS services that don't follow the standard `service_name` pattern of `com.amazonaws.<region>.<service>`.
 
-### filter Configuration Block
+### `filter` Block
 
 The `filter` configuration block supports the following arguments:
 
@@ -81,14 +80,15 @@ This data source exports the following attributes in addition to the arguments a
 * `acceptance_required` - Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `arn` - ARN of the VPC endpoint service.
 * `availability_zones` - Availability Zones in which the service is available. Not available for endpoint services in other regions.
-* `base_endpoint_dns_names` - The DNS names for the service.
+* `base_endpoint_dns_names` - DNS names for the service.
 * `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
 * `owner` - AWS account ID of the service owner or `amazon`.
 * `private_dns_name` - Private DNS name for the service.
 * `private_dns_names` - Private DNS names assigned to the VPC endpoint service.
-* `region` - Region of the endpoint service.
+* `region` - (**Deprecated**) Region of the endpoint service. Use `service_region` instead.
 * `service_id` - ID of the endpoint service.
-* `supported_ip_address_types` - The supported IP address types.
+* `service_region` - Region of the endpoint service.
+* `supported_ip_address_types` - Supported IP address types.
 * `tags` - Map of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.
 

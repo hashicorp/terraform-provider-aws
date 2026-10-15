@@ -1,0 +1,133 @@
+---
+subcategory: "Security Hub"
+layout: "aws"
+page_title: "AWS: aws_securityhub_configuration_policy_association"
+description: |-
+  Provides a resource to associate Security Hub configuration policy to a target.
+---
+
+# Resource: aws_securityhub_configuration_policy_association
+
+Manages Security Hub configuration policy associations.
+
+~> **NOTE:** This resource requires [`aws_securityhub_organization_configuration`](/docs/providers/aws/r/securityhub_organization_admin_account.html) to be configured with type `CENTRAL`. More information about Security Hub central configuration and configuration policies can be found in the [How Security Hub configuration policies work](https://docs.aws.amazon.com/securityhub/latest/userguide/configuration-policies-overview.html) documentation.
+
+## Example Usage
+
+```terraform
+resource "aws_securityhub_finding_aggregator" "example" {
+  linking_mode = "ALL_REGIONS"
+}
+
+resource "aws_securityhub_organization_configuration" "example" {
+  auto_enable           = false
+  auto_enable_standards = "NONE"
+  organization_configuration {
+    configuration_type = "CENTRAL"
+  }
+
+  depends_on = [aws_securityhub_finding_aggregator.example]
+}
+
+resource "aws_securityhub_configuration_policy" "example" {
+  name        = "Example"
+  description = "This is an example configuration policy"
+
+  configuration_policy {
+    service_enabled = true
+    enabled_standard_arns = [
+      "arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0",
+      "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0",
+    ]
+    security_controls_configuration {
+      disabled_control_identifiers = []
+    }
+  }
+
+  depends_on = [aws_securityhub_organization_configuration.example]
+}
+
+resource "aws_securityhub_configuration_policy_association" "account_example" {
+  target_id = "123456789012"
+  policy_id = aws_securityhub_configuration_policy.example.id
+}
+
+resource "aws_securityhub_configuration_policy_association" "root_example" {
+  target_id = "r-abcd"
+  policy_id = aws_securityhub_configuration_policy.example.id
+}
+
+resource "aws_securityhub_configuration_policy_association" "ou_example" {
+  target_id = "ou-abcd-12345678"
+  policy_id = aws_securityhub_configuration_policy.example.id
+}
+
+resource "aws_securityhub_configuration_policy_association" "self_managed_example" {
+  target_id = "123456789012"
+  policy_id = "SELF_MANAGED_SECURITY_HUB"
+}
+```
+
+## Argument Reference
+
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `policy_id` - (Required) The universally unique identifier (UUID) of the configuration policy, or `SELF_MANAGED_SECURITY_HUB` for a self-managed configuration.
+* `target_id` - (Required, Forces new resource) The identifier of the target account, organizational unit, or the root to associate with the specified configuration.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - The identifier of the target account, organizational unit, or the root that is associated with the configuration.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `90s`)
+* `update` - (Default `90s`)
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_configuration_policy_association.example
+  identity = {
+    target_id = "123456789012"
+  }
+}
+
+resource "aws_securityhub_configuration_policy_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `target_id` (String) Identifier of the target account, organizational unit, or the root that is associated with the configuration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub configuration policy associations using `target_id`. For example:
+
+```terraform
+import {
+  to = aws_securityhub_configuration_policy_association.example
+  id = "123456789012"
+}
+```
+
+Using `terraform import`, import Security Hub configuration policy associations using `target_id`. For example:
+
+```console
+% terraform import aws_securityhub_configuration_policy_association.example 123456789012
+```

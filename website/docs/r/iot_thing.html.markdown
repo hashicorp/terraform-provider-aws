@@ -24,6 +24,9 @@ resource "aws_iot_thing" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the thing.
 * `attributes` - (Optional) Map of attributes of the thing.
 * `thing_type_name` - (Optional) The thing type name.
@@ -38,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IOT Things using the name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Things using the name. For example:
 
 ```terraform
 import {
@@ -47,7 +50,7 @@ import {
 }
 ```
 
-Using `terraform import`, import IOT Things using the name. For example:
+Using `terraform import`, import IoT Things using the name. For example:
 
 ```console
 % terraform import aws_iot_thing.example example

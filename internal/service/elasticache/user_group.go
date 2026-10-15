@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticache
 
@@ -12,17 +14,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,29 +42,35 @@ func resourceUserGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringInSlice([]string{engineRedis, engineValkey}, true),
-				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"user_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
+						verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
+					),
+					DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"user_group_id": {
+					Type:      schema.TypeString,
+					Required:  true,
+					ForceNew:  true,
+					StateFunc: sdkv2.ToLowerSchemaStateFunc,
+				},
+				"user_ids": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -124,7 +133,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	userGroup, err := findUserGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache User Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -169,7 +178,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 		_, err := conn.ModifyUserGroup(ctx, input)
 
-		if err != nil {
+		if err != nil && !errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "is not a member of user group") {
 			return sdkdiag.AppendErrorf(diags, "updating ElastiCache User Group (%q): %s", d.Id(), err)
 		}
 
@@ -233,8 +242,7 @@ func findUserGroups(ctx context.Context, conn *elasticache.Client, input *elasti
 
 		if errs.IsA[*awstypes.UserGroupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -252,11 +260,11 @@ func findUserGroups(ctx context.Context, conn *elasticache.Client, input *elasti
 	return output, nil
 }
 
-func statusUserGroup(ctx context.Context, conn *elasticache.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusUserGroup(conn *elasticache.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findUserGroupByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -279,7 +287,7 @@ func waitUserGroupCreated(ctx context.Context, conn *elasticache.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{userGroupStatusCreating, userGroupStatusModifying},
 		Target:     []string{userGroupStatusActive},
-		Refresh:    statusUserGroup(ctx, conn, id),
+		Refresh:    statusUserGroup(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -298,7 +306,7 @@ func waitUserGroupUpdated(ctx context.Context, conn *elasticache.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{userGroupStatusModifying},
 		Target:     []string{userGroupStatusActive},
-		Refresh:    statusUserGroup(ctx, conn, id),
+		Refresh:    statusUserGroup(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -317,7 +325,7 @@ func waitUserGroupDeleted(ctx context.Context, conn *elasticache.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{userGroupStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusUserGroup(ctx, conn, id),
+		Refresh:    statusUserGroup(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

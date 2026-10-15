@@ -40,9 +40,12 @@ EOF
 
 This resource supports the following arguments:
 
-* `plaintext` - (Required) Data to be encrypted. Note that this may show up in logs, and it will be stored in the state file.
+* `context` - (Optional) Mapping that makes up the encryption context.
 * `key_id` - (Required) Globally unique key ID for the customer master key.
-* `context` - (Optional) An optional mapping that makes up the encryption context.
+* `plaintext` - (Optional, Exactly one of `plaintext` or `plaintext_wo` must be set) Data to be encrypted. Note that this may show up in logs, and it will be stored in the state file.
+* `plaintext_wo` - (Optional, Write-Only, Exactly one of `plaintext` or `plaintext_wo` must be set) Data to be encrypted. Note that this may show up in logs. It will not be stored in the state file.
+* `plaintext_wo_version` - (Optional, Required when `plaintext_wo` is set) Triggers a replacement together with `plaintext_wo`. Modify this value when a replacement is required.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 

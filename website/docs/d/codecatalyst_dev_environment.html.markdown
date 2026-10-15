@@ -23,8 +23,9 @@ data "aws_codecatalyst_dev_environment" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `env_id` - - (Required) The system-generated unique ID of the Dev Environment for which you want to view information. To retrieve a list of Dev Environment IDs, use [ListDevEnvironments](https://docs.aws.amazon.com/codecatalyst/latest/APIReference/API_ListDevEnvironments.html).
 * `project_name` - (Required) The name of the project in the space.
 * `space_name` - (Required) The name of the space.
@@ -37,7 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `creator_id` - The system-generated unique ID of the user who created the Dev Environment.
 * `ides` - Information about the integrated development environment (IDE) configured for a Dev Environment.
 * `inactivity_timeout_minutes` - The amount of time the Dev Environment will run without any activity detected before stopping, in minutes. Only whole integers are allowed. Dev Environments consume compute minutes when running.
-* `instance_type` - The Amazon EC2 instace type to use for the Dev Environment.
+* `instance_type` - The Amazon EC2 instance type to use for the Dev Environment.
 * `last_updated_time` - The time when the Dev Environment was last updated, in coordinated universal time (UTC) timestamp format as specified in [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339#section-5.6).
 * `persistent_storage` - Information about the amount of storage allocated to the Dev Environment.
 * `repositories` - The source repository that contains the branch to clone into the Dev Environment.

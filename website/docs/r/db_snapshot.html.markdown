@@ -37,8 +37,9 @@ resource "aws_db_snapshot" "test" {
 
 This resource supports the following arguments:
 
-* `db_instance_identifier` - (Required) The DB Instance Identifier from which to take the snapshot.
-* `db_snapshot_identifier` - (Required) The Identifier for the snapshot.
+* `db_instance_identifier` - (Required) DB instance identifier from which to take the snapshot.
+* `db_snapshot_identifier` - (Required) Identifier for the snapshot.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `shared_accounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -46,21 +47,23 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
-* `availability_zone` - Specifies the name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
-* `db_snapshot_arn` - The Amazon Resource Name (ARN) for the DB snapshot.
-* `encrypted` - Specifies whether the DB snapshot is encrypted.
-* `engine` - Specifies the name of the database engine.
-* `engine_version` - Specifies the version of the database engine.
-* `iops` - Specifies the Provisioned IOPS (I/O operations per second) value of the DB instance at the time of the snapshot.
-* `kms_key_id` - The ARN for the KMS encryption key.
+* `allocated_storage` - Allocated storage size in gigabytes (GB).
+* `availability_zone` - Name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
+* `db_snapshot_arn` - ARN for the DB snapshot.
+* `encrypted` - Whether the DB snapshot is encrypted.
+* `engine` - Name of the database engine.
+* `engine_version` - Version of the database engine.
+* `iops` - Provisioned IOPS (I/O operations per second) value of the DB instance at the time of the snapshot.
+* `kms_key_id` - ARN for the KMS encryption key.
 * `license_model` - License model information for the restored DB instance.
 * `option_group_name` - Provides the option group name for the DB snapshot.
-* `source_db_snapshot_identifier` - The DB snapshot Arn that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
-* `source_region` - The region that the DB snapshot was created in or copied from.
-* `status` - Specifies the status of this DB snapshot.
-* `storage_type` - Specifies the storage type associated with DB snapshot.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `port` - Port that the DB snapshot listens on.
+* `snapshot_type` - Type of the DB snapshot.
+* `source_db_snapshot_identifier` - DB snapshot ARN that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `source_region` - Region that the DB snapshot was created in or copied from.
+* `status` - Status of this DB snapshot.
+* `storage_type` - Storage type associated with DB snapshot.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - Provides the VPC ID associated with the DB snapshot.
 
 ## Timeouts

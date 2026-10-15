@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -35,87 +38,89 @@ func resourceMethodSettings() *schema.Resource {
 			StateContext: resourceMethodSettingsImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"method_path": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"settings": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cache_data_encrypted": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"cache_ttl_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"caching_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"data_trace_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"logging_level": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"OFF",
-								"ERROR",
-								"INFO",
-							}, false),
-						},
-						"metrics_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"require_authorization_for_cache_control": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						"throttling_burst_limit": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  -1,
-						},
-						"throttling_rate_limit": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							Default:  -1,
-						},
-						"unauthorized_cache_control_header_strategy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.UnauthorizedCacheControlHeaderStrategy](),
-							Computed:         true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"method_path": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"settings": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cache_data_encrypted": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"cache_ttl_in_seconds": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"caching_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"data_trace_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"logging_level": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"OFF",
+									"ERROR",
+									"INFO",
+								}, false),
+							},
+							"metrics_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"require_authorization_for_cache_control": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"throttling_burst_limit": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  -1,
+							},
+							"throttling_rate_limit": {
+								Type:     schema.TypeFloat,
+								Optional: true,
+								Default:  -1,
+							},
+							"unauthorized_cache_control_header_strategy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.UnauthorizedCacheControlHeaderStrategy](),
+								Computed:         true,
+							},
 						},
 					},
 				},
-			},
-			"stage_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"stage_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -145,9 +150,9 @@ func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	settings, err := findMethodSettingsByThreePartKey(ctx, conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string), d.Get("method_path").(string))
+	settings, err := findMethodSettingsByThreePartKey(ctx, conn, d.Get(attrRestAPIID).(string), d.Get("stage_name").(string), d.Get("method_path").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Method Settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -243,7 +248,7 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		})
 	}
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	stageName := d.Get("stage_name").(string)
 	id := apiID + "-" + stageName + "-" + methodPath
 	input := apigateway.UpdateStageInput{
@@ -276,7 +281,7 @@ func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 				Path: aws.String(fmt.Sprintf("/%s", d.Get("method_path").(string))),
 			},
 		},
-		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+		RestApiId: aws.String(d.Get(attrRestAPIID).(string)),
 		StageName: aws.String(d.Get("stage_name").(string)),
 	}
 
@@ -306,7 +311,7 @@ func resourceMethodSettingsImport(ctx context.Context, d *schema.ResourceData, m
 	restApiID := idParts[0]
 	stageName := idParts[1]
 	methodPath := idParts[2]
-	d.Set("rest_api_id", restApiID)
+	d.Set(attrRestAPIID, restApiID)
 	d.Set("stage_name", stageName)
 	d.Set("method_path", methodPath)
 	d.SetId(fmt.Sprintf("%s-%s-%s", restApiID, stageName, methodPath))
@@ -323,7 +328,7 @@ func findMethodSettingsByThreePartKey(ctx context.Context, conn *apigateway.Clie
 	output, ok := stage.MethodSettings[methodPath]
 
 	if !ok {
-		return nil, tfresource.NewEmptyResultError(methodPath)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output, nil

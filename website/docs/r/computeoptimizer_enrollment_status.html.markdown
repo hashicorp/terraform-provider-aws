@@ -22,6 +22,7 @@ resource "aws_computeoptimizer_enrollment_status" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `include_member_accounts` - (Optional) Whether to enroll member accounts of the organization if the account is the management account of an organization. Default is `false`.
 * `status` - (Required) The enrollment status of the account. Valid values: `Active`, `Inactive`.
 

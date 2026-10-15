@@ -6,7 +6,7 @@ description: |-
   Provides information about a MemoryDB Parameter Group.
 ---
 
-# Resource: aws_memorydb_parameter_group
+# Data Source: aws_memorydb_parameter_group
 
 Provides information about a MemoryDB Parameter Group.
 
@@ -20,18 +20,19 @@ data "aws_memorydb_parameter_group" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the parameter group.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - Name of the parameter group.
 * `arn` - ARN of the parameter group.
 * `description` - Description of the parameter group.
 * `family` - Engine version that the parameter group can be used with.
+* `id` - Name of the parameter group.
 * `parameter` - Set of user-defined MemoryDB parameters applied by the parameter group.
     * `name` - Name of the parameter.
     * `value` - Value of the parameter.

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudfront
 
@@ -11,12 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,36 +35,38 @@ func resourceOriginAccessIdentity() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"caller_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudfront_access_identity_path": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"iam_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"s3_canonical_user_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"caller_reference": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloudfront_access_identity_path": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "",
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"iam_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"s3_canonical_user_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -92,7 +96,7 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 
 	output, err := findOriginAccessIdentityByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFront Origin Access Identity (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -163,8 +167,7 @@ func findOriginAccessIdentityByID(ctx context.Context, conn *cloudfront.Client, 
 
 	if errs.IsA[*awstypes.NoSuchCloudFrontOriginAccessIdentity](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -173,7 +176,7 @@ func findOriginAccessIdentityByID(ctx context.Context, conn *cloudfront.Client, 
 	}
 
 	if output == nil || output.CloudFrontOriginAccessIdentity == nil || output.CloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -186,7 +189,7 @@ func expandCloudFrontOriginAccessIdentityConfig(d *schema.ResourceData) *awstype
 
 	// This sets CallerReference if it's still pending computation (ie: new resource)
 	if v, ok := d.GetOk("caller_reference"); !ok {
-		apiObject.CallerReference = aws.String(id.UniqueId())
+		apiObject.CallerReference = aws.String(sdkid.UniqueId())
 	} else {
 		apiObject.CallerReference = aws.String(v.(string))
 	}

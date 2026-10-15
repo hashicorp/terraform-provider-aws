@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package connect
 
@@ -27,11 +29,11 @@ func dataSourceUserHierarchyStructure() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"level_one":   sdkv2.DataSourcePropertyFromResourceProperty(hierarchyStructureLevelSchema()),
-							"level_two":   sdkv2.DataSourcePropertyFromResourceProperty(hierarchyStructureLevelSchema()),
-							"level_three": sdkv2.DataSourcePropertyFromResourceProperty(hierarchyStructureLevelSchema()),
-							"level_four":  sdkv2.DataSourcePropertyFromResourceProperty(hierarchyStructureLevelSchema()),
-							"level_five":  sdkv2.DataSourcePropertyFromResourceProperty(hierarchyStructureLevelSchema()),
+							"level_one":   sdkv2.ComputedOnlyFromSchema(hierarchyStructureLevelSchema()),
+							"level_two":   sdkv2.ComputedOnlyFromSchema(hierarchyStructureLevelSchema()),
+							"level_three": sdkv2.ComputedOnlyFromSchema(hierarchyStructureLevelSchema()),
+							"level_four":  sdkv2.ComputedOnlyFromSchema(hierarchyStructureLevelSchema()),
+							"level_five":  sdkv2.ComputedOnlyFromSchema(hierarchyStructureLevelSchema()),
 						},
 					},
 				},

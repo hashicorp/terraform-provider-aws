@@ -52,6 +52,7 @@ resource "aws_schemas_schema" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the schema. Maximum of 385 characters consisting of lower case letters, upper case letters, ., -, _, @.
 * `content` - (Required) The schema specification. Must be a valid Open API 3.0 spec.
 * `registry_name` - (Required) The name of the registry in which this schema belongs.
@@ -63,7 +64,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the discoverer.
+* `arn` - ARN of the discoverer.
 * `last_modified` - The last modified date of the schema.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - The version of the schema.

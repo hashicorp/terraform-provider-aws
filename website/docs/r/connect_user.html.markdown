@@ -111,7 +111,7 @@ resource "aws_connect_user" "example" {
 }
 ```
 
-### With multiple Security profile ids specified in security_profile_ids
+### With multiple Security profile IDs specified in security_profile_ids
 
 ```terraform
 resource "aws_connect_user" "example" {
@@ -138,6 +138,7 @@ resource "aws_connect_user" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directory_user_id` - (Optional) The identifier of the user account in the directory used for identity management. If Amazon Connect cannot access the directory, you can specify this identifier to authenticate users. If you include the identifier, we assume that Amazon Connect cannot access the directory. Otherwise, the identity information is used to authenticate users from your directory. This parameter is required if you are using an existing directory for identity management in Amazon Connect when Amazon Connect cannot access your directory to authenticate users. If you are using SAML for identity management and include this parameter, an error is returned.
 * `hierarchy_group_id` - (Optional) The identifier of the hierarchy group for the user.
 * `identity_info` - (Optional) A block that contains information about the identity of the user. Documented below.
@@ -146,7 +147,7 @@ This resource supports the following arguments:
 * `password` - (Optional) The password for the user account. A password is required if you are using Amazon Connect for identity management. Otherwise, it is an error to include a password.
 * `phone_config` - (Required) A block that contains information about the phone settings for the user. Documented below.
 * `routing_profile_id` - (Required) The identifier of the routing profile for the user.
-* `security_profile_ids` - (Required) A list of identifiers for the security profiles for the user. Specify a minimum of 1 and maximum of 10 security profile ids. For more information, see [Best Practices for Security Profiles](https://docs.aws.amazon.com/connect/latest/adminguide/security-profile-best-practices.html) in the Amazon Connect Administrator Guide.
+* `security_profile_ids` - (Required) A list of identifiers for the security profiles for the user. Specify a minimum of 1 and maximum of 10 security profile IDs. For more information, see [Best Practices for Security Profiles](https://docs.aws.amazon.com/connect/latest/adminguide/security-profile-best-practices.html) in the Amazon Connect Administrator Guide.
 * `tags` - (Optional) Tags to apply to the user. If configured with a provider
 [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -168,7 +169,7 @@ A `phone_config` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the user.
+* `arn` - ARN of the user.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the user
 separated by a colon (`:`).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

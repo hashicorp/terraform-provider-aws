@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ebs_volume: Fix to preserve `iops` when changing EBS volume type (`io1`, `io2`, `gp3`)
-```

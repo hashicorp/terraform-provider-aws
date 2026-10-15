@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_fms_policy: Add `resource_set_ids` attribute
-```

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty_test
@@ -16,7 +16,7 @@ func testAccDetectorDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
@@ -28,6 +28,7 @@ func testAccDetectorDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDetectorDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "features.#", 0),
 					resource.TestCheckResourceAttrPair(datasourceName, "finding_publishing_frequency", resourceName, "finding_publishing_frequency"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
@@ -44,7 +45,7 @@ func testAccDetectorDataSource_ID(t *testing.T) {
 	datasourceName := "data.aws_guardduty_detector.test"
 	resourceName := "aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
@@ -55,6 +56,7 @@ func testAccDetectorDataSource_ID(t *testing.T) {
 			{
 				Config: testAccDetectorDataSourceConfig_id,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "features.#", 0),
 					resource.TestCheckResourceAttrPair(datasourceName, "finding_publishing_frequency", resourceName, "finding_publishing_frequency"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),

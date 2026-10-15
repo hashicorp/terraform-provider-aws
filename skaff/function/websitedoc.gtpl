@@ -14,6 +14,7 @@ TIP: A few guiding principles for writing documentation:
 3. Use active voice and present tense whenever you can.
 4. Document your feature as it exists now; do not mention the future or past if you can help it.
 5. Use accessible and inclusive language.
+6. Don't spell out common abbreviations (e.g. use "ARN", not "Amazon Resource Name").
 --->`
 {{- end }}
 # Function: {{ .FunctionSnake }}

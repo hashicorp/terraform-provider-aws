@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package outposts
 
@@ -22,24 +24,26 @@ func dataSourceOutpostInstanceType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOutpostInstanceTypeRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrInstanceType: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"preferred_instance_types"},
-			},
-			"preferred_instance_types": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrInstanceType},
-				Elem:          &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrInstanceType: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"preferred_instance_types"},
+				},
+				"preferred_instance_types": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrInstanceType},
+					Elem:          &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

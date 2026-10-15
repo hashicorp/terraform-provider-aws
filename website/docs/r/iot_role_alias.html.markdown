@@ -39,6 +39,7 @@ resource "aws_iot_role_alias" "alias" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alias` - (Required) The name of the role alias.
 * `role_arn` - (Required) The identity of the role to which the alias refers.
 * `credential_duration` - (Optional) The duration of the credential, in seconds. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 900 seconds (15 minutes) to 43200 seconds (12 hours).
@@ -53,7 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IOT Role Alias using the alias. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Role Alias using the alias. For example:
 
 ```terraform
 import {
@@ -62,7 +63,7 @@ import {
 }
 ```
 
-Using `terraform import`, import IOT Role Alias using the alias. For example:
+Using `terraform import`, import IoT Role Alias using the alias. For example:
 
 ```console
 % terraform import aws_iot_role_alias.example myalias

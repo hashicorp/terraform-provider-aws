@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package yaml_test
@@ -63,6 +63,21 @@ B: 42
 `,
 			output:     &to3,
 			wantOutput: &to4,
+		},
+		{
+			testName: "double-quoted literal tab",
+			input: `
+a:
+  b: "x	y"
+  c: y
+`,
+			output: &map[string]map[string]string{},
+			wantOutput: &map[string]map[string]string{
+				"a": {
+					"b": "x\ty",
+					"c": "y",
+				},
+			},
 		},
 	}
 

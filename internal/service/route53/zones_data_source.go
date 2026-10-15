@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53
 
@@ -14,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,7 +27,7 @@ func newZonesDataSource(context.Context) (datasource.DataSourceWithConfigure, er
 }
 
 type zonesDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[zonesDataSourceModel]
 }
 
 func (d *zonesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -32,6 +35,7 @@ func (d *zonesDataSource) Schema(ctx context.Context, request datasource.SchemaR
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			names.AttrIDs: schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -62,12 +66,12 @@ func (d *zonesDataSource) Read(ctx context.Context, request datasource.ReadReque
 	})
 
 	data.ID = types.StringValue(d.Meta().Region(ctx))
-	data.ZoneIDs = fwflex.FlattenFrameworkStringValueList(ctx, zoneIDs)
+	data.ZoneIDs = fwflex.FlattenFrameworkStringValueListOfString(ctx, zoneIDs)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type zonesDataSourceModel struct {
-	ID      types.String `tfsdk:"id"`
-	ZoneIDs types.List   `tfsdk:"ids"`
+	ID      types.String         `tfsdk:"id"`
+	ZoneIDs fwtypes.ListOfString `tfsdk:"ids"`
 }

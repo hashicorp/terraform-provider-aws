@@ -24,8 +24,9 @@ data "aws_ssoadmin_principal_application_assignments" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_arn` - (Required) ARN of the instance of IAM Identity Center.
 * `principal_id` - (Required) An identifier for an object in IAM Identity Center, such as a user or group.
 * `principal_type` - (Required) Entity type for which the assignment will be created. Valid values are `USER` or `GROUP`.

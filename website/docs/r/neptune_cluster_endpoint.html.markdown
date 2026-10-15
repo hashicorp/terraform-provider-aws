@@ -24,6 +24,7 @@ resource "aws_neptune_cluster_endpoint" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_identifier` - (Required, Forces new resources) The DB cluster identifier of the DB cluster associated with the endpoint.
 * `cluster_endpoint_identifier` - (Required, Forces new resources) The identifier of the endpoint.
 * `endpoint_type` - (Required) The type of the endpoint. One of: `READER`, `WRITER`, `ANY`.
@@ -35,7 +36,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Neptune Cluster Endpoint Amazon Resource Name (ARN).
+* `arn` - Neptune Cluster Endpoint ARN.
 * `endpoint` - The DNS address of the endpoint.
 * `id` - The Neptune Cluster Endpoint Identifier.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

@@ -25,6 +25,7 @@ resource "aws_ec2_capacity_reservation" "default" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Required) The Availability Zone in which to create the Capacity Reservation.
 * `ebs_optimized` - (Optional) Indicates whether the Capacity Reservation supports EBS-optimized instances.
 * `end_date` - (Optional) The date and time at which the Capacity Reservation expires. When a Capacity Reservation expires, the reserved capacity is released and you can no longer launch instances into it. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
@@ -34,8 +35,8 @@ This resource supports the following arguments:
 * `instance_match_criteria` - (Optional) Indicates the type of instance launches that the Capacity Reservation accepts. Specify either `open` or `targeted`.
 * `instance_platform` - (Required) The type of operating system for which to reserve capacity. Valid options are `Linux/UNIX`, `Red Hat Enterprise Linux`, `SUSE Linux`, `Windows`, `Windows with SQL Server`, `Windows with SQL Server Enterprise`, `Windows with SQL Server Standard` or `Windows with SQL Server Web`.
 * `instance_type` - (Required) The instance type for which to reserve capacity.
-* `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost on which to create the Capacity Reservation.
-* `placement_group_arn` - (Optional) The Amazon Resource Name (ARN) of the cluster placement group in which to create the Capacity Reservation.
+* `outpost_arn` - (Optional) ARN of the Outpost on which to create the Capacity Reservation.
+* `placement_group_arn` - (Optional) ARN of the cluster placement group in which to create the Capacity Reservation.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tenancy` - (Optional) Indicates the tenancy of the Capacity Reservation. Specify either `default` or `dedicated`.
 

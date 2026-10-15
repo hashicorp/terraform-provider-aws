@@ -28,9 +28,10 @@ resource "aws_opensearch_vpc_endpoint" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `domain_arn` - (Required, Forces new resource) Specifies the Amazon Resource Name (ARN) of the domain to create the endpoint for
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `domain_arn` - (Required, Forces new resource) ARN of the domain to create the endpoint for
 * `vpc_options` - (Required) Options to specify the subnets and security groups for the endpoint.
 
 ### vpc_options
@@ -55,17 +56,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch VPC endpoint connections using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch VPC endpoints using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_opensearch_vpc_endpoint_connection.example
+  to = aws_opensearch_vpc_endpoint.example
   id = "endpoint-id"
 }
 ```
 
-Using `terraform import`, import OpenSearch VPC endpoint connections using the `id`. For example:
+Using `terraform import`, import OpenSearch VPC endpoints using the `id`. For example:
 
 ```console
-% terraform import aws_opensearch_vpc_endpoint_connection.example endpoint-id
+% terraform import aws_opensearch_vpc_endpoint.example endpoint-id
 ```

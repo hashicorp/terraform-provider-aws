@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -8,34 +8,33 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppStreamFleetStackAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appstream_fleet_stack_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetStackAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckFleetStackAssociationDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetStackAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetStackAssociationExists(ctx, resourceName),
+					testAccCheckFleetStackAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "fleet_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "stack_name", rName),
 				),
@@ -52,70 +51,49 @@ func TestAccAppStreamFleetStackAssociation_basic(t *testing.T) {
 func TestAccAppStreamFleetStackAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appstream_fleet_stack_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetStackAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckFleetStackAssociationDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetStackAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceFleetStackAssociation(), resourceName),
+					testAccCheckFleetStackAssociationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceFleetStackAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckFleetStackAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckFleetStackAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-
-		fleetName, stackName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		err = tfappstream.FindFleetStackAssociation(ctx, conn, fleetName, stackName)
-
-		if tfresource.NotFound(err) {
-			return fmt.Errorf("AppStream Fleet Stack Association %q does not exist", rs.Primary.ID)
-		}
-
-		return err
-	}
-}
-
-func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_fleet_stack_association" {
 				continue
 			}
 
-			fleetName, stackName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
-			if err != nil {
-				return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
-			}
+			err := tfappstream.FindFleetStackAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["fleet_name"], rs.Primary.Attributes["stack_name"])
 
-			err = tfappstream.FindFleetStackAssociation(ctx, conn, fleetName, stackName)
-
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -123,10 +101,25 @@ func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.Test
 				return err
 			}
 
-			return fmt.Errorf("AppStream Fleet Stack Association %q still exists", rs.Primary.ID)
+			return fmt.Errorf("AppStream Fleet Stack Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckFleetStackAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
+
+		err := tfappstream.FindFleetStackAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["fleet_name"], rs.Primary.Attributes["stack_name"])
+
+		return err
 	}
 }
 

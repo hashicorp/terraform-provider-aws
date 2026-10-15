@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_dms_replication_instance: Increase default timeout for `create`
-```

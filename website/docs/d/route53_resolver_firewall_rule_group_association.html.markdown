@@ -14,7 +14,7 @@ This data source allows to retrieve details about a specific a Route 53 Resolver
 
 ## Example Usage
 
-The following example shows how to get a firewall rule group association from its id.
+The following example shows how to get a firewall rule group association from its ID.
 
 ```terraform
 data "aws_route53_resolver_firewall_rule_group_association" "example" {
@@ -24,11 +24,16 @@ data "aws_route53_resolver_firewall_rule_group_association" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewall_rule_group_association_id` - (Required) The identifier for the association.
 
-The following attribute is additionally exported:
+## Attribute Reference
 
-* `arn` - The Amazon Resource Name (ARN) of the firewall rule group association.
+This data source exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the firewall rule group association.
 * `creation_time` - The date and time that the association was created, in Unix time format and Coordinated Universal Time (UTC).
 * `creator_request_id` - A unique string defined by you to identify the request.
 * `firewall_rule_group_id` - The unique identifier of the firewall rule group.

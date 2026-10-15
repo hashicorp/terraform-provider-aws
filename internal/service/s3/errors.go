@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -20,6 +20,8 @@ const (
 	errCodeInvalidBucketState                   = "InvalidBucketState"
 	errCodeInvalidRequest                       = "InvalidRequest"
 	errCodeMalformedPolicy                      = "MalformedPolicy"
+	errCodeMalformedXML                         = "MalformedXML"
+	errCodeMetadataConfigurationNotFound        = "MetadataConfigurationNotFound"
 	errCodeMethodNotAllowed                     = "MethodNotAllowed"
 	errCodeNoSuchBucket                         = "NoSuchBucket"
 	errCodeNoSuchBucketPolicy                   = "NoSuchBucketPolicy"
@@ -29,6 +31,7 @@ const (
 	errCodeNoSuchKey                            = "NoSuchKey"
 	errCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
 	errCodeNoSuchTagSet                         = "NoSuchTagSet"
+	errCodeNoSuchTagSetError                    = "NoSuchTagSetError"
 	errCodeNoSuchWebsiteConfiguration           = "NoSuchWebsiteConfiguration"
 	errCodeNotImplemented                       = "NotImplemented"
 	// errCodeObjectLockConfigurationNotFound should be used with tfawserr.ErrCodeContains, not tfawserr.ErrCodeEquals.

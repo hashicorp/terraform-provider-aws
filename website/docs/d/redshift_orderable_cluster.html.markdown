@@ -23,6 +23,7 @@ data "aws_redshift_orderable_cluster" "test" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_type` - (Optional) Reshift Cluster typeE.g., `multi-node` or `single-node`
 * `cluster_version` - (Optional) Redshift Cluster versionE.g., `1.0`
 * `node_type` - (Optional) Redshift Cluster node typeE.g., `dc2.8xlarge`

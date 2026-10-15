@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package envvar
@@ -296,6 +296,58 @@ func TestTestSkipIfEmpty(t *testing.T) {
 
 		if got != want {
 			t.Fatalf("expected value: %s, got: %s", want, got)
+		}
+	})
+}
+
+func TestTestSkipIfNotTrue(t *testing.T) {
+	envVar := "TESTENVVAR_SKIPIFNOTTRUE"
+
+	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
+		mockT := &testingiface.RuntimeT{}
+
+		os.Unsetenv(envVar)
+
+		SkipIfNotTrue(mockT, envVar, "")
+
+		if !mockT.Skipped() {
+			t.Fatal("expected to skip")
+		}
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		mockT := &testingiface.RuntimeT{}
+
+		t.Setenv(envVar, "")
+
+		SkipIfNotTrue(mockT, envVar, "")
+
+		if !mockT.Skipped() {
+			t.Fatal("expected to skip")
+		}
+	})
+
+	t.Run("false", func(t *testing.T) {
+		mockT := &testingiface.RuntimeT{}
+
+		t.Setenv(envVar, "0")
+
+		SkipIfNotTrue(mockT, envVar, "")
+
+		if !mockT.Skipped() {
+			t.Fatal("expected to skip")
+		}
+	})
+
+	t.Run("true", func(t *testing.T) {
+		mockT := &testingiface.RuntimeT{}
+
+		t.Setenv(envVar, "1")
+
+		SkipIfNotTrue(mockT, envVar, "")
+
+		if mockT.Skipped() {
+			t.Fatal("expected not to skip")
 		}
 	})
 }

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -21,98 +23,101 @@ import (
 )
 
 // @SDKResource("aws_glue_security_configuration", name="Security Configuration")
-func ResourceSecurityConfiguration() *schema.Resource {
+func resourceSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityConfigurationCreate,
 		ReadWithoutTimeout:   resourceSecurityConfigurationRead,
 		DeleteWithoutTimeout: resourceSecurityConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrEncryptionConfiguration: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_encryption": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cloudwatch_encryption_mode": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										Default:          awstypes.CloudWatchEncryptionModeDisabled,
-										ValidateDiagFunc: enum.Validate[awstypes.CloudWatchEncryptionMode](),
-									},
-									names.AttrKMSKeyARN: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-									},
-								},
-							},
-						},
-						"job_bookmarks_encryption": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"job_bookmarks_encryption_mode": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										Default:          awstypes.JobBookmarksEncryptionModeDisabled,
-										ValidateDiagFunc: enum.Validate[awstypes.JobBookmarksEncryptionMode](),
-									},
-									names.AttrKMSKeyARN: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrEncryptionConfiguration: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_encryption": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cloudwatch_encryption_mode": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Default:          awstypes.CloudWatchEncryptionModeDisabled,
+											ValidateDiagFunc: enum.Validate[awstypes.CloudWatchEncryptionMode](),
+										},
+										names.AttrKMSKeyARN: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
 									},
 								},
 							},
-						},
-						"s3_encryption": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKMSKeyARN: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
+							"job_bookmarks_encryption": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"job_bookmarks_encryption_mode": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Default:          awstypes.JobBookmarksEncryptionModeDisabled,
+											ValidateDiagFunc: enum.Validate[awstypes.JobBookmarksEncryptionMode](),
+										},
+										names.AttrKMSKeyARN: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
 									},
-									"s3_encryption_mode": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ForceNew:         true,
-										Default:          awstypes.S3EncryptionModeDisabled,
-										ValidateDiagFunc: enum.Validate[awstypes.S3EncryptionMode](),
+								},
+							},
+							"s3_encryption": {
+								Type:     schema.TypeList,
+								Required: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKMSKeyARN: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
+										"s3_encryption_mode": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ForceNew:         true,
+											Default:          awstypes.S3EncryptionModeDisabled,
+											ValidateDiagFunc: enum.Validate[awstypes.S3EncryptionMode](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			}
 		},
 	}
 }
@@ -180,7 +185,7 @@ func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Security Configuration: %s", d.Id())
-	err := DeleteSecurityConfiguration(ctx, conn, d.Id())
+	err := deleteSecurityConfiguration(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Security Configuration (%s): %s", d.Id(), err)
 	}
@@ -188,7 +193,7 @@ func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func DeleteSecurityConfiguration(ctx context.Context, conn *glue.Client, name string) error {
+func deleteSecurityConfiguration(ctx context.Context, conn *glue.Client, name string) error {
 	input := &glue.DeleteSecurityConfigurationInput{
 		Name: aws.String(name),
 	}

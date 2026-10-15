@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sweep
@@ -11,10 +11,10 @@ import (
 	"time"
 
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -109,15 +109,15 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 		tflog.Info(ctx, "No resources to sweep")
 	}
 
-	var g multierror.Group
+	var g tfsync.Group
 
 	for _, sweepable := range sweepables {
-		g.Go(func() error {
+		g.Go(ctx, func(ctx context.Context) error {
 			return sweepable.Delete(ctx, optFns...)
 		})
 	}
 
-	return g.Wait().ErrorOrNil()
+	return g.Wait(ctx)
 }
 
 type SweeperFn func(ctx context.Context, client *conns.AWSClient) ([]Sweepable, error)

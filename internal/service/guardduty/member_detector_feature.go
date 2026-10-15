@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package guardduty
 
@@ -24,6 +26,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,7 +40,7 @@ func newMemberDetectorFeatureResource(context.Context) (resource.ResourceWithCon
 }
 
 type memberDetectorFeatureResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[memberDetectorFeatureResourceModel]
 	framework.WithNoOpDelete
 }
 
@@ -138,7 +141,7 @@ func (r *memberDetectorFeatureResource) Read(ctx context.Context, request resour
 
 	output, err := findMemberDetectorFeatureByThreePartKey(ctx, conn, data.DetectorID.ValueString(), data.AccountID.ValueString(), data.Name.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -270,13 +273,14 @@ func findMemberDetectors(ctx context.Context, client *guardduty.Client, input *g
 	}
 
 	if output == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.MemberDataSourceConfigurations, output.UnprocessedAccounts, nil
 }
 
 type memberDetectorFeatureResourceModel struct {
+	framework.WithRegionModel
 	AccountID               types.String                                                        `tfsdk:"account_id"`
 	AdditionalConfiguration fwtypes.ListNestedObjectValueOf[memberAdditionalConfigurationModel] `tfsdk:"additional_configuration"`
 	DetectorID              types.String                                                        `tfsdk:"detector_id"`

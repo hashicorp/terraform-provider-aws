@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecr
 
@@ -12,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,7 +29,7 @@ func newRepositoriesDataSource(context.Context) (datasource.DataSourceWithConfig
 }
 
 type repositoriesDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[repositoriesDataSourceModel]
 }
 
 func (d *repositoriesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -76,8 +78,7 @@ func findRepositories(ctx context.Context, conn *ecr.Client, input *ecr.Describe
 
 		if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -92,6 +93,7 @@ func findRepositories(ctx context.Context, conn *ecr.Client, input *ecr.Describe
 }
 
 type repositoriesDataSourceModel struct {
+	framework.WithRegionModel
 	ID    types.String                     `tfsdk:"id"`
 	Names fwtypes.SetValueOf[types.String] `tfsdk:"names"`
 }

@@ -156,6 +156,32 @@ resource "aws_lexv2models_intent" "example" {
 }
 ```
 
+### QnA Intent Example
+
+```terraform
+resource "aws_lexv2models_intent" "qna_example" {
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version             = aws_lexv2models_bot_locale.test.bot_version
+  name                    = "qna_intent"
+  locale_id               = aws_lexv2models_bot_locale.test.locale_id
+  parent_intent_signature = "AMAZON.QnAIntent"
+
+  qna_intent_configuration {
+    data_source_configuration {
+      kendra_configuration {
+        kendra_index                = aws_kendra_index.example.arn
+        exact_response              = true
+        query_filter_string_enabled = false
+      }
+    }
+  }
+
+  sample_utterance {
+    utterance = "What is the answer?"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -167,6 +193,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `closing_setting` - (Optional) Configuration block for the response that Amazon Lex sends to the user when the intent is closed. See [`closing_setting`](#closing_setting).
 * `confirmation_setting` - (Optional) Configuration block for prompts that Amazon Lex sends to the user to confirm the completion of an intent. If the user answers "no," the settings contain a statement that is sent to the user to end the intent. If you configure this block without `prompt_specification.*.prompt_attempts_specification`, AWS will provide default configurations for `Initial` and `Retry1` `prompt_attempts_specification`s. This will cause Terraform to report differences. Use the `confirmation_setting` configuration above in the [Basic Usage](#basic-usage) example to avoid differences resulting from AWS default configuration. See [`confirmation_setting`](#confirmation_setting).
 * `description` - (Optional) Description of the intent. Use the description to help identify the intent in lists.
@@ -174,7 +201,8 @@ The following arguments are optional:
 * `fulfillment_code_hook` - (Optional) Configuration block for invoking the alias Lambda function when the intent is ready for fulfillment. You can invoke this function to complete the bot's transaction with the user. See [`fulfillment_code_hook`](#fulfillment_code_hook).
 * `initial_response_setting` - (Optional) Configuration block for the response that is sent to the user at the beginning of a conversation, before eliciting slot values. See [`initial_response_setting`](#initial_response_setting).
 * `input_context` - (Optional) Configuration blocks for contexts that must be active for this intent to be considered by Amazon Lex. When an intent has an input context list, Amazon Lex only considers using the intent in an interaction with the user when the specified contexts are included in the active context list for the session. If the contexts are not active, then Amazon Lex will not use the intent. A context can be automatically activated using the outputContexts property or it can be set at runtime. See [`input_context`](#input_context).
-* `kendra_configuration` - (Optional) Configuration block for information required to use the AMAZON.KendraSearchIntent intent to connect to an Amazon Kendra index. The AMAZON.KendraSearchIntent intent is called when Amazon Lex can't determine another intent to invoke. See [`kendra_configuration`](#kendra_configuration).
+* `kendra_configuration` - (Optional) Configuration block for information required to use the AMAZON.KendraSearchIntent intent to connect to an Amazon Kendra index. The AMAZON.KendraSearchIntent intent is called when Amazon Lex can't determine another intent to invoke. Cannot be used with `qna_intent_configuration`. See [`kendra_configuration`](#kendra_configuration).
+* `qna_intent_configuration` - (Optional) Configuration block for QnA intent settings. This is used when `parent_intent_signature` is set to `AMAZON.QnAIntent`. Cannot be used with `kendra_configuration`. See [`qna_intent_configuration`](#qna_intent_configuration).
 * `output_context` - (Optional) Configuration blocks for contexts that the intent activates when it is fulfilled. You can use an output context to indicate the intents that Amazon Lex should consider for the next turn of the conversation with a customer. When you use the outputContextsList property, all of the contexts specified in the list are activated when the intent is fulfilled. You can set up to 10 output contexts. You can also set the number of conversation turns that the context should be active, or the length of time that the context should be active. See [`output_context`](#output_context).
 * `parent_intent_signature` - (Optional) Identifier for the built-in intent to base this intent on.
 * `sample_utterance` - (Optional) Configuration block for strings that a user might say to signal the intent. See [`sample_utterance`](#sample_utterance).
@@ -192,39 +220,39 @@ The following arguments are optional:
 * `message_group` - (Required) Configuration blocks for responses that Amazon Lex can send to the user. Amazon Lex chooses the actual response to send at runtime. See [`message_group`](#message_group).
 * `allow_interrupt` - (Optional) Whether the user can interrupt a speech response from Amazon Lex.
 
-##### `message_group`
+#### `message_group`
 
 * `message` - (Required) Configuration block for the primary message that Amazon Lex should send to the user. See [`message`](#message-and-variation).
 * `variation` - (Optional) Configuration blocks for message variations to send to the user. When variations are defined, Amazon Lex chooses the primary message or one of the variations to send to the user. See [`variation`](#message-and-variation).
 
-###### `message` and `variation`
+#### `message` and `variation`
 
 * `custom_payload` - (Optional) Configuration block for a message in a custom format defined by the client application. See [`custom_payload`](#custom_payload).
 * `image_response_card` - (Optional) Configuration block for a message that defines a response card that the client application can show to the user. See [`image_response_card`](#image_response_card).
 * `plain_text_message` - (Optional) Configuration block for a message in plain text format. See [`plain_text_message`](#plain_text_message).
 * `ssml_message` - (Optional) Configuration block for a message in Speech Synthesis Markup Language (SSML). See [`ssml_message`](#ssml_message).
 
-###### `custom_payload`
+#### `custom_payload`
 
 * `value` - (Required) String that is sent to your application.
 
-###### `image_response_card`
+#### `image_response_card`
 
 * `title` - (Required) Title to display on the response card. The format of the title is determined by the platform displaying the response card.
 * `button` - (Optional) Configuration blocks for buttons that should be displayed on the response card. The arrangement of the buttons is determined by the platform that displays the button. See [`button`](#button).
 * `image_url` - (Optional) URL of an image to display on the response card. The image URL must be publicly available so that the platform displaying the response card has access to the image.
 * `subtitle` - (Optional) Subtitle to display on the response card. The format of the subtitle is determined by the platform displaying the response card.
 
-###### `button`
+#### `button`
 
 * `text` - (Required) Text that appears on the button. Use this to tell the user what value is returned when they choose this button.
 * `value` - (Required) Value returned to Amazon Lex when the user chooses this button. This must be one of the slot values configured for the slot.
 
-###### `plain_text_message`
+#### `plain_text_message`
 
 * `value` - (Required) Message to send to the user.
 
-###### `ssml_message`
+#### `ssml_message`
 
 * `value` - (Required) SSML text that defines the prompt.
 
@@ -234,23 +262,23 @@ The following arguments are optional:
 * `conditional_branch` - (Required) Configuration blocks for conditional branches. A conditional branch is made up of a condition, a response and a next step. The response and next step are executed when the condition is true. See [`conditional_branch`](#conditional_branch).
 * `default_branch` - (Required) Configuration block for the conditional branch that should be followed when the conditions for other branches are not satisfied. A branch is made up of a condition, a response and a next step. See [`default_branch`](#default_branch).
 
-##### `conditional_branch`
+#### `conditional_branch`
 
 * `condition` - (Required) Configuration block for the expression to evaluate. If the condition is true, the branch's actions are taken. See [`condition`](#condition).
 * `name` - (Required) Name of the branch.
 * `next_step` - (Required) Configuration block for the next step in the conversation. See [`next_step`](#next_step).
 * `response` - (Optional) Configuration block for a list of message groups that Amazon Lex uses to respond to the user input. See [`response`](#response).
 
-###### `condition`
+#### `condition`
 
 * `expression_string` - (Required) Expression string that is evaluated.
 
-###### `response`
+#### `response`
 
 * `message_group` - (Required) Configuration blocks for responses that Amazon Lex can send to the user. Amazon Lex chooses the actual response to send at runtime. See [`message_group`](#message_group).
 * `allow_interrupt` - (Optional) Whether the user can interrupt a speech response from Amazon Lex.
 
-###### `default_branch`
+#### `default_branch`
 
 * `next_step` - (Required) Configuration block for the next step in the conversation. See [`next_step`](#next_step).
 * `response` - (Optional) Configuration block for a list of message groups that Amazon Lex uses to respond to the user input. See [`response`](#response).
@@ -261,24 +289,24 @@ The following arguments are optional:
 * `intent` - (Optional) Configuration block for override settings to configure the intent state. See [`intent`](#intent).
 * `session_attributes` - (Optional) Map of key/value pairs representing session-specific context information. It contains application information passed between Amazon Lex and a client application.
 
-##### `dialog_action`
+#### `dialog_action`
 
 * `type` - (Required) Action that the bot should execute. Valid values are `ElicitIntent`, `StartIntent`, `ElicitSlot`, `EvaluateConditional`, `InvokeDialogCodeHook`, `ConfirmIntent`, `FulfillIntent`, `CloseIntent`, `EndConversation`.
 * `slot_to_elicit` - (Optional) If the dialog action is `ElicitSlot`, defines the slot to elicit from the user.
 * `suppress_next_message` - (Optional) Whether the next message for the intent is _not_ used.
 
-##### `intent`
+#### `intent`
 
 * `name` - (Optional, Required when switching intents) Name of the intent.
 * `slot` - (Optional) Configuration block for all of the slot value overrides for the intent. The name of the slot maps to the value of the slot. Slots that are not included in the map aren't overridden. See [`slot`](#slot).
 
-###### `slot`
+#### `slot`
 
 * `shape` - (Optional) When the shape value is `List`, `values` contains a list of slot values. When the value is `Scalar`, `value` contains a single value.
 * `value` - (Optional) Configuration block for the current value of the slot. See [`value`](#slot-value).
 * `values` - _Not currently supported._
 
-###### Slot `value`
+#### Slot `value`
 
 * `interpreted_value` - (Optional) Value that Amazon Lex determines for the slot. The actual value depends on the setting of the value selection strategy for the bot. You can choose to use the value entered by the user, or you can have Amazon Lex choose the first value in the resolvedValues list.
 
@@ -306,7 +334,7 @@ The following arguments are optional:
 * `message_selection_strategy` - (Optional) How a message is selected from a message group among retries. Valid values are `Random` and `Ordered`.
 * `prompt_attempts_specification` - (Optional) Configuration block for advanced settings on each attempt of the prompt. See [`prompt_attempts_specification`](#prompt_attempts_specification).
 
-##### `prompt_attempts_specification`
+#### `prompt_attempts_specification`
 
 * `allowed_input_types` - (Required) Configuration block for the allowed input types of the prompt attempt. See [`allowed_input_types`](#allowed_input_types).
 * `map_block_key` - (Required) Which attempt to configure. Valid values are `Initial`, `Retry1`, `Retry2`, `Retry3`, `Retry4`, `Retry5`.
@@ -314,30 +342,30 @@ The following arguments are optional:
 * `audio_and_dtmf_input_specification` - (Optional) Configuration block for settings on audio and DTMF input. See [`audio_and_dtmf_input_specification`](#audio_and_dtmf_input_specification).
 * `text_input_specification` - (Optional) Configuration block for the settings on text input. See [`text_input_specification`](#text_input_specification).
 
-###### `allowed_input_types`
+#### `allowed_input_types`
 
 * `allow_audio_input` - (Required) Whether audio input is allowed.
 * `allow_dtmf_input` - (Required) Whether DTMF input is allowed.
 
-###### `audio_and_dtmf_input_specification`
+#### `audio_and_dtmf_input_specification`
 
 * `start_timeout_ms` - (Required) Time for which a bot waits before assuming that the customer isn't going to speak or press a key. This timeout is shared between Audio and DTMF inputs.
 * `audio_specification` - (Optional) Configuration block for the settings on audio input. See [`audio_specification`](#audio_specification).
 * `dtmf_specification` - (Optional) Configuration block for the settings on DTMF input. See [`dtmf_specification`](#dtmf_specification).
 
-###### `audio_specification`
+#### `audio_specification`
 
 * `end_timeout_ms` - (Required) Time for which a bot waits after the customer stops speaking to assume the utterance is finished.
 * `max_length_ms` - (Required) Time for how long Amazon Lex waits before speech input is truncated and the speech is returned to application.
 
-###### `dtmf_specification`
+#### `dtmf_specification`
 
 * `deletion_character` - (Required) DTMF character that clears the accumulated DTMF digits and immediately ends the input.
 * `end_character` - (Required) DTMF character that immediately ends input. If the user does not press this character, the input ends after the end timeout.
 * `end_timeout_ms` - (Required) How long the bot should wait after the last DTMF character input before assuming that the input has concluded.
 * `max_length` - (Required) Maximum number of DTMF digits allowed in an utterance.
 
-###### `text_input_specification`
+#### `text_input_specification`
 
 * `start_timeout_ms` - (Required) Time for which a bot waits before re-prompting a customer for text input.
 
@@ -360,53 +388,53 @@ The following arguments are optional:
 * `timeout_next_step` - (Optional) Configuration block for the next step that the bot runs when the code hook times out. See [`timeout_next_step`](#timeout_next_step).
 * `timeout_response` - (Optional) Configuration block for a list of message groups that Amazon Lex uses to respond the user input. See [`timeout_response`](#timeout_response).
 
-##### `failure_conditional`
+#### `failure_conditional`
 
 * `active` - (Required) Whether a conditional branch is active. When active is false, the conditions are not evaluated.
 * `conditional_branch` - (Required) Configuration blocks for conditional branches. A conditional branch is made up of a condition, a response and a next step. The response and next step are executed when the condition is true. See [`conditional_branch`](#conditional_branch).
 * `default_branch` - (Required) Configuration block for the conditional branch that should be followed when the conditions for other branches are not satisfied. A branch is made up of a condition, a response and a next step. See [`default_branch`](#default_branch).
 
-##### `failure_next_step`
+#### `failure_next_step`
 
 * `dialog_action` - (Optional) Configuration block for action that the bot executes at runtime when the conversation reaches this step. See [`dialog_action`](#dialog_action).
 * `intent` - (Optional) Configuration block for override settings to configure the intent state. See [`intent`](#intent).
 * `session_attributes` - (Optional) Map of key/value pairs representing session-specific context information. It contains application information passed between Amazon Lex and a client application.
 
-##### `failure_response`
+#### `failure_response`
 
 * `message_group` - (Required) Configuration blocks for responses that Amazon Lex can send to the user. Amazon Lex chooses the actual response to send at runtime. See [`message_group`](#message_group).
 * `allow_interrupt` - (Optional) Whether the user can interrupt a speech response from Amazon Lex.
 
-##### `success_conditional`
+#### `success_conditional`
 
 * `active` - (Required) Whether a conditional branch is active. When active is false, the conditions are not evaluated.
 * `conditional_branch` - (Required) Configuration blocks for conditional branches. A conditional branch is made up of a condition, a response and a next step. The response and next step are executed when the condition is true. See [`conditional_branch`](#conditional_branch).
 * `default_branch` - (Required) Configuration block for the conditional branch that should be followed when the conditions for other branches are not satisfied. A branch is made up of a condition, a response and a next step. See [`default_branch`](#default_branch).
 
-##### `success_next_step`
+#### `success_next_step`
 
 * `dialog_action` - (Optional) Configuration block for action that the bot executes at runtime when the conversation reaches this step. See [`dialog_action`](#dialog_action).
 * `intent` - (Optional) Configuration block for override settings to configure the intent state. See [`intent`](#intent).
 * `session_attributes` - (Optional) Map of key/value pairs representing session-specific context information. It contains application information passed between Amazon Lex and a client application.
 
-##### `success_response`
+#### `success_response`
 
 * `message_group` - (Required) Configuration blocks for responses that Amazon Lex can send to the user. Amazon Lex chooses the actual response to send at runtime. See [`message_group`](#message_group).
 * `allow_interrupt` - (Optional) Whether the user can interrupt a speech response from Amazon Lex.
 
-##### `timeout_conditional`
+#### `timeout_conditional`
 
 * `active` - (Required) Whether a conditional branch is active. When active is false, the conditions are not evaluated.
 * `conditional_branch` - (Required) Configuration blocks for conditional branches. A conditional branch is made up of a condition, a response and a next step. The response and next step are executed when the condition is true. See [`conditional_branch`](#conditional_branch).
 * `default_branch` - (Required) Configuration block for the conditional branch that should be followed when the conditions for other branches are not satisfied. A branch is made up of a condition, a response and a next step. See [`default_branch`](#default_branch).
 
-##### `timeout_next_step`
+#### `timeout_next_step`
 
 * `dialog_action` - (Optional) Configuration block for action that the bot executes at runtime when the conversation reaches this step. See [`dialog_action`](#dialog_action).
 * `intent` - (Optional) Configuration block for override settings to configure the intent state. See [`intent`](#intent).
 * `session_attributes` - (Optional) Map of key/value pairs representing session-specific context information. It contains application information passed between Amazon Lex and a client application.
 
-##### `timeout_response`
+#### `timeout_response`
 
 * `message_group` - (Required) Configuration blocks for responses that Amazon Lex can send to the user. Amazon Lex chooses the actual response to send at runtime. See [`message_group`](#message_group).
 * `allow_interrupt` - (Optional) Whether the user can interrupt a speech response from Amazon Lex.
@@ -468,13 +496,13 @@ The following arguments are optional:
 * `timeout_in_seconds` - (Required, if `active`) Length of time that the fulfillment Lambda function should run before it times out.
 * `update_response` - (Required, if `active`) Configuration block for messages sent periodically to the user while the fulfillment Lambda function is running.
 
-##### `start_response`
+#### `start_response`
 
 * `delay_in_seconds` - (Required) Delay between when the Lambda fulfillment function starts running and the start message is played. If the Lambda function returns before the delay is over, the start message isn't played.
 * `message_group` - (Required) Between 1-5 configuration block message groups that contain start messages. Amazon Lex chooses one of the messages to play to the user. See [`message_group`](#message_group).
 * `allow_interrupt` - (Optional) Whether the user can interrupt the start message while it is playing.
 
-##### `update_response`
+#### `update_response`
 
 * `frequency_in_seconds` - (Required) Frequency that a message is sent to the user. When the period ends, Amazon Lex chooses a message from the message groups and plays it to the user. If the fulfillment Lambda returns before the first period ends, an update message is not played to the user.
 * `message_group` - (Required) Between 1-5 configuration block message groups that contain start messages. Amazon Lex chooses one of the messages to play to the user. See [`message_group`](#message_group).
@@ -513,6 +541,59 @@ The following arguments are optional:
 * `kendra_index` - (Required) ARN of the Amazon Kendra index that you want the AMAZON.KendraSearchIntent intent to search. The index must be in the same account and Region as the Amazon Lex bot.
 * `query_filter_string` - (Optional) Query filter that Amazon Lex sends to Amazon Kendra to filter the response from a query. The filter is in the format defined by Amazon Kendra. For more information, see [Filtering queries](https://docs.aws.amazon.com/kendra/latest/dg/filtering.html).
 * `query_filter_string_enabled` - (Optional) Whether the AMAZON.KendraSearchIntent intent uses a custom query string to query the Amazon Kendra index.
+
+### `qna_intent_configuration`
+
+* `bedrock_model_configuration` - (Optional) Configuration block for the Amazon Bedrock model to use for generating responses. See [`bedrock_model_configuration`](#bedrock_model_configuration).
+* `data_source_configuration` - (Optional) Configuration block for the data sources to use for the QnA intent. Only one data source (Bedrock Knowledge Base, Kendra, or OpenSearch) can be specified. See [`data_source_configuration`](#data_source_configuration).
+
+#### `bedrock_model_configuration`
+
+* `custom_prompt` - (Optional) Custom prompt to use for the Bedrock model.
+* `guardrail` - (Optional) Configuration block for the guardrail to use with the Bedrock model. See [`guardrail`](#guardrail).
+* `model_arn` - (Required) ARN of the Bedrock model to use.
+* `trace_status` - (Optional) Whether to enable tracing for the Bedrock model. Valid values are `ENABLED` and `DISABLED`.
+
+#### `guardrail`
+
+* `identifier` - (Required) Identifier of the guardrail.
+* `version` - (Required) Version of the guardrail.
+
+#### `data_source_configuration`
+
+* `bedrock_knowledge_store_configuration` - (Optional) Configuration block for Amazon Bedrock Knowledge Base as a data source. See [`bedrock_knowledge_store_configuration`](#bedrock_knowledge_store_configuration).
+* `kendra_configuration` - (Optional) Configuration block for Amazon Kendra as a data source. See [`kendra_configuration`](#kendra_configuration).
+* `opensearch_configuration` - (Optional) Configuration block for OpenSearch as a data source. See [`opensearch_configuration`](#opensearch_configuration).
+
+#### `bedrock_knowledge_store_configuration`
+
+* `bedrock_knowledge_base_arn` - (Required) ARN of the Bedrock Knowledge Base.
+* `exact_response` - (Optional) Whether to return exact responses from the knowledge base. Defaults to `false`.
+* `exact_response_fields` - (Optional) Configuration block for exact response fields. See [`exact_response_fields`](#exact_response_fields-bedrock).
+
+#### `exact_response_fields` (Bedrock)
+
+* `answer_field` - (Optional) Field name for the answer.
+
+#### `kendra_configuration`
+
+* `exact_response` - (Optional) Whether to return exact responses from Kendra. Defaults to `false`.
+* `kendra_index` - (Required) ARN of the Kendra index.
+* `query_filter_string` - (Optional) Query filter string for Kendra.
+* `query_filter_string_enabled` - (Optional) Whether the query filter string is enabled.
+
+#### `opensearch_configuration`
+
+* `domain_endpoint` - (Required) Endpoint of the OpenSearch domain.
+* `exact_response` - (Optional) Whether to return exact responses from OpenSearch. Defaults to `false`.
+* `exact_response_fields` - (Optional) Configuration block for exact response fields. See [`exact_response_fields`](#exact_response_fields).
+* `include_fields` - (Optional) List of fields to include in the response.
+* `index_name` - (Required) Name of the OpenSearch index.
+
+#### `exact_response_fields`
+
+* `answer_field` - (Required) Field name for the answer.
+* `question_field` - (Required) Field name for the question.
 
 ### `output_context`
 

@@ -135,6 +135,7 @@ See the [`value_elicitation_setting` argument reference](#value_elicitation_sett
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the slot.
 * `multiple_values_setting` - (Optional) Whether the slot returns multiple values in one response.
 See the [`multiple_values_setting` argument reference](#multiple_values_setting-argument-reference) below.
@@ -184,7 +185,7 @@ See the [`wait_and_continue_specification` argument reference](#wait_and_continu
 Amazon Lex chooses the default value to use in the order that they are presented in the list.
 See the [`default_value_list` argument reference](#default_value_list-argument-reference) below.
 
-##### `default_value_list` Argument Reference
+#### `default_value_list` Argument Reference
 
 * `default_value` - (Required) Default value to use when a user doesn't provide a value for a slot.
 
@@ -211,21 +212,21 @@ If the active field isn't specified, the default is `true`.
 * `still_waiting_response` - (Optional) Response that Amazon Lex sends periodically to the user to indicate that the bot is still waiting for input from the user.
 See the [`still_waiting_response` argument reference](#still_waiting_response-argument-reference) below.
 
-##### `continue_response` Argument Reference
+#### `continue_response` Argument Reference
 
 * `message_group` - (Required) Configuration blocks for responses that Amazon Lex can send to the user.
 Amazon Lex chooses the actual response to send at runtime.
 See [`message_group`](#message_group).
 * `allow_interrupt` - (Optional) Whether the user can interrupt a speech response from Amazon Lex.
 
-##### `waiting_response` Argument Reference
+#### `waiting_response` Argument Reference
 
 * `message_group` - (Required) Configuration blocks for responses that Amazon Lex can send to the user.
 Amazon Lex chooses the actual response to send at runtime.
 See [`message_group`](#message_group).
 * `allow_interrupt` - (Optional) Whether the user can interrupt a speech response from Amazon Lex.
 
-##### `still_waiting_response` Argument Reference
+#### `still_waiting_response` Argument Reference
 
 * `frequency_in_seconds` - (Required) How often a message should be sent to the user.
 * `message_groups` - (Required) One or more message groups, each containing one or more messages, that define the prompts that Amazon Lex sends to the user.
@@ -233,7 +234,7 @@ See [`message_group`](#message_group).
 * `timeout_in_seconds` - (Required) If Amazon Lex waits longer than this length of time for a response, it will stop sending messages.
 * `allow_interrupt` - (Optional) Whether the user can interrupt a speech response from Amazon Lex.
 
-###### `message_group`
+#### `message_group`
 
 * `message` - (Required) Configuration block for the primary message that Amazon Lex should send to the user.
 See the [`aws_lexv2models_intent` resource](/docs/providers/aws/r/lexv2models_intent.html) for details on the `message` argument reference - they are identical.

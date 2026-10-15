@@ -1,0 +1,39 @@
+[
+  {
+    "@level": "info",
+    "@message": "Expanding",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]",
+    "autoflex.target.type": "*[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "TRACE: nestedObjectCollection entry",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue",
+    "xmlWrapper": false,
+    "xmlWrapperField": ""
+  },
+  {
+    "@level": "trace",
+    "@message": "Expanding nested object collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.size": 0,
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue"
+  }
+]

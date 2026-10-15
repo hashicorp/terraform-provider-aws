@@ -29,12 +29,13 @@ resource "aws_ec2_transit_gateway_connect" "attachment" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `protocol` - (Optional) The tunnel protocol. Valid values: `gre`. Default is `gre`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Connect. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_gateway_default_route_table_association` - (Optional) Boolean whether the Connect should be associated with the EC2 Transit Gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
 * `transit_gateway_default_route_table_propagation` - (Optional) Boolean whether the Connect should propagate routes with the EC2 Transit Gateway propagation default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
-* `transport_attachment_id` - (Required) The underlaying VPC attachment
+* `transport_attachment_id` - (Required) The underlying VPC attachment
 
 ## Attribute Reference
 

@@ -23,6 +23,7 @@ resource "aws_config_retention_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `retention_period_in_days` - (Required) The number of days AWS Config stores historical information.
 
 ## Attribute Reference
@@ -33,7 +34,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the AWS Config retention configuration using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_config_retention_configuration.example
+  identity = {
+    name = "default"
+  }
+}
+
+resource "aws_config_retention_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Retention Configurations using the `name`. For example:
 
 ```terraform
 import {
@@ -42,7 +69,7 @@ import {
 }
 ```
 
-Using `terraform import`, import the AWS Config retention configuration using the `name`. For example:
+Using `terraform import`, import Config Retention Configurations using the `name`. For example:
 
 ```console
 % terraform import aws_config_retention_configuration.example default

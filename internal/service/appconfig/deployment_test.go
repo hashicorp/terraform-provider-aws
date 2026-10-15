@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appconfig_test
@@ -9,20 +9,17 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appconfig"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppConfigDeployment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment.test"
 	appResourceName := "aws_appconfig_application.test"
 	confProfResourceName := "aws_appconfig_configuration_profile.test"
@@ -30,7 +27,7 @@ func TestAccAppConfigDeployment_basic(t *testing.T) {
 	envResourceName := "aws_appconfig_environment.test"
 	confVersionResourceName := "aws_appconfig_hosted_configuration_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -39,7 +36,7 @@ func TestAccAppConfigDeployment_basic(t *testing.T) {
 			{
 				Config: testAccDeploymentConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/environment/[0-9a-z]{4,7}/deployment/1`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, appResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", confProfResourceName, "configuration_profile_id"),
@@ -63,7 +60,7 @@ func TestAccAppConfigDeployment_basic(t *testing.T) {
 
 func TestAccAppConfigDeployment_kms(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment.test"
 	appResourceName := "aws_appconfig_application.test"
 	confProfResourceName := "aws_appconfig_configuration_profile.test"
@@ -71,7 +68,7 @@ func TestAccAppConfigDeployment_kms(t *testing.T) {
 	envResourceName := "aws_appconfig_environment.test"
 	confVersionResourceName := "aws_appconfig_hosted_configuration_version.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -80,7 +77,7 @@ func TestAccAppConfigDeployment_kms(t *testing.T) {
 			{
 				Config: testAccDeploymentConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/environment/[0-9a-z]{4,7}/deployment/1`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, appResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", confProfResourceName, "configuration_profile_id"),
@@ -100,11 +97,11 @@ func TestAccAppConfigDeployment_kms(t *testing.T) {
 
 func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment.test"
 	strategy := "AppConfig.Linear50PercentEvery30Seconds"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -113,7 +110,7 @@ func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 			{
 				Config: testAccDeploymentConfig_predefinedStrategy(rName, strategy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_id", strategy),
 				),
 			},
@@ -133,12 +130,12 @@ func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 
 func TestAccAppConfigDeployment_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resource1Name := "aws_appconfig_deployment.test.0"
 	resource2Name := "aws_appconfig_deployment.test.1"
 	resource3Name := "aws_appconfig_deployment.test.2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -147,51 +144,27 @@ func TestAccAppConfigDeployment_multiple(t *testing.T) {
 			{
 				Config: testAccDeploymentConfig_multiple(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resource1Name),
-					testAccCheckDeploymentExists(ctx, resource2Name),
-					testAccCheckDeploymentExists(ctx, resource3Name),
+					testAccCheckDeploymentExists(ctx, t, resource1Name),
+					testAccCheckDeploymentExists(ctx, t, resource2Name),
+					testAccCheckDeploymentExists(ctx, t, resource3Name),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckDeploymentExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckDeploymentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
-		}
+		conn := acctest.ProviderMeta(ctx, t).AppConfigClient(ctx)
 
-		appID, envID, deploymentNum, err := tfappconfig.DeploymentParseID(rs.Primary.ID)
+		_, err := tfappconfig.FindDeploymentByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["environment_id"], flex.StringValueToInt32Value(rs.Primary.Attributes["deployment_number"]))
 
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
-
-		input := &appconfig.GetDeploymentInput{
-			ApplicationId:    aws.String(appID),
-			DeploymentNumber: aws.Int32(deploymentNum),
-			EnvironmentId:    aws.String(envID),
-		}
-
-		output, err := conn.GetDeployment(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error getting Appconfig Deployment (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("AppConfig Deployment (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -238,6 +211,7 @@ func testAccDeploymentConfig_baseKMS(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_appconfig_application" "test" {

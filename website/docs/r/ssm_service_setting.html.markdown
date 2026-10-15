@@ -14,7 +14,7 @@ This setting defines how a user interacts with or uses a service or a feature of
 
 ```terraform
 resource "aws_ssm_service_setting" "test_setting" {
-  setting_id    = "arn:aws:ssm:us-east-1:123456789012:servicesetting/ssm/parameter-store/high-throughput-enabled"
+  setting_id    = "/ssm/parameter-store/high-throughput-enabled"
   setting_value = "true"
 }
 ```
@@ -23,7 +23,8 @@ resource "aws_ssm_service_setting" "test_setting" {
 
 This resource supports the following arguments:
 
-* `setting_id` - (Required) ID of the service setting.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `setting_id` - (Required) ID of the service setting. Valid values are shown in the [AWS documentation](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_GetServiceSetting.html#API_GetServiceSetting_RequestSyntax).
 * `setting_value` - (Required) Value of the service setting.
 
 ## Attribute Reference
@@ -34,6 +35,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Status of the service setting. Value can be `Default`, `Customized` or `PendingUpdate`.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_service_setting.example
+  identity = {
+    arn = "arn:aws:ssm:us-east-1:123456789012:servicesetting/ssm/parameter-store/high-throughput-enabled"
+  }
+}
+
+resource "aws_ssm_service_setting" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `arn` (String) ARN of the service setting.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS SSM Service Setting using the `setting_id`. For example:
 

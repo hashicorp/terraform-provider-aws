@@ -1,9 +1,7 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "null" {}
-
-data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
   name = var.rName
@@ -25,6 +23,8 @@ resource "aws_iam_role" "test" {
     (var.knownTagKey)   = var.knownTagValue
   }
 }
+
+data "aws_partition" "current" {}
 
 resource "null_resource" "test" {}
 

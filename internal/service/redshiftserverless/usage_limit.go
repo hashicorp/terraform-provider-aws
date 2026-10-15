@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshiftserverless
 
@@ -11,12 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,39 +36,41 @@ func resourceUsageLimit() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"amount": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"breach_action": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.UsageLimitBreachActionLog,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitBreachAction](),
-			},
-			"period": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.UsageLimitPeriodMonthly,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitPeriod](),
-			},
-			names.AttrResourceARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"usage_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.UsageLimitUsageType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"amount": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"breach_action": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.UsageLimitBreachActionLog,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitBreachAction](),
+				},
+				"period": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.UsageLimitPeriodMonthly,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitPeriod](),
+				},
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"usage_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UsageLimitUsageType](),
+				},
+			}
 		},
 	}
 }
@@ -105,7 +109,7 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	out, err := findUsageLimitByName(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless UsageLimit (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -178,8 +182,7 @@ func findUsageLimitByName(ctx context.Context, conn *redshiftserverless.Client, 
 
 	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "does not exist") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -188,7 +191,7 @@ func findUsageLimitByName(ctx context.Context, conn *redshiftserverless.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UsageLimit, nil

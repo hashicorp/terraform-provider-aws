@@ -119,6 +119,7 @@ resource "aws_lex_intent" "order_flowers_intent" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `conclusion_statement` - (Optional) The statement that you want Amazon Lex to convey to the user
 after the intent is successfully fulfilled by the Lambda function. This element is relevant only if
 you provide a Lambda function in the `fulfillment_activity`. If you return the intent to the client
@@ -161,7 +162,7 @@ Specifies a Lambda function that verifies requests to a bot or fulfills the user
 * `message_version` - (Required) The version of the request-response that you want Amazon Lex to use
 to invoke your Lambda function. For more information, see
 [Using Lambda Functions](https://docs.aws.amazon.com/lex/latest/dg/using-lambda.html). Must be less than or equal to 5 characters in length.
-* `uri` - (Required) The Amazon Resource Name (ARN) of the Lambda function.
+* `uri` - (Required) ARN of the Lambda function.
 
 ### follow_up_prompt
 

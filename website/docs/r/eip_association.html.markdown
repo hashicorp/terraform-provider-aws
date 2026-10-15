@@ -41,6 +41,7 @@ resource "aws_eip" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocation_id` - (Optional, Forces new resource) ID of the associated Elastic IP.
   This argument is required despite being optional at the resource level due to legacy support for EC2-Classic networking.
 * `allow_reassociation` - (Optional, Forces new resource) Whether to allow an Elastic IP address to be re-associated.
@@ -63,7 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EIP Assocations using their association IDs. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EIP Associations using their association IDs. For example:
 
 ```terraform
 import {
@@ -72,7 +73,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EIP Assocations using their association IDs. For example:
+Using `terraform import`, import EIP Associations using their association IDs. For example:
 
 ```console
 % terraform import aws_eip_association.test eipassoc-ab12c345

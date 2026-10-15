@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssoadmin
 
@@ -14,19 +16,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssoadmin_permissions_boundary_attachment", name="Permissions Boundary Attachment")
-func ResourcePermissionsBoundaryAttachment() *schema.Resource {
+func resourcePermissionsBoundaryAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionsBoundaryAttachmentCreate,
 		ReadWithoutTimeout:   resourcePermissionsBoundaryAttachmentRead,
@@ -41,59 +43,61 @@ func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"permission_set_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"permissions_boundary": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"customer_managed_policy_reference": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 128),
-									},
-									names.AttrPath: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "/",
-										ForceNew:     true,
-										ValidateFunc: validation.StringLenBetween(0, 512),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"instance_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"permission_set_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"permissions_boundary": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"customer_managed_policy_reference": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 128),
+										},
+										names.AttrPath: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "/",
+											ForceNew:     true,
+											ValidateFunc: validation.StringLenBetween(0, 512),
+										},
 									},
 								},
 							},
-						},
-						"managed_policy_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "",
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(0, 2048),
+							"managed_policy_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "",
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(0, 2048),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -137,9 +141,9 @@ func resourcePermissionsBoundaryAttachmentRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindPermissionsBoundary(ctx, conn, permissionSetARN, instanceARN)
+	policy, err := findPermissionsBoundaryByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSO Permissions Boundary Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -209,7 +213,7 @@ func PermissionsBoundaryAttachmentParseResourceID(id string) (string, string, er
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected PERMISSION_SET_ARN%[2]sINSTANCE_ARN", id, permissionsBoundaryAttachmentIDSeparator)
 }
 
-func FindPermissionsBoundary(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (*awstypes.PermissionsBoundary, error) {
+func findPermissionsBoundaryByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (*awstypes.PermissionsBoundary, error) {
 	input := &ssoadmin.GetPermissionsBoundaryForPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
@@ -219,8 +223,7 @@ func FindPermissionsBoundary(ctx context.Context, conn *ssoadmin.Client, permiss
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -229,7 +232,7 @@ func FindPermissionsBoundary(ctx context.Context, conn *ssoadmin.Client, permiss
 	}
 
 	if output == nil || output.PermissionsBoundary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PermissionsBoundary, nil

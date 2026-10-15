@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecrpublic
 
@@ -14,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,25 +25,27 @@ func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
 
-		Schema: map[string]*schema.Schema{
-			"authorization_token": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"expires_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPassword: {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"authorization_token": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"expires_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPassword: {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -60,7 +64,7 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	authorizationData := out.AuthorizationData
 	authorizationToken := aws.ToString(authorizationData.AuthorizationToken)
 	expiresAt := aws.ToTime(authorizationData.ExpiresAt).Format(time.RFC3339)
-	authBytes, err := itypes.Base64Decode(authorizationToken)
+	authBytes, err := inttypes.Base64Decode(authorizationToken)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "decoding ECR Public authorization token: %s", err)

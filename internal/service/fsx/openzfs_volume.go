@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -13,14 +15,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -50,65 +53,67 @@ func resourceOpenZFSVolume() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"copy_tags_to_snapshots": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"data_compression_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.OpenZFSDataCompressionTypeNone,
-				ValidateDiagFunc: enum.Validate[awstypes.OpenZFSDataCompressionType](),
-			},
-			"delete_volume_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.DeleteFileSystemOpenZFSOption](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 203),
-			},
-			"nfs_exports": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"client_configurations": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MaxItems: 25,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"clients": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 128),
-											validation.StringMatch(regexache.MustCompile(`^[ -~]{1,128}$`), "must be either IP Address or CIDR"),
-										),
-									},
-									"options": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 20,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 128),
+				"copy_tags_to_snapshots": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				"data_compression_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.OpenZFSDataCompressionTypeNone,
+					ValidateDiagFunc: enum.Validate[awstypes.OpenZFSDataCompressionType](),
+				},
+				"delete_volume_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.DeleteFileSystemOpenZFSOption](),
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 203),
+				},
+				"nfs_exports": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"client_configurations": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MaxItems: 25,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"clients": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 128),
+												validation.StringMatch(regexache.MustCompile(`^[ -~]{1,128}$`), "must be either IP Address or CIDR"),
+											),
+										},
+										"options": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 20,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
 										},
 									},
 								},
@@ -116,94 +121,93 @@ func resourceOpenZFSVolume() *schema.Resource {
 						},
 					},
 				},
-			},
-			"origin_snapshot": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"copy_strategy": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OpenZFSCopyStrategy](),
-						},
-						"snapshot_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(8, 512),
-								validation.StringMatch(regexache.MustCompile(`^arn:.*`), "must specify the full ARN of the snapshot"),
-							),
-						},
-					},
-				},
-			},
-			"parent_volume_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(23, 23),
-					validation.StringMatch(regexache.MustCompile(`^(fsvol-[0-9a-f]{17,})$`), "must specify a filesystem id i.e. fs-12345678"),
-				),
-			},
-			"read_only": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"record_size_kib": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      128,
-				ValidateFunc: validation.IntInSlice([]int{4, 8, 16, 32, 64, 128, 256, 512, 1024}),
-			},
-			"storage_capacity_quota_gib": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(0, 2147483647),
-			},
-			"storage_capacity_reservation_gib": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(0, 2147483647),
-			},
-			"user_and_group_quotas": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				MaxItems: 100,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(0, 2147483647),
-						},
-						"storage_capacity_quota_gib": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(0, 2147483647),
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.OpenZFSQuotaType](),
+				"origin_snapshot": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"copy_strategy": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OpenZFSCopyStrategy](),
+							},
+							"snapshot_arn": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(8, 512),
+									validation.StringMatch(regexache.MustCompile(`^arn:.*`), "must specify the full ARN of the snapshot"),
+								),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVolumeType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.VolumeTypeOpenzfs,
-				ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
-			},
+				"parent_volume_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(23, 23),
+						validation.StringMatch(regexache.MustCompile(`^(fsvol-[0-9a-f]{17,})$`), "must specify a filesystem id i.e. fs-12345678"),
+					),
+				},
+				"read_only": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"record_size_kib": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      128,
+					ValidateFunc: validation.IntInSlice([]int{4, 8, 16, 32, 64, 128, 256, 512, 1024}),
+				},
+				"storage_capacity_quota_gib": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(0, 2147483647),
+				},
+				"storage_capacity_reservation_gib": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(0, 2147483647),
+				},
+				"user_and_group_quotas": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(0, 2147483647),
+							},
+							"storage_capacity_quota_gib": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(0, 2147483647),
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.OpenZFSQuotaType](),
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVolumeType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.VolumeTypeOpenzfs,
+					ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
+				},
+			}
 		},
 	}
 }
@@ -254,7 +258,7 @@ func resourceOpenZFSVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 
 	name := d.Get(names.AttrName).(string)
 	input := &fsx.CreateVolumeInput{
-		ClientRequestToken:   aws.String(id.UniqueId()),
+		ClientRequestToken:   aws.String(create.UniqueId(ctx)),
 		Name:                 aws.String(name),
 		OpenZFSConfiguration: openzfsConfig,
 		Tags:                 getTagsIn(ctx),
@@ -282,7 +286,7 @@ func resourceOpenZFSVolumeRead(ctx context.Context, d *schema.ResourceData, meta
 
 	volume, err := findOpenZFSVolumeByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx for OpenZFS Volume (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -356,7 +360,7 @@ func resourceOpenZFSVolumeUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		input := &fsx.UpdateVolumeInput{
-			ClientRequestToken:   aws.String(id.UniqueId()),
+			ClientRequestToken:   aws.String(create.UniqueId(ctx)),
 			OpenZFSConfiguration: openzfsConfig,
 			VolumeId:             aws.String(d.Id()),
 		}
@@ -603,7 +607,7 @@ func findOpenZFSVolumeByID(ctx context.Context, conn *fsx.Client, id string) (*a
 	}
 
 	if output.OpenZFSConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

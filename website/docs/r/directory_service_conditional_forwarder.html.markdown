@@ -28,6 +28,7 @@ resource "aws_directory_service_conditional_forwarder" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directory_id` - (Required) ID of directory.
 * `dns_ips` - (Required) A list of forwarder IP addresses.
 * `remote_domain_name` - (Required) The fully qualified domain name of the remote domain for which forwarders will be used.
@@ -38,7 +39,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import conditional forwarders using the directory id and remote_domain_name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import conditional forwarders using the directory ID and remote_domain_name. For example:
 
 ```terraform
 import {
@@ -47,7 +48,7 @@ import {
 }
 ```
 
-Using `terraform import`, import conditional forwarders using the directory id and remote_domain_name. For example:
+Using `terraform import`, import conditional forwarders using the directory ID and remote_domain_name. For example:
 
 ```console
 % terraform import aws_directory_service_conditional_forwarder.example d-1234567890:example.com

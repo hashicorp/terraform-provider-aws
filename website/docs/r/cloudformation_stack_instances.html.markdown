@@ -91,6 +91,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accounts` - (Optional) Accounts where you want to create stack instances in the specified `regions`. You can specify either `accounts` or `deployment_targets`, but not both.
 * `deployment_targets` - (Optional) AWS Organizations accounts for which to create stack instances in the `regions`. stack sets doesn't deploy stack instances to the organization management account, even if the organization management account is in your organization or in an OU in your organization. Drift detection is not possible for most of this argument. See [deployment_targets](#deployment_targets) below.
 * `parameter_overrides` - (Optional) Key-value map of input parameters to override from the stack set for these instances. This argument's drift detection is limited to the first account and region since each instance can have unique parameters.
@@ -124,7 +125,7 @@ The `operation_preferences` configuration block supports the following arguments
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `stack_instance_summaries` - List of stack instances created from an organizational unit deployment target. This may not always be set depending on whether CloudFormation returns summaries for your configuration. See [`stack_instance_summaries`](#stack_instance_summaries-attribute-reference).
+* `stack_instance_summaries` - List of stack instances created from an organizational unit deployment target. This may not always be set depending on whether CloudFormation returns summaries for your configuration. See [`stack_instance_summaries`](#stack_instance_summaries).
 * `stack_set_id` - Unique identifier of the stack set.
 
 ### `stack_instance_summaries`

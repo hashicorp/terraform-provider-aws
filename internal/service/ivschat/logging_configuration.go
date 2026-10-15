@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ivschat
 
@@ -18,13 +20,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ivschat_logging_configuration", name="Logging Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivschat;ivschat.GetLoggingConfigurationOutput")
+// @Testing(preIdentityVersion="v6.5.0")
 func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingConfigurationCreate,
@@ -32,110 +37,108 @@ func ResourceLoggingConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceLoggingConfigurationUpdate,
 		DeleteWithoutTimeout: resourceLoggingConfigurationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"destination_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				MinItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCloudWatchLogs: {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"destination_configuration.0.cloudwatch_logs",
-								"destination_configuration.0.firehose",
-								"destination_configuration.0.s3",
-							},
-							ConflictsWith: []string{
-								"destination_configuration.0.firehose",
-								"destination_configuration.0.s3",
-							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrLogGroupName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./#-]{1,512}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, underscore, forward slash, or hash sign, and between 1 and 512 characters"),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"destination_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					MinItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCloudWatchLogs: {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"destination_configuration.0.cloudwatch_logs",
+									"destination_configuration.0.firehose",
+									"destination_configuration.0.s3",
+								},
+								ConflictsWith: []string{
+									"destination_configuration.0.firehose",
+									"destination_configuration.0.s3",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrLogGroupName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./#-]{1,512}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, underscore, forward slash, or hash sign, and between 1 and 512 characters"),
+										},
 									},
 								},
 							},
-						},
-						"firehose": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"destination_configuration.0.cloudwatch_logs",
-								"destination_configuration.0.firehose",
-								"destination_configuration.0.s3",
-							},
-							ConflictsWith: []string{
-								"destination_configuration.0.cloudwatch_logs",
-								"destination_configuration.0.s3",
-							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"delivery_stream_name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,64}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, or underscore, and between 1 and 64 characters"),
+							"firehose": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"destination_configuration.0.cloudwatch_logs",
+									"destination_configuration.0.firehose",
+									"destination_configuration.0.s3",
+								},
+								ConflictsWith: []string{
+									"destination_configuration.0.cloudwatch_logs",
+									"destination_configuration.0.s3",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"delivery_stream_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,64}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, or underscore, and between 1 and 64 characters"),
+										},
 									},
 								},
 							},
-						},
-						"s3": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"destination_configuration.0.cloudwatch_logs",
-								"destination_configuration.0.firehose",
-								"destination_configuration.0.s3",
-							},
-							ConflictsWith: []string{
-								"destination_configuration.0.cloudwatch_logs",
-								"destination_configuration.0.firehose",
-							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucketName: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z.-]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
+							"s3": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"destination_configuration.0.cloudwatch_logs",
+									"destination_configuration.0.firehose",
+									"destination_configuration.0.s3",
+								},
+								ConflictsWith: []string{
+									"destination_configuration.0.cloudwatch_logs",
+									"destination_configuration.0.firehose",
+								},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucketName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z.-]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -183,7 +186,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 
 	out, err := findLoggingConfigurationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IVSChat LoggingConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

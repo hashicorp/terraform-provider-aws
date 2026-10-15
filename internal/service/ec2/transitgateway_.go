@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -21,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -58,92 +61,100 @@ func resourceTransitGateway() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"amazon_side_asn": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  64512,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"association_default_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_accept_shared_attachments": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.AutoAcceptSharedAttachmentsValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.AutoAcceptSharedAttachmentsValue](),
-			},
-			"default_route_table_association": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DefaultRouteTableAssociationValueEnable,
-				ValidateDiagFunc: enum.Validate[awstypes.DefaultRouteTableAssociationValue](),
-			},
-			"default_route_table_propagation": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DefaultRouteTablePropagationValueEnable,
-				ValidateDiagFunc: enum.Validate[awstypes.DefaultRouteTablePropagationValue](),
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"dns_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DnsSupportValueEnable,
-				ValidateDiagFunc: enum.Validate[awstypes.DnsSupportValue](),
-			},
-			"multicast_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.MulticastSupportValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.MulticastSupportValue](),
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"propagation_default_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"security_group_referencing_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.SecurityGroupReferencingSupportValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_cidr_blocks": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
-						validation.All(
-							validation.IsCIDRNetwork(0, 24),
-							validation.StringDoesNotMatch(regexache.MustCompile(`^169\.254\.`), "must not be from range 169.254.0.0/16"),
-						),
-						validation.IsCIDRNetwork(0, 64),
-					),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"amazon_side_asn": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  64512,
 				},
-			},
-			"vpn_ecmp_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.VpnEcmpSupportValueEnable,
-				ValidateDiagFunc: enum.Validate[awstypes.VpnEcmpSupportValue](),
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"association_default_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_accept_shared_attachments": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.AutoAcceptSharedAttachmentsValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.AutoAcceptSharedAttachmentsValue](),
+				},
+				"default_route_table_association": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DefaultRouteTableAssociationValueEnable,
+					ValidateDiagFunc: enum.Validate[awstypes.DefaultRouteTableAssociationValue](),
+				},
+				"default_route_table_propagation": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DefaultRouteTablePropagationValueEnable,
+					ValidateDiagFunc: enum.Validate[awstypes.DefaultRouteTablePropagationValue](),
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"dns_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DnsSupportValueEnable,
+					ValidateDiagFunc: enum.Validate[awstypes.DnsSupportValue](),
+				},
+				"encryption_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EncryptionSupportOptionValue](),
+				},
+				"multicast_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.MulticastSupportValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.MulticastSupportValue](),
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"propagation_default_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"security_group_referencing_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.SecurityGroupReferencingSupportValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"transit_gateway_cidr_blocks": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
+							validation.All(
+								validation.IsCIDRNetwork(0, 24),
+								validation.StringDoesNotMatch(regexache.MustCompile(`^169\.254\.`), "must not be from range 169.254.0.0/16"),
+							),
+							validation.IsCIDRNetwork(0, 64),
+						),
+					},
+				},
+				"vpn_ecmp_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.VpnEcmpSupportValueEnable,
+					ValidateDiagFunc: enum.Validate[awstypes.VpnEcmpSupportValue](),
+				},
+			}
 		},
 	}
 }
@@ -190,6 +201,18 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway (%s) create: %s", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("encryption_support"); ok && v.(string) == string(awstypes.EncryptionSupportOptionValueEnable) {
+		input := &ec2.ModifyTransitGatewayInput{
+			TransitGatewayId: output.TransitGateway.TransitGatewayId,
+			Options: &awstypes.ModifyTransitGatewayOptions{
+				EncryptionSupport: awstypes.EncryptionSupportOptionValue(v.(string)),
+			},
+		}
+		if _, err := conn.ModifyTransitGateway(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Transit Gateway (%s) encryption support: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceTransitGatewayRead(ctx, d, meta)...)
 }
 
@@ -199,7 +222,7 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 
 	transitGateway, err := findTransitGatewayByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -217,6 +240,18 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
 	d.Set(names.AttrDescription, transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
+
+	if transitGateway.Options.EncryptionSupport != nil {
+		var encryptionSupport string
+		encryptionState := transitGateway.Options.EncryptionSupport.EncryptionState
+		if encryptionState == awstypes.EncryptionStateValueEnabled || encryptionState == awstypes.EncryptionStateValueEnabling {
+			encryptionSupport = string(awstypes.EncryptionSupportOptionValueEnable)
+		} else {
+			encryptionSupport = string(awstypes.EncryptionSupportOptionValueDisable)
+		}
+		d.Set("encryption_support", encryptionSupport)
+	}
+
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set(names.AttrOwnerID, transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
@@ -263,6 +298,10 @@ func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.Options.DnsSupport = awstypes.DnsSupportValue(d.Get("dns_support").(string))
 		}
 
+		if d.HasChange("encryption_support") {
+			input.Options.EncryptionSupport = awstypes.EncryptionSupportOptionValue(d.Get("encryption_support").(string))
+		}
+
 		if d.HasChange("security_group_referencing_support") {
 			input.Options.SecurityGroupReferencingSupport = awstypes.SecurityGroupReferencingSupportValue(d.Get("security_group_referencing_support").(string))
 		}
@@ -304,7 +343,7 @@ func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteTransitGateway(ctx, &ec2.DeleteTransitGatewayInput{
 			TransitGatewayId: aws.String(d.Id()),
 		})

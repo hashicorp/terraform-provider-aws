@@ -30,11 +30,11 @@ resource "aws_comprehend_entity_recognizer" "example" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.documents.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_bucket.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.entities.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_bucket.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -63,10 +63,11 @@ The following arguments are required:
   One of `en`, `es`, `fr`, `it`, `de`, or `pt`.
 * `name` - (Required) Name for the Entity Recognizer.
   Has a maximum length of 63 characters.
-  Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+  Can contain upper- and lower-case letters, numbers, and hyphen (`-`).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `model_kms_key_id` - (Optional) The ID or ARN of a KMS Key used to encrypt trained Entity Recognizers.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version_name` - (Optional) Name for the version of the Entity Recognizer.
@@ -74,11 +75,11 @@ The following arguments are optional:
   If omitted, Terraform will assign a random, unique version name.
   If explicitly set to `""`, no version name will be set.
   Has a maximum length of 63 characters.
-  Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+  Can contain upper- and lower-case letters, numbers, and hyphen (`-`).
   Conflicts with `version_name_prefix`.
 * `version_name_prefix` - (Optional) Creates a unique version name beginning with the specified prefix.
   Has a maximum length of 37 characters.
-  Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+  Can contain upper- and lower-case letters, numbers, and hyphen (`-`).
   Conflicts with `version_name`.
 * `volume_kms_key_id` - (Optional) ID or ARN of a KMS Key used to encrypt storage volumes during job processing.
 * `vpc_config` - (Optional) Configuration parameters for VPC to contain Entity Recognizer resources.
@@ -157,6 +158,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Optional, Default: `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_comprehend_entity_recognizer.example
+  identity = {
+    "arn" = "arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example"
+  }
+}
+
+resource "aws_comprehend_entity_recognizer" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Comprehend entity recognizer.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Entity Recognizer using the ARN. For example:
 

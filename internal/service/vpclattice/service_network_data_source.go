@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -32,40 +34,42 @@ func dataSourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceNetworkRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auth_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"number_of_associated_services": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"number_of_associated_vpcs": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"service_network_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auth_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"number_of_associated_services": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"number_of_associated_vpcs": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"service_network_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -75,22 +79,22 @@ func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceNetworkID := d.Get("service_network_identifier").(string)
-	out, err := findServiceNetworkByID(ctx, conn, serviceNetworkID)
+	output, err := findServiceNetworkByID(ctx, conn, serviceNetworkID)
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return sdkdiag.AppendErrorf(diags, "reading VPCLattice Service Network (%s): %s", serviceNetworkID, err)
 	}
 
-	d.SetId(aws.ToString(out.Id))
-	serviceNetworkARN := aws.ToString(out.Arn)
+	d.SetId(aws.ToString(output.Id))
+	serviceNetworkARN := aws.ToString(output.Arn)
 	d.Set(names.AttrARN, serviceNetworkARN)
-	d.Set("auth_type", out.AuthType)
-	d.Set(names.AttrCreatedAt, aws.ToTime(out.CreatedAt).String())
-	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
-	d.Set(names.AttrName, out.Name)
-	d.Set("number_of_associated_services", out.NumberOfAssociatedServices)
-	d.Set("number_of_associated_vpcs", out.NumberOfAssociatedVPCs)
-	d.Set("service_network_identifier", out.Id)
+	d.Set("auth_type", output.AuthType)
+	d.Set(names.AttrCreatedAt, aws.ToTime(output.CreatedAt).String())
+	d.Set("last_updated_at", aws.ToTime(output.LastUpdatedAt).String())
+	d.Set(names.AttrName, output.Name)
+	d.Set("number_of_associated_services", output.NumberOfAssociatedServices)
+	d.Set("number_of_associated_vpcs", output.NumberOfAssociatedVPCs)
+	d.Set("service_network_identifier", output.Id)
 
 	return crossAccountSetTags(ctx, conn, diags, serviceNetworkARN, meta.(*conns.AWSClient).AccountID(ctx), "Service Network")
 }
@@ -115,7 +119,7 @@ func crossAccountSetTags(ctx context.Context, conn *vpclattice.Client, diags dia
 			return sdkdiag.AppendErrorf(diags, "listing tags for VPC Lattice %s (%s): %s", resName, resARN, err)
 		}
 
-		setTagsOut(ctx, Tags(tags))
+		setTagsOut(ctx, svcTags(tags))
 	}
 
 	return diags

@@ -10,7 +10,7 @@ description: |-
 
 ## Example Usage
 
-The following shows outputting all network interface ids in a region.
+The following shows outputting all network interface IDs in a region.
 
 ```terraform
 data "aws_network_interfaces" "example" {}
@@ -20,7 +20,7 @@ output "example" {
 }
 ```
 
-The following example retrieves a list of all network interface ids with a custom tag of `Name` set to a value of `test`.
+The following example retrieves a list of all network interface IDs with a custom tag of `Name` set to a value of `test`.
 
 ```terraform
 data "aws_network_interfaces" "example" {
@@ -34,7 +34,7 @@ output "example1" {
 }
 ```
 
-The following example retrieves a network interface ids which associated
+The following example retrieves a network interface IDs which associated
 with specific subnet.
 
 ```terraform
@@ -52,17 +52,19 @@ output "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired network interfaces.
-
 * `filter` - (Optional) Custom filter block as described below.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNetworkInterfaces.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
 
 ## Attribute Reference
@@ -70,7 +72,7 @@ which take the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `ids` - List of all the network interface ids found.
+* `ids` - List of all the network interface IDs found.
 
 ## Timeouts
 

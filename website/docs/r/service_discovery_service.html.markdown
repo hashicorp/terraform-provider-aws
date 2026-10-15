@@ -39,7 +39,7 @@ resource "aws_service_discovery_service" "example" {
     routing_policy = "MULTIVALUE"
   }
 
-  health_check_custom_config {
+  health_check_config {
     failure_threshold = 1
   }
 }
@@ -75,12 +75,13 @@ resource "aws_service_discovery_service" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The name of the service.
 * `description` - (Optional) The description of the service.
 * `dns_config` - (Optional) A complex type that contains information about the resource record sets that you want Amazon Route 53 to create when you register an instance. See [`dns_config` Block](#dns_config-block) for details.
-* `health_check_config` - (Optional) A complex type that contains settings for an optional health check. Only for Public DNS namespaces. See [`health_check_config` Block](#health_check_config-block) for details.
 * `force_destroy` - (Optional) A boolean that indicates all instances should be deleted from the service so that the service can be destroyed without error. These instances are not recoverable. Defaults to `false`.
-* `health_check_custom_config` - (Optional, Forces new resource) A complex type that contains settings for ECS managed health checks. See [`health_check_custom_config` Block](#health_check_custom_config-block) for details.
+* `health_check_config` - (Optional) A complex type that contains settings for an optional health check. Only for Public DNS namespaces. See [`health_check_config` Block](#health_check_config-block) for details.
+* `health_check_custom_config` - (Optional, **Deprecated**, Forces new resource) Please use `health_check_config` instead. See [`health_check_custom_config` Block](#health_check_custom_config-block) for details.
 * `namespace_id` - (Optional) The ID of the namespace that you want to use to create the service.
 * `type` - (Optional) If present, specifies that the service instances are only discoverable using the `DiscoverInstances` API operation. No DNS records is registered for the service instances. The only valid value is `HTTP`.
 * `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -110,9 +111,11 @@ The `health_check_config` configuration block supports the following arguments:
 
 ### `health_check_custom_config` Block
 
+~> The `health_check_custom_config` argument is deprecated. Use [`health_check_config`](#health_check_config-block) instead, which supports additional attributes.
+
 The `health_check_custom_config` configuration block supports the following arguments:
 
-* `failure_threshold` - (Optional, Forces new resource) The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
+* `failure_threshold` - (Optional, **Deprecated** Forces new resource) The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Value is always set to 1.
 
 ## Attribute Reference
 
@@ -120,7 +123,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the service.
 * `arn` - The ARN of the service.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

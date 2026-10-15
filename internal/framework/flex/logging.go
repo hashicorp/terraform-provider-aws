@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -15,16 +15,20 @@ const (
 )
 
 const (
-	logAttrKeySourceType      = "autoflex.source.type"
-	logAttrKeySourceFieldname = "autoflex.source.fieldname"
-	logAttrKeySourcePath      = "autoflex.source.path"
-	logAttrKeySourceSize      = "autoflex.source.size"
+	logAttrKeySourceFieldname   = "autoflex.source.fieldname"
+	logAttrKeySourcePath        = "autoflex.source.path"
+	logAttrKeySourceSize        = "autoflex.source.size"
+	logAttrKeySourceType        = "autoflex.source.type"
+	logAttrKeySourceTypeLiteral = "source_type"
 
 	logAttrKeyTargetType      = "autoflex.target.type"
 	logAttrKeyTargetFieldname = "autoflex.target.fieldname"
 	logAttrKeyTargetPath      = "autoflex.target.path"
 
-	logAttrKeyError = "error"
+	logAttrKeyError        = "error"
+	logAttrKeyFrom         = "from"
+	logAttrKeyTo           = "to"
+	logAttrKeyWrapperField = "wrapper_field"
 )
 
 const (

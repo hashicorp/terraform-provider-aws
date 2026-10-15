@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshiftserverless
 
@@ -18,101 +20,107 @@ func dataSourceWorkgroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkgroupRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPort: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"vpc_endpoint": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"network_interface": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrAvailabilityZone: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrNetworkInterfaceID: {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"private_ip_address": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												names.AttrSubnetID: {
-													Type:     schema.TypeString,
-													Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAddress: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPort: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"vpc_endpoint": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"network_interface": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrAvailabilityZone: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrNetworkInterfaceID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"private_ip_address": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrSubnetID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
 										},
-									},
-									names.AttrVPCEndpointID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrVPCID: {
-										Type:     schema.TypeString,
-										Computed: true,
+										names.AttrVPCEndpointID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrVPCID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"enhanced_vpc_routing": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"namespace_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"enhanced_vpc_routing": {
+					Type:     schema.TypeBool,
+					Computed: true,
 				},
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"namespace_name": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"workgroup_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workgroup_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"track_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workgroup_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workgroup_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -139,6 +147,7 @@ func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrPubliclyAccessible, resource.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroupIDs, resource.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, resource.SubnetIds)
+	d.Set("track_name", resource.TrackName)
 	d.Set("workgroup_id", resource.WorkgroupId)
 
 	return diags

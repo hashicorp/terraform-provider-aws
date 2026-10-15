@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package efs
 
@@ -26,95 +28,97 @@ func dataSourceFileSystem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFileSystemRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_token": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
-			},
-			names.AttrDNSName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrFileSystemID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"lifecycle_policy": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"transition_to_archive": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"transition_to_ia": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"transition_to_primary_storage_class": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"availability_zone_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"creation_token": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(0, 64),
+				},
+				names.AttrDNSName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrFileSystemID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"lifecycle_policy": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"transition_to_archive": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"transition_to_ia": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"transition_to_primary_storage_class": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"performance_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"protection": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"replication_overwrite": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"performance_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"protection": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"replication_overwrite": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"provisioned_throughput_in_mibps": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"size_in_bytes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"throughput_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"provisioned_throughput_in_mibps": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				"size_in_bytes": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"throughput_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -134,15 +138,15 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.FileSystemId = aws.String(v.(string))
 	}
 
-	filter := tfslices.PredicateTrue[*awstypes.FileSystemDescription]()
+	filter := tfslices.PredicateTrue[awstypes.FileSystemDescription]()
 
 	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
-		filter = func(v *awstypes.FileSystemDescription) bool {
-			return KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
+		filter = func(v awstypes.FileSystemDescription) bool {
+			return keyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
 		}
 	}
 
-	fs, err := findFileSystem(ctx, conn, input, filter)
+	fs, err := findFileSystem(ctx, conn, input, tfslices.WithFilter(filter))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS File System", err))

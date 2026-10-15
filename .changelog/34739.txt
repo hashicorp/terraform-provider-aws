@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_appconfig_deployment: Add `kms_key_identifier` attribute
-```

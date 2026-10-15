@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package transcribe
 
@@ -15,12 +17,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,42 +41,44 @@ func ResourceVocabularyFilter() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"download_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLanguageCode: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(validateLanguageCodes(types.LanguageCode("").Values()), false),
-			},
-			"words": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     256,
-				ExactlyOneOf: []string{"words", "vocabulary_filter_file_uri"},
-				Elem:         &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vocabulary_filter_file_uri": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"words", "vocabulary_filter_file_uri"},
-				ValidateFunc: validation.StringLenBetween(1, 2000),
-			},
-			"vocabulary_filter_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 200),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"download_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLanguageCode: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(validateLanguageCodes(types.LanguageCode("").Values()), false),
+				},
+				"words": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MaxItems:     256,
+					ExactlyOneOf: []string{"words", "vocabulary_filter_file_uri"},
+					Elem:         &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vocabulary_filter_file_uri": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"words", "vocabulary_filter_file_uri"},
+					ValidateFunc: validation.StringLenBetween(1, 2000),
+				},
+				"vocabulary_filter_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 200),
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -130,7 +134,7 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 
 	out, err := FindVocabularyFilterByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transcribe VocabularyFilter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -221,8 +225,7 @@ func FindVocabularyFilterByName(ctx context.Context, conn *transcribe.Client, id
 		var bre *types.BadRequestException
 		if errors.As(err, &bre) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -230,7 +233,7 @@ func FindVocabularyFilterByName(ctx context.Context, conn *transcribe.Client, id
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

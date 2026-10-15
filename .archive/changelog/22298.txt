@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_batch_job_queue: Add `scheduling_policy_arn` attribute
-```

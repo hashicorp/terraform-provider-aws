@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticbeanstalk
 
@@ -16,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -35,49 +38,51 @@ func resourceApplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"appversion_lifecycle": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delete_source_from_s3": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"max_age_in_days": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"max_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						names.AttrServiceRole: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"appversion_lifecycle": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"delete_source_from_s3": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"max_age_in_days": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"max_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							names.AttrServiceRole: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -104,7 +109,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 30 * time.Second
 	)
-	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findApplicationByName(ctx, conn, d.Id())
 	})
 
@@ -134,7 +139,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	app, err := findApplicationByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Elastic Beanstalk Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -211,7 +216,7 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 10 * time.Second
 	)
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findApplicationByName(ctx, conn, d.Id())
 	})
 
@@ -248,7 +253,7 @@ func findApplications(ctx context.Context, conn *elasticbeanstalk.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Applications, nil

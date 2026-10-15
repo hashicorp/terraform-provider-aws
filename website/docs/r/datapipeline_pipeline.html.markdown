@@ -22,6 +22,7 @@ resource "aws_datapipeline_pipeline" "default" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of Pipeline.
 * `description` - (Optional) The description of Pipeline.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -35,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datapipeline_pipeline` using the id (Pipeline ID). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datapipeline_pipeline` using the ID (Pipeline ID). For example:
 
 ```terraform
 import {
@@ -44,7 +45,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_datapipeline_pipeline` using the id (Pipeline ID). For example:
+Using `terraform import`, import `aws_datapipeline_pipeline` using the ID (Pipeline ID). For example:
 
 ```console
 % terraform import aws_datapipeline_pipeline.default df-1234567890

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_autoscaling_group: Fix pending state in instance refresh
-```

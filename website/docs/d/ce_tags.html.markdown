@@ -6,7 +6,7 @@ description: |-
   Provides the available cost allocation tag keys and tag values for a specified period.
 ---
 
-# Data source: aws_ce_tags
+# Data Source: aws_ce_tags
 
 Provides the available cost allocation tag keys and tag values for a specified period.
 
@@ -23,12 +23,9 @@ data "aws_ce_tags" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `time_period` - (Required) Configuration block for the start and end dates for retrieving the dimension values. See [`time_period` block](#time_period-block) below for details.
-
-The following arguments are optional:
-
 * `filter` - (Optional) Configuration block for the `Expression` object used to categorize costs. See [`filter` block](#filter-block) below for details.
 * `search_string` - (Optional) Value that you want to search for.
 * `sort_by` - (Optional) Configuration block for the value by which you want to sort the data. [`sort_by` block](#sort_by-block) below for details.

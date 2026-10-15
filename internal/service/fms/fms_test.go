@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fms_test
@@ -18,18 +18,19 @@ func TestAccFMS_serial(t *testing.T) {
 			acctest.CtDisappears: testAccAdminAccount_disappears,
 		},
 		"Policy": {
-			"alb":                    testAccPolicy_alb,
-			acctest.CtBasic:          testAccPolicy_basic,
-			"cloudfrontDistribution": testAccPolicy_cloudFrontDistribution,
-			acctest.CtDisappears:     testAccPolicy_disappears,
-			"includeMap":             testAccPolicy_includeMap,
-			"policyOption":           testAccPolicy_policyOption,
-			"resourceTags":           testAccPolicy_resourceTags,
-			"securityGroup":          testAccPolicy_securityGroup,
-			"tags":                   testAccFMSPolicy_tagsSerial,
-			"update":                 testAccPolicy_update,
-			"rscSet":                 testAccPolicy_rscSet,
-			"nacl":                   testAccPolicy_nacl,
+			"alb":                        testAccPolicy_alb,
+			acctest.CtBasic:              testAccPolicy_basic,
+			"cloudfrontDistribution":     testAccPolicy_cloudFrontDistribution,
+			acctest.CtDisappears:         testAccPolicy_disappears,
+			"includeMap":                 testAccPolicy_includeMap,
+			"policyOption":               testAccPolicy_policyOption,
+			"resourceTags":               testAccPolicy_resourceTags,
+			"resourceTagLogicalOperator": testAccPolicy_resourceTagLogicalOperator,
+			"securityGroup":              testAccPolicy_securityGroup,
+			"tags":                       testAccFMSPolicy_tagsSerial,
+			"update":                     testAccPolicy_update,
+			"rscSet":                     testAccPolicy_rscSet,
+			"nacl":                       testAccPolicy_nacl,
 		},
 		"ResourceSet": {
 			acctest.CtBasic:      testAccFMSResourceSet_basic,

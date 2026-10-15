@@ -35,16 +35,17 @@ resource "aws_appstream_fleet_stack_association" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `fleet_name` - (Required) Name of the fleet.
-* `stack_name` (Required) Name of the stack.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `stack_name` - (Required) Name of the stack.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique ID of the appstream stack fleet association, composed of the `fleet_name` and `stack_name` separated by a slash (`/`).
+* `id` - Unique ID of the AppStream stack fleet association, composed of the `fleet_name` and `stack_name` separated by a slash (`/`).
 
 ## Import
 

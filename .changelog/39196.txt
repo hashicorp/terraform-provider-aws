@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_verifiedaccess_endpoint: fix crash when updating `load_balancer_options.subnet_ids`
-```

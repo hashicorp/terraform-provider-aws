@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cleanrooms
 
@@ -20,13 +22,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,20 +40,22 @@ const (
 
 // @FrameworkResource("aws_cleanrooms_membership",name="Membership")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetMembershipOutput")
 // @Testing(checkDestroyNoop=true)
-func newResourceMembership(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceMembership{}
+// @Testing(preIdentityVersion="v6.47.0")
+func newMembershipResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &membershipResource{}
 
 	return r, nil
 }
 
-type resourceMembership struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+type membershipResource struct {
+	framework.ResourceWithModel[membershipResourceModel]
+	framework.WithImportByIdentity
 }
 
-func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *membershipResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -115,9 +119,6 @@ func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaReques
 			"update_time": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -198,8 +199,8 @@ func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaReques
 	response.Schema = s
 }
 
-func (r *resourceMembership) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceMembershipData
+func (r *membershipResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data membershipResourceModel
 	conn := r.Meta().CleanRoomsClient(ctx)
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -236,8 +237,8 @@ func (r *resourceMembership) Create(ctx context.Context, request resource.Create
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceMembership) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceMembershipData
+func (r *membershipResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data membershipResourceModel
 	conn := r.Meta().CleanRoomsClient(ctx)
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -248,7 +249,7 @@ func (r *resourceMembership) Read(ctx context.Context, request resource.ReadRequ
 
 	output, err := findMembershipByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -270,8 +271,8 @@ func (r *resourceMembership) Read(ctx context.Context, request resource.ReadRequ
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceMembership) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var plan, state resourceMembershipData
+func (r *membershipResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var plan, state membershipResourceModel
 	conn := r.Meta().CleanRoomsClient(ctx)
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
@@ -289,6 +290,9 @@ func (r *resourceMembership) Update(ctx context.Context, request resource.Update
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// set computed only fields to state defaults.
+	plan.UpdateTime = state.UpdateTime
 
 	if diff.HasChanges() {
 		input := cleanrooms.UpdateMembershipInput{
@@ -318,8 +322,8 @@ func (r *resourceMembership) Update(ctx context.Context, request resource.Update
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceMembership) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceMembershipData
+func (r *membershipResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data membershipResourceModel
 	conn := r.Meta().CleanRoomsClient(ctx)
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -355,7 +359,8 @@ func (r *resourceMembership) Delete(ctx context.Context, request resource.Delete
 	}
 }
 
-type resourceMembershipData struct {
+type membershipResourceModel struct {
+	framework.WithRegionModel
 	ARN                             types.String                                                `tfsdk:"arn"`
 	CollaborationARN                types.String                                                `tfsdk:"collaboration_arn"`
 	CollaborationCreatorAccountID   types.String                                                `tfsdk:"collaboration_creator_account_id"`
@@ -449,8 +454,7 @@ func findMembershipByID(ctx context.Context, conn *cleanrooms.Client, id string)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -459,7 +463,7 @@ func findMembershipByID(ctx context.Context, conn *cleanrooms.Client, id string)
 	}
 
 	if out == nil || out.Membership == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

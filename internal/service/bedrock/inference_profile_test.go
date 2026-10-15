@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
@@ -13,30 +13,24 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Regions are hard coded due to limited availability of Bedrock service
-const (
-	foundationModelARN = "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0" // lintignore:AWSAT003,AWSAT005
-)
-
 func TestAccBedrockInferenceProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var inferenceprofile bedrock.GetInferenceProfileOutput
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_inference_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -44,18 +38,18 @@ func TestAccBedrockInferenceProfile_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
+				Config: testAccInferenceProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
+					testAccCheckInferenceProfileExists(ctx, t, resourceName, &inferenceprofile),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`application-inference-profile/[a-z0-9]+$`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "models.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "models.0.model_arn", foundationModelARN),
+					resource.TestCheckResourceAttrPair(resourceName, "models.0.model_arn", "data.aws_bedrock_foundation_model.test", "model_arn"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.InferenceProfileStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.InferenceProfileTypeApplication)),
@@ -67,9 +61,17 @@ func TestAccBedrockInferenceProfile_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"model_source.#",
-					"model_source.0.%",
-					"model_source.0.copy_from",
+					"model_source",
+				},
+			},
+			// Validate a replacement is not planned following import.
+			// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/45705
+			{
+				Config: testAccInferenceProfileConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
 				},
 			},
 		},
@@ -80,10 +82,10 @@ func TestAccBedrockInferenceProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var inferenceprofile bedrock.GetInferenceProfileOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_inference_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -91,15 +93,23 @@ func TestAccBedrockInferenceProfile_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
+				Config: testAccInferenceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceInferenceProfile, resourceName),
+					testAccCheckInferenceProfileExists(ctx, t, resourceName, &inferenceprofile),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceInferenceProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -109,10 +119,10 @@ func TestAccBedrockInferenceProfile_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var inferenceprofile bedrock.GetInferenceProfileOutput
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_inference_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -120,12 +130,12 @@ func TestAccBedrockInferenceProfile_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInferenceProfileConfig_description(rName, foundationModelARN, names.AttrDescription),
+				Config: testAccInferenceProfileConfig_description(rName, names.AttrDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
+					testAccCheckInferenceProfileExists(ctx, t, resourceName, &inferenceprofile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
 			},
@@ -134,35 +144,36 @@ func TestAccBedrockInferenceProfile_description(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"model_source.#",
-					"model_source.0.%",
-					"model_source.0.copy_from",
+					"model_source",
 				},
 			},
 			{
-				Config: testAccInferenceProfileConfig_description(rName, foundationModelARN, "updated"),
+				Config: testAccInferenceProfileConfig_description(rName, "updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
+					testAccCheckInferenceProfileExists(ctx, t, resourceName, &inferenceprofile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"model_source.#",
-					"model_source.0.%",
-					"model_source.0.copy_from",
+					"model_source",
 				},
 			},
 		},
 	})
 }
 
-func testAccCheckInferenceProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInferenceProfileDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrock_inference_profile" {
@@ -190,7 +201,7 @@ func testAccCheckInferenceProfileDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckInferenceProfileExists(ctx context.Context, name string, inferenceprofile *bedrock.GetInferenceProfileOutput) resource.TestCheckFunc {
+func testAccCheckInferenceProfileExists(ctx context.Context, t *testing.T, name string, inferenceprofile *bedrock.GetInferenceProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -201,7 +212,7 @@ func testAccCheckInferenceProfileExists(ctx context.Context, name string, infere
 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameInferenceProfile, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 		input := bedrock.GetInferenceProfileInput{
 			InferenceProfileIdentifier: aws.String(rs.Primary.ID),
@@ -218,7 +229,7 @@ func testAccCheckInferenceProfileExists(ctx context.Context, name string, infere
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 	input := &bedrock.ListInferenceProfilesInput{}
 
@@ -232,27 +243,38 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccInferenceProfileConfig_basic(rName, source string) string {
-	return fmt.Sprintf(`
+func testAccInferenceProfileConfig_base() string {
+	return `
+data "aws_bedrock_foundation_model" "test" {
+  model_id = "amazon.nova-lite-v1:0"
+}
+`
+}
+func testAccInferenceProfileConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInferenceProfileConfig_base(),
+		fmt.Sprintf(`
 resource "aws_bedrock_inference_profile" "test" {
   name = %[1]q
 
   model_source {
-    copy_from = %[2]q
+    copy_from = data.aws_bedrock_foundation_model.test.model_arn
   }
 }
-`, rName, source)
+`, rName))
 }
 
-func testAccInferenceProfileConfig_description(rName, source, description string) string {
-	return fmt.Sprintf(`
+func testAccInferenceProfileConfig_description(rName, description string) string {
+	return acctest.ConfigCompose(
+		testAccInferenceProfileConfig_base(),
+		fmt.Sprintf(`
 resource "aws_bedrock_inference_profile" "test" {
   name        = %[1]q
-  description = %[3]q
+  description = %[2]q
 
   model_source {
-    copy_from = %[2]q
+    copy_from = data.aws_bedrock_foundation_model.test.model_arn
   }
 }
-`, rName, source, description)
+`, rName, description))
 }

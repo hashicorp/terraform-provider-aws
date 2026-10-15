@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -19,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -43,62 +45,58 @@ func resourceIPAMPoolCIDR() *schema.Resource {
 
 		CustomizeDiff: resourceIPAMPoolCIDRCustomizeDiff,
 
-		Schema: map[string]*schema.Schema{
-			"cidr": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					verify.ValidIPv4CIDRNetworkAddress,
-					verify.ValidIPv6CIDRNetworkAddress,
-				),
-			},
-			"cidr_authorization_context": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMessage: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"signature": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"cidr": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+					ValidateFunc: validation.Any(
+						verify.ValidIPv4CIDRNetworkAddress,
+						verify.ValidIPv6CIDRNetworkAddress,
+					),
+				},
+				"cidr_authorization_context": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMessage: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"signature": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			// This resource's ID is a concatenated id of `<cidr>_<poolid>`
-			// ipam_pool_cidr_id was not part of the initial feature release
-			"ipam_pool_cidr_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipam_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(0, 128),
-				ConflictsWith: []string{"cidr"},
-				// NetmaskLength is not outputted by GetIpamPoolCidrsOutput
-				DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
-					if o != "0" && n == "0" {
-						return true
-					}
-					return false
+				// This resource's ID is a concatenated id of `<cidr>_<poolid>`
+				// ipam_pool_cidr_id was not part of the initial feature release
+				"ipam_pool_cidr_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
+				"ipam_pool_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IntBetween(0, 128),
+					ConflictsWith: []string{"cidr"},
+				},
+			}
 		},
 	}
 }
@@ -108,7 +106,7 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	poolID := d.Get("ipam_pool_id").(string)
-	input := &ec2.ProvisionIpamPoolCidrInput{
+	input := ec2.ProvisionIpamPoolCidrInput{
 		IpamPoolId: aws.String(poolID),
 	}
 
@@ -124,7 +122,7 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 		input.NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	output, err := conn.ProvisionIpamPoolCidr(ctx, input)
+	output, err := conn.ProvisionIpamPoolCidr(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool (%s) CIDR: %s", poolID, err)
@@ -158,7 +156,7 @@ func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IPAM Pool CIDR (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -171,6 +169,7 @@ func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("cidr", output.Cidr)
 	d.Set("ipam_pool_cidr_id", output.IpamPoolCidrId)
 	d.Set("ipam_pool_id", poolID)
+	d.Set("netmask_length", output.NetmaskLength)
 
 	return diags
 }
@@ -182,6 +181,27 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 	cidrBlock, poolID, err := ipamPoolCIDRParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	ipamPool, err := findIPAMPoolByID(ctx, conn, poolID)
+	if retry.NotFound(err) {
+		log.Printf("[DEBUG] IPAM Pool (%s) not found, skipping IPAM Pool CIDR (%s) delete", poolID, d.Id())
+		return diags
+	} else if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool (%s): %s", poolID, err)
+	}
+
+	// VPC / Subnet allocations take upto 20m to be released after resource deletion.
+	// Set up correct region/conn for checking allocations
+
+	optFn := func(o *ec2.Options) {}
+	if poolLocale := aws.ToString(ipamPool.Locale); poolLocale != "" && poolLocale != "None" {
+		optFn = func(o *ec2.Options) { o.Region = poolLocale }
+	}
+
+	// Wait for allocations to be released before deprovisioning
+	if err := waitIPAMPoolCIDRAllocationsReleased(ctx, conn, poolID, cidrBlock, d.Timeout(schema.TimeoutDelete), optFn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool (%s) allocations to be released: %s", poolID, err)
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR: %s", d.Id())

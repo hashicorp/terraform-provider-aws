@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -9,26 +11,32 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"log"
-	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_access_key", name="Access Key")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;awstypes;awstypes.AccessKeyMetadata")
+// @Testing(importIgnore="encrypted_secret;key_fingerprint;pgp_key;secret;ses_smtp_password_v4;encrypted_ses_smtp_password_v4")
+// @Testing(preIdentityVersion="v6.45.0")
+// @Testing(plannableImportAction="NoOp")
+// @CustomImport
 func resourceAccessKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessKeyCreate,
@@ -41,6 +49,10 @@ func resourceAccessKey() *schema.Resource {
 			//   ValidationError: Must specify userName when calling with non-User credentials
 			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
 				conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 				input := &iam.GetAccessKeyLastUsedInput{
@@ -63,49 +75,51 @@ func resourceAccessKey() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_secret": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_ses_smtp_password_v4": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pgp_key": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"secret": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"ses_smtp_password_v4": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.StatusTypeActive,
-				ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
-			},
-			"user": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"encrypted_secret": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"encrypted_ses_smtp_password_v4": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pgp_key": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"secret": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				"ses_smtp_password_v4": {
+					Type:      schema.TypeString,
+					Computed:  true,
+					Sensitive: true,
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.StatusTypeActive,
+					ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
+				},
+				"user": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -178,7 +192,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta a
 		createResp.AccessKey.Status = awstypes.StatusTypeInactive
 	}
 
-	resourceAccessKeyReadResult(d, &awstypes.AccessKeyMetadata{
+	resourceAccessKeyFlatten(d, &awstypes.AccessKeyMetadata{
 		AccessKeyId: createResp.AccessKey.AccessKeyId,
 		CreateDate:  createResp.AccessKey.CreateDate,
 		Status:      createResp.AccessKey.Status,
@@ -195,7 +209,7 @@ func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta any
 	username := d.Get("user").(string)
 	key, err := findAccessKeyByTwoPartKey(ctx, conn, username, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Access Key (%s) for User (%s) not found, removing from state", d.Id(), username)
 		d.SetId("")
 		return diags
@@ -204,21 +218,12 @@ func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading IAM Access Key (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(aws.ToString(key.AccessKeyId))
-
-	if key.CreateDate != nil {
-		d.Set("create_date", aws.ToTime(key.CreateDate).Format(time.RFC3339))
-	} else {
-		d.Set("create_date", nil)
-	}
-
-	d.Set(names.AttrStatus, key.Status)
-	d.Set("user", key.UserName)
+	resourceAccessKeyFlatten(d, key)
 
 	return diags
 }
 
-func resourceAccessKeyReadResult(d *schema.ResourceData, key *awstypes.AccessKeyMetadata) {
+func resourceAccessKeyFlatten(d *schema.ResourceData, key *awstypes.AccessKeyMetadata) {
 	d.SetId(aws.ToString(key.AccessKeyId))
 
 	if key.CreateDate != nil {
@@ -249,10 +254,11 @@ func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Access Key: %s", d.Id())
-	_, err := conn.DeleteAccessKey(ctx, &iam.DeleteAccessKeyInput{
+	input := iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
 		UserName:    aws.String(d.Get("user").(string)),
-	})
+	}
+	_, err := conn.DeleteAccessKey(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
@@ -281,7 +287,7 @@ func findAccessKeyByTwoPartKey(ctx context.Context, conn *iam.Client, username, 
 		UserName: aws.String(username),
 	}
 
-	return findAccessKey(ctx, conn, input, func(v awstypes.AccessKeyMetadata) bool {
+	return findAccessKey(ctx, conn, input, func(v *awstypes.AccessKeyMetadata) bool {
 		return aws.ToString(v.AccessKeyId) == id
 	})
 }
@@ -291,10 +297,10 @@ func findAccessKeysByUser(ctx context.Context, conn *iam.Client, username string
 		UserName: aws.String(username),
 	}
 
-	return findAccessKeys(ctx, conn, input, tfslices.PredicateTrue[awstypes.AccessKeyMetadata]())
+	return findAccessKeys(ctx, conn, input, tfslices.PredicateTrue[*awstypes.AccessKeyMetadata]())
 }
 
-func findAccessKey(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[awstypes.AccessKeyMetadata]) (*awstypes.AccessKeyMetadata, error) {
+func findAccessKey(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[*awstypes.AccessKeyMetadata]) (*awstypes.AccessKeyMetadata, error) {
 	output, err := findAccessKeys(ctx, conn, input, filter)
 
 	if err != nil {
@@ -304,7 +310,7 @@ func findAccessKey(ctx context.Context, conn *iam.Client, input *iam.ListAccessK
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[awstypes.AccessKeyMetadata]) ([]awstypes.AccessKeyMetadata, error) {
+func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccessKeysInput, filter tfslices.Predicate[*awstypes.AccessKeyMetadata]) ([]awstypes.AccessKeyMetadata, error) {
 	var output []awstypes.AccessKeyMetadata
 
 	pages := iam.NewListAccessKeysPaginator(conn, input)
@@ -313,8 +319,7 @@ func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccess
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -323,7 +328,7 @@ func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccess
 		}
 
 		for _, v := range page.AccessKeyMetadata {
-			if !reflect.ValueOf(v).IsZero() && filter(v) {
+			if p := &v; !inttypes.IsZero(p) && filter(p) {
 				output = append(output, v)
 			}
 		}
@@ -371,5 +376,5 @@ func sesSMTPPasswordFromSecretKeySigV4(key *string, region string) (string, erro
 	versionedSig := make([]byte, 0, len(rawSig)+1)
 	versionedSig = append(versionedSig, version)
 	versionedSig = append(versionedSig, rawSig...)
-	return itypes.Base64Encode(versionedSig), nil
+	return inttypes.Base64Encode(versionedSig), nil
 }

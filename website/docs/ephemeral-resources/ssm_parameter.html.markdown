@@ -10,7 +10,7 @@ description: |-
 
 Retrieve information about an SSM parameter, including its value.
 
-~> **NOTE:** Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/v1.10.x/resources/ephemeral).
+~> **NOTE:** Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral).
 
 ## Example Usage
 
@@ -26,15 +26,18 @@ ephemeral "aws_ssm_parameter" "example" {
 
 ## Argument Reference
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the parameter that you want to query
+This ephemeral resource supports the following arguments:
+
+* `arn` - (Required) ARN of the parameter that you want to query
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `with_decryption` - (Optional) Return decrypted values for a secure string parameter (Defaults to `true`).
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
+This ephemeral resource exports the following attributes in addition to the arguments above:
 
-* `name` - The name of the parameter.
-* `type` - The type of parameter.
-* `value` - The parameter value.
-* `version` - The parameter version.
-* `with_decryption` - Indicates whether the secure string parameters were decrypted.
+* `name` - Name of the parameter.
+* `type` - Type of parameter.
+* `value` - Parameter value.
+* `version` - Parameter version.
+* `with_decryption` - Whether the secure string parameters were decrypted.

@@ -107,6 +107,7 @@ This example shows how to add a [Predefined Security Policy for ELBs](https://do
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `load_balancer_name` - (Required) The load balancer to attach the policy to.
 * `load_balancer_port` - (Required) The load balancer listener port to apply the policy to.
 * `policy_names` - (Required) List of Policy Names to apply to the backend server.

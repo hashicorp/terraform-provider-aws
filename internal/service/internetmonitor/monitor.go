@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package internetmonitor
 
@@ -14,14 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -41,100 +43,102 @@ func resourceMonitor() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"health_events_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"availability_score_threshold": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							Default:  95.0,
-						},
-						"performance_score_threshold": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							Default:  95.0,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"health_events_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"availability_score_threshold": {
+								Type:     schema.TypeFloat,
+								Optional: true,
+								Default:  95.0,
+							},
+							"performance_score_threshold": {
+								Type:     schema.TypeFloat,
+								Optional: true,
+								Default:  95.0,
+							},
 						},
 					},
 				},
-			},
-			"internet_measurements_log_delivery": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucketName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrBucketPrefix: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"log_delivery_status": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          types.LogDeliveryStatusEnabled,
-										ValidateDiagFunc: enum.Validate[types.LogDeliveryStatus](),
+				"internet_measurements_log_delivery": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucketName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrBucketPrefix: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"log_delivery_status": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          types.LogDeliveryStatusEnabled,
+											ValidateDiagFunc: enum.Validate[types.LogDeliveryStatus](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"max_city_networks_to_monitor": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 500000),
-				AtLeastOneOf: []string{"traffic_percentage_to_monitor", "max_city_networks_to_monitor"},
-			},
-			"monitor_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrResources: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+				"max_city_networks_to_monitor": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 500000),
+					AtLeastOneOf: []string{"traffic_percentage_to_monitor", "max_city_networks_to_monitor"},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  types.MonitorConfigStateActive,
-				ValidateFunc: validation.StringInSlice(enum.Slice(
-					types.MonitorConfigStateActive,
-					types.MonitorConfigStateInactive,
-				), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"traffic_percentage_to_monitor": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 100),
-				AtLeastOneOf: []string{"traffic_percentage_to_monitor", "max_city_networks_to_monitor"},
-			},
+				"monitor_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrResources: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  types.MonitorConfigStateActive,
+					ValidateFunc: validation.StringInSlice(enum.Slice(
+						types.MonitorConfigStateActive,
+						types.MonitorConfigStateInactive,
+					), false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"traffic_percentage_to_monitor": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 100),
+					AtLeastOneOf: []string{"traffic_percentage_to_monitor", "max_city_networks_to_monitor"},
+				},
+			}
 		},
 	}
 }
@@ -149,7 +153,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	name := d.Get("monitor_name").(string)
 	input := &internetmonitor.CreateMonitorInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		MonitorName: aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}
@@ -189,7 +193,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta any
 	if v, ok := d.GetOk(names.AttrStatus); ok {
 		if v := types.MonitorConfigState(v.(string)); v != types.MonitorConfigStateActive {
 			input := &internetmonitor.UpdateMonitorInput{
-				ClientToken: aws.String(id.UniqueId()),
+				ClientToken: aws.String(create.UniqueId(ctx)),
 				MonitorName: aws.String(d.Id()),
 				Status:      v,
 			}
@@ -215,7 +219,7 @@ func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	monitor, err := findMonitorByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Internet Monitor Monitor (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -249,7 +253,7 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &internetmonitor.UpdateMonitorInput{
-			ClientToken: aws.String(id.UniqueId()),
+			ClientToken: aws.String(create.UniqueId(ctx)),
 			MonitorName: aws.String(d.Id()),
 		}
 
@@ -304,7 +308,7 @@ func resourceMonitorDelete(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).InternetMonitorClient(ctx)
 
 	input := &internetmonitor.UpdateMonitorInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		MonitorName: aws.String(d.Id()),
 		Status:      types.MonitorConfigStateInactive,
 	}
@@ -351,8 +355,7 @@ func findMonitorByName(ctx context.Context, conn *internetmonitor.Client, name s
 	// if errs.IsA[*types.ResourceNotFoundException](err) {
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -361,17 +364,17 @@ func findMonitorByName(ctx context.Context, conn *internetmonitor.Client, name s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusMonitor(ctx context.Context, conn *internetmonitor.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMonitor(conn *internetmonitor.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		monitor, err := findMonitorByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -390,7 +393,7 @@ func waitMonitor(ctx context.Context, conn *internetmonitor.Client, name string,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.MonitorConfigStatePending),
 		Target:  enum.Slice(targetState),
-		Refresh: statusMonitor(ctx, conn, name),
+		Refresh: statusMonitor(conn, name),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -399,7 +402,7 @@ func waitMonitor(ctx context.Context, conn *internetmonitor.Client, name string,
 
 	if output, ok := outputRaw.(*internetmonitor.GetMonitorOutput); ok {
 		if status := output.Status; status == types.MonitorConfigStateError {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ProcessingStatusInfo)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ProcessingStatusInfo)))
 		}
 
 		return err

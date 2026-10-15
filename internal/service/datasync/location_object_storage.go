@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datasync
 
@@ -13,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -28,7 +31,12 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_object_storage", name="Location Object Storage")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationObjectStorageOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(domainTfVar="domain")
 func resourceLocationObjectStorage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationObjectStorageCreate,
@@ -36,75 +44,78 @@ func resourceLocationObjectStorage() *schema.Resource {
 		UpdateWithoutTimeout: resourceLocationObjectStorageUpdate,
 		DeleteWithoutTimeout: resourceLocationObjectStorageDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccessKey: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(8, 200),
+				},
+				"agent_arns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucketName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 63),
+				},
+				names.AttrSecretKey: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(8, 200),
+				},
+				"server_certificate": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"server_hostname": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"server_port": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      443,
+					ValidateFunc: validation.IsPortNumber,
+				},
+				"server_protocol": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ObjectStorageServerProtocolHttps,
+					ValidateDiagFunc: enum.Validate[awstypes.ObjectStorageServerProtocol](),
+				},
+				"subdirectory": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(1, 4096),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURI: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccessKey: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(8, 200),
-			},
-			"agent_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucketName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
-			},
-			names.AttrSecretKey: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(8, 200),
-			},
-			"server_certificate": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"server_hostname": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"server_port": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      443,
-				ValidateFunc: validation.IsPortNumber,
-			},
-			"server_protocol": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ObjectStorageServerProtocolHttps,
-				ValidateDiagFunc: enum.Validate[awstypes.ObjectStorageServerProtocol](),
-			},
-			"subdirectory": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(1, 4096),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-		},
+		CustomizeDiff: customdiff.ForceNewIfChange("agent_arns", func(_ context.Context, old, new, meta any) bool {
+			// "InvalidRequestException: Invalid parameter: Updating AgentArns is not permitted for agentless object storage locations".
+			return (old.(*schema.Set).Len() == 0 && new.(*schema.Set).Len() > 0) || (old.(*schema.Set).Len() > 0 && new.(*schema.Set).Len() == 0)
+		}),
 	}
 }
 
@@ -113,11 +124,14 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationObjectStorageInput{
-		AgentArns:      flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
 		BucketName:     aws.String(d.Get(names.AttrBucketName).(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("agent_arns"); ok && v.(*schema.Set).Len() > 0 {
+		input.AgentArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrAccessKey); ok {
@@ -157,7 +171,7 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 
 	output, err := findLocationObjectStorageByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DataSync Location Object Storage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -201,7 +215,9 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		if d.HasChange("agent_arns") {
-			input.AgentArns = flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set))
+			if v, ok := d.GetOk("agent_arns"); ok && v.(*schema.Set).Len() > 0 {
+				input.AgentArns = flex.ExpandStringValueSet(v.(*schema.Set))
+			}
 
 			// Access key must be specified when updating agent ARNs
 			input.AccessKey = aws.String("")
@@ -276,8 +292,7 @@ func findLocationObjectStorageByARN(ctx context.Context, conn *datasync.Client, 
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -286,7 +301,7 @@ func findLocationObjectStorageByARN(ctx context.Context, conn *datasync.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

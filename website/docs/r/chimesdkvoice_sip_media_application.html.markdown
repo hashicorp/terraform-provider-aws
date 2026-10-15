@@ -29,24 +29,25 @@ resource "aws_chimesdkvoice_sip_media_application" "example" {
 The following arguments are required:
 
 * `aws_region` - (Required) The AWS Region in which the AWS Chime SDK Voice Sip Media Application is created.
-* `endpoints` - (Required)  List of endpoints (Lambda Amazon Resource Names) specified for the SIP media application. Currently, only one endpoint is supported. See [`endpoints`](#endpoints).
+* `endpoints` - (Required)  List of endpoints (Lambda ARNs) specified for the SIP media application. Currently, only one endpoint is supported. See [`endpoints`](#endpoints).
 * `name` - (Required) The name of the AWS Chime SDK Voice Sip Media Application.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `endpoints`
 
 The endpoint assigned to the SIP media application.
 
-* `lambda_arn` - (Required) Valid Amazon Resource Name (ARN) of the Lambda function, version, or alias. The function must be created in the same AWS Region as the SIP media application.
+* `lambda_arn` - (Required) Valid ARN of the Lambda function, version, or alias. The function must be created in the same AWS Region as the SIP media application.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` -  ARN (Amazon Resource Name) of the AWS Chime SDK Voice Sip Media Application
+* `arn` -  ARN of the AWS Chime SDK Voice Sip Media Application
 * `id` - The SIP media application ID.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 

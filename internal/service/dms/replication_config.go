@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -14,7 +16,6 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -30,9 +32,11 @@ import (
 )
 
 // @SDKResource("aws_dms_replication_config", name="Replication Config")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationConfig")
-// @Testing(importIgnore="start_replication")
+// @Testing(importIgnore="start_replication", plannableImportAction="NoOp")
 func resourceReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigCreate,
@@ -46,130 +50,128 @@ func resourceReplicationConfig() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compute_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZone: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						"dns_name_servers": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrKMSKeyID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"max_capacity_units": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"min_capacity_units": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"multi_az": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrPreferredMaintenanceWindow: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-						},
-						"replication_subnet_group_id": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validReplicationSubnetGroupID,
-						},
-						names.AttrVPCSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compute_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZone: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"dns_name_servers": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrKMSKeyID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"max_capacity_units": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"min_capacity_units": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"multi_az": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrPreferredMaintenanceWindow: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+							},
+							"replication_subnet_group_id": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validReplicationSubnetGroupID,
+							},
+							names.AttrVPCSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"replication_config_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			// "replication_settings" is equivalent to "replication_task_settings" on "aws_dms_replication_task"
-			// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_task"
-			"replication_settings": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.ToDiagFunc(validation.StringIsJSON),
-					validateReplicationSettings,
-				),
-				DiffSuppressFunc:      suppressEquivalentTaskSettings,
-				DiffSuppressOnRefresh: true,
-			},
-			"replication_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MigrationTypeValue](),
-			},
-			"resource_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"source_endpoint_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"start_replication": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"supplemental_settings": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-			},
-			"table_mappings": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_endpoint_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				"replication_config_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				// "replication_settings" is equivalent to "replication_task_settings" on "aws_dms_replication_task"
+				// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_task"
+				"replication_settings": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringIsJSON),
+						validateReplicationSettings,
+					),
+					DiffSuppressFunc:      suppressEquivalentTaskSettings,
+					DiffSuppressOnRefresh: true,
+				},
+				"replication_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MigrationTypeValue](),
+				},
+				"resource_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"source_endpoint_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"start_replication": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"supplemental_settings": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				},
+				"table_mappings": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_endpoint_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -227,7 +229,7 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 
 	replicationConfig, err := findReplicationConfigByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -383,8 +385,7 @@ func findReplicationConfigs(ctx context.Context, conn *dms.Client, input *dms.De
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -429,8 +430,7 @@ func findReplications(ctx context.Context, conn *dms.Client, input *dms.Describe
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -444,11 +444,11 @@ func findReplications(ctx context.Context, conn *dms.Client, input *dms.Describe
 	return output, nil
 }
 
-func statusReplication(ctx context.Context, conn *dms.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplication(conn *dms.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -470,7 +470,7 @@ func setLastReplicationError(err error, replication *awstypes.Replication) {
 		errs = append(errs, errors.New(v))
 	}
 
-	tfresource.SetLastError(err, errors.Join(errs...))
+	retry.SetLastError(err, errors.Join(errs...))
 }
 
 func waitReplicationRunning(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {
@@ -486,7 +486,7 @@ func waitReplicationRunning(ctx context.Context, conn *dms.Client, arn string, t
 			replicationStatusReplicationStarting,
 		},
 		Target:     []string{replicationStatusRunning, replicationStatusStopped},
-		Refresh:    statusReplication(ctx, conn, arn),
+		Refresh:    statusReplication(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -506,7 +506,7 @@ func waitReplicationStopped(ctx context.Context, conn *dms.Client, arn string, t
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationStatusStopping, replicationStatusRunning},
 		Target:     []string{replicationStatusStopped},
-		Refresh:    statusReplication(ctx, conn, arn),
+		Refresh:    statusReplication(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      60 * time.Second,
@@ -526,7 +526,7 @@ func waitReplicationDeleted(ctx context.Context, conn *dms.Client, arn string, t
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting, replicationStatusStopped},
 		Target:     []string{},
-		Refresh:    statusReplication(ctx, conn, arn),
+		Refresh:    statusReplication(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -546,7 +546,7 @@ func startReplication(ctx context.Context, conn *dms.Client, arn string, timeout
 	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
+		return fmt.Errorf("reading DMS Replication Config (%s) replication: %w", arn, err)
 	}
 
 	replicationStatus := aws.ToString(replication.Status)
@@ -579,12 +579,12 @@ func startReplication(ctx context.Context, conn *dms.Client, arn string, timeout
 func stopReplication(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) error {
 	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
+		return fmt.Errorf("reading DMS Replication Config (%s) replication: %w", arn, err)
 	}
 
 	if replicationStatus := aws.ToString(replication.Status); replicationStatus == replicationStatusStopped || replicationStatus == replicationStatusCreated || replicationStatus == replicationStatusFailed {

@@ -1,15 +1,15 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,69 +39,71 @@ func resourceTransitGatewayVPCAttachment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"appliance_mode_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ApplianceModeSupportValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.ApplianceModeSupportValue](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DnsSupportValueEnable,
-				ValidateDiagFunc: enum.Validate[awstypes.DnsSupportValue](),
-			},
-			"ipv6_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.Ipv6SupportValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.Ipv6SupportValue](),
-			},
-			"security_group_referencing_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
-			},
-			names.AttrSubnetIDs: {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_default_route_table_association": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"transit_gateway_default_route_table_propagation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTransitGatewayID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrVPCID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"vpc_owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"appliance_mode_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ApplianceModeSupportValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.ApplianceModeSupportValue](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dns_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DnsSupportValueEnable,
+					ValidateDiagFunc: enum.Validate[awstypes.DnsSupportValue](),
+				},
+				"ipv6_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.Ipv6SupportValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.Ipv6SupportValue](),
+				},
+				"security_group_referencing_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
+				},
+				names.AttrSubnetIDs: {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"transit_gateway_default_route_table_association": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"transit_gateway_default_route_table_propagation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTransitGatewayID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrVPCID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"vpc_owner_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -172,11 +174,12 @@ func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.Re
 
 func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	transitGatewayVPCAttachment, err := findTransitGatewayVPCAttachmentByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway VPC Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -201,7 +204,7 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 		if transitGatewayRouteTableID := aws.ToString(transitGateway.Options.AssociationDefaultRouteTableId); transitGatewayRouteTableID != "" {
 			_, err := findTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, d.Id())
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				transitGatewayDefaultRouteTableAssociation = false
 			} else if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Association (%s): %s", transitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
@@ -213,7 +216,7 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 		if transitGatewayRouteTableID := aws.ToString(transitGateway.Options.PropagationDefaultRouteTableId); transitGatewayRouteTableID != "" {
 			_, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, d.Id())
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				transitGatewayDefaultRouteTablePropagation = false
 			} else if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Propagation (%s): %s", transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
@@ -225,14 +228,7 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 
 	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
 	vpcOwnerID := aws.ToString(transitGatewayVPCAttachment.VpcOwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: vpcOwnerID,
-		Resource:  fmt.Sprintf("transit-gateway-attachment/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, transitGatewayAttachmentARN(ctx, c, vpcOwnerID, d.Id()))
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
 	d.Set("security_group_referencing_support", transitGatewayVPCAttachment.Options.SecurityGroupReferencingSupport)
@@ -331,4 +327,8 @@ func resourceTransitGatewayVPCAttachmentDelete(ctx context.Context, d *schema.Re
 	}
 
 	return diags
+}
+
+func transitGatewayAttachmentARN(ctx context.Context, c *conns.AWSClient, accountID, attachmentID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "transit-gateway-attachment/"+attachmentID)
 }

@@ -69,12 +69,13 @@ The following arguments are required:
 
 * `name` - (Required) The name of the lifecycle policy to create.
 * `resource_type` - (Required) The type of Image Builder resource that the lifecycle policy applies to. Valid values: `AMI_IMAGE` or `CONTAINER_IMAGE`.
-* `execution_role` - (Required) The Amazon Resource Name (ARN) for the IAM role you create that grants Image Builder access to run lifecycle actions. More information about this role can be found [`here`](https://docs.aws.amazon.com/imagebuilder/latest/userguide/image-lifecycle-prerequisites.html#image-lifecycle-prereq-role).
+* `execution_role` - (Required) ARN for the IAM role you create that grants Image Builder access to run lifecycle actions. More information about this role can be found [`here`](https://docs.aws.amazon.com/imagebuilder/latest/userguide/image-lifecycle-prerequisites.html#image-lifecycle-prereq-role).
 * `policy_detail` - (Required) Configuration block with policy details. Detailed below.
 * `resource_selection` - (Required) Selection criteria for the resources that the lifecycle policy applies to. Detailed below.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) description for the lifecycle policy.
 * `tags` - (Optional) Key-value map of resource tags for the Image Builder Lifecycle Policy. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -87,6 +88,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `exclusion_rules` - (Optional) Additional rules to specify resources that should be exempt from policy actions.
 
 ### action
@@ -97,12 +99,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `include_resources` - (Optional) Specifies the resources that the lifecycle policy applies to. Detailed below.
 
 ### include_resources
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `amis` - (Optional) Specifies whether the lifecycle action should apply to distributed AMIs.
 * `containers` - (Optional) Specifies whether the lifecycle action should apply to distributed containers.
 * `snapshots` - (Optional) Specifies whether the lifecycle action should apply to snapshots associated with distributed AMIs.
@@ -116,6 +120,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `retain_at_least` - (Optional) For age-based filters, this is the number of resources to keep on hand after the lifecycle DELETE action is applied. Impacted resources are only deleted if you have more than this number of resources. If you have fewer resources than this number, the impacted resource is not deleted.
 * `unit` - (Optional) Defines the unit of time that the lifecycle policy uses to determine impacted resources. This is required for age-based rules. Valid values: `DAYS`, `WEEKS`, `MONTHS` or `YEARS`.
 
@@ -123,6 +128,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `amis` - (Optional) Lists configuration values that apply to AMIs that Image Builder should exclude from the lifecycle action. Detailed below.
 * `tag_map` - (Optional) Contains a list of tags that Image Builder uses to skip lifecycle actions for Image Builder image resources that have them.
 
@@ -130,6 +136,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `is_public` - (Optional) Configures whether public AMIs are excluded from the lifecycle action.
 * `last_launched` - (Optional) Specifies configuration details for Image Builder to exclude the most recent resources from lifecycle actions. Detailed below.
 * `regions` - (Optional) Configures AWS Regions that are excluded from the lifecycle action.
@@ -147,6 +154,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `recipe` - (Optional) A list of recipe that are used as selection criteria for the output images that the lifecycle policy applies to. Detailed below.
 * `tag_map` - (Optional) A list of tags that are used as selection criteria for the Image Builder image resources that the lifecycle policy applies to.
 
@@ -155,20 +163,41 @@ The following arguments are optional:
 The following arguments are required:
 
 * `name` - (Required) The name of an Image Builder recipe that the lifecycle policy uses for resource selection.
-* `semantic_version` - (Required) The version of the Image Builder recipe specified by the name field.
+* `semantic_version` - (Required) The version of the Image Builder recipe specified by the `name` field. Wildcard semantic version is supported (e.g. `1.0.x`, `1.x.x`, `x.x.x`).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the lifecycle policy.
-* `arn` - Amazon Resource Name (ARN) of the lifecycle policy.
+* `id` - ARN of the lifecycle policy.
+* `arn` - ARN of the lifecycle policy.
 * `status` - The status of the lifecycle policy.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_lifecycle_policy` using the Amazon Resource Name (ARN). For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_lifecycle_policy.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:lifecycle-policy/example"
+  }
+}
+
+resource "aws_imagebuilder_lifecycle_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Image Builder lifecycle policy.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_lifecycle_policy` using the ARN. For example:
 
 ```terraform
 import {
@@ -177,7 +206,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_imagebuilder_lifecycle_policy` using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_imagebuilder_lifecycle_policy` using the ARN. For example:
 
 ```console
 % terraform import aws_imagebuilder_lifecycle_policy.example arn:aws:imagebuilder:us-east-1:123456789012:lifecycle-policy/example

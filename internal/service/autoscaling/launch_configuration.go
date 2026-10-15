@@ -1,11 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package autoscaling
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- AWS AutoScaling API uses SHA1 for user_data hashing, must match AWS behavior
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -17,8 +19,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	ec2awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,288 +27,290 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_launch_configuration", name="Launch Configuration")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/autoscaling/types;awstypes;awstypes.LaunchConfiguration")
+// @Testing(preIdentityVersion="v6.40.0")
 func resourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchConfigurationCreate,
 		ReadWithoutTimeout:   resourceLaunchConfigurationRead,
 		DeleteWithoutTimeout: resourceLaunchConfigurationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"associate_public_ip_address": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"ebs_block_device": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
-						},
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrEncrypted: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						"no_device": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrSnapshotID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrThroughput: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrVolumeSize: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrVolumeType: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"associate_public_ip_address": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"ebs_block_device": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeleteOnTermination: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+								ForceNew: true,
+							},
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrEncrypted: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"no_device": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrSnapshotID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrThroughput: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrVolumeSize: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrVolumeType: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"enable_monitoring": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  true,
-			},
-			"ephemeral_block_device": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"no_device": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrVirtualName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+				"ebs_optimized": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"enable_monitoring": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  true,
+				},
+				"ephemeral_block_device": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"no_device": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrVirtualName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"iam_instance_profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"image_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"key_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"metadata_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"http_endpoint": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.InstanceMetadataEndpointStateEnabled, awstypes.InstanceMetadataEndpointStateDisabled), false),
-						},
-						"http_put_response_hop_limit": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1, 64),
-						},
-						"http_tokens": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.InstanceMetadataHttpTokensStateOptional, awstypes.InstanceMetadataHttpTokensStateRequired), false),
+				"iam_instance_profile": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"key_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"metadata_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"http_endpoint": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.InstanceMetadataEndpointStateEnabled, awstypes.InstanceMetadataEndpointStateDisabled), false),
+							},
+							"http_put_response_hop_limit": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(1, 64),
+							},
+							"http_tokens": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.InstanceMetadataHttpTokensStateOptional, awstypes.InstanceMetadataHttpTokensStateRequired), false),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validation.StringLenBetween(1, 255),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(1, 255-id.UniqueIDSuffixLength),
-			},
-			"placement_tenancy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"root_block_device": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					// "You can only modify the volume size, volume type, and Delete on
-					// Termination flag on the block device mapping entry for the root
-					// device volume." - bit.ly/ec2bdmap
-					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
-						},
-						names.AttrEncrypted: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrThroughput: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrVolumeSize: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrVolumeType: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validation.StringLenBetween(1, 255),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validation.StringLenBetween(1, 255-sdkid.UniqueIDSuffixLength),
+				},
+				"placement_tenancy": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"root_block_device": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						// "You can only modify the volume size, volume type, and Delete on
+						// Termination flag on the block device mapping entry for the root
+						// device volume." - bit.ly/ec2bdmap
+						Schema: map[string]*schema.Schema{
+							names.AttrDeleteOnTermination: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+								ForceNew: true,
+							},
+							names.AttrEncrypted: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrThroughput: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrVolumeSize: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrVolumeType: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"spot_price": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"user_data": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"user_data_base64"},
-				StateFunc: func(v any) string {
-					switch v := v.(type) {
-					case string:
-						return userDataHashSum(v)
-					default:
-						return ""
-					}
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				ValidateFunc: validation.StringLenBetween(1, 16384),
-			},
-			"user_data_base64": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"user_data"},
-				ValidateFunc:  verify.ValidBase64String,
-			},
+				"spot_price": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"user_data": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"user_data_base64"},
+					StateFunc: func(v any) string {
+						switch v := v.(type) {
+						case string:
+							return userDataHashSum(v)
+						default:
+							return ""
+						}
+					},
+					ValidateFunc: validation.StringLenBetween(1, 16384),
+				},
+				"user_data_base64": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"user_data"},
+					ValidateFunc:  verify.ValidBase64String,
+				},
+			}
 		},
 	}
 }
@@ -317,7 +320,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	lcName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	lcName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := autoscaling.CreateLaunchConfigurationInput{
 		EbsOptimized:            aws.Bool(d.Get("ebs_optimized").(bool)),
 		ImageId:                 aws.String(d.Get("image_id").(string)),
@@ -366,7 +369,6 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 
 	// We'll use this to detect if we're declaring it incorrectly as an ebs_block_device.
 	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Launch Configuration (%s): %s", lcName, err)
 	}
@@ -405,7 +407,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return autoscalingconn.CreateLaunchConfiguration(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -416,7 +418,6 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 
 			return false, err
 		})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Launch Configuration (%s): %s", lcName, err)
 	}
@@ -433,7 +434,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 
 	lc, err := findLaunchConfigurationByName(ctx, autoscalingconn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Launch Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -477,7 +478,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 
 	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		// Don't block a refresh for a bad image.
 		rootDeviceName = ""
 	} else if err != nil {
@@ -518,8 +519,8 @@ func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Launch Configuration: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUseFault](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceInUseFault](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteLaunchConfiguration(ctx, &autoscaling.DeleteLaunchConfigurationInput{
 				LaunchConfigurationName: aws.String(d.Id()),
 			})
@@ -774,18 +775,17 @@ func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
 	// check against double-encoding when setting it.
-	v, err := itypes.Base64Decode(userData)
+	v, err := inttypes.Base64Decode(userData)
 	if err != nil {
 		v = []byte(userData)
 	}
 
-	hash := sha1.Sum(v)
+	hash := sha1.Sum(v) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1 -- AWS AutoScaling API uses SHA1 for user_data hashing, must match AWS behavior
 	return hex.EncodeToString(hash[:])
 }
 
 func findLaunchConfiguration(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLaunchConfigurationsInput) (*awstypes.LaunchConfiguration, error) {
 	output, err := findLaunchConfigurations(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -800,7 +800,6 @@ func findLaunchConfigurations(ctx context.Context, conn *autoscaling.Client, inp
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
 		if err != nil {
 			return nil, err
 		}
@@ -817,16 +816,13 @@ func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client
 	}
 
 	output, err := findLaunchConfiguration(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.LaunchConfigurationName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -834,7 +830,6 @@ func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client
 
 func findImageRootDeviceName(ctx context.Context, conn *ec2.Client, imageID string) (string, error) {
 	image, err := tfec2.FindImageByID(ctx, conn, imageID)
-
 	if err != nil {
 		return "", err
 	}

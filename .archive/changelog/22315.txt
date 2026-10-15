@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ec2_traffic_mirror_filter_rule: Prevent crash during resource read
-```

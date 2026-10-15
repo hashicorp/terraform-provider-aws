@@ -1,0 +1,62 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package ram
+
+import (
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/service/ram"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+)
+
+// Custom RAM tag functions using the same format as generated code. Used only in testing.
+
+// ListTags lists RAM service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
+	var (
+		tags tftags.KeyValueTags
+		err  error
+	)
+	switch resourceType {
+	case "Permission":
+		tags, err = listPermissionTags(ctx, meta.(*conns.AWSClient).RAMClient(ctx), identifier)
+
+	case "ResourceShare":
+		tags, err = listResourceShareTags(ctx, meta.(*conns.AWSClient).RAMClient(ctx), identifier)
+
+	default:
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
+}
+
+func listPermissionTags(ctx context.Context, conn *ram.Client, identifier string) (tftags.KeyValueTags, error) {
+	output, err := findPermissionByARN(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return keyValueTags(ctx, output.Tags), nil
+}
+
+func listResourceShareTags(ctx context.Context, conn *ram.Client, identifier string) (tftags.KeyValueTags, error) {
+	output, err := findResourceShareOwnerSelfByARN(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return keyValueTags(ctx, output.Tags), nil
+}

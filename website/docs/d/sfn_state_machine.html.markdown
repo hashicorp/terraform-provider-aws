@@ -22,6 +22,9 @@ data "aws_sfn_state_machine" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Friendly name of the state machine to match.
 
 ## Attribute Reference
@@ -29,7 +32,7 @@ data "aws_sfn_state_machine" "example" {
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Set to the ARN of the found state machine, suitable for referencing in other resources that support State Machines.
-* `arn` - Set to the arn of the state function.
+* `arn` - Set to the ARN of the state function.
 * `role_arn` - Set to the role_arn used by the state function.
 * `definition` - Set to the state machine definition.
 * `creation_date` - Date the state machine was created.

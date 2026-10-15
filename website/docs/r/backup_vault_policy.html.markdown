@@ -54,14 +54,15 @@ resource "aws_backup_vault_policy" "example" {
 This resource supports the following arguments:
 
 * `backup_vault_name` - (Required) Name of the backup vault to add policy for.
-* `policy` - (Required) The backup vault access policy document in JSON format.
+* `policy` - (Required) Backup vault access policy document in JSON format.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name of the vault.
-* `backup_vault_arn` - The ARN of the vault.
+* `backup_vault_arn` - ARN of the vault.
+* `id` - Name of the vault.
 
 ## Import
 

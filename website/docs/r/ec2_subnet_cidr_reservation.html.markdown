@@ -24,6 +24,7 @@ resource "aws_ec2_subnet_cidr_reservation" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_block` - (Required) The CIDR block for the reservation.
 * `reservation_type` - (Required) The type of reservation to create. Valid values: `explicit`, `prefix`
 * `subnet_id` - (Required) The ID of the subnet to create the reservation for.

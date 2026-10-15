@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_wafregional_ipset
 
-`aws_wafregional_ipset` Retrieves a WAF Regional IP Set Resource Id.
+`aws_wafregional_ipset` Retrieves a WAF Regional IP Set Resource ID.
 
 ## Example Usage
 
@@ -23,6 +23,7 @@ data "aws_wafregional_ipset" "example" {
 This data source supports the following arguments:
 
 * `name` - (Required) Name of the WAF Regional IP set.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 

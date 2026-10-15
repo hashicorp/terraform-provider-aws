@@ -10,7 +10,7 @@ description: |-
 
 `aws_vpc_ipam_pool_cidrs` provides details about an IPAM pool.
 
-This resource can prove useful when an ipam pool was shared to your account and you want to know all (or a filtered list) of the CIDRs that are provisioned into the pool.
+This resource can prove useful when an IPAM pool was shared to your account and you want to know all (or a filtered list) of the CIDRs that are provisioned into the pool.
 
 ## Example Usage
 
@@ -68,28 +68,29 @@ resource "aws_ec2_managed_prefix_list" "pls" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-VPCs in the current region. The given filters must match exactly one
-VPC whose data will be exported as attributes.
+This data source supports the following arguments:
 
-* `ipam_pool_id` - ID of the IPAM pool you would like the list of provisioned CIDRs.
-* `filter` - Custom filter block as described below.
+* `filter` - (Optional) Custom filter block as described below.
+* `ipam_pool_id` - (Required) ID of the IPAM pool you would like the list of provisioned CIDRs.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `filter` Block
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
+
+* `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetIpamPoolCidrs.html).
+* `values` - (Required) Set of values that are accepted for the given field.
 
 ## Attribute Reference
 
-All of the argument attributes except `filter` blocks are also exported as
-result attributes. This data source will complete the data by populating
-any fields that are not included in the configuration with the data for
-the selected IPAM Pool CIDRs.
+This data source exports the following attributes in addition to the arguments above:
 
-The following attribute is additionally exported:
+* `ipam_pool_cidrs` - CIDRs provisioned into the IPAM pool, described below.
 
-* `ipam_pool_cidrs` - The CIDRs provisioned into the IPAM pool, described below.
+### `ipam_pool_cidrs` Block
 
-### ipam_pool_cidrs
-
-* `cidr` - A network CIDR.
-* `state` - The provisioning state of that CIDR.
+* `cidr` - Network CIDR.
+* `state` - Provisioning state of that CIDR.
 
 ## Timeouts
 

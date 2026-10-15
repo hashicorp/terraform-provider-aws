@@ -22,29 +22,32 @@ data "aws_grafana_workspace" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `workspace_id` - (Required) Grafana workspace ID.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `account_access_type` - (Required) Type of account access for the workspace. Valid values are `CURRENT_ACCOUNT` and `ORGANIZATION`. If `ORGANIZATION` is specified, then `organizational_units` must also be present.
-* `authentication_providers` - (Required) Authentication providers for the workspace. Valid values are `AWS_SSO`, `SAML`, or both.
+* `account_access_type` - Type of account access for the workspace. Valid values are `CURRENT_ACCOUNT` and `ORGANIZATION`. If `ORGANIZATION` is specified, then `organizational_units` must also be present.
 * `arn` - ARN of the Grafana workspace.
+* `authentication_providers` - Authentication providers for the workspace. Valid values are `AWS_SSO`, `SAML`, or both.
 * `created_date` - Creation date of the Grafana workspace.
 * `data_sources` - Data sources for the workspace.
 * `description` - Workspace description.
 * `endpoint` - Endpoint of the Grafana workspace.
 * `grafana_version` - Version of Grafana running on the workspace.
+* `kms_key_id` - ID or ARN of the AWS KMS key for encrypting workspace data.
 * `last_updated_date` - Last updated date of the Grafana workspace.
 * `name` - Grafana workspace name.
-* `notification_destinations` - The notification destinations.
-* `organization_role_name` - The role name that the workspace uses to access resources through Amazon Organizations.
-* `organizational_units` - The Amazon Organizations organizational units that the workspace is authorized to use data sources from.
+* `notification_destinations` - Notification destinations.
+* `organization_role_name` - Role name that the workspace uses to access resources through Amazon Organizations.
+* `organizational_units` - Amazon Organizations organizational units that the workspace is authorized to use data sources from.
 * `permission_type` - Permission type of the workspace.
 * `role_arn` - IAM role ARN that the workspace assumes.
+* `saml_configuration_status` - Status of the SAML configuration.
 * `stack_set_name` - AWS CloudFormation stack set name that provisions IAM roles to be used by the workspace.
 * `status` - Status of the Grafana workspace.
 * `tags` - Tags assigned to the resource

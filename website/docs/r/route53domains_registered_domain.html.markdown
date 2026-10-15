@@ -36,8 +36,6 @@ resource "aws_route53domains_registered_domain" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** You must specify the same privacy setting for `admin_privacy`, `registrant_privacy` and `tech_privacy`.
-
 This resource supports the following arguments:
 
 * `admin_contact` - (Optional) Details about the domain administrative contact. See [Contact Blocks](#contact-blocks) for more details.
@@ -53,6 +51,8 @@ This resource supports the following arguments:
 * `tech_contact` - (Optional) Details about the domain technical contact. See [Contact Blocks](#contact-blocks) for more details.
 * `tech_privacy` - (Optional) Whether domain technical contact information is concealed from WHOIS queries. Default: `true`.
 * `transfer_lock` - (Optional) Whether the domain is locked for transfer. Default: `true`.
+
+~> **NOTE:** You must specify the same privacy setting for `admin_privacy`, `registrant_privacy` and `tech_privacy`.
 
 ### Contact Blocks
 

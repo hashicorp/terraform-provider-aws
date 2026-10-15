@@ -44,6 +44,7 @@ resource "aws_ebs_snapshot_copy" "example_copy" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description of what the snapshot is.
 * `encrypted` - Whether the snapshot is encrypted.
 * `kms_key_id` - The ARN for the KMS encryption key.
@@ -59,7 +60,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
+* `arn` - ARN of the EBS Snapshot.
 * `id` - The snapshot ID (e.g., snap-59fcb34e).
 * `owner_id` - The AWS account ID of the snapshot owner.
 * `owner_alias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.

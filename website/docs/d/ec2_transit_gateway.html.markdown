@@ -35,6 +35,7 @@ data "aws_ec2_transit_gateway" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway.
 
@@ -55,6 +56,7 @@ This data source exports the following attributes in addition to the arguments a
 * `default_route_table_propagation` - Whether resource attachments automatically propagate routes to the default propagation route table
 * `description` - Description of the EC2 Transit Gateway
 * `dns_support` - Whether DNS support is enabled
+* `encryption_support` - Whether encryption support for VPC Encryption Control is enabled.
 * `security_group_referencing_support` - Whether Security Group Referencing Support is enabled
 * `multicast_support` - Whether Multicast support is enabled
 * `id` - EC2 Transit Gateway identifier

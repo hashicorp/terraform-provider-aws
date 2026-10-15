@@ -1,3 +1,0 @@
-```release-note:enhancement
- resource/aws_securityhub_member: `email` is Optional
- ```

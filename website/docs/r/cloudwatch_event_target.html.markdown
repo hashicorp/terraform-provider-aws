@@ -12,6 +12,12 @@ Provides an EventBridge Target resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
+-> **Note:** In order to be able to have your AWS Lambda function or
+   SNS topic invoked by an EventBridge rule, you must set up the right permissions
+   using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
+   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
+   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
+
 ## Example Usage
 
 ### Kinesis Usage
@@ -52,8 +58,11 @@ resource "aws_cloudwatch_event_rule" "console" {
 }
 
 resource "aws_kinesis_stream" "test_stream" {
-  name        = "terraform-kinesis-test"
-  shard_count = 1
+  name = "terraform-kinesis-test"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 ```
 
@@ -239,7 +248,7 @@ resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
   arn  = "${aws_api_gateway_stage.example.execution_arn}/GET"
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatch_event_rule.example.name
 
   http_target {
     query_string_parameters = {
@@ -325,7 +334,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
   arn  = aws_lambda_function.example.arn
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatch_event_rule.example.name
 
   input_transformer {
     input_paths = {
@@ -351,7 +360,7 @@ resource "aws_cloudwatch_event_rule" "example" {
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
   arn  = aws_lambda_function.example.arn
-  rule = aws_cloudwatch_event_rule.example.id
+  rule = aws_cloudwatch_event_rule.example.name
 
   input_transformer {
     input_paths = {
@@ -367,7 +376,7 @@ resource "aws_cloudwatch_event_rule" "example" {
 }
 ```
 
-### Cloudwatch Log Group Usage
+### CloudWatch Log Group Usage
 
 ```terraform
 resource "aws_cloudwatch_log_group" "example" {
@@ -459,7 +468,7 @@ resource "aws_cloudwatch_event_rule" "invoke_appsync_mutation" {
 
 resource "aws_cloudwatch_event_target" "invoke_appsync_mutation" {
   arn      = replace(aws_appsync_graphql_api.graphql-api.arn, "apis", "endpoints/graphql-api")
-  rule     = aws_cloudwatch_event_rule.invoke_appsync_mutation.id
+  rule     = aws_cloudwatch_event_rule.invoke_appsync_mutation.name
   role_arn = aws_iam_role.appsync_mutation_role.arn
 
   input_transformer {
@@ -545,19 +554,14 @@ resource "aws_appsync_graphql_api" "graphql-api" {
 
 ## Argument Reference
 
--> **Note:** In order to be able to have your AWS Lambda function or
-   SNS topic invoked by an EventBridge rule, you must set up the right permissions
-   using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
-   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
-   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
-
 The following arguments are required:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the target.
+* `arn` - (Required) ARN of the target.
 * `rule` - (Required) The name of the rule you want to add targets to.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `appsync_target` - (Optional) Parameters used when you are using the rule to invoke an AppSync GraphQL API mutation. Documented below. A maximum of 1 are allowed.
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter config. Documented below. A maximum of 1 are allowed.
@@ -570,13 +574,13 @@ The following arguments are optional:
 * `input_path` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `input_transformer`.
 * `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data. Conflicts with `input` and `input_path`.
 * `kinesis_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Kinesis Stream. Documented below. A maximum of 1 are allowed.
-* `role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used or target in `arn` is EC2 instance, Kinesis data stream, Step Functions state machine, or Event Bus in different account or region.
+* `role_arn` - (Optional) ARN of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used or target in `arn` is EC2 instance, Kinesis data stream, Step Functions state machine, or Event Bus in different account or region.
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `redshift_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Redshift Statement. Documented below. A maximum of 1 are allowed.
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
 * `sagemaker_pipeline_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SageMaker AI Pipeline. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
-* `target_id` - (Optional) The unique target assignment ID. If missing, will generate a random, unique id.
+* `target_id` - (Optional) The unique target assignment ID. If missing, will generate a random, unique ID.
 
 ### batch_target
 
@@ -609,7 +613,7 @@ The following arguments are optional:
 * `platform_version` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `1.1.0`. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
 * `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags are not propagated. Tags can only be propagated to the task during task creation. The only valid value is: `TASK_DEFINITION`.
 * `task_count` - (Optional) The number of tasks to create based on the TaskDefinition. Defaults to `1`.
-* `tags` - (Optional) A map of tags to assign to ecs resources.
+* `tags` - (Optional) A map of tags to assign to ECS resources.
 
 ### http_target
 
@@ -689,11 +693,41 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_target.example
+  identity = {
+    event_bus_name = "default"
+    rule           = "rule-name"
+    target_id      = "target-id"
+  }
+}
+
+resource "aws_cloudwatch_event_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `event_bus_name` (String) Event bus name for the target.
+* `rule` (String) Rule name for the target.
+* `target_id` (String) Target ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
  ```terraform
 import {
-  to = aws_cloudwatch_event_target.test-event-target
+  to = aws_cloudwatch_event_target.example
   id = "rule-name/target-id"
 }
 ```
@@ -701,5 +735,5 @@ import {
 Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
  ```console
-% terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
+% terraform import aws_cloudwatch_event_target.example rule-name/target-id
 ```

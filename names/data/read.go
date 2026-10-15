@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package data
@@ -157,6 +157,13 @@ func (sr ServiceRecord) HumanFriendly() string {
 	return sr.service.ServiceNames.HumanFriendly
 }
 
+func (sr ServiceRecord) HumanFriendlyShort() string {
+	if sr.service.ServiceNames.HumanFriendlyShort != "" {
+		return sr.service.ServiceNames.HumanFriendlyShort
+	}
+	return sr.service.ServiceNames.HumanFriendly
+}
+
 func (sr ServiceRecord) FullHumanFriendly() string {
 	if sr.Brand() == "" {
 		return sr.HumanFriendly()
@@ -171,6 +178,10 @@ func (sr ServiceRecord) Brand() string {
 
 func (sr ServiceRecord) Exclude() bool {
 	return sr.service.Exclude
+}
+
+func (sr ServiceRecord) IsGlobal() bool {
+	return sr.service.IsGlobal
 }
 
 func (sr ServiceRecord) NotImplemented() bool {
@@ -209,6 +220,13 @@ func (sr ServiceRecord) SDKID() string {
 	return ""
 }
 
+func (sr ServiceRecord) ARNNamespace() string {
+	if sr.service.ServiceSDK != nil {
+		return sr.service.ServiceSDK.ARNNamespace
+	}
+	return ""
+}
+
 func (sr ServiceRecord) AWSServiceEnvVar() string {
 	return "AWS_ENDPOINT_URL_" + strings.ReplaceAll(strings.ToUpper(sr.SDKID()), " ", "_")
 }
@@ -229,6 +247,13 @@ func (sr ServiceRecord) EndpointAPIParams() string {
 		return sr.service.ServiceEndpoints.EndpointAPIParams
 	}
 	return ""
+}
+
+func (sr ServiceRecord) EndpointFIPSSupport() bool {
+	if sr.service.ServiceEndpoints != nil {
+		return !sr.service.ServiceEndpoints.EndpointNoFIPSSupport
+	}
+	return true
 }
 
 func (sr ServiceRecord) EndpointRegionOverrides() map[string]string {
@@ -290,14 +315,16 @@ type ResourcePrefix struct {
 }
 
 type SDK struct {
-	ID      string `hcl:"id,optional"`
-	Version int    `hcl:"client_version,optional"`
+	ID           string `hcl:"id,optional"`
+	Version      int    `hcl:"client_version,optional"`
+	ARNNamespace string `hcl:"arn_namespace,optional"`
 }
 
 type Names struct {
-	Aliases           []string `hcl:"aliases,optional"`
-	ProviderNameUpper string   `hcl:"provider_name_upper,attr"`
-	HumanFriendly     string   `hcl:"human_friendly,attr"`
+	Aliases            []string `hcl:"aliases,optional"`
+	ProviderNameUpper  string   `hcl:"provider_name_upper,attr"`
+	HumanFriendly      string   `hcl:"human_friendly,attr"`
+	HumanFriendlyShort string   `hcl:"human_friendly_short,optional"`
 }
 
 type ProviderPackage struct {
@@ -320,6 +347,7 @@ type EndpointInfo struct {
 	EndpointAPIParams       string            `hcl:"endpoint_api_params,optional"`
 	EndpointRegionOverrides map[string]string `hcl:"endpoint_region_overrides,optional"`
 	EndpointOnly            bool              `hcl:"endpoint_only,optional"`
+	EndpointNoFIPSSupport   bool              `hcl:"endpoint_no_fips_support,optional"`
 }
 
 type Service struct {
@@ -344,6 +372,7 @@ type Service struct {
 	NotImplemented                bool     `hcl:"not_implemented,optional"`
 	AllowedSubcategory            bool     `hcl:"allowed_subcategory,optional"`
 	Note                          string   `hcl:"note,optional"`
+	IsGlobal                      bool     `hcl:"is_global,optional"`
 }
 
 type Services struct {

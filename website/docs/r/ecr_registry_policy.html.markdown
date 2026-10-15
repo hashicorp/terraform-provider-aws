@@ -35,7 +35,7 @@ resource "aws_ecr_registry_policy" "example" {
           "ecr:ReplicateImage"
         ],
         Resource = [
-          "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/*"
+          "arn:${data.aws_partition.current.partition}:ecr:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:repository/*"
         ]
       }
     ]
@@ -47,6 +47,7 @@ resource "aws_ecr_registry_policy" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 
 ## Attribute Reference
@@ -57,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Registry Policy using the registry id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Registry Policy using the registry ID. For example:
 
 ```terraform
 import {
@@ -66,7 +67,7 @@ import {
 }
 ```
 
-Using `terraform import`, import ECR Registry Policy using the registry id. For example:
+Using `terraform import`, import ECR Registry Policy using the registry ID. For example:
 
 ```console
 % terraform import aws_ecr_registry_policy.example 123456789012

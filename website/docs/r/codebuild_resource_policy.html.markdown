@@ -53,8 +53,9 @@ resource "aws_codebuild_resource_policy" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required) The ARN of the Project or ReportGroup resource you want to associate with a resource policy.
-* `policy` - (Required) A JSON-formatted resource policy. For more information, see [Sharing a Projec](https://docs.aws.amazon.com/codebuild/latest/userguide/project-sharing.html#project-sharing-share) and [Sharing a Report Group](https://docs.aws.amazon.com/codebuild/latest/userguide/report-groups-sharing.html#report-groups-sharing-share).
+* `policy` - (Required) A JSON-formatted resource policy. For more information, see [Sharing a Project](https://docs.aws.amazon.com/codebuild/latest/userguide/project-sharing.html#project-sharing-share) and [Sharing a Report Group](https://docs.aws.amazon.com/codebuild/latest/userguide/report-groups-sharing.html#report-groups-sharing-share).
 
 ## Attribute Reference
 
@@ -64,7 +65,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Resource Policy using the CodeBuild Resource Policy arn. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codebuild_resource_policy.example
+  identity = {
+    "resource_arn" = "arn:aws:codebuild:us-west-2:123456789012:report-group/report-group-name"
+  }
+}
+
+resource "aws_codebuild_resource_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `resource_arn` (String) ARN of the CodeBuild resource.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Resource Policy using the CodeBuild Resource Policy ARN. For example:
 
 ```terraform
 import {
@@ -73,7 +95,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CodeBuild Resource Policy using the CodeBuild Resource Policy arn. For example:
+Using `terraform import`, import CodeBuild Resource Policy using the CodeBuild Resource Policy ARN. For example:
 
 ```console
 % terraform import aws_codebuild_resource_policy.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name

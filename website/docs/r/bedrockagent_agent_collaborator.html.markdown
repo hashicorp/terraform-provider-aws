@@ -3,11 +3,11 @@ subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_agent_collaborator"
 description: |-
-  Terraform resource for managing an AWS Bedrock Agents Agent Collaborator.
+  Manages an AWS Bedrock Agents Agent Collaborator.
 ---
 # Resource: aws_bedrockagent_agent_collaborator
 
-Terraform resource for managing an AWS Bedrock Agents Agent Collaborator.
+Manages an AWS Bedrock Agents Agent Collaborator.
 
 ## Example Usage
 
@@ -34,7 +34,7 @@ data "aws_iam_policy_document" "example_agent_trust" {
     }
     condition {
       test     = "ArnLike"
-      values   = ["arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent/*"]
+      values   = ["arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:agent/*"]
       variable = "AWS:SourceArn"
     }
   }
@@ -44,14 +44,14 @@ data "aws_iam_policy_document" "example_agent_permissions" {
   statement {
     actions = ["bedrock:InvokeModel"]
     resources = [
-      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
     ]
   }
   statement {
     actions = ["bedrock:GetAgentAlias", "bedrock:InvokeAgent"]
     resources = [
-      "arn:${data.aws_partition.current_agent.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent/*",
-      "arn:${data.aws_partition.current_agent.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent-alias/*"
+      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:agent/*",
+      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:agent-alias/*"
     ]
   }
 }
@@ -71,7 +71,7 @@ resource "aws_bedrockagent_agent" "example_collaborator" {
   agent_resource_role_arn     = aws_iam_role.example.arn
   idle_session_ttl_in_seconds = 500
   foundation_model            = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-  instruction                 = "do what the supervisor tells you to do"
+  instruction                 = "You are a collaborator agent. Do what the supervisor tells you to do."
 }
 
 resource "aws_bedrockagent_agent" "example_supervisor" {
@@ -80,7 +80,7 @@ resource "aws_bedrockagent_agent" "example_supervisor" {
   agent_collaboration         = "SUPERVISOR"
   idle_session_ttl_in_seconds = 500
   foundation_model            = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-  instruction                 = "tell the sub agent what to do"
+  instruction                 = "You are a supervisor agent. Tell the sub agent what to do."
   prepare_agent               = false
 }
 
@@ -106,13 +106,16 @@ resource "aws_bedrockagent_agent_collaborator" "example" {
 
 The following arguments are required:
 
-* `agent_id` - (Required) ID if the agent to associate the collaborator.
+* `agent_descriptor` - (Required) Agent descriptor for the agent collaborator. See [`agent_descriptor` Block](#agent_descriptor-block) for details.
+* `agent_id` - (Required) ID of the agent to associate the collaborator with.
 * `collaboration_instruction` - (Required) Instruction to give the collaborator.
-* `collbaorator_name` - (Required) Name of this collaborator.
+* `collaborator_name` - (Required) Name of this collaborator.
 
 The following arguments are optional:
 
-* `prepare_agent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
+* `agent_version` - (Optional) Version of the agent to associate the collaborator with. Defaults to `DRAFT`.
+* `prepare_agent` - (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `relay_conversation_history` - (Optional) Configure relaying the history to the collaborator.
 
 ### `agent_descriptor` Block

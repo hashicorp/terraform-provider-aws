@@ -45,10 +45,11 @@ The following arguments are required:
 * `project_name` - (Required) The name of the project in the space.
 * `persistent_storage` - (Required) Information about the amount of storage allocated to the Dev Environment.
 * `ides` - (Required) Information about the integrated development environment (IDE) configured for a Dev Environment.
-* `instance_type` - (Required) The Amazon EC2 instace type to use for the Dev Environment. Valid values include dev.standard1.small,dev.standard1.medium,dev.standard1.large,dev.standard1.xlarge
+* `instance_type` - (Required) The Amazon EC2 instance type to use for the Dev Environment. Valid values include dev.standard1.small,dev.standard1.medium,dev.standard1.large,dev.standard1.xlarge
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `inactivity_timeout_minutes` - (Optional) The amount of time the Dev Environment will run without any activity detected before stopping, in minutes. Only whole integers are allowed. Dev Environments consume compute minutes when running.
 * `repositories` - (Optional) The source repository that contains the branch to clone into the Dev Environment.
 

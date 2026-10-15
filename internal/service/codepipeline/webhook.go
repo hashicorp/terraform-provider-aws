@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codepipeline
 
@@ -18,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,7 +28,13 @@ import (
 )
 
 // @SDKResource("aws_codepipeline_webhook", name="Webhook")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @ArnFormat("webhook:{name}")
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codepipeline/types;awstypes;awstypes.ListWebhookItem")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(requireEnvVarValue="GITHUB_TOKEN")
 func resourceWebhook() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebhookCreate,
@@ -33,90 +42,88 @@ func resourceWebhook() *schema.Resource {
 		UpdateWithoutTimeout: resourceWebhookUpdate,
 		DeleteWithoutTimeout: resourceWebhookDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authentication": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.WebhookAuthenticationType](),
-			},
-			"authentication_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				MinItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allowed_ip_range": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsCIDRNetwork(0, 32),
-						},
-						"secret_token": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							Sensitive:    true,
-							ValidateFunc: validation.StringLenBetween(1, 100),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authentication": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.WebhookAuthenticationType](),
+				},
+				"authentication_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					MinItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allowed_ip_range": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsCIDRNetwork(0, 32),
+							},
+							"secret_token": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								Sensitive:    true,
+								ValidateFunc: validation.StringLenBetween(1, 100),
+							},
 						},
 					},
 				},
-			},
-			names.AttrFilter: {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"json_path": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 150),
-						},
-						"match_equals": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 150),
+				names.AttrFilter: {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"json_path": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 150),
+							},
+							"match_equals": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 150),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
-				),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_action": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"target_pipeline": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 100),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+					),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_action": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"target_pipeline": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -161,7 +168,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	webhook, err := findWebhookByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodePipeline Webhook %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

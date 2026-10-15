@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "example" {
 }
 
 resource "aws_s3tables_table" "example" {
-  name             = "example-table"
+  name             = "example_table"
   namespace        = aws_s3tables_namespace.example
   table_bucket_arn = aws_s3tables_namespace.example.table_bucket_arn
   format           = "ICEBERG"
@@ -47,15 +47,12 @@ resource "aws_s3tables_table_bucket" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `name` - (Required, Forces new resource) Name of the table. Must be between 1 and 255 characters in length. Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
+* `namespace` - (Required, Forces new resource) Name of the namespace for this table. Must be between 1 and 255 characters in length. Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_policy` - (Required) Amazon Web Services resource-based policy document in JSON format.
-* `name` - (Required, Forces new resource) Name of the table.
-  Must be between 1 and 255 characters in length.
-  Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
-* `namespace` - (Required, Forces new resource) Name of the namespace for this table.
-  Must be between 1 and 255 characters in length.
-  Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that contains this Namespace.
 
 ## Attribute Reference

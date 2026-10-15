@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_chatbot_slack_channel_configuration
-```

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dynamodb
 
@@ -12,153 +14,155 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dynamodb_table_export", name="Table Export")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;awstypes;awstypes.ExportDescription")
+// @Testing(checkDestroyNoop=true)
 func resourceTableExport() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableExportCreate,
 		ReadWithoutTimeout:   resourceTableExportRead,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"billed_size_in_bytes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"end_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"export_format": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.ExportFormatDynamodbJson,
-				ValidateDiagFunc: enum.Validate[awstypes.ExportFormat](),
-			},
-			"export_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"export_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidUTCTimestamp,
-			},
-			"export_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ExportType](),
-			},
-			"incremental_export_specification": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"export_from_time": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidUTCTimestamp,
-						},
-						"export_to_time": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidUTCTimestamp,
-						},
-						"export_view_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ExportViewType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"billed_size_in_bytes": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"end_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"export_format": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.ExportFormatDynamodbJson,
+					ValidateDiagFunc: enum.Validate[awstypes.ExportFormat](),
+				},
+				"export_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"export_time": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidUTCTimestamp,
+				},
+				"export_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ExportType](),
+				},
+				"incremental_export_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"export_from_time": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidUTCTimestamp,
+							},
+							"export_to_time": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidUTCTimestamp,
+							},
+							"export_view_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ExportViewType](),
+							},
 						},
 					},
 				},
-			},
-			"item_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"manifest_files_s3_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrS3Bucket: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"s3_bucket_owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"s3_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"s3_sse_algorithm": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.S3SseAlgorithm](),
-			},
-			"s3_sse_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2048),
-			},
-			names.AttrStartTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"table_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				"item_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"manifest_files_s3_key": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrS3Bucket: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"s3_bucket_owner": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"s3_prefix": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"s3_sse_algorithm": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.S3SseAlgorithm](),
+				},
+				"s3_sse_kms_key_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2048),
+				},
+				names.AttrStartTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"table_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -228,7 +232,7 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	desc, err := findTableExportByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DynamoDB Table Export (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -266,7 +270,7 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func expandIncrementalExportSpecification(d any) *awstypes.IncrementalExportSpecification {
-	if d.([]any) == nil || len(d.([]any)) == 0 {
+	if len(d.([]any)) == 0 {
 		return nil
 	}
 
@@ -322,23 +326,22 @@ func findTableExportByARN(ctx context.Context, conn *dynamodb.Client, arn string
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
 	if output == nil || output.ExportDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ExportDescription, nil
 }
 
-func statusTableExport(ctx context.Context, conn *dynamodb.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTableExport(conn *dynamodb.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableExportByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -357,7 +360,7 @@ func waitTableExportCreated(ctx context.Context, conn *dynamodb.Client, id strin
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ExportStatusInProgress),
 		Target:  enum.Slice(awstypes.ExportStatusCompleted, awstypes.ExportStatusFailed),
-		Refresh: statusTableExport(ctx, conn, id),
+		Refresh: statusTableExport(conn, id),
 		Timeout: max(maxTimeout, timeout),
 	}
 

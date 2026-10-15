@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package events
 
@@ -18,13 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_cloudwatch_event_buses", name="Event Buses")
+// @FrameworkDataSource("aws_cloudwatch_event_buses", name="Buses")
 func newEventBusesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &eventBusesDataSource{}, nil
 }
 
 type eventBusesDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[eventBusesDataSourceModel]
 }
 
 func (d *eventBusesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -67,6 +69,7 @@ func (d *eventBusesDataSource) Read(ctx context.Context, request datasource.Read
 }
 
 type eventBusesDataSourceModel struct {
+	framework.WithRegionModel
 	EventBuses fwtypes.ListNestedObjectValueOf[eventBusModel] `tfsdk:"event_buses"`
 	NamePrefix types.String                                   `tfsdk:"name_prefix"`
 }

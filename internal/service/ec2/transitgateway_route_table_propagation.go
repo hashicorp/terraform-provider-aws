@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -11,48 +13,52 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_route_table_propagation", name="Transit Gateway Route Table Propagation")
+// @IdentityAttribute("transit_gateway_attachment_id")
+// @IdentityAttribute("transit_gateway_route_table_id")
+// @ImportIDHandler("transitGatewayRouteTablePropagationImportID")
+// @Testing(preCheck="testAccPreCheckTransitGateway", preIdentityVersion="v6.66.0")
 func resourceTransitGatewayRouteTablePropagation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTablePropagationCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayRouteTablePropagationRead,
 		DeleteWithoutTimeout: resourceTransitGatewayRouteTablePropagationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTransitGatewayAttachmentID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"transit_gateway_route_table_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTransitGatewayAttachmentID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"transit_gateway_route_table_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			}
 		},
 	}
 }
@@ -95,7 +101,7 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 
 	transitGatewayPropagation, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table Propagation %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -105,12 +111,16 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Propagation (%s): %s", d.Id(), err)
 	}
 
+	resourceTransitGatewayRouteTablePropagationFlatten(transitGatewayPropagation, transitGatewayRouteTableID, d)
+
+	return diags
+}
+
+func resourceTransitGatewayRouteTablePropagationFlatten(transitGatewayPropagation *awstypes.TransitGatewayRouteTablePropagation, transitGatewayRouteTableID string, d *schema.ResourceData) {
 	d.Set(names.AttrResourceID, transitGatewayPropagation.ResourceId)
 	d.Set(names.AttrResourceType, transitGatewayPropagation.ResourceType)
 	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPropagation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
-
-	return diags
 }
 
 func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -155,7 +165,7 @@ func transitGatewayRouteTablePropagationUpdate(ctx context.Context, conn *ec2.Cl
 	id := transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 	_, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		if enable {
 			input := &ec2.EnableTransitGatewayRouteTablePropagationInput{
 				TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
@@ -218,4 +228,29 @@ func transitGatewayRouteTablePropagationParseResourceID(id string) (string, stri
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TRANSIT-GATEWAY-ROUTE-TABLE-ID%[2]sTRANSIT-GATEWAY-ATTACHMENT-ID", id, transitGatewayRouteTablePropagationIDSeparator)
+}
+
+var _ inttypes.SDKv2ImportID = transitGatewayRouteTablePropagationImportID{}
+
+type transitGatewayRouteTablePropagationImportID struct{}
+
+func (transitGatewayRouteTablePropagationImportID) Parse(id string) (string, map[string]any, error) {
+	transitGatewayRouteTableID, transitGatewayAttachmentID, err := transitGatewayRouteTablePropagationParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	attributes := map[string]any{
+		names.AttrTransitGatewayAttachmentID: transitGatewayAttachmentID,
+		"transit_gateway_route_table_id":     transitGatewayRouteTableID,
+	}
+
+	return transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID), attributes, nil
+}
+
+func (transitGatewayRouteTablePropagationImportID) Create(d *schema.ResourceData) string {
+	return transitGatewayRouteTablePropagationCreateResourceID(
+		d.Get("transit_gateway_route_table_id").(string),
+		d.Get(names.AttrTransitGatewayAttachmentID).(string),
+	)
 }

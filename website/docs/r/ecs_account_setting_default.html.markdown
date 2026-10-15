@@ -16,10 +16,21 @@ Provides an ECS default account setting for a specific ECS Resource name within 
 
 ## Example Usage
 
+### Enable the long task ARN format
+
 ```terraform
 resource "aws_ecs_account_setting_default" "test" {
   name  = "taskLongArnFormat"
   value = "enabled"
+}
+```
+
+### Set the default log driver mode to non-blocking
+
+```terraform
+resource "aws_ecs_account_setting_default" "test" {
+  name  = "defaultLogDriverMode"
+  value = "non-blocking"
 }
 ```
 
@@ -28,14 +39,14 @@ resource "aws_ecs_account_setting_default" "test" {
 This resource supports the following arguments:
 
 * `name` - (Required) Name of the account setting to set.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `value` - (Required) State of the setting.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN that identifies the account setting.
-* `prinicpal_arn` - ARN that identifies the account setting.
+* `principal_arn` - ARN that identifies the account setting.
 
 ## Import
 

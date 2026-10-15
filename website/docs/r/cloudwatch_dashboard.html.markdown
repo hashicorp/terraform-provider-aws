@@ -60,6 +60,7 @@ resource "aws_cloudwatch_dashboard" "main" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dashboard_name` - (Required) The name of the dashboard.
 * `dashboard_body` - (Required) The detailed information about the dashboard, including what widgets are included and their location on the dashboard. You can read more about the body structure in the [documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/CloudWatch-Dashboard-Body-Structure.html).
 
@@ -67,21 +68,47 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `dashboard_arn` - The Amazon Resource Name (ARN) of the dashboard.
+* `dashboard_arn` - ARN of the dashboard.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch dashboards using the `dashboard_name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_dashboard.sample
-  id = "dashboard_name"
+  to = aws_cloudwatch_dashboard.example
+  identity = {
+    dashboard_name = "example-dashboard"
+  }
+}
+
+resource "aws_cloudwatch_dashboard" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import CloudWatch dashboards using the `dashboard_name`. For example:
+### Identity Schema
+
+#### Required
+
+* `dashboard_name` (String) Name of the dashboard.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Dashboards using `dashboard_name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_dashboard.example
+  id = "example-dashboard"
+}
+```
+
+Using `terraform import`, import Dashboards using `dashboard_name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_dashboard.sample dashboard_name
+% terraform import aws_cloudwatch_dashboard.example example-dashboard
 ```

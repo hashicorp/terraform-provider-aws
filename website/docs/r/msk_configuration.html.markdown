@@ -28,16 +28,17 @@ PROPERTIES
 
 This resource supports the following arguments:
 
-* `server_properties` - (Required) Contents of the server.properties file. Supported properties are documented in the [MSK Developer Guide](https://docs.aws.amazon.com/msk/latest/developerguide/msk-configuration-properties.html).
+* `description` - (Optional) Description of the configuration.
 * `kafka_versions` - (Optional) List of Apache Kafka versions which can use this configuration.
 * `name` - (Required) Name of the configuration.
-* `description` - (Optional) Description of the configuration.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `server_properties` - (Required) Contents of the server.properties file. Supported properties are documented in the [MSK Developer Guide](https://docs.aws.amazon.com/msk/latest/developerguide/msk-configuration-properties.html).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the configuration.
+* `arn` - ARN of the configuration.
 * `latest_revision` - Latest revision of the configuration.
 
 ## Import

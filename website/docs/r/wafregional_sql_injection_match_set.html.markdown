@@ -30,10 +30,9 @@ resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name or description of the SizeConstraintSet.
 * `sql_injection_match_tuple` - (Optional) The parts of web requests that you want AWS WAF to inspect for malicious SQL code and, if you want AWS WAF to inspect a header, the name of the header.
-
-### Nested fields
 
 ### `sql_injection_match_tuple`
 
@@ -61,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Sql Injection Match Set using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional SQL Injection Match Set using the ID. For example:
 
 ```terraform
 import {
@@ -70,7 +69,7 @@ import {
 }
 ```
 
-Using `terraform import`, import WAF Regional Sql Injection Match Set using the id. For example:
+Using `terraform import`, import WAF Regional SQL Injection Match Set using the ID. For example:
 
 ```console
 % terraform import aws_wafregional_sql_injection_match_set.sql_injection_match_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

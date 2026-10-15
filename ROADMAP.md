@@ -1,74 +1,51 @@
-# Roadmap:  Nov 2024 - Jan 2025
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
 
-Every few months, the team will highlight areas of focus for our work and upcoming research.
+# Roadmap: October 2026 - December 2026
 
-We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](https://hashicorp.github.io/terraform-provider-aws/core-services/), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
+As we head into Q4, we want to give a clearer view into some of the areas the AWS Provider team will be focused on over the coming months.
 
-Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap.
+This roadmap highlights a subset of that work, informed by Top Community Issues, customer feedback and requests, [Core Services](https://hashicorp.github.io/terraform-provider-aws/core-services/), AWS service priorities, and other areas we see as important for the provider. Where community contributions already exist, we will work with contributors to review and move those forward. Where they do not, we will take on the implementation directly.
 
-This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
+This is not intended to cover everything the team will work on. Weekly releases will continue to include community pull requests, bug fixes, enhancements, new features, and support for AWS service changes outside the areas called out below.
 
-In the period spanning Nov to Jan 2025 the AWS Provider added support for the following (among many others):
+From October through December 2026, our areas of focus will include the following:
 
-- AWS Chatbot
-- Amazon Bedrock
-- Amazon Route 53 Profiles & Zones
-- Amazon Bedrock Agents
-- Completed the migration to Amazon GO SDK v2
+## New Services / Features
 
-From Nov - Jan 2025, we will be prioritizing the following areas of work:
+### AI and Agents
 
-## New Services
+- **Amazon Bedrock Data Automation**: blueprints and projects ([#41643](https://github.com/hashicorp/terraform-provider-aws/issues/41643))
+- **Amazon Bedrock Enforced Guardrails**: `aws_bedrock_enforced_guardrail_configuration` ([#47408](https://github.com/hashicorp/terraform-provider-aws/pull/47408))
+- **AWS DevOps Agent**: agent spaces and asset management ([#48404](https://github.com/hashicorp/terraform-provider-aws/issues/48404))
+- **Amazon SageMaker AI**: inference components ([#48894](https://github.com/hashicorp/terraform-provider-aws/pull/48894)) and JumpStart private hub coverage
 
-### Amazon S3 Tables
+### Compute and Content Delivery
 
-Issue: [#40407](https://github.com/hashicorp/terraform-provider-aws/issues/40407)
+- **Amazon EC2 Capacity Manager** ([#45827](https://github.com/hashicorp/terraform-provider-aws/issues/45827))
+- **Amazon CloudFront flat-rate plans** ([#45450](https://github.com/hashicorp/terraform-provider-aws/issues/45450))
 
-[Amazon S3 Tables](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-s3-tables-apache-iceberg-tables-analytics-workloads/) Amazon S3 Tables deliver the first cloud object store with built-in Apache Iceberg support and the easiest way to store tabular data at scale. S3 Tables are specifically optimized for analytics workloads, resulting in up to 3x faster query throughput and up to 10x higher transactions per second than self-managed tables.
+### Data, Identity, and Messaging
 
-Support for additional S3 resources may include:
-
-New Resource(s):
-
-- `aws_s3tables_table_bucket`
-- `aws_s3tables_table_bucket_policy`
-- `aws_s3tables_table`
-- `aws_s3tables_table_policy`
-- `aws_s3tables_namespace`
-
-### Amazon S3 Express Bucket Lifecycle Configuration
-
-Issue: [#40261](https://github.com/hashicorp/terraform-provider-aws/issues/40261)
-
-[Amazon S3 Express Bucket Lifecycle Configuration](https://aws.amazon.com/about-aws/whats-new/2024/11/amazon-s3-express-one-zone-s3-lifecycle-expirations/) Amazon S3 Express One Zone, a high-performance S3 storage class for latency-sensitive applications, now supports object expiration using S3 Lifecycle. S3 Lifecycle can expire objects based on age to help you automatically optimize storage costs.
-
-Support for Amazon S3 Express resources may include:
-
-Affected Resource(s):
-
-- `aws_s3_bucket_lifecycle_configuration`
-
-### Amazon EKS: Auto Mode
-
-Issue: [#40373](https://github.com/hashicorp/terraform-provider-aws/issues/40373)
-
-[Amazon EKS: Auto Mode](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-eks-auto-mode/) a new feature that fully automates compute, storage, and networking management for Kubernetes clusters. Amazon EKS Auto Mode simplifies running Kubernetes by offloading cluster operations to AWS, improves the performance and security of your applications, and helps optimize compute costs.
-
-### Amazon ECS: Availability Zone Rebalancing
-
-Issue: [#40221](https://github.com/hashicorp/terraform-provider-aws/issues/40221)
-
-[ECS: Availability Zone Rebalancing](https://aws.amazon.com/about-aws/whats-new/2024/11/amazon-ecs-az-rebalancing-speeds-mean-time-recovery-event/) a new feature that automatically redistributes containerized workloads across AZs. This capability helps reduce the mean time to recovery after infrastructure events, enabling applications to maintain high availability without requiring manual intervention.
+- **AWS Directory Service user and group management** ([#39469](https://github.com/hashicorp/terraform-provider-aws/issues/39469))
+- **Oracle Database@AWS multitenant databases (CDB/PDB)**
+- **Amazon FSx for NetApp ONTAP S3 access points** ([#45362](https://github.com/hashicorp/terraform-provider-aws/issues/45362))
+- **AWS End User Messaging protect configurations** ([#39605](https://github.com/hashicorp/terraform-provider-aws/issues/39605))
 
 ## Enhancements to Existing Services
 
-This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
+Alongside new service coverage, we will continue expanding and improving existing AWS resources, with particular focus on highly requested community and customer asks.
 
-- [Enable Deletion Protection for DynamoDB Table Replicas](https://github.com/hashicorp/terraform-provider-aws/issues/30213)
-- [WAFv2 update rules shared with Firewall Manager](https://github.com/hashicorp/terraform-provider-aws/issues/36941)
-- [Add support for enabling primary ipv6 address on EC2 instance](https://github.com/hashicorp/terraform-provider-aws/pull/36425)
-- [Timestream Scheduled Query](https://github.com/hashicorp/terraform-provider-aws/issues/22507)
-- [Log Anomaly Detector](https://github.com/hashicorp/terraform-provider-aws/issues/22507)
+- [Round out Lambda MicroVMs with image hooks, logging, and resource settings, plus an image version data source](https://github.com/hashicorp/terraform-provider-aws/issues/48526)
+- [Use an RDS cluster as the replication source for `aws_db_instance`](https://github.com/hashicorp/terraform-provider-aws/issues/39270)
+- [Expose `publicly_accessible` on `aws_rds_cluster`](https://github.com/hashicorp/terraform-provider-aws/issues/39618)
+- [Update `tunnel_bandwidth` on `aws_vpn_connection` without replacement](https://github.com/hashicorp/terraform-provider-aws/pull/47843)
+- [Add a placement group to `aws_instance` without recreation](https://github.com/hashicorp/terraform-provider-aws/issues/47679)
+- [Manage AWS Managed Microsoft AD directory settings](https://github.com/hashicorp/terraform-provider-aws/issues/46905)
+- [Expanded QuickSight custom permissions](https://github.com/hashicorp/terraform-provider-aws/pull/47135), including deny-by-default and user-level permissions
+- [Directory Service IP routes](https://github.com/hashicorp/terraform-provider-aws/issues/50129) (released in v6.67.0)
+- [`platform_version` for `aws_bedrockagentcore_agent_runtime`](https://github.com/hashicorp/terraform-provider-aws/issues/50078) (merged; ships in v6.68.0)
+- Stability and correctness improvements for tag plan behavior, KMS key deletion, Direct Connect MACsec keys, and CloudWatch Logs metric filter limits
 
 ## Disclosures
 

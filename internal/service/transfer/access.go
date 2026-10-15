@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package transfer
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,88 +40,90 @@ func resourceAccess() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrExternalID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"home_directory": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"home_directory_mappings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 50,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"entry": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1024),
-						},
-						names.AttrTarget: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1024),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrExternalID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
+				},
+				"home_directory": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"home_directory_mappings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 50,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"entry": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+							names.AttrTarget: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
 						},
 					},
 				},
-			},
-			"home_directory_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.HomeDirectoryTypePath,
-				ValidateDiagFunc: enum.Validate[awstypes.HomeDirectoryType](),
-			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				"home_directory_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.HomeDirectoryTypePath,
+					ValidateDiagFunc: enum.Validate[awstypes.HomeDirectoryType](),
 				},
-			},
-			"posix_profile": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"gid": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"secondary_gids": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-						},
-						"uid": {
-							Type:     schema.TypeInt,
-							Required: true,
+				names.AttrPolicy: {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					ValidateFunc:          verify.ValidIAMPolicyJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"posix_profile": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"gid": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"secondary_gids": {
+								Type:     schema.TypeSet,
+								Elem:     &schema.Schema{Type: schema.TypeInt},
+								Optional: true,
+							},
+							"uid": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrRole: {
-				Type: schema.TypeString,
-				// Although Role is required in the API it is not currently returned on Read.
-				// Required:     true,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"server_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validServerID,
-			},
+				names.AttrRole: {
+					Type: schema.TypeString,
+					// Although Role is required in the API it is not currently returned on Read.
+					// Required:     true,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"server_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validServerID,
+				},
+			}
 		},
 	}
 }
@@ -187,7 +191,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	access, err := findAccessByTwoPartKey(ctx, conn, serverID, externalID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transfer Access (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -326,8 +330,7 @@ func findAccessByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -336,7 +339,7 @@ func findAccessByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID
 	}
 
 	if output == nil || output.Access == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Access, nil

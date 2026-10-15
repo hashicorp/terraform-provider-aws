@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package imagebuilder
 
@@ -13,14 +15,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,6 +31,8 @@ import (
 
 // @SDKResource("aws_imagebuilder_distribution_configuration", name="Distribution Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionConfigurationCreate,
@@ -36,290 +40,311 @@ func resourceDistributionConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceDistributionConfigurationUpdate,
 		DeleteWithoutTimeout: resourceDistributionConfigurationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"date_created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"date_updated": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"distribution": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ami_distribution_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ami_tags": tftags.TagsSchema(),
-									names.AttrDescription: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 1024),
-									},
-									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									"launch_permission": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"organization_arns": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_updated": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"distribution": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ami_distribution_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ami_tags": tftags.TagsSchema(),
+										names.AttrDescription: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 1024),
+										},
+										names.AttrKMSKeyID: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										"launch_permission": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"organization_arns": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: verify.ValidARN,
+														},
+													},
+													"organizational_unit_arns": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: verify.ValidARN,
+														},
+													},
+													"user_groups": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: validation.StringLenBetween(1, 1024),
+														},
+													},
+													"user_ids": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: verify.ValidAccountID,
+														},
 													},
 												},
-												"organizational_unit_arns": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
+											},
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(0, 127),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_{-][0-9A-Za-z_\.\s:{}-]+[0-9A-Za-z_}-]$`), "must be a valid output AMI name"),
+											),
+										},
+										"target_account_ids": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: verify.ValidAccountID,
+											},
+										},
+									},
+								},
+							},
+							"container_distribution_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"container_tags": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 1024),
+											},
+										},
+										names.AttrDescription: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										"target_repository": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrRepositoryName: {
 														Type:         schema.TypeString,
-														ValidateFunc: verify.ValidARN,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 1024),
+													},
+													"service": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringInSlice([]string{"ECR"}, false),
 													},
 												},
-												"user_groups": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
+											},
+										},
+									},
+								},
+							},
+							"fast_launch_configuration": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 1000,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAccountID: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidAccountID,
+										},
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										names.AttrLaunchTemplate: {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"launch_template_id": {
 														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidLaunchTemplateID,
+													},
+													"launch_template_name": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidLaunchTemplateName,
+													},
+													"launch_template_version": {
+														Type:         schema.TypeString,
+														Optional:     true,
 														ValidateFunc: validation.StringLenBetween(1, 1024),
 													},
 												},
-												"user_ids": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: verify.ValidAccountID,
+											},
+										},
+										"max_parallel_launches": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      0,
+											ValidateFunc: validation.IntBetween(1, 10000),
+										},
+										"snapshot_configuration": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"target_resource_count": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntBetween(1, 10000),
 													},
 												},
 											},
 										},
 									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 127),
-											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_{-][0-9A-Za-z_\.\s:{}-]+[0-9A-Za-z_}-]$`), "must be a valid output AMI name"),
-										),
-									},
-									"target_account_ids": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
+								},
+							},
+							"launch_template_configuration": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 100,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAccountID: {
 											Type:         schema.TypeString,
+											Optional:     true,
 											ValidateFunc: verify.ValidAccountID,
+										},
+										"default": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  true,
+										},
+										"launch_template_id": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidLaunchTemplateID,
 										},
 									},
 								},
 							},
-						},
-						"container_distribution_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"container_tags": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
+							"license_configuration_arns": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidARN,
+								},
+							},
+							names.AttrRegion: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+							"s3_export_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"disk_image_format": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.DiskImageFormat](),
+										},
+										"role_name": {
 											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										names.AttrS3Bucket: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+										"s3_prefix": {
+											Type:         schema.TypeString,
+											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(1, 1024),
 										},
 									},
-									names.AttrDescription: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									"target_repository": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrRepositoryName: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-												"service": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice([]string{"ECR"}, false),
-												},
-											},
-										},
-									},
 								},
 							},
-						},
-						"fast_launch_configuration": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 1000,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAccountID: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidAccountID,
-									},
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-									names.AttrLaunchTemplate: {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"launch_template_id": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidLaunchTemplateID,
-												},
-												"launch_template_name": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidLaunchTemplateName,
-												},
-												"launch_template_version": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringLenBetween(1, 1024),
-												},
-											},
+							"ssm_parameter_configuration": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ami_account_id": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidAccountID,
 										},
-									},
-									"max_parallel_launches": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      0,
-										ValidateFunc: validation.IntBetween(1, 10000),
-									},
-									"snapshot_configuration": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target_resource_count": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntBetween(1, 10000),
-												},
-											},
+										"data_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.SsmParameterDataType](),
 										},
-									},
-								},
-							},
-						},
-						"launch_template_configuration": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 100,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAccountID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidAccountID,
-									},
-									"default": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"launch_template_id": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidLaunchTemplateID,
-									},
-								},
-							},
-						},
-						"license_configuration_arns": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidARN,
-							},
-						},
-						names.AttrRegion: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1024),
-						},
-						"s3_export_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"disk_image_format": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.DiskImageFormat](),
-									},
-									"role_name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									names.AttrS3Bucket: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
-									},
-									"s3_prefix": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 1024),
+										"parameter_name": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1011),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 126),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 126),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -329,7 +354,7 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -362,7 +387,7 @@ func resourceDistributionConfigurationRead(ctx context.Context, d *schema.Resour
 
 	distributionConfiguration, err := findDistributionConfigurationByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Image Builder Distribution Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -442,8 +467,7 @@ func findDistributionConfigurationByARN(ctx context.Context, conn *imagebuilder.
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -452,7 +476,7 @@ func findDistributionConfigurationByARN(ctx context.Context, conn *imagebuilder.
 	}
 
 	if output == nil || output.DistributionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DistributionConfiguration, nil
@@ -540,6 +564,54 @@ func expandLaunchTemplateConfigurations(tfList []any) []awstypes.LaunchTemplateC
 	return apiObjects
 }
 
+func expandSSMParameterConfigurations(tfList []any) []awstypes.SsmParameterConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.SsmParameterConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandSSMParameterConfiguration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandSSMParameterConfiguration(tfMap map[string]any) *awstypes.SsmParameterConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.SsmParameterConfiguration{}
+
+	if v, ok := tfMap["ami_account_id"].(string); ok && v != "" {
+		apiObject.AmiAccountId = aws.String(v)
+	}
+
+	if v, ok := tfMap["data_type"].(string); ok && v != "" {
+		apiObject.DataType = awstypes.SsmParameterDataType(v)
+	}
+
+	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
+		apiObject.ParameterName = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandDistribution(tfMap map[string]any) *awstypes.Distribution {
 	if tfMap == nil {
 		return nil
@@ -573,6 +645,10 @@ func expandDistribution(tfMap map[string]any) *awstypes.Distribution {
 
 	if v, ok := tfMap["s3_export_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.S3ExportConfiguration = expandS3ExportConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["ssm_parameter_configuration"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SsmParameterConfigurations = expandSSMParameterConfigurations(v.List())
 	}
 
 	return apiObject
@@ -823,7 +899,7 @@ func flattenAMIDistributionConfiguration(apiObject *awstypes.AmiDistributionConf
 	}
 
 	if v := apiObject.TargetAccountIds; v != nil {
-		tfMap["target_account_ids"] = aws.StringSlice(v)
+		tfMap["target_account_ids"] = v
 	}
 
 	return tfMap
@@ -837,7 +913,7 @@ func flattenContainerDistributionConfiguration(apiObject *awstypes.ContainerDist
 	tfMap := map[string]any{}
 
 	if v := apiObject.ContainerTags; v != nil {
-		tfMap["container_tags"] = aws.StringSlice(v)
+		tfMap["container_tags"] = v
 	}
 
 	if v := apiObject.Description; v != nil {
@@ -885,7 +961,7 @@ func flattenDistribution(apiObject awstypes.Distribution) map[string]any {
 	}
 
 	if v := apiObject.LicenseConfigurationArns; v != nil {
-		tfMap["license_configuration_arns"] = aws.StringSlice(v)
+		tfMap["license_configuration_arns"] = v
 	}
 
 	if v := apiObject.Region; v != nil {
@@ -894,6 +970,10 @@ func flattenDistribution(apiObject awstypes.Distribution) map[string]any {
 
 	if v := apiObject.S3ExportConfiguration; v != nil {
 		tfMap["s3_export_configuration"] = []any{flattenS3ExportConfiguration(v)}
+	}
+
+	if v := apiObject.SsmParameterConfigurations; v != nil {
+		tfMap["ssm_parameter_configuration"] = flattenSSMParameterConfigurations(v)
 	}
 
 	return tfMap
@@ -921,19 +1001,19 @@ func flattenLaunchPermissionConfiguration(apiObject *awstypes.LaunchPermissionCo
 	tfMap := map[string]any{}
 
 	if v := apiObject.OrganizationArns; v != nil {
-		tfMap["organization_arns"] = aws.StringSlice(v)
+		tfMap["organization_arns"] = v
 	}
 
 	if v := apiObject.OrganizationalUnitArns; v != nil {
-		tfMap["organizational_unit_arns"] = aws.StringSlice(v)
+		tfMap["organizational_unit_arns"] = v
 	}
 
 	if v := apiObject.UserGroups; v != nil {
-		tfMap["user_groups"] = aws.StringSlice(v)
+		tfMap["user_groups"] = v
 	}
 
 	if v := apiObject.UserIds; v != nil {
-		tfMap["user_ids"] = aws.StringSlice(v)
+		tfMap["user_ids"] = v
 	}
 
 	return tfMap
@@ -1064,6 +1144,38 @@ func flattenS3ExportConfiguration(apiObject *awstypes.S3ExportConfiguration) map
 
 	if v := apiObject.S3Prefix; v != nil {
 		tfMap["s3_prefix"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenSSMParameterConfigurations(apiObjects []awstypes.SsmParameterConfiguration) []any {
+	if apiObjects == nil {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenSSMParameterConfiguration(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenSSMParameterConfiguration(apiObject awstypes.SsmParameterConfiguration) map[string]any {
+	tfMap := map[string]any{}
+
+	if v := apiObject.AmiAccountId; v != nil {
+		tfMap["ami_account_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.DataType; string(v) != "" {
+		tfMap["data_type"] = string(v)
+	}
+
+	if v := apiObject.ParameterName; v != nil {
+		tfMap["parameter_name"] = aws.ToString(v)
 	}
 
 	return tfMap

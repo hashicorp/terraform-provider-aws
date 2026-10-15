@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Amazon MSK Connect Test Data
 
 This directory contains test data for the Amazon MSK Connect resource & data source acceptance tests.

@@ -125,8 +125,9 @@ resource "aws_securityhub_insight" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filters` - (Required) A configuration block including one or more (up to 10 distinct) attributes used to filter the findings included in the insight. The insight only includes findings that match criteria defined in the filters. See [filters](#filters) below for more details.
 * `group_by_attribute` - (Required) The attribute used to group the findings for the insight e.g., if an insight is grouped by `ResourceId`, then the insight produces a list of resource identifiers.
 * `name` - (Required) The name of the custom insight.
@@ -138,7 +139,12 @@ The `filters` configuration block supports the following arguments:
 ~> **NOTE:** For each argument below, up to 20 can be provided.
 
 * `aws_account_id` - (Optional) AWS account ID that a finding is generated in. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `aws_account_name` - (Optional) The name of the AWS account in which a finding is generated. See [String_Filter](#string-filter-argument-reference) below for more details.
 * `company_name` - (Optional) The name of the findings provider (company) that owns the solution (product) that generates findings. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `compliance_associated_standards_id` - (Optional) The unique identifier of a standard in which a control is enabled. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `compliance_security_control_id` - (Optional) The unique identifier of a control across standards. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `compliance_security_control_parameters_name` - (Optional) The unique identifier of a control across standards. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `compliance_security_control_parameters_value` - (Optional) The current value of a security control parameter. See [String_Filter](#string-filter-argument-reference) below for more details.
 * `compliance_status` - (Optional) Exclusive to findings that are generated as the result of a check run against a specific rule in a supported standard, such as CIS AWS Foundations. Contains security standard-related finding details. See [String Filter](#string-filter-argument-reference) below for more details.
 * `confidence` - (Optional) A finding's confidence. Confidence is defined as the likelihood that a finding accurately identifies the behavior or issue that it was intended to identify. Confidence is scored on a 0-100 basis using a ratio scale, where 0 means zero percent confidence and 100 means 100 percent confidence. See [Number Filter](#number-filter-argument-reference) below for more details.
 * `created_at` - (Optional) An ISO8601-formatted timestamp that indicates when the security-findings provider captured the potential security issue that a finding captured. See [Date Filter](#date-filter-argument-reference) below for more details.
@@ -161,14 +167,14 @@ The `filters` configuration block supports the following arguments:
 * `malware_state` - (Optional) The state of the malware that was observed. See [String Filter](#string-filter-argument-reference) below for more details.
 * `malware_type` - (Optional) The type of the malware that was observed. See [String Filter](#string-filter-argument-reference) below for more details.
 * `network_destination_domain` - (Optional) The destination domain of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-* `network_destination_ipv4` - (Optional) The destination IPv4 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-* `network_destination_ipv6` - (Optional) The destination IPv6 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
+* `network_destination_ipv4` - (Optional) The destination IPv4 address of network-related information about a finding. See [IP Filter](#ip-filter-argument-reference) below for more details.
+* `network_destination_ipv6` - (Optional) The destination IPv6 address of network-related information about a finding. See [IP Filter](#ip-filter-argument-reference) below for more details.
 * `network_destination_port` - (Optional) The destination port of network-related information about a finding. See [Number Filter](#number-filter-argument-reference) below for more details.
 * `network_direction` - (Optional) Indicates the direction of network traffic associated with a finding. See [String Filter](#string-filter-argument-reference) below for more details.
 * `network_protocol` - (Optional) The protocol of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
 * `network_source_domain` - (Optional) The source domain of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-* `network_source_ipv4` - (Optional) The source IPv4 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-* `network_source_ipv6` - (Optional) The source IPv6 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
+* `network_source_ipv4` - (Optional) The source IPv4 address of network-related information about a finding. See [IP Filter](#ip-filter-argument-reference) below for more details.
+* `network_source_ipv6` - (Optional) The source IPv6 address of network-related information about a finding. See [IP Filter](#ip-filter-argument-reference) below for more details.
 * `network_source_mac` - (Optional) The source media access control (MAC) address of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
 * `network_source_port` - (Optional) The source port of network-related information about a finding. See [Number Filter](#number-filter-argument-reference) below for more details.
 * `note_text` - (Optional) The text of a note. See [String Filter](#string-filter-argument-reference) below for more details.
@@ -188,9 +194,9 @@ The `filters` configuration block supports the following arguments:
 * `related_findings_id` - (Optional) The solution-generated identifier for a related finding. See [String Filter](#string-filter-argument-reference) below for more details.
 * `related_findings_product_arn` - (Optional) The ARN of the solution that generated a related finding. See [String Filter](#string-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_iam_instance_profile_arn` - (Optional) The IAM profile ARN of the instance. See [String Filter](#string-filter-argument-reference) below for more details.
-* `resource_aws_ec2_instance_image_id` - (Optional) The Amazon Machine Image (AMI) ID of the instance. See [String Filter](#string-filter-argument-reference) below for more details.
-* `resource_aws_ec2_instance_ipv4_addresses` - (Optional) The IPv4 addresses associated with the instance. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-* `resource_aws_ec2_instance_ipv6_addresses` - (Optional) The IPv6 addresses associated with the instance. See [Ip Filter](#ip-filter-argument-reference) below for more details.
+* `resource_aws_ec2_instance_image_id` - (Optional) AMI ID of the instance. See [String Filter](#string-filter-argument-reference) below for more details.
+* `resource_aws_ec2_instance_ipv4_addresses` - (Optional) The IPv4 addresses associated with the instance. See [IP Filter](#ip-filter-argument-reference) below for more details.
+* `resource_aws_ec2_instance_ipv6_addresses` - (Optional) The IPv6 addresses associated with the instance. See [IP Filter](#ip-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_key_name` - (Optional) The key name associated with the instance. See [String Filter](#string-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_launched_at` - (Optional) The date and time the instance was launched. See [Date Filter](#date-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_subnet_id` - (Optional) The identifier of the subnet that the instance was launched in. See [String Filter](#string-filter-argument-reference) below for more details.
@@ -241,9 +247,9 @@ The `date_range` configuration block supports the following arguments:
 * `unit` - (Required) A date range unit for the date filter. Valid values: `DAYS`.
 * `value` - (Required) A date range value for the date filter, provided as an Integer.
 
-### Ip Filter Argument Reference
+### IP Filter Argument Reference
 
-The Ip filter configuration block supports the following arguments:
+The IP filter configuration block supports the following arguments:
 
 * `cidr` - (Required) A finding's CIDR value.
 
@@ -294,7 +300,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub insights using the ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_insight.example
+  identity = {
+    arn = "arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a"
+  }
+}
+
+resource "aws_securityhub_insight" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Security Hub custom insight ARN.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub custom insights using `arn`. For example:
 
 ```terraform
 import {
@@ -303,7 +330,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Security Hub insights using the ARN. For example:
+Using `terraform import`, import Security Hub custom insights using `arn`. For example:
 
 ```console
 % terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a

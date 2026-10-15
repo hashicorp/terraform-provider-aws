@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lexmodels
 
@@ -22,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -51,135 +54,137 @@ func resourceBot() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"abort_statement": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem:     statementResource,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"child_directed": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"clarification_prompt": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem:     promptResource,
-			},
-			"create_version": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 200),
-			},
-			"detect_sentiment": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_model_improvements": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"failure_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"idle_session_ttl_in_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      300,
-				ValidateFunc: validation.IntBetween(60, 86400),
-			},
-			"intent": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 250,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"intent_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
-							),
-						},
-						"intent_version": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 64),
-								validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
-							),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"abort_statement": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem:     statementResource,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"child_directed": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"clarification_prompt": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem:     promptResource,
+				},
+				"create_version": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 200),
+				},
+				"detect_sentiment": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_model_improvements": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"failure_reason": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"idle_session_ttl_in_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      300,
+					ValidateFunc: validation.IntBetween(60, 86400),
+				},
+				"intent": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 250,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"intent_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 100),
+									validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
+								),
+							},
+							"intent_version": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 64),
+									validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
+								),
+							},
 						},
 					},
 				},
-			},
-			names.AttrLastUpdatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"locale": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.LocaleEnUs,
-				ValidateDiagFunc: enum.Validate[awstypes.Locale](),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validBotName,
-			},
-			"nlu_intent_confidence_threshold": {
-				Type:         schema.TypeFloat,
-				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.FloatBetween(0, 1),
-			},
-			"process_behavior": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ProcessBehaviorSave,
-				ValidateDiagFunc: enum.Validate[awstypes.ProcessBehavior](),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"voice_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"locale": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.LocaleEnUs,
+					ValidateDiagFunc: enum.Validate[awstypes.Locale](),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validBotName,
+				},
+				"nlu_intent_confidence_threshold": {
+					Type:         schema.TypeFloat,
+					Optional:     true,
+					Default:      0,
+					ValidateFunc: validation.FloatBetween(0, 1),
+				},
+				"process_behavior": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ProcessBehaviorSave,
+					ValidateDiagFunc: enum.Validate[awstypes.ProcessBehavior](),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"voice_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 		CustomizeDiff: updateComputedAttributesOnBotCreateVersion,
 	}
@@ -254,7 +259,7 @@ func resourceBotCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	var output *lexmodelbuildingservice.PutBotOutput
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		var err error
 
 		if output != nil {
@@ -284,7 +289,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	output, err := findBotVersionByName(ctx, conn, d.Id(), BotVersionLatest)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lex Bot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -377,7 +382,7 @@ func resourceBotUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.VoiceId = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 		return conn.PutBot(ctx, input)
 	})
 
@@ -401,7 +406,7 @@ func resourceBotDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	log.Printf("[DEBUG] Deleting Lex Bot: (%s)", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteBot(ctx, input)
 	})
 

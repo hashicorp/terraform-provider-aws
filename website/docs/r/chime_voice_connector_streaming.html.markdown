@@ -83,8 +83,11 @@ resource "aws_iam_role" "example" {
 }
 
 resource "aws_kinesis_stream" "example" {
-  name        = "ExampleStream"
-  shard_count = 2
+  name = "ExampleStream"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 ```
 
@@ -92,6 +95,7 @@ resource "aws_kinesis_stream" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `data_retention`  - (Required) The retention period, in hours, for the Amazon Kinesis data.
 * `disabled` - (Optional) When true, media streaming to Amazon Kinesis is turned off. Default: `false`

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_synthetics_canary: Fix Canary Update when in running state
-```

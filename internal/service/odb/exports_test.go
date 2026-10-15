@@ -1,0 +1,20 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package odb
+
+// Exports for use in tests only.
+var (
+	ListTags = listTags
+
+	ResourceCloudAutonomousVMCluster                    = newResourceCloudAutonomousVmCluster
+	ResourceAutonomousDatabase                          = newResourceAutonomousDatabase
+	ResourceAutonomousDatabaseSecretsManagerIntegration = newResourceAutonomousDatabaseSecretsManagerIntegration
+	ResourceCloudExadataInfrastructure                  = newResourceCloudExadataInfrastructure
+
+	FindCloudAutonomousVmClusterByID                = findCloudAutonomousVmClusterByID
+	FindAutonomousDatabaseByID                      = findAutonomousDatabaseByID
+	FindAutonomousDatabaseSecretsManagerIntegration = findAutonomousDatabaseSecretsManagerIntegration
+	FindExadataInfraResourceByID                    = findExadataInfraResourceByID
+	FindCloudVmClusterForResourceByID               = findCloudVmClusterForResourceByID
+)

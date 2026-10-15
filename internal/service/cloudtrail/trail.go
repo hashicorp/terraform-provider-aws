@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudtrail
 
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,16 +32,16 @@ import (
 
 // @SDKResource("aws_cloudtrail", name="Trail")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudtrail/types;awstypes;awstypes.Trail")
+// @Testing(serialize=true)
 func resourceTrail() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrailCreate,
 		ReadWithoutTimeout:   resourceTrailRead,
 		UpdateWithoutTimeout: resourceTrailUpdate,
 		DeleteWithoutTimeout: resourceTrailDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -49,220 +52,222 @@ func resourceTrail() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"advanced_event_selector": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"event_selector"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"field_selector": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ends_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"advanced_event_selector": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					ConflictsWith: []string{"event_selector"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field_selector": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ends_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									"equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"equals": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									names.AttrField: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(field_Values(), false),
-									},
-									"not_ends_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
+										names.AttrField: {
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(field_Values(), false),
 										},
-									},
-									"not_equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"not_ends_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									"not_starts_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"not_equals": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									"starts_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"not_starts_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
+										},
+										"starts_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1000),
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1000),
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloud_watch_logs_group_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"cloud_watch_logs_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"enable_log_file_validation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_logging": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"event_selector": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      5,
-				ConflictsWith: []string{"advanced_event_selector"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_resource": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrType: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(resourceType_Values(), false),
-									},
-									names.AttrValues: {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 250,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloud_watch_logs_group_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"cloud_watch_logs_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"enable_log_file_validation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_logging": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"event_selector": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      5,
+					ConflictsWith: []string{"advanced_event_selector"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_resource": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(resourceType_Values(), false),
+										},
+										names.AttrValues: {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 250,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"exclude_management_event_sources": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"include_management_events": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"read_write_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.ReadWriteTypeAll,
-							ValidateDiagFunc: enum.Validate[types.ReadWriteType](),
-						},
-					},
-				},
-			},
-			"home_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"include_global_service_events": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"insight_selector": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"insight_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.InsightType](),
+							"exclude_management_event_sources": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"include_management_events": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"read_write_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.ReadWriteTypeAll,
+								ValidateDiagFunc: enum.Validate[types.ReadWriteType](),
+							},
 						},
 					},
 				},
-			},
-			"is_multi_region_trail": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_organization_trail": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 128),
-			},
-			names.AttrS3BucketName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrS3KeyPrefix: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 2000),
-			},
-			names.AttrSNSTopicARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sns_topic_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"home_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"include_global_service_events": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"insight_selector": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"insight_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.InsightType](),
+							},
+						},
+					},
+				},
+				"is_multi_region_trail": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"is_organization_trail": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 128),
+				},
+				names.AttrS3BucketName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrS3KeyPrefix: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 2000),
+				},
+				names.AttrSNSTopicARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sns_topic_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -312,7 +317,7 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateTrail(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -363,11 +368,11 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	trail, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*types.Trail, error) {
 		return findTrailByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudTrail Trail (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -377,7 +382,6 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading CloudTrail Trail (%s): %s", d.Id(), err)
 	}
 
-	trail := outputRaw.(*types.Trail)
 	d.Set(names.AttrARN, trail.TrailARN)
 	d.Set("cloud_watch_logs_group_arn", trail.CloudWatchLogsLogGroupArn)
 	d.Set("cloud_watch_logs_role_arn", trail.CloudWatchLogsRoleArn)
@@ -501,7 +505,7 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateTrail(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -593,7 +597,7 @@ func findTrails(ctx context.Context, conn *cloudtrail.Client, input *cloudtrail.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrailList, nil
@@ -673,7 +677,7 @@ func setEventSelectors(ctx context.Context, conn *cloudtrail.Client, d *schema.R
 	input.EventSelectors = eventSelectors
 
 	if _, err := conn.PutEventSelectors(ctx, input); err != nil {
-		return fmt.Errorf("setting CloudTrail Trail (%s) event selectors: %s", d.Id(), err)
+		return fmt.Errorf("setting CloudTrail Trail (%s) event selectors: %w", d.Id(), err)
 	}
 
 	return nil
@@ -913,200 +917,202 @@ func flattenInsightSelector(configured []types.InsightSelector) []map[string]any
 // aws_cloudtrail's Schema @v5.24.0 minus validators.
 func resourceTrailV0() *schema.Resource {
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"advanced_event_selector": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"event_selector"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"field_selector": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ends_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"advanced_event_selector": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					ConflictsWith: []string{"event_selector"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field_selector": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ends_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
-									},
-									"equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"equals": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
-									},
-									names.AttrField: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"not_ends_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										names.AttrField: {
+											Type:     schema.TypeString,
+											Required: true,
 										},
-									},
-									"not_equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"not_ends_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
-									},
-									"not_starts_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"not_equals": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
-									},
-									"starts_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"not_starts_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"starts_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloud_watch_logs_group_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"cloud_watch_logs_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"enable_log_file_validation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_logging": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"event_selector": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      5,
-				ConflictsWith: []string{"advanced_event_selector"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_resource": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrValues: {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 250,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloud_watch_logs_group_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"cloud_watch_logs_role_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"enable_log_file_validation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"enable_logging": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"event_selector": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      5,
+					ConflictsWith: []string{"advanced_event_selector"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_resource": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrValues: {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 250,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"exclude_management_event_sources": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"include_management_events": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"read_write_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  types.ReadWriteTypeAll,
-						},
-					},
-				},
-			},
-			"home_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"include_global_service_events": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"insight_selector": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"insight_type": {
-							Type:     schema.TypeString,
-							Required: true,
+							"exclude_management_event_sources": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"include_management_events": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"read_write_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  types.ReadWriteTypeAll,
+							},
 						},
 					},
 				},
-			},
-			"is_multi_region_trail": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_organization_trail": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrS3BucketName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrS3KeyPrefix: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"sns_topic_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"home_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"include_global_service_events": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"insight_selector": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"insight_type": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"is_multi_region_trail": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"is_organization_trail": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrS3BucketName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrS3KeyPrefix: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"sns_topic_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

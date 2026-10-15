@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ses
 
@@ -14,12 +16,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,28 +39,30 @@ func resourceIdentityNotificationTopic() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"identity": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"include_original_headers": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"notification_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
-			},
-			names.AttrTopicARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"identity": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"include_original_headers": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"notification_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
+				},
+				names.AttrTopicARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -70,7 +74,7 @@ func resourceIdentityNotificationTopicSet(ctx context.Context, d *schema.Resourc
 	identity := d.Get("identity").(string)
 	notificationType := awstypes.NotificationType(d.Get("notification_type").(string))
 	id := identityNotificationTopicCreateResourceID(identity, notificationType)
-	inputSINT := &ses.SetIdentityNotificationTopicInput{
+	inputSINT := ses.SetIdentityNotificationTopicInput{
 		Identity:         aws.String(identity),
 		NotificationType: notificationType,
 	}
@@ -79,7 +83,7 @@ func resourceIdentityNotificationTopicSet(ctx context.Context, d *schema.Resourc
 		inputSINT.SnsTopic = aws.String(v.(string))
 	}
 
-	_, err := conn.SetIdentityNotificationTopic(ctx, inputSINT)
+	_, err := conn.SetIdentityNotificationTopic(ctx, &inputSINT)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting SES Identity Notification Topic (%s): %s", id, err)
@@ -89,13 +93,13 @@ func resourceIdentityNotificationTopicSet(ctx context.Context, d *schema.Resourc
 		d.SetId(id)
 	}
 
-	inputSIHINE := &ses.SetIdentityHeadersInNotificationsEnabledInput{
+	inputSIHINE := ses.SetIdentityHeadersInNotificationsEnabledInput{
 		Enabled:          d.Get("include_original_headers").(bool),
 		Identity:         aws.String(identity),
 		NotificationType: notificationType,
 	}
 
-	_, err = conn.SetIdentityHeadersInNotificationsEnabled(ctx, inputSIHINE)
+	_, err = conn.SetIdentityHeadersInNotificationsEnabled(ctx, &inputSIHINE)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting SES Identity Notification Topic (%s) headers in notification: %s", d.Id(), err)
@@ -115,7 +119,7 @@ func resourceIdentityNotificationTopicRead(ctx context.Context, d *schema.Resour
 
 	notificationAttributes, err := findIdentityNotificationAttributesByIdentity(ctx, conn, identity)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SES Identity Notification Topic (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -153,10 +157,11 @@ func resourceIdentityNotificationTopicDelete(ctx context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Deleting SES Identity Notification Topic: %s", d.Id())
-	_, err = conn.SetIdentityNotificationTopic(ctx, &ses.SetIdentityNotificationTopicInput{
+	input := ses.SetIdentityNotificationTopicInput{
 		Identity:         aws.String(identity),
 		NotificationType: notificationType,
-	})
+	}
+	_, err = conn.SetIdentityNotificationTopic(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Must be a verified email address or domain") {
 		return diags
@@ -189,10 +194,10 @@ func identityNotificationTopicParseResourceID(id string) (string, awstypes.Notif
 }
 
 func findIdentityNotificationAttributesByIdentity(ctx context.Context, conn *ses.Client, identity string) (*awstypes.IdentityNotificationAttributes, error) {
-	input := &ses.GetIdentityNotificationAttributesInput{
+	input := ses.GetIdentityNotificationAttributesInput{
 		Identities: []string{identity},
 	}
-	output, err := findIdentityNotificationAttributes(ctx, conn, input)
+	output, err := findIdentityNotificationAttributes(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -213,7 +218,7 @@ func findIdentityNotificationAttributes(ctx context.Context, conn *ses.Client, i
 	}
 
 	if output == nil || output.NotificationAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.NotificationAttributes, nil

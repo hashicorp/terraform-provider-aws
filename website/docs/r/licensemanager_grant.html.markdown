@@ -32,6 +32,7 @@ resource "aws_licensemanager_grant" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The Name of the grant.
 * `allowed_operations` - (Required) A list of the allowed operations for the grant. This is a subset of the allowed operations on the license.
 * `license_arn` - (Required) The ARN of the license to grant.
@@ -50,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_licensemanager_grant` using the grant arn. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_licensemanager_grant` using the grant ARN. For example:
 
 ```terraform
 import {
@@ -59,7 +60,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_licensemanager_grant` using the grant arn. For example:
+Using `terraform import`, import `aws_licensemanager_grant` using the grant ARN. For example:
 
 ```console
 % terraform import aws_licensemanager_grant.test arn:aws:license-manager::123456789011:grant:g-01d313393d9e443d8664cc054db1e089

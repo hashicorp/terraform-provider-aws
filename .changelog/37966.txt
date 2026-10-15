@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Fixes an error where some data sources were not returning `tags`
-```

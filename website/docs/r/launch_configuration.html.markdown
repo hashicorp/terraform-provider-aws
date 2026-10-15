@@ -3,16 +3,16 @@ subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_launch_configuration"
 description: |-
-  Provides a resource to create a new launch configuration, used for autoscaling groups.
+  Provides a resource to create a new launch configuration, used for Auto Scaling groups.
 ---
 
 # Resource: aws_launch_configuration
 
-Provides a resource to create a new launch configuration, used for autoscaling groups.
+Provides a resource to create a new launch configuration, used for Auto Scaling groups.
 
 !> **WARNING:** The use of launch configurations is discouraged in favor of launch templates. Read more in the [AWS EC2 Documentation](https://docs.aws.amazon.com/autoscaling/ec2/userguide/launch-configurations.html).
 
--> **Note** When using `aws_launch_configuration` with `aws_autoscaling_group`, it is recommended to use the `name_prefix` (Optional) instead of the `name` (Optional) attribute. This will allow Terraform lifecycles to detect changes to the launch configuration and update the autoscaling group correctly.
+-> **Note** When using `aws_launch_configuration` with `aws_autoscaling_group`, it is recommended to use the `name_prefix` (Optional) instead of the `name` (Optional) attribute. This will allow Terraform lifecycles to detect changes to the launch configuration and update the Auto Scaling group correctly.
 
 ## Example Usage
 
@@ -40,13 +40,13 @@ resource "aws_launch_configuration" "as_conf" {
 }
 ```
 
-## Using with AutoScaling Groups
+### Using with Auto Scaling groups
 
 Launch Configurations cannot be updated after creation with the Amazon
 Web Service API. In order to update a Launch Configuration, Terraform will
 destroy the existing resource and create a replacement. In order to effectively
-use a Launch Configuration resource with an [AutoScaling Group resource][1],
-it's recommended to specify `create_before_destroy` in a [lifecycle][2] block.
+use a Launch Configuration resource with an [Auto Scaling group resource](/docs/providers/aws/r/autoscaling_group.html),
+it's recommended to specify `create_before_destroy` in a [lifecycle](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) block.
 Either omit the Launch Configuration `name` attribute, or specify a partial name
 with `name_prefix`.  Example:
 
@@ -90,17 +90,17 @@ resource "aws_autoscaling_group" "bar" {
 ```
 
 With this setup Terraform generates a unique name for your Launch
-Configuration and can then update the AutoScaling Group without conflict before
+Configuration and can then update the Auto Scaling group without conflict before
 destroying the previous Launch Configuration.
 
-## Using with Spot Instances
+### Using with Spot Instances
 
 Launch configurations can set the spot instance pricing to be used for the
-Auto Scaling Group to reserve instances. Simply specifying the `spot_price`
+Auto Scaling group to reserve instances. Simply specifying the `spot_price`
 parameter will set the price on the Launch Configuration which will attempt to
 reserve your instances at this price.  See the [AWS Spot Instance
 documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances.html)
-for more information or how to launch [Spot Instances][3] with Terraform.
+for more information or how to launch [Spot Instances](/docs/providers/aws/r/spot_instance_request.html) with Terraform.
 
 ```terraform
 data "aws_ami" "ubuntu" {
@@ -144,7 +144,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `associate_public_ip_address` - (Optional) Associate a public IP address with an instance in a VPC.
 * `ebs_block_device` - (Optional) Additional EBS block devices to attach to the instance. See [Block Devices](#block-devices) below for details.
 * `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.
 * `enable_monitoring` - (Optional) Enables/disables detailed monitoring. This is enabled by default.
@@ -157,14 +158,14 @@ The following arguments are optional:
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
 * `name` - (Optional) The name of the launch configuration. If you leave this blank, Terraform will auto-generate a unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `security_groups` - (Optional) A list of associated security group IDS.
+* `security_groups` - (Optional) A list of associated security group IDs.
 * `placement_tenancy` - (Optional) The tenancy of the instance. Valid values are `default` or `dedicated`, see [AWS's Create Launch Configuration](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_CreateLaunchConfiguration.html) for more details.
 * `root_block_device` - (Optional) Customize details about the root block device of the instance. See [Block Devices](#block-devices) below for details.
 * `spot_price` - (Optional; Default: On-demand price) The maximum price to use for reserving spot instances.
 * `user_data` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
 * `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
 
-## Block devices
+### Block devices
 
 Each of the `*_block_device` attributes controls a portion of the AWS
 Launch Configuration's "Block Device Mapping". It's a good idea to familiarize yourself with [AWS's Block Device
@@ -221,26 +222,48 @@ Modifying any of the `ebs_block_device` settings requires resource replacement.
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the launch configuration.
-* `arn` - The Amazon Resource Name of the launch configuration.
+* `arn` - ARN of the launch configuration.
 * `name` - The name of the launch configuration.
 
-[1]: /docs/providers/aws/r/autoscaling_group.html
-[2]: https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html
-[3]: /docs/providers/aws/r/spot_instance_request.html
-
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_launch_configuration.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_launch_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) name of the launch configuration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import launch configurations using the `name`. For example:
 
 ```terraform
 import {
-  to = aws_launch_configuration.as_conf
-  id = "terraform-lg-123456"
+  to = aws_launch_configuration.example
+  id = "example"
 }
 ```
 
 Using `terraform import`, import launch configurations using the `name`. For example:
 
 ```console
-% terraform import aws_launch_configuration.as_conf terraform-lg-123456
+% terraform import aws_launch_configuration.example example
 ```

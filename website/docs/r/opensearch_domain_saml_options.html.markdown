@@ -52,6 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `saml_options` - (Optional) SAML authentication options for an AWS OpenSearch Domain.
 
 ### saml_options
@@ -67,7 +68,7 @@ The following arguments are optional:
 #### idp
 
 * `entity_id` - (Required) Unique Entity ID of the application in SAML Identity Provider.
-* `metadata_content` - (Required) Metadata of the SAML application in xml format.
+* `metadata_content` - (Required) Metadata of the SAML application in XML format.
 
 ## Attribute Reference
 

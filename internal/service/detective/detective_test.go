@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package detective_test
@@ -18,6 +18,7 @@ func TestAccDetective_serial(t *testing.T) {
 			acctest.CtBasic:      testAccGraph_basic,
 			acctest.CtDisappears: testAccGraph_disappears,
 			"tags":               testAccGraph_tags,
+			"Identity":           testAccDetectiveGraph_identitySerial,
 		},
 		"InvitationAccepter": {
 			acctest.CtBasic: testAccInvitationAccepter_basic,
@@ -36,6 +37,8 @@ func TestAccDetective_serial(t *testing.T) {
 		},
 		"OrganizationConfiguration": {
 			acctest.CtBasic: testAccOrganizationConfiguration_basic,
+			"update":        testAccOrganizationConfiguration_update,
+			"Identity":      testAccDetectiveOrganizationConfiguration_identitySerial,
 		},
 	}
 

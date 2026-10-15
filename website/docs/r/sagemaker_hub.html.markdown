@@ -25,6 +25,7 @@ resource "aws_sagemaker_hub" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hub_name` - (Required) The name of the hub.
 * `hub_description` - (Required) A description of the hub.
 * `hub_display_name` - (Optional) The display name of the hub.
@@ -41,7 +42,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Hub.
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Hub.
+* `arn` - ARN assigned by AWS to this Hub.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

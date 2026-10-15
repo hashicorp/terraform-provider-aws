@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_redshift_cluster: Add the `manage_master_password` and `master_password_secret_kms_key_id` arguments to support managed admin credentials
-```

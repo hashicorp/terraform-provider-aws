@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_dynamodb_table: Add `replica.*.propagate_tags` argument to allow propagating tags to replicas
-```

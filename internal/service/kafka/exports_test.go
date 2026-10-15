@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka
@@ -8,12 +8,15 @@ var (
 	ResourceCluster                      = resourceCluster
 	ResourceClusterPolicy                = resourceClusterPolicy
 	ResourceConfiguration                = resourceConfiguration
+	ResourceChannel                      = newChannelResource
 	ResourceReplicator                   = resourceReplicator
 	ResourceSCRAMSecretAssociation       = resourceSCRAMSecretAssociation
 	ResourceSingleSCRAMSecretAssociation = newSingleSCRAMSecretAssociationResource
 	ResourceServerlessCluster            = resourceServerlessCluster
+	ResourceTopic                        = newTopicResource
 	ResourceVPCConnection                = resourceVPCConnection
 
+	FindChannelByTwoPartKey                      = findChannelByTwoPartKey
 	FindClusterByARN                             = findClusterByARN
 	FindClusterPolicyByARN                       = findClusterPolicyByARN
 	FindConfigurationByARN                       = findConfigurationByARN
@@ -21,5 +24,19 @@ var (
 	FindSCRAMSecretAssociation                   = findSCRAMSecretAssociation
 	FindSingleSCRAMSecretAssociationByTwoPartKey = findSingleSCRAMSecretAssociationByTwoPartKey
 	FindServerlessClusterByARN                   = findServerlessClusterByARN
+	FindTopicByTwoPartKey                        = findTopicByTwoPartKey
 	FindVPCConnectionByARN                       = findVPCConnectionByARN
+
+	ClusterUUIDFromARN    = clusterUUIDFromARN
+	NormalizeKafkaVersion = normalizeKafkaVersion // nosemgrep:ci.kafka-in-var-name
+	SortEndpointsString   = sortEndpointsString
+
+	ExpandKafkaCluster                      = expandKafkaCluster                      // nosemgrep:ci.kafka-in-var-name
+	ExpandApacheKafkaCluster                = expandApacheKafkaCluster                // nosemgrep:ci.kafka-in-var-name
+	ExpandKafkaClusterClientAuthentication  = expandKafkaClusterClientAuthentication  // nosemgrep:ci.kafka-in-var-name
+	ExpandKafkaClusterEncryptionInTransit   = expandKafkaClusterEncryptionInTransit   // nosemgrep:ci.kafka-in-var-name
+	FlattenApacheKafkaCluster               = flattenApacheKafkaCluster               // nosemgrep:ci.kafka-in-var-name
+	FlattenKafkaClusterClientAuthentication = flattenKafkaClusterClientAuthentication // nosemgrep:ci.kafka-in-var-name
+	FlattenKafkaClusterEncryptionInTransit  = flattenKafkaClusterEncryptionInTransit  // nosemgrep:ci.kafka-in-var-name
+	KafkaClusterIdentifier                  = kafkaClusterIdentifier                  // nosemgrep:ci.kafka-in-var-name
 )

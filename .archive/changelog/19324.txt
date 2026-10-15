@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_appconfig_hosted_configuration_version
-```

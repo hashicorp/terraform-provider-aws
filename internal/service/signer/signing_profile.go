@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package signer
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,7 +31,7 @@ import (
 
 // @SDKResource("aws_signer_signing_profile", name="Signing Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceSigningProfile() *schema.Resource {
+func resourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningProfileCreate,
 		ReadWithoutTimeout:   resourceSigningProfileRead,
@@ -39,109 +42,119 @@ func ResourceSigningProfile() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,64}$`), "must be alphanumeric with max length of 64 characters"),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
-			},
-			"platform_display_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(PlatformID_Values(), false),
-			},
-			"revocation_record": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"revocation_effective_from": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"revoked_at": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"revoked_by": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,64}$`), "must be alphanumeric with max length of 64 characters"),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
+				},
+				"platform_display_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"platform_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(PlatformID_Values(), false),
+				},
+				"revocation_record": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"revocation_effective_from": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"revoked_at": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"revoked_by": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"signature_validity_period": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.ValidityType](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
-			"signing_material": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCertificateARN: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+				"signature_validity_period": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[types.ValidityType](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"version_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"signing_material": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Computed: true,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCertificateARN: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+				"signing_parameters": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"version_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -154,7 +167,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("terraform_"),
-	).Generate()
+	).Generate(ctx)
 	input := &signer.PutSigningProfileInput{
 		PlatformId:  aws.String(d.Get("platform_id").(string)),
 		ProfileName: aws.String(name),
@@ -171,6 +184,10 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.Get("signing_material").([]any); ok && len(v) > 0 {
 		input.SigningMaterial = expandSigningMaterial(v)
+	}
+
+	if v, ok := d.Get("signing_parameters").(map[string]any); ok && len(v) > 0 {
+		input.SigningParameters = flex.ExpandStringValueMap(v)
 	}
 
 	_, err := conn.PutSigningProfile(ctx, input)
@@ -190,7 +207,7 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := findSigningProfileByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Signer Signing Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -221,6 +238,11 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 	if output.SigningMaterial != nil {
 		if err := d.Set("signing_material", flattenSigningMaterial(output.SigningMaterial)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting signing_material: %s", err)
+		}
+	}
+	if output.SigningParameters != nil {
+		if err := d.Set("signing_parameters", flex.FlattenStringValueMap(output.SigningParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signing_parameters: %s", err)
 		}
 	}
 	d.Set(names.AttrStatus, output.Status)
@@ -327,8 +349,7 @@ func findSigningProfileByName(ctx context.Context, conn *signer.Client, name str
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastRequest: input,
-			LastError:   err,
+			LastError: err,
 		}
 	}
 
@@ -337,13 +358,12 @@ func findSigningProfileByName(ctx context.Context, conn *signer.Client, name str
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Status; status == types.SigningProfileStatusCanceled {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 

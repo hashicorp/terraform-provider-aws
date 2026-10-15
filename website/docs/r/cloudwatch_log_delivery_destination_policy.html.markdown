@@ -25,6 +25,7 @@ resource "aws_cloudwatch_log_delivery_destination_policy" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delivery_destination_name` - (Required) The name of the delivery destination to assign this policy to.
 * `delivery_destination_policy` - (Required) The contents of the policy.
 
@@ -34,7 +35,33 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Delivery Destination Policy using the `delivery_destination_name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_delivery_destination_policy.example
+  identity = {
+    delivery_destination_name = "example"
+  }
+}
+
+resource "aws_cloudwatch_log_delivery_destination_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `delivery_destination_name` (String) Name of the delivery destination
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Delivery Destination Policies using `delivery_destination_name`. For example:
 
 ```terraform
 import {
@@ -43,7 +70,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudWatch Logs Delivery Destination Policy using the `delivery_destination_name`. For example:
+Using `terraform import`, import Delivery Destination Policies using `delivery_destination_name`. For example:
 
 ```console
 % terraform import aws_cloudwatch_log_delivery_destination_policy.example example

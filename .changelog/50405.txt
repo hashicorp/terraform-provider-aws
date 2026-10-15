@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_transit_gateway_peering_attachment: Prevent erroneous forced replacement when the `DescribeTransitGatewayPeeringAttachments` API returns a present-but-empty `Options` object
+```

@@ -62,6 +62,7 @@ resource "aws_cloudwatch_log_data_protection_policy" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `log_group_name` - (Required) The name of the log group under which the log stream is to be created.
 * `policy_document` - (Required) Specifies the data protection policy in JSON. Read more at [Data protection policy syntax](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/mask-sensitive-log-data-start.html#mask-sensitive-log-data-policysyntax).
 
@@ -71,7 +72,33 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import this resource using the `log_group_name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_data_protection_policy.example
+  identity = {
+    log_group_name = "my-log-group"
+  }
+}
+
+resource "aws_cloudwatch_log_data_protection_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `log_group_name` (String) Name of the log group.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Data Protection Policies using `log_group_name`. For example:
 
 ```terraform
 import {
@@ -80,7 +107,7 @@ import {
 }
 ```
 
-Using `terraform import`, import this resource using the `log_group_name`. For example:
+Using `terraform import`, import Data Protection Policies using `log_group_name`. For example:
 
 ```console
 % terraform import aws_cloudwatch_log_data_protection_policy.example my-log-group

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -217,6 +217,29 @@ func expandRuleAction(l []any) *awstypes.RuleAction {
 
 	if v, ok := m["count"]; ok && len(v.([]any)) > 0 {
 		action.Count = expandCountAction(v.([]any))
+	}
+
+	if v, ok := m["monetize"]; ok && len(v.([]any)) > 0 {
+		action.Monetize = expandMonetizeAction(v.([]any))
+	}
+
+	return action
+}
+
+func expandMonetizeAction(l []any) *awstypes.MonetizeAction {
+	action := &awstypes.MonetizeAction{}
+
+	if len(l) == 0 || l[0] == nil {
+		return action
+	}
+
+	m, ok := l[0].(map[string]any)
+	if !ok {
+		return action
+	}
+
+	if v, ok := m["price_multiplier"].(string); ok && v != "" {
+		action.PriceMultiplier = aws.String(v)
 	}
 
 	return action
@@ -460,6 +483,10 @@ func expandStatement(m map[string]any) *awstypes.Statement {
 		statement.AndStatement = expandAndStatement(v.([]any))
 	}
 
+	if v, ok := m["asn_match_statement"]; ok {
+		statement.AsnMatchStatement = expandASNMatchStatement(v.([]any))
+	}
+
 	if v, ok := m["byte_match_statement"]; ok {
 		statement.ByteMatchStatement = expandByteMatchStatement(v.([]any))
 	}
@@ -523,6 +550,24 @@ func expandAndStatement(l []any) *awstypes.AndStatement {
 	}
 }
 
+func expandASNMatchStatement(l []any) *awstypes.AsnMatchStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	statement := &awstypes.AsnMatchStatement{
+		AsnList: flex.ExpandInt64ValueList(m["asn_list"].([]any)),
+	}
+
+	if v, ok := m["forwarded_ip_config"]; ok {
+		statement.ForwardedIPConfig = expandForwardedIPConfig(v.([]any))
+	}
+
+	return statement
+}
+
 func expandByteMatchStatement(l []any) *awstypes.ByteMatchStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -531,10 +576,11 @@ func expandByteMatchStatement(l []any) *awstypes.ByteMatchStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.ByteMatchStatement{
-		FieldToMatch:         expandFieldToMatch(m["field_to_match"].([]any)),
-		PositionalConstraint: awstypes.PositionalConstraint(m["positional_constraint"].(string)),
-		SearchString:         []byte(m["search_string"].(string)),
-		TextTransformations:  expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PositionalConstraint:        awstypes.PositionalConstraint(m["positional_constraint"].(string)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		SearchString:                []byte(m["search_string"].(string)),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -592,6 +638,10 @@ func expandFieldToMatch(l []any) *awstypes.FieldToMatch {
 
 	if v, ok := m["single_query_argument"]; ok && len(v.([]any)) > 0 {
 		f.SingleQueryArgument = expandSingleQueryArgument(m["single_query_argument"].([]any))
+	}
+
+	if v, ok := m["uri_fragment"]; ok && len(v.([]any)) > 0 {
+		f.UriFragment = expandURIFragment(v.([]any))
 	}
 
 	if v, ok := m["uri_path"]; ok && len(v.([]any)) > 0 {
@@ -777,6 +827,45 @@ func expandSingleQueryArgument(l []any) *awstypes.SingleQueryArgument {
 	}
 }
 
+func expandURIFragment(tfList []any) *awstypes.UriFragment {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]any)
+
+	apiObject := &awstypes.UriFragment{}
+
+	if v, ok := tfMap["fallback_behavior"].(string); ok && v != "" {
+		apiObject.FallbackBehavior = awstypes.FallbackBehavior(v)
+	}
+
+	return apiObject
+}
+
+func expandPreParseTextTransformations(l []any) []awstypes.PreParseTextTransformation {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	rules := make([]awstypes.PreParseTextTransformation, 0)
+
+	for _, rule := range l {
+		if rule == nil {
+			continue
+		}
+		rules = append(rules, expandPreParseTextTransformation(rule.(map[string]any)))
+	}
+
+	return rules
+}
+
+func expandPreParseTextTransformation(m map[string]any) awstypes.PreParseTextTransformation {
+	return awstypes.PreParseTextTransformation{
+		Priority: int32(m[names.AttrPriority].(int)),
+		Type:     awstypes.PreParseTextTransformationType(m[names.AttrType].(string)),
+	}
+}
+
 func expandTextTransformations(l []any) []awstypes.TextTransformation {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -891,9 +980,10 @@ func expandRegexMatchStatement(l []any) *awstypes.RegexMatchStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.RegexMatchStatement{
-		RegexString:         aws.String(m["regex_string"].(string)),
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
-		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+		RegexString:                 aws.String(m["regex_string"].(string)),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -905,9 +995,10 @@ func expandRegexPatternSetReferenceStatement(l []any) *awstypes.RegexPatternSetR
 	m := l[0].(map[string]any)
 
 	return &awstypes.RegexPatternSetReferenceStatement{
-		ARN:                 aws.String(m[names.AttrARN].(string)),
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
-		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+		ARN:                         aws.String(m[names.AttrARN].(string)),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -919,10 +1010,11 @@ func expandSizeConstraintStatement(l []any) *awstypes.SizeConstraintStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.SizeConstraintStatement{
-		ComparisonOperator:  awstypes.ComparisonOperator(m["comparison_operator"].(string)),
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
-		Size:                int64(m[names.AttrSize].(int)),
-		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+		ComparisonOperator:          awstypes.ComparisonOperator(m["comparison_operator"].(string)),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		Size:                        int64(m[names.AttrSize].(int)),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -934,9 +1026,10 @@ func expandSQLiMatchStatement(l []any) *awstypes.SqliMatchStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.SqliMatchStatement{
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
-		SensitivityLevel:    awstypes.SensitivityLevel(m["sensitivity_level"].(string)),
-		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		SensitivityLevel:            awstypes.SensitivityLevel(m["sensitivity_level"].(string)),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -948,8 +1041,9 @@ func expandXSSMatchStatement(l []any) *awstypes.XssMatchStatement {
 	m := l[0].(map[string]any)
 
 	return &awstypes.XssMatchStatement{
-		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]any)),
-		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
+		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
+		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -1037,6 +1131,41 @@ func expandWebACLRulesJSON(rawRules string) ([]awstypes.Rule, error) {
 	return rules, nil
 }
 
+func expandRuleGroupRulesJSON(rawRules string) ([]awstypes.Rule, error) {
+	// Backwards compatibility.
+	if rawRules == "" {
+		return nil, errors.New("decoding JSON: unexpected end of JSON input")
+	}
+
+	var temp []any
+	err := tfjson.DecodeFromBytes([]byte(rawRules), &temp)
+	if err != nil {
+		return nil, fmt.Errorf("decoding JSON: %w", err)
+	}
+
+	for _, v := range temp {
+		walkRulesGroupJSON(reflect.ValueOf(v))
+	}
+
+	out, err := tfjson.EncodeToBytes(temp)
+	if err != nil {
+		return nil, err
+	}
+
+	var rules []awstypes.Rule
+	err = tfjson.DecodeFromBytes(out, &rules)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, r := range rules {
+		if reflect.ValueOf(r).IsZero() {
+			return nil, fmt.Errorf("invalid Rule Group Rule supplied at index (%d)", i)
+		}
+	}
+	return rules, nil
+}
+
 func walkWebACLJSON(v reflect.Value) {
 	m := map[string][]struct {
 		key        string
@@ -1047,7 +1176,7 @@ func walkWebACLJSON(v reflect.Value) {
 		},
 	}
 
-	for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+	for v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
 		v = v.Elem()
 	}
 
@@ -1065,7 +1194,7 @@ func walkWebACLJSON(v reflect.Value) {
 					case reflect.Slice, reflect.Array:
 						switch reflect.ValueOf(va.outputType).Type().Elem().Kind() {
 						case reflect.Uint8:
-							base64String := itypes.Base64Encode([]byte(str.(string)))
+							base64String := inttypes.Base64Encode([]byte(str.(string)))
 							st[va.key] = base64String
 						default:
 						}
@@ -1079,6 +1208,53 @@ func walkWebACLJSON(v reflect.Value) {
 	case reflect.Array, reflect.Slice:
 		for i := range v.Len() {
 			walkWebACLJSON(v.Index(i))
+		}
+	default:
+	}
+}
+
+func walkRulesGroupJSON(v reflect.Value) {
+	m := map[string][]struct {
+		key        string
+		outputType any
+	}{
+		"ByteMatchStatement": {
+			{key: "SearchString", outputType: []byte{}},
+		},
+	}
+
+	for v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
+		v = v.Elem()
+	}
+
+	switch v.Kind() {
+	case reflect.Map:
+		for _, k := range v.MapKeys() {
+			if val, ok := m[k.String()]; ok {
+				st := v.MapIndex(k).Interface().(map[string]any)
+				for _, va := range val {
+					if st[va.key] == nil {
+						continue
+					}
+					str := st[va.key]
+					switch reflect.ValueOf(va.outputType).Kind() {
+					case reflect.Slice, reflect.Array:
+						switch reflect.ValueOf(va.outputType).Type().Elem().Kind() {
+						case reflect.Uint8:
+							base64String := inttypes.Base64Encode([]byte(str.(string)))
+							st[va.key] = base64String
+						default:
+						}
+					default:
+					}
+				}
+			} else {
+				walkRulesGroupJSON(v.MapIndex(k))
+			}
+		}
+	case reflect.Array, reflect.Slice:
+		for i := range v.Len() {
+			walkRulesGroupJSON(v.Index(i))
 		}
 	default:
 	}
@@ -1177,6 +1353,10 @@ func expandWebACLStatement(m map[string]any) *awstypes.Statement {
 
 	if v, ok := m["and_statement"]; ok {
 		statement.AndStatement = expandAndStatement(v.([]any))
+	}
+
+	if v, ok := m["asn_match_statement"]; ok {
+		statement.AsnMatchStatement = expandASNMatchStatement(v.([]any))
 	}
 
 	if v, ok := m["byte_match_statement"]; ok {
@@ -1282,6 +1462,9 @@ func expandManagedRuleGroupConfigs(tfList []any) []awstypes.ManagedRuleGroupConf
 		}
 		if v, ok := m["aws_managed_rules_acfp_rule_set"].([]any); ok && len(v) > 0 {
 			r.AWSManagedRulesACFPRuleSet = expandManagedRulesACFPRuleSet(v)
+		}
+		if v, ok := m["aws_managed_rules_anti_ddos_rule_set"].([]any); ok && len(v) > 0 {
+			r.AWSManagedRulesAntiDDoSRuleSet = expandManagedRulesAntiDDoSRuleSet(v)
 		}
 		if v, ok := m["aws_managed_rules_atp_rule_set"].([]any); ok && len(v) > 0 {
 			r.AWSManagedRulesATPRuleSet = expandManagedRulesATPRuleSet(v)
@@ -1416,6 +1599,82 @@ func expandManagedRulesACFPRuleSet(tfList []any) *awstypes.AWSManagedRulesACFPRu
 	}
 
 	return &out
+}
+
+func expandManagedRulesAntiDDoSRuleSet(tfList []any) *awstypes.AWSManagedRulesAntiDDoSRuleSet {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+	out := awstypes.AWSManagedRulesAntiDDoSRuleSet{
+		ClientSideActionConfig: expandClientSideActionConfig(m["client_side_action_config"].([]any)),
+	}
+
+	if v, ok := m["sensitivity_to_block"].(string); ok && v != "" {
+		out.SensitivityToBlock = awstypes.SensitivityToAct(v)
+	}
+
+	return &out
+}
+
+func expandClientSideActionConfig(tfList []any) *awstypes.ClientSideActionConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+	out := &awstypes.ClientSideActionConfig{
+		Challenge: expandClientSideAction(m["challenge"].([]any)),
+	}
+
+	return out
+}
+
+func expandClientSideAction(tfList []any) *awstypes.ClientSideAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+	out := &awstypes.ClientSideAction{
+		UsageOfAction: awstypes.UsageOfAction(m["usage_of_action"].(string)),
+	}
+
+	if v, ok := m["exempt_uri_regular_expression"].([]any); ok && len(v) > 0 {
+		out.ExemptUriRegularExpressions = expandClientSideActionExemptURIRegularExpression(v)
+	}
+	if v, ok := m["sensitivity"].(string); ok && v != "" {
+		out.Sensitivity = awstypes.SensitivityToAct(v)
+	}
+
+	return out
+}
+
+func expandClientSideActionExemptURIRegularExpression(tfList []any) []awstypes.Regex {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []awstypes.Regex
+	for _, item := range tfList {
+		if item == nil {
+			continue
+		}
+		m, ok := item.(map[string]any)
+		if !ok || m == nil {
+			continue
+		}
+
+		if v, ok := m["regex_string"].(string); ok && v != "" {
+			r := awstypes.Regex{
+				RegexString: aws.String(v),
+			}
+			out = append(out, r)
+		}
+	}
+
+	return out
 }
 
 func expandManagedRulesATPRuleSet(tfList []any) *awstypes.AWSManagedRulesATPRuleSet {
@@ -1564,7 +1823,7 @@ func expandRateLimitCookie(l []any) *awstypes.RateLimitCookie {
 
 	return &awstypes.RateLimitCookie{
 		Name:                aws.String(m[names.AttrName].(string)),
-		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -1576,7 +1835,7 @@ func expandRateLimitHeader(l []any) *awstypes.RateLimitHeader {
 
 	return &awstypes.RateLimitHeader{
 		Name:                aws.String(m[names.AttrName].(string)),
-		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -1618,7 +1877,7 @@ func expandRateLimitQueryArgument(l []any) *awstypes.RateLimitQueryArgument {
 
 	return &awstypes.RateLimitQueryArgument{
 		Name:                aws.String(m[names.AttrName].(string)),
-		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -1628,7 +1887,7 @@ func expandRateLimitQueryString(l []any) *awstypes.RateLimitQueryString {
 	}
 	m := l[0].(map[string]any)
 	return &awstypes.RateLimitQueryString{
-		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -1638,7 +1897,7 @@ func expandRateLimitURIPath(l []any) *awstypes.RateLimitUriPath {
 	}
 	m := l[0].(map[string]any)
 	return &awstypes.RateLimitUriPath{
-		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+		TextTransformations: expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
 }
 
@@ -1650,6 +1909,9 @@ func expandRateBasedStatementCustomKeys(l []any) []awstypes.RateBasedStatementCu
 	for _, ck := range l {
 		r := awstypes.RateBasedStatementCustomKey{}
 		m := ck.(map[string]any)
+		if v, ok := m["asn"]; ok && len(v.([]any)) > 0 {
+			r.ASN = &awstypes.RateLimitAsn{}
+		}
 		if v, ok := m["cookie"]; ok {
 			r.Cookie = expandRateLimitCookie(v.([]any))
 		}
@@ -1772,6 +2034,68 @@ func expandRegex(m map[string]any) awstypes.Regex {
 	}
 }
 
+func expandDataProtectionConfig(tfList []any) *awstypes.DataProtectionConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	return &awstypes.DataProtectionConfig{
+		DataProtections: expandDataProtections(tfMap["data_protection"].([]any)),
+	}
+}
+
+func expandDataProtections(tfList []any) []awstypes.DataProtection {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.DataProtection, 0)
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := &awstypes.DataProtection{
+			Action: awstypes.DataProtectionAction(tfMap[names.AttrAction].(string)),
+			Field:  expandFieldToProtect(tfMap[names.AttrField].([]any)),
+		}
+
+		if v, ok := tfMap["exclude_rate_based_details"].(bool); ok {
+			apiObject.ExcludeRateBasedDetails = v
+		}
+
+		if v, ok := tfMap["exclude_rule_match_details"].(bool); ok {
+			apiObject.ExcludeRuleMatchDetails = v
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandFieldToProtect(tfList []any) *awstypes.FieldToProtect {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	apiObject := &awstypes.FieldToProtect{
+		FieldType: awstypes.FieldToProtectType(tfMap["field_type"].(string)),
+	}
+
+	if v, ok := tfMap["field_keys"].([]any); ok && len(v) > 0 {
+		apiObject.FieldKeys = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
 func flattenRules(r []awstypes.Rule) any {
 	out := make([]map[string]any, len(r))
 	for i, rule := range r {
@@ -1814,6 +2138,23 @@ func flattenRuleAction(a *awstypes.RuleAction) any {
 
 	if a.Count != nil {
 		m["count"] = flattenCount(a.Count)
+	}
+
+	if a.Monetize != nil {
+		m["monetize"] = flattenMonetize(a.Monetize)
+	}
+
+	return []any{m}
+}
+
+func flattenMonetize(a *awstypes.MonetizeAction) []any {
+	if a == nil {
+		return []any{}
+	}
+	m := map[string]any{}
+
+	if a.PriceMultiplier != nil {
+		m["price_multiplier"] = aws.ToString(a.PriceMultiplier)
 	}
 
 	return []any{m}
@@ -2060,6 +2401,10 @@ func flattenStatement(s *awstypes.Statement) map[string]any {
 		m["and_statement"] = flattenAndStatement(s.AndStatement)
 	}
 
+	if s.AsnMatchStatement != nil {
+		m["asn_match_statement"] = flattenASNMatchStatement(s.AsnMatchStatement)
+	}
+
 	if s.ByteMatchStatement != nil {
 		m["byte_match_statement"] = flattenByteMatchStatement(s.ByteMatchStatement)
 	}
@@ -2123,16 +2468,30 @@ func flattenAndStatement(a *awstypes.AndStatement) any {
 	return []any{m}
 }
 
+func flattenASNMatchStatement(a *awstypes.AsnMatchStatement) any {
+	if a == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		"asn_list":            a.AsnList,
+		"forwarded_ip_config": flattenForwardedIPConfig(a.ForwardedIPConfig),
+	}
+
+	return []any{m}
+}
+
 func flattenByteMatchStatement(b *awstypes.ByteMatchStatement) any {
 	if b == nil {
 		return []any{}
 	}
 
 	m := map[string]any{
-		"field_to_match":        flattenFieldToMatch(b.FieldToMatch),
-		"positional_constraint": b.PositionalConstraint,
-		"search_string":         string(b.SearchString),
-		"text_transformation":   flattenTextTransformations(b.TextTransformations),
+		"field_to_match":               flattenFieldToMatch(b.FieldToMatch),
+		"positional_constraint":        b.PositionalConstraint,
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(b.PreParseTextTransformations),
+		"search_string":                string(b.SearchString),
+		attrTextTransformation:         flattenTextTransformations(b.TextTransformations),
 	}
 
 	return []any{m}
@@ -2193,6 +2552,10 @@ func flattenFieldToMatch(f *awstypes.FieldToMatch) any {
 		m["single_query_argument"] = flattenSingleQueryArgument(f.SingleQueryArgument)
 	}
 
+	if f.UriFragment != nil {
+		m["uri_fragment"] = flattenURIFragment(f.UriFragment)
+	}
+
 	if f.UriPath != nil {
 		m["uri_path"] = make([]map[string]any, 1)
 	}
@@ -2247,8 +2610,8 @@ func flattenCookiesMatchPattern(c *awstypes.CookieMatchPattern) any {
 	}
 
 	m := map[string]any{
-		"included_cookies": aws.StringSlice(c.IncludedCookies),
-		"excluded_cookies": aws.StringSlice(c.ExcludedCookies),
+		"included_cookies": c.IncludedCookies,
+		"excluded_cookies": c.ExcludedCookies,
 	}
 
 	if c.All != nil {
@@ -2349,6 +2712,30 @@ func flattenSingleQueryArgument(s *awstypes.SingleQueryArgument) any {
 	return []any{m}
 }
 
+func flattenURIFragment(apiObject *awstypes.UriFragment) any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.FallbackBehavior; v != "" {
+		tfMap["fallback_behavior"] = v
+	}
+	return []any{tfMap}
+}
+
+func flattenPreParseTextTransformations(l []awstypes.PreParseTextTransformation) []any {
+	out := make([]any, len(l))
+	for i, t := range l {
+		m := make(map[string]any)
+		m[names.AttrPriority] = t.Priority
+		m[names.AttrType] = t.Type
+		out[i] = m
+	}
+	return out
+}
+
 func flattenTextTransformations(l []awstypes.TextTransformation) []any {
 	out := make([]any, len(l))
 	for i, t := range l {
@@ -2429,9 +2816,10 @@ func flattenRegexMatchStatement(r *awstypes.RegexMatchStatement) any {
 	}
 
 	m := map[string]any{
-		"regex_string":        aws.ToString(r.RegexString),
-		"field_to_match":      flattenFieldToMatch(r.FieldToMatch),
-		"text_transformation": flattenTextTransformations(r.TextTransformations),
+		"regex_string":                 aws.ToString(r.RegexString),
+		"field_to_match":               flattenFieldToMatch(r.FieldToMatch),
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(r.PreParseTextTransformations),
+		attrTextTransformation:         flattenTextTransformations(r.TextTransformations),
 	}
 
 	return []any{m}
@@ -2443,9 +2831,10 @@ func flattenRegexPatternSetReferenceStatement(r *awstypes.RegexPatternSetReferen
 	}
 
 	m := map[string]any{
-		names.AttrARN:         aws.ToString(r.ARN),
-		"field_to_match":      flattenFieldToMatch(r.FieldToMatch),
-		"text_transformation": flattenTextTransformations(r.TextTransformations),
+		names.AttrARN:                  aws.ToString(r.ARN),
+		"field_to_match":               flattenFieldToMatch(r.FieldToMatch),
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(r.PreParseTextTransformations),
+		attrTextTransformation:         flattenTextTransformations(r.TextTransformations),
 	}
 
 	return []any{m}
@@ -2457,10 +2846,11 @@ func flattenSizeConstraintStatement(s *awstypes.SizeConstraintStatement) any {
 	}
 
 	m := map[string]any{
-		"comparison_operator": s.ComparisonOperator,
-		"field_to_match":      flattenFieldToMatch(s.FieldToMatch),
-		names.AttrSize:        s.Size,
-		"text_transformation": flattenTextTransformations(s.TextTransformations),
+		"comparison_operator":          s.ComparisonOperator,
+		"field_to_match":               flattenFieldToMatch(s.FieldToMatch),
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(s.PreParseTextTransformations),
+		names.AttrSize:                 s.Size,
+		attrTextTransformation:         flattenTextTransformations(s.TextTransformations),
 	}
 
 	return []any{m}
@@ -2472,9 +2862,10 @@ func flattenSQLiMatchStatement(s *awstypes.SqliMatchStatement) any {
 	}
 
 	m := map[string]any{
-		"field_to_match":      flattenFieldToMatch(s.FieldToMatch),
-		"sensitivity_level":   s.SensitivityLevel,
-		"text_transformation": flattenTextTransformations(s.TextTransformations),
+		"field_to_match":               flattenFieldToMatch(s.FieldToMatch),
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(s.PreParseTextTransformations),
+		"sensitivity_level":            s.SensitivityLevel,
+		attrTextTransformation:         flattenTextTransformations(s.TextTransformations),
 	}
 
 	return []any{m}
@@ -2486,8 +2877,9 @@ func flattenXSSMatchStatement(s *awstypes.XssMatchStatement) any {
 	}
 
 	m := map[string]any{
-		"field_to_match":      flattenFieldToMatch(s.FieldToMatch),
-		"text_transformation": flattenTextTransformations(s.TextTransformations),
+		"field_to_match":               flattenFieldToMatch(s.FieldToMatch),
+		attrPreParseTextTransformation: flattenPreParseTextTransformations(s.PreParseTextTransformations),
+		attrTextTransformation:         flattenTextTransformations(s.TextTransformations),
 	}
 
 	return []any{m}
@@ -2572,6 +2964,10 @@ func flattenWebACLStatement(s *awstypes.Statement) map[string]any {
 
 	if s.AndStatement != nil {
 		m["and_statement"] = flattenAndStatement(s.AndStatement)
+	}
+
+	if s.AsnMatchStatement != nil {
+		m["asn_match_statement"] = flattenASNMatchStatement(s.AsnMatchStatement)
 	}
 
 	if s.ByteMatchStatement != nil {
@@ -2734,6 +3130,10 @@ func flattenManagedRuleGroupConfigs(c []awstypes.ManagedRuleGroupConfig) []any {
 		if config.AWSManagedRulesACFPRuleSet != nil {
 			m["aws_managed_rules_acfp_rule_set"] = flattenManagedRulesACFPRuleSet(config.AWSManagedRulesACFPRuleSet)
 		}
+		if config.AWSManagedRulesAntiDDoSRuleSet != nil {
+			m["aws_managed_rules_anti_ddos_rule_set"] = flattenManagedRulesAntiDDoSRuleSet(config.AWSManagedRulesAntiDDoSRuleSet)
+		}
+
 		if config.AWSManagedRulesBotControlRuleSet != nil {
 			m["aws_managed_rules_bot_control_rule_set"] = flattenManagedRulesBotControlRuleSet(config.AWSManagedRulesBotControlRuleSet)
 		}
@@ -2862,6 +3262,70 @@ func flattenManagedRulesACFPRuleSet(apiObject *awstypes.AWSManagedRulesACFPRuleS
 	return []any{m}
 }
 
+func flattenManagedRulesAntiDDoSRuleSet(apiObject *awstypes.AWSManagedRulesAntiDDoSRuleSet) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"client_side_action_config": flattenClientSideActionConfig(apiObject.ClientSideActionConfig),
+	}
+
+	if apiObject.SensitivityToBlock != "" {
+		m["sensitivity_to_block"] = apiObject.SensitivityToBlock
+	}
+
+	return []any{m}
+}
+
+func flattenClientSideActionConfig(apiObject *awstypes.ClientSideActionConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"challenge": flattenClientSideAction(apiObject.Challenge),
+	}
+
+	return []any{m}
+}
+
+func flattenClientSideAction(apiObject *awstypes.ClientSideAction) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"usage_of_action": apiObject.UsageOfAction,
+	}
+
+	if apiObject.ExemptUriRegularExpressions != nil {
+		m["exempt_uri_regular_expression"] = flattenClientSideActionExemptURIRegularExpression(apiObject.ExemptUriRegularExpressions)
+	}
+
+	if apiObject.Sensitivity != "" {
+		m["sensitivity"] = apiObject.Sensitivity
+	}
+
+	return []any{m}
+}
+
+func flattenClientSideActionExemptURIRegularExpression(apiObject []awstypes.Regex) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	var out []any
+	for _, regex := range apiObject {
+		item := map[string]any{
+			"regex_string": aws.ToString(regex.RegexString),
+		}
+		out = append(out, item)
+	}
+
+	return out
+}
+
 func flattenManagedRulesATPRuleSet(apiObject *awstypes.AWSManagedRulesATPRuleSet) []any {
 	if apiObject == nil {
 		return nil
@@ -2954,6 +3418,7 @@ func flattenHeader(apiObject *awstypes.ResponseInspectionHeader) []any {
 
 	m := map[string]any{
 		"failure_values": apiObject.FailureValues,
+		names.AttrName:   apiObject.Name,
 		"success_values": apiObject.SuccessValues,
 	}
 
@@ -2993,8 +3458,8 @@ func flattenRateLimitCookie(apiObject *awstypes.RateLimitCookie) []any {
 	}
 	return []any{
 		map[string]any{
-			names.AttrName:        aws.ToString(apiObject.Name),
-			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+			names.AttrName:         aws.ToString(apiObject.Name),
+			attrTextTransformation: flattenTextTransformations(apiObject.TextTransformations),
 		},
 	}
 }
@@ -3005,8 +3470,8 @@ func flattenRateLimitHeader(apiObject *awstypes.RateLimitHeader) []any {
 	}
 	return []any{
 		map[string]any{
-			names.AttrName:        aws.ToString(apiObject.Name),
-			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+			names.AttrName:         aws.ToString(apiObject.Name),
+			attrTextTransformation: flattenTextTransformations(apiObject.TextTransformations),
 		},
 	}
 }
@@ -3050,8 +3515,8 @@ func flattenRateLimitQueryArgument(apiObject *awstypes.RateLimitQueryArgument) [
 	}
 	return []any{
 		map[string]any{
-			names.AttrName:        aws.ToString(apiObject.Name),
-			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+			names.AttrName:         aws.ToString(apiObject.Name),
+			attrTextTransformation: flattenTextTransformations(apiObject.TextTransformations),
 		},
 	}
 }
@@ -3062,7 +3527,7 @@ func flattenRateLimitQueryString(apiObject *awstypes.RateLimitQueryString) []any
 	}
 	return []any{
 		map[string]any{
-			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+			attrTextTransformation: flattenTextTransformations(apiObject.TextTransformations),
 		},
 	}
 }
@@ -3073,7 +3538,7 @@ func flattenRateLimitURIPath(apiObject *awstypes.RateLimitUriPath) []any {
 	}
 	return []any{
 		map[string]any{
-			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+			attrTextTransformation: flattenTextTransformations(apiObject.TextTransformations),
 		},
 	}
 }
@@ -3087,6 +3552,11 @@ func flattenRateBasedStatementCustomKeys(apiObject []awstypes.RateBasedStatement
 	for i, o := range apiObject {
 		tfMap := map[string]any{}
 
+		if o.ASN != nil {
+			tfMap["asn"] = []any{
+				map[string]any{},
+			}
+		}
 		if o.Cookie != nil {
 			tfMap["cookie"] = flattenRateLimitCookie(o.Cookie)
 		}
@@ -3203,4 +3673,205 @@ func flattenRegexPatternSet(r []awstypes.Regex) any {
 	}
 
 	return regexPatterns
+}
+
+func flattenDataProtectionConfig(apiObject *awstypes.DataProtectionConfig) any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"data_protection": flattenDataProtections(apiObject.DataProtections),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenDataProtections(apiObjects []awstypes.DataProtection) any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0)
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrAction:             apiObject.Action,
+			"exclude_rate_based_details": apiObject.ExcludeRateBasedDetails,
+			"exclude_rule_match_details": apiObject.ExcludeRuleMatchDetails,
+			names.AttrField:              flattenFieldToProtect(apiObject.Field),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenFieldToProtect(apiObject *awstypes.FieldToProtect) any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"field_type": apiObject.FieldType,
+	}
+
+	if v := apiObject.FieldKeys; len(v) > 0 {
+		tfMap["field_keys"] = v
+	}
+
+	return []any{tfMap}
+}
+
+func expandMonetizationConfig(l []any) *awstypes.MonetizationConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+	config := &awstypes.MonetizationConfig{}
+
+	if v, ok := m["crypto_config"].([]any); ok && len(v) > 0 {
+		config.CryptoConfig = expandCryptoConfig(v)
+	}
+
+	if v, ok := m["currency_mode"].(string); ok && v != "" {
+		config.CurrencyMode = awstypes.CurrencyMode(v)
+	}
+
+	return config
+}
+
+func expandCryptoConfig(l []any) *awstypes.CryptoConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+	config := &awstypes.CryptoConfig{}
+
+	if v, ok := m["payment_network"].([]any); ok && len(v) > 0 {
+		config.PaymentNetworks = expandPaymentNetworks(v)
+	}
+
+	return config
+}
+
+func expandPaymentNetworks(l []any) []awstypes.PaymentNetwork {
+	if len(l) == 0 {
+		return nil
+	}
+
+	networks := make([]awstypes.PaymentNetwork, 0, len(l))
+	for _, tfMapRaw := range l {
+		m, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		network := awstypes.PaymentNetwork{}
+		if v, ok := m["chain"].(string); ok && v != "" {
+			network.Chain = awstypes.BlockchainChain(v)
+		}
+		if v, ok := m["wallet_address"].(string); ok && v != "" {
+			network.WalletAddress = aws.String(v)
+		}
+		if v, ok := m["prices"].([]any); ok && len(v) > 0 {
+			network.Prices = expandPrices(v)
+		}
+		networks = append(networks, network)
+	}
+
+	return networks
+}
+
+func expandPrices(l []any) []awstypes.Price {
+	if len(l) == 0 {
+		return nil
+	}
+
+	prices := make([]awstypes.Price, 0, len(l))
+	for _, tfMapRaw := range l {
+		m, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		price := awstypes.Price{}
+		if v, ok := m["amount"].(string); ok && v != "" {
+			price.Amount = aws.String(v)
+		}
+		if v, ok := m["currency"].(string); ok && v != "" {
+			price.Currency = awstypes.CryptoCurrency(v)
+		}
+		prices = append(prices, price)
+	}
+
+	return prices
+}
+
+func flattenMonetizationConfig(apiObject *awstypes.MonetizationConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		"currency_mode": string(apiObject.CurrencyMode),
+	}
+
+	if apiObject.CryptoConfig != nil {
+		m["crypto_config"] = flattenCryptoConfig(apiObject.CryptoConfig)
+	}
+
+	return []any{m}
+}
+
+func flattenCryptoConfig(apiObject *awstypes.CryptoConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	m := map[string]any{}
+	if apiObject.PaymentNetworks != nil {
+		m["payment_network"] = flattenPaymentNetworks(apiObject.PaymentNetworks)
+	}
+
+	return []any{m}
+}
+
+func flattenPaymentNetworks(apiObjects []awstypes.PaymentNetwork) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	l := make([]any, 0, len(apiObjects))
+	for _, apiObject := range apiObjects {
+		m := map[string]any{
+			"chain":          string(apiObject.Chain),
+			"wallet_address": aws.ToString(apiObject.WalletAddress),
+		}
+		if apiObject.Prices != nil {
+			m["prices"] = flattenPrices(apiObject.Prices)
+		}
+		l = append(l, m)
+	}
+
+	return l
+}
+
+func flattenPrices(apiObjects []awstypes.Price) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	l := make([]any, 0, len(apiObjects))
+	for _, apiObject := range apiObjects {
+		m := map[string]any{
+			"amount":   aws.ToString(apiObject.Amount),
+			"currency": string(apiObject.Currency),
+		}
+		l = append(l, m)
+	}
+
+	return l
 }

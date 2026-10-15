@@ -22,6 +22,8 @@ data "aws_iam_user_ssh_key" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `encoding` - (Required) Specifies the public key encoding format to use in the response. To retrieve the public key in ssh-rsa format, use `SSH`. To retrieve the public key in PEM format, use `PEM`.
 * `ssh_public_key_id` - (Required) Unique identifier for the SSH public key.
 * `username` - (Required) Name of the IAM user associated with the SSH public key.

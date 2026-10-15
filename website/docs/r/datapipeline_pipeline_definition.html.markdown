@@ -79,6 +79,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `parameter_object` - (Optional) Configuration block for the parameter objects used in the pipeline definition. See below
 * `parameter_value` - (Optional) Configuration block for the parameter values used in the pipeline definition. See below
 
@@ -117,7 +118,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datapipeline_pipeline_definition` using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datapipeline_pipeline_definition` using the ID. For example:
 
 ```terraform
 import {
@@ -126,7 +127,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_datapipeline_pipeline_definition` using the id. For example:
+Using `terraform import`, import `aws_datapipeline_pipeline_definition` using the ID. For example:
 
 ```console
 % terraform import aws_datapipeline_pipeline_definition.example df-1234567890

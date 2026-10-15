@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -7,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -15,19 +16,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpclattice_target_group_attachment", name="Target Group Attachment")
-// @Testing(tagsTest=false)
 func resourceTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupAttachmentCreate,
@@ -39,36 +40,38 @@ func resourceTargetGroupAttachment() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrTarget: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						names.AttrPort: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsPortNumber,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrTarget: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
+							names.AttrPort: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
 						},
 					},
 				},
-			},
-			"target_group_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"target_group_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -80,14 +83,14 @@ func resourceTargetGroupAttachmentCreate(ctx context.Context, d *schema.Resource
 	targetGroupID := d.Get("target_group_identifier").(string)
 	target := expandTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any))
 	targetID := aws.ToString(target.Id)
-	targetPort := int(aws.ToInt32(target.Port))
-	id := strings.Join([]string{targetGroupID, targetID, strconv.Itoa(targetPort)}, "/")
-	input := &vpclattice.RegisterTargetsInput{
+	targetPort := aws.ToInt32(target.Port)
+	id := targetGroupAttachmentCreateResourceID(targetGroupID, targetID, targetPort)
+	input := vpclattice.RegisterTargetsInput{
 		TargetGroupIdentifier: aws.String(targetGroupID),
 		Targets:               []types.Target{target},
 	}
 
-	_, err := conn.RegisterTargets(ctx, input)
+	_, err := conn.RegisterTargets(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating VPC Lattice Target Group Attachment (%s): %s", id, err)
@@ -106,14 +109,14 @@ func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
+	// Can't use targetGroupAttachmentParseResourceID as targetID ALB ARN includes '/'.
 	targetGroupID := d.Get("target_group_identifier").(string)
 	target := expandTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any))
 	targetID := aws.ToString(target.Id)
-	targetPort := int(aws.ToInt32(target.Port))
-
+	targetPort := aws.ToInt32(target.Port)
 	output, err := findTargetByThreePartKey(ctx, conn, targetGroupID, targetID, targetPort)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Lattice Target Group Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -135,15 +138,19 @@ func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
+	log.Printf("[INFO] Deleting VPC Lattice Target Group Attachment: %s", d.Id())
 	targetGroupID := d.Get("target_group_identifier").(string)
 	target := expandTarget(d.Get(names.AttrTarget).([]any)[0].(map[string]any))
 	targetID := aws.ToString(target.Id)
-	targetPort := int(aws.ToInt32(target.Port))
-
-	log.Printf("[INFO] Deleting VPC Lattice Target Group Attachment: %s", d.Id())
+	targetPort := aws.ToInt32(target.Port)
 	input := vpclattice.DeregisterTargetsInput{
 		TargetGroupIdentifier: aws.String(targetGroupID),
-		Targets:               []types.Target{target},
+		Targets: []types.Target{{
+			Id: aws.String(targetID),
+		}},
+	}
+	if targetPort > 0 {
+		input.Targets[0].Port = aws.Int32(targetPort)
 	}
 	_, err := conn.DeregisterTargets(ctx, &input)
 
@@ -162,25 +169,49 @@ func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func findTargetByThreePartKey(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int) (*types.TargetSummary, error) {
-	input := &vpclattice.ListTargetsInput{
+const targetGroupAttachmentResourceIDSeparator = "/"
+
+func targetGroupAttachmentCreateResourceID(targetGroupID, targetID string, targetPort int32) string {
+	parts := []string{targetGroupID, targetID, flex.Int32ValueToStringValue(targetPort)}
+	id := strings.Join(parts, targetGroupAttachmentResourceIDSeparator)
+
+	return id
+}
+
+func findTargetByThreePartKey(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32) (*types.TargetSummary, error) {
+	input := vpclattice.ListTargetsInput{
 		TargetGroupIdentifier: aws.String(targetGroupID),
 		Targets: []types.Target{{
 			Id: aws.String(targetID),
 		}},
 	}
 	if targetPort > 0 {
-		input.Targets[0].Port = aws.Int32(int32(targetPort))
+		input.Targets[0].Port = aws.Int32(targetPort)
 	}
+
+	return findTarget(ctx, conn, &input)
+}
+
+func findTarget(ctx context.Context, conn *vpclattice.Client, input *vpclattice.ListTargetsInput) (*types.TargetSummary, error) {
+	output, err := findTargets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTargets(ctx context.Context, conn *vpclattice.Client, input *vpclattice.ListTargetsInput) ([]types.TargetSummary, error) {
+	var output []types.TargetSummary
 
 	paginator := vpclattice.NewListTargetsPaginator(conn, input)
 	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(ctx)
+		page, err := paginator.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -188,19 +219,17 @@ func findTargetByThreePartKey(ctx context.Context, conn *vpclattice.Client, targ
 			return nil, err
 		}
 
-		if output != nil && len(output.Items) == 1 {
-			return &(output.Items[0]), nil
-		}
+		output = append(output, page.Items...)
 	}
 
-	return nil, &retry.NotFoundError{}
+	return output, nil
 }
 
-func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTarget(conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTargetByThreePartKey(ctx, conn, targetGroupID, targetID, targetPort)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -212,20 +241,19 @@ func statusTarget(ctx context.Context, conn *vpclattice.Client, targetGroupID, t
 	}
 }
 
-func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int, timeout time.Duration) (*types.TargetSummary, error) {
+func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32, timeout time.Duration) (*types.TargetSummary, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.TargetStatusInitial),
 		Target:                    enum.Slice(types.TargetStatusHealthy, types.TargetStatusUnhealthy, types.TargetStatusUnused, types.TargetStatusUnavailable),
-		Refresh:                   statusTarget(ctx, conn, targetGroupID, targetID, targetPort),
+		Refresh:                   statusTarget(conn, targetGroupID, targetID, targetPort),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.TargetSummary); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
 
 		return output, err
 	}
@@ -233,18 +261,18 @@ func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Clie
 	return nil, err
 }
 
-func waitTargetGroupAttachmentDeleted(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int, timeout time.Duration) (*types.TargetSummary, error) {
+func waitTargetGroupAttachmentDeleted(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int32, timeout time.Duration) (*types.TargetSummary, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TargetStatusDraining, types.TargetStatusInitial),
 		Target:  []string{},
-		Refresh: statusTarget(ctx, conn, targetGroupID, targetID, targetPort),
+		Refresh: statusTarget(conn, targetGroupID, targetID, targetPort),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.TargetSummary); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
 
 		return output, err
 	}

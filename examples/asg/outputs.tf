@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 output "security_group" {
@@ -6,7 +6,7 @@ output "security_group" {
 }
 
 output "launch_configuration" {
-  value = aws_launch_configuration.web-lc.id
+  value = aws_launch_template.web-lt.id
 }
 
 output "asg_name" {

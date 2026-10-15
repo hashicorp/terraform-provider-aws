@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bypass_policy_lockout_safety_check` - (Optional) A flag to indicate whether to bypass the `aws_efs_file_system_policy` lockout safety check. The policy lockout safety check determines whether the policy in the request will prevent the principal making the request will be locked out from making future `PutFileSystemPolicy` requests on the file system. Set `bypass_policy_lockout_safety_check` to `true` only when you intend to prevent the principal that is making the request from making a subsequent `PutFileSystemPolicy` request on the file system. The default value is `false`.
 
 ## Attribute Reference
@@ -67,11 +68,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_efs_file_system_policy.example
+  identity = {
+    id = "fs-6fa144c6"
+  }
+}
+
+resource "aws_efs_file_system_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the file system.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the EFS file system policies using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_efs_file_system_policy.foo
+  to = aws_efs_file_system_policy.example
   id = "fs-6fa144c6"
 }
 ```
@@ -79,5 +106,5 @@ import {
 Using `terraform import`, import the EFS file system policies using the `id`. For example:
 
 ```console
-% terraform import aws_efs_file_system_policy.foo fs-6fa144c6
+% terraform import aws_efs_file_system_policy.example fs-6fa144c6
 ```

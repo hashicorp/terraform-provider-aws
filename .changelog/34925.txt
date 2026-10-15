@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_redshiftserverless_workgroup: Add `port` argument
-```

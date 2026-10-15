@@ -31,12 +31,14 @@ resource "aws_cloudwatch_log_anomaly_detector" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `log_group_arn_list` - (Required) Array containing the ARN of the log group that this anomaly detector will watch. You can specify only one log group ARN.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `anomaly_visibility_time` - (Optional) Number of days to have visibility on an anomaly. After this time period has elapsed for an anomaly, it will be automatically baselined and the anomaly detector will treat new occurrences of a similar anomaly as normal. Therefore, if you do not correct the cause of an anomaly during the time period specified in `anomaly_visibility_time`, it will be considered normal going forward and will not be detected as an anomaly. Valid Range: Minimum value of 7. Maximum value of 90.
 
 * `detector_name` - (Optional) Name for this anomaly detector.
@@ -55,17 +57,38 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Anomaly Detector using the `arn`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_cloudwatch_log_anomaly_detector.example
-  id = "log_anomaly_detector-arn-12345678"
+  identity = {
+    arn = "arn:aws:logs:us-east-1:123456789012:anomaly-detector:1a2b3c4d-5e6f-7890-abcd-ef1234567890"
+  }
+}
+
+resource "aws_cloudwatch_log_anomaly_detector" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import CloudWatch Log Anomaly Detector using the `example_id_arg`. For example:
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the anomaly detector.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Anomaly Detectors using `arn`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_anomaly_detector.example
+  id = "arn:aws:logs:us-east-1:123456789012:anomaly-detector:1a2b3c4d-5e6f-7890-abcd-ef1234567890"
+}
+```
+
+Using `terraform import`, import Anomaly Detectors using `arn`. For example:
 
 ```console
-% terraform import aws_cloudwatch_log_anomaly_detector.example log_anomaly_detector-arn-12345678
+% terraform import aws_cloudwatch_log_anomaly_detector.example arn:aws:logs:us-east-1:123456789012:anomaly-detector:1a2b3c4d-5e6f-7890-abcd-ef1234567890
 ```
