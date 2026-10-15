@@ -27,12 +27,12 @@ import (
 
 const testAccViewDefinition = "SELECT `@timestamp`, `@message` FROM \"logs.default\""
 
-func checkViewARN(rName string) knownvalue.Check {
-	return tfknownvalue.RegionalARNRegexp("cloudwatch", regexache.MustCompile(`view/view\.`+rName+`/[0-9a-f-]{36}`))
+func checkViewARN(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("cloudwatch", regexache.MustCompile(`view/`+name+`/[0-9a-f-]{36}`))
 }
 
-func checkViewARNAlternateRegion(rName string) knownvalue.Check {
-	return tfknownvalue.RegionalARNAlternateRegionRegexp("cloudwatch", regexache.MustCompile(`view/view\.`+rName+`/[0-9a-f-]{36}`))
+func checkViewARNAlternateRegion(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("cloudwatch", regexache.MustCompile(`view/`+name+`/[0-9a-f-]{36}`))
 }
 
 func TestAccCloudWatchOmniView_basic(t *testing.T) {
@@ -73,6 +73,10 @@ func TestAccCloudWatchOmniView_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/View/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,

@@ -48,10 +48,10 @@ func TestAccCloudWatchOmniView_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkViewARN(rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkViewARN("view."+rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkViewARN(rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkViewARN("view."+rName+"-1")),
 				},
 			},
 			{
@@ -104,7 +104,7 @@ func TestAccCloudWatchOmniView_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkViewARN(rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkViewARN("view."+rName+"-0")),
 				},
 			},
 			{
@@ -121,7 +121,7 @@ func TestAccCloudWatchOmniView_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_cloudwatchomni_view.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_cloudwatchomni_view.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact("view."+rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_cloudwatchomni_view.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkViewARN(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkViewARN("view."+rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("definition"), knownvalue.StringExact(testAccViewDefinition)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact("view."+rName+"-0")),
@@ -168,10 +168,10 @@ func TestAccCloudWatchOmniView_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkViewARNAlternateRegion(rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkViewARNAlternateRegion("view."+rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkViewARNAlternateRegion(rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkViewARNAlternateRegion("view."+rName+"-1")),
 				},
 			},
 			{

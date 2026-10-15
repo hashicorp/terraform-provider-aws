@@ -72,7 +72,7 @@ func (l *viewListResource) List(ctx context.Context, request list.ListRequest, s
 				data.Name = fwflex.StringValueToFramework(ctx, name)
 
 				if request.IncludeResource {
-					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, output, &data))
+					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
 					if result.Diagnostics.HasError() {
 						return
 					}
