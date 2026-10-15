@@ -38,6 +38,16 @@ func TestAccCloudWatchOmni_serial(t *testing.T) {
 			"List_includeResource":        testAccSpace_List_includeResource,
 			"List_regionOverride":         testAccSpace_List_regionOverride,
 		},
+		"Dashboard": {
+			acctest.CtBasic:        testAccDashboard_basic,
+			acctest.CtDisappears:   testAccDashboard_disappears,
+			"disappearsSpace":      testAccDashboard_disappearsSpace,
+			"update":               testAccDashboard_update,
+			"Identity":             testAccCloudWatchOmniDashboard_identitySerial,
+			"List_basic":           testAccDashboard_List_basic,
+			"List_includeResource": testAccDashboard_List_includeResource,
+			"List_regionOverride":  testAccDashboard_List_regionOverride,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
