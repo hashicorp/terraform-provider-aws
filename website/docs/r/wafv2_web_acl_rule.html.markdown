@@ -509,25 +509,25 @@ Exactly one of the following statement blocks must be specified:
 * `sqli_match_statement` - (Optional) Match requests that appear to contain SQL injection attacks. See [SQL Injection Match Statement](#sql-injection-match-statement) below.
 * `xss_match_statement` - (Optional) Match requests that appear to contain cross-site scripting attacks. See [Cross-Site Scripting Match Statement](#cross-site-scripting-match-statement) below.
 
-~> **NOTE:** Logical statements (`and_statement`, `not_statement`, `or_statement`) can be nested up to 3 levels deep. This matches the nesting limit of the `aws_wafv2_web_acl` resource.
+~> **NOTE:** Logical statements (`and_statement`, `not_statement`, `or_statement`) can be nested up to 3 levels deep. This matches the nesting limit of the `aws_wafv2_web_acl` resource. As in AWS WAF, `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement` can only be used at the top level of a rule's `statement`, not inside a logical statement.
 
 #### And Statement
 
 Combines multiple statements using logical AND. All nested statements must match for the AND statement to match.
 
-* `statement` - (Required) List of statements to combine. At least one statement is required. Each nested statement supports the same statement types listed above.
+* `statement` - (Required) List of statements to combine. At least two statements are required. Each nested statement supports the statement types listed above except `and_statement`, `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement`.
 
 #### Not Statement
 
 Negates a single statement. The NOT statement matches when the nested statement does not match.
 
-* `statement` - (Required) Single statement to negate. Exactly one statement must be specified.
+* `statement` - (Required) Single statement to negate. Exactly one statement must be specified. The nested statement supports the statement types listed above except `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement`.
 
 #### Or Statement
 
 Combines multiple statements using logical OR. At least one nested statement must match for the OR statement to match.
 
-* `statement` - (Required) List of statements to combine. At least one statement is required. Each nested statement supports the same statement types listed above.
+* `statement` - (Required) List of statements to combine. At least two statements are required. Each nested statement supports the statement types listed above except `managed_rule_group_statement`, `or_statement`, `rate_based_statement` and `rule_group_reference_statement`.
 
 #### ASN Match Statement
 
