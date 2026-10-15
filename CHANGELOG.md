@@ -1,4 +1,4 @@
-## 6.69.1 (Unreleased)
+## 6.69.1 (October 15, 2026)
 
 BUG FIXES:
 
