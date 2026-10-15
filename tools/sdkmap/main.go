@@ -6,7 +6,7 @@
 // the AWS SDK client methods each of those functions calls, and those the tags interceptor calls.
 //
 // Annotations are recognized using the same rules as the service package generator
-// (internal/generate/servicepackage), so the output matches what the provider registers.
+// (internal/generate/servicepackage), except that build constraints are honored when selecting a package's files.
 package main
 
 import (
@@ -88,8 +88,12 @@ type funcRef struct {
 
 // resourceTags holds the service package methods through which the tags interceptor lists and updates
 // a resource's tags around its CRUD functions.
+//
+// The methods are analyzed as a whole: where they branch on @Tags(resourceType=...), e.g. in IAM and S3,
+// the SDK calls for every resource type that shares them are included.
 type resourceTags struct {
-	// List is the service package's ListTags, called after Create, Read, and Update.
+	// List is the service package's ListTags, called after Create, Read, and Update if they don't set tags themselves,
+	// and after Update if tags_all isn't known until apply.
 	List *funcRef `json:"list,omitempty"`
 	// Update is the service package's UpdateTags, called during Update.
 	Update *funcRef `json:"update,omitempty"`
@@ -149,6 +153,8 @@ type servicePackage struct {
 	interfaces map[string][]string
 	// fieldTypes maps struct field names, on any struct type, to their types.
 	fieldTypes map[string]string
+	// factories holds the functions annotated with @SDKResource.
+	factories map[ast.Node]bool
 }
 
 // load parses conns.AWSClient and every service package under root.
@@ -256,6 +262,7 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 		methods:    make(map[string]map[string]*ast.FuncDecl),
 		interfaces: make(map[string][]string),
 		fieldTypes: make(map[string]string),
+		factories:  make(map[ast.Node]bool),
 	}
 
 	for _, file := range files {
@@ -265,6 +272,9 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 			case *ast.FuncDecl:
 				if d.Recv == nil {
 					pkg.decls[d.Name.Name] = d
+					if typeNames, _ := parseAnnotations(d.Doc); len(typeNames) > 0 {
+						pkg.factories[d] = true
+					}
 					continue
 				}
 				recv := resolveType(d.Recv.List[0].Type, imports)
@@ -378,7 +388,8 @@ func parseAnnotations(doc *ast.CommentGroup) (typeNames []string, tagged bool) {
 				break
 			}
 		case "Tags":
-			tagged = strings.Contains(args, "identifierAttribute")
+			// As in the generator, a later @Tags annotation doesn't unset an identifierAttribute.
+			tagged = tagged || strings.Contains(args, "identifierAttribute")
 		}
 	}
 
@@ -387,7 +398,7 @@ func parseAnnotations(doc *ast.CommentGroup) (typeNames []string, tagged bool) {
 
 // returnedResource returns the &schema.Resource{...} literal returned at the end of fn, or nil.
 func returnedResource(fn *ast.FuncDecl) *ast.CompositeLit {
-	if len(fn.Body.List) == 0 {
+	if fn.Body == nil || len(fn.Body.List) == 0 {
 		return nil
 	}
 	ret, ok := fn.Body.List[len(fn.Body.List)-1].(*ast.ReturnStmt)
@@ -551,8 +562,10 @@ func (a *analyzer) factoryVarTypes(pkg *servicePackage, factory *ast.FuncDecl) m
 }
 
 // follow walks a declaration in pkg, once.
+// Resource factory functions aren't followed: calling one, e.g. resourceStack().SchemaMap(),
+// returns the resource's schema.Resource without calling any of its functions.
 func (f *callFinder) follow(pkg *servicePackage, decl ast.Node) {
-	if decl == nil || f.visited[decl] {
+	if decl == nil || f.visited[decl] || pkg.factories[decl] {
 		return
 	}
 	f.visited[decl] = true
