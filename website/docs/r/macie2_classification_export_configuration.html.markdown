@@ -34,21 +34,19 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `s3_destination` - (Required) Configuration block for a S3 Destination. Defined below
 
-### s3_destination Configuration Block
+### `s3_destination` Block
 
-The `s3_destination` configuration block supports the following arguments:
+The `s3_destination` configuration block supports the following arguments. Additional information can be found in the [Storing and retaining sensitive data discovery results with Amazon Macie for AWS Macie documentation](https://docs.aws.amazon.com/macie/latest/user/discovery-results-repository-s3.html).
 
-* `bucket_name` - (Required) The Amazon S3 bucket name in which Amazon Macie exports the data classification results.
-* `key_prefix` - (Optional) The object key for the bucket in which Amazon Macie exports the data classification results.
+* `bucket_name` - (Required) Amazon S3 bucket name in which Amazon Macie exports the data classification results.
+* `key_prefix` - (Optional) Object key for the bucket in which Amazon Macie exports the data classification results.
 * `kms_key_arn` - (Required) ARN of the KMS key to be used to encrypt the data.
-
-Additional information can be found in the [Storing and retaining sensitive data discovery results with Amazon Macie for AWS Macie documentation](https://docs.aws.amazon.com/macie/latest/user/discovery-results-repository-s3.html).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The unique identifier (ID) of the configuration.
+* `id` - Unique identifier (ID) of the configuration.
 
 ## Import
 

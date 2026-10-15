@@ -70,6 +70,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ram_principal_association",
 			Name:     "Principal Association",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrPrincipal, true),
+				inttypes.StringIdentityAttribute("resource_share_arn", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      principalAssociationImportID{},
+			},
 		},
 		{
 			Factory:  resourceResourceAssociation,
@@ -109,6 +117,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newPrincipalAssociationResourceAsListResource,
+			TypeName: "aws_ram_principal_association",
+			Name:     "Principal Association",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrPrincipal, true),
+				inttypes.StringIdentityAttribute("resource_share_arn", true),
+			}),
+		},
 		{
 			Factory:  newResourceAssociationResourceAsListResource,
 			TypeName: "aws_ram_resource_association",

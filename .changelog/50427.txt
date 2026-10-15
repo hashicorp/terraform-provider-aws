@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_ram_principal_association
+```
+```release-note:enhancement
+resource/aws_ram_principal_association: Add resource identity support
+```

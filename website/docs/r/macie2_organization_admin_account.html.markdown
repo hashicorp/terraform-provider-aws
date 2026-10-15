@@ -25,14 +25,14 @@ resource "aws_macie2_organization_admin_account" "example" {
 
 This resource supports the following arguments:
 
+* `admin_account_id` - (Required) AWS account ID for the account to designate as the delegated Amazon Macie administrator account for the organization.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `admin_account_id` - (Required) The AWS account ID for the account to designate as the delegated Amazon Macie administrator account for the organization.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The unique identifier (ID) of the macie organization admin account.
+* `id` - Unique identifier (ID) of the Macie organization admin account.
 
 ## Import
 
