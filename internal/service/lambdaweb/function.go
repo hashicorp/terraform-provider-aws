@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -608,7 +607,7 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 	conn := r.Meta().LambdaWebClient(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, state.FunctionName)
-	out, err := findWebFunctionByName(ctx, conn, name)
+	function, err := findWebFunctionByName(ctx, conn, name)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -619,55 +618,57 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	var (
+		revision *lambdaweb.GetWebFunctionRevisionOutput
+		endpoint *lambdaweb.GetWebFunctionEndpointOutput
+	)
+
+	switch revisionSummary, err := findNewestFunctionRevision(ctx, conn, name); {
+	case err != nil:
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+
+	case revisionSummary != nil:
+		revisionID := aws.ToString(revisionSummary.RevisionId)
+		revision, err = findWebFunctionRevisionByTwoPartKey(ctx, conn, name, revisionID)
+		switch {
+		case retry.NotFound(err):
+			revision, err = nil, nil
+		case err != nil:
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+	}
+
+	ep, diags := state.EndpointConfig.ToPtr(ctx)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	revision, err := findNewestFunctionRevision(ctx, conn, name)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-		return
-	}
-
-	if revision != nil {
-		revisionID := aws.ToString(revision.RevisionId)
-		state.LatestRevisionID = fwflex.StringValueToFramework(ctx, revisionID)
-
-		rev, err := findWebFunctionRevisionByTwoPartKey(ctx, conn, name, revisionID)
-		switch {
-		case retry.NotFound(err):
+	var endpointName string
+	if ep != nil {
+		endpointName = fwflex.StringValueFromFramework(ctx, ep.EndpointName)
+	} else {
+		// No configuration to match against, i.e. import. CreateWebFunction always
+		// creates an endpoint with the function, so the oldest endpoint is the one
+		// endpoint_config describes. Giving up when a function has several
+		// endpoints would leave the Required endpoint_config block empty in state,
+		// and populating it from null triggers the RequiresReplace plan modifiers
+		// on endpoint_name and endpoint_type: the first apply after import would
+		// then replace the function, silently deleting every other endpoint it
+		// owns along with their domain names.
+		switch endpointSummary, err := findOldestFunctionEndpoint(ctx, conn, name); {
 		case err != nil:
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
-		default:
-			// Refresh revision_config from the latest revision. GetWebFunction does not
-			// return the build and service configuration, but GetWebFunctionRevision
-			// does, so read it explicitly: otherwise revision_config is never
-			// reconciled with the service (no drift detection on code, environment
-			// variables, description or the KMS key) and cannot be populated on import.
-			priorRevisionConfig := state.RevisionConfig
-			var revModel revisionConfigModel
-			smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, rev, &revModel))
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			restoreTelemetryConfig(ctx, &revModel, priorRevisionConfig)
-			state.RevisionConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &revModel)
-		}
-	} else {
-		state.LatestRevisionID = types.StringNull()
-		state.RevisionConfig = fwtypes.NewListNestedObjectValueOfNull[revisionConfigModel](ctx)
-	}
 
-	state.DomainName = types.StringNull()
-	state.RegionalDomainNames = fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{})
-	switch endpointName, err := readEndpointName(ctx, conn, name, state.EndpointConfig); {
-	case err != nil:
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-		return
-	case endpointName != "":
-		ep, err := findEndpointByName(ctx, conn, name, endpointName)
+		case endpointSummary != nil:
+			endpointName = aws.ToString(endpointSummary.EndpointName)
+		}
+	}
+	if endpointName != "" {
+		endpoint, err = findEndpointByName(ctx, conn, name, endpointName)
 		switch {
 		case retry.NotFound(err):
 			// The endpoint described by endpoint_config was deleted outside of
@@ -676,22 +677,16 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 			// traffic, and pairing a stale endpoint_config with the null
 			// domain_name set above breaks every configuration that references
 			// the domain, leaving plan and apply unable to run at all.
-			state.EndpointConfig = fwtypes.NewListNestedObjectValueOfNull[endpointConfigModel](ctx)
+			endpoint, err = nil, nil
 		case err != nil:
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
-		default:
-			state.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
-			state.RegionalDomainNames = regionalDomainNames(ctx, ep.RegionalEndpoints)
-
-			var epModel endpointConfigModel
-			smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, ep, &epModel))
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			epModel.Description = normalizeDescription(epModel.Description)
-			state.EndpointConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &epModel)
 		}
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, function, revision, endpoint, &state))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
@@ -1102,7 +1097,7 @@ func listFunctionRevisionPages(ctx context.Context, conn *lambdaweb.Client, inpu
 	}
 }
 
-func findOldestEndpoint(ctx context.Context, conn *lambdaweb.Client, functionName string) (*awstypes.FunctionEndpointSummary, error) {
+func findOldestFunctionEndpoint(ctx context.Context, conn *lambdaweb.Client, functionName string) (*awstypes.FunctionEndpointSummary, error) {
 	var oldest *awstypes.FunctionEndpointSummary
 	input := lambdaweb.ListWebFunctionEndpointsInput{
 		FunctionName: aws.String(functionName),
@@ -1154,7 +1149,7 @@ func readEndpointName(ctx context.Context, conn *lambdaweb.Client, functionName 
 	// on endpoint_name and endpoint_type: the first apply after import would
 	// then replace the function, silently deleting every other endpoint it
 	// owns along with their domain names.
-	oldest, err := findOldestEndpoint(ctx, conn, functionName)
+	oldest, err := findOldestFunctionEndpoint(ctx, conn, functionName)
 	if err != nil || oldest == nil {
 		return "", err
 	}
