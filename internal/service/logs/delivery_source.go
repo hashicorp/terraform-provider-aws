@@ -8,6 +8,7 @@ package logs
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -44,6 +45,11 @@ func newDeliverySourceResource(context.Context) (resource.ResourceWithConfigure,
 
 	return r, nil
 }
+
+const (
+	putDeliverySourceTimeout    = 5 * time.Minute
+	deleteDeliverySourceTimeout = 5 * time.Minute
+)
 
 type deliverySourceResource struct {
 	framework.ResourceWithModel[deliverySourceResourceModel]
