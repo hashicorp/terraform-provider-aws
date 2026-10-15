@@ -351,6 +351,7 @@ The following arguments are optional:
 
 ### insight_selector
 
+* `event_categories` - (Optional) Set of event categories to enable Insights on. Valid values are: `Management` and `Data`. Defaults to `Management` when not configured.
 * `insight_type` - (Optional) Type of insights to log on a trail. Valid values are: `ApiCallRateInsight` and `ApiErrorRateInsight`.
 
 ### Advanced Event Selector Arguments

@@ -683,6 +683,59 @@ func testAccTrail_insightSelector(t *testing.T) {
 	})
 }
 
+func testAccTrail_insightSelectorEventCategories(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cloudtrail.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudTrailConfig_insightSelectorEventCategoriesManagement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.event_categories.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "insight_selector.0.event_categories.*", "Management"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCloudTrailConfig_insightSelectorEventCategoriesDataEvents(rName, `["Management", "Data"]`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.event_categories.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "insight_selector.0.event_categories.*", "Management"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "insight_selector.0.event_categories.*", "Data"),
+				),
+			},
+			{
+				Config: testAccCloudTrailConfig_insightSelectorEventCategoriesDataEvents(rName, `["Management"]`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.event_categories.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "insight_selector.0.event_categories.*", "Management"),
+				),
+			},
+			{
+				Config: testAccCloudTrailConfig_dataEvents(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccTrail_advancedEventSelector(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudtrail.test"
@@ -1640,6 +1693,100 @@ resource "aws_cloudtrail" "test" {
   }
 }
 `, rName))
+}
+
+func testAccCloudTrailConfig_insightSelectorEventCategoriesManagement(rName string) string {
+	return acctest.ConfigCompose(testAccCloudTrailConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.test.bucket
+
+  insight_selector {
+    insight_type     = "ApiCallRateInsight"
+    event_categories = ["Management"]
+  }
+}
+`, rName))
+}
+
+// Insights on data events requires the trail to log data events, and Insights on
+// management events requires it to log write management events.
+func testAccCloudTrailConfig_dataEvents(rName string) string {
+	return acctest.ConfigCompose(testAccCloudTrailConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.test.bucket
+
+  advanced_event_selector {
+    name = "managementEvents"
+
+    field_selector {
+      field  = "eventCategory"
+      equals = ["Management"]
+    }
+  }
+
+  advanced_event_selector {
+    name = "s3DataEvents"
+
+    field_selector {
+      field  = "eventCategory"
+      equals = ["Data"]
+    }
+
+    field_selector {
+      field  = "resources.type"
+      equals = ["AWS::S3::Object"]
+    }
+  }
+}
+`, rName))
+}
+
+func testAccCloudTrailConfig_insightSelectorEventCategoriesDataEvents(rName, eventCategories string) string {
+	return acctest.ConfigCompose(testAccCloudTrailConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.test.bucket
+
+  advanced_event_selector {
+    name = "managementEvents"
+
+    field_selector {
+      field  = "eventCategory"
+      equals = ["Management"]
+    }
+  }
+
+  advanced_event_selector {
+    name = "s3DataEvents"
+
+    field_selector {
+      field  = "eventCategory"
+      equals = ["Data"]
+    }
+
+    field_selector {
+      field  = "resources.type"
+      equals = ["AWS::S3::Object"]
+    }
+  }
+
+  insight_selector {
+    insight_type     = "ApiCallRateInsight"
+    event_categories = %[2]s
+  }
+}
+`, rName, eventCategories))
 }
 
 func testAccCloudTrailConfig_advancedEventSelector(rName string) string {
