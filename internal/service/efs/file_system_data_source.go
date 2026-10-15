@@ -113,7 +113,7 @@ func dataSourceFileSystem() *schema.Resource {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				"throughput_mode": {
 					Type:     schema.TypeString,
 					Computed: true,
