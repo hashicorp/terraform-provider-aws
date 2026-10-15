@@ -30,7 +30,7 @@ resource "aws_sagemaker_workteam" "example" {
 }
 ```
 
-### Oidc Usage
+### OIDC Usage
 
 ```terraform
 resource "aws_sagemaker_workteam" "example" {
@@ -70,7 +70,7 @@ This resource supports the following arguments:
 * `user_pool` - (Required) An identifier for a user pool. The user pool must be in the same region as the service that you are calling.
 * `user_group` - (Required) An identifier for a user group.
 
-#### Oidc Member Definition
+#### OIDC Member Definition
 
 * `groups` - (Required) A list of comma separated strings that identifies user groups in your OIDC IdP. Each user group is made up of a group of private workers.
 

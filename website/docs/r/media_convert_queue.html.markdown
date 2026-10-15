@@ -22,28 +22,28 @@ resource "aws_media_convert_queue" "test" {
 
 This resource supports the following arguments:
 
+* `concurrent_jobs` - (Optional) Maximum number of jobs your queue can process concurrently. For on-demand queues, the value you enter is constrained by your service quotas for Maximum concurrent jobs, per on-demand queue and Maximum concurrent jobs, per account. For reserved queues, specify the number of jobs you can process concurrently in your reservation plan instead.
+* `description` - (Optional) Description of the queue
+* `name` - (Required) Unique identifier describing the queue
+* `pricing_plan` - (Optional) Whether the pricing plan for the queue is on-demand or reserved. Valid values are `ON_DEMAND` or `RESERVED`. Default to `ON_DEMAND`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) A unique identifier describing the queue
-* `concurrent_jobs` - (Optional) The maximum number of jobs your queue can process concurrently. For on-demand queues, the value you enter is constrained by your service quotas for Maximum concurrent jobs, per on-demand queue and Maximum concurrent jobs, per account. For reserved queues, specify the number of jobs you can process concurrently in your reservation plan instead.
-* `description` - (Optional) A description of the queue
-* `pricing_plan` - (Optional) Specifies whether the pricing plan for the queue is on-demand or reserved. Valid values are `ON_DEMAND` or `RESERVED`. Default to `ON_DEMAND`.
-* `reservation_plan_settings` - (Optional) A detail pricing plan of the  reserved queue. See below.
-* `status` - (Optional) A status of the queue. Valid values are `ACTIVE` or `RESERVED`. Default to `PAUSED`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `reservation_plan_settings` - (Optional) Detail pricing plan of the reserved queue. See below.
+* `status` - (Optional) Status of the queue. Valid values are `ACTIVE` or `RESERVED`. Default to `PAUSED`.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-#### `reservation_plan_settings`
+### `reservation_plan_settings` Block
 
-* `commitment` - (Required) The length of the term of your reserved queue pricing plan commitment. Valid value is `ONE_YEAR`.
-* `renewal_type` - (Required) Specifies whether the term of your reserved queue pricing plan. Valid values are `AUTO_RENEW` or `EXPIRE`.
-* `reserved_slots` - (Required) Specifies the number of reserved transcode slots (RTS) for queue.
+* `commitment` - (Required) Length of the term of your reserved queue pricing plan commitment. Valid value is `ONE_YEAR`.
+* `renewal_type` - (Required) Renewal type of your reserved queue pricing plan. Valid values are `AUTO_RENEW` or `EXPIRE`.
+* `reserved_slots` - (Required) Number of reserved transcode slots (RTS) for queue.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The same as `name`
-* `arn` - The Arn of the queue
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the queue
+* `id` - Same as `name`
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

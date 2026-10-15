@@ -166,7 +166,7 @@ To specify data source connection parameters, exactly one of the following sub-o
 * `athena` - (Optional) [Parameters](#athena-block) for connecting to Athena.
 * `aurora` - (Optional) [Parameters](#aurora-block) for connecting to Aurora MySQL.
 * `aurora_postgresql` - (Optional) [Parameters](#aurora_postgresql-block) for connecting to Aurora Postgresql.
-* `aws_iot_analytics` - (Optional) [Parameters](#aws_iot_analytics-block) for connecting to AWS IOT Analytics.
+* `aws_iot_analytics` - (Optional) [Parameters](#aws_iot_analytics-block) for connecting to AWS IoT Analytics.
 * `databricks` - (Optional) [Parameters](#databricks-block) for connecting to Databricks.
 * `jira` - (Optional) [Parameters](#jira-block) for connecting to Jira.
 * `maria_db` - (Optional) [Parameters](#maria_db-block) for connecting to MariaDB.

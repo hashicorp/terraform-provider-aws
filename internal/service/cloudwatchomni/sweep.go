@@ -5,13 +5,11 @@ package cloudwatchomni
 
 import (
 	"context"
-	"strings"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -20,7 +18,8 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains)
+	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space", "aws_cloudwatchomni_view")
+	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces)
 	awsv2.Register("aws_cloudwatchomni_view", sweepViews)
 }
 
@@ -37,19 +36,34 @@ func sweepDomains(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, v := range page.Items {
-			id, name := aws.ToString(v.DomainId), aws.ToString(v.Name)
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDomainResource, client,
+				framework.NewAttribute("domain_id", aws.ToString(v.DomainId))),
+			)
+		}
+	}
 
-			// An account has at most one domain, so only sweep domains created by acceptance tests.
-			if !strings.HasPrefix(name, sweep.ResourcePrefix+"-") {
-				tflog.Info(ctx, "Skipping CloudWatch Omni Domain without an acceptance test name", map[string]any{
-					"domain_id":    id,
-					names.AttrName: name,
-				})
+	return sweepResources, nil
+}
+
+func sweepSpaces(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input cloudwatchomni.ListSpacesInput
+	conn := client.CloudWatchOmniClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := cloudwatchomni.NewListSpacesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Items {
+			if aws.ToString(v.Region) != conn.Options().Region {
 				continue
 			}
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newDomainResource, client,
-				framework.NewAttribute("domain_id", id)),
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSpaceResource, client,
+				framework.NewAttribute("space_id", aws.ToString(v.SpaceId))),
 			)
 		}
 	}
@@ -72,18 +86,8 @@ func sweepViews(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 		}
 
 		for _, v := range page.Items {
-			name := aws.ToString(v.Name)
-
-			// View names carry the "view." prefix, so acceptance test views are "view.tf-acc-test-...".
-			if !strings.HasPrefix(name, "view."+sweep.ResourcePrefix+"-") {
-				tflog.Info(ctx, "Skipping CloudWatch Omni View without an acceptance test name", map[string]any{
-					names.AttrName: name,
-				})
-				continue
-			}
-
 			sweepResources = append(sweepResources, framework.NewSweepResource(newViewResource, client,
-				framework.NewAttribute(names.AttrName, name)),
+				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))),
 			)
 		}
 	}

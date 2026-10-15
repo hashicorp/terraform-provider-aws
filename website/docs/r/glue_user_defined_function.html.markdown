@@ -36,27 +36,27 @@ resource "aws_glue_user_defined_function" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name of the function.
 * `catalog_id` - (Optional) ID of the Glue Catalog to create the function in. If omitted, this defaults to the AWS Account ID.
-* `database_name` - (Required) The name of the Database to create the Function.
-* `class_name` - (Required) The Java class that contains the function code.
-* `owner_name` - (Required) The owner of the function.
-* `owner_type` - (Required) The owner type. can be one of `USER`, `ROLE`, and `GROUP`.
-* `resource_uris` - (Optional) The configuration block for Resource URIs. See [resource uris](#resource-uris) below for more details.
+* `class_name` - (Required) Java class that contains the function code.
+* `database_name` - (Required) Name of the Database to create the Function.
+* `name` - (Required) Name of the function.
+* `owner_name` - (Required) Owner of the function.
+* `owner_type` - (Required) Owner type. can be one of `USER`, `ROLE`, and `GROUP`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resource_uris` - (Optional) Configuration block for Resource URIs. See [`resource_uris` Block](#resource_uris-block) below for more details.
 
-### Resource URIs
+### `resource_uris` Block
 
-* `resource_type` - (Required) The type of the resource. can be one of `JAR`, `FILE`, and `ARCHIVE`.
-* `uri` - (Required) The URI for accessing the resource.
+* `resource_type` - (Required) Type of the resource. can be one of `JAR`, `FILE`, and `ARCHIVE`.
+* `uri` - (Required) URI for accessing the resource.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id`- The id of the Glue User Defined Function.
-* `arn`- The ARN of the Glue User Defined Function.
-* `create_time`- The time at which the function was created.
+* `arn`- ARN of the Glue User Defined Function.
+* `create_time`- Time at which the function was created.
+* `id`- ID of the Glue User Defined Function.
 
 ## Import
 

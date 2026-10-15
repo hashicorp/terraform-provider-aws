@@ -6,8 +6,10 @@ package cloudwatchomni
 // Exports for use in tests only.
 var (
 	ResourceDomain = newDomainResource
+	ResourceSpace  = newSpaceResource
 	ResourceView   = newViewResource
 
 	FindDomainByID = findDomainByID
+	FindSpaceByID  = findSpaceByID
 	FindViewByName = findViewByName
 )
