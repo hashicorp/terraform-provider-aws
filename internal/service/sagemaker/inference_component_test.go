@@ -33,7 +33,7 @@ func TestAccSageMakerInferenceComponent_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceComponentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("inference-component/%s", rName)),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "endpoint_arn", "sagemaker", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "variant_name", "variant-1"),
@@ -44,7 +44,7 @@ func TestAccSageMakerInferenceComponent_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "runtime_config.0.current_copy_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "runtime_config.0.desired_copy_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "specification.0.compute_resource_requirements.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "specification.0.compute_resource_requirements.0.min_memory_required_in_mb"),
 					resource.TestCheckResourceAttr(resourceName, "specification.0.compute_resource_requirements.0.min_memory_required_in_mb", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "specification.0.compute_resource_requirements.0.number_of_cpu_cores_required", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "specification.0.container.0.resolved_image"),
@@ -75,7 +75,7 @@ func TestAccSageMakerInferenceComponent_disappears(t *testing.T) {
 				Config: testAccInferenceComponentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceComponentExists(ctx, t, resourceName),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceInferenceComponent(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsagemaker.ResourceInferenceComponent, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -244,7 +244,7 @@ func TestAccSageMakerInferenceComponent_dataCacheConfig(t *testing.T) {
 				Config: testAccInferenceComponentConfig_dataCacheConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceComponentExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "specification.0.data_cache_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "specification.0.data_cache_config.0.enable_caching"),
 					resource.TestCheckResourceAttr(resourceName, "specification.0.data_cache_config.0.enable_caching", acctest.CtTrue),
 				),
 			},
