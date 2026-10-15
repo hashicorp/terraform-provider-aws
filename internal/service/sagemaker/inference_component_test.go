@@ -43,6 +43,7 @@ func TestAccSageMakerInferenceComponent_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "runtime_config.0.copy_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "runtime_config.0.current_copy_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "runtime_config.0.desired_copy_count", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "runtime_config.0.placement_status.#"),
 					resource.TestCheckResourceAttr(resourceName, "specification.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "specification.0.compute_resource_requirements.0.min_memory_required_in_mb"),
 					resource.TestCheckResourceAttr(resourceName, "specification.0.compute_resource_requirements.0.min_memory_required_in_mb", "1024"),
@@ -52,9 +53,11 @@ func TestAccSageMakerInferenceComponent_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -111,9 +114,11 @@ func TestAccSageMakerInferenceComponent_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
 				Config: testAccInferenceComponentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -162,9 +167,11 @@ func TestAccSageMakerInferenceComponent_runtimeConfigUpdate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -192,9 +199,11 @@ func TestAccSageMakerInferenceComponent_container(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -221,9 +230,11 @@ func TestAccSageMakerInferenceComponent_startupParameters(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -249,9 +260,11 @@ func TestAccSageMakerInferenceComponent_dataCacheConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -280,9 +293,11 @@ func TestAccSageMakerInferenceComponent_schedulingConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -307,9 +322,11 @@ func TestAccSageMakerInferenceComponent_containerImage(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -357,10 +374,12 @@ func TestAccSageMakerInferenceComponent_deploymentConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deployment_config"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore:              []string{"deployment_config"},
 			},
 		},
 	})
@@ -387,9 +406,11 @@ func TestAccSageMakerInferenceComponent_computeResourceRequirements(t *testing.T
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -415,9 +436,11 @@ func TestAccSageMakerInferenceComponent_acceleratorDevices(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -442,9 +465,11 @@ func TestAccSageMakerInferenceComponent_modelName(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -473,9 +498,11 @@ func TestAccSageMakerInferenceComponent_specifications(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -505,9 +532,11 @@ func TestAccSageMakerInferenceComponent_adapter(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -535,9 +564,11 @@ func TestAccSageMakerInferenceComponent_containerMetricsConfig(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -569,9 +600,11 @@ func TestAccSageMakerInferenceComponent_specificationUpdate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -586,7 +619,12 @@ func testAccCheckInferenceComponentDestroy(ctx context.Context, t *testing.T) re
 				continue
 			}
 
-			_, err := tfsagemaker.FindInferenceComponentByName(ctx, conn, rs.Primary.ID)
+			name := rs.Primary.Attributes[names.AttrName]
+			if name == "" {
+				return fmt.Errorf("No SageMaker Inference Component name is set")
+			}
+
+			_, err := tfsagemaker.FindInferenceComponentByName(ctx, conn, name)
 
 			if retry.NotFound(err) {
 				continue
@@ -596,7 +634,7 @@ func testAccCheckInferenceComponentDestroy(ctx context.Context, t *testing.T) re
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Inference Component (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker Inference Component (%s) still exists", name)
 		}
 		return nil
 	}
@@ -611,7 +649,12 @@ func testAccCheckInferenceComponentExists(ctx context.Context, t *testing.T, n s
 
 		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
-		_, err := tfsagemaker.FindInferenceComponentByName(ctx, conn, rs.Primary.ID)
+		name := rs.Primary.Attributes[names.AttrName]
+		if name == "" {
+			return fmt.Errorf("No SageMaker Inference Component name is set")
+		}
+
+		_, err := tfsagemaker.FindInferenceComponentByName(ctx, conn, name)
 
 		return err
 	}
