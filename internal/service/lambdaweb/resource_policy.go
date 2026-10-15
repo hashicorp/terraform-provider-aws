@@ -5,7 +5,6 @@ package lambdaweb
 
 import (
 	"context"
-	"errors"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -38,10 +37,6 @@ func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigur
 	return &resourcePolicyResource{}, nil
 }
 
-const (
-	ResNameResourcePolicy = "Resource Policy"
-)
-
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
 	framework.WithImportByIdentity
@@ -50,6 +45,10 @@ type resourcePolicyResource struct {
 func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrPolicy: schema.StringAttribute{
+				CustomType: fwtypes.IAMPolicyType,
+				Required:   true,
+			},
 			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -57,59 +56,50 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrPolicy: schema.StringAttribute{
-				CustomType: fwtypes.IAMPolicyType,
-				Required:   true,
-			},
 			"revision_id": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 	}
 }
 
 func (r *resourcePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().LambdaWebClient(ctx)
-
 	var plan resourcePolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().LambdaWebClient(ctx)
+
 	var input lambdaweb.PutResourcePolicyInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	resourceARN := fwflex.StringValueFromFramework(ctx, plan.ResourceARN)
 	out, err := conn.PutResourcePolicy(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, plan.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
-	if out == nil || out.Policy == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), names.AttrResourceARN, plan.ResourceARN.String())
-		return
-	}
-	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
-	plan.RevisionID = flex.StringToFramework(ctx, out.RevisionId)
+
+	plan.RevisionID = fwflex.StringToFramework(ctx, out.RevisionId)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().LambdaWebClient(ctx)
-
 	var state resourcePolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().LambdaWebClient(ctx)
+
+	resourceARN := fwflex.StringValueFromFramework(ctx, state.ResourceARN)
 	out, err := findResourcePolicyByARN(ctx, conn, state.ResourceARN.ValueString())
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -117,19 +107,17 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, state.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
 
 	state.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
-	state.RevisionID = flex.StringToFramework(ctx, out.RevisionId)
+	state.RevisionID = fwflex.StringToFramework(ctx, out.RevisionId)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resourcePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().LambdaWebClient(ctx)
-
 	var plan, state resourcePolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -137,68 +125,71 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
+	conn := r.Meta().LambdaWebClient(ctx)
+
+	resourceARN := fwflex.StringValueFromFramework(ctx, plan.ResourceARN)
 	var input lambdaweb.PutResourcePolicyInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	// Send the last known revision so the service can reject a concurrent
 	// overwrite (optimistic concurrency); the API returns the new revision.
-	input.RevisionId = state.RevisionID.ValueStringPointer()
+	input.RevisionId = fwflex.StringFromFramework(ctx, state.RevisionID)
 
 	out, err := conn.PutResourcePolicy(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, plan.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
-	if out == nil || out.Policy == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), names.AttrResourceARN, plan.ResourceARN.String())
-		return
-	}
-	plan.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
-	plan.RevisionID = flex.StringToFramework(ctx, out.RevisionId)
+
+	plan.RevisionID = fwflex.StringToFramework(ctx, out.RevisionId)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().LambdaWebClient(ctx)
-
 	var state resourcePolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().LambdaWebClient(ctx)
+
+	resourceARN := fwflex.StringValueFromFramework(ctx, state.ResourceARN)
 	input := lambdaweb.DeleteResourcePolicyInput{
-		ResourceArn: state.ResourceARN.ValueStringPointer(),
-		RevisionId:  state.RevisionID.ValueStringPointer(),
+		ResourceArn: aws.String(resourceARN),
+		RevisionId:  fwflex.StringFromFramework(ctx, state.RevisionID),
 	}
-
 	_, err := conn.DeleteResourcePolicy(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, names.AttrResourceARN, state.ResourceARN.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
 }
 
-func findResourcePolicyByARN(ctx context.Context, conn *lambdaweb.Client, resourceArn string) (*lambdaweb.GetResourcePolicyOutput, error) {
+func findResourcePolicyByARN(ctx context.Context, conn *lambdaweb.Client, arn string) (*lambdaweb.GetResourcePolicyOutput, error) {
 	input := lambdaweb.GetResourcePolicyInput{
-		ResourceArn: aws.String(resourceArn),
+		ResourceArn: aws.String(arn),
+	}
+	return findResourcePolicy(ctx, conn, &input)
+}
+
+func findResourcePolicy(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.GetResourcePolicyInput) (*lambdaweb.GetResourcePolicyOutput, error) {
+	out, err := conn.GetResourcePolicy(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
 
-	out, err := conn.GetResourcePolicy(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError: err,
-			})
-		}
-
 		return nil, smarterr.NewError(err)
 	}
 
@@ -211,7 +202,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *lambdaweb.Client, resour
 
 type resourcePolicyResourceModel struct {
 	framework.WithRegionModel
-	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`
 	Policy      fwtypes.IAMPolicy `tfsdk:"policy"`
+	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`
 	RevisionID  types.String      `tfsdk:"revision_id"`
 }
