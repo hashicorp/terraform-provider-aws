@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -46,6 +47,7 @@ import (
 // @FrameworkResource("aws_sagemaker_inference_component", name="Inference Component")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
+// @Testing(importStateIdAttribute="name")
 // @Testing(hasNoPreExistingResource=true)
 func newInferenceComponentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &inferenceComponentResource{}
@@ -214,21 +216,15 @@ func (r *inferenceComponentResource) Schema(ctx context.Context, req resource.Sc
 						"desired_copy_count": schema.Int32Attribute{
 							Computed: true,
 						},
-					},
-					Blocks: map[string]schema.Block{
-						"placement_status": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentPlacementStatusModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"current_copy_count": schema.Int32Attribute{
-										Computed: true,
-									},
-									names.AttrInstanceType: schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.ProductionVariantInstanceType](),
-										Computed:   true,
-									},
-								},
-							},
+						// Modeled as a computed list attribute rather than a nested block.
+						// A block's cardinality is controlled by configuration, and nothing
+						// ever configures this read-only value, so a block would be planned
+						// with a count of zero and then fail the apply with an
+						// inconsistent-result error once the service returned entries.
+						"placement_status": schema.ListAttribute{
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[inferenceComponentPlacementStatusModel](ctx),
+							ElementType: fwtypes.NewObjectTypeOf[inferenceComponentPlacementStatusModel](ctx),
+							Computed:    true,
 						},
 					},
 				},
@@ -294,10 +290,11 @@ func inferenceComponentSpecificationSchema(ctx context.Context) schema.NestedBlo
 		Blocks: map[string]schema.Block{
 			// An adapter inference component (one that sets base_inference_component_name)
 			// omits compute_resource_requirements and inherits the base component's compute
-			// resources, which the API echoes back on read. The individual attributes are
-			// Optional+Computed so server-populated values are absorbed without a perpetual
-			// diff. (The provider is served over Terraform protocol v5, which does not allow
-			// nested attributes, so this must be a block.)
+			// resources, which the API echoes back on read. A returned value is discarded
+			// when the configuration omitted the block (see
+			// preserveOmittedSpecificationBlocks), because a block's cardinality comes from
+			// configuration. (The provider is served over Terraform protocol v5, which does
+			// not allow nested attributes, so this must be a block.)
 			"compute_resource_requirements": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentComputeResourceRequirementsModel](ctx),
 				Validators: []validator.List{
@@ -512,12 +509,17 @@ func (r *inferenceComponentResource) Create(ctx context.Context, req resource.Cr
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	out, err := waitInferenceComponentInService(ctx, conn, name, createTimeout)
 	if err != nil {
+		// The component was created, so record its name to taint the resource rather
+		// than leaving it untracked for a subsequent apply to recreate. Best effort:
+		// a failure to write partial state must not mask the original error.
+		resp.State.SetAttribute(ctx, path.Root(names.AttrName), name) //nolint:errcheck // Set 'name' so as to taint the resource.
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
 	r.flatten(ctx, out, &plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
+		resp.State.SetAttribute(ctx, path.Root(names.AttrName), name) //nolint:errcheck // Set 'name' so as to taint the resource.
 		return
 	}
 
@@ -561,6 +563,7 @@ func (r *inferenceComponentResource) Read(ctx context.Context, req resource.Read
 // update), so refreshing it would produce perpetual diffs.
 func (r *inferenceComponentResource) flatten(ctx context.Context, out *sagemaker.DescribeInferenceComponentOutput, data *inferenceComponentResourceModel, diags *diag.Diagnostics) {
 	deploymentConfig := data.DeploymentConfig
+	priorSpecification, priorSpecifications := data.Specification, data.Specifications
 
 	diags.Append(fwflex.Flatten(ctx, out, data)...)
 	if diags.HasError() {
@@ -568,6 +571,65 @@ func (r *inferenceComponentResource) flatten(ctx context.Context, out *sagemaker
 	}
 
 	data.DeploymentConfig = deploymentConfig
+
+	preserveOmittedSpecificationBlocks(ctx, priorSpecification, &data.Specification, diags)
+	if diags.HasError() {
+		return
+	}
+
+	preserveOmittedSpecificationBlocks(ctx, priorSpecifications, &data.Specifications, diags)
+}
+
+// preserveOmittedSpecificationBlocks keeps compute_resource_requirements and
+// data_cache_config absent when the configuration omitted them.
+//
+// Both are optional blocks that the service may return anyway: an adapter component
+// inherits the base component's compute resources, and data caching can be enabled by
+// default. A block's cardinality is controlled by configuration, so absorbing a returned
+// value would change the planned count from zero to one and fail the apply with an
+// inconsistent-result error, or produce a recurring removal diff on refresh. Marking the
+// child attributes Computed does not help, because it is the block count that changes.
+//
+// Preservation only applies when a prior value exists to correlate against, so import
+// (where there is no prior state) still populates the blocks from the API.
+func preserveOmittedSpecificationBlocks(ctx context.Context, prior fwtypes.ListNestedObjectValueOf[inferenceComponentSpecificationModel], current *fwtypes.ListNestedObjectValueOf[inferenceComponentSpecificationModel], diags *diag.Diagnostics) {
+	if prior.IsNull() || prior.IsUnknown() || current.IsNull() || current.IsUnknown() {
+		return
+	}
+
+	priorSpecs, d := prior.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return
+	}
+
+	currentSpecs, d := current.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return
+	}
+
+	// Without a one-to-one correspondence the elements cannot be correlated.
+	if len(priorSpecs) != len(currentSpecs) {
+		return
+	}
+
+	for i, priorSpec := range priorSpecs {
+		if priorSpec.ComputeResourceRequirements.IsNull() {
+			currentSpecs[i].ComputeResourceRequirements = priorSpec.ComputeResourceRequirements
+		}
+		if priorSpec.DataCacheConfig.IsNull() {
+			currentSpecs[i].DataCacheConfig = priorSpec.DataCacheConfig
+		}
+	}
+
+	v, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, currentSpecs, nil)
+	diags.Append(d...)
+	if diags.HasError() {
+		return
+	}
+
+	*current = v
 }
 
 func (r *inferenceComponentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -586,17 +648,30 @@ func (r *inferenceComponentResource) Update(ctx context.Context, req resource.Up
 	// request that carries only a DeploymentConfig. A deployment_config-only change
 	// therefore does not trigger an API call -- the directive only governs how a future
 	// spec/runtime change rolls out, so the new value is simply persisted to state.
-	specOrRuntimeChanged := !plan.RuntimeConfig.Equal(state.RuntimeConfig) ||
-		!plan.Specification.Equal(state.Specification) ||
-		!plan.Specifications.Equal(state.Specifications)
+	//
+	// The comparison is made on the expanded request structures rather than on the models.
+	// Read-only attributes such as placement_status, the copy count summaries and
+	// container.resolved_image are Computed without a plan modifier, so the Framework
+	// marks them unknown in every plan. Comparing models would then report a change for
+	// any update at all, including a tags-only one, and needlessly redeploy the model. The
+	// request types carry only configurable fields, so read-only values are excluded
+	// structurally rather than by a list that has to be maintained by hand.
+	var input, stateInput sagemaker.UpdateInferenceComponentInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input), smerr.ID, name)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, state, &stateInput), smerr.ID, name)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	specOrRuntimeChanged := !reflect.DeepEqual(input.RuntimeConfig, stateInput.RuntimeConfig) ||
+		!reflect.DeepEqual(input.Specification, stateInput.Specification) ||
+		!reflect.DeepEqual(input.Specifications, stateInput.Specifications)
 
 	if specOrRuntimeChanged {
-		var input sagemaker.UpdateInferenceComponentInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input), smerr.ID, name)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
 		_, err := conn.UpdateInferenceComponent(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
@@ -803,6 +878,11 @@ type inferenceComponentResourceModel struct {
 	VariantName              types.String                                                             `tfsdk:"variant_name"`
 }
 
+// inferenceComponentRuntimeConfigModel spans the API's asymmetric runtime types: the
+// request carries only CopyCount, while the Describe response returns an
+// InferenceComponentRuntimeConfigSummary that also reports CurrentCopyCount,
+// DesiredCopyCount and PlacementStatus. The read-only values are exposed as computed
+// attributes so practitioners can consume them.
 type inferenceComponentRuntimeConfigModel struct {
 	CopyCount        types.Int32                                                             `tfsdk:"copy_count"`
 	CurrentCopyCount types.Int32                                                             `tfsdk:"current_copy_count"`
@@ -813,9 +893,8 @@ type inferenceComponentRuntimeConfigModel struct {
 var _ fwflex.Flattener = &inferenceComponentRuntimeConfigModel{}
 
 // Flatten maps the InferenceComponentRuntimeConfigSummary (returned by Describe) onto
-// the model. The create/update request type carries only CopyCount, while the summary
-// reports CurrentCopyCount/DesiredCopyCount/PlacementStatus; copy_count is mapped from
-// DesiredCopyCount so the configured value is refreshed consistently (including import).
+// the model. copy_count is mapped from DesiredCopyCount, the requested value, so the
+// configured value is refreshed consistently (including import).
 func (m *inferenceComponentRuntimeConfigModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
