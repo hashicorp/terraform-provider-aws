@@ -152,8 +152,7 @@ func normalizeRulesValue(v reflect.Value) {
 		applyRulesJSONDefaults(v.Interface())
 		normalizeRulesValue(v.Elem())
 	case reflect.Struct:
-		for i := range v.NumField() {
-			f := v.Field(i)
+		for _, f := range v.Fields() {
 			if !f.CanSet() {
 				continue // Unexported.
 			}

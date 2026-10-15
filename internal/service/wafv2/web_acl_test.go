@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -4065,7 +4066,7 @@ func TestAccWAFV2WebACL_ruleJSONNoDrift(t *testing.T) {
 	// Each rule_json is written as a user would, omitting the values that AWS fills
 	// in. The plan after apply and refresh must be empty.
 	testCases := map[string]string{
-		"byte_match": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `ByteMatchStatement = {
+		"byte_match": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `ByteMatchStatement = {
   SearchString         = "BadBot"
   PositionalConstraint = "CONTAINS"
   FieldToMatch         = { SingleHeader = { Name = "User-Agent" } }
@@ -4075,7 +4076,7 @@ func TestAccWAFV2WebACL_ruleJSONNoDrift(t *testing.T) {
     { Priority = 1, Type = "URL_DECODE" },
   ]
 }`),
-		"field_to_match": testAccWebACLRuleJSON("rule", 1, `Action = { Count = {} }`, `OrStatement = {
+		"field_to_match": testAccWebACLRuleJSON("rule-1", 1, `Action = { Count = {} }`, `OrStatement = {
   Statements = [
     { ByteMatchStatement = { SearchString = "a", PositionalConstraint = "CONTAINS", FieldToMatch = { AllQueryArguments = {} }, TextTransformations = [{ Priority = 0, Type = "NONE" }] } },
     { ByteMatchStatement = { SearchString = "a", PositionalConstraint = "CONTAINS", FieldToMatch = { Body = {} }, TextTransformations = [{ Priority = 0, Type = "NONE" }] } },
@@ -4093,50 +4094,50 @@ func TestAccWAFV2WebACL_ruleJSONNoDrift(t *testing.T) {
     { ByteMatchStatement = { SearchString = "t13d1516h2_8daaf6152771_02713d6af862", PositionalConstraint = "EXACTLY", FieldToMatch = { JA4Fingerprint = { FallbackBehavior = "NO_MATCH" } }, TextTransformations = [{ Priority = 0, Type = "NONE" }] } },
   ]
 }`),
-		"regex_match": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `RegexMatchStatement = {
+		"regex_match": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `RegexMatchStatement = {
   RegexString         = "^/admin"
   FieldToMatch        = { UriPath = {} }
   TextTransformations = [{ Priority = 0, Type = "NONE" }]
 }`),
-		"regex_pattern_set_reference": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `RegexPatternSetReferenceStatement = {
+		"regex_pattern_set_reference": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `RegexPatternSetReferenceStatement = {
   ARN                 = aws_wafv2_regex_pattern_set.test.arn
   FieldToMatch        = { UriPath = {} }
   TextTransformations = [{ Priority = 0, Type = "NONE" }]
 }`),
-		"sqli_match": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `SqliMatchStatement = {
+		"sqli_match": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `SqliMatchStatement = {
   FieldToMatch        = { QueryString = {} }
   TextTransformations = [{ Priority = 0, Type = "URL_DECODE" }]
 }`),
-		"xss_match": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `XssMatchStatement = {
+		"xss_match": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `XssMatchStatement = {
   FieldToMatch        = { Body = {} }
   TextTransformations = [{ Priority = 0, Type = "HTML_ENTITY_DECODE" }]
 }`),
-		"size_constraint": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `SizeConstraintStatement = {
+		"size_constraint": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `SizeConstraintStatement = {
   ComparisonOperator  = "GT"
   Size                = 8192
   FieldToMatch        = { Body = { OversizeHandling = "MATCH" } }
   TextTransformations = [{ Priority = 0, Type = "NONE" }]
 }`),
-		"geo_match": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `GeoMatchStatement = {
+		"geo_match": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `GeoMatchStatement = {
   CountryCodes      = ["US", "NL", "CA"]
   ForwardedIPConfig = { HeaderName = "X-Forwarded-For", FallbackBehavior = "MATCH" }
 }`),
-		"ip_set_reference": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `IPSetReferenceStatement = {
+		"ip_set_reference": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `IPSetReferenceStatement = {
   ARN                    = aws_wafv2_ip_set.test.arn
   IPSetForwardedIPConfig = { HeaderName = "X-Forwarded-For", FallbackBehavior = "NO_MATCH", Position = "FIRST" }
 }`),
-		"label_match": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `LabelMatchStatement = {
+		"label_match": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `LabelMatchStatement = {
   Scope = "LABEL"
   Key   = "awswaf:managed:aws:bot-control:bot:verified"
 }`),
-		"asn_match": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `AsnMatchStatement = {
+		"asn_match": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `AsnMatchStatement = {
   AsnList = [64512, 64496]
 }`),
-		"rate_based": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `RateBasedStatement = {
+		"rate_based": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `RateBasedStatement = {
   Limit            = 1000
   AggregateKeyType = "IP"
 }`),
-		"rate_based_forwarded_ip_scope_down": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `RateBasedStatement = {
+		"rate_based_forwarded_ip_scope_down": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `RateBasedStatement = {
   Limit             = 1000
   AggregateKeyType  = "FORWARDED_IP"
   ForwardedIPConfig = { HeaderName = "X-Forwarded-For", FallbackBehavior = "MATCH" }
@@ -4149,7 +4150,7 @@ func TestAccWAFV2WebACL_ruleJSONNoDrift(t *testing.T) {
     }
   }
 }`),
-		"rate_based_custom_keys": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `RateBasedStatement = {
+		"rate_based_custom_keys": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `RateBasedStatement = {
   Limit               = 500
   AggregateKeyType    = "CUSTOM_KEYS"
   EvaluationWindowSec = 60
@@ -4161,7 +4162,7 @@ func TestAccWAFV2WebACL_ruleJSONNoDrift(t *testing.T) {
     { IP = {} },
   ]
 }`),
-		"rate_based_custom_keys_other": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `RateBasedStatement = {
+		"rate_based_custom_keys_other": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `RateBasedStatement = {
   Limit            = 500
   AggregateKeyType = "CUSTOM_KEYS"
   CustomKeys = [
@@ -4172,7 +4173,7 @@ func TestAccWAFV2WebACL_ruleJSONNoDrift(t *testing.T) {
     { ASN = {} },
   ]
 }`),
-		"managed_rule_group": testAccWebACLRuleJSON("rule", 1, `OverrideAction = { None = {} }`, `ManagedRuleGroupStatement = {
+		"managed_rule_group": testAccWebACLRuleJSON("rule-1", 1, `OverrideAction = { None = {} }`, `ManagedRuleGroupStatement = {
   VendorName = "AWS"
   Name       = "AWSManagedRulesCommonRuleSet"
   RuleActionOverrides = [
@@ -4192,7 +4193,7 @@ func TestAccWAFV2WebACL_ruleJSONNoDrift(t *testing.T) {
   Name                    = "AWSManagedRulesBotControlRuleSet"
   ManagedRuleGroupConfigs = [{ AWSManagedRulesBotControlRuleSet = { InspectionLevel = "COMMON" } }]
 }`) + "]",
-		"managed_rule_group_atp": testAccWebACLRuleJSON("rule", 1, `OverrideAction = { None = {} }`, `ManagedRuleGroupStatement = {
+		"managed_rule_group_atp": testAccWebACLRuleJSON("rule-1", 1, `OverrideAction = { None = {} }`, `ManagedRuleGroupStatement = {
   VendorName = "AWS"
   Name       = "AWSManagedRulesATPRuleSet"
   ManagedRuleGroupConfigs = [{
@@ -4206,7 +4207,7 @@ func TestAccWAFV2WebACL_ruleJSONNoDrift(t *testing.T) {
     }
   }]
 }`),
-		"managed_rule_group_acfp": testAccWebACLRuleJSON("rule", 1, `OverrideAction = { None = {} }`, `ManagedRuleGroupStatement = {
+		"managed_rule_group_acfp": testAccWebACLRuleJSON("rule-1", 1, `OverrideAction = { None = {} }`, `ManagedRuleGroupStatement = {
   VendorName = "AWS"
   Name       = "AWSManagedRulesACFPRuleSet"
   ManagedRuleGroupConfigs = [{
@@ -4222,7 +4223,7 @@ func TestAccWAFV2WebACL_ruleJSONNoDrift(t *testing.T) {
     }
   }]
 }`),
-		"managed_rule_group_anti_ddos": testAccWebACLRuleJSON("rule", 1, `OverrideAction = { None = {} }`, `ManagedRuleGroupStatement = {
+		"managed_rule_group_anti_ddos": testAccWebACLRuleJSON("rule-1", 1, `OverrideAction = { None = {} }`, `ManagedRuleGroupStatement = {
   VendorName = "AWS"
   Name       = "AWSManagedRulesAntiDDoSRuleSet"
   ManagedRuleGroupConfigs = [{
@@ -4236,11 +4237,11 @@ func TestAccWAFV2WebACL_ruleJSONNoDrift(t *testing.T) {
     }
   }]
 }`),
-		"rule_group_reference": testAccWebACLRuleJSON("rule", 1, `OverrideAction = { None = {} }`, `RuleGroupReferenceStatement = {
+		"rule_group_reference": testAccWebACLRuleJSON("rule-1", 1, `OverrideAction = { None = {} }`, `RuleGroupReferenceStatement = {
   ARN                 = aws_wafv2_rule_group.test.arn
   RuleActionOverrides = [{ Name = "rule-1", ActionToUse = { Count = {} } }]
 }`),
-		"actions": "[" + testAccWebACLRuleJSONObject("allow", 1, `Action = {
+		"rule_actions": "[" + testAccWebACLRuleJSONObject("allow", 1, `Action = {
   Allow = {
     CustomRequestHandling = { InsertHeaders = [{ Name = "x-b", Value = "1" }, { Name = "x-a", Value = "2" }] }
   }
@@ -4262,8 +4263,8 @@ ChallengeConfig = { ImmunityTimeProperty = { ImmunityTime = 600 } }`, `LabelMatc
 }
 RuleLabels = [{ Name = "test:z" }, { Name = "test:y" }]`, `LabelMatchStatement = { Scope = "NAMESPACE", Key = "test:" }`) + "]",
 		// More than the 3 levels of logical nesting that the rule block supports.
-		"nesting_depth_5": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, testAccRuleJSONDeepStatement),
-		"rate_based_scope_down_nesting_depth_4": testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `RateBasedStatement = {
+		"nesting_depth_5": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, testAccRuleJSONDeepStatement),
+		"rate_based_scope_down_nesting_depth_4": testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `RateBasedStatement = {
   Limit              = 1000
   AggregateKeyType   = "IP"
   ScopeDownStatement = `+testAccRuleJSONDeepStatementLevel4+`
@@ -4306,7 +4307,7 @@ func TestAccWAFV2WebACL_ruleJSONDrift(t *testing.T) {
 	var v awstypes.WebACL
 	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
-	rules := testAccWebACLRuleJSON("rule", 1, `Action = { Block = {} }`, `RateBasedStatement = {
+	rules := testAccWebACLRuleJSON("rule-1", 1, `Action = { Block = {} }`, `RateBasedStatement = {
   Limit            = 1000
   AggregateKeyType = "IP"
 }`)
@@ -8593,14 +8594,20 @@ func testAccWebACLRuleJSONObject(name string, priority int, action, statement st
 }
 
 func testAccWebACLConfig_ruleJSONStatements(rName, rules string) string {
-	return fmt.Sprintf(`
+	// Create only the dependencies that the rules reference, to stay below the per-account limits.
+	var config []string
+	if strings.Contains(rules, "aws_wafv2_ip_set.test") {
+		config = append(config, fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = %[1]q
   scope              = "REGIONAL"
   ip_address_version = "IPV4"
   addresses          = ["192.0.2.0/24"]
 }
-
+`, rName))
+	}
+	if strings.Contains(rules, "aws_wafv2_regex_pattern_set.test") {
+		config = append(config, fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
   name  = %[1]q
   scope = "REGIONAL"
@@ -8609,7 +8616,10 @@ resource "aws_wafv2_regex_pattern_set" "test" {
     regex_string = "^/admin"
   }
 }
-
+`, rName))
+	}
+	if strings.Contains(rules, "aws_wafv2_rule_group.test") {
+		config = append(config, fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   name     = %[1]q
   scope    = "REGIONAL"
@@ -8642,7 +8652,10 @@ resource "aws_wafv2_rule_group" "test" {
     sampled_requests_enabled   = false
   }
 }
+`, rName))
+	}
 
+	return acctest.ConfigCompose(append(config, fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name  = %[1]q
   scope = "REGIONAL"
@@ -8665,5 +8678,5 @@ resource "aws_wafv2_web_acl" "test" {
 
   rule_json = jsonencode(%[2]s)
 }
-`, rName, rules)
+`, rName, rules))...)
 }
