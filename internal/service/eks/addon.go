@@ -626,11 +626,7 @@ func addonIssuesError(apiObjects []types.AddonIssue) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		err := addonIssueError(apiObject)
-
-		if err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", strings.Join(apiObject.ResourceIds, ", "), err))
-		}
+		errs = append(errs, fmt.Errorf("%s: %w", strings.Join(apiObject.ResourceIds, ", "), addonIssueError(apiObject)))
 	}
 
 	return errors.Join(errs...)
@@ -644,11 +640,7 @@ func errorDetailsError(apiObjects []types.ErrorDetail) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		err := errorDetailError(apiObject)
-
-		if err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", strings.Join(apiObject.ResourceIds, ", "), err))
-		}
+		errs = append(errs, fmt.Errorf("%s: %w", strings.Join(apiObject.ResourceIds, ", "), errorDetailError(apiObject)))
 	}
 
 	return errors.Join(errs...)

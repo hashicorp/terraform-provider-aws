@@ -69,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Regex Match Set using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Regex Match Set using the ID. For example:
 
 ```terraform
 import {
@@ -78,7 +78,7 @@ import {
 }
 ```
 
-Using `terraform import`, import WAF Regional Regex Match Set using the id. For example:
+Using `terraform import`, import WAF Regional Regex Match Set using the ID. For example:
 
 ```console
 % terraform import aws_wafregional_regex_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

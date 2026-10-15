@@ -19,7 +19,7 @@ under the registered domain name using
 API Gateway domains can be defined as either 'edge-optimized' or 'regional'.  In an edge-optimized configuration,
 API Gateway internally creates and manages a CloudFront distribution to route requests on the given hostname. In
 addition to this resource it's necessary to create a DNS record corresponding to the given domain name which is an alias
-(either Route53 alias or traditional CNAME) to the Cloudfront domain name exported in the `cloudfront_domain_name`
+(either Route53 alias or traditional CNAME) to the CloudFront domain name exported in the `cloudfront_domain_name`
 attribute.
 
 In a regional configuration, API Gateway does not create a CloudFront distribution to route requests to the API, though
@@ -203,7 +203,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of domain name.
 * `certificate_upload_date` - Upload date associated with the domain certificate.
-* `cloudfront_domain_name` - Hostname created by Cloudfront to represent the distribution that implements this domain name mapping.
+* `cloudfront_domain_name` - Hostname created by CloudFront to represent the distribution that implements this domain name mapping.
 * `cloudfront_zone_id` - For convenience, the hosted zone ID (`Z2FDTNDATAQYW2`) that can be used to create a Route53 alias record for the distribution.
 * `domain_name_id` - Identifier for the domain name resource. Supported only for private custom domain names.
 * `id` - Internal identifier assigned to this domain name by API Gateway.

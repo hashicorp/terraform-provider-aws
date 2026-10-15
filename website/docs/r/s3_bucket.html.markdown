@@ -88,10 +88,10 @@ The `cors_rule` configuration block supports the following arguments:
 
 The `grant` configuration block supports the following arguments:
 
-* `id` - (Optional) Canonical user id to grant for. Used only when `type` is `CanonicalUser`.
+* `id` - (Optional) Canonical user ID to grant for. Used only when `type` is `CanonicalUser`.
 * `permissions` - (Required) List of permissions to apply for grantee. Valid values are `READ`, `WRITE`, `READ_ACP`, `WRITE_ACP`, `FULL_CONTROL`.
 * `type` - (Required) Type of grantee to apply for. Valid values are `CanonicalUser` and `Group`. `AmazonCustomerByEmail` is not supported.
-* `uri` - (Optional) Uri address to grant for. Used only when `type` is `Group`.
+* `uri` - (Optional) URI address to grant for. Used only when `type` is `Group`.
 
 ### `lifecycle_rule` Block
 

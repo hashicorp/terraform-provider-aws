@@ -16,7 +16,7 @@ Manages an AWS Bedrock AgentCore Browser. Browser provides AI agents with web br
 
 ```terraform
 resource "aws_bedrockagentcore_browser" "example" {
-  name        = "example-browser"
+  name        = "example_browser"
   description = "Browser for web data extraction"
 
   network_configuration {
@@ -29,7 +29,7 @@ resource "aws_bedrockagentcore_browser" "example" {
 
 ```terraform
 resource "aws_bedrockagentcore_browser" "vpc_example" {
-  name        = "vpc-browser"
+  name        = "vpc_browser"
   description = "Browser with VPC configuration"
 
   network_configuration {
@@ -66,7 +66,7 @@ resource "aws_s3_bucket" "recording" {
 }
 
 resource "aws_bedrockagentcore_browser" "example" {
-  name               = "example-browser"
+  name               = "example_browser"
   description        = "Browser with recording enabled"
   execution_role_arn = aws_iam_role.example.arn
 
@@ -134,7 +134,7 @@ The `s3_location` object supports the following:
 
 The `browser_signing` object supports the following:
 
-* `enabled` - (Required) Whether browser signing is enabled. When enabled, the browser cryptographically signs HTTP requests to identify itself as an AI agent to bot control vendors.
+* `enabled` - (Required) Whether to enable browser signing. When enabled, the browser cryptographically signs HTTP requests to identify itself as an AI agent to bot control vendors.
 
 ### `enterprise_policy` Block
 

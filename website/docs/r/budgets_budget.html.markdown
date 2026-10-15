@@ -442,7 +442,7 @@ The `filter_expression` block maps directly to the [AWS Expression](https://docs
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the budget.
-* `id` - id of resource.
+* `id` - ID of resource.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### `auto_adjust_data` Block
