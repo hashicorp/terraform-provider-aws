@@ -4,14 +4,20 @@
 package wafv2
 
 import (
+	"context"
+	"fmt"
 	"math"
 	"sync"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -179,8 +185,13 @@ var byteMatchStatementSchema = sync.OnceValue(func() *schema.Schema {
 				},
 				"search_string": {
 					Type:         schema.TypeString,
-					Required:     true,
+					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 200),
+				},
+				"search_string_base64": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validSearchStringBase64,
 				},
 				attrPreParseTextTransformation: preParseTextTransformationSchema(),
 				attrTextTransformation:         textTransformationSchema(),
@@ -437,10 +448,14 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						// The AWS default, set explicitly rather than Computed: a rule is a set
+						// element, and Terraform can only carry a Computed value over from
+						// prior state when every unset Optional attribute in the rule is null
+						// there, which SDKv2 does not guarantee (it stores "").
 						"fallback_behavior": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Computed:         true,
+							Default:          awstypes.FallbackBehaviorMatch,
 							ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 						},
 					},
@@ -1854,5 +1869,76 @@ func asnMatchStatementSchema() *schema.Schema {
 				"forwarded_ip_config": forwardedIPConfigSchema(),
 			},
 		},
+	}
+}
+
+func validSearchStringBase64(v any, k string) (ws []string, errors []error) {
+	b, err := inttypes.Base64Decode(v.(string))
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q must be base64-encoded: %w", k, err))
+		return
+	}
+
+	if n := len(b); n < 1 || n > 200 {
+		errors = append(errors, fmt.Errorf("%q must decode to between 1 and 200 bytes, got %d", k, n))
+	}
+
+	return
+}
+
+// validateByteMatchStatementSearchString checks that every byte_match_statement, at any
+// nesting depth, sets exactly one of search_string and search_string_base64.
+func validateByteMatchStatementSearchString(_ context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+	walkRawByteMatchStatements(req.RawConfig, cty.Path{}, func(v cty.Value, p cty.Path) {
+		searchString, searchStringBase64 := v.GetAttr("search_string"), v.GetAttr("search_string_base64")
+		if !searchString.IsKnown() || !searchStringBase64.IsKnown() {
+			return
+		}
+
+		var n int
+		for _, v := range []cty.Value{searchString, searchStringBase64} {
+			if !v.IsNull() {
+				n++
+			}
+		}
+
+		if n != 1 {
+			resp.Diagnostics = append(resp.Diagnostics, errs.NewExactlyOneOfChildrenError(p, n, p.GetAttr("search_string"), p.GetAttr("search_string_base64")))
+		}
+	})
+}
+
+func walkRawByteMatchStatements(v cty.Value, p cty.Path, f func(cty.Value, cty.Path)) {
+	if !v.IsKnown() || v.IsNull() {
+		return
+	}
+
+	switch ty := v.Type(); {
+	case ty.IsObjectType():
+		for k := range ty.AttributeTypes() {
+			if k != "byte_match_statement" {
+				walkRawByteMatchStatements(v.GetAttr(k), p.GetAttr(k), f)
+				continue
+			}
+
+			l := v.GetAttr(k)
+			if !l.IsKnown() || l.IsNull() {
+				continue
+			}
+			for i, e := range tfcty.ValueElements(l) {
+				if e.IsKnown() && !e.IsNull() {
+					f(e, p.GetAttr(k).Index(i))
+				}
+			}
+		}
+	case ty.IsSetType():
+		// Set elements have no addressable path; report against the set itself.
+		for _, e := range tfcty.ValueElements(v) {
+			walkRawByteMatchStatements(e, p, f)
+		}
+	case ty.IsListType(), ty.IsTupleType(), ty.IsMapType():
+		for i, e := range tfcty.ValueElements(v) {
+			walkRawByteMatchStatements(e, p.Index(i), f)
+		}
 	}
 }
