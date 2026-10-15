@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_pricingplanmanager_subscription: Fix replacement planned on import when `approval_mode` is set in configuration
+```
