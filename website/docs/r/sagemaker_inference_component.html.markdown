@@ -116,111 +116,125 @@ resource "aws_sagemaker_inference_component" "example" {
 
 This resource supports the following arguments:
 
-* `name` - (Required) A unique name to assign to the inference component.
-* `endpoint_name` - (Required) The name of an existing endpoint where you host the inference component.
-* `variant_name` - (Optional) The name of an existing production variant where you host the inference component. Required for a standard inference component; must be omitted for an adapter inference component (one that sets `base_inference_component_name`).
-* `specification` - (Optional, conflicts with `specifications`) Details about the resources to deploy with this inference component. See [Specification](#specification).
-* `specifications` - (Optional, conflicts with `specification`) A list of specification objects for the inference component, one per instance type. See [Specification](#specification).
-* `runtime_config` - (Optional) Runtime settings for a model that is deployed with an inference component. See [Runtime Config](#runtime-config).
-* `deployment_config` - (Optional) The deployment configuration for the inference component, which controls the rollout strategy and rollback behavior. This directive applies only when the inference component is **updated** — the `CreateInferenceComponent` API does not accept it, so it has no effect on initial creation. It is not returned by the API and is therefore not refreshed into state or verified on import. See [Deployment Config](#deployment-config).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `deployment_config` - (Optional) Deployment configuration for the inference component, which controls the rollout strategy and rollback behavior. This directive applies only when the inference component is **updated** — the `CreateInferenceComponent` API does not accept it, so it has no effect on initial creation. It is not returned by the API and is therefore not refreshed into state or verified on import. See [`deployment_config` Block](#deployment_config-block).
+* `endpoint_name` - (Required) Name of an existing endpoint where you host the inference component.
+* `name` - (Required) Unique name to assign to the inference component.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `runtime_config` - (Optional) Runtime settings for a model that is deployed with an inference component. See [`runtime_config` Block](#runtime_config-block).
+* `specification` - (Optional, conflicts with `specifications`) Details about the resources to deploy with this inference component. See [`specification` and `specifications` Block](#specification-and-specifications-block).
+* `specifications` - (Optional, conflicts with `specification`) List of specification objects for the inference component, one per instance type. See [`specification` and `specifications` Block](#specification-and-specifications-block).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `variant_name` - (Optional) Name of an existing production variant where you host the inference component. Required for a standard inference component; must be omitted for an adapter inference component (one that sets `base_inference_component_name`).
 
-### Specification
+### `specification` and `specifications` Block
 
-* `model_name` - (Optional) The name of an existing SageMaker AI model object in your account that you want to deploy with the inference component.
-* `base_inference_component_name` - (Optional) The name of an existing inference component that is to contain the inference component that you're creating. Used for adapter inference components.
-* `instance_type` - (Optional) The ML compute instance type for this specification. Required when using the `specifications` parameter with multiple entries.
-* `compute_resource_requirements` - (Optional) The compute resources allocated to run a model. See [Compute Resource Requirements](#compute-resource-requirements).
-* `container` - (Optional) Defines a container that provides the runtime environment for a model. See [Container](#container).
-* `data_cache_config` - (Optional) Settings that affect how the inference component caches data. See [Data Cache Config](#data-cache-config).
-* `scheduling_config` - (Optional) The scheduling configuration for placing inference component copies. See [Scheduling Config](#scheduling-config).
-* `startup_parameters` - (Optional) Settings that take effect while the model container starts up. See [Startup Parameters](#startup-parameters).
+* `base_inference_component_name` - (Optional) Name of an existing inference component that is to contain the inference component that you're creating. Used for adapter inference components.
+* `compute_resource_requirements` - (Optional) Compute resources allocated to run a model. See [`compute_resource_requirements` Block](#compute_resource_requirements-block).
+* `container` - (Optional) Container that provides the runtime environment for a model. See [`container` Block](#container-block).
+* `data_cache_config` - (Optional) Settings that affect how the inference component caches data. See [`data_cache_config` Block](#data_cache_config-block).
+* `instance_type` - (Optional) ML compute instance type for this specification. Required when using the `specifications` parameter with multiple entries.
+* `model_name` - (Optional) Name of an existing SageMaker AI model object in your account that you want to deploy with the inference component.
+* `scheduling_config` - (Optional) Scheduling configuration for placing inference component copies. See [`scheduling_config` Block](#scheduling_config-block).
+* `startup_parameters` - (Optional) Settings that take effect while the model container starts up. See [`startup_parameters` Block](#startup_parameters-block).
 
-### Compute Resource Requirements
+### `compute_resource_requirements` Block
 
-* `min_memory_required_in_mb` - (Required) The minimum MB of memory to allocate to run a model. Minimum value of `128`.
-* `max_memory_required_in_mb` - (Optional) The maximum MB of memory to allocate to run a model. Minimum value of `128`.
-* `number_of_accelerator_devices_required` - (Optional) The number of accelerators (GPUs or AWS Inferentia) to allocate. Minimum value of `1`.
-* `number_of_cpu_cores_required` - (Optional) The number of CPU cores to allocate. Minimum value of `0.25`.
+* `max_memory_required_in_mb` - (Optional) Maximum MB of memory to allocate to run a model. Minimum value of `128`.
+* `min_memory_required_in_mb` - (Required) Minimum MB of memory to allocate to run a model. Minimum value of `128`.
+* `number_of_accelerator_devices_required` - (Optional) Number of accelerators (GPUs or AWS Inferentia) to allocate. Minimum value of `1`.
+* `number_of_cpu_cores_required` - (Optional) Number of CPU cores to allocate. Minimum value of `0.25`.
 
-### Container
+### `container` Block
 
-* `image` - (Optional) The Amazon ECR path where the Docker image for the model is stored.
-* `artifact_url` - (Optional) The Amazon S3 path where the model artifacts are stored (.tar.gz).
-* `environment` - (Optional) The environment variables to set in the Docker container.
-* `container_metrics_config` - (Optional) Configuration for container metrics scraping. See [Container Metrics Config](#container-metrics-config).
+* `artifact_url` - (Optional) Amazon S3 path where the model artifacts are stored (.tar.gz).
+* `container_metrics_config` - (Optional) Configuration for container metrics scraping. See [`container_metrics_config` Block](#container_metrics_config-block).
+* `environment` - (Optional) Environment variables to set in the Docker container.
+* `image` - (Optional) Amazon ECR path where the Docker image for the model is stored.
 
-### Container Metrics Config
+### `container_metrics_config` Block
 
-* `metrics_endpoint` - (Optional) The metrics endpoint configuration. See [Metrics Endpoint](#metrics-endpoint).
+* `metrics_endpoint` - (Optional) Metrics endpoint configuration. See [`metrics_endpoint` Block](#metrics_endpoint-block).
 
-### Metrics Endpoint
+### `metrics_endpoint` Block
 
-* `metrics_endpoint_path` - (Required) The path to the metrics endpoint. Must start with `/`. Maximum 256 characters.
-* `metric_publish_frequency_in_seconds` - (Optional) The interval in seconds at which metrics are published. Valid values: `10`, `30`, `60`, `120`, `180`, `240`, `300`. Defaults to `60`.
+* `metric_publish_frequency_in_seconds` - (Optional) Interval in seconds at which metrics are published. Valid values: `10`, `30`, `60`, `120`, `180`, `240`, `300`. Defaults to `60`.
+* `metrics_endpoint_path` - (Required) Path to the metrics endpoint. Must start with `/`. Maximum 256 characters.
 
-### Data Cache Config
+### `data_cache_config` Block
 
 * `enable_caching` - (Required) Whether the endpoint caches model artifacts and container images.
 
-### Scheduling Config
+### `scheduling_config` Block
 
-* `placement_strategy` - (Required) The strategy for placing inference component copies. Valid values: `SPREAD`, `BINPACK`.
-* `availability_zone_balance` - (Optional) Configuration for balancing copies across Availability Zones. See [Availability Zone Balance](#availability-zone-balance).
+* `availability_zone_balance` - (Optional) Configuration for balancing copies across Availability Zones. See [`availability_zone_balance` Block](#availability_zone_balance-block).
+* `placement_strategy` - (Required) Strategy for placing inference component copies. Valid values: `SPREAD`, `BINPACK`.
 
-### Availability Zone Balance
+### `availability_zone_balance` Block
 
 * `enforcement_mode` - (Required) How strictly the AZ balance constraint is enforced. Valid values: `PERMISSIVE`.
-* `max_imbalance` - (Optional) The maximum allowed difference in copy count between any two Availability Zones. Default: `0`.
+* `max_imbalance` - (Optional) Maximum allowed difference in copy count between any two Availability Zones. Default: `0`.
 
-### Startup Parameters
+### `startup_parameters` Block
 
-* `container_startup_health_check_timeout_in_seconds` - (Optional) The timeout in seconds for the inference container to pass health check. Valid values: `60`-`3600`.
-* `model_data_download_timeout_in_seconds` - (Optional) The timeout in seconds to download and extract the model. Valid values: `60`-`3600`.
+* `container_startup_health_check_timeout_in_seconds` - (Optional) Timeout in seconds for the inference container to pass health check. Valid values: `60`-`3600`.
+* `model_data_download_timeout_in_seconds` - (Optional) Timeout in seconds to download and extract the model. Valid values: `60`-`3600`.
 
-### Runtime Config
+### `runtime_config` Block
 
-* `copy_count` - (Required) The number of runtime copies of the model container to deploy.
+* `copy_count` - (Required) Number of runtime copies of the model container to deploy.
 
-### Deployment Config
+### `deployment_config` Block
 
-* `rolling_update_policy` - (Required) Specifies a rolling deployment strategy. See [Rolling Update Policy](#rolling-update-policy).
-* `auto_rollback_configuration` - (Optional) Automatic rollback configuration. See [Auto Rollback Configuration](#auto-rollback-configuration).
+* `auto_rollback_configuration` - (Optional) Automatic rollback configuration. See [`auto_rollback_configuration` Block](#auto_rollback_configuration-block).
+* `rolling_update_policy` - (Required) Rolling deployment strategy. See [`rolling_update_policy` Block](#rolling_update_policy-block).
 
-### Rolling Update Policy
+### `rolling_update_policy` Block
 
-* `maximum_batch_size` - (Required) The batch size for each rolling step. See [Capacity Size](#capacity-size).
-* `wait_interval_in_seconds` - (Required) The length of the baking period in seconds. Valid values: `0`-`3600`.
-* `maximum_execution_timeout_in_seconds` - (Optional) The time limit for the total deployment. Valid values are between `600` and `28800`.
-* `rollback_maximum_batch_size` - (Optional) The batch size for a rollback. See [Capacity Size](#capacity-size).
+* `maximum_batch_size` - (Required) Batch size for each rolling step. See [`maximum_batch_size` and `rollback_maximum_batch_size` Block](#maximum_batch_size-and-rollback_maximum_batch_size-block).
+* `maximum_execution_timeout_in_seconds` - (Optional) Time limit for the total deployment. Valid values are between `600` and `28800`.
+* `rollback_maximum_batch_size` - (Optional) Batch size for a rollback. See [`maximum_batch_size` and `rollback_maximum_batch_size` Block](#maximum_batch_size-and-rollback_maximum_batch_size-block).
+* `wait_interval_in_seconds` - (Required) Length of the baking period in seconds. Valid values: `0`-`3600`.
 
-### Capacity Size
+### `maximum_batch_size` and `rollback_maximum_batch_size` Block
 
-* `type` - (Required) The capacity size type. Valid values: `COPY_COUNT`, `CAPACITY_PERCENT`.
-* `value` - (Required) The capacity size value.
+* `type` - (Required) Capacity size type. Valid values: `COPY_COUNT`, `CAPACITY_PERCENT`.
+* `value` - (Required) Capacity size value.
 
-### Auto Rollback Configuration
+### `auto_rollback_configuration` Block
 
-* `alarms` - (Optional) List of CloudWatch alarms that trigger rollback. See [Alarms](#alarms).
+* `alarms` - (Optional) List of CloudWatch alarms that trigger rollback. See [`alarms` Block](#alarms-block).
 
-### Alarms
+### `alarms` Block
 
-* `alarm_name` - (Required) The name of a CloudWatch alarm.
+* `alarm_name` - (Required) Name of a CloudWatch alarm.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the inference component.
-* `endpoint_arn` - The Amazon Resource Name (ARN) of the endpoint that hosts the inference component.
-* `status` - The status of the inference component (e.g., `InService`, `Creating`, `Updating`, `Failed`, `Deleting`).
+* `arn` - ARN of the inference component.
+* `creation_time` - Time when the inference component was created.
+* `endpoint_arn` - ARN of the endpoint that hosts the inference component.
 * `failure_reason` - If the inference component status is `Failed`, the reason for the failure.
-* `creation_time` - The time when the inference component was created.
-* `last_modified_time` - The time when the inference component was last updated.
-* `runtime_config.0.current_copy_count` - The number of runtime copies currently deployed.
-* `runtime_config.0.desired_copy_count` - The number of runtime copies requested.
-* `runtime_config.0.placement_status` - The placement status of the inference component copies across instance types. Each block contains `current_copy_count` (the number of copies placed on this instance type) and `instance_type`.
-* `specification.0.container.0.resolved_image` - The specific digest path of the container image that was resolved and deployed.
+* `last_modified_time` - Time when the inference component was last updated.
+* `runtime_config` - Runtime status of the inference component. See below.
+* `specification` / `specifications` - Each `container` block exports additional attributes. See below.
+* `status` - Status of the inference component (e.g., `InService`, `Creating`, `Updating`, `Failed`, `Deleting`).
+
+### `runtime_config` Block
+
+* `current_copy_count` - Number of runtime copies currently deployed.
+* `desired_copy_count` - Number of runtime copies requested.
+* `placement_status` - Placement status of the inference component copies across instance types. See below.
+
+### `placement_status` Block
+
+* `current_copy_count` - Number of copies placed on this instance type.
+* `instance_type` - Instance type on which the copies are placed.
+
+### `container` Block
+
+* `resolved_image` - Specific digest path of the container image that was resolved and deployed.
 
 ## Timeouts
 
