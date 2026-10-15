@@ -232,8 +232,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker AI Inference Components can be imported using the `name`, e.g.,
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_inference_component.example
+  identity = {
+    name = "my-inference-component"
+  }
+}
+
+resource "aws_sagemaker_inference_component" "example" {
+  ### Configuration omitted for brevity ###
+}
 ```
-$ terraform import aws_sagemaker_inference_component.example my-inference-component
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the inference component.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute. For example:
+
+```terraform
+import {
+  to = aws_sagemaker_inference_component.example
+  id = "my-inference-component"
+}
+```
+
+Using `terraform import`, import SageMaker AI Inference Components using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_inference_component.example my-inference-component
 ```
