@@ -14,6 +14,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -61,6 +62,8 @@ func TestWebACLUpdate_preservesShieldRule(t *testing.T) {
 				mu          sync.Mutex
 				updateRules []string
 			)
+			webACLARN := fmt.Sprintf("arn:%s:wafv2:%s:123456789012:regional/webacl/test/web-acl-id", endpoints.AwsPartitionID, endpoints.UsEast1RegionID)
+			ruleGroupARN := fmt.Sprintf("arn:%s:wafv2:%s:123456789012:regional/rulegroup/ShieldMitigationRuleGroup/rule-group-id", endpoints.AwsPartitionID, endpoints.UsEast1RegionID)
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				body, err := io.ReadAll(r.Body)
 				if err != nil {
@@ -78,7 +81,7 @@ func TestWebACLUpdate_preservesShieldRule(t *testing.T) {
 					write(`{
   "LockToken": "lock-token-2",
   "WebACL": {
-    "ARN": "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/test/web-acl-id",
+    "ARN": "` + webACLARN + `",
     "DefaultAction": {"Allow": {}},
     "Id": "web-acl-id",
     "Name": "test",
@@ -86,7 +89,7 @@ func TestWebACLUpdate_preservesShieldRule(t *testing.T) {
       "Name": "` + shieldRuleName + `",
       "OverrideAction": {"None": {}},
       "Priority": 10000000,
-      "Statement": {"RuleGroupReferenceStatement": {"ARN": "arn:aws:wafv2:us-east-1:123456789012:regional/rulegroup/ShieldMitigationRuleGroup/rule-group-id"}},
+      "Statement": {"RuleGroupReferenceStatement": {"ARN": "` + ruleGroupARN + `"}},
       "VisibilityConfig": {"CloudWatchMetricsEnabled": true, "MetricName": "shield", "SampledRequestsEnabled": true}
     }],
     "VisibilityConfig": {"CloudWatchMetricsEnabled": false, "MetricName": "test", "SampledRequestsEnabled": false}
@@ -121,7 +124,7 @@ func TestWebACLUpdate_preservesShieldRule(t *testing.T) {
 			diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(map[string]any{
 				names.AttrAccessKey:                 servicemocks.MockStaticAccessKey,
 				names.AttrSecretKey:                 servicemocks.MockStaticSecretKey,
-				names.AttrRegion:                    "us-east-1",
+				names.AttrRegion:                    endpoints.UsEast1RegionID,
 				names.AttrSkipCredentialsValidation: true,
 				names.AttrSkipRequestingAccountID:   true,
 				names.AttrEndpoints: []any{map[string]any{
