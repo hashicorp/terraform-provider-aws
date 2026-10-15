@@ -532,9 +532,11 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 	// serves. Default HomeRegion endpoints to LatestRevision explicitly, the
 	// value ValidateConfig assumes and aws_lambdaweb_endpoint sends. MultiRegion
 	// and PerRegion must set Disabled explicitly (enforced in ValidateConfig).
-	if ep := input.EndpointConfig; ep != nil && ep.AutoDeploymentMode == "" && ep.EndpointType == awstypes.EndpointTypeHomeRegion {
-		ep.AutoDeploymentMode = awstypes.AutoDeploymentModeLatestRevision
+	endpointConfig := input.EndpointConfig
+	if endpointConfig.AutoDeploymentMode == "" && endpointConfig.EndpointType == awstypes.EndpointTypeHomeRegion {
+		endpointConfig.AutoDeploymentMode = awstypes.AutoDeploymentModeLatestRevision
 	}
+	endpointName := aws.ToString(endpointConfig.EndpointName)
 
 	// IAM/S3-policy eventual consistency: a freshly created execution role or
 	// bucket policy can take tens of seconds to become visible to the service.
@@ -559,63 +561,38 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	if _, err := waitFunctionCreated(ctx, conn, name, r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
+	revisionID := aws.ToString(output.Revision.RevisionId)
+	var (
+		revision *lambdaweb.GetWebFunctionRevisionOutput
+		endpoint *lambdaweb.GetWebFunctionEndpointOutput
+	)
+
+	function, err := waitFunctionCreated(ctx, conn, name, r.CreateTimeout(ctx, plan.Timeouts))
+	if err != nil {
 		// Taint the resource.
 		resp.State.SetAttribute(ctx, path.Root("function_name"), name)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	plan.FunctionARN = fwflex.StringToFramework(ctx, output.FunctionArn)
-
-	if output.Revision != nil {
-		revisionID := aws.ToString(output.Revision.RevisionId)
-		plan.LatestRevisionID = fwflex.StringValueToFramework(ctx, revisionID)
-
-		// Read the revision back: the function-level output carries no build or
-		// service configuration, so server-assigned values inside
-		// revision_config would otherwise remain unknown after apply.
-		rev, err := findWebFunctionRevisionByTwoPartKey(ctx, conn, name, revisionID)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-			return
-		}
-
-		var revModel revisionConfigModel
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, rev, &revModel))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		restoreTelemetryConfig(ctx, &revModel, plan.RevisionConfig)
-		plan.RevisionConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &revModel)
-	} else {
-		plan.LatestRevisionID = types.StringNull()
+	endpoint, err = waitEndpointActive(ctx, conn, name, endpointName, r.CreateTimeout(ctx, plan.Timeouts))
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
 	}
 
-	plan.DomainName = types.StringNull()
-	plan.RegionalDomainNames = fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{})
-	if !plan.EndpointConfig.IsNull() {
-		endpointName, err := endpointNameFromConfig(ctx, plan.EndpointConfig)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-			return
-		}
+	// Read the revision back: the function-level output carries no build or
+	// service configuration, so server-assigned values inside
+	// revision_config would otherwise remain unknown after apply.
+	revision, err = findWebFunctionRevisionByTwoPartKey(ctx, conn, name, revisionID)
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	}
 
-		ep, err := waitEndpointActive(ctx, conn, name, endpointName, r.CreateTimeout(ctx, plan.Timeouts))
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-			return
-		}
-		plan.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
-		plan.RegionalDomainNames = regionalDomainNames(ctx, ep.RegionalEndpoints)
-
-		var epModel endpointConfigModel
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, ep, &epModel))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		epModel.Description = normalizeDescription(epModel.Description)
-		plan.EndpointConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &epModel)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, function, revision, endpoint, &plan))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -647,7 +624,7 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	revision, err := findNewestRevision(ctx, conn, name)
+	revision, err := findNewestFunctionRevision(ctx, conn, name)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
@@ -899,11 +876,32 @@ func (r *functionResource) flatten(ctx context.Context, function *lambdaweb.GetW
 	}
 
 	if endpoint != nil {
+		if aws.ToString(endpoint.Description) == "" {
+			endpoint.Description = nil
+		}
+
+		model, d := fwtypes.Nullified[endpointConfigModel](ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		diags.Append(fwflex.Flatten(ctx, endpoint, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		data.EndpointConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
 		data.DomainName = fwflex.StringToFramework(ctx, endpoint.DomainName)
 		data.RegionalDomainNames = regionalDomainNames(ctx, endpoint.RegionalEndpoints)
 	} else {
-		data.DomainName = types.StringNull()
 		data.EndpointConfig = fwtypes.NewListNestedObjectValueOfNull[endpointConfigModel](ctx)
+		data.DomainName = types.StringNull()
+		data.RegionalDomainNames = fwflex.FlattenFrameworkStringValueMapOfString(ctx, nil)
 	}
 
 	return diags
@@ -1065,7 +1063,7 @@ func waitFunctionRevisionActive(ctx context.Context, conn *lambdaweb.Client, fun
 	return nil, smarterr.NewError(err)
 }
 
-func findNewestRevision(ctx context.Context, conn *lambdaweb.Client, functionName string) (*awstypes.FunctionRevisionSummary, error) {
+func findNewestFunctionRevision(ctx context.Context, conn *lambdaweb.Client, functionName string) (*awstypes.FunctionRevisionSummary, error) {
 	var newest *awstypes.FunctionRevisionSummary
 	input := lambdaweb.ListWebFunctionRevisionsInput{
 		FunctionName: aws.String(functionName),
