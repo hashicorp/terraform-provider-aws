@@ -18,11 +18,11 @@ var TagsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-// TagsSchema returns the schema to use for computed tags, either resource `tags_all` or for data sources.
+// TagsSchemaComputed returns the schema to use for computed tags: resource `tags_all`
+// and data source tags that are attributes only. Users can't set it in configuration.
 var TagsSchemaComputed = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeMap,
-		Optional: true,
 		Computed: true,
 		Elem:     &schema.Schema{Type: schema.TypeString},
 	}
@@ -40,7 +40,7 @@ var TagsSchemaOptionalComputed = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-// TagsSchema returns the schema to use for configurable resource tags where changes recreate the resource.
+// TagsSchemaForceNew returns the schema to use for configurable resource tags where changes recreate the resource.
 var TagsSchemaForceNew = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeMap,
