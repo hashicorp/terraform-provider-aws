@@ -81,7 +81,6 @@ func (l *directorySettingsListResource) List(ctx context.Context, request list.L
 				continue
 			}
 
-			e := entry
 			result := request.NewListResult(ctx)
 
 			var data directorySettingsResourceModel
@@ -90,7 +89,7 @@ func (l *directorySettingsListResource) List(ctx context.Context, request list.L
 				data.DirectoryID = fwflex.StringValueToFramework(ctx, directoryID)
 
 				if request.IncludeResource {
-					data.flatten(ctx, &e)
+					data.flatten(ctx, &entry)
 				}
 
 				result.DisplayName = fwflex.StringValueFromFramework(ctx, data.Name)
