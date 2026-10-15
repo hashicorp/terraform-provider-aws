@@ -7,8 +7,13 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,21 +32,16 @@ func TestAccLambdaWebFunctionDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionDataSourceConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "latest_revision_id", resourceName, "latest_revision_id"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, string(awstypes.FunctionStateActive)),
-				),
+				ConfigDirectory: config.StaticDirectory("testdata/Function/data.basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrARN), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("latest_revision_id"), resourceName, tfjsonpath.New("latest_revision_id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.FunctionStateActive)),
+				},
 			},
 		},
 	})
-}
-
-func testAccFunctionDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), `
-data "aws_lambdaweb_function" "test" {
-  function_name = aws_lambdaweb_function.test.function_name
-}
-`)
 }

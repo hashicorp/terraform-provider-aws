@@ -58,25 +58,25 @@ func (d *functionDataSource) Read(ctx context.Context, request datasource.ReadRe
 	}
 
 	conn := d.Meta().LambdaWebClient(ctx)
-	name := data.FunctionName.ValueString()
 
-	out, err := findWebFunctionByName(ctx, conn, name)
+	name := fwflex.StringValueFromFramework(ctx, data.FunctionName)
+	function, err := findWebFunctionByName(ctx, conn, name)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, function, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.ARN = fwflex.StringToFramework(ctx, out.FunctionArn)
 
-	if revision, err := findNewestFunctionRevision(ctx, conn, name); err == nil && revision != nil {
-		data.LatestRevisionID = fwflex.StringToFramework(ctx, revision.RevisionId)
-	} else if err != nil {
+	switch revision, err := findNewestFunctionRevision(ctx, conn, name); {
+	case err != nil:
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
+	case revision != nil:
+		data.LatestRevisionID = fwflex.StringToFramework(ctx, revision.RevisionId)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -84,7 +84,7 @@ func (d *functionDataSource) Read(ctx context.Context, request datasource.ReadRe
 
 type functionDataSourceModel struct {
 	framework.WithRegionModel
-	ARN              types.String `tfsdk:"arn"`
+	FunctionARN      types.String `tfsdk:"arn"`
 	FunctionName     types.String `tfsdk:"function_name"`
 	LatestRevisionID types.String `tfsdk:"latest_revision_id"`
 	State            types.String `tfsdk:"state"`
