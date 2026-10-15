@@ -5,10 +5,12 @@ package wafv2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,7 +26,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -33,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -319,6 +324,7 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 		}
 		plan.WebACLARN = types.StringValue(plan.WebACLARN.ValueString())
 		resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+		keepSearchStringBase64(req.Plan.Raw, &resp.State, &resp.Diagnostics)
 		return
 	}
 
@@ -394,6 +400,7 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, state))
+	keepSearchStringBase64(req.Plan.Raw, &resp.State, &resp.Diagnostics)
 }
 
 func (r *resourceWebACLRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -435,6 +442,7 @@ func (r *resourceWebACLRule) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, state))
+	keepSearchStringBase64(req.State.Raw, &resp.State, &resp.Diagnostics)
 }
 
 func (r *resourceWebACLRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -537,6 +545,7 @@ func (r *resourceWebACLRule) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	keepSearchStringBase64(req.Plan.Raw, &resp.State, &resp.Diagnostics)
 }
 
 func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -1979,9 +1988,115 @@ func (m webACLRuleRateBasedStatementModel) Expand(ctx context.Context) (result a
 
 type webACLRuleByteMatchStatementModel struct {
 	SearchString         types.String                                                  `tfsdk:"search_string"`
+	SearchStringBase64   types.String                                                  `tfsdk:"search_string_base64"`
 	PositionalConstraint fwtypes.StringEnum[awstypes.PositionalConstraint]             `tfsdk:"positional_constraint"`
 	FieldToMatch         fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
 	TextTransformations  fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
+}
+
+func (m webACLRuleByteMatchStatementModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var apiObject awstypes.ByteMatchStatement
+	diags.Append(flex.Expand(ctx, m.FieldToMatch, &apiObject.FieldToMatch)...)
+	diags.Append(flex.Expand(ctx, m.TextTransformations, &apiObject.TextTransformations)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+	apiObject.PositionalConstraint = m.PositionalConstraint.ValueEnum()
+
+	if v := m.SearchStringBase64.ValueString(); v != "" {
+		b, err := inttypes.Base64Decode(v)
+		if err != nil {
+			diags.AddError("decoding search_string_base64", err.Error())
+			return nil, diags
+		}
+		apiObject.SearchString = b
+	} else {
+		apiObject.SearchString = []byte(m.SearchString.ValueString())
+	}
+
+	return &apiObject, diags
+}
+
+func (m *webACLRuleByteMatchStatementModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	var apiObject *awstypes.ByteMatchStatement
+	switch v := v.(type) {
+	case *awstypes.ByteMatchStatement:
+		apiObject = v
+	case awstypes.ByteMatchStatement:
+		apiObject = &v
+	}
+	if apiObject == nil {
+		return diags
+	}
+
+	diags.Append(flex.Flatten(ctx, apiObject.FieldToMatch, &m.FieldToMatch)...)
+	diags.Append(flex.Flatten(ctx, apiObject.TextTransformations, &m.TextTransformations)...)
+	m.PositionalConstraint = fwtypes.StringEnumValue(apiObject.PositionalConstraint)
+
+	// A Terraform string holds only UTF-8 text, so any other value, such as the raw digest that
+	// the MD5 and SHA256 text transformations produce, is kept in base64.
+	m.SearchString, m.SearchStringBase64 = types.StringNull(), types.StringNull()
+	if !utf8.Valid(apiObject.SearchString) {
+		m.SearchStringBase64 = types.StringValue(inttypes.Base64Encode(apiObject.SearchString))
+	} else {
+		m.SearchString = types.StringValue(string(apiObject.SearchString))
+	}
+
+	return diags
+}
+
+// keepSearchStringBase64 reads each byte_match_statement in state back as search_string_base64
+// where prior (the plan, or the prior state) set search_string_base64 at the same path, so that a
+// UTF-8 value configured in base64 stays in base64.
+func keepSearchStringBase64(prior tftypes.Value, state *tfsdk.State, diags *diag.Diagnostics) {
+	if diags.HasError() {
+		return
+	}
+
+	raw, err := tftypes.Transform(state.Raw, func(p *tftypes.AttributePath, v tftypes.Value) (tftypes.Value, error) {
+		ty, ok := v.Type().(tftypes.Object)
+		if !ok || !v.IsKnown() || v.IsNull() {
+			return v, nil
+		}
+		if _, ok := ty.AttributeTypes["search_string_base64"]; !ok {
+			return v, nil
+		}
+
+		var attrs map[string]tftypes.Value
+		if err := v.As(&attrs); err != nil {
+			return v, err
+		}
+		if s := attrs["search_string"]; !s.IsKnown() || s.IsNull() {
+			return v, nil
+		}
+		var searchString string
+		if err := attrs["search_string"].As(&searchString); err != nil {
+			return v, err
+		}
+
+		pv, _, err := tftypes.WalkAttributePath(prior, p.WithAttributeName("search_string_base64"))
+		if errors.Is(err, tftypes.ErrInvalidStep) {
+			// No byte_match_statement at this path in prior, as on import.
+			return v, nil
+		}
+		if err != nil {
+			return v, err
+		}
+		if pv, ok := pv.(tftypes.Value); !ok || !pv.IsKnown() || pv.IsNull() {
+			return v, nil
+		}
+
+		attrs["search_string"] = tftypes.NewValue(tftypes.String, nil)
+		attrs["search_string_base64"] = tftypes.NewValue(tftypes.String, inttypes.Base64Encode([]byte(searchString)))
+
+		return tftypes.NewValue(ty, attrs), nil
+	})
+	if err != nil {
+		diags.AddError("reading search_string_base64", err.Error())
+		return
+	}
+
+	state.Raw = raw
 }
 
 type webACLRuleSqliMatchStatementModel struct {

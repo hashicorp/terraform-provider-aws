@@ -775,6 +775,126 @@ func TestAccWAFV2WebACLRule_migrateInlineToSeparateResource(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_byteMatchStatementSearchStringBase64(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+	// md5("Bearer helloworld"): the raw digest that the MD5 text transformation produces is not valid UTF-8.
+	md5Digest := "h2QVtbiOklmEbY1TNBraLw=="
+	attrPrefix := "statement.0.and_statement.0.statement.0.byte_match_statement.0."
+	siblingPrefix := "statement.0.and_statement.0.statement.1.byte_match_statement.0."
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_byteMatchStatementSearchStringBase64(rName, fmt.Sprintf("search_string_base64 = %q", md5Digest)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					testAccCheckWebACLRuleByteMatchSearchString(ctx, t, resourceName, string(mustBase64Decode(t, md5Digest))),
+					resource.TestCheckNoResourceAttr(resourceName, attrPrefix+"search_string"),
+					resource.TestCheckResourceAttr(resourceName, attrPrefix+"search_string_base64", md5Digest),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+			{
+				// Valid UTF-8 set in base64 is read back in base64.
+				Config: testAccWebACLRuleConfig_byteMatchStatementSearchStringBase64(rName, `search_string_base64 = base64encode("BadBot")`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					testAccCheckWebACLRuleByteMatchSearchString(ctx, t, resourceName, "BadBot"),
+					resource.TestCheckNoResourceAttr(resourceName, attrPrefix+"search_string"),
+					resource.TestCheckResourceAttr(resourceName, attrPrefix+"search_string_base64", "QmFkQm90"),
+					// The same bytes set as text in the sibling statement stay in search_string.
+					resource.TestCheckResourceAttr(resourceName, siblingPrefix+"search_string", "BadBot"),
+					resource.TestCheckNoResourceAttr(resourceName, siblingPrefix+"search_string_base64"),
+				),
+			},
+			{
+				Config: testAccWebACLRuleConfig_byteMatchStatementSearchStringBase64(rName, `search_string = "BadBot"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					testAccCheckWebACLRuleByteMatchSearchString(ctx, t, resourceName, "BadBot"),
+					resource.TestCheckResourceAttr(resourceName, attrPrefix+"search_string", "BadBot"),
+					resource.TestCheckNoResourceAttr(resourceName, attrPrefix+"search_string_base64"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_byteMatchStatementUpgradeFromV6_69_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		CheckDestroy: testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.69.0",
+					},
+				},
+				Config: testAccWebACLRuleConfig_byteMatchStatement(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccWebACLRuleConfig_byteMatchStatement(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckWebACLRuleByteMatchSearchString(ctx context.Context, t *testing.T, n, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		webACLID, webACLName, webACLScope, err := parseWebACLARNForTest(rs.Primary.Attributes["web_acl_arn"])
+		if err != nil {
+			return err
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
+		input := wafv2.GetWebACLInput{
+			Id:    aws.String(webACLID),
+			Name:  aws.String(webACLName),
+			Scope: awstypes.Scope(webACLScope),
+		}
+		output, err := conn.GetWebACL(ctx, &input)
+		if err != nil {
+			return err
+		}
+
+		return checkByteMatchSearchStrings(output.WebACL.Rules, map[string]string{rs.Primary.Attributes[names.AttrName]: want})
+	}
+}
+
 func testAccCheckWebACLRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
@@ -2351,4 +2471,84 @@ resource "aws_wafv2_web_acl_rule" "test" {
   }
 }
 `, rName)
+}
+
+func testAccWebACLRuleConfig_byteMatchStatementSearchStringBase64(rName, searchString string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    and_statement {
+      statement {
+        byte_match_statement {
+          %[2]s
+          positional_constraint = "EXACTLY"
+
+          field_to_match {
+            single_header {
+              name = "authorization"
+            }
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "MD5"
+          }
+        }
+      }
+
+      # The same bytes as plain text, next to a statement that may set them in base64.
+      statement {
+        byte_match_statement {
+          search_string         = "BadBot"
+          positional_constraint = "EXACTLY"
+
+          field_to_match {
+            single_header {
+              name = "user-agent"
+            }
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "NONE"
+          }
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, searchString)
 }

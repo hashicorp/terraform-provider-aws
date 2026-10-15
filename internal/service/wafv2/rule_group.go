@@ -162,6 +162,10 @@ func resourceRuleGroup() *schema.Resource {
 				"visibility_config": visibilityConfigSchema(),
 			}
 		},
+
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validateByteMatchStatementSearchString,
+		},
 	}
 }
 
@@ -249,7 +253,9 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrName, ruleGroup.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ruleGroup.Name)))
 	if _, ok := d.GetOk("rules_json"); !ok {
-		if err := d.Set(names.AttrRule, flattenRules(ruleGroup.Rules)); err != nil {
+		rules := flattenRules(ruleGroup.Rules)
+		preferSearchStringBase64(rules, d.Get(names.AttrRule).(*schema.Set).List())
+		if err := d.Set(names.AttrRule, rules); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 		}
 	} else {

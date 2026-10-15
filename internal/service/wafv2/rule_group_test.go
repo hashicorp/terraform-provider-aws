@@ -2764,6 +2764,80 @@ func testAccPreCheckScopeRegional(ctx context.Context, t *testing.T) {
 	}
 }
 
+func TestAccWAFV2RuleGroup_ByteMatchStatement_searchStringBase64(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+	// md5("Bearer helloworld"): the raw digest that the MD5 text transformation produces is not valid UTF-8.
+	md5Digest := "h2QVtbiOklmEbY1TNBraLw=="
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_byteMatchStatementSearchStringBase64(ruleGroupName, fmt.Sprintf("search_string_base64 = %q", md5Digest)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					testAccCheckRuleGroupByteMatchSearchStrings(&v, map[string]string{"rule-1": string(mustBase64Decode(t, md5Digest))}),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName: "rule-1",
+						"statement.0.byte_match_statement.0.search_string":        "",
+						"statement.0.byte_match_statement.0.search_string_base64": md5Digest,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+			{
+				// Valid UTF-8 set in base64 is read back in base64.
+				Config: testAccRuleGroupConfig_byteMatchStatementSearchStringBase64(ruleGroupName, `search_string_base64 = base64encode("BadBot")`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					testAccCheckRuleGroupByteMatchSearchStrings(&v, map[string]string{"rule-1": "BadBot", "rule-2": "BadBot"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName: "rule-1",
+						"statement.0.byte_match_statement.0.search_string":        "",
+						"statement.0.byte_match_statement.0.search_string_base64": "QmFkQm90",
+					}),
+					// The same bytes set as text in another rule stay in search_string.
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName: "rule-2",
+						"statement.0.byte_match_statement.0.search_string":        "BadBot",
+						"statement.0.byte_match_statement.0.search_string_base64": "",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_byteMatchStatementSearchStringBase64(ruleGroupName, `search_string = "BadBot"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					testAccCheckRuleGroupByteMatchSearchStrings(&v, map[string]string{"rule-1": "BadBot"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName: "rule-1",
+						"statement.0.byte_match_statement.0.search_string":        "BadBot",
+						"statement.0.byte_match_statement.0.search_string_base64": "",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckRuleGroupByteMatchSearchStrings(v *awstypes.RuleGroup, want map[string]string) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		return checkByteMatchSearchStrings(v.Rules, want)
+	}
+}
+
 func testAccCheckRuleGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -5995,4 +6069,113 @@ resource "aws_wafv2_rule_group" "test" {
   }
 }
 `, rName)
+}
+
+func testAccRuleGroupConfig_byteMatchStatementSearchStringBase64(rName, searchString string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 50
+  name     = %[1]q
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      byte_match_statement {
+        field_to_match {
+          single_header {
+            name = "authorization"
+          }
+        }
+        positional_constraint = "EXACTLY"
+        %[2]s
+        text_transformation {
+          priority = 0
+          type     = "MD5"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-1"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  rule {
+    name     = "rule-2"
+    priority = 2
+
+    action {
+      count {}
+    }
+
+    # The same bytes as plain text, next to a rule that may set them in base64.
+    statement {
+      byte_match_statement {
+        field_to_match {
+          single_header {
+            name = "user-agent"
+          }
+        }
+        positional_constraint = "EXACTLY"
+        search_string         = "BadBot"
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-2"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  rule {
+    name     = "rule-3"
+    priority = 3
+
+    action {
+      count {}
+    }
+
+    # search_string_base64 next to uri_fragment, whose fallback_behavior is left to its default.
+    statement {
+      byte_match_statement {
+        field_to_match {
+          uri_fragment {}
+        }
+        positional_constraint = "CONTAINS"
+        search_string_base64  = "/F4DjTilcDIIVEHn/nAQsA=="
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-3"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, searchString)
 }

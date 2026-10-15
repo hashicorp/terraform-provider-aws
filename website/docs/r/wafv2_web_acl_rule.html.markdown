@@ -536,7 +536,8 @@ Combines multiple statements using logical OR. At least one nested statement mus
 
 #### Byte Match Statement
 
-* `search_string` - (Required) String value to search for within the request (1-200 characters).
+* `search_string` - (Optional) String value to search for within the request (1-200 bytes). Exactly one of `search_string` or `search_string_base64` must be specified.
+* `search_string_base64` - (Optional) Base64-encoded value to search for within the request (1-200 bytes when decoded), for a value that is not valid UTF-8 text, such as the raw digest that the `MD5` and `SHA256` text transformations produce. Exactly one of `search_string` or `search_string_base64` must be specified. On import, a value that is valid UTF-8 is read into `search_string` and any other value into `search_string_base64`.
 * `positional_constraint` - (Required) Area within the portion of the web request that you want WAF to search for `search_string`. Valid values: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field-to-match) below.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below.
