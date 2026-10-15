@@ -25,7 +25,7 @@ var (
 	WaitIPRoutesRemoved                  = waitIPRoutesRemoved
 	IsIPRoutesUpdateRetryable            = isIPRoutesUpdateRetryable
 	IPRoutesSemanticEquals               = ipRoutesSemanticEquals
-	FindDirectorySettingsByDirectoryID   = findDirectorySettingsByDirectoryID
+	FindDirectorySettingByTwoPartKey     = findDirectorySettingByTwoPartKey
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
 	FindRegionByTwoPartKey               = findRegionByTwoPartKey
@@ -37,6 +37,7 @@ var (
 
 // Type aliases for use in tests only.
 type (
-	IPRouteImportID = ipRouteImportID
-	IPRouteModel    = ipRouteModel
+	DirectorySettingsImportID = directorySettingsImportID
+	IPRouteImportID           = ipRouteImportID
+	IPRouteModel              = ipRouteModel
 )

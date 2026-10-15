@@ -7,7 +7,6 @@ import (
 	"context"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -16,9 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 // @FrameworkListResource("aws_directory_service_directory_settings")
@@ -77,34 +74,32 @@ func (l *directorySettingsListResource) List(ctx context.Context, request list.L
 			return
 		}
 
-		// Only directories with at least one requested (non-default) setting have
-		// a corresponding aws_directory_service_directory_settings resource.
-		requested := tfslices.Filter(entries, func(e awstypes.SettingEntry) bool {
-			return e.RequestedValue != nil
-		})
-		if len(requested) == 0 {
-			tflog.Debug(ctx, "Directory has no requested Settings, skipping")
-			return
-		}
-
-		result := request.NewListResult(ctx)
-
-		var data directorySettingsResourceModel
-
-		l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-			data.DirectoryID = fwflex.StringValueToFramework(ctx, directoryID)
-
-			if request.IncludeResource {
-				result.Diagnostics.Append(flattenDirectorySettingsForList(ctx, requested, &data)...)
-				if result.Diagnostics.HasError() {
-					return
-				}
+		// Each requested (non-default) setting maps to its own
+		// aws_directory_service_directory_settings resource instance.
+		for _, entry := range entries {
+			if entry.RequestedValue == nil {
+				continue
 			}
 
-			result.DisplayName = directoryID
-		})
+			e := entry
+			result := request.NewListResult(ctx)
 
-		yield(result)
+			var data directorySettingsResourceModel
+
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+				data.DirectoryID = fwflex.StringValueToFramework(ctx, directoryID)
+
+				if request.IncludeResource {
+					data.flatten(ctx, &e)
+				}
+
+				result.DisplayName = fwflex.StringValueFromFramework(ctx, data.Name)
+			})
+
+			if !yield(result) {
+				return
+			}
+		}
 	}
 }
 
@@ -112,30 +107,4 @@ func (l *directorySettingsListResource) List(ctx context.Context, request list.L
 type listDirectorySettingsModel struct {
 	framework.WithRegionModel
 	DirectoryID types.String `tfsdk:"directory_id"`
-}
-
-// flattenDirectorySettingsForList builds the `setting` list for the List Resource from
-// the settings that have been explicitly requested for the directory.
-//
-// This is intentionally separate from mergeSettingEntries, which is used by
-// Create/Read/Update: those merge against a known list of requested settings from
-// plan or state, while listing has no such prior knowledge and instead relies on the
-// API's RequestedValue field to identify managed settings.
-func flattenDirectorySettingsForList(ctx context.Context, entries []awstypes.SettingEntry, data *directorySettingsResourceModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
-	var diags diag.Diagnostics
-
-	models := make([]*directorySettingModel, len(entries))
-	for i, e := range entries {
-		models[i] = &directorySettingModel{
-			Name:  fwflex.StringToFramework(ctx, e.Name),
-			Value: fwflex.StringToFramework(ctx, e.RequestedValue),
-			Type:  fwflex.StringToFramework(ctx, e.Type),
-		}
-	}
-
-	settings, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, models, nil)
-	diags.Append(d...)
-	data.Settings = settings
-
-	return diags
 }
