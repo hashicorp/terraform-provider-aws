@@ -33,7 +33,9 @@ func RegisterSweepers() {
 	awsv2.Register("aws_sagemaker_endpoint", sweepEndpoints,
 		"aws_sagemaker_model",
 		"aws_sagemaker_endpoint_configuration",
+		"aws_sagemaker_inference_component",
 	)
+	awsv2.Register("aws_sagemaker_inference_component", sweepInferenceComponents)
 	awsv2.Register("aws_sagemaker_feature_group", sweepFeatureGroups)
 	awsv2.Register("aws_sagemaker_flow_definition", sweepFlowDefinitions)
 	awsv2.Register("aws_sagemaker_human_task_ui", sweepHumanTaskUIs)
@@ -343,6 +345,33 @@ func sweepImages(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 			d.SetId(aws.ToString(v.ImageName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepInferenceComponents(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.SageMakerClient(ctx)
+	input := sagemaker.ListInferenceComponentsInput{
+		NameContains: aws.String(sweep.ResourcePrefix),
+	}
+	var sweepResources []sweep.Sweepable
+
+	pages := sagemaker.NewListInferenceComponentsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		// An adapter component must be deleted before the base component it attaches to.
+		// No ordering is imposed here: deleting a base component while an adapter still
+		// references it fails with a retryable error that the resource's Delete retries.
+		for _, v := range page.InferenceComponents {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newInferenceComponentResource, client,
+				framework.NewAttribute(names.AttrName, aws.ToString(v.InferenceComponentName))),
+			)
 		}
 	}
 
