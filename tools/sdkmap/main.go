@@ -147,11 +147,9 @@ type analyzer struct {
 
 	// imports maps each parsed file to its imports, keyed by the name each import is referred to.
 	imports map[*token.File]map[string]string
-
 	// clientMethods maps the conns.AWSClient methods that return an AWS SDK client to the client's
 	// type, e.g. "S3Client" to "github.com/aws/aws-sdk-go-v2/service/s3".
 	clientMethods map[string]string
-
 	// services maps import paths to service packages.
 	services map[string]*servicePackage
 }
@@ -364,7 +362,7 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 			} else {
 				log.Printf("%s: %s does not return a schema.Resource literal", r.Location, r.Expr)
 			}
-			if !slices.ContainsFunc(r.funcRefs(), func(ref *funcRef) bool { return len(ref.SDKCalls) > 0 }) {
+			if !r.hasSDKCalls() {
 				log.Printf("%s: no AWS SDK calls found for %s", r.Location, r.Expr)
 			}
 			if tagged {
@@ -471,9 +469,15 @@ func (a *analyzer) addFuncRefs(pkg *servicePackage, r *resource, lit *ast.Compos
 	}
 }
 
-// funcRefs returns the functions a resource references.
-func (r *resource) funcRefs() []*funcRef {
-	return slices.DeleteFunc([]*funcRef{r.Create, r.Read, r.Update, r.Delete, r.CustomizeDiff, r.Import}, func(ref *funcRef) bool { return ref == nil })
+// hasSDKCalls reports whether any of a resource's functions calls an AWS SDK client method.
+func (r *resource) hasSDKCalls() bool {
+	refs := []*funcRef{r.Create, r.Read, r.Update, r.Delete, r.CustomizeDiff, r.Import}
+	return slices.ContainsFunc(refs, (*funcRef).hasSDKCalls)
+}
+
+// hasSDKCalls reports whether the function calls an AWS SDK client method. ref may be nil.
+func (ref *funcRef) hasSDKCalls() bool {
+	return ref != nil && len(ref.SDKCalls) > 0
 }
 
 // isCustomDiffCombinator reports whether expr is a call to customdiff.All or customdiff.Sequence.
