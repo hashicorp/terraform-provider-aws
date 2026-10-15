@@ -220,6 +220,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `runtime_config` - Runtime status of the inference component. See below.
 * `specification` / `specifications` - Each `container` block exports additional attributes. See below.
 * `status` - Status of the inference component (e.g., `InService`, `Creating`, `Updating`, `Failed`, `Deleting`).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### `runtime_config` Block
 
