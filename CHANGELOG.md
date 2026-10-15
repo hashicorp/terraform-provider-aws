@@ -1,5 +1,9 @@
 ## 6.70.0 (Unreleased)
 
+BUG FIXES:
+
+* provider: Fixes `bufio.Scanner: token too long` when logging requests or responses with long lines ([#50501](https://github.com/hashicorp/terraform-provider-aws/issues/50501))
+
 ## 6.69.0 (October 14, 2026)
 
 FEATURES:
