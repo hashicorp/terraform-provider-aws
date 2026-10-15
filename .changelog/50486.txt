@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudtrail: Add `insight_selector.event_categories` argument
+```
+
+```release-note:bug
+resource/aws_cloudtrail: Change `insight_selector` from a set to a list so `event_categories` does not produce a perpetual diff
+```
