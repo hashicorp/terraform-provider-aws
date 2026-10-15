@@ -9,6 +9,7 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -17,7 +18,8 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space")
-	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces)
+	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces, "aws_cloudwatchomni_access_grant")
+	awsv2.Register("aws_cloudwatchomni_access_grant", sweepAccessGrants)
 }
 
 func sweepDomains(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -63,6 +65,27 @@ func sweepSpaces(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 				framework.NewAttribute("space_id", aws.ToString(v.SpaceId))),
 			)
 		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepAccessGrants(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.CloudWatchOmniClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	for v, err := range listRegionalAccessGrants(ctx, conn) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		if v.GrantType == awstypes.AccessGrantTypeServiceManaged {
+			continue
+		}
+
+		sweepResources = append(sweepResources, framework.NewSweepResource(newAccessGrantResource, client,
+			framework.NewAttribute("grant_id", aws.ToString(v.GrantId))),
+		)
 	}
 
 	return sweepResources, nil
