@@ -124,7 +124,11 @@ func (r *deliverySourceResource) Create(ctx context.Context, request resource.Cr
 	input.Tags = getTagsIn(ctx)
 
 	defer deliverySourceMutexLock(&data)()
-	output, err := conn.PutDeliverySource(ctx, &input)
+	output, err := tfresource.RetryWhenIsA[*cloudwatchlogs.PutDeliverySourceOutput, *awstypes.ConflictException](
+		ctx, putDeliverySourceTimeout, func(ctx context.Context) (*cloudwatchlogs.PutDeliverySourceOutput, error) {
+			return conn.PutDeliverySource(ctx, &input)
+		},
+	)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Delivery Source (%s)", name), err.Error())
 
@@ -192,8 +196,13 @@ func (r *deliverySourceResource) Delete(ctx context.Context, request resource.De
 	input := cloudwatchlogs.DeleteDeliverySourceInput{
 		Name: aws.String(name),
 	}
+
 	defer deliverySourceMutexLock(&data)()
-	_, err := conn.DeleteDeliverySource(ctx, &input)
+	_, err := tfresource.RetryWhenIsA[*cloudwatchlogs.DeleteDeliverySourceOutput, *awstypes.ConflictException](
+		ctx, deleteDeliverySourceTimeout, func(ctx context.Context) (*cloudwatchlogs.DeleteDeliverySourceOutput, error) {
+			return conn.DeleteDeliverySource(ctx, &input)
+		},
+	)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
