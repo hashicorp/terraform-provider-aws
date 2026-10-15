@@ -116,7 +116,7 @@ func dataSourceVPCEndpointService() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				"vpc_endpoint_policy_supported": {
 					Type:     schema.TypeBool,
 					Computed: true,

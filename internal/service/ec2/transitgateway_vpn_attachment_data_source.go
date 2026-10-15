@@ -35,7 +35,7 @@ func dataSourceTransitGatewayVPNAttachment() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrFilter: customFiltersSchema(),
-				names.AttrTags:   tftags.TagsSchemaComputed(),
+				names.AttrTags:   tftags.TagsSchemaOptionalComputed(),
 				names.AttrTransitGatewayID: {
 					Type:     schema.TypeString,
 					Optional: true,
