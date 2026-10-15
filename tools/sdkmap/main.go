@@ -111,7 +111,7 @@ func main() {
 	}
 
 	resources := []resource{}
-	for _, pkg := range a.services {
+	for _, pkg := range a.servicePackages() {
 		resources = append(resources, a.findSDKResources(pkg)...)
 	}
 
@@ -135,10 +135,15 @@ type analyzer struct {
 	// clientMethods maps the conns.AWSClient methods that return an AWS SDK client to the client's type,
 	// e.g. "S3Client" to "github.com/aws/aws-sdk-go-v2/service/s3".
 	clientMethods map[string]string
-	// services lists the service packages in directory order.
-	services []*servicePackage
-	// servicesByPath maps import paths to service packages.
-	servicesByPath map[string]*servicePackage
+	// services maps import paths to service packages.
+	services map[string]*servicePackage
+}
+
+// servicePackages returns the service packages, sorted by name.
+func (a *analyzer) servicePackages() []*servicePackage {
+	return slices.SortedFunc(maps.Values(a.services), func(x, y *servicePackage) int {
+		return strings.Compare(x.name, y.name)
+	})
 }
 
 // servicePackage is a service's Go package, with all of its non-test files parsed and its declarations indexed.
@@ -160,11 +165,11 @@ type servicePackage struct {
 // load parses conns.AWSClient and every service package under root.
 func load(root string) (*analyzer, error) {
 	a := &analyzer{
-		root:           root,
-		fset:           token.NewFileSet(),
-		imports:        make(map[*token.File]map[string]string),
-		clientMethods:  make(map[string]string),
-		servicesByPath: make(map[string]*servicePackage),
+		root:          root,
+		fset:          token.NewFileSet(),
+		imports:       make(map[*token.File]map[string]string),
+		clientMethods: make(map[string]string),
+		services:      make(map[string]*servicePackage),
 	}
 
 	// Record the conns.AWSClient methods that return an AWS SDK client, e.g. S3Client.
@@ -203,8 +208,7 @@ func load(root string) (*analyzer, error) {
 		}
 
 		pkg := a.indexPackage(entry.Name(), files)
-		a.services = append(a.services, pkg)
-		a.servicesByPath[servicePathPrefix+pkg.name] = pkg
+		a.services[servicePathPrefix+pkg.name] = pkg
 	}
 
 	return a, nil
@@ -624,7 +628,7 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 	case *ast.SelectorExpr:
 		if x, ok := n.X.(*ast.Ident); ok {
 			if importPath, ok := v.imports[x.Name]; ok {
-				if other, ok := v.finder.servicesByPath[importPath]; ok {
+				if other, ok := v.finder.services[importPath]; ok {
 					v.finder.follow(other, other.decls[n.Sel.Name])
 				}
 				return nil
