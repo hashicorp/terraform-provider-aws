@@ -6,7 +6,8 @@
 // the AWS SDK client methods each of those functions calls, and those the tags interceptor calls.
 //
 // Annotations are recognized using the same rules as the service package generator
-// (internal/generate/servicepackage), except that build constraints are honored when selecting a package's files.
+// (internal/generate/servicepackage), except that build constraints are honored when selecting a
+// package's files.
 package main
 
 import (
@@ -55,16 +56,20 @@ type resource struct {
 	Service      string     `json:"service"`
 	ResourceType string     `json:"resource_type"`
 	PluginType   pluginType `json:"plugin_type"`
+
 	// Expr is the factory function annotated with the resource's annotation, e.g. @SDKResource.
 	Expr string `json:"expr"`
 	// Location is where Expr is declared, as "<file>:<line>" relative to the repository root.
 	Location string `json:"location"`
 
-	Create        *funcRef `json:"create,omitempty"`
-	Read          *funcRef `json:"read,omitempty"`
-	Update        *funcRef `json:"update,omitempty"`
-	Delete        *funcRef `json:"delete,omitempty"`
+	Create *funcRef `json:"create,omitempty"`
+	Read   *funcRef `json:"read,omitempty"`
+	Update *funcRef `json:"update,omitempty"`
+	Delete *funcRef `json:"delete,omitempty"`
+
+	// CustomizeDiff is nil if the resource has no CustomizeDiff function.
 	CustomizeDiff *funcRef `json:"customize_diff,omitempty"`
+
 	// Import is nil if the resource has no importer or uses schema.ImportStatePassthroughContext.
 	Import *funcRef `json:"import,omitempty"`
 
@@ -72,29 +77,36 @@ type resource struct {
 	Tags *resourceTags `json:"tags,omitempty"`
 }
 
-// funcRef is a reference to a function from a resource's schema.Resource, or to a service package method.
+// funcRef is a reference to a function from a resource's schema.Resource, or to a service package
+// method.
 type funcRef struct {
 	// Expr is the reference as written, e.g. "resourceObjectCreate" or "verify.SetTagsDiff".
 	Expr string `json:"expr"`
-	// Location is where the function is defined, as "<file>:<line>" relative to the repository root:
-	// a package-level declaration (for a call, the called function's declaration), or else the function literal
-	// or call expression itself. It is empty if the function is not declared in the package, e.g. verify.SetTagsDiff or a method value.
+
+	// Location is where the function is defined, as "<file>:<line>" relative to the repository
+	// root: a package-level declaration (for a call, the called function's declaration), or else
+	// the function literal or call expression itself. It is empty if the function is not declared
+	// in the package, e.g. verify.SetTagsDiff or a method value.
 	Location string `json:"location,omitempty"`
-	// SDKCalls is the sorted set of AWS SDK client methods reachable from the function, e.g. "s3.PutObjectAcl".
+
+	// SDKCalls is the sorted set of AWS SDK client methods reachable from the function, e.g.
+	// "s3.PutObjectAcl".
 	SDKCalls []string `json:"sdk_calls"`
+
 	// Functions lists the functions combined by customdiff.All or customdiff.Sequence, flattened.
 	Functions []*funcRef `json:"functions,omitempty"`
 }
 
-// resourceTags holds the service package methods through which the tags interceptor lists and updates
-// a resource's tags around its CRUD functions.
+// resourceTags holds the service package methods through which the tags interceptor lists and
+// updates a resource's tags around its CRUD functions.
 //
-// The methods are analyzed as a whole: where they branch on @Tags(resourceType=...), e.g. in IAM and S3,
-// the SDK calls for every resource type that shares them are included.
+// The methods are analyzed as a whole: where they branch on @Tags(resourceType=...), e.g. in IAM
+// and S3, the SDK calls for every resource type that shares them are included.
 type resourceTags struct {
-	// List is the service package's ListTags, called after Create, Read, and Update if they don't set tags themselves,
-	// and after Update if tags_all isn't known until apply.
+	// List is the service package's ListTags, called after Create, Read, and Update if they don't
+	// set tags themselves, and after Update if tags_all isn't known until apply.
 	List *funcRef `json:"list,omitempty"`
+
 	// Update is the service package's UpdateTags, called during Update.
 	Update *funcRef `json:"update,omitempty"`
 }
@@ -129,12 +141,17 @@ func main() {
 type analyzer struct {
 	// root is the path to the root of the repository, which locations are relative to.
 	root string
+
+	// fset holds the positions of every parsed file.
 	fset *token.FileSet
-	// imports maps each parsed file to its imports, keyed by the name each import is referred to by.
+
+	// imports maps each parsed file to its imports, keyed by the name each import is referred to.
 	imports map[*token.File]map[string]string
-	// clientMethods maps the conns.AWSClient methods that return an AWS SDK client to the client's type,
-	// e.g. "S3Client" to "github.com/aws/aws-sdk-go-v2/service/s3".
+
+	// clientMethods maps the conns.AWSClient methods that return an AWS SDK client to the client's
+	// type, e.g. "S3Client" to "github.com/aws/aws-sdk-go-v2/service/s3".
 	clientMethods map[string]string
+
 	// services maps import paths to service packages.
 	services map[string]*servicePackage
 }
@@ -146,11 +163,14 @@ func (a *analyzer) servicePackages() []*servicePackage {
 	})
 }
 
-// servicePackage is a service's Go package, with all of its non-test files parsed and its declarations indexed.
+// servicePackage is a service's Go package, with all of its non-test files parsed and its
+// declarations indexed.
 type servicePackage struct {
 	name  string
 	files []*ast.File
-	// decls maps the names of package-level functions (*ast.FuncDecl), variables, and constants (*ast.ValueSpec) to their declarations.
+
+	// decls maps the names of package-level functions (*ast.FuncDecl), variables, and constants
+	// (*ast.ValueSpec) to their declarations.
 	decls map[string]ast.Node
 	// methods maps receiver type names to method names to declarations.
 	methods map[string]map[string]*ast.FuncDecl
@@ -214,8 +234,8 @@ func load(root string) (*analyzer, error) {
 	return a, nil
 }
 
-// parsePackage parses the non-test Go files of the package in dir, honoring build constraints, and records their imports.
-// It returns no files if dir contains no buildable Go files.
+// parsePackage parses the non-test Go files of the package in dir, honoring build constraints,
+// and records their imports. It returns no files if dir contains no buildable Go files.
 func (a *analyzer) parsePackage(dir string) ([]*ast.File, error) {
 	bp, err := build.ImportDir(dir, 0)
 	if _, ok := errors.AsType[*build.NoGoError](err); ok {
@@ -348,7 +368,8 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 				log.Printf("%s: no AWS SDK calls found for %s", r.Location, r.Expr)
 			}
 			if tagged {
-				// The tags interceptor lists and updates tags through the service package's ListTags and UpdateTags.
+				// The tags interceptor lists and updates tags through the service package's
+				// ListTags and UpdateTags.
 				r.Tags = &resourceTags{
 					List:   a.newMethodRef(pkg, "servicePackage", "ListTags"),
 					Update: a.newMethodRef(pkg, "servicePackage", "UpdateTags"),
@@ -461,7 +482,8 @@ func isCustomDiffCombinator(expr ast.Expr) bool {
 	return ok && isSelector(call.Fun, "customdiff", "All", "Sequence")
 }
 
-// customizeDiffFuncs flattens customdiff.All and customdiff.Sequence into the functions they combine.
+// customizeDiffFuncs flattens customdiff.All and customdiff.Sequence into the functions they
+// combine.
 func customizeDiffFuncs(expr ast.Expr) []ast.Expr {
 	if !isCustomDiffCombinator(expr) {
 		return []ast.Expr{expr}
@@ -498,8 +520,8 @@ func (a *analyzer) newFuncRef(pkg *servicePackage, expr ast.Expr, varTypes map[s
 	return ref
 }
 
-// newMethodRef returns a reference to the method name on the type recv in pkg, e.g. "(*servicePackage).ListTags",
-// or nil if there is no such method.
+// newMethodRef returns a reference to the method name on the type recv in pkg, e.g.
+// "(*servicePackage).ListTags", or nil if there is no such method.
 func (a *analyzer) newMethodRef(pkg *servicePackage, recv, name string) *funcRef {
 	m, ok := pkg.methods[recv][name]
 	if !ok {
@@ -530,9 +552,9 @@ type callFinder struct {
 	calls   map[string]bool
 }
 
-// findSDKCalls returns the sorted set of AWS SDK client methods reachable from node,
-// e.g. a declaration or a function reference from a resource's schema.Resource.
-// varTypes holds the types of variables in scope at node, e.g. from factoryVarTypes, and may be nil.
+// findSDKCalls returns the sorted set of AWS SDK client methods reachable from node, e.g. a
+// declaration or a function reference from a resource's schema.Resource. varTypes holds the types
+// of variables in scope at node, e.g. from factoryVarTypes, and may be nil.
 func (a *analyzer) findSDKCalls(pkg *servicePackage, node ast.Node, varTypes map[string]string) []string {
 	f := &callFinder{analyzer: a, visited: make(map[ast.Node]bool), calls: make(map[string]bool)}
 
@@ -546,8 +568,9 @@ func (a *analyzer) findSDKCalls(pkg *servicePackage, node ast.Node, varTypes map
 	return calls
 }
 
-// factoryVarTypes returns the types of the variables declared in the body of a resource's factory function,
-// outside any nested function, so that the functions it references can use them, e.g. a method value such as h.Upsert.
+// factoryVarTypes returns the types of the variables declared in the body of a resource's factory
+// function, outside any nested function, so that the functions it references can use them, e.g. a
+// method value such as h.Upsert.
 func (a *analyzer) factoryVarTypes(pkg *servicePackage, factory *ast.FuncDecl) map[string]string {
 	v := (&callFinder{analyzer: a}).newVisitor(pkg, factory)
 	for _, stmt := range factory.Body.List {
@@ -581,8 +604,8 @@ func (f *callFinder) newVisitor(pkg *servicePackage, node ast.Node) *declVisitor
 	return &declVisitor{finder: f, pkg: pkg, imports: f.importsOf(node), varTypes: make(map[string]string)}
 }
 
-// declVisitor records the SDK client method calls in a declaration, and follows the declarations it references:
-// package-level declarations in pkg, exported declarations in other service packages,
+// declVisitor records the SDK client method calls in a declaration, and follows the declarations it
+// references: package-level declarations in pkg, exported declarations in other service packages,
 // and methods in pkg called on a value whose type is known.
 //
 // Types are tracked syntactically, as strings: an AWS SDK client by its package's import path
@@ -591,6 +614,7 @@ type declVisitor struct {
 	finder  *callFinder
 	pkg     *servicePackage
 	imports map[string]string
+
 	// varTypes maps variable names to their types, where known.
 	// Scoping is ignored: names are shared by all nested function literals.
 	varTypes map[string]string
@@ -619,7 +643,8 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 				v.finder.calls[path.Base(typ)+"."+sel.Sel.Name] = true
 			}
 		} else if x, ok := sel.X.(*ast.Ident); ok && isSDKPackage(v.imports[x.Name]) {
-			// A paginator calls its operation, e.g. s3.NewListObjectsV2Paginator calls ListObjectsV2.
+			// A paginator calls its operation, e.g. s3.NewListObjectsV2Paginator calls
+			// ListObjectsV2.
 			if m := paginatorRegexp.FindStringSubmatch(sel.Sel.Name); m != nil {
 				v.finder.calls[path.Base(v.imports[x.Name])+"."+m[1]] = true
 			}
@@ -642,7 +667,8 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 		return nil
 
 	case *ast.KeyValueExpr:
-		// A struct literal key names a field, not a package-level declaration, so only the value is walked.
+		// A struct literal key names a field, not a package-level declaration, so only the value is
+		// walked.
 		if _, ok := n.Key.(*ast.Ident); ok {
 			ast.Walk(v, n.Value)
 			return nil
@@ -655,11 +681,13 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-// setDeclaredTypes records the types of the variables assigned or declared by an *ast.AssignStmt or *ast.ValueSpec.
+// setDeclaredTypes records the types of the variables assigned or declared by an *ast.AssignStmt or
+// *ast.ValueSpec.
 func (v *declVisitor) setDeclaredTypes(node ast.Node) {
 	switch n := node.(type) {
 	case *ast.AssignStmt:
-		// With several values on the left and one on the right (e.g. conn, err := f()), only the first value's type is known.
+		// With several values on the left and one on the right (e.g. conn, err := f()),
+		// only the first value's type is known.
 		for i, lhs := range n.Lhs {
 			if id, ok := lhs.(*ast.Ident); ok && (len(n.Lhs) == len(n.Rhs) || i == 0) {
 				v.setVarType(id.Name, v.typeOf(n.Rhs[i]))
@@ -686,8 +714,9 @@ func (v *declVisitor) setParamTypes(params *ast.FieldList) {
 	}
 }
 
-// setVarType records the type of a variable, unless the type is unknown or the variable has an interface type.
-// Keeping the interface type means its method calls dispatch to every implementation that may be assigned to it.
+// setVarType records the type of a variable, unless the type is unknown or the variable has an
+// interface type. Keeping the interface type means its method calls dispatch to every
+// implementation that may be assigned to it.
 func (v *declVisitor) setVarType(name, typ string) {
 	if _, isInterface := v.pkg.interfaces[v.varTypes[name]]; typ != "" && !isInterface {
 		v.varTypes[name] = typ
@@ -722,7 +751,8 @@ func (v *declVisitor) typeOf(expr ast.Expr) string {
 	return ""
 }
 
-// methodsOf returns the methods named name on typ, or, if typ is an interface, on every type in pkg that implements it.
+// methodsOf returns the methods named name on typ, or, if typ is an interface, on every type in pkg
+// that implements it.
 func (pkg *servicePackage) methodsOf(typ, name string) []*ast.FuncDecl {
 	if typ == "" {
 		return nil
