@@ -269,12 +269,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	tflog.Info(ctx, "Creating SageMaker AI Endpoint")
 
-	// Pace the rollback-and-retry with a fixed poll interval. SageMaker caches the
-	// failure to assume an execution role that has not finished propagating; recreating
-	// the endpoint immediately re-triggers the assume and keeps that negative result
-	// fresh. Spacing attempts out lets the cached result expire so a subsequent attempt
-	// can succeed once the role has propagated.
-	err := tfresource.Retry(ctx, endpointCreateRetryTimeout, func(ctx context.Context) *tfresource.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout*2, func(ctx context.Context) *tfresource.RetryError {
 		tflog.Info(ctx, "Calling CreateEndpoint")
 		_, err := conn.CreateEndpoint(ctx, &input)
 
@@ -300,7 +295,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		return nil
-	}, tfresource.WithPollInterval(propagationTimeout))
+	})
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
