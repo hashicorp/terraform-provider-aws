@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -43,10 +43,6 @@ func newViewResource(_ context.Context) (resource.ResourceWithConfigure, error) 
 	return &viewResource{}, nil
 }
 
-const (
-	ResNameView = "View"
-)
-
 type viewResource struct {
 	framework.ResourceWithModel[viewResourceModel]
 	framework.WithImportByIdentity
@@ -56,13 +52,6 @@ func (r *viewResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"definition": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -94,10 +83,6 @@ func (r *viewResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
 		},
 	}
 }
@@ -119,6 +104,7 @@ func (r *viewResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	input.ClientToken = aws.String(create.UniqueId(ctx))
+
 	// CreateView takes a tag map, but the tag operations live in the cloudwatch package and use a slice.
 	if tags := keyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {
 		input.Tags = tags
@@ -130,10 +116,8 @@ func (r *viewResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	plan.ARN = fwflex.StringToFramework(ctx, out.Arn)
+	plan.Type = fwtypes.StringEnumValue(out.Type)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -159,7 +143,7 @@ func (r *viewResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -196,19 +180,11 @@ func (r *viewResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			input.Description = aws.String("")
 		}
 
-		out, err := conn.UpdateView(ctx, &input)
+		_, err := conn.UpdateView(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 			return
 		}
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	} else {
-		// Only tags changed; UpdateView was not called, so computed values are unchanged.
-		plan.UpdatedAt = state.UpdatedAt
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -237,12 +213,21 @@ func (r *viewResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
+func (r *viewResource) flatten(ctx context.Context, view *cloudwatchomni.GetViewOutput, data *viewResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, view, data)...)
+	return diags
+}
+
 func findViewByName(ctx context.Context, conn *cloudwatchomni.Client, name string) (*cloudwatchomni.GetViewOutput, error) {
 	input := cloudwatchomni.GetViewInput{
 		Name: aws.String(name),
 	}
+	return findView(ctx, conn, &input)
+}
 
-	out, err := conn.GetView(ctx, &input)
+func findView(ctx context.Context, conn *cloudwatchomni.Client, input *cloudwatchomni.GetViewInput) (*cloudwatchomni.GetViewOutput, error) {
+	out, err := conn.GetView(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
@@ -262,12 +247,10 @@ func findViewByName(ctx context.Context, conn *cloudwatchomni.Client, name strin
 type viewResourceModel struct {
 	framework.WithRegionModel
 	ARN         types.String                          `tfsdk:"arn"`
-	CreatedAt   timetypes.RFC3339                     `tfsdk:"created_at"`
 	Definition  types.String                          `tfsdk:"definition"`
 	Description types.String                          `tfsdk:"description" autoflex:",omitempty"`
 	Name        types.String                          `tfsdk:"name"`
 	Tags        tftags.Map                            `tfsdk:"tags"`
 	TagsAll     tftags.Map                            `tfsdk:"tags_all"`
 	Type        fwtypes.StringEnum[awstypes.ViewType] `tfsdk:"type"`
-	UpdatedAt   timetypes.RFC3339                     `tfsdk:"updated_at"`
 }

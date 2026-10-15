@@ -6,7 +6,6 @@ package cloudwatchomni_test
 import (
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -15,28 +14,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func checkViewARN(rName string) knownvalue.Check {
-	return tfknownvalue.RegionalARNRegexp("cloudwatch", regexache.MustCompile(`view/view\.`+rName+`/[0-9a-f-]{36}`))
-}
-
-func checkViewARNAlternateRegion(rName string) knownvalue.Check {
-	return tfknownvalue.RegionalARNAlternateRegionRegexp("cloudwatch", regexache.MustCompile(`view/view\.`+rName+`/[0-9a-f-]{36}`))
-}
-
 func TestAccCloudWatchOmniView_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_cloudwatchomni_view.test[0]"
 	resourceName2 := "aws_cloudwatchomni_view.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -89,10 +77,8 @@ func TestAccCloudWatchOmniView_List_basic(t *testing.T) {
 
 func TestAccCloudWatchOmniView_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_cloudwatchomni_view.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -154,11 +140,9 @@ func TestAccCloudWatchOmniView_List_includeResource(t *testing.T) {
 
 func TestAccCloudWatchOmniView_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName1 := "aws_cloudwatchomni_view.test[0]"
 	resourceName2 := "aws_cloudwatchomni_view.test[1]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 

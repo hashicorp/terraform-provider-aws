@@ -5,12 +5,13 @@ package cloudwatchomni_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,13 +20,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatchomni "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchomni"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const testAccViewDefinition = "SELECT `@timestamp`, `@message` FROM \"logs.default\""
+
+func checkViewARN(rName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("cloudwatch", regexache.MustCompile(`view/view\.`+rName+`/[0-9a-f-]{36}`))
+}
+
+func checkViewARNAlternateRegion(rName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("cloudwatch", regexache.MustCompile(`view/view\.`+rName+`/[0-9a-f-]{36}`))
+}
 
 func TestAccCloudWatchOmniView_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -43,19 +51,25 @@ func TestAccCloudWatchOmniView_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccViewConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/View/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, t, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("cloudwatch", regexache.MustCompile(`view/view\.`+rName+`/[0-9a-f-]{36}`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkViewARN("view."+rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("definition"), knownvalue.StringExact(testAccViewDefinition)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("view."+rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("USER")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("updated_at"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.ViewTypeUser)),
 				},
 			},
 			{
@@ -85,7 +99,10 @@ func TestAccCloudWatchOmniView_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccViewConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/View/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatchomni.ResourceView, resourceName),
@@ -187,18 +204,17 @@ func testAccCheckViewDestroy(ctx context.Context, t *testing.T) resource.TestChe
 				continue
 			}
 
-			name := rs.Primary.Attributes[names.AttrName]
-			_, err := tfcloudwatchomni.FindViewByName(ctx, conn, name)
+			_, err := tfcloudwatchomni.FindViewByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 			if retry.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return create.Error(names.CloudWatchOmni, create.ErrActionCheckingDestroyed, tfcloudwatchomni.ResNameView, name, err)
+				return err
 			}
 
-			return create.Error(names.CloudWatchOmni, create.ErrActionCheckingDestroyed, tfcloudwatchomni.ResNameView, name, errors.New("not destroyed"))
+			return fmt.Errorf("CloudWatch Omni View %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
@@ -209,20 +225,14 @@ func testAccCheckViewExists(ctx context.Context, t *testing.T, n string, v *clou
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.CloudWatchOmni, create.ErrActionCheckingExistence, tfcloudwatchomni.ResNameView, n, errors.New("not found"))
-		}
-
-		name := rs.Primary.Attributes[names.AttrName]
-		if name == "" {
-			return create.Error(names.CloudWatchOmni, create.ErrActionCheckingExistence, tfcloudwatchomni.ResNameView, n, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).CloudWatchOmniClient(ctx)
 
-		output, err := tfcloudwatchomni.FindViewByName(ctx, conn, name)
-
+		output, err := tfcloudwatchomni.FindViewByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 		if err != nil {
-			return create.Error(names.CloudWatchOmni, create.ErrActionCheckingExistence, tfcloudwatchomni.ResNameView, name, err)
+			return err
 		}
 
 		*v = *output
