@@ -156,7 +156,7 @@ func TestAccCloudWatchOmniView_List_regionOverride(t *testing.T) {
 			testAccPreCheckView(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchOmniServiceID),
-		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

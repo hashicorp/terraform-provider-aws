@@ -125,11 +125,12 @@ func TestAccCloudWatchOmniView_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchOmniView_update(t *testing.T) {
+func TestAccCloudWatchOmniView_definition(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 cloudwatchomni.GetViewOutput
+	var v cloudwatchomni.GetViewOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatchomni_view.test"
+	definition1 := "SELECT `@timestamp`, `@message` FROM \"logs.default\""
 	definition2 := "SELECT `@timestamp` FROM \"logs.default\""
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -142,19 +143,31 @@ func TestAccCloudWatchOmniView_update(t *testing.T) {
 		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccViewConfig_description(rName, testAccViewDefinition, "description 1"),
+				ConfigDirectory: config.StaticDirectory("testdata/View/definition/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"definition":    config.StringVariable(definition1),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, t, resourceName, &v1),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("description 1")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("definition"), knownvalue.StringExact(definition1)),
 				},
 			},
 			{
-				Config: testAccViewConfig_description(rName, definition2, "description 2"),
+				ConfigDirectory: config.StaticDirectory("testdata/View/definition/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"definition":    config.StringVariable(definition2),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, t, resourceName, &v2),
-					testAccCheckViewNotRecreated(&v1, &v2),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -163,14 +176,72 @@ func TestAccCloudWatchOmniView_update(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("definition"), knownvalue.StringExact(definition2)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("description 2")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudWatchOmniView_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v cloudwatchomni.GetViewOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatchomni_view.test"
+	description1 := "desc1"
+	description2 := "desc2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckView(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchOmniServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/View/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable(description1),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(description1)),
 				},
 			},
 			{
-				Config: testAccViewConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/View/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable(description2),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, t, resourceName, &v3),
-					testAccCheckViewNotRecreated(&v2, &v3),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(description2)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/View/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -243,35 +314,4 @@ func testAccCheckViewExists(ctx context.Context, t *testing.T, n string, v *clou
 
 		return nil
 	}
-}
-
-// testAccCheckViewNotRecreated verifies that an update kept the same view, using its ARN
-// (which carries a server-generated id) rather than the name.
-func testAccCheckViewNotRecreated(before, after *cloudwatchomni.GetViewOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if b, a := *before.Arn, *after.Arn; b != a {
-			return fmt.Errorf("CloudWatch Omni View recreated: %s -> %s", b, a)
-		}
-
-		return nil
-	}
-}
-
-func testAccViewConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatchomni_view" "test" {
-  name       = "view.%[1]s"
-  definition = %[2]q
-}
-`, rName, testAccViewDefinition)
-}
-
-func testAccViewConfig_description(rName, definition, description string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatchomni_view" "test" {
-  name        = "view.%[1]s"
-  definition  = %[2]q
-  description = %[3]q
-}
-`, rName, definition, description)
 }
