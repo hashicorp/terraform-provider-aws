@@ -544,6 +544,101 @@ func TestAccResilienceHubV2Service_dependencyDiscovery(t *testing.T) {
 	})
 }
 
+func TestAccResilienceHubV2Service_devOpsAgent(t *testing.T) {
+	ctx := acctest.Context(t)
+	var svc awstypes.Service
+	// Linking requires an existing DevOps Agent Agent Space, which cannot be
+	// provisioned by this test. Supply its ARN via the environment to run.
+	agentSpaceARN := acctest.SkipIfEnvVarNotSet(t, "RESILIENCEHUBV2_AGENT_SPACE_ARN")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Connect: supplying agent_space_arn links the service to the Agent Space.
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/dev_ops_agent/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:   config.StringVariable(rName),
+					"agent_space_arn": config.StringVariable(agentSpaceARN),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &svc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dev_ops_agent_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"agent_space_arn": knownvalue.StringExact(agentSpaceARN),
+					})})),
+					// Linking is asynchronous: the create response reports CONNECTING, which may
+					// have advanced to CONNECTED by refresh. Assert the status is non-null and the
+					// space id/region were resolved rather than pinning an exact transient status.
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dev_ops_agent_status"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dev_ops_agent_space_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dev_ops_agent_region"), knownvalue.NotNull()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/dev_ops_agent/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:   config.StringVariable(rName),
+					"agent_space_arn": config.StringVariable(agentSpaceARN),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				// The DevOps Agent connection finalizes asynchronously (CONNECTING ->
+				// CONNECTED), surfacing operator_app_url/connected_at out-of-band, so these
+				// computed status fields can legitimately differ between apply and import.
+				ImportStateVerifyIgnore: []string{
+					"dev_ops_agent_status",
+					"dev_ops_agent_operator_app_url",
+					"dev_ops_agent_connected_at",
+					"dev_ops_agent_status_reason",
+				},
+			},
+			// Disconnect: removing the block clears the linkage; the API no longer
+			// returns a DevOps Agent configuration, so both attributes become null.
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/dev_ops_agent/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:   config.StringVariable(rName),
+					"agent_space_arn": config.StringVariable(""),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &svc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dev_ops_agent_configuration"), knownvalue.ListSizeExact(0)),
+					// The service keeps reporting status after a disconnect: it transitions to
+					// DISCONNECTED and clears the resolved space id/region.
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dev_ops_agent_status"), tfknownvalue.StringExact(awstypes.DevOpsAgentConnectionStatusDisconnected)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dev_ops_agent_space_id"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dev_ops_agent_region"), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ResilienceHubV2Client(ctx)
