@@ -170,8 +170,8 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 						// Objects rather than blocks: the service assigns
 						// account-level defaults when unset, so they must be
 						// Computed (see aws_lambdaweb_endpoint).
-						"scaling_config":  framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithPlanModifiers[scalingConfigModel](listplanmodifier.UseNonNullStateForUnknown())),
-						"throttle_config": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithPlanModifiers[throttleConfigModel](listplanmodifier.UseNonNullStateForUnknown())),
+						"scaling_config":  framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithPlanModifiers[scalingConfigModel](listplanmodifier.UseStateForUnknown())),
+						"throttle_config": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithPlanModifiers[throttleConfigModel](listplanmodifier.UseStateForUnknown())),
 					},
 				},
 			},
@@ -640,15 +640,15 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		}
 	}
 
-	ep, diags := state.EndpointConfig.ToPtr(ctx)
-	resp.Diagnostics.Append(diags...)
+	endpointConfig, diags := state.EndpointConfig.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var endpointName string
-	if ep != nil {
-		endpointName = fwflex.StringValueFromFramework(ctx, ep.EndpointName)
+	if endpointConfig != nil {
+		endpointName = fwflex.StringValueFromFramework(ctx, endpointConfig.EndpointName)
 	} else {
 		// No configuration to match against, i.e. import. CreateWebFunction always
 		// creates an endpoint with the function, so the oldest endpoint is the one
@@ -693,8 +693,6 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *functionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().LambdaWebClient(ctx)
-
 	var plan, state functionResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -702,7 +700,9 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	name := plan.FunctionName.ValueString()
+	conn := r.Meta().LambdaWebClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, plan.FunctionName)
 
 	if !plan.RevisionConfig.Equal(state.RevisionConfig) {
 		// CreateWebFunctionRevision takes description/kmsKeyArn/buildConfig/
@@ -719,20 +719,22 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
 		input.FunctionName = aws.String(name)
 
-		revOut, err := conn.CreateWebFunctionRevision(ctx, &input)
+		output, err := conn.CreateWebFunctionRevision(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
 		}
 
-		revisionID := aws.ToString(revOut.RevisionId)
+		revisionID := aws.ToString(output.RevisionId)
 		if _, err := waitFunctionRevisionActive(ctx, conn, name, revisionID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
 		}
-		plan.LatestRevisionID = fwflex.StringToFramework(ctx, revOut.RevisionId)
+
+		plan.LatestRevisionID = fwflex.StringToFramework(ctx, output.RevisionId)
 	} else {
 		plan.LatestRevisionID = state.LatestRevisionID
 	}
@@ -741,13 +743,7 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 	// computed, so leaving them unknown fails the apply.
 	plan.DomainName = state.DomainName
 	plan.RegionalDomainNames = state.RegionalDomainNames
-	if !plan.EndpointConfig.Equal(state.EndpointConfig) && !plan.EndpointConfig.IsNull() {
-		endpointName, err := endpointNameFromConfig(ctx, plan.EndpointConfig)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-			return
-		}
-
+	if !plan.EndpointConfig.Equal(state.EndpointConfig) {
 		// UpdateWebFunctionEndpoint takes description/authType/
 		// autoDeploymentMode at the top level; expand the endpoint_config
 		// block, not the resource model.
@@ -756,53 +752,48 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		endpointName := fwflex.StringValueFromFramework(ctx, endpointConfig.EndpointName)
 
 		var input lambdaweb.UpdateWebFunctionEndpointInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, endpointConfig, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		input.FunctionName = aws.String(name)
-		input.EndpointName = aws.String(endpointName)
+
 		// An omitted description means "leave unchanged" to the API, so an empty
 		// string is what clears one that was removed from the configuration.
 		if endpointConfig.Description.IsNull() {
-			if prior, d := state.EndpointConfig.ToPtr(ctx); !d.HasError() && prior != nil && !prior.Description.IsNull() {
+			if prior, diags := state.EndpointConfig.ToPtr(ctx); !diags.HasError() && prior != nil && !prior.Description.IsNull() {
 				input.Description = aws.String("")
 			}
 		}
+		input.EndpointName = aws.String(endpointName)
+		input.FunctionName = aws.String(name)
 
 		if _, err := conn.UpdateWebFunctionEndpoint(ctx, &input); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
 		}
 
-		ep, err := waitEndpointUpdated(ctx, conn, name, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
+		endpoint, err := waitEndpointUpdated(ctx, conn, name, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
 		}
-		plan.DomainName = fwflex.StringToFramework(ctx, ep.DomainName)
-		plan.RegionalDomainNames = regionalDomainNames(ctx, ep.RegionalEndpoints)
 
-		// Mirror Create: flatten the endpoint back so computed sub-attributes
-		// (auto_deployment_mode, regions) are known after apply.
-		var epModel endpointConfigModel
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, ep, &epModel))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flattenEndpoint(ctx, endpoint, &state))
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		epModel.Description = normalizeDescription(epModel.Description)
-		plan.EndpointConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &epModel)
 	}
 
-	out, err := waitFunctionUpdated(ctx, conn, name, r.UpdateTimeout(ctx, plan.Timeouts))
+	function, err := waitFunctionUpdated(ctx, conn, name, r.UpdateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flattenFunction(ctx, function, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -840,28 +831,13 @@ func (r *functionResource) Delete(ctx context.Context, req resource.DeleteReques
 
 func (r *functionResource) flatten(ctx context.Context, function *lambdaweb.GetWebFunctionOutput, revision *lambdaweb.GetWebFunctionRevisionOutput, endpoint *lambdaweb.GetWebFunctionEndpointOutput, data *functionResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
-	diags.Append(fwflex.Flatten(ctx, function, data)...)
+	diags.Append(r.flattenFunction(ctx, function, data)...)
 	if diags.HasError() {
 		return diags
 	}
 
 	if revision != nil {
-		data.LatestRevisionID = fwflex.StringToFramework(ctx, revision.RevisionId)
-
-		priorRevisionConfig := data.RevisionConfig
-		model, d := fwtypes.Nullified[revisionConfigModel](ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-		diags.Append(fwflex.Flatten(ctx, revision, &model)...)
-		if diags.HasError() {
-			return diags
-		}
-		restoreTelemetryConfig(ctx, &model, priorRevisionConfig)
-
-		data.RevisionConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
-		diags.Append(d...)
+		diags.Append(r.flattenRevision(ctx, revision, data)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -871,33 +847,74 @@ func (r *functionResource) flatten(ctx context.Context, function *lambdaweb.GetW
 	}
 
 	if endpoint != nil {
-		if aws.ToString(endpoint.Description) == "" {
-			endpoint.Description = nil
-		}
-
-		model, d := fwtypes.Nullified[endpointConfigModel](ctx)
-		diags.Append(d...)
+		diags.Append(r.flattenEndpoint(ctx, endpoint, data)...)
 		if diags.HasError() {
 			return diags
 		}
-		diags.Append(fwflex.Flatten(ctx, endpoint, &model)...)
-		if diags.HasError() {
-			return diags
-		}
-
-		data.EndpointConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		data.DomainName = fwflex.StringToFramework(ctx, endpoint.DomainName)
-		data.RegionalDomainNames = regionalDomainNames(ctx, endpoint.RegionalEndpoints)
 	} else {
 		data.EndpointConfig = fwtypes.NewListNestedObjectValueOfNull[endpointConfigModel](ctx)
 		data.DomainName = types.StringNull()
 		data.RegionalDomainNames = fwflex.FlattenFrameworkStringValueMapOfString(ctx, nil)
 	}
+
+	return diags
+}
+
+func (r *functionResource) flattenFunction(ctx context.Context, function *lambdaweb.GetWebFunctionOutput, data *functionResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, function, data)...)
+	return diags
+}
+
+func (r *functionResource) flattenRevision(ctx context.Context, revision *lambdaweb.GetWebFunctionRevisionOutput, data *functionResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	data.LatestRevisionID = fwflex.StringToFramework(ctx, revision.RevisionId)
+
+	priorRevisionConfig := data.RevisionConfig
+	model, d := fwtypes.Nullified[revisionConfigModel](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	diags.Append(fwflex.Flatten(ctx, revision, &model)...)
+	if diags.HasError() {
+		return diags
+	}
+	restoreTelemetryConfig(ctx, &model, priorRevisionConfig)
+
+	data.RevisionConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	return diags
+}
+
+func (r *functionResource) flattenEndpoint(ctx context.Context, endpoint *lambdaweb.GetWebFunctionEndpointOutput, data *functionResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if aws.ToString(endpoint.Description) == "" {
+		endpoint.Description = nil
+	}
+
+	model, d := fwtypes.Nullified[endpointConfigModel](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	diags.Append(fwflex.Flatten(ctx, endpoint, &model)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	data.EndpointConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	data.DomainName = fwflex.StringToFramework(ctx, endpoint.DomainName)
+	data.RegionalDomainNames = regionalDomainNames(ctx, endpoint.RegionalEndpoints)
 
 	return diags
 }
@@ -1134,38 +1151,6 @@ func listFunctionEndpointPages(ctx context.Context, conn *lambdaweb.Client, inpu
 			}
 		}
 	}
-}
-
-func readEndpointName(ctx context.Context, conn *lambdaweb.Client, functionName string, cfg fwtypes.ListNestedObjectValueOf[endpointConfigModel]) (string, error) {
-	if !cfg.IsNull() {
-		return endpointNameFromConfig(ctx, cfg)
-	}
-
-	// No configuration to match against, i.e. import. CreateWebFunction always
-	// creates an endpoint with the function, so the oldest endpoint is the one
-	// endpoint_config describes. Giving up when a function has several
-	// endpoints would leave the Required endpoint_config block empty in state,
-	// and populating it from null triggers the RequiresReplace plan modifiers
-	// on endpoint_name and endpoint_type: the first apply after import would
-	// then replace the function, silently deleting every other endpoint it
-	// owns along with their domain names.
-	oldest, err := findOldestFunctionEndpoint(ctx, conn, functionName)
-	if err != nil || oldest == nil {
-		return "", err
-	}
-
-	return aws.ToString(oldest.EndpointName), nil
-}
-
-func endpointNameFromConfig(ctx context.Context, l fwtypes.ListNestedObjectValueOf[endpointConfigModel]) (string, error) {
-	models, d := l.ToSlice(ctx)
-	if d.HasError() {
-		return "", errors.New("reading endpoint_config")
-	}
-	if len(models) == 0 {
-		return "", errors.New("empty endpoint_config")
-	}
-	return models[0].EndpointName.ValueString(), nil
 }
 
 // restoreTelemetryConfig keeps telemetry_config as configuration-only state.
