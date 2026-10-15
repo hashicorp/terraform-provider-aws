@@ -31,7 +31,7 @@ resource "aws_cloudwatchomni_access_grant" "test" {
         row_scope {
           field    = "serviceName"
           operator = "IN"
-          values   = ["service-a", "service-b"]
+          values   = ["service-b", "service-a"]
         }
 
         row_scope {

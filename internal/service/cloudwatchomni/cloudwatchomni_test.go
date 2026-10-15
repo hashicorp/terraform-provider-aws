@@ -23,6 +23,7 @@ func TestAccCloudWatchOmni_serial(t *testing.T) {
 			"permission":           testAccAccessGrant_permission,
 			"principal":            testAccAccessGrant_principal,
 			"scopedAction":         testAccAccessGrant_scopedAction,
+			"validation":           testAccAccessGrant_validation,
 			"Identity":             testAccCloudWatchOmniAccessGrant_identitySerial,
 			"List_basic":           testAccAccessGrant_List_basic,
 			"List_includeResource": testAccAccessGrant_List_includeResource,

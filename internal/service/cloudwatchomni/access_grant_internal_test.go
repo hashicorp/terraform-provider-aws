@@ -4,6 +4,7 @@
 package cloudwatchomni
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -72,7 +73,7 @@ func TestFlattenExpandAccessGrantRoundTrip(t *testing.T) {
 								ResourceArns: []string{},
 								RowScopeGroups: [][]awstypes.RowScope{
 									{
-										{Field: aws.String("serviceName"), Operator: awstypes.RowScopeOperatorIn, Values: []string{"x", "y"}},
+										{Field: aws.String("serviceName"), Operator: awstypes.RowScopeOperatorIn, Values: []string{"y", "x"}},
 										{Field: aws.String("accountId"), Operator: awstypes.RowScopeOperatorIn, Values: []string{"example"}},
 									},
 									{
@@ -140,6 +141,17 @@ func TestFlattenExpandAccessGrantRoundTrip(t *testing.T) {
 			var got cloudwatchomni.CreateAccessGrantInput
 			if diags := fwflex.Expand(ctx, data, &got); diags.HasError() {
 				t.Fatalf("expand: %v", diags)
+			}
+
+			// Row scope values are a set, so their expanded order is not significant.
+			for _, scopedAction := range got.ScopedActions {
+				for _, scope := range scopedAction.Resources {
+					for _, group := range scope.RowScopeGroups {
+						for _, rowScope := range group {
+							slices.Sort(rowScope.Values)
+						}
+					}
+				}
 			}
 
 			if diff := cmp.Diff(testCase.want, got, cmpopts.IgnoreUnexported(

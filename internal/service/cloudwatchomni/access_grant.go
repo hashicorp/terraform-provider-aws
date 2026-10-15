@@ -9,14 +9,19 @@ import (
 	"iter"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -74,6 +79,9 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^d-[0-9a-z]{1,25}$`), "must be a CloudWatch Omni domain ID"),
+				},
 			},
 			"grant_id": framework.IDAttribute(),
 			"grant_type": schema.StringAttribute{
@@ -88,6 +96,10 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 64),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]+$`), "use letters, numbers, underscores, and hyphens."),
+				},
 			},
 			"permission": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AccessGrantPermission](),
@@ -100,6 +112,9 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`), "must be a CloudWatch Omni space ID"),
 				},
 			},
 			"updated_at": schema.StringAttribute{
@@ -125,6 +140,10 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 					Attributes: map[string]schema.Attribute{
 						"principal_id": schema.StringAttribute{
 							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 2048),
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9:/_+=,.@-]*$`), "start with a letter or number and use letters, numbers, and the characters :/_+=,.@-"),
+							},
 						},
 						"principal_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AccessGrantPrincipalType](),
@@ -134,13 +153,22 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 					Blocks: map[string]schema.Block{
 						"principal_attribute": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[accessGrantPrincipalAttributeModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(10),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrKey: schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
 									},
 									names.AttrValue: schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 512),
+										},
 									},
 								},
 							},
@@ -153,28 +181,47 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(20),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrActions: schema.ListAttribute{
 							CustomType:  fwtypes.ListOfStringType,
 							ElementType: types.StringType,
 							Required:    true,
+							Validators: []validator.List{
+								listvalidator.SizeBetween(1, 50),
+								listvalidator.ValueStringsAre(
+									stringvalidator.LengthBetween(3, 256),
+									stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9-]*:[A-Za-z][A-Za-z0-9]*$`), `use the form "vendor-code:Action", without wildcards.`),
+								),
+							},
 						},
 						"context_conditions": schema.MapAttribute{
 							CustomType:  fwtypes.MapOfListOfStringType,
 							ElementType: fwtypes.ListOfStringType,
 							Optional:    true,
+							Validators: []validator.Map{
+								mapvalidator.SizeAtMost(10),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
 						"resource": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[resourceScopeModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(10),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"resource_arns": schema.ListAttribute{
 										CustomType:  fwtypes.ListOfStringType,
 										ElementType: types.StringType,
 										Optional:    true,
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(5),
+										},
 									},
 									names.AttrResourceType: schema.StringAttribute{
 										Required: true,
@@ -182,37 +229,57 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 									"signal_types": schema.ListAttribute{
 										CustomType: fwtypes.ListOfStringEnumType[awstypes.SignalType](),
 										Optional:   true,
+										Validators: []validator.List{
+											listvalidator.SizeBetween(1, 3),
+											listvalidator.UniqueValues(),
+										},
 									},
 									names.AttrTags: schema.MapAttribute{
 										CustomType:  fwtypes.MapOfStringType,
 										ElementType: types.StringType,
 										Optional:    true,
+										Validators: []validator.Map{
+											mapvalidator.SizeAtMost(3),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
 									"row_scope_group": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[rowScopeGroupModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(20),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
 												"row_scope": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[rowScopeModel](ctx),
 													Validators: []validator.List{
 														listvalidator.IsRequired(),
-														listvalidator.SizeAtLeast(1),
+														listvalidator.SizeBetween(1, 20),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															names.AttrField: schema.StringAttribute{
 																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 256),
+																},
 															},
 															"operator": schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.RowScopeOperator](),
 																Required:   true,
 															},
-															names.AttrValues: schema.ListAttribute{
-																CustomType:  fwtypes.ListOfStringType,
+															// The service sorts and deduplicates values, so they are a set.
+															names.AttrValues: schema.SetAttribute{
+																CustomType:  fwtypes.SetOfStringType,
 																ElementType: types.StringType,
 																Required:    true,
+																Validators: []validator.Set{
+																	setvalidator.SizeBetween(1, 100),
+																	setvalidator.ValueStringsAre(
+																		stringvalidator.LengthBetween(1, 256),
+																	),
+																},
 															},
 														},
 													},
@@ -227,6 +294,92 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 		},
+	}
+}
+
+func (r *accessGrantResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data accessGrantResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// An absent block is an empty, not null, list, so presence is checked by length.
+	if !data.Principal.IsUnknown() {
+		principals, d := data.Principal.ToSlice(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		for i, principal := range principals {
+			if principal.PrincipalAttributes.IsUnknown() {
+				continue
+			}
+
+			principalPath := path.Root(names.AttrPrincipal).AtListIndex(i)
+			hasAttributes := principal.PrincipalAttributes.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+
+			if hasAttributes && !principal.PrincipalType.IsUnknown() && principal.PrincipalType.ValueEnum() != awstypes.AccessGrantPrincipalTypeIdcUser {
+				response.Diagnostics.AddAttributeError(
+					principalPath.AtName("principal_attribute"),
+					"Invalid Attribute Combination",
+					fmt.Sprintf("principal_attribute is only supported when principal_type is %q", awstypes.AccessGrantPrincipalTypeIdcUser),
+				)
+			}
+
+			if !hasAttributes && principal.PrincipalID.IsNull() {
+				response.Diagnostics.AddAttributeError(
+					principalPath,
+					"Missing Attribute Configuration",
+					"at least one of principal_id or principal_attribute must be specified",
+				)
+			}
+		}
+	}
+
+	if data.ScopedActions.IsUnknown() {
+		return
+	}
+
+	if !data.Permission.IsUnknown() && data.Permission.ValueEnum() == awstypes.AccessGrantPermissionCustom && data.ScopedActions.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
+		response.Diagnostics.AddAttributeError(
+			path.Root("scoped_action"),
+			"Missing Attribute Configuration",
+			fmt.Sprintf("at least one scoped_action must be specified when permission is %q", awstypes.AccessGrantPermissionCustom),
+		)
+	}
+
+	scopedActions, d := data.ScopedActions.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	for i, scopedAction := range scopedActions {
+		if scopedAction.Resources.IsUnknown() {
+			continue
+		}
+
+		resources, d := scopedAction.Resources.ToSlice(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		for j, scope := range resources {
+			if scope.SignalTypes.IsUnknown() || scope.RowScopeGroups.IsUnknown() {
+				continue
+			}
+
+			if hasSignalTypes, hasRowScopeGroups := !scope.SignalTypes.IsNull(), scope.RowScopeGroups.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0; hasSignalTypes != hasRowScopeGroups {
+				response.Diagnostics.AddAttributeError(
+					path.Root("scoped_action").AtListIndex(i).AtName("resource").AtListIndex(j),
+					"Invalid Attribute Combination",
+					"signal_types and row_scope_group must be specified together",
+				)
+			}
+		}
 	}
 }
 
@@ -602,5 +755,5 @@ type rowScopeGroupModel struct {
 type rowScopeModel struct {
 	Field    types.String                                  `tfsdk:"field"`
 	Operator fwtypes.StringEnum[awstypes.RowScopeOperator] `tfsdk:"operator"`
-	Values   fwtypes.ListOfString                          `tfsdk:"values"`
+	Values   fwtypes.SetOfString                           `tfsdk:"values"`
 }

@@ -381,7 +381,7 @@ func testAccAccessGrant_scopedAction(t *testing.T) {
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											names.AttrField: knownvalue.StringExact("serviceName"),
 											"operator":      tfknownvalue.StringExact(awstypes.RowScopeOperatorIn),
-											names.AttrValues: knownvalue.ListExact([]knownvalue.Check{
+											names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
 												knownvalue.StringExact("service-a"),
 												knownvalue.StringExact("service-b"),
 											}),
@@ -389,7 +389,7 @@ func testAccAccessGrant_scopedAction(t *testing.T) {
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											names.AttrField:  knownvalue.StringExact("accountId"),
 											"operator":       tfknownvalue.StringExact(awstypes.RowScopeOperatorIn),
-											names.AttrValues: knownvalue.ListSizeExact(1),
+											names.AttrValues: knownvalue.SetSizeExact(1),
 										}),
 									}),
 								}),
@@ -398,7 +398,7 @@ func testAccAccessGrant_scopedAction(t *testing.T) {
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											names.AttrField: knownvalue.StringExact("serviceName"),
 											"operator":      tfknownvalue.StringExact(awstypes.RowScopeOperatorIn),
-											names.AttrValues: knownvalue.ListExact([]knownvalue.Check{
+											names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
 												knownvalue.StringExact("service-c"),
 											}),
 										}),
@@ -425,6 +425,58 @@ func testAccAccessGrant_scopedAction(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "grant_id"),
 				ImportStateVerifyIdentifierAttribute: "grant_id",
+			},
+		},
+	})
+}
+
+func testAccAccessGrant_validation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchOmniServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessGrantDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccessGrant/validation_principal_attribute_type/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ExpectError: regexache.MustCompile(`principal_attribute is only supported when principal_type`),
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccessGrant/validation_principal_missing/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ExpectError: regexache.MustCompile(`at least one of principal_id or principal_attribute`),
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccessGrant/validation_custom_without_scoped_action/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ExpectError: regexache.MustCompile(`at least one scoped_action must be specified`),
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccessGrant/validation_row_scope_group_without_signal_types/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ExpectError: regexache.MustCompile(`signal_types and row_scope_group must be specified together`),
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccessGrant/validation_action_name/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ExpectError: regexache.MustCompile(`Invalid Attribute Value Match`),
 			},
 		},
 	})
