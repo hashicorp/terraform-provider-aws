@@ -71,7 +71,7 @@ var (
 	ResourceImage                                  = resourceImage
 	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
-	ResourceInferenceComponent                     = resourceInferenceComponent
+	ResourceInferenceComponent                     = newInferenceComponentResource
 	ResourceMlflowApp                              = newMlflowAppResource
 	ResourceMlflowTrackingServer                   = resourceMlflowTrackingServer
 	ResourceModel                                  = resourceModel

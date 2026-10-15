@@ -6,607 +6,639 @@ package sagemaker
 import (
 	"context"
 	"errors"
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/float32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	// Default create/update/delete timeouts. These are only the fallback values for the
-	// resource's user-overridable timeouts block, not fixed limits.
-	inferenceComponentInServiceDefaultTimeout = 30 * time.Minute
-	inferenceComponentDeletedDefaultTimeout   = 30 * time.Minute
-)
-
-// @SDKResource("aws_sagemaker_inference_component", name="Inference Component")
+// @FrameworkResource("aws_sagemaker_inference_component", name="Inference Component")
 // @Tags(identifierAttribute="arn")
-func resourceInferenceComponent() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceInferenceComponentCreate,
-		ReadWithoutTimeout:   resourceInferenceComponentRead,
-		UpdateWithoutTimeout: resourceInferenceComponentUpdate,
-		DeleteWithoutTimeout: resourceInferenceComponentDelete,
+// @IdentityAttribute("name")
+// @Testing(hasNoPreExistingResource=true)
+func newInferenceComponentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &inferenceComponentResource{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
+
+	return r, nil
+}
+
+type inferenceComponentResource struct {
+	framework.ResourceWithModel[inferenceComponentResourceModel]
+	framework.WithTimeouts
+	framework.WithImportByIdentity
+}
+
+func (r *inferenceComponentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrCreationTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			"endpoint_arn": framework.ARNAttributeComputedOnly(),
+			"endpoint_name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					inferenceComponentNameValidator,
+				},
+			},
+			"failure_reason": schema.StringAttribute{
+				Computed: true,
+			},
+			"last_modified_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					inferenceComponentNameValidator,
+				},
+			},
+			names.AttrStatus: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.InferenceComponentStatus](),
+				Computed:   true,
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			// variant_name is conditionally required: the CreateInferenceComponent API
+			// rejects a null value for a standard inference component but forbids it for
+			// an adapter inference component (one that sets base_inference_component_name),
+			// which instead inherits -- and echoes back on read -- the base component's
+			// variant. It is therefore Optional (requirement enforced server-side) and
+			// Computed (absorbs the inherited value so the adapter case does not force
+			// replacement or produce a perpetual diff).
+			"variant_name": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					inferenceComponentNameValidator,
+				},
+			},
 		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(inferenceComponentInServiceDefaultTimeout),
-			Update: schema.DefaultTimeout(inferenceComponentInServiceDefaultTimeout),
-			Delete: schema.DefaultTimeout(inferenceComponentDeletedDefaultTimeout),
-		},
-
-		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				names.AttrARN: {
-					Type:     schema.TypeString,
-					Computed: true,
+		Blocks: map[string]schema.Block{
+			"deployment_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentDeploymentConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
-				names.AttrCreationTime: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"endpoint_arn": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"failure_reason": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"last_modified_time": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"deployment_config": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"auto_rollback_configuration": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"alarms": {
-											Type:     schema.TypeList,
-											Optional: true,
-											MaxItems: 10,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"alarm_name": {
-														Type:     schema.TypeString,
-														Required: true,
-													},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"auto_rollback_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentAutoRollbackConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"alarms": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentAlarmModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(10),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"alarm_name": schema.StringAttribute{
+													Required: true,
 												},
 											},
 										},
 									},
 								},
 							},
-							"rolling_update_policy": {
-								Type:     schema.TypeList,
-								Required: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"maximum_batch_size": {
-											Type:     schema.TypeList,
-											Required: true,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													names.AttrType: {
-														Type:             schema.TypeString,
-														Required:         true,
-														ValidateDiagFunc: enum.Validate[awstypes.InferenceComponentCapacitySizeType](),
-													},
-													names.AttrValue: {
-														Type:         schema.TypeInt,
-														Required:     true,
-														ValidateFunc: validation.IntAtLeast(1),
-													},
-												},
-											},
+						},
+						"rolling_update_policy": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentRollingUpdatePolicyModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"maximum_execution_timeout_in_seconds": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.Between(600, 28800),
 										},
-										"maximum_execution_timeout_in_seconds": {
-											Type:         schema.TypeInt,
-											Optional:     true,
-											ValidateFunc: validation.IntBetween(600, 28800),
+									},
+									"wait_interval_in_seconds": schema.Int32Attribute{
+										Required: true,
+										Validators: []validator.Int32{
+											int32validator.Between(0, 3600),
 										},
-										"rollback_maximum_batch_size": {
-											Type:     schema.TypeList,
-											Optional: true,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													names.AttrType: {
-														Type:             schema.TypeString,
-														Required:         true,
-														ValidateDiagFunc: enum.Validate[awstypes.InferenceComponentCapacitySizeType](),
-													},
-													names.AttrValue: {
-														Type:         schema.TypeInt,
-														Required:     true,
-														ValidateFunc: validation.IntAtLeast(1),
-													},
-												},
-											},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"maximum_batch_size": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentCapacitySizeModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+											listvalidator.IsRequired(),
 										},
-										"wait_interval_in_seconds": {
-											Type:         schema.TypeInt,
-											Required:     true,
-											ValidateFunc: validation.IntBetween(0, 3600),
+										NestedObject: inferenceComponentCapacitySizeSchema(),
+									},
+									"rollback_maximum_batch_size": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentCapacitySizeModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
 										},
+										NestedObject: inferenceComponentCapacitySizeSchema(),
 									},
 								},
 							},
 						},
 					},
 				},
-				"endpoint_name": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ForceNew:     true,
-					ValidateFunc: validName,
+			},
+			"runtime_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentRuntimeConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
-				names.AttrName: {
-					Type:         schema.TypeString,
-					Required:     true,
-					ForceNew:     true,
-					ValidateFunc: validName,
-				},
-				"runtime_config": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Computed: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"copy_count": {
-								Type:         schema.TypeInt,
-								Required:     true,
-								ValidateFunc: validation.IntAtLeast(0),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"copy_count": schema.Int32Attribute{
+							Required: true,
+							Validators: []validator.Int32{
+								int32validator.AtLeast(0),
 							},
-							"current_copy_count": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
-							"desired_copy_count": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
-							"placement_status": {
-								Type:     schema.TypeList,
-								Computed: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"current_copy_count": {
-											Type:     schema.TypeInt,
-											Computed: true,
-										},
-										names.AttrInstanceType: {
-											Type:     schema.TypeString,
-											Computed: true,
-										},
+						},
+						"current_copy_count": schema.Int32Attribute{
+							Computed: true,
+						},
+						"desired_copy_count": schema.Int32Attribute{
+							Computed: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"placement_status": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentPlacementStatusModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"current_copy_count": schema.Int32Attribute{
+										Computed: true,
+									},
+									names.AttrInstanceType: schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.ProductionVariantInstanceType](),
+										Computed:   true,
 									},
 								},
 							},
 						},
 					},
 				},
-				"specification": {
-					Type:         schema.TypeList,
-					Optional:     true,
-					MaxItems:     1,
-					ExactlyOneOf: []string{"specification", "specifications"},
-					Elem: &schema.Resource{
-						Schema: inferenceComponentSpecificationSchema(),
-					},
+			},
+			"specification": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentSpecificationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.ExactlyOneOf(
+						path.MatchRoot("specification"),
+						path.MatchRoot("specifications"),
+					),
 				},
-				"specifications": {
-					Type:         schema.TypeList,
-					Optional:     true,
-					MinItems:     2,
-					ExactlyOneOf: []string{"specification", "specifications"},
-					Elem: &schema.Resource{
-						Schema: inferenceComponentSpecificationSchema(),
-					},
+				NestedObject: inferenceComponentSpecificationSchema(ctx),
+			},
+			"specifications": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentSpecificationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(2),
 				},
-				names.AttrStatus: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
-				// variant_name is conditionally required: the CreateInferenceComponent API
-				// rejects a null value for a standard inference component but forbids it for
-				// an adapter component (one that sets base_inference_component_name), which
-				// instead inherits — and echoes back on read — the base component's variant.
-				// It is therefore Optional (requirement enforced server-side) and Computed
-				// (absorbs the inherited value so the adapter case does not force replacement).
-				"variant_name": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: validName,
-				},
-			}
+				NestedObject: inferenceComponentSpecificationSchema(ctx),
+			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
 
-func inferenceComponentSpecificationSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"base_inference_component_name": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		// An adapter inference component (one that sets base_inference_component_name)
-		// omits this block and inherits the base component's compute resources, which the
-		// API then echoes back on read. Computed absorbs those inherited values so the
-		// adapter case does not produce a perpetual diff.
-		"compute_resource_requirements": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Computed: true,
-			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"max_memory_required_in_mb": {
-						Type:         schema.TypeInt,
-						Optional:     true,
-						ValidateFunc: validation.IntAtLeast(128),
-					},
-					"min_memory_required_in_mb": {
-						Type:         schema.TypeInt,
-						Required:     true,
-						ValidateFunc: validation.IntAtLeast(128),
-					},
-					"number_of_accelerator_devices_required": {
-						Type:         schema.TypeFloat,
-						Optional:     true,
-						ValidateFunc: validation.FloatAtLeast(1),
-					},
-					"number_of_cpu_cores_required": {
-						Type:         schema.TypeFloat,
-						Optional:     true,
-						ValidateFunc: validation.FloatAtLeast(0.25),
-					},
-				},
+func inferenceComponentCapacitySizeSchema() schema.NestedBlockObject {
+	return schema.NestedBlockObject{
+		Attributes: map[string]schema.Attribute{
+			names.AttrType: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.InferenceComponentCapacitySizeType](),
+				Required:   true,
 			},
-		},
-		"container": {
-			Type:     schema.TypeList,
-			Optional: true,
-			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"artifact_url": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"container_metrics_config": {
-						Type:     schema.TypeList,
-						Optional: true,
-						MaxItems: 1,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"metrics_endpoint": {
-									Type:     schema.TypeList,
-									Optional: true,
-									MaxItems: 1,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"metric_publish_frequency_in_seconds": {
-												Type:         schema.TypeInt,
-												Optional:     true,
-												Default:      60,
-												ValidateFunc: validation.IntInSlice([]int{10, 30, 60, 120, 180, 240, 300}),
-											},
-											"metrics_endpoint_path": {
-												Type:     schema.TypeString,
-												Required: true,
-												ValidateFunc: validation.All(
-													validation.StringLenBetween(1, 256),
-													validation.StringMatch(regexache.MustCompile(`^/`), "must start with '/'"),
-												),
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-					names.AttrEnvironment: {
-						Type:     schema.TypeMap,
-						Optional: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-					"image": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"resolved_image": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-				},
-			},
-		},
-		// The service may return a data_cache_config (e.g. caching enabled by default on
-		// accelerator instances) even when the block is omitted, so it is Computed to
-		// absorb that server-populated value without producing a perpetual diff.
-		"data_cache_config": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Computed: true,
-			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"enable_caching": {
-						Type:     schema.TypeBool,
-						Required: true,
-					},
-				},
-			},
-		},
-		names.AttrInstanceType: {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: enum.Validate[awstypes.ProductionVariantInstanceType](),
-		},
-		"model_name": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"scheduling_config": {
-			Type:     schema.TypeList,
-			Optional: true,
-			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"availability_zone_balance": {
-						Type:     schema.TypeList,
-						Optional: true,
-						MaxItems: 1,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"enforcement_mode": {
-									Type:             schema.TypeString,
-									Required:         true,
-									ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneBalanceEnforcementMode](),
-								},
-								"max_imbalance": {
-									Type:     schema.TypeInt,
-									Optional: true,
-								},
-							},
-						},
-					},
-					"placement_strategy": {
-						Type:             schema.TypeString,
-						Required:         true,
-						ValidateDiagFunc: enum.Validate[awstypes.InferenceComponentPlacementStrategy](),
-					},
-				},
-			},
-		},
-		"startup_parameters": {
-			Type:     schema.TypeList,
-			Optional: true,
-			MaxItems: 1,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"container_startup_health_check_timeout_in_seconds": {
-						Type:         schema.TypeInt,
-						Optional:     true,
-						ValidateFunc: validation.IntBetween(60, 3600),
-					},
-					"model_data_download_timeout_in_seconds": {
-						Type:         schema.TypeInt,
-						Optional:     true,
-						ValidateFunc: validation.IntBetween(60, 3600),
-					},
+			names.AttrValue: schema.Int32Attribute{
+				Required: true,
+				Validators: []validator.Int32{
+					int32validator.AtLeast(1),
 				},
 			},
 		},
 	}
 }
 
-func resourceInferenceComponentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
+func inferenceComponentSpecificationSchema(ctx context.Context) schema.NestedBlockObject {
+	return schema.NestedBlockObject{
+		Attributes: map[string]schema.Attribute{
+			"base_inference_component_name": schema.StringAttribute{
+				Optional: true,
+			},
+			names.AttrInstanceType: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ProductionVariantInstanceType](),
+				Optional:   true,
+			},
+			"model_name": schema.StringAttribute{
+				Optional: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			// An adapter inference component (one that sets base_inference_component_name)
+			// omits compute_resource_requirements and inherits the base component's compute
+			// resources, which the API echoes back on read. The individual attributes are
+			// Optional+Computed so server-populated values are absorbed without a perpetual
+			// diff. (The provider is served over Terraform protocol v5, which does not allow
+			// nested attributes, so this must be a block.)
+			"compute_resource_requirements": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentComputeResourceRequirementsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"max_memory_required_in_mb": schema.Int32Attribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.UseStateForUnknown(),
+							},
+							Validators: []validator.Int32{
+								int32validator.AtLeast(128),
+							},
+						},
+						"min_memory_required_in_mb": schema.Int32Attribute{
+							Required: true,
+							Validators: []validator.Int32{
+								int32validator.AtLeast(128),
+							},
+						},
+						"number_of_accelerator_devices_required": schema.Float32Attribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.Float32{
+								float32planmodifier.UseStateForUnknown(),
+							},
+							Validators: []validator.Float32{
+								float32validator.AtLeast(1),
+							},
+						},
+						"number_of_cpu_cores_required": schema.Float32Attribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.Float32{
+								float32planmodifier.UseStateForUnknown(),
+							},
+							Validators: []validator.Float32{
+								float32validator.AtLeast(0.25),
+							},
+						},
+					},
+				},
+			},
+			// The service may return a data_cache_config (e.g. caching enabled by default on
+			// accelerator instances) even when it is omitted.
+			"data_cache_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentDataCacheConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"enable_caching": schema.BoolAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
+			"container": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentContainerModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"artifact_url": schema.StringAttribute{
+							Optional: true,
+						},
+						names.AttrEnvironment: schema.MapAttribute{
+							CustomType:  fwtypes.MapOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+						},
+						"image": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
+						"resolved_image": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"container_metrics_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentContainerMetricsConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"metrics_endpoint": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentMetricsEndpointModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metric_publish_frequency_in_seconds": schema.Int32Attribute{
+													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.UseStateForUnknown(),
+													},
+													Validators: []validator.Int32{
+														int32validator.OneOf(10, 30, 60, 120, 180, 240, 300),
+													},
+												},
+												"metrics_endpoint_path": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 256),
+														stringvalidator.RegexMatches(regexache.MustCompile(`^/`), "must start with '/'"),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"scheduling_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentSchedulingConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"placement_strategy": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.InferenceComponentPlacementStrategy](),
+							Required:   true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"availability_zone_balance": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentAvailabilityZoneBalanceModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"enforcement_mode": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.AvailabilityZoneBalanceEnforcementMode](),
+										Required:   true,
+									},
+									"max_imbalance": schema.Int32Attribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"startup_parameters": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentStartupParametersModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"container_startup_health_check_timeout_in_seconds": schema.Int32Attribute{
+							Optional: true,
+							Validators: []validator.Int32{
+								int32validator.Between(60, 3600),
+							},
+						},
+						"model_data_download_timeout_in_seconds": schema.Int32Attribute{
+							Optional: true,
+							Validators: []validator.Int32{
+								int32validator.Between(60, 3600),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
 
-	name := d.Get(names.AttrName).(string)
-	input := &sagemaker.CreateInferenceComponentInput{
-		InferenceComponentName: aws.String(name),
-		EndpointName:           aws.String(d.Get("endpoint_name").(string)),
-		Tags:                   getTagsIn(ctx),
+func (r *inferenceComponentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().SageMakerClient(ctx)
+
+	var plan inferenceComponentResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("variant_name"); ok {
-		input.VariantName = aws.String(v.(string))
+	var input sagemaker.CreateInferenceComponentInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("runtime_config"); ok && len(v.([]any)) > 0 {
-		input.RuntimeConfig = expandInferenceComponentRuntimeConfig(v.([]any))
-	}
+	input.Tags = getTagsIn(ctx)
 
-	if v, ok := d.GetOk("specification"); ok && len(v.([]any)) > 0 {
-		input.Specification = expandInferenceComponentSpecification(v.([]any)[0].(map[string]any))
-	}
-
-	if v, ok := d.GetOk("specifications"); ok && len(v.([]any)) > 0 {
-		input.Specifications = expandInferenceComponentSpecifications(v.([]any))
-	}
-
-	_, err := conn.CreateInferenceComponent(ctx, input)
+	name := plan.InferenceComponentName.ValueString()
+	_, err := conn.CreateInferenceComponent(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Inference Component (%s): %s", name, err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
 	}
 
-	d.SetId(name)
-
-	if err := waitInferenceComponentInService(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Inference Component (%s) to be in service: %s", d.Id(), err)
-	}
-
-	return append(diags, resourceInferenceComponentRead(ctx, d, meta)...)
-}
-
-func resourceInferenceComponentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
-
-	output, err := findInferenceComponentByName(ctx, conn, d.Id())
-	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] SageMaker Inference Component (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	out, err := waitInferenceComponentInService(ctx, conn, name, createTimeout)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Inference Component (%s): %s", d.Id(), err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
 	}
 
-	d.Set(names.AttrARN, output.InferenceComponentArn)
-	d.Set(names.AttrName, output.InferenceComponentName)
-	d.Set("endpoint_arn", output.EndpointArn)
-	d.Set("endpoint_name", output.EndpointName)
-	d.Set("variant_name", output.VariantName)
-	d.Set(names.AttrStatus, string(output.InferenceComponentStatus))
-	d.Set("failure_reason", output.FailureReason)
-
-	if output.CreationTime != nil {
-		d.Set(names.AttrCreationTime, aws.ToTime(output.CreationTime).Format(time.RFC3339))
+	r.flatten(ctx, out, &plan, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if output.LastModifiedTime != nil {
-		d.Set("last_modified_time", aws.ToTime(output.LastModifiedTime).Format(time.RFC3339))
-	}
-
-	if err := d.Set("runtime_config", flattenInferenceComponentRuntimeConfigSummary(output.RuntimeConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting runtime_config: %s", err)
-	}
-
-	if output.Specification != nil {
-		if err := d.Set("specification", []any{flattenInferenceComponentSpecificationSummary(output.Specification)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting specification: %s", err)
-		}
-		d.Set("specifications", nil)
-	} else if output.Specifications != nil {
-		d.Set("specification", nil)
-		if err := d.Set("specifications", flattenInferenceComponentSpecificationSummaries(output.Specifications)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting specifications: %s", err)
-		}
-	} else {
-		d.Set("specification", nil)
-		d.Set("specifications", nil)
-	}
-
-	// deployment_config is an update-only rollout directive: the CreateInferenceComponent
-	// API does not accept it, and DescribeInferenceComponent only reports it via
-	// LastDeploymentConfig after an update has occurred. To avoid perpetual diffs on
-	// resources that were never updated, we preserve the configured value in state rather
-	// than refreshing it from the API.
-
-	return diags
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func resourceInferenceComponentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
+func (r *inferenceComponentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().SageMakerClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &sagemaker.UpdateInferenceComponentInput{
-			InferenceComponentName: aws.String(d.Id()),
+	var state inferenceComponentResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	name := state.InferenceComponentName.ValueString()
+	out, err := findInferenceComponentByName(ctx, conn, name)
+	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	r.flatten(ctx, out, &state, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+}
+
+// flatten maps the DescribeInferenceComponent output into the resource model.
+//
+// deployment_config is intentionally preserved from the prior model value rather
+// than refreshed: it is an update-only rollout directive that the API does not
+// return via DescribeInferenceComponent (only as LastDeploymentConfig after an
+// update), so refreshing it would produce perpetual diffs.
+func (r *inferenceComponentResource) flatten(ctx context.Context, out *sagemaker.DescribeInferenceComponentOutput, data *inferenceComponentResourceModel, diags *diag.Diagnostics) {
+	deploymentConfig := data.DeploymentConfig
+
+	diags.Append(fwflex.Flatten(ctx, out, data)...)
+	if diags.HasError() {
+		return
+	}
+
+	data.DeploymentConfig = deploymentConfig
+}
+
+func (r *inferenceComponentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().SageMakerClient(ctx)
+
+	var plan, state inferenceComponentResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	name := plan.InferenceComponentName.ValueString()
+
+	// UpdateInferenceComponent requires RuntimeConfig or a Specification; it rejects a
+	// request that carries only a DeploymentConfig. A deployment_config-only change
+	// therefore does not trigger an API call -- the directive only governs how a future
+	// spec/runtime change rolls out, so the new value is simply persisted to state.
+	specOrRuntimeChanged := !plan.RuntimeConfig.Equal(state.RuntimeConfig) ||
+		!plan.Specification.Equal(state.Specification) ||
+		!plan.Specifications.Equal(state.Specifications)
+
+	if specOrRuntimeChanged {
+		var input sagemaker.UpdateInferenceComponentInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input), smerr.ID, name)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
-		// UpdateInferenceComponent requires RuntimeConfig or a Specification; it rejects a
-		// request carrying only the name or only a DeploymentConfig. Track whether one of
-		// the required fields is populated so we skip a no-op/invalid API call (e.g. when
-		// the sole change is clearing an optional block).
-		var hasSpecOrRuntime bool
-
-		if d.HasChange("runtime_config") {
-			if v, ok := d.GetOk("runtime_config"); ok && len(v.([]any)) > 0 {
-				input.RuntimeConfig = expandInferenceComponentRuntimeConfig(v.([]any))
-				hasSpecOrRuntime = true
-			}
+		_, err := conn.UpdateInferenceComponent(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
 		}
 
-		if d.HasChange("specification") {
-			if v, ok := d.GetOk("specification"); ok && len(v.([]any)) > 0 {
-				input.Specification = expandInferenceComponentSpecification(v.([]any)[0].(map[string]any))
-				hasSpecOrRuntime = true
-			}
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		out, err := waitInferenceComponentInService(ctx, conn, name, updateTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
 		}
 
-		if d.HasChange("specifications") {
-			if v, ok := d.GetOk("specifications"); ok && len(v.([]any)) > 0 {
-				input.Specifications = expandInferenceComponentSpecifications(v.([]any))
-				hasSpecOrRuntime = true
-			}
-		}
-
-		// deployment_config only governs how a spec/runtime change rolls out, so it is
-		// attached to the request but never triggers one on its own.
-		if d.HasChange("deployment_config") {
-			if v, ok := d.GetOk("deployment_config"); ok && len(v.([]any)) > 0 {
-				input.DeploymentConfig = expandInferenceComponentDeploymentConfig(v.([]any))
-			}
-		}
-
-		if hasSpecOrRuntime {
-			_, err := conn.UpdateInferenceComponent(ctx, input)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating SageMaker Inference Component (%s): %s", d.Id(), err)
-			}
-
-			if err := waitInferenceComponentInService(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Inference Component (%s) to be in service: %s", d.Id(), err)
-			}
+		r.flatten(ctx, out, &plan, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 	}
 
-	return append(diags, resourceInferenceComponentRead(ctx, d, meta)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func resourceInferenceComponentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
+func (r *inferenceComponentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().SageMakerClient(ctx)
 
-	log.Printf("[INFO] Deleting SageMaker Inference Component: %s", d.Id())
-	// A delete may be rejected with a transient conflict: the component still has an
-	// adapter component attached and being torn down ("is a base inference component
-	// for one or more associated"), or it is mid-transition (Creating/Updating). Retry
-	// only those cases. A component already in DELETE_IN_PROGRESS is treated as success
-	// below rather than retried, since the delete has effectively been accepted.
-	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
+	var state inferenceComponentResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	name := state.InferenceComponentName.ValueString()
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+
+	// A delete may be rejected with a transient conflict: the component is still a base
+	// inference component for one or more associated adapter components that are being
+	// torn down. Retry only that case. A component already in DELETE_IN_PROGRESS, or
+	// already gone, is treated as success below rather than retried.
+	_, err := tfresource.RetryWhen(ctx, deleteTimeout,
 		func(ctx context.Context) (any, error) {
 			return conn.DeleteInferenceComponent(ctx, &sagemaker.DeleteInferenceComponentInput{
-				InferenceComponentName: aws.String(d.Id()),
+				InferenceComponentName: aws.String(name),
 			})
 		},
 		func(err error) (bool, error) {
@@ -616,49 +648,48 @@ func resourceInferenceComponentDelete(ctx context.Context, d *schema.ResourceDat
 			return false, err
 		})
 
-	// Already gone, or a concurrent/prior delete is already in progress. In both cases
-	// the component will be (or already is being) removed, so fall through to the wait.
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find inference component") ||
 		tfawserr.ErrMessageContains(err, ErrCodeValidationException, "DELETE_IN_PROGRESS") {
 		err = nil
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Inference Component (%s): %s", d.Id(), err)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
 	}
 
-	if err := waitInferenceComponentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Inference Component (%s) to be deleted: %s", d.Id(), err)
+	if _, err := waitInferenceComponentDeleted(ctx, conn, name, deleteTimeout); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+		return
 	}
-
-	return diags
 }
 
 func findInferenceComponentByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeInferenceComponentOutput, error) {
-	input := &sagemaker.DescribeInferenceComponentInput{
+	input := sagemaker.DescribeInferenceComponentInput{
 		InferenceComponentName: aws.String(name),
 	}
 
-	output, err := conn.DescribeInferenceComponent(ctx, input)
+	output, err := conn.DescribeInferenceComponent(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find inference component") {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
-		}
+		})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
+	// Treat a component that is being deleted as gone for drift-detection purposes.
 	if output.InferenceComponentStatus == awstypes.InferenceComponentStatusDeleting {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			Message: string(output.InferenceComponentStatus),
-		}
+		})
 	}
 
 	return output, nil
@@ -673,7 +704,7 @@ func statusInferenceComponent(conn *sagemaker.Client, name string) retry.StateRe
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return output, string(output.InferenceComponentStatus), nil
@@ -683,29 +714,27 @@ func statusInferenceComponent(conn *sagemaker.Client, name string) retry.StateRe
 // statusInferenceComponentForDeletion reports the real status, including Deleting,
 // rather than collapsing Deleting to not-found the way findInferenceComponentByName
 // does for drift detection. This lets the delete waiter block until the component is
-// genuinely gone (a bare "Could not find" from Describe), which matters when a base
-// component's deletion must wait for its adapter component to be fully removed first.
+// genuinely gone, which matters when a base component's deletion must wait for its
+// adapter component to be fully removed first.
 func statusInferenceComponentForDeletion(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		input := &sagemaker.DescribeInferenceComponentInput{
+		output, err := conn.DescribeInferenceComponent(ctx, &sagemaker.DescribeInferenceComponentInput{
 			InferenceComponentName: aws.String(name),
-		}
-
-		output, err := conn.DescribeInferenceComponent(ctx, input)
+		})
 
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find inference component") {
 			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return output, string(output.InferenceComponentStatus), nil
 	}
 }
 
-func waitInferenceComponentInService(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) error {
+func waitInferenceComponentInService(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeInferenceComponentOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InferenceComponentStatusCreating, awstypes.InferenceComponentStatusUpdating),
 		Target:  enum.Slice(awstypes.InferenceComponentStatusInService),
@@ -714,474 +743,215 @@ func waitInferenceComponentInService(ctx context.Context, conn *sagemaker.Client
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*sagemaker.DescribeInferenceComponentOutput); ok {
 		if status, reason := output.InferenceComponentStatus, aws.ToString(output.FailureReason); status == awstypes.InferenceComponentStatusFailed && reason != "" {
 			retry.SetLastError(err, errors.New(reason))
 		}
-		return err
+		return output, smarterr.NewError(err)
 	}
 
-	return err
+	return nil, smarterr.NewError(err)
 }
 
-func waitInferenceComponentDeleted(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) error {
-	// Use the deletion-aware status refresh so the wait blocks through the Deleting
-	// state until the component is actually gone, rather than returning as soon as
-	// deletion begins.
+func waitInferenceComponentDeleted(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeInferenceComponentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.InferenceComponentStatusInService, awstypes.InferenceComponentStatusCreating, awstypes.InferenceComponentStatusUpdating, awstypes.InferenceComponentStatusFailed, awstypes.InferenceComponentStatusDeleting),
+		Pending: enum.Slice(
+			awstypes.InferenceComponentStatusInService,
+			awstypes.InferenceComponentStatusCreating,
+			awstypes.InferenceComponentStatusUpdating,
+			awstypes.InferenceComponentStatusFailed,
+			awstypes.InferenceComponentStatusDeleting,
+		),
 		Target:  []string{},
 		Refresh: statusInferenceComponentForDeletion(conn, name),
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
-	return err
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*sagemaker.DescribeInferenceComponentOutput); ok {
+		return output, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
 }
 
-// Expand functions
+var inferenceComponentNameValidator = stringvalidator.All(
+	stringvalidator.LengthBetween(1, 63),
+	stringvalidator.RegexMatches(
+		regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`),
+		"must contain only alphanumeric characters and hyphens, and must not begin or end with a hyphen",
+	),
+)
 
-func expandInferenceComponentRuntimeConfig(tfList []any) *awstypes.InferenceComponentRuntimeConfig {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-
-	tfMap := tfList[0].(map[string]any)
-	return &awstypes.InferenceComponentRuntimeConfig{
-		CopyCount: aws.Int32(int32(tfMap["copy_count"].(int))),
-	}
+type inferenceComponentResourceModel struct {
+	framework.WithRegionModel
+	CreationTime             timetypes.RFC3339                                                        `tfsdk:"creation_time"`
+	DeploymentConfig         fwtypes.ListNestedObjectValueOf[inferenceComponentDeploymentConfigModel] `tfsdk:"deployment_config"`
+	EndpointARN              types.String                                                             `tfsdk:"endpoint_arn"`
+	EndpointName             types.String                                                             `tfsdk:"endpoint_name"`
+	FailureReason            types.String                                                             `tfsdk:"failure_reason"`
+	InferenceComponentARN    types.String                                                             `tfsdk:"arn"`
+	InferenceComponentName   types.String                                                             `tfsdk:"name"`
+	InferenceComponentStatus fwtypes.StringEnum[awstypes.InferenceComponentStatus]                    `tfsdk:"status"`
+	LastModifiedTime         timetypes.RFC3339                                                        `tfsdk:"last_modified_time"`
+	RuntimeConfig            fwtypes.ListNestedObjectValueOf[inferenceComponentRuntimeConfigModel]    `tfsdk:"runtime_config"`
+	Specification            fwtypes.ListNestedObjectValueOf[inferenceComponentSpecificationModel]    `tfsdk:"specification"`
+	Specifications           fwtypes.ListNestedObjectValueOf[inferenceComponentSpecificationModel]    `tfsdk:"specifications"`
+	Tags                     tftags.Map                                                               `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                               `tfsdk:"tags_all"`
+	Timeouts                 timeouts.Value                                                           `tfsdk:"timeouts"`
+	VariantName              types.String                                                             `tfsdk:"variant_name"`
 }
 
-func expandInferenceComponentSpecification(tfMap map[string]any) *awstypes.InferenceComponentSpecification {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &awstypes.InferenceComponentSpecification{}
-
-	if v, ok := tfMap["base_inference_component_name"].(string); ok && v != "" {
-		apiObject.BaseInferenceComponentName = aws.String(v)
-	}
-
-	if v, ok := tfMap["model_name"].(string); ok && v != "" {
-		apiObject.ModelName = aws.String(v)
-	}
-
-	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
-		apiObject.InstanceType = awstypes.ProductionVariantInstanceType(v)
-	}
-
-	if v, ok := tfMap["compute_resource_requirements"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ComputeResourceRequirements = expandInferenceComponentComputeResourceRequirements(v[0].(map[string]any))
-	}
-
-	if v, ok := tfMap["container"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Container = expandInferenceComponentContainerSpecification(v[0].(map[string]any))
-	}
-
-	if v, ok := tfMap["data_cache_config"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DataCacheConfig = expandInferenceComponentDataCacheConfig(v[0].(map[string]any))
-	}
-
-	if v, ok := tfMap["scheduling_config"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SchedulingConfig = expandInferenceComponentSchedulingConfig(v[0].(map[string]any))
-	}
-
-	if v, ok := tfMap["startup_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.StartupParameters = expandInferenceComponentStartupParameters(v[0].(map[string]any))
-	}
-
-	return apiObject
+type inferenceComponentRuntimeConfigModel struct {
+	CopyCount        types.Int32                                                             `tfsdk:"copy_count"`
+	CurrentCopyCount types.Int32                                                             `tfsdk:"current_copy_count"`
+	DesiredCopyCount types.Int32                                                             `tfsdk:"desired_copy_count"`
+	PlacementStatus  fwtypes.ListNestedObjectValueOf[inferenceComponentPlacementStatusModel] `tfsdk:"placement_status"`
 }
 
-func expandInferenceComponentSpecifications(tfList []any) []awstypes.InferenceComponentSpecification {
-	if len(tfList) == 0 {
-		return nil
+var _ fwflex.Flattener = &inferenceComponentRuntimeConfigModel{}
+
+// Flatten maps the InferenceComponentRuntimeConfigSummary (returned by Describe) onto
+// the model. The create/update request type carries only CopyCount, while the summary
+// reports CurrentCopyCount/DesiredCopyCount/PlacementStatus; copy_count is mapped from
+// DesiredCopyCount so the configured value is refreshed consistently (including import).
+func (m *inferenceComponentRuntimeConfigModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch t := v.(type) {
+	case awstypes.InferenceComponentRuntimeConfigSummary:
+		m.CopyCount = types.Int32PointerValue(t.DesiredCopyCount)
+		m.CurrentCopyCount = types.Int32PointerValue(t.CurrentCopyCount)
+		m.DesiredCopyCount = types.Int32PointerValue(t.DesiredCopyCount)
+		diags.Append(fwflex.Flatten(ctx, t.PlacementStatus, &m.PlacementStatus)...)
+	default:
+		diags.AddError("Unexpected Type", fmt.Sprintf("runtime_config flatten: %T", v))
 	}
 
-	apiObjects := make([]awstypes.InferenceComponentSpecification, 0, len(tfList))
-	for _, tfMapRaw := range tfList {
-		if tfMapRaw == nil {
-			continue
+	return diags
+}
+
+type inferenceComponentPlacementStatusModel struct {
+	CurrentCopyCount types.Int32                                                `tfsdk:"current_copy_count"`
+	InstanceType     fwtypes.StringEnum[awstypes.ProductionVariantInstanceType] `tfsdk:"instance_type"`
+}
+
+type inferenceComponentSpecificationModel struct {
+	BaseInferenceComponentName  types.String                                                                        `tfsdk:"base_inference_component_name"`
+	ComputeResourceRequirements fwtypes.ListNestedObjectValueOf[inferenceComponentComputeResourceRequirementsModel] `tfsdk:"compute_resource_requirements"`
+	Container                   fwtypes.ListNestedObjectValueOf[inferenceComponentContainerModel]                   `tfsdk:"container"`
+	DataCacheConfig             fwtypes.ListNestedObjectValueOf[inferenceComponentDataCacheConfigModel]             `tfsdk:"data_cache_config"`
+	InstanceType                fwtypes.StringEnum[awstypes.ProductionVariantInstanceType]                          `tfsdk:"instance_type"`
+	ModelName                   types.String                                                                        `tfsdk:"model_name"`
+	SchedulingConfig            fwtypes.ListNestedObjectValueOf[inferenceComponentSchedulingConfigModel]            `tfsdk:"scheduling_config"`
+	StartupParameters           fwtypes.ListNestedObjectValueOf[inferenceComponentStartupParametersModel]           `tfsdk:"startup_parameters"`
+}
+
+type inferenceComponentComputeResourceRequirementsModel struct {
+	MaxMemoryRequiredInMb              types.Int32   `tfsdk:"max_memory_required_in_mb"`
+	MinMemoryRequiredInMb              types.Int32   `tfsdk:"min_memory_required_in_mb"`
+	NumberOfAcceleratorDevicesRequired types.Float32 `tfsdk:"number_of_accelerator_devices_required"`
+	NumberOfCpuCoresRequired           types.Float32 `tfsdk:"number_of_cpu_cores_required"`
+}
+
+type inferenceComponentContainerModel struct {
+	ArtifactURL            types.String                                                                   `tfsdk:"artifact_url"`
+	ContainerMetricsConfig fwtypes.ListNestedObjectValueOf[inferenceComponentContainerMetricsConfigModel] `tfsdk:"container_metrics_config"`
+	Environment            fwtypes.MapOfString                                                            `tfsdk:"environment"`
+	Image                  types.String                                                                   `tfsdk:"image"`
+	ResolvedImage          types.String                                                                   `tfsdk:"resolved_image"`
+}
+
+var _ fwflex.Flattener = &inferenceComponentContainerModel{}
+
+// Flatten maps the InferenceComponentContainerSpecificationSummary (returned by
+// Describe) onto the model. The request type carries a flat Image, while the summary
+// reports a nested DeployedImage{SpecifiedImage, ResolvedImage}; image is mapped from
+// SpecifiedImage (the value the caller provided) and resolved_image from ResolvedImage.
+// The symmetric fields are expanded via plain AutoFlex (no custom Expander is needed).
+func (m *inferenceComponentContainerModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch t := v.(type) {
+	case awstypes.InferenceComponentContainerSpecificationSummary:
+		m.ArtifactURL = types.StringPointerValue(t.ArtifactUrl)
+
+		if t.DeployedImage != nil {
+			m.Image = types.StringPointerValue(t.DeployedImage.SpecifiedImage)
+			m.ResolvedImage = types.StringPointerValue(t.DeployedImage.ResolvedImage)
+		} else {
+			m.Image = types.StringNull()
+			m.ResolvedImage = types.StringNull()
 		}
-		tfMap := tfMapRaw.(map[string]any)
-		apiObject := expandInferenceComponentSpecification(tfMap)
-		if apiObject != nil {
-			apiObjects = append(apiObjects, *apiObject)
+
+		if len(t.Environment) > 0 {
+			diags.Append(fwflex.Flatten(ctx, t.Environment, &m.Environment)...)
+		} else {
+			m.Environment = fwtypes.NewMapValueOfNull[types.String](ctx)
 		}
-	}
 
-	return apiObjects
-}
-
-func expandInferenceComponentComputeResourceRequirements(tfMap map[string]any) *awstypes.InferenceComponentComputeResourceRequirements {
-	apiObject := &awstypes.InferenceComponentComputeResourceRequirements{
-		MinMemoryRequiredInMb: aws.Int32(int32(tfMap["min_memory_required_in_mb"].(int))),
-	}
-
-	if v, ok := tfMap["max_memory_required_in_mb"].(int); ok && v > 0 {
-		apiObject.MaxMemoryRequiredInMb = aws.Int32(int32(v))
-	}
-
-	if v, ok := tfMap["number_of_accelerator_devices_required"].(float64); ok && v > 0 {
-		apiObject.NumberOfAcceleratorDevicesRequired = aws.Float32(float32(v))
-	}
-
-	if v, ok := tfMap["number_of_cpu_cores_required"].(float64); ok && v > 0 {
-		apiObject.NumberOfCpuCoresRequired = aws.Float32(float32(v))
-	}
-
-	return apiObject
-}
-
-func expandInferenceComponentContainerSpecification(tfMap map[string]any) *awstypes.InferenceComponentContainerSpecification {
-	apiObject := &awstypes.InferenceComponentContainerSpecification{}
-
-	if v, ok := tfMap["artifact_url"].(string); ok && v != "" {
-		apiObject.ArtifactUrl = aws.String(v)
-	}
-
-	if v, ok := tfMap["image"].(string); ok && v != "" {
-		apiObject.Image = aws.String(v)
-	}
-
-	if v, ok := tfMap[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
-		apiObject.Environment = flex.ExpandStringValueMap(v)
-	}
-
-	if v, ok := tfMap["container_metrics_config"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ContainerMetricsConfig = expandInferenceComponentContainerMetricsConfig(v[0].(map[string]any))
-	}
-
-	return apiObject
-}
-
-func expandInferenceComponentContainerMetricsConfig(tfMap map[string]any) *awstypes.ContainerMetricsConfig {
-	apiObject := &awstypes.ContainerMetricsConfig{}
-
-	if v, ok := tfMap["metrics_endpoint"].([]any); ok && len(v) > 0 && v[0] != nil {
-		endpointMap := v[0].(map[string]any)
-		metricsEndpoint := awstypes.MetricsEndpoint{
-			MetricsEndpointPath: aws.String(endpointMap["metrics_endpoint_path"].(string)),
+		if t.ContainerMetricsConfig != nil {
+			diags.Append(fwflex.Flatten(ctx, t.ContainerMetricsConfig, &m.ContainerMetricsConfig)...)
+		} else {
+			m.ContainerMetricsConfig = fwtypes.NewListNestedObjectValueOfNull[inferenceComponentContainerMetricsConfigModel](ctx)
 		}
-		if freq, ok := endpointMap["metric_publish_frequency_in_seconds"].(int); ok && freq > 0 {
-			metricsEndpoint.MetricPublishFrequencyInSeconds = int32(freq)
-		}
-		apiObject.MetricsEndpoints = []awstypes.MetricsEndpoint{metricsEndpoint}
+	default:
+		diags.AddError("Unexpected Type", fmt.Sprintf("container flatten: %T", v))
 	}
 
-	return apiObject
+	return diags
 }
 
-func expandInferenceComponentDataCacheConfig(tfMap map[string]any) *awstypes.InferenceComponentDataCacheConfig {
-	return &awstypes.InferenceComponentDataCacheConfig{
-		EnableCaching: aws.Bool(tfMap["enable_caching"].(bool)),
-	}
+type inferenceComponentContainerMetricsConfigModel struct {
+	MetricsEndpoints fwtypes.ListNestedObjectValueOf[inferenceComponentMetricsEndpointModel] `tfsdk:"metrics_endpoint"`
 }
 
-func expandInferenceComponentSchedulingConfig(tfMap map[string]any) *awstypes.InferenceComponentSchedulingConfig {
-	apiObject := &awstypes.InferenceComponentSchedulingConfig{
-		PlacementStrategy: awstypes.InferenceComponentPlacementStrategy(tfMap["placement_strategy"].(string)),
-	}
-
-	if v, ok := tfMap["availability_zone_balance"].([]any); ok && len(v) > 0 && v[0] != nil {
-		azMap := v[0].(map[string]any)
-		azBalance := &awstypes.InferenceComponentAvailabilityZoneBalance{
-			EnforcementMode: awstypes.AvailabilityZoneBalanceEnforcementMode(azMap["enforcement_mode"].(string)),
-		}
-		if maxImbalance, ok := azMap["max_imbalance"].(int); ok && maxImbalance > 0 {
-			azBalance.MaxImbalance = aws.Int32(int32(maxImbalance))
-		}
-		apiObject.AvailabilityZoneBalance = azBalance
-	}
-
-	return apiObject
+type inferenceComponentMetricsEndpointModel struct {
+	MetricPublishFrequencyInSeconds types.Int32  `tfsdk:"metric_publish_frequency_in_seconds"`
+	MetricsEndpointPath             types.String `tfsdk:"metrics_endpoint_path"`
 }
 
-func expandInferenceComponentStartupParameters(tfMap map[string]any) *awstypes.InferenceComponentStartupParameters {
-	apiObject := &awstypes.InferenceComponentStartupParameters{}
-
-	if v, ok := tfMap["container_startup_health_check_timeout_in_seconds"].(int); ok && v > 0 {
-		apiObject.ContainerStartupHealthCheckTimeoutInSeconds = aws.Int32(int32(v))
-	}
-
-	if v, ok := tfMap["model_data_download_timeout_in_seconds"].(int); ok && v > 0 {
-		apiObject.ModelDataDownloadTimeoutInSeconds = aws.Int32(int32(v))
-	}
-
-	return apiObject
+type inferenceComponentDataCacheConfigModel struct {
+	EnableCaching types.Bool `tfsdk:"enable_caching"`
 }
 
-func expandInferenceComponentDeploymentConfig(tfList []any) *awstypes.InferenceComponentDeploymentConfig {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-
-	tfMap := tfList[0].(map[string]any)
-	apiObject := &awstypes.InferenceComponentDeploymentConfig{}
-
-	if v, ok := tfMap["rolling_update_policy"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.RollingUpdatePolicy = expandInferenceComponentRollingUpdatePolicy(v[0].(map[string]any))
-	}
-
-	if v, ok := tfMap["auto_rollback_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AutoRollbackConfiguration = expandInferenceComponentAutoRollbackConfig(v[0].(map[string]any))
-	}
-
-	return apiObject
+type inferenceComponentSchedulingConfigModel struct {
+	AvailabilityZoneBalance fwtypes.ListNestedObjectValueOf[inferenceComponentAvailabilityZoneBalanceModel] `tfsdk:"availability_zone_balance"`
+	PlacementStrategy       fwtypes.StringEnum[awstypes.InferenceComponentPlacementStrategy]                `tfsdk:"placement_strategy"`
 }
 
-func expandInferenceComponentRollingUpdatePolicy(tfMap map[string]any) *awstypes.InferenceComponentRollingUpdatePolicy {
-	apiObject := &awstypes.InferenceComponentRollingUpdatePolicy{
-		WaitIntervalInSeconds: aws.Int32(int32(tfMap["wait_interval_in_seconds"].(int))),
-	}
-
-	if v, ok := tfMap["maximum_batch_size"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.MaximumBatchSize = expandInferenceComponentCapacitySize(v[0].(map[string]any))
-	}
-
-	if v, ok := tfMap["maximum_execution_timeout_in_seconds"].(int); ok && v > 0 {
-		apiObject.MaximumExecutionTimeoutInSeconds = aws.Int32(int32(v))
-	}
-
-	if v, ok := tfMap["rollback_maximum_batch_size"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.RollbackMaximumBatchSize = expandInferenceComponentCapacitySize(v[0].(map[string]any))
-	}
-
-	return apiObject
+type inferenceComponentAvailabilityZoneBalanceModel struct {
+	EnforcementMode fwtypes.StringEnum[awstypes.AvailabilityZoneBalanceEnforcementMode] `tfsdk:"enforcement_mode"`
+	MaxImbalance    types.Int32                                                         `tfsdk:"max_imbalance"`
 }
 
-func expandInferenceComponentCapacitySize(tfMap map[string]any) *awstypes.InferenceComponentCapacitySize {
-	return &awstypes.InferenceComponentCapacitySize{
-		Type:  awstypes.InferenceComponentCapacitySizeType(tfMap[names.AttrType].(string)),
-		Value: aws.Int32(int32(tfMap[names.AttrValue].(int))),
-	}
+type inferenceComponentStartupParametersModel struct {
+	ContainerStartupHealthCheckTimeoutInSeconds types.Int32 `tfsdk:"container_startup_health_check_timeout_in_seconds"`
+	ModelDataDownloadTimeoutInSeconds           types.Int32 `tfsdk:"model_data_download_timeout_in_seconds"`
 }
 
-func expandInferenceComponentAutoRollbackConfig(tfMap map[string]any) *awstypes.AutoRollbackConfig {
-	apiObject := &awstypes.AutoRollbackConfig{}
-
-	if v, ok := tfMap["alarms"].([]any); ok && len(v) > 0 {
-		apiObject.Alarms = expandAlarms(v)
-	}
-
-	return apiObject
+type inferenceComponentDeploymentConfigModel struct {
+	AutoRollbackConfiguration fwtypes.ListNestedObjectValueOf[inferenceComponentAutoRollbackConfigModel]  `tfsdk:"auto_rollback_configuration"`
+	RollingUpdatePolicy       fwtypes.ListNestedObjectValueOf[inferenceComponentRollingUpdatePolicyModel] `tfsdk:"rolling_update_policy"`
 }
 
-// Flatten functions
-
-func flattenInferenceComponentRuntimeConfigSummary(apiObject *awstypes.InferenceComponentRuntimeConfigSummary) []any {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{
-		"current_copy_count": aws.ToInt32(apiObject.CurrentCopyCount),
-		"desired_copy_count": aws.ToInt32(apiObject.DesiredCopyCount),
-		"placement_status":   flattenInferenceComponentPlacementStatus(apiObject.PlacementStatus),
-	}
-
-	if apiObject.DesiredCopyCount != nil {
-		tfMap["copy_count"] = aws.ToInt32(apiObject.DesiredCopyCount)
-	} else if apiObject.CurrentCopyCount != nil {
-		tfMap["copy_count"] = aws.ToInt32(apiObject.CurrentCopyCount)
-	}
-
-	return []any{tfMap}
+type inferenceComponentAutoRollbackConfigModel struct {
+	Alarms fwtypes.ListNestedObjectValueOf[inferenceComponentAlarmModel] `tfsdk:"alarms"`
 }
 
-func flattenInferenceComponentPlacementStatus(apiObjects []awstypes.InferenceComponentPlacementStatus) []any {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	tfList := make([]any, 0, len(apiObjects))
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]any{
-			"current_copy_count":   aws.ToInt32(apiObject.CurrentCopyCount),
-			names.AttrInstanceType: string(apiObject.InstanceType),
-		})
-	}
-
-	return tfList
+type inferenceComponentAlarmModel struct {
+	AlarmName types.String `tfsdk:"alarm_name"`
 }
 
-func flattenInferenceComponentSpecificationSummary(apiObject *awstypes.InferenceComponentSpecificationSummary) map[string]any {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{}
-
-	if apiObject.BaseInferenceComponentName != nil {
-		tfMap["base_inference_component_name"] = aws.ToString(apiObject.BaseInferenceComponentName)
-	}
-
-	if apiObject.ModelName != nil {
-		tfMap["model_name"] = aws.ToString(apiObject.ModelName)
-	}
-
-	if apiObject.InstanceType != "" {
-		tfMap[names.AttrInstanceType] = string(apiObject.InstanceType)
-	}
-
-	if apiObject.ComputeResourceRequirements != nil {
-		tfMap["compute_resource_requirements"] = flattenInferenceComponentComputeResourceRequirements(apiObject.ComputeResourceRequirements)
-	}
-
-	if apiObject.Container != nil {
-		tfMap["container"] = flattenInferenceComponentContainerSummary(apiObject.Container)
-	}
-
-	if apiObject.DataCacheConfig != nil {
-		tfMap["data_cache_config"] = flattenInferenceComponentDataCacheConfigSummary(apiObject.DataCacheConfig)
-	}
-
-	if apiObject.SchedulingConfig != nil {
-		tfMap["scheduling_config"] = flattenInferenceComponentSchedulingConfig(apiObject.SchedulingConfig)
-	}
-
-	if apiObject.StartupParameters != nil {
-		tfMap["startup_parameters"] = flattenInferenceComponentStartupParameters(apiObject.StartupParameters)
-	}
-
-	return tfMap
+type inferenceComponentRollingUpdatePolicyModel struct {
+	MaximumBatchSize                 fwtypes.ListNestedObjectValueOf[inferenceComponentCapacitySizeModel] `tfsdk:"maximum_batch_size"`
+	MaximumExecutionTimeoutInSeconds types.Int32                                                          `tfsdk:"maximum_execution_timeout_in_seconds"`
+	RollbackMaximumBatchSize         fwtypes.ListNestedObjectValueOf[inferenceComponentCapacitySizeModel] `tfsdk:"rollback_maximum_batch_size"`
+	WaitIntervalInSeconds            types.Int32                                                          `tfsdk:"wait_interval_in_seconds"`
 }
 
-func flattenInferenceComponentSpecificationSummaries(apiObjects []awstypes.InferenceComponentSpecificationSummary) []any {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	tfList := make([]any, 0, len(apiObjects))
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenInferenceComponentSpecificationSummary(&apiObject))
-	}
-
-	return tfList
-}
-
-func flattenInferenceComponentComputeResourceRequirements(apiObject *awstypes.InferenceComponentComputeResourceRequirements) []any {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{
-		"min_memory_required_in_mb": aws.ToInt32(apiObject.MinMemoryRequiredInMb),
-	}
-
-	if apiObject.MaxMemoryRequiredInMb != nil {
-		tfMap["max_memory_required_in_mb"] = aws.ToInt32(apiObject.MaxMemoryRequiredInMb)
-	}
-
-	if apiObject.NumberOfAcceleratorDevicesRequired != nil {
-		tfMap["number_of_accelerator_devices_required"] = aws.ToFloat32(apiObject.NumberOfAcceleratorDevicesRequired)
-	}
-
-	if apiObject.NumberOfCpuCoresRequired != nil {
-		tfMap["number_of_cpu_cores_required"] = aws.ToFloat32(apiObject.NumberOfCpuCoresRequired)
-	}
-
-	return []any{tfMap}
-}
-
-func flattenInferenceComponentContainerSummary(apiObject *awstypes.InferenceComponentContainerSpecificationSummary) []any {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{}
-
-	if apiObject.DeployedImage != nil {
-		if apiObject.DeployedImage.SpecifiedImage != nil {
-			tfMap["image"] = aws.ToString(apiObject.DeployedImage.SpecifiedImage)
-		}
-		if apiObject.DeployedImage.ResolvedImage != nil {
-			tfMap["resolved_image"] = aws.ToString(apiObject.DeployedImage.ResolvedImage)
-		}
-	}
-
-	if apiObject.ArtifactUrl != nil {
-		tfMap["artifact_url"] = aws.ToString(apiObject.ArtifactUrl)
-	}
-
-	if len(apiObject.Environment) > 0 {
-		tfMap[names.AttrEnvironment] = apiObject.Environment
-	}
-
-	if apiObject.ContainerMetricsConfig != nil {
-		tfMap["container_metrics_config"] = flattenInferenceComponentContainerMetricsConfig(apiObject.ContainerMetricsConfig)
-	}
-
-	return []any{tfMap}
-}
-
-func flattenInferenceComponentContainerMetricsConfig(apiObject *awstypes.ContainerMetricsConfig) []any {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{}
-
-	if len(apiObject.MetricsEndpoints) > 0 {
-		endpoint := apiObject.MetricsEndpoints[0]
-		endpointMap := map[string]any{
-			"metrics_endpoint_path":               aws.ToString(endpoint.MetricsEndpointPath),
-			"metric_publish_frequency_in_seconds": int(endpoint.MetricPublishFrequencyInSeconds),
-		}
-		tfMap["metrics_endpoint"] = []any{endpointMap}
-	}
-
-	return []any{tfMap}
-}
-
-func flattenInferenceComponentDataCacheConfigSummary(apiObject *awstypes.InferenceComponentDataCacheConfigSummary) []any {
-	if apiObject == nil {
-		return nil
-	}
-
-	return []any{map[string]any{
-		"enable_caching": aws.ToBool(apiObject.EnableCaching),
-	}}
-}
-
-func flattenInferenceComponentSchedulingConfig(apiObject *awstypes.InferenceComponentSchedulingConfig) []any {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{
-		"placement_strategy": string(apiObject.PlacementStrategy),
-	}
-
-	if apiObject.AvailabilityZoneBalance != nil {
-		azMap := map[string]any{
-			"enforcement_mode": string(apiObject.AvailabilityZoneBalance.EnforcementMode),
-		}
-		if apiObject.AvailabilityZoneBalance.MaxImbalance != nil {
-			azMap["max_imbalance"] = aws.ToInt32(apiObject.AvailabilityZoneBalance.MaxImbalance)
-		}
-		tfMap["availability_zone_balance"] = []any{azMap}
-	}
-
-	return []any{tfMap}
-}
-
-func flattenInferenceComponentStartupParameters(apiObject *awstypes.InferenceComponentStartupParameters) []any {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{}
-
-	if apiObject.ContainerStartupHealthCheckTimeoutInSeconds != nil {
-		tfMap["container_startup_health_check_timeout_in_seconds"] = aws.ToInt32(apiObject.ContainerStartupHealthCheckTimeoutInSeconds)
-	}
-
-	if apiObject.ModelDataDownloadTimeoutInSeconds != nil {
-		tfMap["model_data_download_timeout_in_seconds"] = aws.ToInt32(apiObject.ModelDataDownloadTimeoutInSeconds)
-	}
-
-	return []any{tfMap}
+type inferenceComponentCapacitySizeModel struct {
+	Type  fwtypes.StringEnum[awstypes.InferenceComponentCapacitySizeType] `tfsdk:"type"`
+	Value types.Int32                                                     `tfsdk:"value"`
 }
