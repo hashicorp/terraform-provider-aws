@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_iam_policy_document: Fix `cannot unmarshal object` errors when a policy in `source_policy_documents` or `override_policy_documents` has a single `Statement` object instead of an array
+```
