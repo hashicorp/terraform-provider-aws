@@ -6,8 +6,14 @@
 package route53domains
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -140,7 +146,7 @@ func (r *delegationSignerRecordResource) Create(ctx context.Context, request res
 		return
 	}
 
-	dnssecKey, err := findDNSSECKeyByThreePartKey(ctx, conn, data.DomainName.ValueString(), int(signingAttributes.Flags.ValueInt64()), signingAttributes.PublicKey.ValueString())
+	dnssecKey, err := findDNSSECKeyByThreePartKey(ctx, conn, data.DomainName.ValueString(), int(signingAttributes.Flags.ValueInt64()), int(signingAttributes.Algorithm.ValueInt64()), signingAttributes.PublicKey.ValueString())
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key", data.DomainName.ValueString()), err.Error())
@@ -176,6 +182,18 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 	conn := r.Meta().Route53DomainsClient(ctx)
 
 	dnssecKey, err := findDNSSECKeyByTwoPartKey(ctx, conn, data.DomainName.ValueString(), data.DNSSECKeyID.ValueString())
+
+	// Fallback to digest-based lookup if ID-based lookup fails (handles registry ID format changes)
+	if retry.NotFound(err) {
+		signingAttributes, diags := data.SigningAttributes.ToPtr(ctx)
+		if !diags.HasError() && signingAttributes != nil {
+			// Try digest-based fallback for .uk/.co.uk and other registry-limited TLDs
+			dnssecKey, err = findDNSSECKeyByThreePartKey(ctx, conn, data.DomainName.ValueString(),
+				int(signingAttributes.Flags.ValueInt64()),
+				int(signingAttributes.Algorithm.ValueInt64()),
+				signingAttributes.PublicKey.ValueString())
+		}
+	}
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -284,14 +302,73 @@ func findDNSSECKeyByTwoPartKey(ctx context.Context, conn *route53domains.Client,
 	}))
 }
 
-func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Client, domainName string, flags int, publicKey string) (*awstypes.DnssecKey, error) {
+func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Client, domainName string, flags int, algorithm int, publicKey string) (*awstypes.DnssecKey, error) {
 	output, err := findDomainDetailByName(ctx, conn, domainName)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
+	// For most TLDs, AWS returns full DNSSEC key info (Flags, PublicKey).
+	// For .uk/.co.uk domains managed by Nominet registry, AWS returns only partial data.
+	// Try exact match first on Flags + PublicKey (standard TLDs).
+	result, err := tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
 		return int(aws.ToInt32(v.Flags)) == flags && aws.ToString(v.PublicKey) == publicKey
 	}))
+
+	// Fallback: If exact match fails but keys exist, compute RFC 4034 digest locally
+	// and match against the AWS-returned Digest field (always present, registrar-agnostic).
+	// This handles registry limitations and multi-key scenarios (e.g., during key rollover).
+	if err != nil && len(output.DnssecKeys) > 0 {
+		expectedDigest := calculateExpectedDigest(domainName, flags, algorithm, publicKey)
+
+		fallbackResult, fallbackErr := tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
+			return strings.EqualFold(aws.ToString(v.Digest), expectedDigest)
+		}))
+
+		if fallbackErr == nil {
+			return fallbackResult, nil
+		}
+	}
+
+	return result, err
+}
+
+// calculateExpectedDigest generates the RFC 4034 compliant SHA-256 digest
+// from Terraform resource configuration. This is deterministic and works
+// across all registrars since AWS always returns the Digest field.
+func calculateExpectedDigest(domainName string, flags int, algorithm int, publicKey string) string {
+	var buf bytes.Buffer
+
+	// 1. Convert domain name to DNS wire-format labels (lowercase per RFC 4034)
+	domain := strings.ToLower(strings.TrimSuffix(domainName, "."))
+	if domain != "" {
+		labels := strings.Split(domain, ".")
+		for _, label := range labels {
+			buf.WriteByte(byte(len(label)))
+			buf.WriteString(label)
+		}
+	}
+	buf.WriteByte(0) // Root label terminator
+
+	// 2. Append Flags (16-bit, Big Endian)
+	flagsBytes := make([]byte, 2)
+	binary.BigEndian.PutUint16(flagsBytes, uint16(flags))
+	buf.Write(flagsBytes)
+
+	// 3. Append Protocol (8-bit, always 3 for DNSSEC)
+	buf.WriteByte(3)
+
+	// 4. Append Algorithm (8-bit)
+	buf.WriteByte(byte(algorithm))
+
+	// 5. Append Public Key (Base64 decoded)
+	pubKeyBytes, err := base64.StdEncoding.DecodeString(publicKey)
+	if err == nil {
+		buf.Write(pubKeyBytes)
+	}
+
+	// 6. Compute SHA-256 and return as uppercase hex
+	hash := sha256.Sum256(buf.Bytes())
+	return strings.ToUpper(hex.EncodeToString(hash[:]))
 }
