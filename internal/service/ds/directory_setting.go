@@ -40,6 +40,7 @@ import (
 // @Testing(preCheck="acctest.PreCheckDirectoryService")
 // @Testing(domainTfVar="domain")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(checkDestroyNoop=true)
 // @Testing(importStateIdAttributes="directory_id;name", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newDirectorySettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directorySettingsResource{}

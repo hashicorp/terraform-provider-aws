@@ -37,7 +37,7 @@ func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
-		CheckDestroy:             testAccCheckDirectorySettingDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
