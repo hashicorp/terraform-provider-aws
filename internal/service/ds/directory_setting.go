@@ -208,14 +208,8 @@ func (r *directorySettingsResource) Update(ctx context.Context, req resource.Upd
 
 func waitDirectorySettingUpdated(ctx context.Context, conn *directoryservice.Client, directoryID, settingName string, timeout time.Duration) (*awstypes.SettingEntry, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(
-			awstypes.DirectoryConfigurationStatusRequested,
-			awstypes.DirectoryConfigurationStatusUpdating,
-		),
-		Target: enum.Slice(
-			awstypes.DirectoryConfigurationStatusUpdated,
-			awstypes.DirectoryConfigurationStatusDefault,
-		),
+		Pending: enum.Slice(awstypes.DirectoryConfigurationStatusRequested, awstypes.DirectoryConfigurationStatusUpdating),
+		Target:  enum.Slice(awstypes.DirectoryConfigurationStatusUpdated, awstypes.DirectoryConfigurationStatusDefault),
 		Refresh: statusDirectorySetting(conn, directoryID, settingName),
 		Timeout: timeout,
 	}
