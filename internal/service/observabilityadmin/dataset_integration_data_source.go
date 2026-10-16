@@ -5,12 +5,12 @@ package observabilityadmin
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -35,7 +35,8 @@ func (d *datasetIntegrationDataSource) Schema(ctx context.Context, request datas
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -70,6 +71,11 @@ func (d *datasetIntegrationDataSource) Read(ctx context.Context, request datasou
 		return
 	}
 
+	if len(summaries) == 0 {
+		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("no dataset integration found in %s", d.Meta().Region(ctx)))
+		return
+	}
+
 	// At most one dataset integration exists per account and Region.
 	summary, err := tfresource.AssertSingleValueResult(summaries)
 	if err != nil {
@@ -87,7 +93,7 @@ func (d *datasetIntegrationDataSource) Read(ctx context.Context, request datasou
 
 type datasetIntegrationDataSourceModel struct {
 	framework.WithRegionModel
-	ARN       types.String      `tfsdk:"arn"`
+	ARN       fwtypes.ARN       `tfsdk:"arn"`
 	CreatedAt timetypes.RFC3339 `tfsdk:"created_at"`
 	RoleARN   fwtypes.ARN       `tfsdk:"role_arn"`
 	Tags      tftags.Map        `tfsdk:"tags"`

@@ -22,6 +22,7 @@ func TestAccObservabilityAdmin_serial(t *testing.T) {
 		},
 		"DatasetIntegrationDataSource": {
 			acctest.CtBasic: testAccDatasetIntegrationDataSource_basic,
+			"notFound":      testAccDatasetIntegrationDataSource_notFound,
 			"tags":          testAccObservabilityAdminDatasetIntegrationDataSource_tagsSerial,
 		},
 		"S3TableIntegration": {

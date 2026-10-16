@@ -4,6 +4,7 @@
 package observabilityadmin_test
 
 import (
+	"github.com/YakDriver/regexache"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -41,6 +42,25 @@ func testAccDatasetIntegrationDataSource_basic(t *testing.T) {
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrRoleARN), resourceName, tfjsonpath.New(names.AttrRoleARN), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("updated_at"), resourceName, tfjsonpath.New("updated_at"), compare.ValuesSame()),
 				},
+			},
+		},
+	})
+}
+
+func testAccDatasetIntegrationDataSource_notFound(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccDatasetIntegrationPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/DatasetIntegration/data.not_found/"),
+				ExpectError:     regexache.MustCompile(`no dataset integration found in`),
 			},
 		},
 	})

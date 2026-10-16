@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_observabilityadmin_dataset_integration
 
-Provides details about the CloudWatch Observability Admin Dataset Integration for the current account and Region.
+Provides details about the CloudWatch Observability Admin Dataset Integration for the current account and Region. Reading fails if no dataset integration exists in the Region.
 
 ## Example Usage
 

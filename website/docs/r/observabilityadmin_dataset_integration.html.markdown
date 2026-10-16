@@ -12,6 +12,15 @@ Manages a CloudWatch Observability Admin Dataset Integration. A dataset integrat
 
 ~> **NOTE:** Only one dataset integration can exist per account and Region. Creating a second one fails with a `ConflictException`. To manage an existing dataset integration, [import](#import) it.
 
+~> **NOTE:** A successful apply does not prove that forwarding works. If the execution role's trust policy names the wrong account in `aws:SourceAccount` or `aws:SourceArn`, or the role lacks the permissions below, the integration is still created but nothing is forwarded.
+
+Before you create the integration:
+
+* The caller needs `iam:PassRole` on the execution role to create or update the integration.
+* The execution role must be in the same account as the integration and must trust `logs.amazonaws.com`. Both trust policy conditions must name that account, as in the example below.
+* The role's `logs:IntegrateWithDataset` permissions decide which log groups are forwarded. `log-group:*` forwards all log groups in the account. Log groups in the Delivery log class are never forwarded.
+* If the destination dataset is encrypted with a customer managed AWS KMS key, the key policy must allow the execution role `kms:Encrypt`, `kms:Decrypt`, and `kms:GenerateDataKey`.
+
 ## Example Usage
 
 ### Basic Usage
@@ -37,7 +46,7 @@ resource "aws_iam_role" "example" {
           "aws:SourceAccount" = data.aws_caller_identity.current.account_id
         }
         ArnLike = {
-          "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:observabilityadmin:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:dataset-integration/*"
+          "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:observabilityadmin:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:dataset-integration/default"
         }
       }
     }]
@@ -58,7 +67,7 @@ resource "aws_iam_role_policy" "example" {
       {
         Effect   = "Allow"
         Action   = "cloudwatch:PutRecords"
-        Resource = "arn:${data.aws_partition.current.partition}:cloudwatch:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:dataset/*"
+        Resource = "*"
       },
     ]
   })
