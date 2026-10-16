@@ -62,7 +62,6 @@ func testAccAccessProfile_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkAccessProfileARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("assume_status"), tfknownvalue.StringExact(awstypes.AssumeStatusAllowed)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("profile_id"), checkAccessProfileID),
@@ -72,7 +71,6 @@ func testAccAccessProfile_basic(t *testing.T) {
 						"aws_cloudwatchomni_space.test", tfjsonpath.New("space_id"),
 						compare.ValuesSame(),
 					),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("updated_at"), knownvalue.NotNull()),
 				},
 			},
 			{

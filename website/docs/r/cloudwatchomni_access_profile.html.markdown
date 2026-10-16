@@ -53,10 +53,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the access profile.
 * `assume_status` - Whether the calling principal can assume the access profile. Valid values: `ALLOWED`, `DENIED`.
-* `created_at` - Date and time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), when the access profile was created.
 * `profile_id` - Unique identifier of the access profile.
 * `profile_type` - Who manages the access profile. Valid values: `CUSTOMER_MANAGED`, `SERVICE_MANAGED`.
-* `updated_at` - Date and time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), when the access profile was last updated.
 
 ## Timeouts
 

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -68,13 +67,6 @@ func (r *accessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 				CustomType: fwtypes.StringEnumType[awstypes.AssumeStatus](),
 				Computed:   true,
 			},
-			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
@@ -94,10 +86,6 @@ func (r *accessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -226,7 +214,6 @@ func (r *accessProfileResource) Update(ctx context.Context, req resource.UpdateR
 	} else {
 		// Computed attributes without UseStateForUnknown are unknown in the plan.
 		plan.AssumeStatus = state.AssumeStatus
-		plan.UpdatedAt = state.UpdatedAt
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -272,7 +259,7 @@ func (r *accessProfileResource) flatten(ctx context.Context, profile *awstypes.A
 		profile.Description = nil
 	}
 
-	return fwflex.Flatten(ctx, profile, data, fwflex.WithIgnoredFieldNamesAppend("Region"))
+	return fwflex.Flatten(ctx, profile, data)
 }
 
 func findAccessProfileByTwoPartKey(ctx context.Context, conn *cloudwatchomni.Client, spaceID, profileID string) (*awstypes.AccessProfile, error) {
@@ -350,14 +337,12 @@ type accessProfileResourceModel struct {
 	framework.WithRegionModel
 	ARN          types.String                                   `tfsdk:"arn"`
 	AssumeStatus fwtypes.StringEnum[awstypes.AssumeStatus]      `tfsdk:"assume_status"`
-	CreatedAt    timetypes.RFC3339                              `tfsdk:"created_at"`
 	Description  types.String                                   `tfsdk:"description"`
 	Name         types.String                                   `tfsdk:"name"`
 	ProfileID    types.String                                   `tfsdk:"profile_id"`
 	ProfileType  fwtypes.StringEnum[awstypes.AccessProfileType] `tfsdk:"profile_type"`
 	SpaceID      types.String                                   `tfsdk:"space_id"`
 	Timeouts     timeouts.Value                                 `tfsdk:"timeouts"`
-	UpdatedAt    timetypes.RFC3339                              `tfsdk:"updated_at"`
 }
 
 var _ inttypes.ImportIDParser = accessProfileImportID{}
