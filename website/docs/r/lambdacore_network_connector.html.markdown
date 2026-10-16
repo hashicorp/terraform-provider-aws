@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_lambdacore_network_connector
 
-Manages an AWS Lambda Network Connector. A network connector provisions elastic network interfaces (ENIs) in the subnets you specify, routing outbound traffic from [Lambda MicroVMs](https://docs.aws.amazon.com/lambda/latest/dg/microvms-networking.html) through your VPC — for example to reach private resources, or to give MicroVM traffic a stable source IP by exiting through your NAT gateway.
+Manages an AWS Lambda Network Connector. A network connector provisions elastic network interfaces (ENIs) in the subnets you specify, routing outbound traffic from [Lambda MicroVMs](https://docs.aws.amazon.com/lambda/latest/dg/microvms-networking.html) or [Lambda Web Functions](https://docs.aws.amazon.com/lambda/latest/dg/web-functions-networking.html) through your VPC — for example to reach private resources, or to give MicroVM traffic a stable source IP by exiting through your NAT gateway.
 
 ## Example Usage
 
@@ -109,6 +109,8 @@ The `vpc_egress_configuration` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the network connector.
+* `latest_version` - Number of the connector's latest version. Each configuration change creates a new immutable version.
+* `latest_version_arn` - Version-qualified ARN of the connector's latest version. Use it for `egress_network_connector_arn` on an `aws_lambdaweb_function` revision.
 
 ## Timeouts
 

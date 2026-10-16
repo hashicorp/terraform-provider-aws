@@ -1,0 +1,23 @@
+```release-note:new-resource
+aws_lambdaweb_function
+```
+
+```release-note:new-resource
+aws_lambdaweb_endpoint
+```
+
+```release-note:new-data-source
+aws_lambdaweb_function
+```
+
+```release-note:new-data-source
+aws_lambdaweb_endpoint
+```
+
+```release-note:new-resource
+aws_lambdaweb_resource_policy
+```
+
+```release-note:enhancement
+resource/aws_lambdacore_network_connector: Add `latest_version` and `latest_version_arn` attributes
+```
