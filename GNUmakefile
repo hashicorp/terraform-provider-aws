@@ -1384,7 +1384,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	smoke-core-services \
 	smoke-identity \
 	smoke-logging \
-	$(SMOKE_LOGGING_TARGETS) \
 	sweep \
 	sweeper \
 	sweeper-check \
