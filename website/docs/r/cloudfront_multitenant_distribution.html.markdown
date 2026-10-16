@@ -228,6 +228,7 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 
 * `origin_keepalive_timeout` - (Optional) Custom keep-alive timeout, in seconds. By default, CloudFront uses a default timeout. Default: 5.
 * `origin_read_timeout` - (Optional) Custom read timeout, in seconds. By default, CloudFront uses a default timeout. Default: 30.
+* `owner_account_id` - (Optional) AWS account ID that owns the VPC origin. Required when referencing a VPC origin shared from a different AWS account (cross-account VPC origin access).
 * `vpc_origin_id` - (Required) ID of the VPC origin that you want CloudFront to route requests to.
 
 ### Custom Error Response
