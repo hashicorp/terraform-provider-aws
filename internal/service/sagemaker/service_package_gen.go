@@ -65,6 +65,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newInferenceComponentResource,
+			TypeName: "aws_sagemaker_inference_component",
+			Name:     "Inference Component",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newLabelingJobResource,
 			TypeName: "aws_sagemaker_labeling_job",
 			Name:     "Labeling Job",
