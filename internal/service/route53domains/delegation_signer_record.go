@@ -228,7 +228,7 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 
 	data.SigningAttributes = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, signingAttributes)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
 func (r *delegationSignerRecordResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
