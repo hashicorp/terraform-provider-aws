@@ -28,7 +28,7 @@ resource "aws_resiliencehubv2_service" "test" {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = "${var.rName}-invoker"
+  name               = "${var.rName}-invoker"
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
