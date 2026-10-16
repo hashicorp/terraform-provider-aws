@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -126,9 +127,10 @@ func resourceTaskDefinition() *schema.Resource {
 					ValidateFunc:          validTaskDefinitionContainerDefinitions,
 				},
 				"cpu": {
-					Type:     schema.TypeString,
-					Optional: true,
-					ForceNew: true,
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressTaskDefinitionCPUDiffs,
 				},
 				"enable_fault_injection": {
 					Type:     schema.TypeBool,
@@ -174,9 +176,10 @@ func resourceTaskDefinition() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.IpcMode](),
 				},
 				"memory": {
-					Type:     schema.TypeString,
-					Optional: true,
-					ForceNew: true,
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressTaskDefinitionMemoryDiffs,
 				},
 				"network_mode": {
 					Type:             schema.TypeString,
@@ -816,6 +819,72 @@ func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, fami
 	}
 
 	return taskDefinition, tags, nil
+}
+
+// suppressTaskDefinitionCPUDiffs suppresses differences between equivalent
+// task-level CPU values. ECS accepts either CPU units (e.g. "1024") or a vCPU
+// string (e.g. "1 vCPU", ".25 vcpu") and always returns CPU units.
+func suppressTaskDefinitionCPUDiffs(_, old, new string, _ *schema.ResourceData) bool {
+	return taskDefinitionSizesEqual(old, new, "vcpu")
+}
+
+// suppressTaskDefinitionMemoryDiffs suppresses differences between equivalent
+// task-level memory values. ECS accepts either MiB (e.g. "2048") or a GB
+// string (e.g. "2GB", "2 GB") and always returns MiB.
+func suppressTaskDefinitionMemoryDiffs(_, old, new string, _ *schema.ResourceData) bool {
+	return taskDefinitionSizesEqual(old, new, "gb", "gib")
+}
+
+// taskDefinitionSizesEqual reports whether two task size values are equivalent,
+// falling back to a string comparison if either value cannot be normalized.
+func taskDefinitionSizesEqual(old, new string, units ...string) bool {
+	if old == new {
+		return true
+	}
+
+	o, ok := normalizeTaskDefinitionSize(old, units...)
+	if !ok {
+		return false
+	}
+	n, ok := normalizeTaskDefinitionSize(new, units...)
+	if !ok {
+		return false
+	}
+
+	return o == n
+}
+
+// normalizeTaskDefinitionSize converts a task size value to its base integer
+// unit (CPU units or MiB). A value with one of the given (case-insensitive)
+// unit suffixes is multiplied by 1024; a bare integer is returned unchanged.
+func normalizeTaskDefinitionSize(v string, units ...string) (int64, bool) {
+	v = strings.ToLower(strings.TrimSpace(v))
+	if v == "" {
+		return 0, false
+	}
+
+	for _, unit := range units {
+		if s, ok := strings.CutSuffix(v, unit); ok {
+			f, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
+			if err != nil || f <= 0 || math.IsInf(f, 0) || math.IsNaN(f) {
+				return 0, false
+			}
+
+			f *= 1024
+			if f != math.Trunc(f) || f > math.MaxInt64 {
+				return 0, false
+			}
+
+			return int64(f), true
+		}
+	}
+
+	i, err := strconv.ParseInt(v, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+
+	return i, true
 }
 
 func validTaskDefinitionContainerDefinitions(v any, k string) (ws []string, errors []error) {
