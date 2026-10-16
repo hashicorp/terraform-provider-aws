@@ -5,6 +5,8 @@ package main
 
 import (
 	"go/ast"
+	"go/parser"
+	"go/types"
 	"slices"
 	"testing"
 )
@@ -202,4 +204,151 @@ func TestParseAnnotations(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestIsCustomDiffCombinator(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		expr string
+		want bool
+	}{
+		"all": {
+			expr: "customdiff.All(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
+			want: true,
+		},
+		"sequence": {
+			expr: "customdiff.Sequence(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
+			want: true,
+		},
+		"all without arguments": {
+			expr: "customdiff.All()",
+			want: true,
+		},
+		"nested": {
+			expr: "customdiff.All(customdiff.Sequence(resourceBucketCustomizeDiff))",
+			want: true,
+		},
+		"other customdiff function": {
+			expr: `customdiff.ForceNewIfChange("size", sizeDecreased)`,
+		},
+		"conditional": {
+			expr: "customdiff.If(isNewResource, resourceBucketCustomizeDiff)",
+		},
+		"combinator not called": {
+			expr: "customdiff.All",
+		},
+		"different package": {
+			expr: "diff.All(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
+		},
+		"unqualified call": {
+			expr: "All(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
+		},
+		"ordinary call": {
+			expr: "resourceBucketCustomizeDiff()",
+		},
+		"identifier": {
+			expr: "resourceBucketCustomizeDiff",
+		},
+		"selector": {
+			expr: "verify.SetTagsDiff",
+		},
+		"function literal": {
+			expr: "func(ctx context.Context, d *schema.ResourceDiff, meta any) error { return nil }",
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := isCustomDiffCombinator(mustParseExpr(t, testCase.expr)); got != testCase.want {
+				t.Errorf("isCustomDiffCombinator(%s) = %t, want %t", testCase.expr, got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestCustomizeDiffFuncs(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		expr string
+		// want holds the returned expressions, formatted by types.ExprString.
+		want []string
+	}{
+		"identifier": {
+			expr: "resourceBucketCustomizeDiff",
+			want: []string{"resourceBucketCustomizeDiff"},
+		},
+		"selector": {
+			expr: "verify.SetTagsDiff",
+			want: []string{"verify.SetTagsDiff"},
+		},
+		"function literal": {
+			expr: "func(ctx context.Context, d *schema.ResourceDiff, meta any) error { return nil }",
+			want: []string{"(func(ctx context.Context, d *schema.ResourceDiff, meta any) error literal)"},
+		},
+		"ordinary call": {
+			expr: "resourceBucketCustomizeDiff()",
+			want: []string{"resourceBucketCustomizeDiff()"},
+		},
+		"other customdiff function": {
+			expr: `customdiff.ForceNewIfChange("size", sizeDecreased)`,
+			want: []string{`customdiff.ForceNewIfChange("size", sizeDecreased)`},
+		},
+		"all": {
+			expr: "customdiff.All(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
+			want: []string{"resourceBucketCustomizeDiff", "verify.SetTagsDiff"},
+		},
+		"sequence": {
+			expr: "customdiff.Sequence(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
+			want: []string{"resourceBucketCustomizeDiff", "verify.SetTagsDiff"},
+		},
+		"all without arguments": {
+			expr: "customdiff.All()",
+		},
+		"all with calls": {
+			expr: `customdiff.All(customdiff.ForceNewIfChange("size", sizeDecreased), validateBucket())`,
+			want: []string{`customdiff.ForceNewIfChange("size", sizeDecreased)`, "validateBucket()"},
+		},
+		"all with conditional": {
+			expr: "customdiff.All(resourceBucketCustomizeDiff, customdiff.If(isNewResource, validateBucket))",
+			want: []string{"resourceBucketCustomizeDiff", "customdiff.If(isNewResource, validateBucket)"},
+		},
+		"nested": {
+			expr: "customdiff.All(first, customdiff.Sequence(second, third), fourth)",
+			want: []string{"first", "second", "third", "fourth"},
+		},
+		"deeply nested": {
+			expr: "customdiff.Sequence(customdiff.All(customdiff.Sequence(first), second), customdiff.All(), third)",
+			want: []string{"first", "second", "third"},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			var got []string
+			for _, expr := range customizeDiffFuncs(mustParseExpr(t, testCase.expr)) {
+				got = append(got, types.ExprString(expr))
+			}
+
+			if !slices.Equal(got, testCase.want) {
+				t.Errorf("customizeDiffFuncs(%s) = %q, want %q", testCase.expr, got, testCase.want)
+			}
+		})
+	}
+}
+
+// mustParseExpr parses a Go expression, failing the test if it is invalid.
+func mustParseExpr(t *testing.T, src string) ast.Expr {
+	t.Helper()
+
+	expr, err := parser.ParseExpr(src)
+	if err != nil {
+		t.Fatalf("parsing %q: %s", src, err)
+	}
+	return expr
 }
