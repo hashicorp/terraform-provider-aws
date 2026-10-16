@@ -1643,7 +1643,6 @@ func expandWithElementsAs[T any](ctx context.Context, vFrom elementsAs, vTo refl
 
 	vTo.Set(reflect.ValueOf(to))
 	return diags
-
 }
 
 func diagExpandingSourceIsNil(sourceType reflect.Type) diag.ErrorDiagnostic {
