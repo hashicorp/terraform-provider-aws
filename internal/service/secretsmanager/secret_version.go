@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -32,6 +33,7 @@ import (
 
 const (
 	secretVersionStageCurrent  = "AWSCURRENT"
+	secretVersionStagePending  = "AWSPENDING"
 	secretVersionStagePrevious = "AWSPREVIOUS"
 )
 
@@ -272,9 +274,11 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return diags
 	}
 	if err != nil {
-		// The KMS key is unavailable. Keep the version and its last-known value, but
-		// not when state has no value (e.g. import), or a later configured value
-		// would be recorded by Update without calling PutSecretValue.
+		// When a secret's KMS key changes, Secrets Manager re-encrypts only the AWSCURRENT,
+		// AWSPENDING, and AWSPREVIOUS versions. Once the old key is gone, a version that had
+		// already been superseded can't be decrypted. It can't change either, so keep it and its
+		// last-known value. Don't do this when state has no value (e.g. import), or a later
+		// configured value would be recorded by Update without calling PutSecretValue.
 		_, hasSecretString := d.GetOk("secret_string")
 		_, hasSecretBinary := d.GetOk("secret_binary")
 		if isKMSKeyUnavailable(err) && (hasSecretString || hasSecretBinary) {
@@ -290,12 +294,18 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 				return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 			}
 
+			// An undecryptable AWSCURRENT or AWSPENDING version breaks the secret for its consumers.
+			// That must stay an error.
+			if !isSecretVersionSuperseded(versionEntry.VersionStages) {
+				return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), decryptErr)
+			}
+
 			d.Set(names.AttrARN, arn)
 			d.Set("secret_arn", arn)
 			d.Set("version_id", versionEntry.VersionId)
 			d.Set("version_stages", versionEntry.VersionStages)
 
-			return sdkdiag.AppendWarningf(diags, "Secrets Manager Secret Version (%s) cannot be decrypted because its KMS key is unavailable; using the secret value from state: %s", d.Id(), decryptErr)
+			return sdkdiag.AppendWarningf(diags, "Secrets Manager Secret Version (%s) is no longer current and cannot be decrypted because its KMS key is unavailable; using the secret value from state: %s", d.Id(), decryptErr)
 		}
 
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
@@ -328,6 +338,14 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 		o, n := d.GetChange("version_stages")
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+
+		// Don't move staging labels, AWSCURRENT in particular, onto a version that can't be decrypted.
+		// Other errors are reported by the Read that follows.
+		if len(add) > 0 && !flex.HasWriteOnlyValue(d, "secret_string_wo") {
+			if _, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID); isKMSKeyUnavailable(err) {
+				return sdkdiag.AppendErrorf(diags, "adding Secrets Manager Secret Version (%s) stages: version cannot be decrypted because its KMS key is unavailable: %s", d.Id(), err)
+			}
+		}
 
 		var listedVersionIDs bool
 		for _, stage := range add {
@@ -543,7 +561,14 @@ func isKMSKeyUnavailable(err error) bool {
 		return false
 	}
 	return errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "Error Code: KMSInvalidStateException") ||
-		errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "Error Code: DisabledException")
+		errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "Error Code: DisabledException") ||
+		errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "Error Code: NotFoundException")
+}
+
+// isSecretVersionSuperseded reports whether a version no longer carries a staging label that
+// consumers or rotation read from.
+func isSecretVersionSuperseded(stages []string) bool {
+	return !slices.Contains(stages, secretVersionStageCurrent) && !slices.Contains(stages, secretVersionStagePending)
 }
 
 const secretVersionIDSeparator = "|"

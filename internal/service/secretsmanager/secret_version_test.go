@@ -9,9 +9,11 @@ import (
 	"maps"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/google/go-cmp/cmp"
@@ -24,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -357,6 +360,10 @@ func TestIsKMSKeyUnavailable(t *testing.T) {
 			err:      &types.DecryptionFailure{Message: aws.String(prefix + " is disabled. (Service: AWSKMS; Status Code: 400; Error Code: DisabledException)")},
 			expected: true,
 		},
+		"deleted": {
+			err:      &types.DecryptionFailure{Message: aws.String(prefix + " does not exist. (Service: AWSKMS; Status Code: 400; Error Code: NotFoundException)")},
+			expected: true,
+		},
 		"creating": {
 			err: &types.DecryptionFailure{Message: aws.String(prefix + " is creating. (Service: AWSKMS; Status Code: 400; Error Code: KMSInvalidStateException)")},
 		},
@@ -373,6 +380,32 @@ func TestIsKMSKeyUnavailable(t *testing.T) {
 			t.Parallel()
 
 			if got := tfsecretsmanager.IsKMSKeyUnavailable(tc.err); got != tc.expected {
+				t.Errorf("expected %t, got %t", tc.expected, got)
+			}
+		})
+	}
+}
+
+func TestIsSecretVersionSuperseded(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		stages   []string
+		expected bool
+	}{
+		"no stages":   {expected: true},
+		"previous":    {stages: []string{"AWSPREVIOUS"}, expected: true},
+		"custom":      {stages: []string{"one"}, expected: true},
+		"current":     {stages: []string{"AWSCURRENT"}},
+		"pending":     {stages: []string{"AWSPENDING"}},
+		"current+one": {stages: []string{"one", "AWSCURRENT"}},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfsecretsmanager.IsSecretVersionSuperseded(tc.stages); got != tc.expected {
 				t.Errorf("expected %t, got %t", tc.expected, got)
 			}
 		})
@@ -580,9 +613,103 @@ func TestAccSecretsManagerSecretVersion_versionStagesExternalUpdate(t *testing.T
 	})
 }
 
-func TestAccSecretsManagerSecretVersion_kmsKeyUnavailable(t *testing.T) {
+// The customer scenario: another writer (rotation, another workspace) supersedes the managed version,
+// the secret moves to a new KMS key, and the old key is scheduled for deletion.
+func TestAccSecretsManagerSecretVersion_kmsKeyRotatedSupersededVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version secretsmanager.GetSecretValueOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretVersionConfig_kmsKeyRotation(rName, "old", true, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
+				),
+			},
+			{
+				// Two out-of-band versions move AWSCURRENT, then AWSPREVIOUS, off the managed version.
+				PreConfig: func() {
+					conn := acctest.ProviderMeta(ctx, t).SecretsManagerClient(ctx)
+
+					for _, v := range []string{"rotated-1", "rotated-2"} {
+						input := secretsmanager.PutSecretValueInput{
+							SecretId:     version.ARN,
+							SecretString: aws.String(v),
+						}
+						if _, err := conn.PutSecretValue(ctx, &input); err != nil {
+							t.Fatalf("putting Secrets Manager Secret value: %s", err)
+						}
+					}
+				},
+				Config: testAccSecretVersionConfig_kmsKeyRotation(rName, "old", true, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				// Secrets Manager re-encrypts AWSCURRENT and AWSPREVIOUS with the new key, not the managed version.
+				Config: testAccSecretVersionConfig_kmsKeyRotation(rName, "new", true, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				// Removing the old key schedules its deletion. The managed version can no longer be decrypted.
+				Config: testAccSecretVersionConfig_kmsKeyRotation(rName, "new", false, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				// Moving AWSCURRENT back onto the undecryptable version is refused.
+				Config:      testAccSecretVersionConfig_kmsKeyRotation(rName, "new", false, `version_stages = ["AWSCURRENT"]`),
+				ExpectError: regexache.MustCompile(`version cannot be decrypted because its KMS key is unavailable`),
+			},
+			{
+				// Without a value in state, there's nothing to fall back to.
+				Config:            testAccSecretVersionConfig_kmsKeyRotation(rName, "new", false, ""),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSecretVersionImportStateIdFunc(resourceName),
+				ExpectError:       regexache.MustCompile(`DecryptionFailure`),
+			},
+		},
+	})
+}
+
+// An undecryptable AWSCURRENT version breaks the secret for every consumer and remains an error.
+func TestAccSecretsManagerSecretVersion_kmsKeyUnavailableCurrentVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	var keyID string
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_version.test"
 
@@ -596,31 +723,39 @@ func TestAccSecretsManagerSecretVersion_kmsKeyUnavailable(t *testing.T) {
 				Config: testAccSecretVersionConfig_kmsKey(rName, "test-string", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, t, resourceName, &version),
-					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
-					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
+					func(s *terraform.State) error {
+						keyID = s.RootModule().Resources["aws_kms_key.test"].Primary.ID
+						return nil
+					},
 				),
 			},
 			{
-				Config: testAccSecretVersionConfig_kmsKey(rName, "test-string", false),
+				Config:      testAccSecretVersionConfig_kmsKey(rName, "test-string", false),
+				ExpectError: regexache.MustCompile(`DecryptionFailure`),
+			},
+			{
+				// Re-enable the key outside Terraform; refresh would fail otherwise.
+				PreConfig: func() {
+					input := kms.EnableKeyInput{
+						KeyId: aws.String(keyID),
+					}
+					if _, err := acctest.ProviderMeta(ctx, t).KMSClient(ctx).EnableKey(ctx, &input); err != nil {
+						t.Fatalf("enabling KMS Key (%s): %s", keyID, err)
+					}
+
+					conn := acctest.ProviderMeta(ctx, t).SecretsManagerClient(ctx)
+					_, err := tfresource.RetryWhenIsA[*secretsmanager.GetSecretValueOutput, *types.DecryptionFailure](ctx, 2*time.Minute, func(ctx context.Context) (*secretsmanager.GetSecretValueOutput, error) {
+						return tfsecretsmanager.FindSecretVersionByTwoPartKey(ctx, conn, aws.ToString(version.ARN), aws.ToString(version.VersionId))
+					})
+					if err != nil {
+						t.Fatalf("waiting for KMS Key (%s) enable: %s", keyID, err)
+					}
+				},
+				Config: testAccSecretVersionConfig_kmsKey(rName, "test-string", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
-					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
-					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-			},
-			{
-				Config:            testAccSecretVersionConfig_kmsKey(rName, "test-string", false),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSecretVersionImportStateIdFunc(resourceName),
-				ExpectError:       regexache.MustCompile(`DecryptionFailure`),
 			},
 		},
 	})
@@ -1407,6 +1542,37 @@ resource "aws_secretsmanager_secret_version" "test" {
   secret_string = %[2]q
 }
 `, rName, secret, enabled)
+}
+
+func testAccSecretVersionConfig_kmsKeyRotation(rName, secretKey string, oldKeyExists bool, versionStages string) string {
+	var oldKey string
+	if oldKeyExists {
+		oldKey = fmt.Sprintf(`
+resource "aws_kms_key" "old" {
+  description             = "%[1]s-old"
+  deletion_window_in_days = 7
+}
+`, rName)
+	}
+
+	return oldKey + fmt.Sprintf(`
+resource "aws_kms_key" "new" {
+  description             = "%[1]s-new"
+  deletion_window_in_days = 7
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  kms_key_id              = aws_kms_key.%[2]s.key_id
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = "test-string"
+  %[3]s
+}
+`, rName, secretKey, versionStages)
 }
 
 func testAccSecretVersionConfig_stagesSingle(rName string) string {

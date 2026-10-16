@@ -22,4 +22,5 @@ var (
 
 	SecretVersionForceNewCustomDiffInner = secretVersionForceNewCustomDiffInner
 	IsKMSKeyUnavailable                  = isKMSKeyUnavailable
+	IsSecretVersionSuperseded            = isSecretVersionSuperseded
 )
