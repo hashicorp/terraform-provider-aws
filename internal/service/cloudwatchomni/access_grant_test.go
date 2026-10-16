@@ -61,7 +61,6 @@ func testAccAccessGrant_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkAccessGrantARN),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("domain_id"), "aws_cloudwatchomni_domain.test", tfjsonpath.New("domain_id"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("grant_id"), checkAccessGrantID),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("grant_type"), tfknownvalue.StringExact(awstypes.AccessGrantTypeCustomerManaged)),
@@ -75,7 +74,6 @@ func testAccAccessGrant_basic(t *testing.T) {
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrPrincipal).AtSliceIndex(0).AtMapKey("principal_id"), "aws_iam_role.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scoped_action"), knownvalue.ListSizeExact(0)),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("space_id"), "aws_cloudwatchomni_space.test", tfjsonpath.New("space_id"), compare.ValuesSame()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("updated_at"), knownvalue.NotNull()),
 				},
 			},
 			{

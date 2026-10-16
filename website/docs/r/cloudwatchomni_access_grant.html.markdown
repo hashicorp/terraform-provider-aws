@@ -130,10 +130,8 @@ At least one of `principal_id` or `principal_attribute` must be specified.
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the access grant.
-* `created_at` - Time the access grant was created, in RFC3339 format.
 * `grant_id` - Unique ID of the access grant.
 * `grant_type` - Who manages the access grant.
-* `updated_at` - Time the access grant was last updated, in RFC3339 format.
 
 ~> **NOTE:** This resource does not support tags. `CreateAccessGrant` accepts tags, but CloudWatch Omni does not return them on read and provides no tag read or write operations, so tags could not be refreshed, updated, or imported.
 

@@ -7,14 +7,12 @@ import (
 	"context"
 	"fmt"
 	"iter"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -49,7 +47,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 // @Testing(importStateIdAttribute="grant_id")
-// @Testing(tagsTest=false)
 func newAccessGrantResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantResource{}
 
@@ -67,13 +64,6 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"domain_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -115,13 +105,6 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 				},
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`), "must be a CloudWatch Omni space ID"),
-				},
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
@@ -187,9 +170,8 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrActions: schema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringType,
-							ElementType: types.StringType,
-							Required:    true,
+							CustomType: fwtypes.ListOfStringType,
+							Required:   true,
 							Validators: []validator.List{
 								listvalidator.SizeBetween(1, 50),
 								listvalidator.ValueStringsAre(
@@ -199,9 +181,8 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 							},
 						},
 						"context_conditions": schema.MapAttribute{
-							CustomType:  fwtypes.MapOfListOfStringType,
-							ElementType: fwtypes.ListOfStringType,
-							Optional:    true,
+							CustomType: fwtypes.MapOfListOfStringType,
+							Optional:   true,
 							Validators: []validator.Map{
 								mapvalidator.SizeAtMost(10),
 							},
@@ -403,7 +384,6 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 
 	// A newly created IAM principal can take a while to become visible to CloudWatch Omni.
-	const propagationTimeout = 2 * time.Minute
 	output, err := tfresource.RetryWhenIsAErrorMessageContains[*cloudwatchomni.CreateAccessGrantOutput, *awstypes.ValidationException](ctx, propagationTimeout,
 		func(ctx context.Context) (*cloudwatchomni.CreateAccessGrantOutput, error) {
 			return conn.CreateAccessGrant(ctx, &input)
@@ -563,7 +543,6 @@ func listAccessGrantPages(ctx context.Context, conn *cloudwatchomni.Client, inpu
 
 type accessGrantResourceModel struct {
 	framework.WithRegionModel
-	CreatedAt     timetypes.RFC3339                                          `tfsdk:"created_at"`
 	DomainID      types.String                                               `tfsdk:"domain_id"`
 	GrantARN      types.String                                               `tfsdk:"arn"`
 	GrantID       types.String                                               `tfsdk:"grant_id"`
@@ -573,7 +552,6 @@ type accessGrantResourceModel struct {
 	Principal     fwtypes.ListNestedObjectValueOf[accessGrantPrincipalModel] `tfsdk:"principal"`
 	ScopedActions fwtypes.ListNestedObjectValueOf[scopedActionsModel]        `tfsdk:"scoped_action"`
 	SpaceID       types.String                                               `tfsdk:"space_id"`
-	UpdatedAt     timetypes.RFC3339                                          `tfsdk:"updated_at"`
 }
 
 type accessGrantPrincipalModel struct {

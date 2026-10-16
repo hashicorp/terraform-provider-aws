@@ -127,7 +127,6 @@ func testAccAccessGrant_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceDisplayName("aws_cloudwatchomni_access_grant.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_cloudwatchomni_access_grant.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkAccessGrantARN),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("domain_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("grant_id"), checkAccessGrantID),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("grant_type"), tfknownvalue.StringExact(awstypes.AccessGrantTypeCustomerManaged)),
@@ -137,7 +136,6 @@ func testAccAccessGrant_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("scoped_action"), knownvalue.ListSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("space_id"), knownvalue.NotNull()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("updated_at"), knownvalue.NotNull()),
 					}),
 
 					tfquerycheck.ExpectIdentityFunc("aws_cloudwatchomni_access_grant.test", identity2.Checks()),
