@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDSDirectorySettings_List_basic(t *testing.T) {
+func TestAccDSDirectorySetting_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -75,7 +75,7 @@ func TestAccDSDirectorySettings_List_basic(t *testing.T) {
 	})
 }
 
-func TestAccDSDirectorySettings_List_includeResource(t *testing.T) {
+func TestAccDSDirectorySetting_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -136,7 +136,7 @@ func TestAccDSDirectorySettings_List_includeResource(t *testing.T) {
 	})
 }
 
-func TestAccDSDirectorySettings_List_regionOverride(t *testing.T) {
+func TestAccDSDirectorySetting_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
