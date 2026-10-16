@@ -13,11 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -44,7 +47,6 @@ import (
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc="testAccAccessProfileImportStateIDFunc")
 // @Testing(importStateIdAttribute="profile_id")
-// @Testing(tagsTest=false)
 func newAccessProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessProfileResource{}
 
@@ -69,9 +71,15 @@ func (r *accessProfileResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 1024),
+				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 256),
+				},
 			},
 			"profile_id": framework.IDAttribute(),
 			"profile_type": schema.StringAttribute{
@@ -124,6 +132,9 @@ func (r *accessProfileResource) Create(ctx context.Context, req resource.CreateR
 	spaceID, profileID := fwflex.StringValueFromFramework(ctx, plan.SpaceID), aws.ToString(out.AccessProfile.ProfileId)
 	profile, err := waitAccessProfileCreated(ctx, conn, spaceID, profileID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
+		// Taint the resource.
+		resp.State.SetAttribute(ctx, path.Root("profile_id"), profileID)
+		resp.State.SetAttribute(ctx, path.Root("space_id"), spaceID)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, profileID)
 		return
 	}
@@ -194,7 +205,8 @@ func (r *accessProfileResource) Update(ctx context.Context, req resource.UpdateR
 			input.Description = aws.String("")
 		}
 
-		if _, err := conn.UpdateAccessProfile(ctx, &input); err != nil {
+		_, err := conn.UpdateAccessProfile(ctx, &input)
+		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, profileID)
 			return
 		}
@@ -245,21 +257,23 @@ func (r *accessProfileResource) Delete(ctx context.Context, req resource.DeleteR
 	const (
 		accessProfileDeletedTimeout = 5 * time.Minute
 	)
-	if _, err := tfresource.RetryUntilNotFound(ctx, accessProfileDeletedTimeout, func(ctx context.Context) (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, accessProfileDeletedTimeout, func(ctx context.Context) (any, error) {
 		return findAccessProfileByTwoPartKey(ctx, conn, spaceID, profileID)
-	}); err != nil {
+	})
+	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, profileID)
 		return
 	}
 }
 
 func (r *accessProfileResource) flatten(ctx context.Context, profile *awstypes.AccessProfile, data *accessProfileResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
 	// A cleared description may be returned as an empty string; treat it as absent.
 	if aws.ToString(profile.Description) == "" {
 		profile.Description = nil
 	}
-
-	return fwflex.Flatten(ctx, profile, data)
+	diags.Append(fwflex.Flatten(ctx, profile, data)...)
+	return diags
 }
 
 func findAccessProfileByTwoPartKey(ctx context.Context, conn *cloudwatchomni.Client, spaceID, profileID string) (*awstypes.AccessProfile, error) {

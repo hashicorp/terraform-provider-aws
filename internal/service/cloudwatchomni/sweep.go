@@ -19,8 +19,8 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_cloudwatchomni_access_profile", sweepAccessProfiles)
-	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space", "aws_cloudwatchomni_access_profile")
-	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces)
+	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space")
+	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces, "aws_cloudwatchomni_access_profile")
 	awsv2.Register("aws_cloudwatchomni_view", sweepViews)
 }
 
