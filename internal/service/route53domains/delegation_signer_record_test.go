@@ -147,20 +147,17 @@ resource "aws_route53domains_delegation_signer_record" "test" {
 // TestCalculateExpectedDigest verifies RFC 4034 compliant digest generation
 func TestCalculateExpectedDigest(t *testing.T) {
 	t.Run("Valid RFC 4034 digest generation", func(t *testing.T) {
-		// Example domain and key configuration
 		domainName := "example.com"
-		flags := 257       // KSK/ZSK
-		algorithm := 13    // ECDSAP256SHA256
+		flags := 257
+		algorithm := 13
 		publicKey := "AwEAAazJ1O4G2F9O7lYvRjWp1A5MvXk1zY7B2C4D5E6F7G8H9I0J"
 
 		digest := tfroute53domains.CalculateExpectedDigest(domainName, flags, algorithm, publicKey)
 
-		// Verify it returns a valid hex string (64 chars for SHA-256)
 		if len(digest) != 64 {
 			t.Errorf("Expected 64-char hex digest, got %d chars: %s", len(digest), digest)
 		}
 
-		// Verify it's uppercase hex
 		for _, ch := range digest {
 			if !((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F')) {
 				t.Errorf("Digest contains non-hex character: %c", ch)
@@ -189,7 +186,6 @@ func TestCalculateExpectedDigest(t *testing.T) {
 		algorithm := 13
 		invalidKey := "not_valid_base64!!!"
 
-		// Should not crash, just use empty key bytes
 		digest := tfroute53domains.CalculateExpectedDigest(domainName, flags, algorithm, invalidKey)
 
 		if len(digest) == 0 {
