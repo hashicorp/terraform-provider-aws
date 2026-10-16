@@ -745,6 +745,21 @@ func (r *inferenceComponentResource) Update(ctx context.Context, req resource.Up
 		if resp.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		// Nothing is sent to the API for a deployment_config-only change, but the
+		// Framework marks every Computed attribute with a null configuration value as
+		// unknown in the plan, and unknown values cannot be written to state. Refresh to
+		// resolve them; otherwise Terraform rejects the result object after apply.
+		out, err := findInferenceComponentByName(ctx, conn, name)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
+
+		r.flatten(ctx, out, &plan, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
