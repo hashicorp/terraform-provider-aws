@@ -1,5 +1,10 @@
 ## 6.70.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_cloudwatchomni_view` ([#50428](https://github.com/hashicorp/terraform-provider-aws/issues/50428))
+* **New Resource:** `aws_cloudwatchomni_view` ([#50428](https://github.com/hashicorp/terraform-provider-aws/issues/50428))
+
 BUG FIXES:
 
 * resource/aws_prometheus_scraper: Fix update failure on scrapers with a CloudWatch destination by omitting unchanged `destination` from update requests ([#50463](https://github.com/hashicorp/terraform-provider-aws/issues/50463))
