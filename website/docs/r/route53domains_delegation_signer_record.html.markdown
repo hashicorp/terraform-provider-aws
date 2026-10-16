@@ -118,7 +118,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `dnssec_key_id` - An ID assigned to the created DS record.
+* `dnssec_key_id` - Digest of the created DS record (as returned by the registry and published in the parent zone's DS record).
 
 ## Timeouts
 
@@ -129,7 +129,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import delegation signer records using the domain name and DNSSEC key ID, separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import delegation signer records using the domain name and DS record digest (`dnssec_key_id`), separated by a comma (`,`). The digest is the last field of the domain's DS record in the parent zone (e.g. `dig DS example.com`). After import, `signing_attributes` is not populated (the registry does not return the key's flags or public key); the next apply completes it in place without replacing the record. For example:
 
 ```terraform
 import {
@@ -138,7 +138,7 @@ import {
 }
 ```
 
-Using `terraform import`, import delegation signer records using the domain name and DNSSEC key ID, separated by a comma (`,`). For example:
+Using `terraform import`, import delegation signer records using the domain name and DS record digest, separated by a comma (`,`). For example:
 
 ```console
 % terraform import aws_route53domains_delegation_signer_record.example example.com,40DE3534F5324DBDAC598ACEDB5B1E26A5368732D9C791D1347E4FBDDF6FC343

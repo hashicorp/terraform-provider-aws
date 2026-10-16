@@ -37,10 +37,22 @@ func testAccDelegationSignerRecord_basic(t *testing.T) {
 				),
 			},
 			{
+				// GetDomainDetail does not return the key's flags or public key. Refresh must still
+				// find the record by its DS digest and must not plan a replacement (#47928).
+				Config: testAccDelegationSignerAssociationConfig_basic(domainName, publicKey),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateIdFunc: testAccDelegationSignerAssociationImportStateIDFunc(ctx, resourceName),
+				// Not returned by the API; completed in place on the next apply after import.
+				ImportStateVerifyIgnore: []string{"signing_attributes"},
 			},
 		},
 	})
@@ -83,7 +95,7 @@ func testAccCheckDelegationSignerAssociationDestroy(ctx context.Context, t *test
 		conn := acctest.ProviderMeta(ctx, t).Route53DomainsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_route53domains_ds_association" {
+			if rs.Type != "aws_route53domains_delegation_signer_record" {
 				continue
 			}
 
