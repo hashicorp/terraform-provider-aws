@@ -66,9 +66,9 @@ func TestAccDSDirectorySetting_List_basic(t *testing.T) {
 					"domain":        config.StringVariable(domain),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_directory_service_directory_setting.test", identity.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_directory_service_directory_setting.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
-					tfquerycheck.ExpectNoResourceObject("aws_directory_service_directory_setting.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
+					tfquerycheck.ExpectIdentityFunc(resourceName, identity.Checks()),
+					querycheck.ExpectResourceDisplayName(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
+					tfquerycheck.ExpectNoResourceObject(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
 				},
 			},
 		},
@@ -121,9 +121,9 @@ func TestAccDSDirectorySetting_List_includeResource(t *testing.T) {
 					"domain":        config.StringVariable(domain),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_directory_service_directory_setting.test", identity.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_directory_service_directory_setting.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
-					querycheck.ExpectResourceKnownValues("aws_directory_service_directory_setting.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
+					tfquerycheck.ExpectIdentityFunc(resourceName, identity.Checks()),
+					querycheck.ExpectResourceDisplayName(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
+					querycheck.ExpectResourceKnownValues(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("directory_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact("TLS_1_0")),
@@ -185,8 +185,8 @@ func TestAccDSDirectorySetting_List_regionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_directory_service_directory_setting.test", identity.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_directory_service_directory_setting.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
+					tfquerycheck.ExpectIdentityFunc(resourceName, identity.Checks()),
+					querycheck.ExpectResourceDisplayName(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
 				},
 			},
 		},
