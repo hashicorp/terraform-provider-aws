@@ -399,7 +399,7 @@ func TestAccWAFV2WebACLRule_rateBasedStatementScopeDownAndNotStatement(t *testin
 					testAccCheckWebACLRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.limit", "2000"),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.aggregate_key_type", "IP"),
-					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.scope_down_statement.0.and_statement.0.statement.0.not_statement.0.statement.0.byte_match_statement.0.search_string", "basic"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.scope_down_statement.0.and_statement.0.statement.0.not_statement.0.statement.0.byte_match_statement.0.search_string", acctest.CtBasic),
 					resource.TestCheckResourceAttrPair(resourceName, "statement.0.rate_based_statement.0.scope_down_statement.0.and_statement.0.statement.1.not_statement.0.statement.0.ip_set_reference_statement.0.arn", "aws_wafv2_ip_set.test", names.AttrARN),
 				),
 			},
