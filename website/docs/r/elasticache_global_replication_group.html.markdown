@@ -117,6 +117,7 @@ This resource supports the following arguments:
 * `num_node_groups` - (Optional) The number of node groups (shards) on the global replication group.
 * `parameter_group_name` - (Optional) An ElastiCache Parameter Group to use for the Global Replication Group.
   Required when upgrading a major engine version, but will be ignored if left configured after the upgrade is complete. Specifying without a major version upgrade will fail. When a replication group joins a global datastore, AWS auto-generates a new parameter group (prefixed `global-datastore-`) derived from the primary's parameter group. Note that ElastiCache creates a copy of this parameter group for each member replication group.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -134,6 +135,7 @@ This resource exports the following attributes in addition to the arguments abov
     * `global_node_group_id` - The ID of the global node group.
     * `slots` - The keyspace for this node group.
 * `transit_encryption_enabled` - A flag that indicates whether the encryption in transit is enabled.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
