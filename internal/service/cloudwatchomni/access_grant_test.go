@@ -446,21 +446,21 @@ func testAccAccessGrant_validation(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ExpectError: regexache.MustCompile(`principal_attribute is only supported when principal_type`),
+				ExpectError: regexache.MustCompile(`principal_attribute must not be configured`),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessGrant/validation_principal_missing/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ExpectError: regexache.MustCompile(`at least one of principal_id or principal_attribute`),
+				ExpectError: regexache.MustCompile(`At least one of.*principal_attribute.*principal_id`),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessGrant/validation_custom_without_scoped_action/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ExpectError: regexache.MustCompile(`at least one scoped_action must be specified`),
+				ExpectError: regexache.MustCompile(`scoped_action must be configured`),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessGrant/validation_row_scope_group_without_signal_types/"),

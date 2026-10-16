@@ -33,6 +33,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -94,6 +96,12 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 			"permission": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AccessGrantPermission](),
 				Required:   true,
+				Validators: []validator.String{
+					tfstringvalidator.AlsoRequiresWhenEquals(
+						awstypes.AccessGrantPermissionCustom,
+						path.MatchRelative().AtParent().AtName("scoped_action"),
+					),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -120,6 +128,12 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.AtLeastOneOfChildren(
+							path.MatchRelative().AtName("principal_attribute"),
+							path.MatchRelative().AtName("principal_id"),
+						),
+					},
 					Attributes: map[string]schema.Attribute{
 						"principal_id": schema.StringAttribute{
 							Optional: true,
@@ -131,6 +145,12 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 						"principal_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AccessGrantPrincipalType](),
 							Required:   true,
+							Validators: []validator.String{
+								tfstringvalidator.ConflictsWithWhenNotEquals(
+									awstypes.AccessGrantPrincipalTypeIdcUser,
+									path.MatchRelative().AtParent().AtName("principal_attribute"),
+								),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -283,52 +303,6 @@ func (r *accessGrantResource) ValidateConfig(ctx context.Context, request resour
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	// An absent block is an empty, not null, list, so presence is checked by length.
-	if !data.Principal.IsUnknown() {
-		principals, d := data.Principal.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, d)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		for i, principal := range principals {
-			if principal.PrincipalAttributes.IsUnknown() {
-				continue
-			}
-
-			principalPath := path.Root(names.AttrPrincipal).AtListIndex(i)
-			hasAttributes := principal.PrincipalAttributes.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
-
-			if hasAttributes && !principal.PrincipalType.IsUnknown() && principal.PrincipalType.ValueEnum() != awstypes.AccessGrantPrincipalTypeIdcUser {
-				response.Diagnostics.AddAttributeError(
-					principalPath.AtName("principal_attribute"),
-					"Invalid Attribute Combination",
-					fmt.Sprintf("principal_attribute is only supported when principal_type is %q", awstypes.AccessGrantPrincipalTypeIdcUser),
-				)
-			}
-
-			if !hasAttributes && principal.PrincipalID.IsNull() {
-				response.Diagnostics.AddAttributeError(
-					principalPath,
-					"Missing Attribute Configuration",
-					"at least one of principal_id or principal_attribute must be specified",
-				)
-			}
-		}
-	}
-
-	if data.ScopedActions.IsUnknown() {
-		return
-	}
-
-	if !data.Permission.IsUnknown() && data.Permission.ValueEnum() == awstypes.AccessGrantPermissionCustom && data.ScopedActions.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
-		response.Diagnostics.AddAttributeError(
-			path.Root("scoped_action"),
-			"Missing Attribute Configuration",
-			fmt.Sprintf("at least one scoped_action must be specified when permission is %q", awstypes.AccessGrantPermissionCustom),
-		)
 	}
 
 	scopedActions, d := data.ScopedActions.ToSlice(ctx)
