@@ -765,7 +765,7 @@ Exactly one of the following scope down statement blocks must be specified:
 * `sqli_match_statement` - (Optional) Match requests that appear to contain SQL injection attacks.
 * `xss_match_statement` - (Optional) Match requests that appear to contain cross-site scripting attacks.
 
-~> **NOTE:** Logical statements (`and_statement`, `not_statement`, `or_statement`) can be nested within scope down statements, matching the same nesting behavior as the main statement block.
+~> **NOTE:** Logical statements (`and_statement`, `not_statement`, `or_statement`) can be nested up to 2 levels deep within a scope down statement, one level less than in the main statement block. This matches `scope_down_statement` in the `aws_wafv2_web_acl` resource.
 
 ### Custom Keys
 
