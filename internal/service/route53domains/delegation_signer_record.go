@@ -293,15 +293,6 @@ func (data *delegationSignerRecordResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *delegationSignerRecordResourceModel) setID() (string, error) {
-	parts := []string{
-		data.DomainName.ValueString(),
-		data.DNSSECKeyID.ValueString(),
-	}
-
-	return flex.FlattenResourceId(parts, delegationSignerRecordResourceIDPartCount, false)
-}
-
 func findDNSSECKeyByTwoPartKey(ctx context.Context, conn *route53domains.Client, domainName, keyID string) (*awstypes.DnssecKey, error) {
 	output, err := findDomainDetailByName(ctx, conn, domainName)
 
@@ -334,7 +325,7 @@ func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Clien
 	}
 
 	// For most TLDs, AWS returns full DNSSEC key info (Flags, PublicKey).
-	// For .uk/.co.uk domains managed by Nominet registry, AWS only returns Digest (partial data).
+	// For .uk/.co.uk domains, the registry only returns Digest (partial data).
 	// Try exact match first on Flags + PublicKey (standard TLDs).
 	result, err := tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
 		return int(aws.ToInt32(v.Flags)) == flags && aws.ToString(v.PublicKey) == publicKey
