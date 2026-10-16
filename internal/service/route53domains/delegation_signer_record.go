@@ -320,7 +320,7 @@ func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Clien
 	// and match against the AWS-returned Digest field (always present, registrar-agnostic).
 	// This handles registry limitations and multi-key scenarios (e.g., during key rollover).
 	if err != nil && len(output.DnssecKeys) > 0 {
-		expectedDigest := calculateExpectedDigest(domainName, flags, algorithm, publicKey)
+		expectedDigest := CalculateExpectedDigest(domainName, flags, algorithm, publicKey)
 
 		fallbackResult, fallbackErr := tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
 			return strings.EqualFold(aws.ToString(v.Digest), expectedDigest)
@@ -334,17 +334,16 @@ func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Clien
 	return result, err
 }
 
-// calculateExpectedDigest generates the RFC 4034 compliant SHA-256 digest
+// CalculateExpectedDigest generates the RFC 4034 compliant SHA-256 digest
 // from Terraform resource configuration. This is deterministic and works
 // across all registrars since AWS always returns the Digest field.
-func calculateExpectedDigest(domainName string, flags int, algorithm int, publicKey string) string {
+func CalculateExpectedDigest(domainName string, flags int, algorithm int, publicKey string) string {
 	var buf bytes.Buffer
 
 	// 1. Convert domain name to DNS wire-format labels (lowercase per RFC 4034)
 	domain := strings.ToLower(strings.TrimSuffix(domainName, "."))
 	if domain != "" {
-		labels := strings.Split(domain, ".")
-		for _, label := range labels {
+		for label := range strings.SplitSeq(domain, ".") {
 			buf.WriteByte(byte(len(label)))
 			buf.WriteString(label)
 		}

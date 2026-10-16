@@ -153,7 +153,7 @@ func TestCalculateExpectedDigest(t *testing.T) {
 		algorithm := 13    // ECDSAP256SHA256
 		publicKey := "AwEAAazJ1O4G2F9O7lYvRjWp1A5MvXk1zY7B2C4D5E6F7G8H9I0J"
 
-		digest := calculateExpectedDigest(domainName, flags, algorithm, publicKey)
+		digest := tfroute53domains.CalculateExpectedDigest(domainName, flags, algorithm, publicKey)
 
 		// Verify it returns a valid hex string (64 chars for SHA-256)
 		if len(digest) != 64 {
@@ -175,8 +175,8 @@ func TestCalculateExpectedDigest(t *testing.T) {
 		algorithm := 13
 		publicKey := "AwEAAazJ1O4G2F9O7lYvRjWp1A5MvXk1zY7B2C4D5E6F7G8H9I0J"
 
-		digestLower := calculateExpectedDigest(domainLower, flags, algorithm, publicKey)
-		digestUpper := calculateExpectedDigest(domainUpper, flags, algorithm, publicKey)
+		digestLower := tfroute53domains.CalculateExpectedDigest(domainLower, flags, algorithm, publicKey)
+		digestUpper := tfroute53domains.CalculateExpectedDigest(domainUpper, flags, algorithm, publicKey)
 
 		if digestLower != digestUpper {
 			t.Errorf("Domain case sensitivity violation.\nLower: %s\nUpper: %s", digestLower, digestUpper)
@@ -190,7 +190,7 @@ func TestCalculateExpectedDigest(t *testing.T) {
 		invalidKey := "not_valid_base64!!!"
 
 		// Should not crash, just use empty key bytes
-		digest := calculateExpectedDigest(domainName, flags, algorithm, invalidKey)
+		digest := tfroute53domains.CalculateExpectedDigest(domainName, flags, algorithm, invalidKey)
 
 		if len(digest) == 0 {
 			t.Errorf("Digest should not be empty even with invalid key")
