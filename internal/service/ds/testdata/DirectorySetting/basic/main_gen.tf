@@ -41,7 +41,7 @@ resource "aws_directory_service_directory" "test" {
   name     = var.domain
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
-  size     = "Small"
+  size     = "Large"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id

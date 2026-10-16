@@ -46,7 +46,7 @@ func TestAccDSDirectorySetting_List_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"domain":        config.StringVariable(domain),
@@ -60,7 +60,7 @@ func TestAccDSDirectorySetting_List_basic(t *testing.T) {
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"domain":        config.StringVariable(domain),
@@ -101,7 +101,7 @@ func TestAccDSDirectorySetting_List_includeResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"domain":        config.StringVariable(domain),
@@ -115,7 +115,7 @@ func TestAccDSDirectorySetting_List_includeResource(t *testing.T) {
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"domain":        config.StringVariable(domain),
@@ -163,7 +163,7 @@ func TestAccDSDirectorySetting_List_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"domain":        config.StringVariable(domain),
@@ -178,7 +178,7 @@ func TestAccDSDirectorySetting_List_regionOverride(t *testing.T) {
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"domain":        config.StringVariable(domain),
