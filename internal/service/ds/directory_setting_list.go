@@ -9,6 +9,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -36,6 +37,9 @@ func (l *directorySettingsListResource) ListResourceConfigSchema(ctx context.Con
 			"directory_id": listschema.StringAttribute{
 				Required:    true,
 				Description: "ID of the directory to list Settings for.",
+				Validators: []validator.String{
+					directoryIDValidator,
+				},
 			},
 		},
 	}
@@ -87,6 +91,7 @@ func (l *directorySettingsListResource) List(ctx context.Context, request list.L
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				data.DirectoryID = fwflex.StringValueToFramework(ctx, directoryID)
+				data.Name = fwflex.StringToFramework(ctx, entry.Name)
 
 				if request.IncludeResource {
 					data.flatten(ctx, &entry)
