@@ -130,7 +130,7 @@ func (r *directorySettingsResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	plan.flatten(ctx, entry)
+	r.flatten(ctx, entry, &plan)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -155,7 +155,7 @@ func (r *directorySettingsResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	state.flatten(ctx, entry)
+	r.flatten(ctx, entry, &state)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -202,7 +202,7 @@ func (r *directorySettingsResource) Update(ctx context.Context, req resource.Upd
 			return
 		}
 
-		plan.flatten(ctx, entry)
+		r.flatten(ctx, entry, &plan)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -278,10 +278,10 @@ func findDirectorySetting(ctx context.Context, conn *directoryservice.Client, di
 	return tfresource.AssertSingleValueResult(tfslices.Filter(entries, tfslices.PredicateValue(filter)))
 }
 
-func (m *directorySettingsResourceModel) flatten(ctx context.Context, entry *awstypes.SettingEntry) {
-	m.Name = fwflex.StringToFramework(ctx, entry.Name)
-	m.Value = fwflex.StringToFramework(ctx, entry.RequestedValue)
-	m.Type = fwflex.StringToFramework(ctx, entry.Type)
+func (r *directorySettingsResource) flatten(ctx context.Context, entry *awstypes.SettingEntry, data *directorySettingsResourceModel) {
+	data.Name = fwflex.StringToFramework(ctx, entry.Name)
+	data.Value = fwflex.StringToFramework(ctx, entry.RequestedValue)
+	data.Type = fwflex.StringToFramework(ctx, entry.Type)
 }
 
 var _ inttypes.ImportIDParser = directorySettingsImportID{}

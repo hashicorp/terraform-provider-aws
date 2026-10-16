@@ -26,7 +26,8 @@ func TestAccDSDirectorySetting_List_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	resourceName := "aws_directory_service_directory_setting.test"
+	listResourceName := "aws_directory_service_directory_setting.test"
+	resourceName := "aws_directory_service_directory_setting.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName(t)
 	identity := tfstatecheck.Identity()
@@ -48,8 +49,9 @@ func TestAccDSDirectorySetting_List_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
+					"resource_count": config.IntegerVariable(1),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
@@ -62,13 +64,14 @@ func TestAccDSDirectorySetting_List_basic(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
+					"resource_count": config.IntegerVariable(1),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc(resourceName, identity.Checks()),
-					querycheck.ExpectResourceDisplayName(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
-					tfquerycheck.ExpectNoResourceObject(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
+					tfquerycheck.ExpectIdentityFunc(listResourceName, identity.Checks()),
+					querycheck.ExpectResourceDisplayName(listResourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
+					tfquerycheck.ExpectNoResourceObject(listResourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
 				},
 			},
 		},
@@ -81,7 +84,8 @@ func TestAccDSDirectorySetting_List_includeResource(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	resourceName := "aws_directory_service_directory_setting.test"
+	listResourceName := "aws_directory_service_directory_setting.test"
+	resourceName := "aws_directory_service_directory_setting.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName(t)
 	identity := tfstatecheck.Identity()
@@ -103,8 +107,9 @@ func TestAccDSDirectorySetting_List_includeResource(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
+					"resource_count": config.IntegerVariable(1),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
@@ -117,13 +122,14 @@ func TestAccDSDirectorySetting_List_includeResource(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_include_resource/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
+					"resource_count": config.IntegerVariable(1),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc(resourceName, identity.Checks()),
-					querycheck.ExpectResourceDisplayName(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
-					querycheck.ExpectResourceKnownValues(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
+					tfquerycheck.ExpectIdentityFunc(listResourceName, identity.Checks()),
+					querycheck.ExpectResourceDisplayName(listResourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
+					querycheck.ExpectResourceKnownValues(listResourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("directory_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact("TLS_1_0")),
@@ -142,7 +148,8 @@ func TestAccDSDirectorySetting_List_regionOverride(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	resourceName := "aws_directory_service_directory_setting.test"
+	listResourceName := "aws_directory_service_directory_setting.test"
+	resourceName := "aws_directory_service_directory_setting.test[0]"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName(t)
 	identity := tfstatecheck.Identity()
@@ -165,9 +172,10 @@ func TestAccDSDirectorySetting_List_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
+					"resource_count": config.IntegerVariable(1),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
@@ -180,13 +188,14 @@ func TestAccDSDirectorySetting_List_regionOverride(t *testing.T) {
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/list_region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					acctest.CtRName:  config.StringVariable(rName),
+					"domain":         config.StringVariable(domain),
+					"resource_count": config.IntegerVariable(1),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc(resourceName, identity.Checks()),
-					querycheck.ExpectResourceDisplayName(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
+					tfquerycheck.ExpectIdentityFunc(listResourceName, identity.Checks()),
+					querycheck.ExpectResourceDisplayName(listResourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.NotNull()),
 				},
 			},
 		},

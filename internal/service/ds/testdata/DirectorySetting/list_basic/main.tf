@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_directory_service_directory_setting" "test" {
+  count = var.resource_count
+
   directory_id = aws_directory_service_directory.test.id
   name         = "TLS_1_0"
   value        = "Disable"
@@ -58,4 +60,10 @@ variable "rName" {
 variable "domain" {
   type     = string
   nullable = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
 }

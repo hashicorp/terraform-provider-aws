@@ -81,7 +81,7 @@ func (l *directorySettingsListResource) List(ctx context.Context, request list.L
 		// Each requested (non-default) setting maps to its own
 		// aws_directory_service_directory_setting resource instance.
 		for _, entry := range entries {
-			if entry.RequestedValue == nil {
+			if entry.RequestStatus == awstypes.DirectoryConfigurationStatusDefault {
 				continue
 			}
 
@@ -94,7 +94,7 @@ func (l *directorySettingsListResource) List(ctx context.Context, request list.L
 				data.Name = fwflex.StringToFramework(ctx, entry.Name)
 
 				if request.IncludeResource {
-					data.flatten(ctx, &entry)
+					l.flatten(ctx, &entry, &data)
 				}
 
 				result.DisplayName = fwflex.StringValueFromFramework(ctx, data.Name)
