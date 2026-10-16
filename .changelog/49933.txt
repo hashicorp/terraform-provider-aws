@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ebs_volume_copy: Add support for encryption and shared EBS volumes
+```
+
+```release-note:enhancement
+data-source/aws_ebs_volume: Add `owner_id` attribute
+```
