@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_mwaa_environment: Allow in-place upgrades across major Apache Airflow versions (for example, `2.x` to `3.x`) instead of forcing resource replacement, aligning with Amazon MWAA's support for in-place major-version upgrades
+```
