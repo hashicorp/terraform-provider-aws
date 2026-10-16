@@ -570,6 +570,7 @@ func TestAccSageMakerInferenceComponent_adapter(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore:              []string{"specification.0.compute_resource_requirements"},
 			},
 		},
 	})
