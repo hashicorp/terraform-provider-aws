@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_lifecycle_configuration: Prevent "inconsistent result after apply" errors and non-terminating stabilization with S3-compatible backends (e.g. Ceph RADOS Gateway) that omit the `x-amz-transition-default-minimum-object-size` field
+```
