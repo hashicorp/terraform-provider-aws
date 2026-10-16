@@ -1039,7 +1039,7 @@ func expandMapOfString(ctx context.Context, _ *autoExpander, vFrom basetypes.Map
 	return diags
 }
 
-// expandMapOfString copies a Plugin Framework MapOfString(ish) value to a compatible AWS API value.
+// expandMapOfInt32 copies a Plugin Framework MapOfInt32(ish) value to a compatible AWS API value.
 func expandMapOfInt32(ctx context.Context, _ *autoExpander, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
