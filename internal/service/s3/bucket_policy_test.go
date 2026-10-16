@@ -5,8 +5,10 @@ package s3_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -19,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1122,4 +1125,93 @@ data "aws_iam_policy_document" "test" {
   }
 }
 `)
+}
+
+const testWaitBucketPolicy = `{"Version":"2012-10-17","Statement":[]}`
+
+var errBoom = errors.New("boom")
+
+// scriptedBucketPolicyFinder returns a find function that plays back steps in order.
+// A nil step is a successful find, a NotFound step is a *retry.NotFoundError,
+// and any other step is returned as given.
+// Calling past the end of the script returns a non-NotFound error.
+func scriptedBucketPolicyFinder(steps ...error) (func(context.Context) (string, error), *int) {
+	var calls int
+	return func(context.Context) (string, error) {
+		i := calls
+		calls++
+		if i >= len(steps) {
+			return "", errors.New("script exhausted")
+		}
+		if err := steps[i]; err != nil {
+			return "", err
+		}
+		return testWaitBucketPolicy, nil
+	}, &calls
+}
+
+func TestWaitBucketPolicyFound(t *testing.T) {
+	t.Parallel()
+
+	notFound := &retry.NotFoundError{}
+
+	testCases := map[string]struct {
+		steps     []error
+		wantCalls int
+		wantErr   error
+	}{
+		"immediateSuccess":             {steps: []error{nil, nil, nil}, wantCalls: 3},
+		"notFoundResetsCount":          {steps: []error{nil, notFound, nil, nil, nil}, wantCalls: 5},
+		"notFoundBeforeSuccess":        {steps: []error{notFound, notFound, nil, nil, nil}, wantCalls: 5},
+		"notFoundAfterTwoSuccesses":    {steps: []error{nil, nil, notFound, nil, nil, nil}, wantCalls: 6},
+		"otherErrorReturnsImmediately": {steps: []error{nil, errBoom}, wantCalls: 2, wantErr: errBoom},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			find, calls := scriptedBucketPolicyFinder(tc.steps...)
+
+			got, err := tfs3.WaitBucketPolicyFound(t.Context(), time.Minute, find, backoff.WithDelay(backoff.ZeroDelay))
+
+			if tc.wantErr != nil {
+				if !errors.Is(err, tc.wantErr) {
+					t.Fatalf("err = %v, want %v", err, tc.wantErr)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %s", err)
+				}
+				if got != testWaitBucketPolicy {
+					t.Errorf("policy = %q, want %q", got, testWaitBucketPolicy)
+				}
+			}
+			if *calls != tc.wantCalls {
+				t.Errorf("calls = %d, want %d", *calls, tc.wantCalls)
+			}
+		})
+	}
+}
+
+func TestWaitBucketPolicyFound_timeoutNeverFound(t *testing.T) {
+	t.Parallel()
+
+	var calls int
+	find := func(context.Context) (string, error) {
+		calls++
+		return "", &retry.NotFoundError{}
+	}
+
+	_, err := tfs3.WaitBucketPolicyFound(t.Context(), 0, find, backoff.WithDelay(backoff.ZeroDelay))
+
+	if !retry.NotFound(err) {
+		t.Errorf("err = %v, want NotFound", err)
+	}
+	if retry.TimedOut(err) {
+		t.Errorf("err = %v, want not a timeout", err)
+	}
+	if calls != 2 {
+		t.Errorf("calls = %d, want 2", calls)
+	}
 }
