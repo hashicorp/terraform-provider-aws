@@ -1082,6 +1082,86 @@ func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_masterUserAuthenticationType(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_masterUserAuthenticationType(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "master_user_authentication_type", "iam-db-auth"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					"master_user_authentication_type",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_MasterUserAuthenticationType_update(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_masterUserAuthenticationTypePassword(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtTrue),
+					resource.TestCheckNoResourceAttr(resourceName, "master_user_authentication_type"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_masterUserAuthenticationType(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "master_user_authentication_type", "iam-db-auth"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ErrorOnConvertToManageOnStoppedInstance(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -8744,6 +8824,54 @@ resource "aws_db_instance" "test" {
   iam_database_authentication_enabled = true
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName))
+}
+
+func testAccInstanceConfig_masterUserAuthenticationType(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassPostgres(),
+		testAccInstanceConfig_baseVPC(rName),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier                          = %[1]q
+  allocated_storage                   = 10
+  apply_immediately                   = true
+  engine                              = data.aws_rds_orderable_db_instance.test.engine
+  engine_version                      = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class                      = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                             = "test"
+  db_subnet_group_name                = aws_db_subnet_group.test.name
+  username                            = "tfacctest"
+  backup_retention_period             = 0
+  skip_final_snapshot                 = true
+  iam_database_authentication_enabled = true
+  master_user_authentication_type     = "iam-db-auth"
+}
+`, rName))
+}
+
+func testAccInstanceConfig_masterUserAuthenticationTypePassword(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_orderableClassPostgres(),
+		testAccInstanceConfig_baseVPC(rName),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier                          = %[1]q
+  allocated_storage                   = 10
+  apply_immediately                   = true
+  engine                              = data.aws_rds_orderable_db_instance.test.engine
+  engine_version                      = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class                      = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                             = "test"
+  db_subnet_group_name                = aws_db_subnet_group.test.name
+  username                            = "tfacctest"
+  password_wo                         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version                 = 1
+  backup_retention_period             = 0
+  skip_final_snapshot                 = true
+  iam_database_authentication_enabled = true
+}
+`, rName))
 }
 
 func testAccInstanceConfig_FinalSnapshotID_skipFinalSnapshot(rName string) string {
