@@ -2,8 +2,12 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_cloudwatchomni_access_profile` ([#50471](https://github.com/hashicorp/terraform-provider-aws/issues/50471))
 * **New List Resource:** `aws_cloudwatchomni_view` ([#50428](https://github.com/hashicorp/terraform-provider-aws/issues/50428))
+* **New List Resource:** `aws_directoryservicedata_group` ([#50221](https://github.com/hashicorp/terraform-provider-aws/issues/50221))
+* **New Resource:** `aws_cloudwatchomni_access_profile` ([#50471](https://github.com/hashicorp/terraform-provider-aws/issues/50471))
 * **New Resource:** `aws_cloudwatchomni_view` ([#50428](https://github.com/hashicorp/terraform-provider-aws/issues/50428))
+* **New Resource:** `aws_directoryservicedata_group` ([#50221](https://github.com/hashicorp/terraform-provider-aws/issues/50221))
 
 BUG FIXES:
 
