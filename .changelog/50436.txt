@@ -1,0 +1,3 @@
+```release-note:note
+provider: Update the minimum Go version required to build the provider to 1.27.2
+```

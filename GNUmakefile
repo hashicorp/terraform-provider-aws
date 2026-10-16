@@ -488,16 +488,16 @@ misspell: changelog-misspell docs-misspell website-misspell ## [CI] Run all CI m
 
 modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
 	@echo "make: Checking for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -test $(TEST)
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.23.0 -test $(TEST)
 
 modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
 	@echo "make: Fixing checks for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $(TEST)
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.23.0 -fix -test $(TEST)
 
 modern-fix-core: prereq-go ## Fix checks for modern Go code in core directories
 	@echo "make: Fixing checks for modern Go code in core directories..."
 	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/'); \
-	$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $$core_pkgs
+	$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.23.0 -fix -test $$core_pkgs
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
