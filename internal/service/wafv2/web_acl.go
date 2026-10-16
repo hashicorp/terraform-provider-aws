@@ -418,7 +418,16 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		// so that the provider will not remove the Shield rule when changes are applied to the WebACL.
 		var rules []awstypes.Rule
 
-		rules = expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List())
+		if v, ok := d.GetOk("rule_json"); ok {
+			var err error
+			rules, err = expandWebACLRulesJSON(v.(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "expanding WAFv2 WebACL JSON rule (%s): %s", d.Id(), err)
+			}
+		} else {
+			rules = expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List())
+		}
+
 		if sr := findShieldRule(rules); len(sr) == 0 {
 			output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
 
@@ -427,23 +436,6 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 
 			rules = append(rules, findShieldRule(output.WebACL.Rules)...)
-		}
-
-		if v, ok := d.GetOk("rule_json"); ok {
-			r, err := expandWebACLRulesJSON(v.(string))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "expanding WAFv2 WebACL JSON rule (%s): %s", d.Id(), err)
-			}
-			if sr := findShieldRule(rules); len(sr) == 0 {
-				output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
-				}
-
-				r = append(r, findShieldRule(output.WebACL.Rules)...)
-			}
-			rules = r
 		}
 
 		input := &wafv2.UpdateWebACLInput{
