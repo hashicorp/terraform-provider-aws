@@ -31,13 +31,10 @@ var (
 	FindRegionByTwoPartKey               = findRegionByTwoPartKey
 	FindSharedDirectoryByTwoPartKey      = findSharedDirectoryByTwoPartKey // nosemgrep:ci.ds-in-var-name
 	FindTrustByTwoPartKey                = findTrustByTwoPartKey
-
-	ResNameDirectorySettingsExported = ResNameDirectorySettings
 )
 
 // Type aliases for use in tests only.
 type (
-	DirectorySettingsImportID = directorySettingsImportID
-	IPRouteImportID           = ipRouteImportID
-	IPRouteModel              = ipRouteModel
+	IPRouteImportID = ipRouteImportID
+	IPRouteModel    = ipRouteModel
 )

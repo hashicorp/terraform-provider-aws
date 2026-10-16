@@ -49,10 +49,6 @@ func newDirectorySettingsResource(_ context.Context) (resource.ResourceWithConfi
 	return r, nil
 }
 
-const (
-	ResNameDirectorySettings = "Directory Settings"
-)
-
 type directorySettingsResource struct {
 	framework.ResourceWithModel[directorySettingsResourceModel]
 	framework.WithTimeouts

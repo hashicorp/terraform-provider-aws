@@ -5,7 +5,6 @@ package ds_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -161,41 +159,32 @@ func testAccCheckDirectorySettingDestroy(ctx context.Context, t *testing.T) reso
 				continue
 			}
 
-			directoryID := rs.Primary.Attributes["directory_id"]
-			name := rs.Primary.Attributes[names.AttrName]
-
-			_, err := tfds.FindDirectorySettingByTwoPartKey(ctx, conn, directoryID, name)
+			_, err := tfds.FindDirectorySettingByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes[names.AttrName])
 			if retry.NotFound(err) {
-				return nil
+				continue
 			}
 			if err != nil {
-				return create.Error(names.DS, create.ErrActionCheckingDestroyed, tfds.ResNameDirectorySettingsExported, directoryID, err)
+				return err
 			}
 
-			return create.Error(names.DS, create.ErrActionCheckingDestroyed, tfds.ResNameDirectorySettingsExported, directoryID, errors.New("not destroyed"))
+			return fmt.Errorf("Directory Service Directory Setting %s still exists", rs.Primary.Attributes["directory_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDirectorySettingExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
+func testAccCheckDirectorySettingExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameDirectorySettingsExported, name, errors.New("not found"))
-		}
-
-		directoryID := rs.Primary.Attributes["directory_id"]
-		settingName := rs.Primary.Attributes[names.AttrName]
-		if directoryID == "" || settingName == "" {
-			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameDirectorySettingsExported, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
-		_, err := tfds.FindDirectorySettingByTwoPartKey(ctx, conn, directoryID, settingName)
-		return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameDirectorySettingsExported, directoryID, err)
+		_, err := tfds.FindDirectorySettingByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes[names.AttrName])
+		return err
 	}
 }
 
