@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_controltower_landing_zone: Fix persistent diffs in `manifest_json` caused by array ordering and type inconsistencies
+```
