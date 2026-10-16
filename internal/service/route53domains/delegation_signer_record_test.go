@@ -146,7 +146,10 @@ resource "aws_route53domains_delegation_signer_record" "test" {
 
 // TestCalculateExpectedDigest verifies RFC 4034 compliant digest generation
 func TestCalculateExpectedDigest(t *testing.T) {
+	t.Parallel()
+
 	t.Run("Valid RFC 4034 digest generation", func(t *testing.T) {
+		t.Parallel()
 		domainName := "example.com"
 		flags := 257
 		algorithm := 13
@@ -166,6 +169,8 @@ func TestCalculateExpectedDigest(t *testing.T) {
 	})
 
 	t.Run("Domain case insensitivity (RFC 4034)", func(t *testing.T) {
+		t.Parallel()
+
 		domainLower := "example.com"
 		domainUpper := "EXAMPLE.COM"
 		flags := 257
@@ -181,6 +186,8 @@ func TestCalculateExpectedDigest(t *testing.T) {
 	})
 
 	t.Run("Invalid Base64 public key graceful handling", func(t *testing.T) {
+		t.Parallel()
+
 		domainName := "example.com"
 		flags := 257
 		algorithm := 13

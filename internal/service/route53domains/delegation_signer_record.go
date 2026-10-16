@@ -154,14 +154,24 @@ func (r *delegationSignerRecordResource) Create(ctx context.Context, request res
 		return
 	}
 
-	// Set values for unknowns.
-	data.DNSSECKeyID = fwflex.StringToFramework(ctx, dnssecKey.Id)
-	id, err := data.setID()
+	// Store actual AWS ID for Delete operations, but compute digest for state ID stability.
+	// This ensures registrar-agnostic state tracking (Gandi vs Amazon Registrar, etc).
+	expectedDigest := CalculateExpectedDigest(data.DomainName.ValueString(), int(signingAttributes.Flags.ValueInt64()), int(signingAttributes.Algorithm.ValueInt64()), signingAttributes.PublicKey.ValueString())
+
+	// Set state ID using digest for stability
+	parts := []string{
+		data.DomainName.ValueString(),
+		expectedDigest,
+	}
+	resourceID, err := flex.FlattenResourceId(parts, delegationSignerRecordResourceIDPartCount, false)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID Route 53 Domains Domain (%s) DNSSEC key", data.DomainName.ValueString()), err.Error())
 		return
 	}
-	data.ID = types.StringValue(id)
+
+	// Store actual AWS ID for API operations (Delete, etc)
+	data.DNSSECKeyID = fwflex.StringToFramework(ctx, dnssecKey.Id)
+	data.ID = types.StringValue(resourceID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -173,27 +183,26 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
+	// Extract domain and digest from stable resource ID
+	idParts, err := flex.ExpandResourceId(data.ID.ValueString(), delegationSignerRecordResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.AddError("parsing delegation signer record resource ID", err.Error())
 		return
 	}
+	domainName := idParts[0]
+	digest := idParts[1]
 
 	conn := r.Meta().Route53DomainsClient(ctx)
 
-	dnssecKey, err := findDNSSECKeyByTwoPartKey(ctx, conn, data.DomainName.ValueString(), data.DNSSECKeyID.ValueString())
-
-	// Fallback to digest-based lookup if ID-based lookup fails (handles registry ID format changes)
-	if retry.NotFound(err) {
-		signingAttributes, diags := data.SigningAttributes.ToPtr(ctx)
-		if !diags.HasError() && signingAttributes != nil {
-			// Try digest-based fallback for .uk/.co.uk and other registry-limited TLDs
-			dnssecKey, err = findDNSSECKeyByThreePartKey(ctx, conn, data.DomainName.ValueString(),
-				int(signingAttributes.Flags.ValueInt64()),
-				int(signingAttributes.Algorithm.ValueInt64()),
-				signingAttributes.PublicKey.ValueString())
-		}
+	signingAttributes, diags := data.SigningAttributes.ToPtr(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
 	}
+
+	// Look up DNSSEC key by digest (deterministic across registrars).
+	// Ensures stable state tracking regardless of registry (Gandi vs Amazon Registrar, etc).
+	dnssecKey, err := findDNSSECKeyByDigest(ctx, conn, domainName, digest)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -208,14 +217,16 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 		return
 	}
 
+	// Update DNSSECKeyID with actual AWS ID for Delete operations.
+	data.DNSSECKeyID = fwflex.StringToFramework(ctx, dnssecKey.Id)
+
 	// Set attributes for import.
-	var signingAttributes delegationSignerRecordSigningAttributesModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, dnssecKey, &signingAttributes)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, dnssecKey, signingAttributes)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.SigningAttributes = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &signingAttributes)
+	data.SigningAttributes = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, signingAttributes)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -265,6 +276,7 @@ type delegationSignerRecordSigningAttributesModel struct {
 
 const (
 	delegationSignerRecordResourceIDPartCount = 2
+	dnssecProtocol                            = 3 // RFC 4034: DNSSEC protocol number
 )
 
 func (data *delegationSignerRecordResourceModel) InitFromID() error {
@@ -302,6 +314,18 @@ func findDNSSECKeyByTwoPartKey(ctx context.Context, conn *route53domains.Client,
 	}))
 }
 
+func findDNSSECKeyByDigest(ctx context.Context, conn *route53domains.Client, domainName, digest string) (*awstypes.DnssecKey, error) {
+	output, err := findDomainDetailByName(ctx, conn, domainName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
+		return strings.EqualFold(aws.ToString(v.Digest), digest)
+	}))
+}
+
 func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Client, domainName string, flags int, algorithm int, publicKey string) (*awstypes.DnssecKey, error) {
 	output, err := findDomainDetailByName(ctx, conn, domainName)
 
@@ -310,7 +334,7 @@ func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Clien
 	}
 
 	// For most TLDs, AWS returns full DNSSEC key info (Flags, PublicKey).
-	// For .uk/.co.uk domains managed by Nominet registry, AWS returns only partial data.
+	// For .uk/.co.uk domains managed by Nominet registry, AWS only returns Digest (partial data).
 	// Try exact match first on Flags + PublicKey (standard TLDs).
 	result, err := tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
 		return int(aws.ToInt32(v.Flags)) == flags && aws.ToString(v.PublicKey) == publicKey
@@ -356,7 +380,7 @@ func CalculateExpectedDigest(domainName string, flags int, algorithm int, public
 	buf.Write(flagsBytes)
 
 	// 3. Append Protocol (8-bit, always 3 for DNSSEC)
-	buf.WriteByte(3)
+	buf.WriteByte(dnssecProtocol)
 
 	// 4. Append Algorithm (8-bit)
 	buf.WriteByte(byte(algorithm))
