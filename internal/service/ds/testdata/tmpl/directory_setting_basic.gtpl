@@ -40,7 +40,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_directory_service_directory" "test" {
 {{- template "region" }}
-  name     = "${var.rName}.test"
+  name     = var.domain
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   size     = "Small"

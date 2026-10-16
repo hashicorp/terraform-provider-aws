@@ -38,7 +38,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_directory_service_directory" "test" {
-  name     = "${var.rName}.test"
+  name     = var.domain
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   size     = "Small"
@@ -54,3 +54,8 @@ variable "rName" {
   type        = string
   nullable    = false
 }
+variable "domain" {
+  type     = string
+  nullable = false
+}
+

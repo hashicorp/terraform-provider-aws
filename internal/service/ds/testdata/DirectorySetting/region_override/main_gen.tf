@@ -48,7 +48,7 @@ resource "aws_subnet" "test" {
 resource "aws_directory_service_directory" "test" {
   region = var.region
 
-  name     = "${var.rName}.test"
+  name     = var.domain
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   size     = "Small"
@@ -64,6 +64,11 @@ variable "rName" {
   type        = string
   nullable    = false
 }
+variable "domain" {
+  type     = string
+  nullable = false
+}
+
 
 variable "region" {
   description = "Region to deploy resource in"

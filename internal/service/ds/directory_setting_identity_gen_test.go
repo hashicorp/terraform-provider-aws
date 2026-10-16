@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,6 +26,7 @@ func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 
 	resourceName := "aws_directory_service_directory_setting.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -43,6 +45,7 @@ func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectorySettingExists(ctx, t, resourceName),
@@ -65,9 +68,10 @@ func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "directory_id"),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -79,11 +83,12 @@ func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "directory_id"),
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", names.AttrName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("directory_id"), knownvalue.NotNull()),
@@ -98,6 +103,7 @@ func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -119,6 +125,7 @@ func TestAccDSDirectorySetting_Identity_regionOverride(t *testing.T) {
 
 	resourceName := "aws_directory_service_directory_setting.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -137,6 +144,7 @@ func TestAccDSDirectorySetting_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -157,10 +165,11 @@ func TestAccDSDirectorySetting_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, "directory_id"),
+				ImportStateIdFunc:                    acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -172,12 +181,13 @@ func TestAccDSDirectorySetting_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, "directory_id"),
+				ImportStateIdFunc: acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", names.AttrName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("directory_id"), knownvalue.NotNull()),
@@ -192,6 +202,7 @@ func TestAccDSDirectorySetting_Identity_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,

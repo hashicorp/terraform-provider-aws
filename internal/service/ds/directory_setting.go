@@ -38,8 +38,9 @@ import (
 // @IdentityAttribute("name")
 // @ImportIDHandler("directorySettingsImportID")
 // @Testing(preCheck="acctest.PreCheckDirectoryService")
+// @Testing(domainTfVar="domain")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(importStateIdAttribute="directory_id")
+// @Testing(importStateIdAttributes="directory_id;name", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newDirectorySettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directorySettingsResource{}
 
@@ -285,7 +286,7 @@ type directorySettingsImportID struct{}
 func (directorySettingsImportID) Parse(id string) (string, map[string]any, error) {
 	directoryID, settingName, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found || directoryID == "" || settingName == "" {
-		return "", nil, fmt.Errorf("id %q should be in the format <directory-id>%s<setting-name>", id, intflex.ResourceIdSeparator)
+		return "", nil, fmt.Errorf("id %q should be in the format <directory-id>%s<name>", id, intflex.ResourceIdSeparator)
 	}
 
 	return id, map[string]any{
