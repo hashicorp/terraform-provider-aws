@@ -254,7 +254,7 @@ func findDirectorySettingsByDirectoryID(ctx context.Context, conn *directoryserv
 		return !lastPage
 	})
 
-	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
+	if errs.IsA[*awstypes.EntityDoesNotExistException](err) || errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
