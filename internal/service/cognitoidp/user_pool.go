@@ -321,6 +321,25 @@ func resourceUserPool() *schema.Resource {
 								Optional:     true,
 								ValidateFunc: verify.ValidARN,
 							},
+							"inbound_federation": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"lambda_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"lambda_version": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.InboundFederationLambdaVersionType](),
+										},
+									},
+								},
+							},
 							names.AttrKMSKeyID: {
 								Type:         schema.TypeString,
 								Optional:     true,
@@ -1697,6 +1716,12 @@ func expandLambdaConfigType(tfMap map[string]any) *awstypes.LambdaConfigType {
 		apiObject.DefineAuthChallenge = aws.String(v.(string))
 	}
 
+	if v, ok := tfMap["inbound_federation"].([]any); ok && len(v) > 0 {
+		if v, ok := v[0].(map[string]any); ok && v != nil {
+			apiObject.InboundFederation = expandInboundFederationLambdaType(v)
+		}
+	}
+
 	if v, ok := tfMap[names.AttrKMSKeyID]; ok && v.(string) != "" {
 		apiObject.KMSKeyID = aws.String(v.(string))
 	}
@@ -1763,6 +1788,10 @@ func flattenLambdaConfigType(apiObject *awstypes.LambdaConfigType) []any {
 
 	if apiObject.DefineAuthChallenge != nil {
 		tfMap["define_auth_challenge"] = aws.ToString(apiObject.DefineAuthChallenge)
+	}
+
+	if apiObject.InboundFederation != nil {
+		tfMap["inbound_federation"] = flattenInboundFederationLambdaType(apiObject.InboundFederation)
 	}
 
 	if apiObject.KMSKeyID != nil {
@@ -2214,6 +2243,28 @@ func expandPreTokenGenerationVersionConfigType(tfMap map[string]any) *awstypes.P
 }
 
 func flattenPreTokenGenerationVersionConfigType(apiObject *awstypes.PreTokenGenerationVersionConfigType) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	tfMap["lambda_arn"] = aws.ToString(apiObject.LambdaArn)
+	tfMap["lambda_version"] = apiObject.LambdaVersion
+
+	return []any{tfMap}
+}
+
+func expandInboundFederationLambdaType(tfMap map[string]any) *awstypes.InboundFederationLambdaType {
+	apiObject := &awstypes.InboundFederationLambdaType{
+		LambdaArn:     aws.String(tfMap["lambda_arn"].(string)),
+		LambdaVersion: awstypes.InboundFederationLambdaVersionType(tfMap["lambda_version"].(string)),
+	}
+
+	return apiObject
+}
+
+func flattenInboundFederationLambdaType(apiObject *awstypes.InboundFederationLambdaType) []any {
 	if apiObject == nil {
 		return nil
 	}
