@@ -9,6 +9,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -81,7 +82,13 @@ func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading KMS Key (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrKeyID, key.metadata.KeyId)
+	// Preserve a key ARN in key_id rather than overwriting it with the key ID.
+	// On import key_id is empty, so fall back to the resource ID.
+	keyIDOrARN := d.Get(names.AttrKeyID).(string)
+	if keyIDOrARN == "" {
+		keyIDOrARN = d.Id()
+	}
+	d.Set(names.AttrKeyID, keyPolicyKeyIDToSet(keyIDOrARN, aws.ToString(key.metadata.KeyId), aws.ToString(key.metadata.Arn)))
 	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -117,4 +124,15 @@ func resourceKeyPolicyDelete(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	return diags
+}
+
+// keyPolicyKeyIDToSet returns the value to store in key_id.
+// If the configured or prior value is the ARN of the key that was read, it is kept,
+// otherwise the key ID is returned.
+func keyPolicyKeyIDToSet(keyIDOrARN, keyID, keyARN string) string {
+	if keyARN != "" && keyIDOrARN == keyARN {
+		return keyIDOrARN
+	}
+
+	return keyID
 }
