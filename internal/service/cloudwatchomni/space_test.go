@@ -407,7 +407,7 @@ func testAccCheckSpaceDestroy(ctx context.Context, t *testing.T) resource.TestCh
 				return err
 			}
 
-			return fmt.Errorf("CloudWatch Omni Space %s still exists", rs.Primary.ID)
+			return fmt.Errorf("CloudWatch Omni Space %s still exists", rs.Primary.Attributes["space_id"])
 		}
 
 		return nil

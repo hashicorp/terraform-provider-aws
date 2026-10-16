@@ -9,15 +9,18 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space")
+	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space", "aws_cloudwatchomni_view")
 	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces)
+	awsv2.Register("aws_cloudwatchomni_view", sweepViews)
 }
 
 func sweepDomains(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -61,6 +64,30 @@ func sweepSpaces(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newSpaceResource, client,
 				framework.NewAttribute("space_id", aws.ToString(v.SpaceId))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepViews(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := cloudwatchomni.ListViewsInput{
+		Type: awstypes.ViewTypeUser,
+	}
+	conn := client.CloudWatchOmniClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := cloudwatchomni.NewListViewsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Items {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newViewResource, client,
+				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))),
 			)
 		}
 	}
