@@ -160,7 +160,7 @@ func (r *networkConnectorResource) Create(ctx context.Context, req resource.Crea
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 
-	out, err := tfresource.RetryWhen(ctx, propagationTimeout,
+	outCNC, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func(ctx context.Context) (*lambdacore.CreateNetworkConnectorOutput, error) {
 			return conn.CreateNetworkConnector(ctx, &input)
 		},
@@ -179,18 +179,20 @@ func (r *networkConnectorResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	// Set values for unknowns.
-	arn := aws.ToString(out.Arn)
-	plan.ARN = fwflex.StringValueToFramework(ctx, arn)
+	arn := aws.ToString(outCNC.Arn)
 
-	created, err := waitNetworkConnectorCreated(ctx, conn, arn, r.CreateTimeout(ctx, plan.Timeouts))
+	outGNC, err := waitNetworkConnectorCreated(ctx, conn, arn, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		// Taint the resource.
 		resp.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
-	setNetworkConnectorLatestVersion(ctx, created, &plan)
+
+	// Set values for unknowns.
+	plan.ARN = fwflex.StringValueToFramework(ctx, arn)
+	plan.LatestVersion = fwflex.Int64ToFramework(ctx, outGNC.LatestVersion)
+	plan.LatestVersionARN = fwtypes.ARNValue(aws.ToString(outGNC.LatestVersionArn))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -271,12 +273,14 @@ func (r *networkConnectorResource) Update(ctx context.Context, req resource.Upda
 			return
 		}
 
-		updated, err := waitNetworkConnectorUpdated(ctx, conn, arn, r.UpdateTimeout(ctx, plan.Timeouts))
+		out, err := waitNetworkConnectorUpdated(ctx, conn, arn, r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
 		}
-		setNetworkConnectorLatestVersion(ctx, updated, &plan)
+
+		plan.LatestVersion = fwflex.Int64ToFramework(ctx, out.LatestVersion)
+		plan.LatestVersionARN = fwtypes.ARNValue(aws.ToString(out.LatestVersionArn))
 	} else {
 		plan.LatestVersion = state.LatestVersion
 		plan.LatestVersionARN = state.LatestVersionARN
@@ -451,16 +455,6 @@ type networkConnectorResourceModel struct {
 	Name             types.String                                                        `tfsdk:"name"`
 	OperatorRole     fwtypes.ARN                                                         `tfsdk:"operator_role"`
 	Timeouts         timeouts.Value                                                      `tfsdk:"timeouts"`
-}
-
-// setNetworkConnectorLatestVersion copies the computed version fields from a
-// waiter result, since Create and Update write the plan rather than re-reading.
-func setNetworkConnectorLatestVersion(ctx context.Context, out *lambdacore.GetNetworkConnectorOutput, data *networkConnectorResourceModel) {
-	if out == nil {
-		return
-	}
-	data.LatestVersion = fwflex.Int64ToFramework(ctx, out.LatestVersion)
-	data.LatestVersionARN = fwtypes.ARNValue(aws.ToString(out.LatestVersionArn))
 }
 
 type networkConnectorConfigurationModel struct {
