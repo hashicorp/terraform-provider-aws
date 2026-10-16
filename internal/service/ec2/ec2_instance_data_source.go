@@ -196,7 +196,7 @@ func dataSourceInstance() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"instance_tags": tftags.TagsSchemaComputed(),
+				"instance_tags": tftags.TagsSchemaOptionalComputed(),
 				names.AttrInstanceType: {
 					Type:     schema.TypeString,
 					Computed: true,

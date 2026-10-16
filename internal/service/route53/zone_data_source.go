@@ -76,7 +76,7 @@ func dataSourceZone() *schema.Resource {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				names.AttrVPCID: {
 					Type:     schema.TypeString,
 					Optional: true,

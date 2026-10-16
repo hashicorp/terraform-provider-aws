@@ -839,7 +839,7 @@ func dataSourceLaunchTemplate() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				"user_data": {
 					Type:     schema.TypeString,
 					Computed: true,
