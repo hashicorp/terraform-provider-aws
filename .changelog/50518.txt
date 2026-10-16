@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_wafv2_web_acl: Fix `Invalid address to set` errors during Read when the web ACL has a rule nested deeper than the `rule` block supports. Such rules are no longer stored in `rule`, a warning names them, and updates keep them unchanged
+```
