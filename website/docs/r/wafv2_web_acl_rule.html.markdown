@@ -509,25 +509,25 @@ Exactly one of the following statement blocks must be specified:
 * `sqli_match_statement` - (Optional) Match requests that appear to contain SQL injection attacks. See [SQL Injection Match Statement](#sql-injection-match-statement) below.
 * `xss_match_statement` - (Optional) Match requests that appear to contain cross-site scripting attacks. See [Cross-Site Scripting Match Statement](#cross-site-scripting-match-statement) below.
 
-~> **NOTE:** Logical statements (`and_statement`, `not_statement`, `or_statement`) can be nested up to 3 levels deep. This matches the nesting limit of the `aws_wafv2_web_acl` resource.
+~> **NOTE:** Logical statements (`and_statement`, `not_statement`, `or_statement`) can be nested up to 3 levels deep. This matches the nesting limit of the `aws_wafv2_web_acl` resource. As in AWS WAF, `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement` can only be used at the top level of a rule's `statement`, not inside a logical statement.
 
 #### And Statement
 
 Combines multiple statements using logical AND. All nested statements must match for the AND statement to match.
 
-* `statement` - (Required) List of statements to combine. At least one statement is required. Each nested statement supports the same statement types listed above.
+* `statement` - (Required) List of statements to combine. At least two statements are required. Each nested statement supports the statement types listed above except `and_statement`, `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement`.
 
 #### Not Statement
 
 Negates a single statement. The NOT statement matches when the nested statement does not match.
 
-* `statement` - (Required) Single statement to negate. Exactly one statement must be specified.
+* `statement` - (Required) Single statement to negate. Exactly one statement must be specified. The nested statement supports the statement types listed above except `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement`.
 
 #### Or Statement
 
 Combines multiple statements using logical OR. At least one nested statement must match for the OR statement to match.
 
-* `statement` - (Required) List of statements to combine. At least one statement is required. Each nested statement supports the same statement types listed above.
+* `statement` - (Required) List of statements to combine. At least two statements are required. Each nested statement supports the statement types listed above except `managed_rule_group_statement`, `or_statement`, `rate_based_statement` and `rule_group_reference_statement`.
 
 #### ASN Match Statement
 
@@ -752,15 +752,20 @@ Exactly one of the following must be specified:
 
 Exactly one of the following scope down statement blocks must be specified:
 
+* `and_statement` - (Optional) Logical AND statement that combines multiple statements. See [And Statement](#and-statement) above.
 * `asn_match_statement` - (Optional) Match requests based on Autonomous System Number (ASN). See [ASN Match Statement](#asn-match-statement) above.
 * `byte_match_statement` - (Optional) Match requests based on byte patterns. See [Byte Match Statement](#byte-match-statement) above.
 * `geo_match_statement` - (Optional) Match requests by geographic location. See [Geo Match Statement](#geo-match-statement) above.
 * `ip_set_reference_statement` - (Optional) Reference to an IP set. See [IP Set Reference Statement](#ip-set-reference-statement) above.
 * `label_match_statement` - (Optional) Match requests based on labels. See [Label Match Statement](#label-match-statement) above.
+* `not_statement` - (Optional) Logical NOT statement that negates a single statement. See [Not Statement](#not-statement) above.
+* `or_statement` - (Optional) Logical OR statement that combines multiple statements. See [Or Statement](#or-statement) above.
 * `regex_match_statement` - (Optional) Match requests using regex patterns. See [Regex Match Statement](#regex-match-statement) above.
 * `size_constraint_statement` - (Optional) Match requests based on size constraints. See [Size Constraint Statement](#size-constraint-statement) above.
 * `sqli_match_statement` - (Optional) Match requests that appear to contain SQL injection attacks.
 * `xss_match_statement` - (Optional) Match requests that appear to contain cross-site scripting attacks.
+
+~> **NOTE:** Logical statements (`and_statement`, `not_statement`, `or_statement`) can be nested up to 2 levels deep within a scope down statement, one level less than in the main statement block. This matches `scope_down_statement` in the `aws_wafv2_web_acl` resource.
 
 ### Custom Keys
 

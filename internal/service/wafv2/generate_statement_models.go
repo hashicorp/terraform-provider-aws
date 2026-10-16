@@ -35,17 +35,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	levels := make([]int, maxLevel+1)
-	for i := range levels {
-		levels[i] = i
+	// Levels of the statements nested in and/or/not; the top level is maxLevel.
+	childLevels := make([]int, maxLevel)
+	for i := range childLevels {
+		childLevels[i] = i
 	}
 
 	data := struct {
-		MaxLevel int
-		Levels   []int
+		MaxLevel    int
+		ChildLevels []int
 	}{
-		MaxLevel: maxLevel,
-		Levels:   levels,
+		MaxLevel:    maxLevel,
+		ChildLevels: childLevels,
 	}
 
 	var buf bytes.Buffer
