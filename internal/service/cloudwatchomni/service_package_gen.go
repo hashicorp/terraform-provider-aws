@@ -38,6 +38,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newAccessProfileResource,
+			TypeName: "aws_cloudwatchomni_access_profile",
+			Name:     "Access Profile",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("profile_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      accessProfileImportID{},
+			},
+		},
+		{
 			Factory:  newDomainResource,
 			TypeName: "aws_cloudwatchomni_domain",
 			Name:     "Domain",
@@ -57,6 +71,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newViewResource,
+			TypeName: "aws_cloudwatchomni_view",
+			Name:     "View",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
 }
 
@@ -68,6 +93,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Name:     "Access Grant",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("grant_id", true)),
+		},
+		{
+			Factory:  newAccessProfileResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_access_profile",
+			Name:     "Access Profile",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("profile_id", true),
+			}),
 		},
 		{
 			Factory:  newDomainResourceAsListResource,
@@ -82,6 +117,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Name:     "Space",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("space_id", true)),
+		},
+		{
+			Factory:  newViewResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_view",
+			Name:     "View",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 	})
 }
