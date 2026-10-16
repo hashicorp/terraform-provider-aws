@@ -143,11 +143,11 @@ The `cross_account_role` block supports:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the service.
-* `dev_ops_agent_status` - Connection status of the AWS DevOps Agent integration. Valid values: `CONNECTING`, `CONNECTED`, `DISCONNECTED`, `FAILED`. Linking is asynchronous: a newly linked service reports `CONNECTING` and transitions to `CONNECTED` (or `FAILED`) out-of-band, so a subsequent refresh is needed to observe the terminal status. After a disconnect, this is reported as `DISCONNECTED`.
-* `dev_ops_agent_space_id` - Identifier of the linked Agent Space.
-* `dev_ops_agent_region` - AWS Region of the linked Agent Space.
-* `dev_ops_agent_operator_app_url` - URL of the DevOps Agent Operator App for the linked Agent Space. Present when `dev_ops_agent_status` is `CONNECTED`.
 * `dev_ops_agent_connected_at` - Timestamp (RFC 3339) when the service successfully connected to the Agent Space.
+* `dev_ops_agent_operator_app_url` - URL of the DevOps Agent Operator App for the linked Agent Space. Present when `dev_ops_agent_status` is `CONNECTED`.
+* `dev_ops_agent_region` - AWS Region of the linked Agent Space.
+* `dev_ops_agent_space_id` - Identifier of the linked Agent Space.
+* `dev_ops_agent_status` - Connection status of the AWS DevOps Agent integration. Valid values: `CONNECTING`, `CONNECTED`, `DISCONNECTED`, `FAILED`. Linking is asynchronous: a newly linked service reports `CONNECTING` and transitions to `CONNECTED` (or `FAILED`) out-of-band, so a subsequent refresh is needed to observe the terminal status. After a disconnect, this is reported as `DISCONNECTED`.
 * `dev_ops_agent_status_reason` - Human-readable explanation of the current connection status. Present when `dev_ops_agent_status` is `FAILED`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
