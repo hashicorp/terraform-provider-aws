@@ -28,6 +28,7 @@ func TestAccDSDirectorySettings_List_basic(t *testing.T) {
 
 	resourceName := "aws_directory_service_directory_setting.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 	identity := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -48,6 +49,7 @@ func TestAccDSDirectorySettings_List_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
@@ -61,6 +63,7 @@ func TestAccDSDirectorySettings_List_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_directory_service_directory_setting.test", identity.Checks()),
@@ -80,6 +83,7 @@ func TestAccDSDirectorySettings_List_includeResource(t *testing.T) {
 
 	resourceName := "aws_directory_service_directory_setting.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 	identity := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -100,6 +104,7 @@ func TestAccDSDirectorySettings_List_includeResource(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
@@ -113,6 +118,7 @@ func TestAccDSDirectorySettings_List_includeResource(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_directory_service_directory_setting.test", identity.Checks()),
@@ -138,6 +144,7 @@ func TestAccDSDirectorySettings_List_regionOverride(t *testing.T) {
 
 	resourceName := "aws_directory_service_directory_setting.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 	identity := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -159,6 +166,7 @@ func TestAccDSDirectorySettings_List_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -173,6 +181,7 @@ func TestAccDSDirectorySettings_List_regionOverride(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySettings/list_region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
+					"domain":        config.StringVariable(domain),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{

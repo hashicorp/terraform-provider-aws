@@ -47,7 +47,7 @@ resource "aws_subnet" "test" {
 resource "aws_directory_service_directory" "test" {
   region = var.region
 
-  name     = "corp.${var.rName}.com"
+  name     = var.domain
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
@@ -62,6 +62,11 @@ variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
+}
+
+variable "domain" {
+  type     = string
+  nullable = false
 }
 
 variable "region" {
