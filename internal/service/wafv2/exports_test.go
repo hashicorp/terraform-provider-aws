@@ -27,4 +27,5 @@ var (
 	ListRuleGroupsPages               = listRuleGroupsPages
 	ListWebACLsPages                  = listWebACLsPages
 	ParseWebACLARN                    = parseWebACLARN
+	PartitionWebACLRules              = partitionWebACLRules
 )
