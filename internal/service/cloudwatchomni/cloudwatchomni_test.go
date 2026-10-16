@@ -16,6 +16,16 @@ func TestAccCloudWatchOmni_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"AccessProfile": {
+			acctest.CtBasic:        testAccAccessProfile_basic,
+			acctest.CtDisappears:   testAccAccessProfile_disappears,
+			acctest.CtName:         testAccAccessProfile_name,
+			"description":          testAccAccessProfile_description,
+			"Identity":             testAccCloudWatchOmniAccessProfile_identitySerial,
+			"List_basic":           testAccAccessProfile_List_basic,
+			"List_includeResource": testAccAccessProfile_List_includeResource,
+			"List_regionOverride":  testAccAccessProfile_List_regionOverride,
+		},
 		"Domain": {
 			acctest.CtBasic:        testAccDomain_basic,
 			acctest.CtDisappears:   testAccDomain_disappears,

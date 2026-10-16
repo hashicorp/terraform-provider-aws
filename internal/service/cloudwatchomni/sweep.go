@@ -18,9 +18,56 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space", "aws_cloudwatchomni_view")
-	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces)
+	awsv2.Register("aws_cloudwatchomni_access_profile", sweepAccessProfiles)
+	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space")
+	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces, "aws_cloudwatchomni_access_profile")
 	awsv2.Register("aws_cloudwatchomni_view", sweepViews)
+}
+
+func sweepAccessProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input cloudwatchomni.ListSpacesInput
+	conn := client.CloudWatchOmniClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := cloudwatchomni.NewListSpacesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Items {
+			if aws.ToString(v.Region) != conn.Options().Region {
+				continue
+			}
+
+			spaceID := aws.ToString(v.SpaceId)
+			input := cloudwatchomni.ListAccessProfilesInput{
+				SpaceId: aws.String(spaceID),
+			}
+			pages := cloudwatchomni.NewListAccessProfilesPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, smarterr.NewError(err)
+				}
+
+				for _, v := range page.Items {
+					// Service-managed profiles cannot be deleted.
+					if v.ProfileType == awstypes.AccessProfileTypeServiceManaged {
+						continue
+					}
+
+					sweepResources = append(sweepResources, framework.NewSweepResource(newAccessProfileResource, client,
+						framework.NewAttribute("profile_id", aws.ToString(v.ProfileId)),
+						framework.NewAttribute("space_id", spaceID)),
+					)
+				}
+			}
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepDomains(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
