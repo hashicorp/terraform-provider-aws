@@ -8,8 +8,10 @@ var (
 	ResourceAccessProfile = newAccessProfileResource
 	ResourceDomain        = newDomainResource
 	ResourceSpace         = newSpaceResource
+	ResourceView          = newViewResource
 
 	FindAccessProfileByTwoPartKey = findAccessProfileByTwoPartKey
 	FindDomainByID                = findDomainByID
 	FindSpaceByID                 = findSpaceByID
+	FindViewByName                = findViewByName
 )

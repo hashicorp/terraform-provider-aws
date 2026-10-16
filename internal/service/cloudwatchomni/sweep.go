@@ -14,12 +14,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
 	awsv2.Register("aws_cloudwatchomni_access_profile", sweepAccessProfiles)
-	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space")
-	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces, "aws_cloudwatchomni_access_profile")
+	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space", "aws_cloudwatchomni_access_profile")
+	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces)
+	awsv2.Register("aws_cloudwatchomni_view", sweepViews)
 }
 
 func sweepAccessProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -40,24 +42,24 @@ func sweepAccessProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.
 			}
 
 			spaceID := aws.ToString(v.SpaceId)
-			profileInput := cloudwatchomni.ListAccessProfilesInput{
+			input := cloudwatchomni.ListAccessProfilesInput{
 				SpaceId: aws.String(spaceID),
 			}
-			profilePages := cloudwatchomni.NewListAccessProfilesPaginator(conn, &profileInput)
-			for profilePages.HasMorePages() {
-				profilePage, err := profilePages.NextPage(ctx)
+			pages := cloudwatchomni.NewListAccessProfilesPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
 				if err != nil {
 					return nil, smarterr.NewError(err)
 				}
 
-				for _, profile := range profilePage.Items {
+				for _, v := range page.Items {
 					// Service-managed profiles cannot be deleted.
-					if profile.ProfileType == awstypes.AccessProfileTypeServiceManaged {
+					if v.ProfileType == awstypes.AccessProfileTypeServiceManaged {
 						continue
 					}
 
 					sweepResources = append(sweepResources, framework.NewSweepResource(newAccessProfileResource, client,
-						framework.NewAttribute("profile_id", aws.ToString(profile.ProfileId)),
+						framework.NewAttribute("profile_id", aws.ToString(v.ProfileId)),
 						framework.NewAttribute("space_id", spaceID)),
 					)
 				}
@@ -109,6 +111,30 @@ func sweepSpaces(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newSpaceResource, client,
 				framework.NewAttribute("space_id", aws.ToString(v.SpaceId))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepViews(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := cloudwatchomni.ListViewsInput{
+		Type: awstypes.ViewTypeUser,
+	}
+	conn := client.CloudWatchOmniClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := cloudwatchomni.NewListViewsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Items {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newViewResource, client,
+				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))),
 			)
 		}
 	}
