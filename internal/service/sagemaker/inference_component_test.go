@@ -209,6 +209,39 @@ func TestAccSageMakerInferenceComponent_container(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerInferenceComponent_containerEnvironment(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_inference_component.test"
+
+	// environment is Optional without Computed, so an explicitly configured empty map
+	// must survive the apply as an empty map rather than becoming null, while an
+	// omitted environment must stay null. No import step is included: the API reports
+	// no entries in both cases, so import cannot tell them apart.
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInferenceComponentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInferenceComponentConfig_containerEnvironmentEmpty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInferenceComponentExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "specification.0.container.0.environment.%", "0"),
+				),
+			},
+			{
+				Config: testAccInferenceComponentConfig_containerEnvironmentOmitted(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInferenceComponentExists(ctx, t, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "specification.0.container.0.environment.%"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSageMakerInferenceComponent_startupParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -892,6 +925,60 @@ resource "aws_sagemaker_inference_component" "test" {
       environment = {
         MY_ENV = "my_value"
       }
+    }
+
+    compute_resource_requirements {
+      min_memory_required_in_mb    = 1024
+      number_of_cpu_cores_required = 1
+    }
+  }
+
+  runtime_config {
+    copy_count = 1
+  }
+}
+`, rName))
+}
+
+func testAccInferenceComponentConfig_containerEnvironmentEmpty(rName string) string {
+	return acctest.ConfigCompose(testAccInferenceComponentConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_inference_component" "test" {
+  name          = %[1]q
+  endpoint_name = aws_sagemaker_endpoint.test.name
+  variant_name  = "variant-1"
+
+  specification {
+    container {
+      image        = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+      artifact_url = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
+
+      environment = {}
+    }
+
+    compute_resource_requirements {
+      min_memory_required_in_mb    = 1024
+      number_of_cpu_cores_required = 1
+    }
+  }
+
+  runtime_config {
+    copy_count = 1
+  }
+}
+`, rName))
+}
+
+func testAccInferenceComponentConfig_containerEnvironmentOmitted(rName string) string {
+	return acctest.ConfigCompose(testAccInferenceComponentConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_inference_component" "test" {
+  name          = %[1]q
+  endpoint_name = aws_sagemaker_endpoint.test.name
+  variant_name  = "variant-1"
+
+  specification {
+    container {
+      image        = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+      artifact_url = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
     }
 
     compute_resource_requirements {

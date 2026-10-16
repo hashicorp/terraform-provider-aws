@@ -621,9 +621,65 @@ func preserveOmittedSpecificationBlocks(ctx context.Context, prior fwtypes.ListN
 		if priorSpec.DataCacheConfig.IsNull() {
 			currentSpecs[i].DataCacheConfig = priorSpec.DataCacheConfig
 		}
+
+		preserveConfiguredEmptyEnvironment(ctx, priorSpec.Container, &currentSpecs[i].Container, diags)
+		if diags.HasError() {
+			return
+		}
 	}
 
 	v, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, currentSpecs, nil)
+	diags.Append(d...)
+	if diags.HasError() {
+		return
+	}
+
+	*current = v
+}
+
+// preserveConfiguredEmptyEnvironment keeps an explicitly configured empty container
+// environment from being replaced by null.
+//
+// environment is Optional without Computed, so its planned value is exactly what the
+// configuration holds, and Terraform distinguishes an empty map from a null one. The
+// service reports no entries for an empty environment, which flattens to null and would
+// fail the apply with an inconsistent-result error. An omitted environment is null in the
+// configuration and stays null.
+func preserveConfiguredEmptyEnvironment(ctx context.Context, prior fwtypes.ListNestedObjectValueOf[inferenceComponentContainerModel], current *fwtypes.ListNestedObjectValueOf[inferenceComponentContainerModel], diags *diag.Diagnostics) {
+	if prior.IsNull() || prior.IsUnknown() || current.IsNull() || current.IsUnknown() {
+		return
+	}
+
+	priorContainer, d := prior.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return
+	}
+
+	currentContainer, d := current.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return
+	}
+
+	if priorContainer == nil || currentContainer == nil {
+		return
+	}
+
+	// Only an explicitly configured empty map is restored. A prior value that holds
+	// entries is left alone so genuine drift is still reported.
+	priorEnvironment := priorContainer.Environment
+	if priorEnvironment.IsNull() || priorEnvironment.IsUnknown() || priorEnvironment.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		return
+	}
+
+	if !currentContainer.Environment.IsNull() {
+		return
+	}
+
+	currentContainer.Environment = priorEnvironment
+
+	v, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, currentContainer)
 	diags.Append(d...)
 	if diags.HasError() {
 		return
