@@ -209,6 +209,171 @@ func TestAccBedrockAgentCorePolicy_cedarStatementUpdate(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCorePolicy_definitionTypeChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_policy.test"
+	stmt := "permit(principal, action, resource is AgentCore::Gateway);"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/definition_type/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"variant":       config.StringVariable("cedar"),
+					"statement":     config.StringVariable(stmt),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("definition").AtSliceIndex(0).AtMapKey("cedar").AtSliceIndex(0).AtMapKey("statement"), knownvalue.StringExact(stmt)),
+				},
+			},
+			{
+				// Switching the union variant (cedar -> policy) is rejected by
+				// UpdatePolicy ("Changing policy type is not permitted"), so the
+				// plan must be a replacement, not an in-place update.
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/definition_type/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"variant":       config.StringVariable("policy"),
+					"statement":     config.StringVariable(stmt),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("definition").AtSliceIndex(0).AtMapKey(names.AttrPolicy).AtSliceIndex(0).AtMapKey("statement"), knownvalue.StringExact(stmt)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCorePolicy_enforcementMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/enforcement_mode/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:    config.StringVariable(rName),
+					"enforcement_mode": config.StringVariable("LOG_ONLY"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforcement_mode"), knownvalue.StringExact("LOG_ONLY")),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/enforcement_mode/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:    config.StringVariable(rName),
+					"enforcement_mode": config.StringVariable("ACTIVE"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enforcement_mode"), knownvalue.StringExact("ACTIVE")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCorePolicy_policyStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_policy.test"
+	stmt1 := "permit(principal, action, resource is AgentCore::Gateway);"
+	stmt2 := "forbid(principal, action, resource is AgentCore::Gateway);"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/policy_statement/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"statement":     config.StringVariable(stmt1),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("definition").AtSliceIndex(0).AtMapKey(names.AttrPolicy).AtSliceIndex(0).AtMapKey("statement"), knownvalue.StringExact(stmt1)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/policy_statement/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"statement":     config.StringVariable(stmt2),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("definition").AtSliceIndex(0).AtMapKey(names.AttrPolicy).AtSliceIndex(0).AtMapKey("statement"), knownvalue.StringExact(stmt2)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
