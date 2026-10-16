@@ -408,6 +408,53 @@ func testAccOrganization_FeatureSetUpdate(t *testing.T) {
 	})
 }
 
+func testAccOrganization_returnOrganizationOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var organization awstypes.Organization
+	resourceName := "aws_organizations_organization.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationConfig_returnOrganizationOnly(awstypes.PolicyTypeServiceControlPolicy),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, t, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "accounts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_policy_types.*", string(awstypes.PolicyTypeServiceControlPolicy)),
+					resource.TestCheckResourceAttr(resourceName, "non_master_accounts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "return_organization_only", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "roots.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "roots.0.policy_types.#", "1"),
+				),
+			},
+			{
+				Config: testAccOrganizationConfig_returnOrganizationOnly(awstypes.PolicyTypeServiceControlPolicy, awstypes.PolicyTypeTagPolicy),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, t, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "roots.0.policy_types.#", "2"),
+					testAccCheckOrganizationEnablePolicyTypeOutOfBand(ctx, t, resourceName, awstypes.PolicyTypeBackupPolicy),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				// The policy type enabled outside of Terraform is read back.
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_policy_types.*", string(awstypes.PolicyTypeBackupPolicy)),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckOrganizationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
@@ -473,6 +520,19 @@ func testAccOrganizationNotRecreated(before, after *awstypes.Organization) resou
 	}
 }
 
+func testAccCheckOrganizationEnablePolicyTypeOutOfBand(ctx context.Context, t *testing.T, n string, policyType awstypes.PolicyType) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
+
+		return tforganizations.EnablePolicyType(ctx, conn, policyType, rs.Primary.Attributes["roots.0.id"])
+	}
+}
+
 const testAccOrganizationConfig_basic = `
 resource "aws_organizations_organization" "test" {}
 `
@@ -516,4 +576,13 @@ resource "aws_organizations_organization" "test" {
   feature_set = %[1]q
 }
 `, featureSet)
+}
+
+func testAccOrganizationConfig_returnOrganizationOnly(policyTypes ...awstypes.PolicyType) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {
+  enabled_policy_types     = [%[1]s]
+  return_organization_only = true
+}
+`, acctest.ListOfStrings(policyTypes...))
 }
