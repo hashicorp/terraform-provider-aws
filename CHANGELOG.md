@@ -1,5 +1,9 @@
 ## 6.70.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_prometheus_scraper: Fix update failure on scrapers with a CloudWatch destination by omitting unchanged `destination` from update requests ([#50463](https://github.com/hashicorp/terraform-provider-aws/issues/50463))
+
 ## 6.69.1 (October 15, 2026)
 
 BUG FIXES:
