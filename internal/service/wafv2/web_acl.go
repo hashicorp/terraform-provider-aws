@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -30,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -178,15 +176,13 @@ func resourceWebACL() *schema.Resource {
 					),
 				},
 				"rule_json": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					ConflictsWith:    []string{names.AttrRule},
-					ValidateFunc:     validation.StringIsJSON,
-					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-					StateFunc: func(v any) string {
-						json, _ := structure.NormalizeJsonString(v)
-						return json
-					},
+					Type:                  schema.TypeString,
+					Optional:              true,
+					ConflictsWith:         []string{names.AttrRule},
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      rulesJSONDiffSuppressFunc(expandWebACLRulesJSON),
+					DiffSuppressOnRefresh: true,
+					StateFunc:             rulesJSONStateFunc(expandWebACLRulesJSON),
 				},
 				names.AttrRule: {
 					Type:          schema.TypeSet,
@@ -380,7 +376,11 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 		}
 	} else {
-		d.Set("rule_json", d.Get("rule_json"))
+		ruleJSON, err := webACLRulesJSONToSet(d.Get("rule_json").(string), webACL.Rules)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting rule_json: %s", err)
+		}
+		d.Set("rule_json", ruleJSON)
 		d.Set(names.AttrRule, nil)
 	}
 	d.Set("token_domains", webACL.TokenDomains)
