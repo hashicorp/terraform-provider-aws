@@ -29,8 +29,6 @@ const (
 	domainDeletedTimeout              = 20 * time.Minute
 	featureGroupCreatedTimeout        = 20 * time.Minute
 	featureGroupDeletedTimeout        = 10 * time.Minute
-	appInServiceTimeout               = 10 * time.Minute
-	appDeletedTimeout                 = 10 * time.Minute
 	flowDefinitionActiveTimeout       = 2 * time.Minute
 	flowDefinitionDeletedTimeout      = 2 * time.Minute
 	projectCreatedTimeout             = 15 * time.Minute
@@ -356,12 +354,12 @@ func waitFeatureGroupUpdated(ctx context.Context, conn *sagemaker.Client, name s
 	return nil, err
 }
 
-func waitAppInService(ctx context.Context, conn *sagemaker.Client, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
+func waitAppInService(ctx context.Context, conn *sagemaker.Client, domainID, userProfileOrSpaceName, appType, appName string, timeout time.Duration) (*sagemaker.DescribeAppOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AppStatusPending),
 		Target:  enum.Slice(awstypes.AppStatusInService),
 		Refresh: statusApp(conn, domainID, userProfileOrSpaceName, appType, appName),
-		Timeout: appInServiceTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -377,12 +375,12 @@ func waitAppInService(ctx context.Context, conn *sagemaker.Client, domainID, use
 	return nil, err
 }
 
-func waitAppDeleted(ctx context.Context, conn *sagemaker.Client, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
+func waitAppDeleted(ctx context.Context, conn *sagemaker.Client, domainID, userProfileOrSpaceName, appType, appName string, timeout time.Duration) (*sagemaker.DescribeAppOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AppStatusDeleting),
 		Target:  []string{},
 		Refresh: statusApp(conn, domainID, userProfileOrSpaceName, appType, appName),
-		Timeout: appDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
