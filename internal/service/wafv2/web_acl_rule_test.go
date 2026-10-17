@@ -774,6 +774,43 @@ func TestAccWAFV2WebACLRule_migrateInlineToSeparateResource(t *testing.T) {
 		},
 	})
 }
+func TestAccWAFV2WebACLRule_dataProtectionConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+	webACLResourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Create.
+			{
+				Config: testAccWebACLRuleConfig_dataProtectionConfig(rName, []string{"CN", "RU"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					testAccCheckWebACLHasDataProtectionConfig(ctx, t, webACLResourceName),
+				),
+			},
+			// Update. Only `name` and `priority` force replacement, so changing the statement
+			// exercises the update path rather than a delete and create cycle.
+			{
+				Config: testAccWebACLRuleConfig_dataProtectionConfig(rName, []string{"CN", "RU", "KP"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					testAccCheckWebACLHasDataProtectionConfig(ctx, t, webACLResourceName),
+				),
+			},
+			// Delete. The rule leaves the configuration while the Web ACL stays behind.
+			{
+				Config: testAccWebACLRuleConfig_dataProtectionConfigWebACLOnly(rName),
+				Check:  testAccCheckWebACLHasDataProtectionConfig(ctx, t, webACLResourceName),
+			},
+		},
+	})
+}
 
 func testAccCheckWebACLRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -852,6 +889,28 @@ func testAccCheckWebACLRuleExists(ctx context.Context, t *testing.T, n string) r
 		}
 
 		return fmt.Errorf("WAFv2 Web ACL Rule %s not found in Web ACL", ruleName)
+	}
+}
+
+func testAccCheckWebACLHasDataProtectionConfig(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
+
+		output, err := tfwafv2.FindWebACLByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
+		if err != nil {
+			return err
+		}
+
+		if output.WebACL.DataProtectionConfig == nil || len(output.WebACL.DataProtectionConfig.DataProtections) == 0 {
+			return fmt.Errorf("WAFv2 Web ACL (%s): data protection configuration not found", rs.Primary.ID)
+		}
+
+		return nil
 	}
 }
 
@@ -2351,4 +2410,64 @@ resource "aws_wafv2_web_acl_rule" "test" {
   }
 }
 `, rName)
+}
+
+func testAccWebACLRuleConfig_dataProtectionConfigWebACLOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  data_protection_config {
+    data_protection {
+      action = "HASH"
+
+      field {
+        field_type = "SINGLE_HEADER"
+        field_keys = ["authorization"]
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleConfig_dataProtectionConfig(rName string, countryCodes []string) string {
+	return acctest.ConfigCompose(testAccWebACLRuleConfig_dataProtectionConfigWebACLOnly(rName), fmt.Sprintf(`
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    geo_match_statement {
+      country_codes = [%[2]s]
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, acctest.ListOfStrings(countryCodes...)))
 }
