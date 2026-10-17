@@ -197,6 +197,57 @@ func waitGSIDeleted(ctx context.Context, conn *dynamodb.Client, tableName, index
 	return nil, err
 }
 
+func waitVectorIndexActive(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*awstypes.VectorIndexDescription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusUpdating),
+		Target:  enum.Slice(awstypes.IndexStatusActive),
+		Refresh: statusVectorIndex(conn, tableName, indexName),
+		Timeout: max(updateTableTimeout, timeout),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VectorIndexDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAllVectorIndexesActive(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusUpdating),
+		Target:  enum.Slice(awstypes.IndexStatusActive),
+		Refresh: statusAllVectorIndexes(conn, tableName),
+		Timeout: max(createTableTimeout, timeout),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVectorIndexDeleted(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*awstypes.VectorIndexDescription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.IndexStatusActive, awstypes.IndexStatusDeleting, awstypes.IndexStatusUpdating),
+		Target:  []string{},
+		Refresh: statusVectorIndex(conn, tableName, indexName),
+		Timeout: max(updateTableTimeout, timeout),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VectorIndexDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitPITRUpdated(ctx context.Context, conn *dynamodb.Client, tableName string, toEnable bool, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.PointInTimeRecoveryDescription, error) {
 	var pending []string
 	target := enum.Slice(awstypes.PointInTimeRecoveryStatusDisabled)
