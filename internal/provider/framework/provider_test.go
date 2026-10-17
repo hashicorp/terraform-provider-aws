@@ -12,12 +12,17 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	actionschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	ephemeralschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	providerschema "github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -394,4 +399,25 @@ func validateSchemaTagsForResource(tagsSpec inttypes.ServicePackageResourceTags,
 		}
 	}
 	return nil
+}
+
+func TestIgnoreTagUpdatesRejectsEmptyStrings(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	var response provider.SchemaResponse
+	(&frameworkProvider{}).Schema(ctx, provider.SchemaRequest{}, &response)
+	block := response.Schema.Blocks["ignore_tag_updates"].(providerschema.ListNestedBlock)
+	for _, key := range []string{"keys", "key_prefixes"} {
+		attribute := block.NestedObject.Attributes[key].(providerschema.SetAttribute)
+		for _, value := range []string{"", "CreatedOn"} {
+			request := validator.SetRequest{ConfigValue: types.SetValueMust(types.StringType, []attr.Value{types.StringValue(value)})}
+			var result validator.SetResponse
+			for _, validate := range attribute.Validators {
+				validate.ValidateSet(ctx, request, &result)
+			}
+			if result.Diagnostics.HasError() != (value == "") {
+				t.Errorf("%s value %q: unexpected diagnostics %v", key, value, result.Diagnostics)
+			}
+		}
+	}
 }
