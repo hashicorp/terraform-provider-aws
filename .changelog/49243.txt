@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Fix `sigint_rollback` wait for deployment terminal status so successful rollbacks are recognized
+```
