@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_schedule: Recalculate the start time when updating a recurring schedule that does not configure `start_time`
+```
