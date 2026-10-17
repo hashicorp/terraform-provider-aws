@@ -299,7 +299,8 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 							ElementType: types.StringType,
 							Optional:    true,
 							Description: "Resource tags to default across all resources. " +
-								"Can also be configured with environment variables like `" + tftags.DefaultTagsEnvVarPrefix + "<tag_name>`.",
+								"Can also be configured with environment variables like `" + tftags.DefaultTagsEnvVarPrefix + "<tag_name>`, " +
+								"or with the `" + tftags.DefaultTagsEnvVar + "` environment variable containing comma-separated `key=value` pairs.",
 						},
 					},
 				},
