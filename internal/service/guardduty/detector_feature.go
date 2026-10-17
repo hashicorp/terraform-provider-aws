@@ -26,6 +26,13 @@ import (
 )
 
 // @SDKResource("aws_guardduty_detector_feature", name="Detector Feature")
+// @IdentityAttribute("detector_id")
+// @IdentityAttribute("name")
+// @IdAttrFormat("{detector_id}/{name}")
+// @ImportIDHandler("detectorFeatureImportID")
+// @Testing(preIdentityVersion="v6.49.0")
+// @Testing(checkDestroyNoop=true)
+// @Testing(generator=false)
 func resourceDetectorFeature() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorFeaturePut,
@@ -154,6 +161,29 @@ func detectorFeatureParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DETECTORID%[2]sFEATURENAME", id, detectorFeatureResourceIDSeparator)
+}
+
+type detectorFeatureImportID struct{}
+
+func (detectorFeatureImportID) Create(d *schema.ResourceData) string {
+	return detectorFeatureCreateResourceID(
+		d.Get("detector_id").(string),
+		d.Get(names.AttrName).(string),
+	)
+}
+
+func (detectorFeatureImportID) Parse(id string) (string, map[string]any, error) {
+	detectorID, name, err := detectorFeatureParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"detector_id":  detectorID,
+		names.AttrName: name,
+	}
+
+	return id, result, nil
 }
 
 func findDetectorFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.DetectorFeatureConfigurationResult, error) {
