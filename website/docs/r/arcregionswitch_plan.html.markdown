@@ -220,6 +220,7 @@ The following arguments are optional:
 * `parallel_config` - (Optional) Configuration for parallel execution of multiple steps. See [`parallel_config` Block](#parallel_config-block) for details.
 * `rds_create_cross_region_read_replica_config` - (Optional) Configuration for creating cross-region RDS read replicas. See [`rds_create_cross_region_read_replica_config` Block](#rds_create_cross_region_read_replica_config-block) for details.
 * `rds_promote_read_replica_config` - (Optional) Configuration for promoting RDS read replicas. See [`rds_promote_read_replica_config` Block](#rds_promote_read_replica_config-block) for details.
+* `rds_switchover_read_replica_config` - (Optional) Configuration for switching over RDS read replicas. See [`rds_switchover_read_replica_config` Block](#rds_switchover_read_replica_config-block) for details.
 * `region_switch_plan_config` - (Optional) Configuration for executing a nested region switch plan. See [`region_switch_plan_config` Block](#region_switch_plan_config-block) for details.
 * `route53_health_check_config` - (Optional) Configuration for Route53 health check operations. See [`route53_health_check_config` Block](#route53_health_check_config-block) for details.
 
@@ -428,6 +429,18 @@ The following arguments are optional:
 * `db_instance_arn_map` - (Required) Map of source DB instance identifiers to target DB instance ARNs.
 * `external_id` - (Optional) External ID for cross-account role assumption.
 * `timeout_minutes` - (Optional) Timeout in minutes.
+
+### `rds_switchover_read_replica_config` Block
+
+* `cross_account_role` - (Optional) ARN of the cross-account role to assume.
+* `db_instance_arn_map` - (Required) Map of source DB instance identifiers to target DB instance ARNs.
+* `external_id` - (Optional) External ID for cross-account role assumption.
+* `timeout_minutes` - (Optional) Timeout in minutes.
+* `ungraceful` - (Optional) Ungraceful behavior configuration. See [`rds_switchover_read_replica_config.ungraceful` Block](#rds_switchover_read_replica_configungraceful-block) for details.
+
+### `rds_switchover_read_replica_config.ungraceful` Block
+
+* `ungraceful` - (Optional) Ungraceful behavior. Valid values: `promoteReadReplica`.
 
 ### `region_switch_plan_config` Block
 
