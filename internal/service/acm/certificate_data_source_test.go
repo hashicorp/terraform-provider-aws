@@ -32,6 +32,8 @@ func TestAccACMCertificateDataSource_byDomain(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDomain, domain),
+					resource.TestCheckResourceAttr(dataSourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "subject_alternative_names.0", domain),
 				),
 			},
 		},
