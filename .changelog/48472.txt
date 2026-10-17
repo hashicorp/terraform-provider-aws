@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53_records_exclusive: Fix severe performance regression for large hosted zones by changing `resource_record_set` from `SetNestedBlock` to `ListNestedBlock`, eliminating per-element SHA256 hashing during state flatten
+```
