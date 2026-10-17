@@ -135,6 +135,7 @@ This resource supports the following arguments:
 
 * `description` - (Optional) Description of the flow.
 * `destination_flow_config` - (Required) Configuration that controls how Amazon AppFlow places data in the destination connector. See the `destination_flow_config` Block for details.
+* `force_delete` - (Optional) Whether to force deleting the flow even if it is currently in use. Defaults to `false`.
 * `kms_arn` - (Optional) ARN of the KMS key you provide for encryption. Required if you do not want to use the Amazon AppFlow-managed KMS key. Uses the Amazon AppFlow-managed KMS key when not provided.
 * `metadata_catalog_config` - (Optional) Configuration that determines how Amazon AppFlow catalogs the data that the flow transfers. See the `metadata_catalog_config` Block for details.
 * `name` - (Required) Name of the flow.
