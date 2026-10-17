@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ebs_volume: Add `availability_zone_id` argument as an alternative to `availability_zone`
+```
+
+```release-note:enhancement
+data-source/aws_ebs_volume: Add `availability_zone_id` attribute
+```
