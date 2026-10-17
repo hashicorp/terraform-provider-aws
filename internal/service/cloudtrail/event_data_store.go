@@ -151,7 +151,6 @@ func resourceEventDataStore() *schema.Resource {
 				names.AttrKMSKeyID: {
 					Type:     schema.TypeString,
 					Optional: true,
-					ForceNew: true,
 				},
 				"multi_region_enabled": {
 					Type:     schema.TypeBool,
@@ -284,6 +283,10 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if d.HasChange("billing_mode") {
 			input.BillingMode = types.BillingMode(d.Get("billing_mode").(string))
+		}
+
+		if d.HasChange(names.AttrKMSKeyID) {
+			input.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyID).(string))
 		}
 
 		if d.HasChange("multi_region_enabled") {
