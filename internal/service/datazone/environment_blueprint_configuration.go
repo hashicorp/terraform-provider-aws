@@ -65,6 +65,10 @@ func (r *environmentBlueprintConfigurationResource) Schema(ctx context.Context, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"environment_role_permission_boundary": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+			},
 			"global_parameters": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
@@ -250,11 +254,12 @@ func (environmentBlueprintConfigurationImportID) Parse(id string) (string, map[s
 
 type environmentBlueprintConfigurationResourceModel struct {
 	framework.WithRegionModel
-	DomainIdentifier               types.String             `tfsdk:"domain_id"`
-	EnabledRegions                 fwtypes.ListOfString     `tfsdk:"enabled_regions"`
-	EnvironmentBlueprintIdentifier types.String             `tfsdk:"environment_blueprint_id"`
-	GlobalParameters               fwtypes.MapOfString      `tfsdk:"global_parameters"`
-	ManageAccessRoleARN            fwtypes.ARN              `tfsdk:"manage_access_role_arn"`
-	ProvisioningRoleARN            fwtypes.ARN              `tfsdk:"provisioning_role_arn"`
-	RegionalParameters             fwtypes.MapOfMapOfString `tfsdk:"regional_parameters"`
+	DomainIdentifier                  types.String             `tfsdk:"domain_id"`
+	EnabledRegions                    fwtypes.ListOfString     `tfsdk:"enabled_regions"`
+	EnvironmentBlueprintIdentifier    types.String             `tfsdk:"environment_blueprint_id"`
+	EnvironmentRolePermissionBoundary fwtypes.ARN              `tfsdk:"environment_role_permission_boundary"`
+	GlobalParameters                  fwtypes.MapOfString      `tfsdk:"global_parameters"`
+	ManageAccessRoleARN               fwtypes.ARN              `tfsdk:"manage_access_role_arn"`
+	ProvisioningRoleARN               fwtypes.ARN              `tfsdk:"provisioning_role_arn"`
+	RegionalParameters                fwtypes.MapOfMapOfString `tfsdk:"regional_parameters"`
 }
