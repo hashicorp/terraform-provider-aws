@@ -77,6 +77,27 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 											Optional:      true,
 											ConflictsWith: []string{"rule.0.default_retention.0.years"},
 										},
+										"default_event_hold": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"days": {
+														Type:          schema.TypeInt,
+														Optional:      true,
+														ValidateFunc:  validation.IntBetween(1, 36500),
+														ConflictsWith: []string{"rule.0.default_retention.0.default_event_hold.0.years"},
+													},
+													"years": {
+														Type:          schema.TypeInt,
+														Optional:      true,
+														ValidateFunc:  validation.IntBetween(1, 100),
+														ConflictsWith: []string{"rule.0.default_retention.0.default_event_hold.0.days"},
+													},
+												},
+											},
+										},
 										names.AttrMode: {
 											Type:             schema.TypeString,
 											Optional:         true,
@@ -342,6 +363,10 @@ func expandDefaultRetention(l []any) *types.DefaultRetention {
 		dr.Days = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap["default_event_hold"].([]any); ok && len(v) > 0 && v[0] != nil {
+		dr.DefaultEventHold = expandEventHoldDuration(v)
+	}
+
 	if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 		dr.Mode = types.ObjectLockRetentionMode(v)
 	}
@@ -351,6 +376,42 @@ func expandDefaultRetention(l []any) *types.DefaultRetention {
 	}
 
 	return dr
+}
+
+func expandEventHoldDuration(l []any) *types.EventHoldDuration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	ehd := &types.EventHoldDuration{}
+
+	if v, ok := tfMap["days"].(int); ok && v > 0 {
+		ehd.Days = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["years"].(int); ok && v > 0 {
+		ehd.Years = aws.Int32(int32(v))
+	}
+
+	return ehd
+}
+
+func flattenEventHoldDuration(ehd *types.EventHoldDuration) []any {
+	if ehd == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		"days":  ehd.Days,
+		"years": ehd.Years,
+	}
+
+	return []any{m}
 }
 
 func flattenObjectLockRule(rule *types.ObjectLockRule) []any {
@@ -373,9 +434,10 @@ func flattenDefaultRetention(dr *types.DefaultRetention) []any {
 	}
 
 	m := map[string]any{
-		"days":         dr.Days,
-		names.AttrMode: dr.Mode,
-		"years":        dr.Years,
+		"days":               dr.Days,
+		"default_event_hold": flattenEventHoldDuration(dr.DefaultEventHold),
+		names.AttrMode:       dr.Mode,
+		"years":              dr.Years,
 	}
 
 	return []any{m}
