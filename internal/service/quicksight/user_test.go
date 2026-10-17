@@ -50,6 +50,15 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName2, names.AttrARN, "quicksight", fmt.Sprintf("user/default/%s", rName2)),
 				),
 			},
+			{
+				ResourceName:      resourceName2,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"identity_type",
+					"user_invitation_url",
+				},
+			},
 		},
 	})
 }
