@@ -12,6 +12,7 @@ import (
 	"log"
 	"math"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -533,6 +534,17 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	d.SetId(id)
+
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
+		return findTargetByThreePartKey(ctx, conn, eventBusName, ruleName, targetID)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Target (%s) create: %s", d.Id(), err)
+	}
 
 	return append(diags, resourceTargetRead(ctx, d, meta)...)
 }
