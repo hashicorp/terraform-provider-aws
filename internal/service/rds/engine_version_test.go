@@ -9,6 +9,46 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestCommunityVersionFromDescription(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		description string
+		expected    string
+	}{
+		"aurora-mysql": {
+			description: "Aurora MySQL 3.12.0 (compatible with MySQL 8.0.44)",
+			expected:    "8.0.44",
+		},
+		"aurora-mysql v2": {
+			description: "Aurora MySQL 2.11.2 (compatible with MySQL 5.7.12)",
+			expected:    "5.7.12",
+		},
+		"aurora-postgresql": {
+			description: "Aurora PostgreSQL (Compatible with PostgreSQL 16.4)",
+			expected:    "16.4",
+		},
+		"non-aurora": {
+			description: "MySQL Community Edition",
+			expected:    "",
+		},
+		"empty": {
+			description: "",
+			expected:    "",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if actual := communityVersionFromDescription(test.description); actual != test.expected {
+				t.Errorf("expected %q, got %q", test.expected, actual)
+			}
+		})
+	}
+}
+
 func TestCompareActualEngineVersion(t *testing.T) {
 	t.Parallel()
 

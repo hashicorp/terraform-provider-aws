@@ -10,6 +10,7 @@ import (
 	"sort"
 
 	"github.com/YakDriver/go-version"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
@@ -30,6 +31,10 @@ func dataSourceEngineVersion() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
+				"community_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"default_character_set": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -392,6 +397,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(aws.ToString(found.EngineVersion))
+	d.Set("community_version", communityVersionFromDescription(aws.ToString(found.DBEngineVersionDescription)))
 	if found.DefaultCharacterSet != nil {
 		d.Set("default_character_set", found.DefaultCharacterSet.CharacterSetName)
 	}
@@ -439,6 +445,21 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("version_description", found.DBEngineVersionDescription)
 
 	return diags
+}
+
+// Aurora engine version descriptions embed the compatible community engine version,
+// e.g. "Aurora MySQL 3.12.0 (compatible with MySQL 8.0.44)" or
+// "Aurora PostgreSQL (Compatible with PostgreSQL 16.4)".
+var communityVersionRegex = regexache.MustCompile(`(?i)\(compatible with\s+[a-z]+\s+v?([0-9][0-9a-z.]*)\)`)
+
+// communityVersionFromDescription returns the community engine version embedded in an
+// Aurora engine version description, or "" if the description does not contain one.
+func communityVersionFromDescription(description string) string {
+	if m := communityVersionRegex.FindStringSubmatch(description); m != nil {
+		return m[1]
+	}
+
+	return ""
 }
 
 func sortEngineVersions(engineVersions []awstypes.DBEngineVersion) {
