@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_opensearch_domain: Add `software_update_options.use_latest_service_software_for_blue_green` argument
+```
+
+```release-note:enhancement
+data-source/aws_opensearch_domain: Add `software_update_options.use_latest_service_software_for_blue_green` attribute
+```

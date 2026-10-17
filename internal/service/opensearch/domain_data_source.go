@@ -485,6 +485,10 @@ func dataSourceDomain() *schema.Resource {
 								Type:     schema.TypeBool,
 								Computed: true,
 							},
+							"use_latest_service_software_for_blue_green": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},

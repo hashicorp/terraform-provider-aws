@@ -237,6 +237,9 @@ func expandSoftwareUpdateOptions(in []any) *awstypes.SoftwareUpdateOptions {
 	if v, ok := m["auto_software_update_enabled"].(bool); ok {
 		out.AutoSoftwareUpdateEnabled = aws.Bool(v)
 	}
+	if v, ok := m["use_latest_service_software_for_blue_green"].(bool); ok {
+		out.UseLatestServiceSoftwareForBlueGreen = aws.Bool(v)
+	}
 
 	return &out
 }
@@ -247,7 +250,8 @@ func flattenSoftwareUpdateOptions(softwareUpdateOptions *awstypes.SoftwareUpdate
 	}
 
 	m := map[string]any{
-		"auto_software_update_enabled": aws.ToBool(softwareUpdateOptions.AutoSoftwareUpdateEnabled),
+		"auto_software_update_enabled":               aws.ToBool(softwareUpdateOptions.AutoSoftwareUpdateEnabled),
+		"use_latest_service_software_for_blue_green": aws.ToBool(softwareUpdateOptions.UseLatestServiceSoftwareForBlueGreen),
 	}
 
 	return []any{m}
