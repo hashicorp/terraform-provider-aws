@@ -181,6 +181,25 @@ func resourceRegisteredDomain() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
+				"consent": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"currency": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(3, 3),
+							},
+							"max_price": {
+								Type:         schema.TypeFloat,
+								Required:     true,
+								ValidateFunc: validation.FloatAtLeast(0.001),
+							},
+						},
+					},
+				},
 				"expiration_date": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -275,6 +294,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	d.SetId(aws.ToString(domainDetail.DomainName))
 
 	var adminContact, billingContact, registrantContact, techContact *awstypes.ContactDetail
+	var consent *awstypes.Consent
 
 	if v, ok := d.GetOk("admin_contact"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		if v := expandContactDetail(v.([]any)[0].(map[string]any)); !reflect.DeepEqual(v, domainDetail.AdminContact) {
@@ -301,7 +321,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if adminContact != nil || billingContact != nil || registrantContact != nil || techContact != nil {
-		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, billingContact, registrantContact, techContact, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, billingContact, registrantContact, techContact, consent, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -440,6 +460,7 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 
 	if d.HasChanges("admin_contact", "billing_contact", "registrant_contact", "tech_contact") {
 		var adminContact, billingContact, registrantContact, techContact *awstypes.ContactDetail
+		var consent *awstypes.Consent
 
 		if key := "admin_contact"; d.HasChange(key) {
 			if v, ok := d.GetOk(key); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -465,7 +486,11 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 
-		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, billingContact, registrantContact, techContact, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if v, ok := d.GetOk("consent"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			consent = expandConsent(v.([]any)[0].(map[string]any))
+		}
+
+		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, billingContact, registrantContact, techContact, consent, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -556,13 +581,14 @@ func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, dom
 	return nil
 }
 
-func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domainName string, adminContact, billingContact, registrantContact, techContact *awstypes.ContactDetail, timeout time.Duration) error {
+func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domainName string, adminContact, billingContact, registrantContact, techContact *awstypes.ContactDetail, consent *awstypes.Consent, timeout time.Duration) error {
 	input := &route53domains.UpdateDomainContactInput{
 		AdminContact:      adminContact,
 		BillingContact:    billingContact,
 		DomainName:        aws.String(domainName),
 		RegistrantContact: registrantContact,
 		TechContact:       techContact,
+		Consent:           consent,
 	}
 
 	output, err := conn.UpdateDomainContact(ctx, input)
@@ -891,4 +917,22 @@ func flattenNameservers(apiObjects []awstypes.Nameserver) []any {
 	}
 
 	return tfList
+}
+
+func expandConsent(tfMap map[string]any) *awstypes.Consent {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.Consent{}
+
+	if v, ok := tfMap["currency"].(string); ok {
+		apiObject.Currency = aws.String(v)
+	}
+
+	if v, ok := tfMap["max_price"].(float64); ok {
+		apiObject.MaxPrice = v
+	}
+
+	return apiObject
 }
