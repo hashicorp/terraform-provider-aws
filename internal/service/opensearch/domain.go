@@ -639,6 +639,13 @@ func resourceDomain() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"engine_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EngineMode](),
+				},
 				names.AttrEngineVersion: {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -798,6 +805,13 @@ func resourceDomain() *schema.Resource {
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"use_case": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DomainUseCase](),
+				},
 				"vpc_options": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -934,6 +948,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
 	}
 
+	if v, ok := d.GetOk("engine_mode"); ok {
+		input.EngineMode = awstypes.EngineMode(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
@@ -983,6 +1001,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v, ok := d.GetOk("software_update_options"); ok {
 		input.SoftwareUpdateOptions = expandSoftwareUpdateOptions(v.([]any))
+	}
+
+	if v, ok := d.GetOk("use_case"); ok {
+		input.UseCase = awstypes.DomainUseCase(v.(string))
 	}
 
 	if v, ok := d.GetOk("vpc_options"); ok {
@@ -1140,6 +1162,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err := d.Set("encrypt_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encrypt_at_rest: %s", err)
 	}
+	d.Set("engine_mode", ds.EngineMode)
 	d.Set(names.AttrEngineVersion, ds.EngineVersion)
 	if ds.IdentityCenterOptions != nil {
 		if err := d.Set("identity_center_options", flattenIdentityCenterOptions(ds.IdentityCenterOptions)); err != nil {
@@ -1184,6 +1207,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err := d.Set("software_update_options", flattenSoftwareUpdateOptions(ds.SoftwareUpdateOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting software_update_options: %s", err)
 	}
+	d.Set("use_case", ds.UseCase)
 	if ds.VPCOptions != nil {
 		if err := d.Set("vpc_options", []any{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
