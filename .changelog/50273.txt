@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_pinpointsmsvoicev2_configuration_set: Fix `default_message_type` and `default_sender_id` not being applied when set on create
+```
