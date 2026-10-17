@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: Remove default value for `metadata_options.http_protocol_ipv6`, fixing instance creation failures and perpetual drift in partitions that do not support the IPv6 instance metadata endpoint
+```
