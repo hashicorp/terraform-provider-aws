@@ -51,7 +51,7 @@ func resourceIdentityProvider() *schema.Resource {
 					},
 				},
 				"idp_identifiers": {
-					Type:     schema.TypeList,
+					Type:     schema.TypeSet,
 					Optional: true,
 					MaxItems: 50,
 					Elem: &schema.Schema{
@@ -106,8 +106,8 @@ func resourceIdentityProviderCreate(ctx context.Context, d *schema.ResourceData,
 		input.AttributeMapping = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("idp_identifiers"); ok && len(v.([]any)) > 0 {
-		input.IdpIdentifiers = flex.ExpandStringValueList(v.([]any))
+	if v, ok := d.GetOk("idp_identifiers"); ok && v.(*schema.Set).Len() > 0 {
+		input.IdpIdentifiers = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("provider_details"); ok && len(v.(map[string]any)) > 0 {
@@ -175,7 +175,7 @@ func resourceIdentityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.HasChange("idp_identifiers") {
-		input.IdpIdentifiers = flex.ExpandStringValueList(d.Get("idp_identifiers").([]any))
+		input.IdpIdentifiers = flex.ExpandStringValueSet(d.Get("idp_identifiers").(*schema.Set))
 	}
 
 	if d.HasChange("provider_details") {
