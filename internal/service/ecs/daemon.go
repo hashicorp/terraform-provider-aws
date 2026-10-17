@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -77,6 +78,11 @@ func (r *daemonResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"critical": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
 			},
 			"daemon_task_definition_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -386,13 +392,18 @@ func daemonNameFromARN(arnStr string) types.String {
 	return types.StringNull()
 }
 
-// flattenDaemonRevision populates task definition ARN and capacity
-// provider ARNs from a DaemonRevision and DaemonRevisionDetail. DaemonTaskDefinitionArn is only
-// set when the model's value is null (e.g., during import) to avoid overwriting
+// flattenDaemonRevision populates task definition ARN, criticality, and capacity
+// provider ARNs from a DaemonRevision and DaemonRevisionDetail. DaemonTaskDefinitionArn and Critical
+// are only set when the model's value is null (e.g., during import) to avoid overwriting
 // the plan value with potentially stale revision data during Create/Update.
 func flattenDaemonRevision(ctx context.Context, revision *awstypes.DaemonRevision, revisionDetail awstypes.DaemonRevisionDetail, model *daemonResourceModel) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	if model.DaemonTaskDefinitionArn.IsNull() {
 		model.DaemonTaskDefinitionArn = fwtypes.ARNValue(aws.ToString(revision.DaemonTaskDefinitionArn))
+	}
+
+	// Revisions created before non-critical daemons were supported omit the field; the API default is true.
+	if model.Critical.IsNull() {
+		model.Critical = types.BoolValue(revision.Critical == nil || aws.ToBool(revision.Critical))
 	}
 
 	if len(revisionDetail.CapacityProviders) > 0 {
@@ -547,6 +558,7 @@ type daemonResourceModel struct {
 	DaemonArn               types.String                                                  `tfsdk:"arn"`
 	CapacityProviderArns    fwtypes.SetOfString                                           `tfsdk:"capacity_provider_arns"`
 	ClusterArn              fwtypes.ARN                                                   `tfsdk:"cluster_arn"`
+	Critical                types.Bool                                                    `tfsdk:"critical"`
 	DaemonTaskDefinitionArn fwtypes.ARN                                                   `tfsdk:"daemon_task_definition_arn"`
 	DeploymentConfiguration fwtypes.ListNestedObjectValueOf[deploymentConfigurationModel] `tfsdk:"deployment_configuration"`
 	DeploymentArn           fwtypes.ARN                                                   `tfsdk:"deployment_arn"`
