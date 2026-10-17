@@ -143,8 +143,18 @@ func resourceListenerRule() *schema.Resource {
 										},
 										names.AttrClientSecret: {
 											Type:      schema.TypeString,
-											Required:  true,
+											Optional:  true,
 											Sensitive: true,
+										},
+										"client_secret_wo": {
+											Type:      schema.TypeString,
+											Optional:  true,
+											Sensitive: true,
+											WriteOnly: true,
+										},
+										"client_secret_wo_version": {
+											Type:     schema.TypeInt,
+											Optional: true,
 										},
 										names.AttrIssuer: {
 											Type:     schema.TypeString,
@@ -636,6 +646,11 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		return diags
 	}
 
+	diags = append(diags, setAuthenticateOIDCClientSecretWO(d, names.AttrAction, input.Actions)...)
+	if diags.HasError() {
+		return diags
+	}
+
 	var err error
 
 	input.Conditions, err = expandRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
@@ -809,6 +824,11 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if d.HasChange(names.AttrAction) {
 			input.Actions = expandListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
+			if diags.HasError() {
+				return diags
+			}
+
+			diags = append(diags, setAuthenticateOIDCClientSecretWO(d, names.AttrAction, input.Actions)...)
 			if diags.HasError() {
 				return diags
 			}

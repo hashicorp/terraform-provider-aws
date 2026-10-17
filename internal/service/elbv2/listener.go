@@ -151,8 +151,18 @@ func resourceListener() *schema.Resource {
 										},
 										names.AttrClientSecret: {
 											Type:      schema.TypeString,
-											Required:  true,
+											Optional:  true,
 											Sensitive: true,
+										},
+										"client_secret_wo": {
+											Type:      schema.TypeString,
+											Optional:  true,
+											Sensitive: true,
+											WriteOnly: true,
+										},
+										"client_secret_wo_version": {
+											Type:     schema.TypeInt,
+											Optional: true,
 										},
 										names.AttrIssuer: {
 											Type:     schema.TypeString,
@@ -640,6 +650,11 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta an
 		if diags.HasError() {
 			return diags
 		}
+
+		diags = append(diags, setAuthenticateOIDCClientSecretWO(d, names.AttrDefaultAction, input.DefaultActions)...)
+		if diags.HasError() {
+			return diags
+		}
 	}
 
 	if v, ok := d.GetOk("mutual_authentication"); ok {
@@ -802,6 +817,11 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if d.HasChange(names.AttrDefaultAction) {
 			input.DefaultActions = expandListenerActions(cty.GetAttrPath(names.AttrDefaultAction), d.Get(names.AttrDefaultAction).([]any), &diags)
+			if diags.HasError() {
+				return diags
+			}
+
+			diags = append(diags, setAuthenticateOIDCClientSecretWO(d, names.AttrDefaultAction, input.DefaultActions)...)
 			if diags.HasError() {
 				return diags
 			}
@@ -1265,6 +1285,36 @@ func expandListenerAuthenticateCognitoConfig(l []any) *awstypes.AuthenticateCogn
 	return config
 }
 
+// setAuthenticateOIDCClientSecretWO sets the client secret of each authenticate-oidc
+// action in attrName configured with the write-only client_secret_wo argument.
+// The secret is read from configuration on create and whenever client_secret_wo_version
+// changes; otherwise the listener or rule keeps its existing secret.
+func setAuthenticateOIDCClientSecretWO(d *schema.ResourceData, attrName string, actions []awstypes.Action) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	for i, action := range actions {
+		config := action.AuthenticateOidcConfig
+		if action.Type != awstypes.ActionTypeEnumAuthenticateOidc || config == nil || config.ClientSecret != nil {
+			continue
+		}
+
+		if !d.IsNewResource() && !d.HasChange(attrName+"."+strconv.Itoa(i)+".authenticate_oidc.0.client_secret_wo_version") {
+			config.UseExistingClientSecret = aws.Bool(true)
+			continue
+		}
+
+		clientSecretWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(attrName).IndexInt(i).GetAttr("authenticate_oidc").IndexInt(0).GetAttr("client_secret_wo"))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return diags
+		}
+
+		config.ClientSecret = aws.String(clientSecretWO)
+	}
+
+	return diags
+}
+
 func expandAuthenticateOIDCConfig(l []any) *awstypes.AuthenticateOidcActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1280,10 +1330,13 @@ func expandAuthenticateOIDCConfig(l []any) *awstypes.AuthenticateOidcActionConfi
 		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]any)),
 		AuthorizationEndpoint:            aws.String(tfMap["authorization_endpoint"].(string)),
 		ClientId:                         aws.String(tfMap[names.AttrClientID].(string)),
-		ClientSecret:                     aws.String(tfMap[names.AttrClientSecret].(string)),
 		Issuer:                           aws.String(tfMap[names.AttrIssuer].(string)),
 		TokenEndpoint:                    aws.String(tfMap["token_endpoint"].(string)),
 		UserInfoEndpoint:                 aws.String(tfMap["user_info_endpoint"].(string)),
+	}
+
+	if v, ok := tfMap[names.AttrClientSecret].(string); ok && v != "" {
+		config.ClientSecret = aws.String(v)
 	}
 
 	if v, ok := tfMap["on_unauthenticated_request"].(string); ok && v != "" {
@@ -1552,7 +1605,12 @@ func flattenListenerActions(d *schema.ResourceData, attrName string, apiObjects 
 				clientSecret = v.(string)
 			}
 
-			tfMap["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(apiObject.AuthenticateOidcConfig, clientSecret)
+			var clientSecretWOVersion int
+			if v, ok := d.GetOk(attrName + "." + strconv.Itoa(i) + ".authenticate_oidc.0.client_secret_wo_version"); ok {
+				clientSecretWOVersion = v.(int)
+			}
+
+			tfMap["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(apiObject.AuthenticateOidcConfig, clientSecret, clientSecretWOVersion)
 
 		case awstypes.ActionTypeEnumJwtValidation:
 			tfMap["jwt_validation"] = flattenListenerActionJWTValidationConfig(apiObject.JwtValidationConfig)
@@ -1652,7 +1710,7 @@ func flattenMutualAuthenticationAttributes(apiObject *awstypes.MutualAuthenticat
 	}
 }
 
-func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcActionConfig, clientSecret string) []any {
+func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcActionConfig, clientSecret string, clientSecretWOVersion int) []any {
 	if apiObject == nil {
 		return []any{}
 	}
@@ -1670,6 +1728,9 @@ func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcAct
 	}
 	if clientSecret != "" {
 		tfMap[names.AttrClientSecret] = clientSecret
+	}
+	if clientSecretWOVersion != 0 {
+		tfMap["client_secret_wo_version"] = clientSecretWOVersion
 	}
 	if apiObject.Issuer != nil {
 		tfMap[names.AttrIssuer] = aws.ToString(apiObject.Issuer)
@@ -2017,6 +2078,8 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 					actionPath.GetAttr(names.AttrType),
 					string(actionType),
 				))
+			} else {
+				listenerActionAuthenticateOIDCPlantimeValidate(actionPath.GetAttr("authenticate_oidc").IndexInt(0), ao.Index(cty.NumberIntVal(0)), diags)
 			}
 
 		case awstypes.ActionTypeEnumJwtValidation:
@@ -2028,6 +2091,37 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 				))
 			}
 		}
+	}
+}
+
+func listenerActionAuthenticateOIDCPlantimeValidate(oidcPath cty.Path, oidc cty.Value, diags *diag.Diagnostics) {
+	clientSecret := oidc.GetAttr(names.AttrClientSecret)
+	clientSecretWO := oidc.GetAttr("client_secret_wo")
+	clientSecretWOVersion := oidc.GetAttr("client_secret_wo_version")
+	if !clientSecret.IsKnown() || !clientSecretWO.IsKnown() || !clientSecretWOVersion.IsKnown() {
+		return
+	}
+
+	clientSecretPath := oidcPath.GetAttr(names.AttrClientSecret)
+	clientSecretWOPath := oidcPath.GetAttr("client_secret_wo")
+	clientSecretWOVersionPath := oidcPath.GetAttr("client_secret_wo_version")
+
+	count := 0
+	if !clientSecret.IsNull() {
+		count++
+	}
+	if !clientSecretWO.IsNull() {
+		count++
+	}
+	if count != 1 {
+		*diags = append(*diags, errs.NewExactlyOneOfChildrenError(oidcPath, count, clientSecretPath, clientSecretWOPath))
+	}
+
+	switch {
+	case !clientSecretWO.IsNull() && clientSecretWOVersion.IsNull():
+		*diags = append(*diags, errs.NewAttributeAlsoRequiresError(clientSecretWOPath, clientSecretWOVersionPath))
+	case clientSecretWO.IsNull() && !clientSecretWOVersion.IsNull():
+		*diags = append(*diags, errs.NewAttributeAlsoRequiresError(clientSecretWOVersionPath, clientSecretWOPath))
 	}
 }
 
