@@ -57,6 +57,10 @@ resource "aws_bedrockagentcore_online_evaluation_config" "example" {
     evaluator_id = "Builtin.GoalSuccessRate"
   }
 
+  clustering_config {
+    frequencies = ["DAILY", "WEEKLY"]
+  }
+
   rule {
     sampling_config {
       sampling_percentage = 10.0
@@ -112,12 +116,17 @@ The following arguments are required:
 * `data_source_config` - (Required) Data source configuration specifying where to read agent traces. See [`data_source_config` Block](#data_source_config-block) below.
 * `enable_on_create` - (Required) Whether to enable the online evaluation configuration immediately upon creation.
 * `evaluation_execution_role_arn` - (Required) ARN of the IAM role that grants permissions to read from CloudWatch logs, write evaluation results, and invoke Amazon Bedrock models for evaluation.
-* `evaluator` - (Required) List of evaluators to apply during online evaluation. Minimum 1, maximum 10. See [`evaluator` Block](#evaluator-block) below.
 * `online_evaluation_config_name` - (Required, Forces new resource) Name of the online evaluation configuration. Must start with a letter and contain only alphanumeric characters and underscores, up to 48 characters.
 * `rule` - (Required) Evaluation rule defining sampling configuration, filters, and session detection settings. See [`rule` Block](#rule-block) below.
 
+Exactly one of the following arguments is required:
+
+* `evaluator` - (Optional) List of evaluators to apply during online evaluation. Minimum 1, maximum 10. Exactly one of `evaluator` or `insight` must be specified. See [`evaluator` Block](#evaluator-block) below.
+* `insight` - (Optional) List of insight analyses to run against sessions during evaluation. Maximum 10. Exactly one of `evaluator` or `insight` must be specified. See [`insight` Block](#insight-block) below.
+
 The following arguments are optional:
 
+* `clustering_config` - (Optional) Configuration for periodic batch evaluation clustering, specifying how often clustering batch evaluations are triggered. Can only be set when `insight` is specified. Cannot be removed once set (the service retains it on update); recreate the resource to remove it. See [`clustering_config` Block](#clustering_config-block) below.
 * `description` - (Optional) Description of the online evaluation configuration.
 * `execution_status` - (Optional) Execution status to enable or disable the online evaluation. Valid values: `ENABLED`, `DISABLED`. Computed on create based on `enable_on_create`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -141,6 +150,18 @@ The `cloudwatch_logs` block supports the following:
 The `evaluator` block supports the following:
 
 * `evaluator_id` - (Required) Unique identifier of the evaluator. Can reference builtin evaluators (e.g., `Builtin.Helpfulness`, `Builtin.GoalSuccessRate`) or custom evaluator IDs.
+
+### `insight` Block
+
+The `insight` block supports the following:
+
+* `insight_id` - (Required) Unique identifier of the insight to run. Can reference builtin insights using the `Builtin.Insight.*` naming convention or custom insight IDs.
+
+### `clustering_config` Block
+
+The `clustering_config` block supports the following:
+
+* `frequencies` - (Required) List of frequencies at which clustering batch evaluations are triggered. Maximum 3. Valid values: `DAILY`, `WEEKLY`, `MONTHLY`.
 
 ### `rule` Block
 
