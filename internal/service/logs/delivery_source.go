@@ -8,6 +8,7 @@ package logs
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -43,6 +45,11 @@ func newDeliverySourceResource(context.Context) (resource.ResourceWithConfigure,
 
 	return r, nil
 }
+
+const (
+	putDeliverySourceTimeout    = 5 * time.Minute
+	deleteDeliverySourceTimeout = 5 * time.Minute
+)
 
 type deliverySourceResource struct {
 	framework.ResourceWithModel[deliverySourceResourceModel]
@@ -90,6 +97,19 @@ func (r *deliverySourceResource) Schema(ctx context.Context, request resource.Sc
 	}
 }
 
+// deliverySourceMutexLock acquires locks on resource arn to prevent concurrent modification conflicts.
+// Especially for eks capabilities that go into updating status prevent another delivery source modification
+// at the same time.
+func deliverySourceMutexLock(model *deliverySourceResourceModel) func() {
+	resourceKey := fmt.Sprintf("logs-resource:%s", model.ResourceARN.ValueString())
+
+	conns.GlobalMutexKV.Lock(resourceKey)
+
+	return func() {
+		conns.GlobalMutexKV.Unlock(resourceKey)
+	}
+}
+
 func (r *deliverySourceResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data deliverySourceResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -109,8 +129,12 @@ func (r *deliverySourceResource) Create(ctx context.Context, request resource.Cr
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.PutDeliverySource(ctx, &input)
-
+	defer deliverySourceMutexLock(&data)()
+	output, err := tfresource.RetryWhenIsA[*cloudwatchlogs.PutDeliverySourceOutput, *awstypes.ConflictException](
+		ctx, putDeliverySourceTimeout, func(ctx context.Context) (*cloudwatchlogs.PutDeliverySourceOutput, error) {
+			return conn.PutDeliverySource(ctx, &input)
+		},
+	)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Delivery Source (%s)", name), err.Error())
 
@@ -178,7 +202,13 @@ func (r *deliverySourceResource) Delete(ctx context.Context, request resource.De
 	input := cloudwatchlogs.DeleteDeliverySourceInput{
 		Name: aws.String(name),
 	}
-	_, err := conn.DeleteDeliverySource(ctx, &input)
+
+	defer deliverySourceMutexLock(&data)()
+	_, err := tfresource.RetryWhenIsA[*cloudwatchlogs.DeleteDeliverySourceOutput, *awstypes.ConflictException](
+		ctx, deleteDeliverySourceTimeout, func(ctx context.Context) (*cloudwatchlogs.DeleteDeliverySourceOutput, error) {
+			return conn.DeleteDeliverySource(ctx, &input)
+		},
+	)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
