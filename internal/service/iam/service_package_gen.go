@@ -30,6 +30,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
+			Factory:  newPolicyDocumentsDataSource,
+			TypeName: "aws_iam_policy_documents",
+			Name:     "Policy Documents",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
+		{
 			Factory:  newRolePoliciesDataSource,
 			TypeName: "aws_iam_role_policies",
 			Name:     "Role Policies",

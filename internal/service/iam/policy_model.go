@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/jmespath/go-jmespath"
 )
 
@@ -241,16 +242,20 @@ func (cs *iamPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 }
 
 func policyDecodeConfigStringList(lI []any) any {
-	if len(lI) == 1 {
-		return lI[0].(string)
+	return policyDecodeConfigStrings(tfslices.ApplyToAll(lI, func(v any) string {
+		return v.(string)
+	}))
+}
+
+// policyDecodeConfigStrings returns the single element of l as a string, or
+// l sorted in reverse order. l is sorted in place.
+func policyDecodeConfigStrings(l []string) any {
+	if len(l) == 1 {
+		return l[0]
 	}
-	ret := make([]string, len(lI))
-	for i, vI := range lI {
-		ret[i] = vI.(string)
-	}
-	slices.Sort(ret)
-	slices.Reverse(ret)
-	return ret
+	slices.Sort(l)
+	slices.Reverse(l)
+	return l
 }
 
 // policyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
@@ -305,4 +310,69 @@ func isValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-f
 		return true
 	}
 	return false
+}
+
+// splitPolicyDocument packs doc's statements, in order, into as few documents
+// as possible without any document's minified JSON exceeding maxSize bytes.
+// Byte length never under-counts the characters AWS measures.
+func splitPolicyDocument(doc *iamPolicyDoc, maxSize int) ([]*iamPolicyDoc, error) {
+	newChunk := func(stmts []*iamPolicyStatement) *iamPolicyDoc {
+		return &iamPolicyDoc{Id: doc.Id, Version: doc.Version, Statements: stmts}
+	}
+
+	if len(doc.Statements) == 0 {
+		chunk := newChunk(nil)
+		size, err := policyDocumentSize(chunk)
+		if err != nil {
+			return nil, err
+		}
+		if size > maxSize {
+			return nil, fmt.Errorf("policy document without statements is %d characters, exceeding max_policy_size (%d)", size, maxSize)
+		}
+		return []*iamPolicyDoc{chunk}, nil
+	}
+
+	// Marshal each statement once. A chunk's size is then a fixed overhead plus
+	// its statements' sizes plus one comma between each pair.
+	stmtSizes := make([]int, len(doc.Statements))
+	for i, stmt := range doc.Statements {
+		b, err := json.Marshal(stmt)
+		if err != nil {
+			return nil, fmt.Errorf("formatting JSON: %w", err)
+		}
+		stmtSizes[i] = len(b)
+	}
+	size, err := policyDocumentSize(newChunk(doc.Statements[:1]))
+	if err != nil {
+		return nil, err
+	}
+	overhead := size - stmtSizes[0]
+
+	var docs []*iamPolicyDoc
+	start, size := 0, overhead-1 // Cancels the comma counted before the first statement.
+	for i, n := range stmtSizes {
+		if size+1+n <= maxSize {
+			size += 1 + n
+			continue
+		}
+		if overhead+n > maxSize {
+			label := fmt.Sprintf("statement %d", i)
+			if sid := doc.Statements[i].Sid; sid != "" {
+				label += fmt.Sprintf(" (Sid %q)", sid)
+			}
+			return nil, fmt.Errorf("%s of the merged policy document is %d characters on its own, exceeding max_policy_size (%d)", label, overhead+n, maxSize)
+		}
+		docs = append(docs, newChunk(doc.Statements[start:i:i]))
+		start, size = i, overhead+n
+	}
+
+	return append(docs, newChunk(doc.Statements[start:])), nil
+}
+
+func policyDocumentSize(doc *iamPolicyDoc) (int, error) {
+	b, err := json.Marshal(doc)
+	if err != nil {
+		return 0, fmt.Errorf("formatting JSON: %w", err)
+	}
+	return len(b), nil
 }
