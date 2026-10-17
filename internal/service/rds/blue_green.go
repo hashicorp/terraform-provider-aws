@@ -140,6 +140,21 @@ func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds.Crea
 	if d.HasChange(names.AttrParameterGroupName) {
 		input.TargetDBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 	}
+	if d.HasChange(names.AttrAllocatedStorage) {
+		input.TargetAllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+	}
+	if d.HasChange(names.AttrIOPS) {
+		input.TargetIops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
+	}
+	if d.HasChange("storage_throughput") {
+		input.TargetStorageThroughput = aws.Int32(int32(d.Get("storage_throughput").(int)))
+	}
+	if d.HasChange(names.AttrStorageType) {
+		input.TargetStorageType = aws.String(d.Get(names.AttrStorageType).(string))
+	}
+	if v, ok := d.GetOk("blue_green_update.0.upgrade_target_storage_config"); ok {
+		input.UpgradeTargetStorageConfig = aws.Bool(v.(bool))
+	}
 
 	return input
 }
@@ -153,6 +168,25 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 	needsModify, diags := dbInstancePopulateModify(modifyInput, d)
 	if diags.HasError() {
 		return fmt.Errorf("populating modify input: %s", sdkdiag.DiagnosticsString(diags))
+	}
+
+	// Storage, engine version, and parameter group changes are already applied
+	// via CreateBlueGreenDeployment Target* parameters, so they must not also be
+	// applied via ModifyDBInstance.
+	modifyInput.AllocatedStorage = nil
+	modifyInput.Iops = nil
+	modifyInput.StorageThroughput = nil
+	modifyInput.StorageType = nil
+
+	if needsModify {
+		needsModify = d.HasChangesExcept(
+			names.AttrAllocatedStorage,
+			names.AttrEngineVersion,
+			names.AttrIOPS,
+			names.AttrParameterGroupName,
+			"storage_throughput",
+			names.AttrStorageType,
+		)
 	}
 
 	if needsModify {
