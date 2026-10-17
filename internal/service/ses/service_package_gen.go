@@ -47,6 +47,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  dataSourceDomainDKIM,
+			TypeName: "aws_ses_domain_dkim",
+			Name:     "Domain DKIM",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  dataSourceDomainIdentity,
 			TypeName: "aws_ses_domain_identity",
 			Name:     "Domain Identity",
