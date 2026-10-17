@@ -9,8 +9,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafkaconnect/types"
@@ -529,19 +531,24 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta a
 				CurrentVersion: aws.String(currentVersion),
 			}
 
-			_, err := conn.UpdateConnector(ctx, input)
+			output, err := conn.UpdateConnector(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating MSK Connect Connector capacity (%s): %s", d.Id(), err)
 			}
 
-			output, err := waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			operationARN := aws.ToString(output.ConnectorOperationArn)
+			if _, err := waitConnectorOperationCompleted(ctx, conn, operationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) operation (%s): %s", d.Id(), operationARN, err)
+			}
+
+			connectorOutput, err := waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
 			}
 
-			currentVersion = aws.ToString(output.CurrentVersion)
+			currentVersion = aws.ToString(connectorOutput.CurrentVersion)
 		}
 
 		if d.HasChange("connector_configuration") {
@@ -551,10 +558,15 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta a
 				CurrentVersion:         aws.String(currentVersion),
 			}
 
-			_, err := conn.UpdateConnector(ctx, input)
+			output, err := conn.UpdateConnector(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating MSK Connect Connector configuration (%s): %s", d.Id(), err)
+			}
+
+			operationARN := aws.ToString(output.ConnectorOperationArn)
+			if _, err := waitConnectorOperationCompleted(ctx, conn, operationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Connector (%s) operation (%s): %s", d.Id(), operationARN, err)
 			}
 
 			if _, err := waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -614,6 +626,30 @@ func findConnectorByARN(ctx context.Context, conn *kafkaconnect.Client, arn stri
 	return output, nil
 }
 
+func findConnectorOperationByARN(ctx context.Context, conn *kafkaconnect.Client, arn string) (*kafkaconnect.DescribeConnectorOperationOutput, error) {
+	input := &kafkaconnect.DescribeConnectorOperationInput{
+		ConnectorOperationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeConnectorOperation(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	if output == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	}
+
+	return output, nil
+}
+
 func statusConnector(conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectorByARN(ctx, conn, arn)
@@ -627,6 +663,22 @@ func statusConnector(conn *kafkaconnect.Client, arn string) retry.StateRefreshFu
 		}
 
 		return output, string(output.ConnectorState), nil
+	}
+}
+
+func statusConnectorOperation(conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findConnectorOperationByARN(ctx, conn, arn)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.ConnectorOperationState), nil
 	}
 }
 
@@ -670,6 +722,64 @@ func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn st
 	}
 
 	return nil, err
+}
+
+func waitConnectorOperationCompleted(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOperationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.ConnectorOperationStatePending,
+			awstypes.ConnectorOperationStateUpdateInProgress,
+			awstypes.ConnectorOperationStateRollbackInProgress,
+		),
+		Target:  enum.Slice(awstypes.ConnectorOperationStateUpdateComplete),
+		Refresh: statusConnectorOperation(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOperationOutput); ok {
+		switch output.ConnectorOperationState {
+		case awstypes.ConnectorOperationStateUpdateFailed,
+			awstypes.ConnectorOperationStateRollbackFailed,
+			awstypes.ConnectorOperationStateRollbackComplete:
+			retry.SetLastError(err, connectorOperationError(output))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func connectorOperationError(output *kafkaconnect.DescribeConnectorOperationOutput) error {
+	parts := []string{
+		fmt.Sprintf("operation (%s)", aws.ToString(output.ConnectorOperationArn)),
+		fmt.Sprintf("type (%s)", output.ConnectorOperationType),
+		fmt.Sprintf("state (%s)", output.ConnectorOperationState),
+	}
+
+	if errorInfo := output.ErrorInfo; errorInfo != nil {
+		if code := aws.ToString(errorInfo.Code); code != "" {
+			parts = append(parts, fmt.Sprintf("error code (%s)", code))
+		}
+
+		if message := aws.ToString(errorInfo.Message); message != "" {
+			parts = append(parts, fmt.Sprintf("error message (%s)", message))
+		}
+	}
+
+	if len(output.OperationSteps) > 0 {
+		steps := make([]string, 0, len(output.OperationSteps))
+
+		for _, step := range output.OperationSteps {
+			steps = append(steps, fmt.Sprintf("%s=%s", step.StepType, step.StepState))
+		}
+
+		parts = append(parts, fmt.Sprintf("steps (%s)", strings.Join(steps, ", ")))
+	}
+
+	return fmt.Errorf("%s", strings.Join(parts, ", "))
 }
 
 func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
