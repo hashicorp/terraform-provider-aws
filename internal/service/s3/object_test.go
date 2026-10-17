@@ -2020,6 +2020,75 @@ func TestAccS3Object_optInRegion(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_preventOverwriteCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_preventOverwrite(rName, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj),
+					testAccCheckObjectBody(&obj, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "prevent_overwrite", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_preventOverwriteCreateConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccObjectConfig_preventOverwriteConflict(rName),
+				ExpectError: regexache.MustCompile(`PreconditionFailed`),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_preventOverwriteUpdateConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_preventOverwrite(rName, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, t, resourceName, &obj),
+					testAccCheckObjectBody(&obj, "stuff"),
+				),
+			},
+			{
+				Config:      testAccObjectConfig_preventOverwrite(rName, "changed"),
+				ExpectError: regexache.MustCompile(`PreconditionFailed`),
+			},
+		},
+	})
+}
+
 func TestAccS3Object_defaultKMS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
@@ -3463,6 +3532,46 @@ resource "aws_s3_object" "object" {
   key    = "test-key"
 }
 `, rName))
+}
+
+func testAccObjectConfig_preventOverwrite(rName, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "object" {
+  bucket            = aws_s3_bucket.test.bucket
+  key               = "test-key"
+  content           = %[2]q
+  prevent_overwrite = true
+}
+`, rName, content)
+}
+
+func testAccObjectConfig_preventOverwriteConflict(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "object" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "test-key"
+  content = "original"
+}
+
+resource "aws_s3_object" "conflict" {
+  bucket            = aws_s3_bucket.test.bucket
+  key               = "test-key"
+  content           = "conflict"
+  prevent_overwrite = true
+
+  depends_on = [aws_s3_object.object]
+}
+`, rName)
 }
 
 func testAccObjectConfig_defaultKMS(rName string, content string) string {

@@ -53,6 +53,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"Number of distinct destination bucket ARNs cannot exceed",
 		"destination is not allowed",
 		"blocked by the BlockPublicAcls block public access setting",
+		"PreconditionFailed: At least one of the pre-conditions you specified did not hold",
 	)
 }
 
