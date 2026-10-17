@@ -79,6 +79,7 @@ The `deployment_configuration` block exports the following attributes:
 * `bake_time_in_minutes` - Time to wait after deployment before terminating old tasks
 * `canary_configuration` - Canary deployment configuration. See [`canary_configuration` Block](#canary_configuration-block) for details.
 * `deployment_circuit_breaker` - Circuit breaker configuration. See [`deployment_circuit_breaker` Block](#deployment_circuit_breaker-block) for details.
+* `early_success_criteria` - Early deployment success criteria. See [`early_success_criteria` Block](#early_success_criteria-block) for details.
 * `lifecycle_hook` - Lifecycle hooks for deployments. See [`lifecycle_hook` Block](#lifecycle_hook-block) for details.
 * `linear_configuration` - Linear deployment configuration. See [`linear_configuration` Block](#linear_configuration-block) for details.
 * `maximum_percent` - Upper limit on tasks during deployment
@@ -106,6 +107,14 @@ The `deployment_circuit_breaker` block exports the following attributes:
 
 * `enable` - Whether circuit breaker is enabled
 * `rollback` - Whether to rollback on failure
+
+### `early_success_criteria` Block
+
+The `early_success_criteria` block exports the following attributes:
+
+* `enable` - Whether early success criteria is enabled.
+* `healthy_percent` - Percentage of the desired task count that must be healthy before the deployment can complete.
+* `source_service_revision_cleanup` - When tasks from the previous service revision are removed relative to deployment completion.
 
 ### `linear_configuration` Block
 

@@ -644,6 +644,32 @@ func resourceService() *schema.Resource {
 								Computed:     true,
 								ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 1440),
 							},
+							"early_success_criteria": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enable": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										"healthy_percent": {
+											Type:         nullable.TypeNullableInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 100),
+										},
+										"source_service_revision_cleanup": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ServiceRevisionCleanup](),
+										},
+									},
+								},
+							},
 							"linear_configuration": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -1451,6 +1477,14 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	if v, ok := d.GetOk("deployment_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		config := v.([]any)[0].(map[string]any)
 
+		if v, ok := config["early_success_criteria"].([]any); ok && len(v) > 0 && v[0] != nil {
+			earlySuccessCriteria, err := expandDeploymentEarlySuccessCriteria(v[0].(map[string]any))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+			input.DeploymentConfiguration.EarlySuccessCriteria = earlySuccessCriteria
+		}
+
 		if strategy, ok := config["strategy"].(string); ok && strategy != "" {
 			input.DeploymentConfiguration.Strategy = awstypes.DeploymentStrategy(strategy)
 
@@ -1670,6 +1704,14 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 			if v, ok := d.GetOk("deployment_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				config := v.([]any)[0].(map[string]any)
+
+				if v, ok := config["early_success_criteria"].([]any); ok && len(v) > 0 && v[0] != nil {
+					earlySuccessCriteria, err := expandDeploymentEarlySuccessCriteria(v[0].(map[string]any))
+					if err != nil {
+						return sdkdiag.AppendFromErr(diags, err)
+					}
+					input.DeploymentConfiguration.EarlySuccessCriteria = earlySuccessCriteria
+				}
 
 				if strategy, ok := config["strategy"].(string); ok && strategy != "" {
 					input.DeploymentConfiguration.Strategy = awstypes.DeploymentStrategy(strategy)
@@ -2652,6 +2694,52 @@ func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreake
 	return tfMap
 }
 
+func expandDeploymentEarlySuccessCriteria(tfMap map[string]any) (*awstypes.DeploymentEarlySuccessCriteria, error) {
+	if tfMap == nil {
+		return nil, nil
+	}
+
+	apiObject := &awstypes.DeploymentEarlySuccessCriteria{
+		Enable: tfMap["enable"].(bool),
+	}
+
+	if v, ok := tfMap["healthy_percent"].(string); ok {
+		value, null, err := nullable.Int(v).ValueInt32()
+		if err != nil {
+			return nil, fmt.Errorf("expanding early success criteria healthy_percent: %w", err)
+		}
+		if !null {
+			apiObject.HealthyPercent = aws.Int32(value)
+		}
+	}
+
+	if v, ok := tfMap["source_service_revision_cleanup"].(string); ok && v != "" {
+		apiObject.SourceServiceRevisionCleanup = awstypes.ServiceRevisionCleanup(v)
+	}
+
+	return apiObject, nil
+}
+
+func flattenDeploymentEarlySuccessCriteria(apiObject *awstypes.DeploymentEarlySuccessCriteria) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"enable": apiObject.Enable,
+	}
+
+	if v := apiObject.HealthyPercent; v != nil {
+		tfMap["healthy_percent"] = flex.Int32ToStringValue(v)
+	}
+
+	if v := apiObject.SourceServiceRevisionCleanup; v != "" {
+		tfMap["source_service_revision_cleanup"] = string(v)
+	}
+
+	return []any{tfMap}
+}
+
 func flattenDeploymentConfiguration(apiObject *awstypes.DeploymentConfiguration) []any {
 	if apiObject == nil {
 		return nil
@@ -2665,6 +2753,10 @@ func flattenDeploymentConfiguration(apiObject *awstypes.DeploymentConfiguration)
 
 	if v := apiObject.CanaryConfiguration; v != nil {
 		tfMap["canary_configuration"] = flattenCanaryConfiguration(v)
+	}
+
+	if v := apiObject.EarlySuccessCriteria; v != nil {
+		tfMap["early_success_criteria"] = flattenDeploymentEarlySuccessCriteria(v)
 	}
 
 	if v := apiObject.LinearConfiguration; v != nil {
