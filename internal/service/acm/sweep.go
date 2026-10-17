@@ -4,19 +4,26 @@
 package acm
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_acm_acme_endpoint", sweepACMEEndpoints)
+
 	resource.AddTestSweepers("aws_acm_certificate", &resource.Sweeper{
 		Name: "aws_acm_certificate",
 		F:    sweepCertificates,
@@ -39,6 +46,29 @@ func RegisterSweepers() {
 			"aws_lb_listener",
 		},
 	})
+}
+
+func sweepACMEEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ACMClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	input := acm.ListAcmeEndpointsInput{}
+	pages := acm.NewListAcmeEndpointsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.AcmeEndpoints {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newACMEEndpointResource, client,
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.AcmeEndpointArn)),
+			))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepCertificates(region string) error {
