@@ -891,7 +891,9 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
 		} else {
 			settings.Username = aws.String(d.Get(names.AttrUsername).(string))
-			settings.Password = aws.String(d.Get(names.AttrPassword).(string))
+			if v, ok := d.GetOk(names.AttrPassword); ok {
+				settings.Password = aws.String(v.(string))
+			}
 			settings.ServerName = aws.String(d.Get("server_name").(string))
 			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
@@ -1214,7 +1216,9 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
 					} else {
 						settings.Username = aws.String(d.Get(names.AttrUsername).(string))
-						settings.Password = aws.String(d.Get(names.AttrPassword).(string))
+						if v, ok := d.GetOk(names.AttrPassword); ok {
+							settings.Password = aws.String(v.(string))
+						}
 						settings.ServerName = aws.String(d.Get("server_name").(string))
 						settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
