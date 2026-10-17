@@ -43,6 +43,7 @@ var (
 	ResourceIPAMResourceDiscoveryAssociation              = resourceIPAMResourceDiscoveryAssociation
 	ResourceIPAMScope                                     = resourceIPAMScope
 	ResourceImageBlockPublicAccess                        = resourceImageBlockPublicAccess
+	ResourceAMIWatermark                                  = newAMIWatermarkResource
 	ResourceInstance                                      = resourceInstance
 	ResourceInstanceConnectEndpoint                       = newInstanceConnectEndpointResource
 	ResourceInstanceMetadataDefaults                      = newInstanceMetadataDefaultsResource
@@ -184,6 +185,7 @@ var (
 	FindIPAMResourceDiscoveryByID                               = findIPAMResourceDiscoveryByID
 	FindIPAMScopeByID                                           = findIPAMScopeByID
 	FindImageLaunchPermission                                   = findImageLaunchPermission
+	FindImageWatermark                                          = findImageWatermark
 	FindInstanceConnectEndpointByID                             = findInstanceConnectEndpointByID
 	FindInstanceMetadataDefaults                                = findInstanceMetadataDefaults
 	FindInstanceStateByID                                       = findInstanceStateByID

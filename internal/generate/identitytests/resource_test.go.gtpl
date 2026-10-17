@@ -174,7 +174,11 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if gt (len .IdentityAttributes) 1 -}}
 			{{ range .IdentityAttributes -}}
 				{{ if not .Optional -}}
+				{{ if and (eq $.PlannableResourceAction "Replace") (not .TestNotNull) -}}
+				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }})),
+				{{ else -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }}), knownvalue.NotNull()),
+				{{ end -}}
 				{{ end -}}
 			{{ end -}}
 		{{ end -}}
@@ -228,7 +232,11 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if gt (len .IdentityAttributes) 1 -}}
 			{{ range .IdentityAttributes -}}
 				{{ if not .Optional -}}
+				{{ if and (eq $.PlannableResourceAction "Replace") (not .TestNotNull) -}}
+				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }})),
+				{{ else -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }}), knownvalue.NotNull()),
+				{{ end -}}
 				{{ end -}}
 			{{ end -}}
 		{{ end -}}
