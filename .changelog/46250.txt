@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_nat_gateway: Fix perpetual diff on `regional_nat_gateway_address` for zonal NAT gateways
+```
