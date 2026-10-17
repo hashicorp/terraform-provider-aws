@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_trigger: Fix permanent `InvalidInputException` errors when updating `enabled` on `EVENT` type triggers
+```

@@ -291,7 +291,11 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta any
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to create", d.Id())
 	if _, err := waitTriggerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
-			return diags
+			// Read rather than returning bare: it clears the ID if the trigger really is gone,
+			// and otherwise populates attributes that are only ever set on the read path. Of
+			// those, "enabled" cannot recover from being left unset for ON_DEMAND and EVENT
+			// triggers, because it is derived from its own prior value.
+			return append(diags, resourceTriggerRead(ctx, d, meta)...)
 		}
 		return sdkdiag.AppendErrorf(diags, "waiting for Glue Trigger (%s) to be Created: %s", d.Id(), err)
 	}
@@ -414,7 +418,9 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	if d.HasChange(names.AttrEnabled) {
+	// EVENT triggers cannot be started - AWS rejects StartTrigger on them outright, as the
+	// create path already accounts for. Their enabled value is not actionable either way.
+	if d.HasChange(names.AttrEnabled) && d.Get(names.AttrType).(string) != string(awstypes.TriggerTypeEvent) {
 		if d.Get(names.AttrEnabled).(bool) {
 			input := &glue.StartTriggerInput{
 				Name: aws.String(d.Id()),
@@ -426,8 +432,9 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				return sdkdiag.AppendErrorf(diags, "starting Glue Trigger (%s): %s", d.Id(), err)
 			}
 		} else {
-			//Skip if Trigger is type is ON_DEMAND and is in CREATED state as this means the trigger is not running or has ran already.
-			if !(d.Get(names.AttrType).(string) == string(awstypes.TriggerTypeOnDemand) && d.Get(names.AttrState).(string) == string(awstypes.TriggerStateCreated)) {
+			// AWS refuses StopTrigger in CREATED state for EVERY trigger type, not just
+			// ON_DEMAND: nothing is running yet, or it has already run.
+			if d.Get(names.AttrState).(string) != string(awstypes.TriggerStateCreated) {
 				input := &glue.StopTriggerInput{
 					Name: aws.String(d.Id()),
 				}
