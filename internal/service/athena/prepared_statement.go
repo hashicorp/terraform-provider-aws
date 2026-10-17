@@ -62,6 +62,10 @@ func resourcePreparedStatement() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 262144),
+					// Athena trims surrounding whitespace, such as the trailing newline of a heredoc.
+					DiffSuppressFunc: func(k, old, new string, _ *schema.ResourceData) bool {
+						return strings.TrimSpace(old) == strings.TrimSpace(new)
+					},
 				},
 				"workgroup": {
 					Type:         schema.TypeString,
