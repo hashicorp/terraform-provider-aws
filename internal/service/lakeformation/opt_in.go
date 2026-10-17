@@ -594,10 +594,10 @@ func findOptIns(ctx context.Context, conn *lakeformation.Client, input *lakeform
 }
 
 func findOptInByID(ctx context.Context, conn *lakeformation.Client, id string, resource *awstypes.Resource) (*awstypes.LakeFormationOptInsInfo, error) {
+	// The ListLakeFormationOptIns API rejects a cross-account principal ARN when it is
+	// passed as the Principal filter (even though CreateLakeFormationOptIn accepts it),
+	// so filter by Resource only and match the principal client-side.
 	in := &lakeformation.ListLakeFormationOptInsInput{
-		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(id),
-		},
 		Resource: resource,
 	}
 
