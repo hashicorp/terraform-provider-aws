@@ -22,11 +22,11 @@ Other teams aren't as transparent as Go about security fixes. But, a quick way t
 
 ### Changelog Format
 
-``````
-```release-note:note
+Run `changie new`, select the `Note` kind, set Impact to `provider`, and enter the body text. For example:
+
+```
 provider: Updated Go version to v1.25.7 (addresses GO-2026-4337, Unexpected session resumption)
 ```
-``````
 
 ## Go Version Update
 

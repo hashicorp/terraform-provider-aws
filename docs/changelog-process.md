@@ -3,168 +3,198 @@
 
 # Changelog Process
 
-HashiCorp’s open-source projects have always maintained user-friendly, readable `CHANGELOG.md` that allows users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
+HashiCorp's open-source projects maintain a user-friendly `CHANGELOG.md` that lets operators tell at a glance whether a release affects them and gauge the risk of an upgrade.
 
-We use [go-changelog](https://github.com/hashicorp/go-changelog) to generate the changelog from files created in the `.changelog/` directory.
-It is important that when you raise your pull request, there is a changelog entry which describes the changes your contribution makes.
-Not all changes require an entry in the changelog, guidance follows on what changes do.
+We use [Changie](https://changie.dev/) to generate the CHANGELOG from change fragment files stored in `.changes/<major_version_number>.x/unreleased/`. Every pull request that warrants a CHANGELOG entry must include a Changie fragment — CI will fail the pull request if one is missing.
 
-## Changelog format
+## Installing Changie
 
-The changelog format requires an entry in the following format, where HEADER corresponds to the changelog category, and the entry is the changelog entry itself. The entry should be included in a file in the `.changelog` directory with the naming convention `{PR-NUMBER}.txt`. For example, to create a changelog entry for pull request 1234, there should be a file named `.changelog/1234.txt`.
+Install Changie along with all other project tools:
 
-``````
-```release-note:{HEADER}
-{ENTRY}
-```
-``````
-
-If a pull request should contain multiple changelog entries, then multiple blocks can be added to the same changelog file. For example:
-
-``````
-```release-note:note
-resource/aws_example_thing: The `broken` attribute has been deprecated. All configurations using `broken` should be updated to use the new `not_broken` attribute instead.
+```console
+$ make tools
 ```
 
-```release-note:enhancement
-resource/aws_example_thing: Add `not_broken` attribute
-```
-``````
+Or install it directly with Go:
 
-While generally an antipattern to have a PR contain multiple resources/data sources, in the case that it is required a changelog file should have multiple new resource/data sources blocks. ie
-
-``````
-```release-note:new-resource
-aws_ecs_daemon
+```console
+$ go install github.com/miniscruff/changie@latest
 ```
 
-```release-note:new-resource
-aws_ecs_daemon_task_definition
-```
-``````
+For other methods, see the [Changie installation documentation](https://changie.dev/guide/installation/).
 
-## Pull request types to CHANGELOG
+## Creating a CHANGELOG Entry
 
-The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines and examples for when a decision needs to be made to decide whether a change should have an entry.
+Run the interactive tool from the repository root:
 
-### Changes that should have a CHANGELOG entry
-
-#### New resource
-
-A new resource entry should only contain the name of the resource, and use the `release-note:new-resource` header.
-
-``````
-```release-note:new-resource
-aws_secretsmanager_secret_policy
-```
-``````
-
-#### New data source
-
-A new data source entry should only contain the name of the data source, and use the `release-note:new-data-source` header.
-
-``````
-```release-note:new-data-source
-aws_workspaces_workspace
-```
-``````
-
-#### New full-length documentation guides (e.g., EKS Getting Started Guide, IAM Policy Documents with Terraform)
-
-A new full-length documentation entry gives the title of the documentation added, using the `release-note:new-guide` header.
-
-``````
-```release-note:new-guide
-Custom Service Endpoint Configuration
-```
-``````
-
-#### New list resource
-
-A new list resource should only contain the name of the resource, and use the `release-note:new-list-resource` header.
-
-``````
-```release-note:new-list-resource
-aws_ebs_volume_attachment
-```
-``````
-
-### Resource identity support
-
-Adding resource identity support should use the `release-note:enhancement` header and have a prefix indicating the resource it corresponds to, a colon and "Adding resource identity support".
-
-``````
-```release-note:enhancement
-resource/aws_ebs_volume_attachment: Add resource identity support
-```
-``````
-
-#### Resource and provider bug fixes
-
-A new bug entry should use the `release-note:bug` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level fixes.
-
-``````
-```release-note:bug
-resource/aws_glue_classifier: Fix quote_symbol being optional
-```
-``````
-
-#### Resource and provider enhancements
-
-A new enhancement entry should use the `release-note:enhancement` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level enhancements.
-
-``````
-```release-note:enhancement
-resource/aws_eip: Add network_border_group argument
-```
-``````
-
-#### Deprecations
-
-A deprecation entry should use the `release-note:note` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level changes.
-
-``````
-```release-note:note
-resource/aws_dx_gateway_association: The vpn_gateway_id attribute is being deprecated in favor of the new associated_gateway_id attribute to support transit gateway associations
-```
-``````
-
-#### Breaking changes and removals
-
-A breaking-change entry should use the `release-note:breaking-change` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level changes.
-
-``````
-```release-note:breaking-change
-resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
-```
-``````
-
-#### Region validation support
-
-``````
-```release-note:note
-provider: Region validation now automatically supports the new `XX-XXXXX-#` (Location) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g., `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g., `data.aws_availability_zones.available: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-####]
+```console
+$ changie new
 ```
 
-```release-note:enhancement
-provider: Support automatic region validation for `XX-XXXXX-#` [GH-####]
+Changie will prompt you for:
+
+1. **Kind** — The type of change (Breaking Change, Note, Resource/Data Source/Ephemeral Resource/Function/List Resource/Action, Enhancement, or Bug)
+2. **Impact** — The affected resource(s), data source(s), or other component(s)
+3. **Body** — A description of the change
+4. **Pull request number (if known)** — Optional. You may leave this blank; it is automatically backfilled into the fragment after the pull request is merged.
+
+The tool creates a YAML fragment in `.changes/<major_version_number>.x/unreleased/` with a timestamped filename (e.g., `enhancement-20260120-143022.yaml`). Commit this file with your pull request.
+
+!!! note
+    Do not create fragment files by hand. Changie uses a specific file naming format required for correct CHANGELOG generation. Always use `changie new`.
+
+### Example
+
+Running `changie new` for an enhancement produces a fragment like this:
+
+```yaml
+kind: enhancement
+body: Add `not_broken` attribute
+custom:
+  Impact: |-
+    resource/aws_example_thing
 ```
-``````
 
-### Changes that may have a CHANGELOG entry
+Which generates this CHANGELOG entry:
 
-Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
-Any changes which do not fit into the above categories but warrant highlighting.
-Use resource/data source/provider prefixes where appropriate.
-
-``````
-```release-note:note
-resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
+```markdown
+* resource/aws_example_thing: Add `not_broken` attribute ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
 ```
-``````
 
-### Changes that should _not_ have a CHANGELOG entry
+## Updating an Existing Entry
 
-- Resource and provider documentation updates
-- Testing updates
-- Code refactoring
+Edit the YAML file directly in `.changes/<major_version_number>.x/unreleased/`. Do not rename the file — the filename format is used by Changie during CHANGELOG generation.
+
+!!! note
+    If the change has already been released, edit the per-version CHANGELOG file (e.g., `.changes/6.x/6.1.0.md`) instead. Do not edit `CHANGELOG.md` directly — it is regenerated automatically on every PR merge and any manual edits will be overwritten.
+
+Entries within each section (`BREAKING CHANGES`, `NOTES`, `FEATURES`, `ENHANCEMENTS`, `BUG FIXES`) are sorted alphabetically when the CHANGELOG is regenerated by GitHub Actions.
+
+## What Requires a CHANGELOG Entry
+
+### Changes That Should Have an Entry
+
+- **New Resource/Data Source/Ephemeral Resource/List Resource/Function/Action** — Use the `feature` kind, select the appropriate option, and provide the resource name (e.g., `aws_secretsmanager_secret_policy`).
+- **Bug Fix** — Use the `bug` kind. Set Impact to the affected resource, data source, or `provider`.
+- **Enhancement** — Use the `enhancement` kind. Set Impact to the affected resource, data source, or `provider`.
+- **Deprecation** — Use the `note` kind. Set Impact to the affected resource, data source, or `provider`.
+- **Breaking Change** — Use the `breaking-change` kind. Set Impact to the affected resource, data source, or `provider`.
+- **New AWS Region Support** — Use the `note` entry (Impact: `provider`) explaining the region and its opt-in requirements.
+
+### Changes That May Have an Entry
+
+- **Dependency updates** — Only when the update contains bug fixes or enhancements that directly affect operators.
+- **Other notable changes** — Any operator-visible change not covered above. Use resource, data source, or `provider` prefixes in Impact where appropriate.
+
+### Changes That Should Not Have an Entry
+
+- Documentation updates
+- Test updates
+- Code refactoring with no user-visible effect
+
+## Multi-Line Impact: Multiple CHANGELOG Entries from One Fragment
+
+When a single change affects more than one resource or data source, enter each on its own line in the `Impact` prompt. Changie generates a separate CHANGELOG entry for each line, all sharing the same body text.
+
+**Fragment:**
+
+```yaml
+kind: enhancement
+body: Add configurable timeouts
+custom:
+  Impact: |-
+    resource/aws_instance
+    resource/aws_spot_instance_request
+    data-source/aws_instance
+```
+
+**Generated CHANGELOG entries:**
+
+```markdown
+* resource/aws_instance: Add configurable timeouts ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+* resource/aws_spot_instance_request: Add configurable timeouts ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+* data-source/aws_instance: Add configurable timeouts ([#12345](https://github.com/hashicorp/terraform-provider-aws/issues/12345))
+```
+
+This works for all kinds that use an Impact field: `bug`, `enhancement`, `note`, and `breaking-change`.
+
+## Migrating from `go-changelog`
+
+**New pull requests** that include a `.changelog/*.txt` fragment from the previous `go-changelog` system will fail CI. Convert the fragment to Changie format before the pull request can merge:
+
+```console
+$ make convert-changelog FILE=.changelog/12345.txt
+```
+
+This parses your existing entry file, creates the equivalent Changie YAML fragment(s) in `.changes/<major_version_number>.x/unreleased/`, and deletes the original file.
+
+**Existing pull requests** that were opened before this migration will not have received a CI failure about their `.changelog/` fragment. When such a pull request merges, CI automatically converts the fragment to Changie format — no manual action is required.
+
+---
+
+## Workflow Diagram
+
+The diagram below illustrates the full CHANGELOG management workflow, from creating a fragment through to the generated `CHANGELOG.md` on `main`.
+
+```mermaid
+flowchart TD
+    subgraph NCW ["New Contribution Workflow"]
+        direction TD
+        CONTRIB([Code change complete])
+        CONTRIB --> NEW["Run `changie new`\nAnswer prompts: kind · component · description"]
+        NEW --> FRAG["Fragment created in\n.changes/<major_version_number>.x/unreleased/"]
+        FRAG --> PR([Open / update PR])
+    end
+
+    subgraph CEY ["changelog-entries.yml"]
+        direction TD
+        VAL["pull_request_target: opened / synchronize /\nready_for_review / reopened"]
+
+        VAL --> SVC{Touches\nservice files?}
+        SVC -- Yes --> NCN{has label\nno-changelog-needed?}
+        NCN -- No --> CF{Changie\nfragment added?}
+        CF -- No --> FAIL1[❌ Missing fragment\nRun `changie new`]
+
+        VAL --> DE{Direct edit to\nCHANGELOG.md?}
+        DE -- Yes --> FAIL2[❌ Do not edit CHANGELOG.md directly\nEdit the fragment or use `changie new`]
+
+        VAL --> GCF{Legacy .changelog/*.txt\nfragment present?}
+        GCF -- Yes --> FAIL3[❌ Run `make convert-changelog`\nto convert to Changie format]
+
+        SVC -- No --> VALPASS
+        NCN -- Yes --> VALPASS
+        CF -- Yes --> VALPASS
+        DE -- No --> VALPASS
+        GCF -- No --> VALPASS
+        FAIL1 & FAIL2 & FAIL3 --> VALPASS([✅ All checks passed])
+    end
+
+    MERGE[PR merged to main]
+
+    subgraph UCPRT ["update-changelog.yml — pull_request_target"]
+        direction TD
+        CONV["Auto-convert any legacy .changelog/*.txt\nfragments introduced by this PR\n(transitional — removed after migration)"]
+        CONV --> BF["Backfill PullRequest key\ninto any fragment missing it"]
+        BF --> REGEN["changie merge --include-unreleased\nSort entries · Append footer\nCommit + push directly to main"]
+        REGEN --> DONE([✅ CHANGELOG.md updated on main])
+    end
+
+    subgraph UCWD ["update-changelog.yml — workflow_dispatch"]
+        direction TD
+        MANUAL([Maintainer: workflow_dispatch])
+        MANUAL --> FFV{final_for_version?}
+
+        FFV -- false\nunreleased refresh --> REGEN2["changie merge --include-unreleased\nSort entries · Append footer\nCommit + push directly to main"]
+        REGEN2 --> DONE2([✅ CHANGELOG.md refreshed on main])
+
+        FFV -- true\nrelease --> BATCH["changie batch <version>\nMoves unreleased fragments into\n.changes/<major_version_number>.x/<version>.md"]
+        BATCH --> REGEN3["changie merge\nSort entries · Append footer"]
+        REGEN3 --> OPENPR["Open PR targeting main:\nUpdate CHANGELOG for v<version>"]
+        OPENPR --> DONE3([✅ Release CHANGELOG PR ready for review])
+    end
+
+    PR --> VAL
+    VALPASS --> MERGE
+    MERGE --> CONV
+    DONE --> MANUAL
+```
