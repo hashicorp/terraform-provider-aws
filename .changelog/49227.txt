@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_vpc_security_group_ingress_rule: Allow move from `aws_security_group_rule` resource with single source
+```
+
+```release-note:enhancement
+resource/aws_vpc_security_group_egress_rule: Allow move from `aws_security_group_rule` resource with single destination
+```
