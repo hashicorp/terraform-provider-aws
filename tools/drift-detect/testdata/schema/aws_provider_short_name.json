@@ -1,0 +1,22 @@
+{
+  "format_version": "1.0",
+  "provider_schemas": {
+    "aws": {
+      "provider": {
+        "version": 0,
+        "block": {}
+      },
+      "resource_schemas": {
+        "aws_sns_topic": {
+          "version": 0,
+          "block": {
+            "attributes": {
+              "id":   { "type": "string", "computed": true },
+              "name": { "type": "string", "optional": true, "computed": true }
+            }
+          }
+        }
+      }
+    }
+  }
+}

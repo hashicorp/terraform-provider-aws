@@ -1,0 +1,34 @@
+{
+  "smithy": "2.0",
+  "shapes": {
+    "com.amazonaws.sns#CreateTopicInput": {
+      "type": "structure",
+      "members": {
+        "Name": {
+          "target": "smithy.api#String",
+          "traits": {
+            "smithy.api#required": {}
+          }
+        },
+        "Attributes": {
+          "target": "com.amazonaws.sns#TopicAttributesMap"
+        },
+        "Tags": {
+          "target": "com.amazonaws.sns#TagList"
+        }
+      }
+    },
+    "com.amazonaws.sns#TopicAttributesMap": {
+      "type": "map",
+      "key": {
+        "target": "smithy.api#String"
+      },
+      "value": {
+        "target": "smithy.api#String"
+      }
+    },
+    "com.amazonaws.sns#TagList": {
+      "type": "list"
+    }
+  }
+}
