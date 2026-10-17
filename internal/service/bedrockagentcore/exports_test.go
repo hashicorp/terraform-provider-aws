@@ -50,27 +50,30 @@ var (
 )
 
 type (
-	CustomConfigurationModel               = customConfigurationModel
-	CustomJWTAuthorizerConfigurationModel  = customJWTAuthorizerConfigurationModel
-	EpisodicReflectionConfigurationModel   = episodicReflectionConfigurationModel
-	EpisodicReflectionOverrideDetailsModel = episodicReflectionOverrideDetailsModel
-	ExtractionConfigModel                  = extractionConfigModel
-	InvocationConfigurationModel           = invocationConfigurationModel
-	LLMExtractionConfigModel               = llmExtractionConfigModel
-	ManagedVPCResourceModel                = managedVPCResourceModel
-	MemoryRecordSchemaModel                = memoryRecordSchemaModel
-	MemoryStrategyResourceModel            = memoryStrategyResourceModel
-	MessageBasedTriggerModel               = messageBasedTriggerModel
-	MetadataSchemaEntryModel               = metadataSchemaEntryModel
-	NumberValidationModel                  = numberValidationModel
-	OverrideDetailsModel                   = overrideDetailsModel
-	PrivateEndpointModel                   = privateEndpointModel
-	SelfManagedConfigurationModel          = selfManagedConfigurationModel
-	SelfManagedLatticeResourceModel        = selfManagedLatticeResourceModel
-	StringListValidationModel              = stringListValidationModel
-	StringValidationModel                  = stringValidationModel
-	TimeBasedTriggerModel                  = timeBasedTriggerModel
-	TokenBasedTriggerModel                 = tokenBasedTriggerModel
-	TriggerConditionsModel                 = triggerConditionsModel
-	ValidationModel                        = validationModel
+	CertificateConfigurationModel               = certificateConfigurationModel
+	CustomConfigurationModel                    = customConfigurationModel
+	CustomJWTAuthorizerConfigurationModel       = customJWTAuthorizerConfigurationModel
+	EpisodicReflectionConfigurationModel        = episodicReflectionConfigurationModel
+	EpisodicReflectionOverrideDetailsModel      = episodicReflectionOverrideDetailsModel
+	ExtractionConfigModel                       = extractionConfigModel
+	InvocationConfigurationModel                = invocationConfigurationModel
+	LLMExtractionConfigModel                    = llmExtractionConfigModel
+	ManagedVPCResourceModel                     = managedVPCResourceModel
+	MemoryRecordSchemaModel                     = memoryRecordSchemaModel
+	MemoryStrategyResourceModel                 = memoryStrategyResourceModel
+	MessageBasedTriggerModel                    = messageBasedTriggerModel
+	MetadataSchemaEntryModel                    = metadataSchemaEntryModel
+	NumberValidationModel                       = numberValidationModel
+	OverrideDetailsModel                        = overrideDetailsModel
+	PrivateEndpointModel                        = privateEndpointModel
+	S3ConfigurationModel                        = s3ConfigurationModel
+	SecretsManagerCertificateConfigurationModel = secretsManagerCertificateConfigurationModel
+	SelfManagedConfigurationModel               = selfManagedConfigurationModel
+	SelfManagedLatticeResourceModel             = selfManagedLatticeResourceModel
+	StringListValidationModel                   = stringListValidationModel
+	StringValidationModel                       = stringValidationModel
+	TimeBasedTriggerModel                       = timeBasedTriggerModel
+	TokenBasedTriggerModel                      = tokenBasedTriggerModel
+	TriggerConditionsModel                      = triggerConditionsModel
+	ValidationModel                             = validationModel
 )
