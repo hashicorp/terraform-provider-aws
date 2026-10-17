@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eks_addon: Wait for the add-on to return to an `ACTIVE` status when an update fails due to an EKS service-side timeout that leaves the add-on `DEGRADED` with the new configuration applied
+```
