@@ -77,6 +77,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Type_SCP":               testAccPolicy_type_SCP,
 			"Type_Tag":               testAccPolicy_type_Tag,
 			"Type_SecurityHub":       testAccPolicy_type_SecurityHub,
+			"Type_GuardDuty":         testAccPolicy_type_GuardDuty,
 			"Type_Inspector":         testAccPolicy_type_Inspector,
 			"Type_UpgradeRollout":    testAccPolicy_type_UpgradeRollout,
 			"Type_S3":                testAccPolicy_type_S3,

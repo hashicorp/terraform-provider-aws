@@ -461,6 +461,57 @@ func testAccPolicy_type_SecurityHub(t *testing.T) {
 	})
 }
 
+func testAccPolicy_type_GuardDuty(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_guardduty.html
+	guardDutyPolicyContent := `{
+    "guardduty" : {
+      "enablement" : {
+        "default" : {
+          "foundational" : {
+            "status" : {
+              "@@assign" : "enabled"
+            }
+          },
+          "s3_data_events" : {
+            "status" : {
+              "@@assign" : "enabled"
+            }
+          }
+        }
+      }
+    }
+}`
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, guardDutyPolicyContent, string(awstypes.PolicyTypeGuarddutyPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeGuarddutyPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
 func testAccPolicy_type_Inspector(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.Policy
