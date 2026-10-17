@@ -16,6 +16,7 @@ var (
 	ResourcePatchBaseline           = resourcePatchBaseline
 	ResourcePatchGroup              = resourcePatchGroup
 	ResourceResourceDataSync        = resourceResourceDataSync
+	ResourceResourcePolicy          = newResourcePolicyResource
 	ResourceServiceSetting          = resourceServiceSetting
 
 	FindActivationByID                                 = findActivationByID
@@ -30,6 +31,7 @@ var (
 	FindPatchBaselineByID                              = findPatchBaselineByID
 	FindPatchGroupByTwoPartKey                         = findPatchGroupByTwoPartKey
 	FindResourceDataSyncByName                         = findResourceDataSyncByName
+	FindResourcePolicyByTwoPartKey                     = findResourcePolicyByTwoPartKey
 	FindServiceSettingByID                             = findServiceSettingByID
 
 	ExtractPatchBaselineIDFromARN = extractPatchBaselineIDFromARN
