@@ -35,6 +35,7 @@ import (
 type AWSClient struct {
 	accountID                 string
 	awsConfig                 *aws.Config
+	assumeNoPropagationDelay  bool                      // From TF_AWS_ASSUME_NO_PROPAGATION_DELAY.
 	callRecorder              *apicall.Recorder         // For acceptance tests asserting which AWS API operations are made.
 	clients                   map[string]map[string]any // Region -> service package name -> API client.
 	defaultTagsConfig         *tftags.DefaultConfig
@@ -501,4 +502,13 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 	}
 
 	return client, nil
+}
+
+// AssumeNoPropagationDelay reports whether the operator has asserted, via the
+// TF_AWS_ASSUME_NO_PROPAGATION_DELAY environment variable, that the target
+// environment has no cross-service propagation delay (e.g. an in-process
+// emulator such as LocalStack). Resource waiters may use this to skip the
+// consecutive-confirmation budget that absorbs AWS eventual consistency.
+func (c *AWSClient) AssumeNoPropagationDelay() bool {
+	return c.assumeNoPropagationDelay
 }
