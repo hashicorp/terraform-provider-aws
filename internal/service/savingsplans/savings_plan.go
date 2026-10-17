@@ -241,6 +241,18 @@ func (r *savingsPlanResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	// DescribeSavingsPlans (the source of savingsPlan above) never returns a
+	// purchase time: it's a write-only input on CreateSavingsPlan, not an
+	// attribute of the Savings Plan itself. When the practitioner doesn't set
+	// purchase_time in their configuration (the common case: an immediate,
+	// rather than future-dated, purchase), Flatten has no source value to
+	// populate it with, so it's left unknown. Resolve it to null instead so
+	// Create doesn't violate the framework's "all Computed values must be
+	// known after apply" invariant.
+	if plan.PurchaseTime.IsUnknown() {
+		plan.PurchaseTime = timetypes.NewRFC3339Null()
+	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
