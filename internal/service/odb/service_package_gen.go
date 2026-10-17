@@ -7,6 +7,8 @@ package odb
 
 import (
 	"context"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
@@ -98,6 +100,26 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newExaDBVMClusterDataSource,
+			TypeName: "aws_odb_exadb_vm_cluster",
+			Name:     "ExaDB VM Cluster",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newExascaleDBStorageVaultDataSource,
+			TypeName: "aws_odb_exascale_db_storage_vault",
+			Name:     "Exascale DB Storage Vault",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newDataSourceGIMinorVersions,
+			TypeName: "aws_odb_gi_minor_versions",
+			Name:     "GI Minor Versions",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newDataSourceGiVersions,
 			TypeName: "aws_odb_gi_versions",
 			Name:     "Gi Versions",
@@ -182,6 +204,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newExaDBVMClusterResource,
+			TypeName: "aws_odb_exadb_vm_cluster",
+			Name:     "ExaDB VM Cluster",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newExascaleDBStorageVaultResource,
+			TypeName: "aws_odb_exascale_db_storage_vault",
+			Name:     "Exascale DB Storage Vault",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newResourceAssociateDisassociateIAMRole,
 			TypeName: "aws_odb_iam_role_association",
 			Name:     "IAM Role Association",
@@ -202,6 +246,27 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newExaDBVMClusterResourceAsListResource,
+			TypeName: "aws_odb_exadb_vm_cluster",
+			Name:     "ExaDB VM Cluster",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newExascaleDBStorageVaultResourceAsListResource,
+			TypeName: "aws_odb_exascale_db_storage_vault",
+			Name:     "Exascale DB Storage Vault",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
