@@ -117,6 +117,85 @@ func TestAccNetworkManagerCoreNetwork_description(t *testing.T) {
 	})
 }
 
+func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network.test"
+	originalSegmentValue := "segmentValue1"
+	updatedSegmentValue := "segmentValue2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkConfig_policyDocument(originalSegmentValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(fmt.Sprintf(`"name":"%s"`, originalSegmentValue))),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
+						"asn":                  "65022",
+						"edge_location":        acctest.Region(),
+						"inside_cidr_blocks.#": "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
+						"edge_locations.#":  "1",
+						"edge_locations.0":  acctest.Region(),
+						names.AttrName:      originalSegmentValue,
+						"shared_segments.#": "0",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// policy_document is only refreshed into state when it is
+				// managed by this resource, so it is unset after import.
+				ImportStateVerifyIgnore: []string{"create_base_policy", "policy_document"},
+			},
+			{
+				Config: testAccCoreNetworkConfig_policyDocument(updatedSegmentValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(fmt.Sprintf(`"name":"%s"`, updatedSegmentValue))),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
+						"asn":                  "65022",
+						"edge_location":        acctest.Region(),
+						"inside_cidr_blocks.#": "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
+						"edge_locations.#":  "1",
+						"edge_locations.0":  acctest.Region(),
+						names.AttrName:      updatedSegmentValue,
+						"shared_segments.#": "0",
+					}),
+				),
+			},
+			{
+				// Removing policy_document stops managing the policy; the LIVE policy is left in place.
+				Config: testAccCoreNetworkConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
+						"asn":                  "65022",
+						"edge_location":        acctest.Region(),
+						"inside_cidr_blocks.#": "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
+						"edge_locations.#":  "1",
+						"edge_locations.0":  acctest.Region(),
+						names.AttrName:      updatedSegmentValue,
+						"shared_segments.#": "0",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithoutRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network.test"
@@ -401,6 +480,31 @@ resource "aws_networkmanager_core_network" "test" {
   description       = %[1]q
 }
 `, description)
+}
+
+func testAccCoreNetworkConfig_policyDocument(segmentValue string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+
+    edge_locations {
+      location = %[2]q
+    }
+  }
+
+  segments {
+    name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, segmentValue, acctest.Region())
 }
 
 func testAccCoreNetworkConfig_basePolicyDocumentWithoutRegion() string {
