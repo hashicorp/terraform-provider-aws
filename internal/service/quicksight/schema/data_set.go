@@ -1434,7 +1434,7 @@ func expandColumnTag(tfMap map[string]any) *awstypes.ColumnTag {
 	if v, ok := tfMap["column_description"].([]any); ok {
 		apiObject.ColumnDescription = expandColumnDescription(v)
 	}
-	if v, ok := tfMap["column_geographic_role"].(string); ok {
+	if v, ok := tfMap["column_geographic_role"].(string); ok && v != "" {
 		apiObject.ColumnGeographicRole = awstypes.GeoSpatialDataRole(v)
 	}
 
