@@ -702,6 +702,12 @@ func resourceCluster() *schema.Resource {
 					ForceNew: true,
 					Required: true,
 				},
+				"session_enabled": {
+					Type:     schema.TypeBool,
+					ForceNew: true,
+					Optional: true,
+					Default:  false,
+				},
 				"step": {
 					Type:       schema.TypeList,
 					Optional:   true,
@@ -1011,6 +1017,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.SecurityConfiguration = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("session_enabled"); ok {
+		input.SessionEnabled = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("step"); ok {
 		input.Steps = expandStepConfigs(v.([]any))
 	}
@@ -1132,6 +1142,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.Set(names.AttrServiceRole, cluster.ServiceRole)
 	d.Set("security_configuration", cluster.SecurityConfiguration)
+	d.Set("session_enabled", cluster.SessionEnabled)
 	d.Set("autoscaling_role", cluster.AutoScalingRole)
 	d.Set("os_release_label", cluster.OSReleaseLabel)
 	d.Set("release_label", cluster.ReleaseLabel)
