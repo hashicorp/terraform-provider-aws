@@ -10,7 +10,7 @@ description: |-
 
 Provides a Glue Job resource.
 
--> Glue functionality, such as monitoring and logging of jobs, is typically managed with the `default_arguments` argument. See the [Special Parameters Used by AWS Glue](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html) topic in the Glue developer guide for additional information.
+-> Glue functionality, such as monitoring and logging of jobs, is typically managed with the `default_arguments` argument. See the [Special Parameters Used by AWS Glue](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html) topic in the Glue developer guide for additional information. More Additional parameters for Logging in this Guide [Custom Logging arguments for Glue 5.0 ]([url](https://docs.aws.amazon.com/glue/latest/dg/monitor-continuous-logging.html#monitor-logging-custom))
 
 ## Example Usage
 
@@ -208,6 +208,8 @@ resource "aws_glue_job" "example" {
     "--enable-continuous-cloudwatch-log" = "true"
     "--enable-continuous-log-filter"     = "true"
     "--enable-metrics"                   = ""
+    "--custom-logGroup-prefix"           = "/aws-glue/jobs/example"
+    "--custom-logStream-prefix"          =  "example-driver"
   }
 }
 ```
