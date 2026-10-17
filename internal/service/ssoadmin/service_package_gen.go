@@ -108,6 +108,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newInstanceResource,
+			TypeName: "aws_ssoadmin_instance",
+			Name:     "Instance",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalResourceWithGlobalARNFormat(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newManagedPolicyAttachmentsExclusiveResource,
 			TypeName: "aws_ssoadmin_managed_policy_attachments_exclusive",
 			Name:     "Managed Policy Attachments Exclusive",
@@ -151,6 +162,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newInstanceResourceAsListResource,
+			TypeName: "aws_ssoadmin_instance",
+			Name:     "Instance",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
 		{
 			Factory:  newRegionResourceAsListResource,
 			TypeName: "aws_ssoadmin_region",

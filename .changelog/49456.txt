@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_ssoadmin_instance
+```
+
+```release-note:new-list-resource
+aws_ssoadmin_instance
+```
