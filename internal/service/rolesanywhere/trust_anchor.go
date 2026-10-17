@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -26,8 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-const configuredByDefault string = "rolesanywhere.amazonaws.com"
 
 // @SDKResource("aws_rolesanywhere_trust_anchor", name="Trust Anchor")
 // @Tags(identifierAttribute="arn")
@@ -60,7 +57,6 @@ func resourceTrustAnchor() *schema.Resource {
 				"notification_settings": {
 					Type:     schema.TypeSet,
 					Computed: true,
-					ForceNew: true,
 					Optional: true,
 					MaxItems: 50,
 					Elem: &schema.Resource{
@@ -68,7 +64,6 @@ func resourceTrustAnchor() *schema.Resource {
 							"channel": {
 								Type:             schema.TypeString,
 								Computed:         true,
-								ForceNew:         true,
 								Optional:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.NotificationChannel](),
 							},
@@ -79,20 +74,17 @@ func resourceTrustAnchor() *schema.Resource {
 							names.AttrEnabled: {
 								Type:     schema.TypeBool,
 								Computed: true,
-								ForceNew: true,
 								Optional: true,
 							},
 							"event": {
 								Type:             schema.TypeString,
 								Computed:         true,
-								ForceNew:         true,
 								Optional:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.NotificationEvent](),
 							},
 							"threshold": {
 								Type:     schema.TypeInt,
 								Computed: true,
-								ForceNew: true,
 								Optional: true,
 							},
 						},
@@ -141,42 +133,64 @@ func resourceTrustAnchor() *schema.Resource {
 	}
 }
 
-// The AWS API returns two default entries for notification_settings. These entries are overwritten based on if a user defines a notification setting with the same event type.
-// Since notification settings cannot be updated, we need to force a resource recreation when they change, while at the same time allowing computed values.
-// Because both computed and user-defined arguments need to be supported, a custom diff function is required to handle this.
-// The function checks the diff, and if the difference is due to computed value change, the diff is suppressed based on the configuredBy attribute.
+// The AWS API always returns a default entry for every notification event, even one the
+// user never configured. Those default entries must not produce a perpetual diff on an
+// event the user simply didn't reference. A value change on an event the user did
+// reference, however, is a real, user-driven change and must not be suppressed.
+//
+// This diff is matched by "event" rather than by full object equality: comparing whole
+// objects can't tell "AWS filled in a default the user never mentioned" apart from "the
+// user changed a value on an event they did configure", since both show up as the old
+// object having no identical match in the new set.
 func customizeDiffNotificationSettings(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	oldSet, newSet := diff.GetChange("notification_settings")
 
-	oldSetTyped, okOld := oldSet.(*schema.Set)
-	newSetTyped, okNew := newSet.(*schema.Set)
-
-	if !okOld || !okNew {
-		return fmt.Errorf("unexpected type for notification_settings: oldSet: %T, newSet: %T", oldSet, newSet)
+	oldSetTyped, ok := oldSet.(*schema.Set)
+	if !ok {
+		return fmt.Errorf("unexpected type for notification_settings (old): %T", oldSet)
+	}
+	newSetTyped, ok := newSet.(*schema.Set)
+	if !ok {
+		return fmt.Errorf("unexpected type for notification_settings (new): %T", newSet)
 	}
 
-	oldList := oldSetTyped.List()
-	newList := newSetTyped.List()
+	// Nothing to reconcile: a brand-new resource has no prior state to compare against,
+	// and clearing here would strip the Computed "pending" marker, locking the plan to an
+	// empty set and preventing AWS's real default entries from ever landing in state.
+	if oldSetTyped.Len() == 0 {
+		return nil
+	}
 
-	for _, obj1 := range oldList {
-		found := false
-		for _, obj2 := range newList {
-			if reflect.DeepEqual(obj1, obj2) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			if object, okNew := obj1.(map[string]any); okNew && object["configured_by"] == configuredByDefault {
-				if err := diff.Clear("notification_settings"); err != nil {
-					return err
-				}
-				break
-			}
+	oldByEvent := make(map[string]map[string]any, oldSetTyped.Len())
+	for _, raw := range oldSetTyped.List() {
+		if m, ok := raw.(map[string]any); ok {
+			oldByEvent[fmt.Sprint(m["event"])] = m
 		}
 	}
 
-	return nil
+	for _, raw := range newSetTyped.List() {
+		newMap, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		oldMap, existed := oldByEvent[fmt.Sprint(newMap["event"])]
+		if !existed {
+			// A new event block the prior state never had is always a real change.
+			return nil
+		}
+
+		if oldMap["enabled"] != newMap["enabled"] ||
+			oldMap["threshold"] != newMap["threshold"] ||
+			oldMap["channel"] != newMap["channel"] {
+			// The user changed a value on an event that already existed: keep the diff.
+			return nil
+		}
+	}
+
+	// Every entry the user configured already matches the refreshed state; any remaining
+	// difference is solely AWS-computed defaults for events the user never referenced.
+	return diff.Clear("notification_settings")
 }
 
 func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -242,7 +256,7 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "notification_settings") {
 		input := &rolesanywhere.UpdateTrustAnchorInput{
 			TrustAnchorId: aws.String(d.Id()),
 			Name:          aws.String(d.Get(names.AttrName).(string)),
@@ -266,6 +280,22 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 				if err := disableTrustAnchor(ctx, d.Id(), meta); err != nil {
 					return sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 				}
+			}
+		}
+	}
+
+	if d.HasChange("notification_settings") {
+		if v, ok := d.GetOk("notification_settings"); ok && v.(*schema.Set).Len() > 0 {
+			input := &rolesanywhere.PutNotificationSettingsInput{
+				TrustAnchorId:        aws.String(d.Id()),
+				NotificationSettings: expandNotificationSettings(v.(*schema.Set).List()),
+			}
+
+			log.Printf("[DEBUG] Updating RolesAnywhere Trust Anchor (%s) notification settings: %#v", d.Id(), input)
+			_, err := conn.PutNotificationSettings(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating RolesAnywhere Trust Anchor (%s) notification settings: %s", d.Id(), err)
 			}
 		}
 	}
