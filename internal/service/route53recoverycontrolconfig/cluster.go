@@ -6,8 +6,10 @@
 package route53recoverycontrolconfig
 
 import (
+	"cmp"
 	"context"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
@@ -233,6 +235,11 @@ func flattenClusterEndpoints(endpoints []awstypes.ClusterEndpoint) []any {
 	if len(endpoints) == 0 {
 		return nil
 	}
+
+	// The API returns endpoints in a non-deterministic order.
+	slices.SortFunc(endpoints, func(a, b awstypes.ClusterEndpoint) int {
+		return cmp.Compare(aws.ToString(a.Region), aws.ToString(b.Region))
+	})
 
 	var tfList []any
 
