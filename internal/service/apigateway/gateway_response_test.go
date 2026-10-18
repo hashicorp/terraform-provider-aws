@@ -83,8 +83,12 @@ func TestAccAPIGatewayGatewayResponse_defaultStatusCode(t *testing.T) {
 			{
 				// Re-applying the same configuration must produce an empty plan
 				// (status_code is Computed when omitted).
-				Config:   testAccGatewayResponseConfig_defaultStatusCode(rName),
-				PlanOnly: true,
+				Config: testAccGatewayResponseConfig_defaultStatusCode(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
