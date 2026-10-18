@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators/internal"
 )
 
-// RequiredTogetherChildren checks that a set of path.Expression,
+// RequiredTogetherChildren checks that a set of path.Expression
 // either has all known or all null values.
 func RequiredTogetherChildren(expressions ...path.Expression) validator.Object {
 	return internal.RequiredTogetherValidator(expressions...)
