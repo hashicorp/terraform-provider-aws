@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_costoptimizationhub_enrollment_status: Fix perpetual diff on `include_member_accounts` when the API does not return a value
+```
