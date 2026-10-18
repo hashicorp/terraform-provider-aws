@@ -253,6 +253,10 @@ type objectValidatorTestCase struct {
 	wantWarnings  int
 }
 
+// testObjectValidatorCombinations tests all 27 null/set/unknown combinations of a, b,
+// and c. For fully known combinations, invalidCount determines whether the number
+// of configured children should produce an error (or a warning if warnings is true).
+// Any unknown child defers validation, so no diagnostics are expected.
 func testObjectValidatorCombinations(t *testing.T, validatorFactory func(...path.Expression) validator.Object, invalidCount func(int) bool, warnings bool) {
 	t.Helper()
 
