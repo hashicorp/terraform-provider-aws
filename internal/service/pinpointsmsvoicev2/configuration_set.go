@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -145,7 +146,7 @@ func (r *configurationSetResource) Read(ctx context.Context, request resource.Re
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, out, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -231,6 +232,10 @@ func (r *configurationSetResource) Delete(ctx context.Context, request resource.
 
 		return
 	}
+}
+
+func (r *configurationSetResource) flatten(ctx context.Context, configurationSet *awstypes.ConfigurationSetInformation, data *configurationSetResourceModel) diag.Diagnostics {
+	return fwflex.Flatten(ctx, configurationSet, data)
 }
 
 type configurationSetResourceModel struct {

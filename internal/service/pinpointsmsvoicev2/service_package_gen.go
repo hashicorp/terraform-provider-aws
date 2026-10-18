@@ -124,6 +124,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newConfigurationSetResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_configuration_set",
+			Name:     "Configuration Set",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+		},
+		{
 			Factory:  newEventDestinationResourceAsListResource,
 			TypeName: "aws_pinpointsmsvoicev2_event_destination",
 			Name:     "Event Destination",
