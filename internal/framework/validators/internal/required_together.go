@@ -69,14 +69,12 @@ func (v requiredTogetherValidator) validate(ctx context.Context, request validat
 			continue
 		}
 
-		// Capture all matched paths so we can validate everything was either
-		// configured together or not.
-		foundPaths.Append(matchedPaths...)
-
 		for _, mp := range matchedPaths {
 			if mp.Equal(request.Path) {
 				continue
 			}
+
+			foundPaths.Append(mp)
 
 			var mpVal attr.Value
 			response.Diagnostics.Append(request.Config.GetAttribute(ctx, mp, &mpVal)...)
