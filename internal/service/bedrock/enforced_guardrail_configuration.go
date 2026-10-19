@@ -240,6 +240,7 @@ func (r *enforcedGuardrailConfigurationResource) putEnforcedGuardrailConfigurati
 	if diags.HasError() {
 		return nil, diags
 	}
+	inferenceConfig.GuardrailIdentifier = fwflex.StringFromFramework(ctx, data.GuardrailARN)
 
 	input := bedrock.PutEnforcedGuardrailConfigurationInput{
 		GuardrailInferenceConfig: &inferenceConfig,
@@ -298,7 +299,7 @@ func listEnforcedGuardrailConfigurationPages(ctx context.Context, conn *bedrock.
 type enforcedGuardrailConfigurationResourceModel struct {
 	framework.WithRegionModel
 	ConfigID                 types.String                                                   `tfsdk:"config_id"`
-	GuardrailARN             types.String                                                   `tfsdk:"guardrail_arn"`
+	GuardrailARN             fwtypes.ARN                                                    `tfsdk:"guardrail_arn"`
 	GuardrailID              types.String                                                   `tfsdk:"guardrail_id"`
 	GuardrailVersion         types.String                                                   `tfsdk:"guardrail_version"`
 	ModelEnforcement         fwtypes.ListNestedObjectValueOf[modelEnforcementModel]         `tfsdk:"model_enforcement"`

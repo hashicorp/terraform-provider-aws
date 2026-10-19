@@ -49,7 +49,7 @@ func testAccEnforcedGuardrailConfiguration_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("config_id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("guardraila_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("guardrail_arn"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("guardrail_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("guardrail_version"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model_enforcement"), knownvalue.ListSizeExact(0)),
@@ -131,13 +131,13 @@ func testAccEnforcedGuardrailConfiguration_update(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model_enforcement"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("selective_content_guarding"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model_enforcement"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"included_models": knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.StringExact("ALL"),
 						}),
 						"excluded_models": knownvalue.ListSizeExact(0),
 					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("selective_content_guarding"), knownvalue.ListSizeExact(0)),
 				},
 			},
 			{
@@ -161,7 +161,7 @@ func testAccEnforcedGuardrailConfiguration_update(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
