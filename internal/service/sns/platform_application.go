@@ -372,7 +372,8 @@ func expandPlatformApplicationSecretAttributes(d *schema.ResourceData, attribute
 		// comes back as an empty string. When this happens, fall back to the "regular" version of the attribute.
 		if v == "" {
 			v = d.Get(secret.tfAttributeName).(string)
-		} else {
+		}
+		if v != "" {
 			attributes[secret.apiAttributeName] = v
 		}
 	}
