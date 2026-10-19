@@ -35,7 +35,9 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"additional_configuration":                     testAccDetectorFeature_additionalConfiguration,
 			"additional_configuration_new_order":           testAccDetectorFeature_additionalConfiguration_newOrder,
 			"additional_configuration_migrate_list_to_set": testAccDetectorFeature_additionalConfiguration_migrateListToSet,
-			"additional_configuration_rds_data_risk":       testAccDetectorFeature_additionalConfiguration_rdsDataRisk,
+			"additional_configuration_rds_data_risk_disabled_to_enabled": testAccDetectorFeature_additionalConfiguration_rdsDataRisk_disabledToEnabled,
+			"additional_configuration_rds_data_risk_enabled_to_disabled": testAccDetectorFeature_additionalConfiguration_rdsDataRisk_enabledToDisabled,
+			"additional_configuration_rds_data_risk_remove":              testAccDetectorFeature_additionalConfiguration_rdsDataRisk_remove,
 		},
 		"Filter": {
 			acctest.CtBasic:      testAccFilter_basic,

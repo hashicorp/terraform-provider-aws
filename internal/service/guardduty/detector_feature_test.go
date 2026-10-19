@@ -184,7 +184,7 @@ func testAccDetectorFeature_additionalConfiguration_newOrder(t *testing.T) {
 	})
 }
 
-func testAccDetectorFeature_additionalConfiguration_rdsDataRisk(t *testing.T) {
+func testAccDetectorFeature_additionalConfiguration_rdsDataRisk_enabledToDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_detector_feature.test"
 
@@ -242,6 +242,106 @@ func testAccDetectorFeature_additionalConfiguration_rdsDataRisk(t *testing.T) {
 					})),
 				},
 			},
+		},
+	})
+}
+
+func testAccDetectorFeature_additionalConfiguration_rdsDataRisk_disabledToEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_detector_feature.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorFeatureConfig_additionalConfiguration_rdsDataRisk("ENABLED", "DISABLED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDetectorFeatureConfig_additionalConfiguration_rdsDataRisk("ENABLED", "ENABLED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func testAccDetectorFeature_additionalConfiguration_rdsDataRisk_remove(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_detector_feature.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorFeatureConfig_additionalConfiguration_rdsDataRisk("ENABLED", "ENABLED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
+						}),
+					})),
+				},
+			},
 			{
 				Config: testAccDetectorFeatureConfig_basic("RDS_LOGIN_EVENTS", "ENABLED"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -261,7 +361,7 @@ func testAccDetectorFeature_additionalConfiguration_rdsDataRisk(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
-							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
 						}),
 					})),
 				},
