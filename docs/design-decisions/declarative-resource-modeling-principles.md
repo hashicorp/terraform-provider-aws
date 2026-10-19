@@ -23,9 +23,7 @@ Any fact about a resource that we write as data instead of code (registration, t
 
 These govern what gets added and how proposals to change the syntax are judged. Nothing that exists today has to migrate.
 
-**Perfection is the enemy of good.** Six of these seven refuse something, so taken as a checklist they can block every change. They are not a bar a change clears only by reaching the end state. A change earns its place by leaving the provider better than it found it, and the test is whether the step stands alone: if everything planned after it is abandoned and the provider is still better off, it ships at whatever size it comes in. If it only pays off once later work lands, it is a down payment, not a step.
-
-Direction alone is not enough. Every key in the testing vocabulary was a step in the right direction for somebody, and the accumulation is what these principles exist to prevent. So a step is judged on its own terms, not on what it promises next, and principle 6 still charges rent for whatever it adds.
+**A step has to stand alone.** Most of these principles refuse something, so used as a checklist they can block every change. A change doesn't have to reach the end state. It has to leave the provider better even if everything planned after it is abandoned. One that only pays off once later work lands is a down payment, and "a step in the right direction" is how most `@Testing` keys got added. Principle 6 still charges rent for whatever a step adds.
 
 ## Background
 
@@ -33,7 +31,7 @@ Annotations arrived in 2023 as four bare markers. By October 2026 there were 25 
 
 In this provider the Go code is the resource. Metadata describes what the provider and its generators need and can't read from the code. [`terraform-provider-awscc`](https://github.com/hashicorp/terraform-provider-awscc) works the other way: it's generated from CloudFormation schemas, so the spec has to carry everything. Where the spec can't (CloudFormation doesn't expose defaults consistently), awscc marks optional values `Computed` and stops detecting drift on values a practitioner omits.
 
-The case studies and measurements behind these principles are collected in [declarative-modeling](https://github.com/YakDriver/declarative-modeling): how other systems model resources declaratively, what each approach costs, and the provider measurements these principles came from.
+Case studies of how other systems model resources declaratively, and the provider measurements behind these principles, are in [YakDriver/declarative-modeling](https://github.com/YakDriver/declarative-modeling).
 
 ## The principles
 
