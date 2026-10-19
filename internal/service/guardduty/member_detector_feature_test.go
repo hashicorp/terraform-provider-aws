@@ -102,15 +102,15 @@ func testAccMemberDetectorFeature_additionalConfiguration(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationEksAddonManagement),
+							names.AttrName:   tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationEksAddonManagement),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationEc2AgentManagement),
+							names.AttrName:   tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationEc2AgentManagement),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationEcsFargateAgentManagement),
+							names.AttrName:   tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationEcsFargateAgentManagement),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
 						}),
 					})),
@@ -148,7 +148,7 @@ func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk_enabledToD
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrName:   tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationRdsDataRisk),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
 						}),
 					})),
@@ -167,7 +167,7 @@ func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk_enabledToD
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrName:   tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationRdsDataRisk),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
 						}),
 					})),
@@ -205,7 +205,7 @@ func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk_disabledTo
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrName:   tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationRdsDataRisk),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
 						}),
 					})),
@@ -224,7 +224,7 @@ func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk_disabledTo
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrName:   tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationRdsDataRisk),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
 						}),
 					})),
@@ -262,7 +262,7 @@ func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk_remove(t *
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrName:   tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationRdsDataRisk),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
 						}),
 					})),
