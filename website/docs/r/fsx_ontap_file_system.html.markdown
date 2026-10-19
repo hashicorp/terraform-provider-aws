@@ -62,13 +62,14 @@ This resource supports the following arguments:
 
 * `automatic_backup_retention_days` - (Optional) Number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
 * `daily_automatic_backup_start_time` - (Optional) Recurring daily time, in the format HH:MM. HH is the zero-padded hour of the day (0-23), and MM is the zero-padded minute of the hour. For example, 05:00 specifies 5 AM daily. Requires `automatic_backup_retention_days` to be set.
-* `deployment_type` - (Optional) Filesystem deployment type. Supports `MULTI_AZ_1`, `MULTI_AZ_2`, `SINGLE_AZ_1`, and `SINGLE_AZ_2`.
+* `deployment_type` - (Required) Filesystem deployment type. Supports `MULTI_AZ_1`, `MULTI_AZ_2`, `SINGLE_AZ_1`, and `SINGLE_AZ_2`.
 * `disk_iops_configuration` - (Optional) SSD IOPS configuration for the Amazon FSx for NetApp ONTAP file system. See [`disk_iops_configuration`](#disk_iops_configuration-block) below.
 * `endpoint_ip_address_range` - (Optional) IP address range in which the endpoints to access your file system will be created. By default, Amazon FSx selects an unused IP address range for you from the 198.19.\* range. Note that the 198.19.\* range is also used by AWS services such as WorkSpaces and AppStream 2.0 for their [management network interfaces](https://docs.aws.amazon.com/appstream2/latest/developerguide/management_ports.html).
 * `fsx_admin_password` - (Optional) ONTAP administrative password for the fsxadmin user that you can use to administer your file system using the ONTAP CLI and REST API.
 * `ha_pairs` - (Optional) Number of ha_pairs to deploy for the file system. Valid value is 1 for `SINGLE_AZ_1` or `MULTI_AZ_1` and `MULTI_AZ_2`. Valid values are 1 through 12 for `SINGLE_AZ_2`.
 * `kms_key_id` - (Optional) ARN for the KMS Key to encrypt the file system at rest, Defaults to an AWS managed KMS Key.
-* `preferred_subnet_id` - (Required) ID for a subnet. A subnet is a range of IP addresses in your virtual private cloud (VPC).
+* `network_type` - (Optional) Network type. Valid values are `IPV4` and `DUAL`. Default value is `IPV4`.
+* `preferred_subnet_id` - (Required) ID for a subnet. A subnet is a range of IP addresses in your VPC.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `route_table_ids` - (Optional) VPC route tables in which your file system's endpoints will be created. You should specify all VPC route tables associated with the subnets in which your clients are located. By default, Amazon FSx selects your VPC's default route table.
 * `security_group_ids` - (Optional) List of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
@@ -89,7 +90,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
 * `dns_name` - DNS name for the file system.
 
   **Note:** This attribute does not apply to FSx for ONTAP file systems and is consequently not set. You can access your FSx for ONTAP file system and volumes via a [Storage Virtual Machine (SVM)](fsx_ontap_storage_virtual_machine.html) using its DNS name or IP address.
@@ -98,14 +99,19 @@ This resource exports the following attributes in addition to the arguments abov
 * `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible The first network interface returned is the primary network interface.
 * `owner_id` - AWS account identifier that created the file system.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `vpc_id` - Identifier of the Virtual Private Cloud for the file system.
+* `vpc_id` - Identifier of the VPC for the file system.
 
 ### `endpoints` Block
 
-* `intercluster` - Endpoint for managing your file system by setting up NetApp SnapMirror with other ONTAP systems. See [Endpoint](#endpoint).
-* `management` - Endpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [Endpoint](#endpoint).
+* `intercluster` - Endpoint for managing your file system by setting up NetApp SnapMirror with other ONTAP systems. See [`endpoints.intercluster`](#endpointsintercluster-block) below.
+* `management` - Endpoint for managing your file system using the NetApp ONTAP CLI and NetApp ONTAP API. See [`endpoints.management`](#endpointsmanagement-block) below.
 
-#### Endpoint
+#### `endpoints.intercluster` Block
+
+* `dns_name` - Domain Name Service (DNS) name for the file system. You can mount your file system using its DNS name.
+* `ip_addresses` - IP addresses of the file system endpoint.
+
+#### `endpoints.management` Block
 
 * `dns_name` - Domain Name Service (DNS) name for the file system. You can mount your file system using its DNS name.
 * `ip_addresses` - IP addresses of the file system endpoint.

@@ -3,25 +3,25 @@ subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_inference_profiles"
 description: |-
-  Terraform data source for managing AWS Bedrock Inference Profiles.
+  Provides details about AWS Bedrock Inference Profiles.
 ---
 
 # Data Source: aws_bedrock_inference_profiles
 
-Terraform data source for managing AWS Bedrock Inference Profiles.
+Provides details about AWS Bedrock Inference Profiles.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_bedrock_inference_profiles" "test" {}
+data "aws_bedrock_inference_profiles" "example" {}
 ```
 
 ### Filter by Type
 
 ```terraform
-data "aws_bedrock_inference_profiles" "test" {
+data "aws_bedrock_inference_profiles" "example" {
   type = "APPLICATION"
 }
 ```
@@ -43,7 +43,7 @@ This data source exports the following attributes in addition to the arguments a
 
 - `created_at` - Time at which the inference profile was created.
 - `description` - Description of the inference profile.
-- `inference_profile_arn` - Amazon Resource Name (ARN) of the inference profile.
+- `inference_profile_arn` - ARN of the inference profile.
 - `inference_profile_id` - Unique identifier of the inference profile.
 - `inference_profile_name` - Name of the inference profile.
 - `models` - List of information about each model in the inference profile. See [`models` Block](#models-block).
@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `models` Block
 
-- `model_arn` - Amazon Resource Name (ARN) of the model.
+- `model_arn` - ARN of the model.

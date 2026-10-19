@@ -162,7 +162,7 @@ Specifies a Lambda function that verifies requests to a bot or fulfills the user
 * `message_version` - (Required) The version of the request-response that you want Amazon Lex to use
 to invoke your Lambda function. For more information, see
 [Using Lambda Functions](https://docs.aws.amazon.com/lex/latest/dg/using-lambda.html). Must be less than or equal to 5 characters in length.
-* `uri` - (Required) The Amazon Resource Name (ARN) of the Lambda function.
+* `uri` - (Required) ARN of the Lambda function.
 
 ### follow_up_prompt
 

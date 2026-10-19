@@ -56,7 +56,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the secret.
+* `id` - ARN of the secret.
 
 ## Import
 
@@ -79,9 +79,9 @@ resource "aws_secretsmanager_secret_policy" "example" {
 
 #### Required
 
-- `secret_arn` (String) Amazon Resource Name (ARN) of the Secrets Manager secret.
+- `secret_arn` (String) ARN of the Secrets Manager secret.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_policy` using the secret Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_policy` using the secret ARN. For example:
 
 ```terraform
 import {
@@ -90,7 +90,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_secretsmanager_secret_policy` using the secret Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_secretsmanager_secret_policy` using the secret ARN. For example:
 
 ```console
 % terraform import aws_secretsmanager_secret_policy.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456

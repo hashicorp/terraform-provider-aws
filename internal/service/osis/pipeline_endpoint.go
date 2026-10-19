@@ -144,7 +144,7 @@ func (r *pipelineEndpointResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	data.ID = fwflex.StringValueToFramework(ctx, aws.ToString(output.EndpointId))
+	data.ID = fwflex.StringToFramework(ctx, output.EndpointId)
 
 	endpoint, err := waitPipelineEndpointCreated(ctx, conn, aws.ToString(output.EndpointId), r.CreateTimeout(ctx, data.Timeouts))
 

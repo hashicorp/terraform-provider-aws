@@ -51,14 +51,14 @@ The `nfs_exports` configuration block supports the following arguments:
 The `client_configurations` configuration block supports the following arguments:
 
 * `clients` - (Required) - A value that specifies who can mount the file system. You can provide a wildcard character (*), an IP address (0.0.0.0), or a CIDR address (192.0.2.0/24. By default, Amazon FSx uses the wildcard character when specifying the client.
-* `options` - (Required) -  The options to use when mounting the file system. Maximum of 20 items. See the [Linix NFS exports man page](https://linux.die.net/man/5/exports) for more information. `crossmount` and `sync` are used by default.
+* `options` - (Required) -  The options to use when mounting the file system. Maximum of 20 items. See the [Linux NFS exports man page](https://linux.die.net/man/5/exports) for more information. `crossmount` and `sync` are used by default.
 
 ### `origin_snapshot` Block
 
 The `origin_snapshot` configuration block supports the following arguments:
 
 - `copy_strategy` - (Required) - Specifies the strategy used when copying data from the snapshot to the new volume. Valid values are `CLONE`, `FULL_COPY`, `INCREMENTAL_COPY`.
-- `snapshot_arn` - (Required) - The Amazon Resource Name (ARN) of the origin snapshot.
+- `snapshot_arn` - (Required) - The ARN of the origin snapshot.
 
 ### `user_and_group_quotas` Block
 
@@ -72,7 +72,7 @@ The `user_and_group_quotas` configuration block supports the following arguments
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
 * `id` - Identifier of the file system, e.g., `fsvol-12345678`
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

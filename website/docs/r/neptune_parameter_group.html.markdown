@@ -47,7 +47,7 @@ Parameter blocks support the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Neptune parameter group name.
-* `arn` - The Neptune parameter group Amazon Resource Name (ARN).
+* `arn` - Neptune parameter group ARN.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

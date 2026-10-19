@@ -33,14 +33,14 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role` - (Required) ARN referencing the IAM role assumed by S3 when replicating tables in this bucket.
-* `rule` - (Optional) Replication rules. See [Rule](#rule) below for more details.
+* `rule` - (Optional) Replication rules. See [Rule](#rule-block) below for more details.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that owns this replication configuration.
 
 ### `rule` Block
 
 The `rule` block supports the following:
 
-* `destination` - (Required) Replication destination. See [Destination](#destination) below for more details.
+* `destination` - (Required) Replication destination. See [Destination](#destination-block) below for more details.
 
 ### `destination` Block
 

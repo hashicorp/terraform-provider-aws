@@ -48,6 +48,33 @@ func TestAtMostOneOfChildren(t *testing.T) {
 	})
 }
 
+func TestAtLeastOneOfChildren(t *testing.T) {
+	t.Parallel()
+
+	testObjectValidator(t, tfobjectvalidator.AtLeastOneOfChildren, map[string]objectValidatorTestCase{
+		"all-children-null": {
+			wantErrors: 1,
+		},
+		"one-child-set": {
+			a:          "value",
+			wantErrors: 0,
+		},
+		"multiple-children-set": {
+			a:          "value-a",
+			b:          "value-b",
+			wantErrors: 0,
+		},
+		"child-unknown": {
+			a:          tftypes.UnknownValue,
+			wantErrors: 0,
+		},
+		"object-unknown": {
+			objectUnknown: true,
+			wantErrors:    0,
+		},
+	})
+}
+
 func TestExactlyOneOfChildren(t *testing.T) {
 	t.Parallel()
 

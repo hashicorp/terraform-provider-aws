@@ -74,7 +74,7 @@ The following arguments are required:
 
 * `max_units` - (Required) The maximum pipeline capacity, in Ingestion Compute Units (ICUs).
 * `min_units` - (Required) The minimum pipeline capacity, in Ingestion Compute Units (ICUs).
-* `pipeline_configuration_body` - (Required) The pipeline configuration in YAML format. This argument accepts the pipeline configuration as a string or within a .yaml file. If you provide the configuration as a string, each new line must be escaped with `\n`.
+* `pipeline_configuration_body` - (Required) The pipeline configuration in YAML format. This argument accepts the pipeline configuration as a string or within a `.yaml` file. If you provide the configuration as a string, each new line must be escaped with `\n`.
 * `pipeline_name` - (Required) Name of the pipeline. Pipeline names are unique across the pipelines owned by an account within an AWS Region.
 
 The following arguments are optional:
@@ -116,7 +116,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - (**Deprecated**) Name of the pipeline.
 * `ingest_endpoint_urls` - The list of ingestion endpoints for the pipeline, which you can send data to.
-* `pipeline_arn` - Amazon Resource Name (ARN) of the pipeline.
+* `pipeline_arn` - ARN of the pipeline.
 
 ## Timeouts
 

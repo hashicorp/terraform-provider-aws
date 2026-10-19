@@ -42,9 +42,9 @@ resource "aws_appfabric_ingestion_destination" "example" {
 
 The following arguments are required:
 
-* `app_bundle_arn` - (Required) Amazon Resource Name (ARN) of the app bundle to use for the request.
+* `app_bundle_arn` - (Required) ARN of the app bundle to use for the request.
 * `destination_configuration` - (Required) Configuration for the destination of ingested data. See [`destination_configuration` Block](#destination_configuration-block) below.
-* `ingestion_arn` - (Required) Amazon Resource Name (ARN) of the ingestion to use for the request.
+* `ingestion_arn` - (Required) ARN of the ingestion to use for the request.
 * `processing_configuration` - (Required) Configuration for how ingested data is processed. See [`processing_configuration` Block](#processing_configuration-block) below.
 
 The following arguments are optional:

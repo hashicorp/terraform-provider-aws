@@ -14,6 +14,7 @@ Documentation guidelines:
 - Focus on brevity and clarity
 - Use present tense and active voice
 - Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
+- Don't spell out common abbreviations (e.g. use "ARN", not "Amazon Resource Name")
 - Boolean arguments should begin with "Whether to"
 - Use "example" instead of "test" in examples
 --->

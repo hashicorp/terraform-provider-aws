@@ -108,6 +108,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "feature is not supported") {
 		return true
 	}
+	// Example (GovCloud): The AppStream 2.0 user pool feature is not supported in the us-gov-west-1 AWS Region
+	if tfawserr.ErrMessageContains(err, "com.amazon.coral.service#InvalidParameterValueException", "feature is not supported") {
+		return true
+	}
 	// Example (GovCloud): InvalidParameterValueException: This API operation is currently unavailable
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "This API operation is currently unavailable") {
 		return true
@@ -148,6 +152,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "The requested operation is not supported in the called region") {
 		return true
 	}
+	// For example from GovCloud CloudWatch Logs: ListLogAnomalyDetectors
+	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "UnknownError") {
+		return true
+	}
 	// For example from us-west-2 ECR public repository
 	if tfawserr.ErrMessageContains(err, "UnsupportedCommandException", "command is only supported in") {
 		return true
@@ -174,6 +182,10 @@ func SkipSweepError(err error) bool {
 	}
 	// Example (redshiftserverless): ValidationException: The ServerlessToServerlessRestore operation isn't supported
 	if tfawserr.ErrMessageContains(err, "ValidationException", "operation isn't supported") {
+		return true
+	}
+	// Example (observabilityadmin): ValidationException: Telemetry evaluation is not enabled for the requester account
+	if tfawserr.ErrMessageContains(err, "ValidationException", "Telemetry evaluation is not enabled") {
 		return true
 	}
 	// For example from us-west-2 SageMaker device fleet

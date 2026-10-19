@@ -52,7 +52,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `application_tag` - A map with a single tag key-value pair used to associate resources with the application. This attribute can be passed directly into the `tags` argument of another resource, or merged into a map of existing tags.
-* `arn` - ARN (Amazon Resource Name) of the application.
+* `arn` - ARN of the application.
 * `id` - Identifier of the application.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

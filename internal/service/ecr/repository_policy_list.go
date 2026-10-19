@@ -32,17 +32,7 @@ type repositoryPolicyListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type repositoryPolicyListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *repositoryPolicyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query repositoryPolicyListResourceModel
-	if diags := request.Config.Get(ctx, &query); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
-	}
-
 	conn := l.Meta().ECRClient(ctx)
 
 	tflog.Info(ctx, "Listing ECR repository policies")

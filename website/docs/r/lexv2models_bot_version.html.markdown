@@ -42,7 +42,7 @@ The `locale_specification` attribute value is a map with one or more entries, ea
 This resource exports the following attributes in addition to the arguments above:
 
 * `bot_version` - Version number assigned to the version.
-* `id` - A comma-delimited string concatinating `bot_id` and `bot_version`.
+* `id` - A comma-delimited string concatenating `bot_id` and `bot_version`.
 
 ## Timeouts
 

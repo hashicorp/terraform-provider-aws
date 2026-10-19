@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Identifier of EC2 Local Gateway Route Table Virtual Interface Group Association.
 * `local_gateway_id` - Identifier of the EC2 Local Gateway.
-* `local_gateway_route_table_arn` - Amazon Resource Name (ARN) of the EC2 Local Gateway Route Table.
+* `local_gateway_route_table_arn` - ARN of the EC2 Local Gateway Route Table.
 * `owner_id` - Identifier of the AWS account that owns the EC2 Local Gateway Virtual Interface Group Association.
 * `state` - State of the EC2 Local Gateway Route Table Virtual Interface Group Association.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

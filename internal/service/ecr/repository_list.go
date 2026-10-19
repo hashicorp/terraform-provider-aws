@@ -31,17 +31,7 @@ type repositoryListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type repositoryListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *repositoryListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query repositoryListResourceModel
-	if diags := request.Config.Get(ctx, &query); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
-	}
-
 	awsClient := l.Meta()
 	conn := awsClient.ECRClient(ctx)
 

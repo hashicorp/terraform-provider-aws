@@ -25,8 +25,8 @@ resource "aws_appfabric_app_authorization_connection" "example" {
 
 The following arguments are required:
 
-* `app_authorization_arn` - (Required) Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the app authorization to use for the request.
-* `app_bundle_arn` - (Required) Amazon Resource Name (ARN) of the app bundle to use for the request.
+* `app_authorization_arn` - (Required) ARN or Universal Unique Identifier (UUID) of the app authorization to use for the request.
+* `app_bundle_arn` - (Required) ARN of the app bundle to use for the request.
 
 The following arguments are optional:
 

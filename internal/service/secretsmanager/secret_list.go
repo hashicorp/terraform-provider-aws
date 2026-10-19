@@ -37,14 +37,6 @@ type listResourceSecret struct {
 func (l *listResourceSecret) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().SecretsManagerClient(ctx)
 
-	var query listSecretModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Secrets Manager Secret")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input secretsmanager.ListSecretsInput
@@ -94,10 +86,6 @@ func (l *listResourceSecret) List(ctx context.Context, request list.ListRequest,
 			}
 		}
 	}
-}
-
-type listSecretModel struct {
-	framework.WithRegionModel
 }
 
 func listSecrets(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.ListSecretsInput) iter.Seq2[awstypes.SecretListEntry, error] {

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_api_gateway_stage
 
-Manages an API Gateway Stage. A stage is a named reference to a deployment, which can be done via the [`aws_api_gateway_deployment` resource](api_gateway_deployment.html). Stages can be optionally managed further with the [`aws_api_gateway_base_path_mapping` resource](api_gateway_base_path_mapping.html), [`aws_api_gateway_domain_name` resource](api_gateway_domain_name.html), and [`aws_api_method_settings` resource](api_gateway_method_settings.html). For more information, see the [API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-stages.html).
+Manages an API Gateway Stage. A stage is a named reference to a deployment, which can be done via the [`aws_api_gateway_deployment` resource](api_gateway_deployment.html). Stages can be optionally managed further with the [`aws_api_gateway_base_path_mapping` resource](api_gateway_base_path_mapping.html), [`aws_api_gateway_domain_name` resource](api_gateway_domain_name.html), and [`aws_api_gateway_method_settings` resource](api_gateway_method_settings.html). For more information, see the [API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-stages.html).
 
 ## Example Usage
 
@@ -103,10 +103,10 @@ resource "aws_cloudwatch_log_group" "example" {
 
 This resource supports the following arguments:
 
-* `access_log_settings` - (Optional) Enables access logs for the API stage. See [Access Log Settings](#access-log-settings) below.
+* `access_log_settings` - (Optional) Enables access logs for the API stage. See [`access_log_settings` Block](#access_log_settings-block) below.
 * `cache_cluster_enabled` - (Optional) Whether a cache cluster is enabled for the stage
 * `cache_cluster_size` - (Optional) Size of the cache cluster for the stage, if enabled. Allowed values include `0.5`, `1.6`, `6.1`, `13.5`, `28.4`, `58.2`, `118` and `237`.
-* `canary_settings` - (Optional) Configuration settings of a canary deployment. See [Canary Settings](#canary-settings) below.
+* `canary_settings` - (Optional) Configuration settings of a canary deployment. See [`canary_settings` Block](#canary_settings-block) below.
 * `client_certificate_id` - (Optional) Identifier of a client certificate for the stage.
 * `deployment_id` - (Required) ID of the deployment that the stage points to
 * `description` - (Optional) Description of the stage.

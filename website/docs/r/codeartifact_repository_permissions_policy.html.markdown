@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_codeartifact_repository_permissions_policy
 
-Provides a CodeArtifact Repostory Permissions Policy Resource.
+Provides a CodeArtifact Repository Permissions Policy Resource.
 
 ## Example Usage
 
@@ -86,7 +86,7 @@ resource "aws_codeartifact_repository_permissions_policy" "example" {
 
 #### Required
 
-- `resource_arn` (String) Amazon Resource Name (ARN) of the CodeArtifact repository.
+- `resource_arn` (String) ARN of the CodeArtifact repository.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Repository Permissions Policies using the CodeArtifact Repository ARN. For example:
 

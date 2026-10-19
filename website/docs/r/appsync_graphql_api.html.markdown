@@ -252,9 +252,9 @@ The `additional_authentication_provider` configuration block supports the follow
 
 The `enhanced_metrics_config` configuration block supports the following arguments. See [EnhancedMetricsConfig](https://docs.aws.amazon.com/appsync/latest/APIReference/API_EnhancedMetricsConfig.html) for more information.
 
-* `data_source_level_metrics_behavior` - (Optional) How data source metrics will be emitted to CloudWatch. Valid values: `FULL_REQUEST_DATA_SOURCE_METRICS`, `PER_DATA_SOURCE_METRICS`
-* `operation_level_metrics_config` - (Optional) How operation metrics will be emitted to CloudWatch. Valid values: `ENABLED`, `DISABLED`
-* `resolver_level_metrics_behavior` - (Optional) How resolver metrics will be emitted to CloudWatch. Valid values: `FULL_REQUEST_RESOLVER_METRICS`, `PER_RESOLVER_METRICS`
+* `data_source_level_metrics_behavior` - (Required) How data source metrics will be emitted to CloudWatch. Valid values: `FULL_REQUEST_DATA_SOURCE_METRICS`, `PER_DATA_SOURCE_METRICS`
+* `operation_level_metrics_config` - (Required) How operation metrics will be emitted to CloudWatch. Valid values: `ENABLED`, `DISABLED`
+* `resolver_level_metrics_behavior` - (Required) How resolver metrics will be emitted to CloudWatch. Valid values: `FULL_REQUEST_RESOLVER_METRICS`, `PER_RESOLVER_METRICS`
 
 ### `lambda_authorizer_config` Block
 
@@ -268,7 +268,7 @@ The `lambda_authorizer_config` configuration block supports the following argume
 
 The `log_config` configuration block supports the following arguments:
 
-* `cloudwatch_logs_role_arn` - (Required) Amazon Resource Name of the service role that AWS AppSync will assume to publish to Amazon CloudWatch logs in your account.
+* `cloudwatch_logs_role_arn` - (Required) ARN of the service role that AWS AppSync will assume to publish to Amazon CloudWatch logs in your account.
 * `exclude_verbose_content` - (Optional) Set to TRUE to exclude sections that contain information such as headers, context, and evaluated mapping templates, regardless of logging  level. Valid values: `true`, `false`. Default value: `false`
 * `field_log_level` - (Required) Field logging level. Valid values: `ALL`, `ERROR`, `NONE`.
 

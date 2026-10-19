@@ -34,7 +34,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Endpoint Access.
+* `arn` - ARN of the Redshift Serverless Endpoint Access.
 * `id` - The Redshift Endpoint Access Name.
 * `address` - The DNS address of the VPC endpoint.
 * `port` - The port that Amazon Redshift Serverless listens on.
@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `vpc_id` - The port that Amazon Redshift Serverless listens on.
 * `network_interface` - The network interfaces of the endpoint.. See `Network Interface` below.
 
-##### Network Interface
+#### Network Interface
 
 * `availability_zone` - The availability Zone.
 * `network_interface_id` - The unique identifier of the network interface.

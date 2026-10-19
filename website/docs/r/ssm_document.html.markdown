@@ -15,7 +15,7 @@ or greater can update their content once created, see [SSM Schema Features](http
 
 ## Example Usage
 
-### Create an ssm document in JSON format
+### Create an SSM document in JSON format
 
 ```terraform
 resource "aws_ssm_document" "foo" {
@@ -44,7 +44,7 @@ DOC
 }
 ```
 
-### Create an ssm document in YAML format
+### Create an SSM document in YAML format
 
 ```terraform
 resource "aws_ssm_document" "foo" {
@@ -102,7 +102,7 @@ The `permissions` map supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the document.
+* `arn` - ARN of the document.
 * `created_date` - The date the document was created.
 * `default_version` - The default version of the document.
 * `description` - The description of the document.

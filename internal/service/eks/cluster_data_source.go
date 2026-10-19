@@ -179,6 +179,18 @@ func dataSourceCluster() *schema.Resource {
 									},
 								},
 							},
+							"pod_gc_controller_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"terminated_pod_gc_threshold": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+									},
+								},
+							},
 						},
 					},
 				},

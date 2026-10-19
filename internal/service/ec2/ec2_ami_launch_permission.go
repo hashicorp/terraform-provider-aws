@@ -23,20 +23,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ami_launch_permission", name="AMI Launch Permission")
+// @IdentityAttribute("image_id")
+// @IdentityAttribute("launch_permission_account_id", resourceAttributeName="account_id", optional="true", testNotNull="true")
+// @IdentityAttribute("group", optional="true")
+// @IdentityAttribute("organization_arn", optional="true")
+// @IdentityAttribute("organizational_unit_arn", optional="true")
+// @ImportIDHandler("amiLaunchPermissionImportID")
+// @Testing(preIdentityVersion="v6.60.0")
+// @Testing(importStateIdFunc="testAccAMILaunchPermissionImportStateIdFunc")
 func resourceAMILaunchPermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMILaunchPermissionCreate,
 		ReadWithoutTimeout:   resourceAMILaunchPermissionRead,
 		DeleteWithoutTimeout: resourceAMILaunchPermissionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceAMILaunchPermissionImport,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -128,13 +133,17 @@ func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading AMI Launch Permission (%s): %s", d.Id(), err)
 	}
 
+	resourceAMILaunchPermissionFlatten(d, imageID, accountID, group, organizationARN, organizationalUnitARN)
+
+	return diags
+}
+
+func resourceAMILaunchPermissionFlatten(d *schema.ResourceData, imageID, accountID, group, organizationARN, organizationalUnitARN string) {
 	d.Set(names.AttrAccountID, accountID)
 	d.Set("group", group)
 	d.Set("image_id", imageID)
 	d.Set("organization_arn", organizationARN)
 	d.Set("organizational_unit_arn", organizationalUnitARN)
-
-	return diags
 }
 
 func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -166,46 +175,6 @@ func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return diags
-}
-
-func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	const importIDSeparator = "/"
-	parts := strings.Split(d.Id(), importIDSeparator)
-
-	// Heuristic to identify the permission type.
-	var ok bool
-	if n := len(parts); n >= 2 {
-		if permissionID, imageID := strings.Join(parts[:n-1], importIDSeparator), parts[n-1]; permissionID != "" && imageID != "" {
-			if regexache.MustCompile(`^\d{12}$`).MatchString(permissionID) {
-				// AWS account ID.
-				d.SetId(amiLaunchPermissionCreateResourceID(imageID, permissionID, "", "", ""))
-				ok = true
-			} else if arn.IsARN(permissionID) {
-				if v, _ := arn.Parse(permissionID); v.Service == "organizations" {
-					// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsorganizations.html#awsorganizations-resources-for-iam-policies.
-					if strings.HasPrefix(v.Resource, "organization/") {
-						// Organization ARN.
-						d.SetId(amiLaunchPermissionCreateResourceID(imageID, "", "", permissionID, ""))
-						ok = true
-					} else if strings.HasPrefix(v.Resource, "ou/") {
-						// Organizational unit ARN.
-						d.SetId(amiLaunchPermissionCreateResourceID(imageID, "", "", "", permissionID))
-						ok = true
-					}
-				}
-			} else {
-				// Group name.
-				d.SetId(amiLaunchPermissionCreateResourceID(imageID, "", permissionID, "", ""))
-				ok = true
-			}
-		}
-	}
-
-	if !ok {
-		return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected [ACCOUNT-ID|GROUP-NAME|ORGANIZATION-ARN|ORGANIZATIONAL-UNIT-ARN]%[2]sIMAGE-ID", d.Id(), importIDSeparator)
-	}
-
-	return []*schema.ResourceData{d}, nil
 }
 
 const (
@@ -273,4 +242,61 @@ func expandLaunchPermissions(accountID, group, organizationARN, organizationalUn
 	}
 
 	return []awstypes.LaunchPermission{apiObject}
+}
+
+var _ inttypes.SDKv2ImportID = amiLaunchPermissionImportID{}
+
+type amiLaunchPermissionImportID struct{}
+
+func (amiLaunchPermissionImportID) Create(d *schema.ResourceData) string {
+	imageID := d.Get("image_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
+	group := d.Get("group").(string)
+	organizationARN := d.Get("organization_arn").(string)
+	organizationalUnitARN := d.Get("organizational_unit_arn").(string)
+	return amiLaunchPermissionCreateResourceID(imageID, accountID, group, organizationARN, organizationalUnitARN)
+}
+
+func (amiLaunchPermissionImportID) Parse(id string) (string, map[string]any, error) {
+	const importIDSeparator = "/"
+	parts := strings.Split(id, importIDSeparator)
+	var imageID, accountID, group, organizationARN, organizationalUnitARN string
+	var ok bool
+	m := make(map[string]any)
+	if n := len(parts); n >= 2 {
+		permissionID, imgID := strings.Join(parts[:n-1], importIDSeparator), parts[n-1]
+		if permissionID != "" && imgID != "" {
+			imageID = imgID
+			if regexache.MustCompile(`^\d{12}$`).MatchString(permissionID) {
+				accountID = permissionID
+				m["image_id"] = imageID
+				m[names.AttrAccountID] = accountID
+				ok = true
+			} else if arn.IsARN(permissionID) {
+				if v, _ := arn.Parse(permissionID); v.Service == "organizations" {
+					if strings.HasPrefix(v.Resource, "organization/") {
+						organizationARN = permissionID
+						m["image_id"] = imageID
+						m["organization_arn"] = organizationARN
+						ok = true
+					} else if strings.HasPrefix(v.Resource, "ou/") {
+						organizationalUnitARN = permissionID
+						m["image_id"] = imageID
+						m["organizational_unit_arn"] = organizationalUnitARN
+						ok = true
+					}
+				}
+			} else {
+				group = permissionID
+				m["image_id"] = imageID
+				m["group"] = group
+				ok = true
+			}
+		}
+	}
+	if !ok {
+		return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected [ACCOUNT-ID|GROUP-NAME|ORGANIZATION-ARN|ORGANIZATIONAL-UNIT-ARN]%[2]sIMAGE-ID", id, importIDSeparator)
+	}
+	resourceID := amiLaunchPermissionCreateResourceID(imageID, accountID, group, organizationARN, organizationalUnitARN)
+	return resourceID, m, nil
 }

@@ -60,7 +60,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
+* `arn` - ARN of the EBS Snapshot.
 * `id` - The snapshot ID (e.g., snap-59fcb34e).
 * `owner_id` - The AWS account ID of the snapshot owner.
 * `owner_alias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.

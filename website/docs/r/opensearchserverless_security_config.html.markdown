@@ -47,7 +47,7 @@ The following arguments are optional:
 ### `iam_identity_center_options` Block
 
 * `group_attribute` - (Optional) Group attribute for this IAM Identity Center integration. Valid values are `GroupId` and `GroupName`. Defaults to `GroupId`.
-* `instance_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the IAM Identity Center instance used to integrate with OpenSearch Serverless.
+* `instance_arn` - (Required, Forces new resource) ARN of the IAM Identity Center instance used to integrate with OpenSearch Serverless.
 * `user_attribute` - (Optional) User attribute for this IAM Identity Center integration. Valid values are `UserId`, `UserName` and `Email`. Defaults to `UserId`.
 
 ### `saml_options` Block

@@ -38,6 +38,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// accountaccess
+
+				"accountaccess": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// acm
 
 				"acm": {
@@ -49,6 +57,14 @@ func endpointsSchema() *schema.Schema {
 				// acmpca
 
 				"acmpca": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// agentregistry
+
+				"agentregistry": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
@@ -294,6 +310,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// bedrockruntime
+
+				"bedrockruntime": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// billing
 
 				"billing": {
@@ -443,6 +467,14 @@ func endpointsSchema() *schema.Schema {
 				// cloudwatch
 
 				"cloudwatch": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// cloudwatchomni
+
+				"cloudwatchomni": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
@@ -742,6 +774,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// directoryservicedata
+
+				"directoryservicedata": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// dlm
 
 				"dlm": {
@@ -969,6 +1009,14 @@ func endpointsSchema() *schema.Schema {
 				// emrserverless
 
 				"emrserverless": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// eventbridgev2
+
+				"eventbridgev2": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
@@ -1344,6 +1392,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// lambdaweb
+
+				"lambdaweb": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// launchwizard
 
 				"launchwizard": {
@@ -1618,6 +1674,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// networksecuritymanager
+
+				"networksecuritymanager": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// notifications
 
 				"notifications": {
@@ -1775,6 +1839,14 @@ func endpointsSchema() *schema.Schema {
 				// pricing
 
 				"pricing": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// pricingplanmanager
+
+				"pricingplanmanager": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

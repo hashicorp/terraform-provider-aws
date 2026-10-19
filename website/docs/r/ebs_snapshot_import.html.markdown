@@ -57,7 +57,7 @@ This resource supports the following arguments:
 
 * `description` - (Optional) The description of the disk image being imported.
 * `format` - (Required) The format of the disk image being imported. One of `VHD` or `VMDK`.
-* `url` - (Optional) The URL to the Amazon S3-based disk image being imported. It can either be a https URL (https://..) or an Amazon S3 URL (s3://..). One of `url` or `user_bucket` must be set.
+* `url` - (Optional) The URL to the Amazon S3-based disk image being imported. It can either be an HTTPS URL (`https://..`) or an Amazon S3 URL (`s3://..`). One of `url` or `user_bucket` must be set.
 * `user_bucket` - (Optional) The Amazon S3 bucket for the disk image. One of `url` or `user_bucket` must be set. Detailed below.
 
 ### user_bucket Configuration Block
@@ -69,7 +69,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
+* `arn` - ARN of the EBS Snapshot.
 * `id` - The snapshot ID (e.g., snap-59fcb34e).
 * `owner_id` - The AWS account ID of the EBS snapshot owner.
 * `owner_alias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.

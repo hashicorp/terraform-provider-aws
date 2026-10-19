@@ -237,7 +237,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 		GatewayARN:           aws.String(d.Get("gateway_arn").(string)),
 		GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-		KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
+		KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)), //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 		LocationARN:          aws.String(d.Get("location_arn").(string)),
 		NFSFileShareDefaults: fileShareDefaults,
 		ObjectACL:            awstypes.ObjectACL(d.Get("object_acl").(string)),
@@ -356,7 +356,7 @@ func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 			DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 			FileShareARN:         aws.String(d.Id()),
 			GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-			KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
+			KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)), //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 			NFSFileShareDefaults: fileShareDefaults,
 			ObjectACL:            awstypes.ObjectACL(d.Get("object_acl").(string)),
 			ReadOnly:             aws.Bool(d.Get("read_only").(bool)),

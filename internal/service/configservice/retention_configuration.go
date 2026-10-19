@@ -117,7 +117,7 @@ func (r *retentionConfigurationResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	data.Name = fwflex.StringValueToFramework(ctx, aws.ToString(retentionConfiguration.Name))
+	data.Name = fwflex.StringToFramework(ctx, retentionConfiguration.Name)
 	data.RetentionPeriodInDays = fwflex.Int32ToFrameworkInt64(ctx, retentionConfiguration.RetentionPeriodInDays)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

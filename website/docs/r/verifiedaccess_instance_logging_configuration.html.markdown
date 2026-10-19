@@ -105,42 +105,42 @@ resource "aws_verifiedaccess_instance_logging_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `access_logs` - (Required) Block that specifies the configuration options for Verified Access instances. [Detailed below](#access_logs-block).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `access_logs` - (Required) A block that specifies the configuration options for Verified Access instances. [Detailed below](#access_logs).
-* `verifiedaccess_instance_id` - (Required - Forces New resource) The ID of the Verified Access instance.
+* `verifiedaccess_instance_id` - (Required, Forces new resource) ID of the Verified Access instance.
 
-### access_logs
+### `access_logs` Block
 
 A `access_logs` block supports the following arguments:
 
-* `cloudwatch_logs` - (Optional) A block that specifies configures sending Verified Access logs to CloudWatch Logs. [Detailed below](#cloudwatch_logs).
-* `include_trust_context` - (Optional) Include trust data sent by trust providers into the logs.
-* `kinesis_data_firehose` - (Optional) A block that specifies configures sending Verified Access logs to Kinesis. [Detailed below](#kinesis_data_firehose).
-* `log_version` - (Optional) The logging version to use. Refer to [VerifiedAccessLogOptions](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VerifiedAccessLogOptions.html) for the allowed values.
-* `s3` - (Optional) A block that specifies configures sending Verified Access logs to S3. [Detailed below](#s3).
+* `cloudwatch_logs` - (Optional) Block that specifies configures sending Verified Access logs to CloudWatch Logs. [Detailed below](#cloudwatch_logs-block).
+* `include_trust_context` - (Optional) Whether to include trust data sent by trust providers in the logs.
+* `kinesis_data_firehose` - (Optional) Block that specifies configures sending Verified Access logs to Kinesis. [Detailed below](#kinesis_data_firehose-block).
+* `log_version` - (Optional) Logging version to use. Refer to [VerifiedAccessLogOptions](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VerifiedAccessLogOptions.html) for the allowed values.
+* `s3` - (Optional) Block that specifies configures sending Verified Access logs to S3. [Detailed below](#s3-block).
 
-#### cloudwatch_logs
+#### `cloudwatch_logs` Block
 
 A `cloudwatch_logs` block supports the following arguments:
 
-* `enabled` - (Required) Indicates whether logging is enabled.
-* `log_group` - (Optional) The name of the CloudWatch Logs Log Group.
+* `enabled` - (Required) Whether logging is enabled.
+* `log_group` - (Optional) Name of the CloudWatch Logs Log Group.
 
-#### kinesis_data_firehose
+#### `kinesis_data_firehose` Block
 
 A `kinesis_data_firehose` block supports the following arguments:
 
-* `delivery_stream` - (Optional) The name of the delivery stream.
-* `enabled` - (Required) Indicates whether logging is enabled.
+* `delivery_stream` - (Optional) Name of the delivery stream.
+* `enabled` - (Required) Whether logging is enabled.
 
-#### s3
+#### `s3` Block
 
 A `s3` block supports the following arguments:
 
-* `bucket_name` - (Optional) The name of S3 bucket.
-* `bucket_owner` - (Optional) The ID of the AWS account that owns the Amazon S3 bucket.
-* `enabled` - (Required) Indicates whether logging is enabled.
-* `prefix` - (Optional) The bucket prefix.
+* `bucket_name` - (Optional) Name of S3 bucket.
+* `bucket_owner` - (Optional) ID of the AWS account that owns the Amazon S3 bucket.
+* `enabled` - (Required) Whether logging is enabled.
+* `prefix` - (Optional) Bucket prefix.
 
 ## Attribute Reference
 

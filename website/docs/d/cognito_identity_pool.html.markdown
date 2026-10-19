@@ -38,6 +38,6 @@ This data source exports the following attributes in addition to the arguments a
 * `developer_provider_name` - The "domain" by which Cognito will refer to your users.
 * `cognito_identity_providers` - An array of Amazon Cognito Identity user pools and their client IDs.
 * `openid_connect_provider_arns` - Set of OpendID Connect provider ARNs.
-* `saml_provider_arns` - An array of Amazon Resource Names (ARNs) of the SAML provider for your identity.
+* `saml_provider_arns` - Array of ARNs of the SAML provider for your identity.
 * `supported_login_providers` - Key-Value pairs mapping provider names to provider app IDs.
 * `tags` - A map of tags to assigned to the Identity Pool.

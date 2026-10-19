@@ -84,7 +84,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the Query Logging Config.
+* `arn` - ARN of the Query Logging Config.
 * `id` - The query logging configuration ID
 
 ## Import

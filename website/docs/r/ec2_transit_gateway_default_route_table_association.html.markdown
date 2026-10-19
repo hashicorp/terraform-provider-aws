@@ -3,11 +3,11 @@ subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_default_route_table_association"
 description: |-
-  Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Transit Gateway Default Route Table Association.
+  Terraform resource for managing an AWS EC2 Transit Gateway Default Route Table Association.
 ---
 # Resource: aws_ec2_transit_gateway_default_route_table_association
 
-Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Transit Gateway Default Route Table Association.
+Terraform resource for managing an AWS EC2 Transit Gateway Default Route Table Association.
 
 ## Example Usage
 

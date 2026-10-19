@@ -50,29 +50,29 @@ resource "aws_iam_role" "assume" {
 
 The following arguments are required:
 
-* `editor_role_values` - (Required) The editor role values.
-* `workspace_id` - (Required) The workspace id.
+* `editor_role_values` - (Required) Editor role values.
+* `workspace_id` - (Required) Workspace ID.
 
 The following arguments are optional:
 
+* `admin_role_values` - (Optional) Admin role values.
+* `allowed_organizations` - (Optional) Allowed organizations.
+* `email_assertion` - (Optional) Email assertion.
+* `groups_assertion` - (Optional) Groups assertion.
+* `idp_metadata_url` - (Optional) IDP Metadata URL. Note that either `idp_metadata_url` or `idp_metadata_xml` (but not both) must be specified.
+* `idp_metadata_xml` - (Optional) IDP Metadata XML. Note that either `idp_metadata_url` or `idp_metadata_xml` (but not both) must be specified.
+* `login_assertion` - (Optional) Login assertion.
+* `login_validity_duration` - (Optional) Login validity duration.
+* `name_assertion` - (Optional) Name assertion.
+* `org_assertion` - (Optional) Org assertion.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `admin_role_values` - (Optional) The admin role values.
-* `allowed_organizations` - (Optional) The allowed organizations.
-* `email_assertion` - (Optional) The email assertion.
-* `groups_assertion` - (Optional) The groups assertion.
-* `idp_metadata_url` - (Optional) The IDP Metadata URL. Note that either `idp_metadata_url` or `idp_metadata_xml` (but not both) must be specified.
-* `idp_metadata_xml` - (Optional) The IDP Metadata XML. Note that either `idp_metadata_url` or `idp_metadata_xml` (but not both) must be specified.
-* `login_assertion` - (Optional) The login assertion.
-* `login_validity_duration` - (Optional) The login validity duration.
-* `name_assertion` - (Optional) The name assertion.
-* `org_assertion` - (Optional) The org assertion.
-* `role_assertion` - (Optional) The role assertion.
+* `role_assertion` - (Optional) Role assertion.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `status` - The status of the SAML configuration.
+* `status` - Status of the SAML configuration.
 
 ## Timeouts
 

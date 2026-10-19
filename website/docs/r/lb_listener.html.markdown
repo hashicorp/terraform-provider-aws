@@ -397,7 +397,7 @@ The following arguments are optional:
 * `session_cookie_name` - (Optional) Name of the cookie used to maintain session information.
 * `session_timeout` - (Optional) Maximum duration of the authentication session, in seconds.
 
-##### authentication_request_extra_params
+#### authentication_request_extra_params
 
 * `key` - (Required) Key of query parameter.
 * `value` - (Required) Value of query parameter.
@@ -442,7 +442,7 @@ The following arguments are optional:
 
 * `stickiness` - (Optional) Configuration block for target group stickiness for the rule. See below.
 
-##### target_group
+#### target_group
 
 The following arguments are required:
 
@@ -452,7 +452,7 @@ The following arguments are optional:
 
 * `weight` - (Optional) Weight. The range is 0 to 999.
 
-##### stickiness
+#### stickiness
 
 The following arguments are required:
 
@@ -542,7 +542,7 @@ resource "aws_lb_listener" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the load balancer listener.
+- `arn` (String) ARN of the load balancer listener.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import listeners using their ARN. For example:
 

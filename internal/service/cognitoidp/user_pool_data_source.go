@@ -21,6 +21,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_cognito_user_pool", name="User Pool")
+// Cannot use Transparent Tagging because of UserPoolTags
 // @Testing(tagsTest=true)
 // @Testing(tagsIdentifierAttribute="arn")
 func newUserPoolDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {

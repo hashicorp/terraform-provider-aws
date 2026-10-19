@@ -158,7 +158,7 @@ The `selection_criteria` block supports the following:
 
 The `aws_org` block supports the following:
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the Amazon Web Services organization.
+* `arn` - (Required) ARN of the Amazon Web Services organization.
 
 ### `data_export` Block
 
@@ -186,7 +186,7 @@ The `cloud_watch_metrics` block supports the following:
 The `s3_bucket_destination` block supports the following:
 
 * `account_id` - (Required) Account ID of the owner of the S3 Storage Lens metrics export bucket.
-* `arn` - (Required) Amazon Resource Name (ARN) of the bucket.
+* `arn` - (Required) ARN of the bucket.
 * `encryption` - (Optional) Encryption of the metrics exports in this bucket. See [`encryption`](#encryption-block) below for more details.
 * `format` - (Required) Export format. Valid values: `CSV`, `Parquet`.
 * `output_schema_version` - (Required) Schema version of the export file. Valid values: `V_1`.
@@ -230,7 +230,7 @@ The `include` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the S3 Storage Lens configuration.
+* `arn` - ARN of the S3 Storage Lens configuration.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

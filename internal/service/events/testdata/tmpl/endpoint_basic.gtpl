@@ -20,14 +20,10 @@ resource "aws_cloudwatch_event_endpoint" "test" {
       }
 
       secondary {
-        route = data.aws_region.secondary.region
+        route = var.secondary_region
       }
     }
   }
-}
-
-data "aws_region" "secondary" {
-  provider = "awsalternate"
 }
 
 data "aws_partition" "current" {}
@@ -38,7 +34,7 @@ resource "aws_cloudwatch_event_bus" "primary" {
 }
 
 resource "aws_cloudwatch_event_bus" "secondary" {
-  provider = "awsalternate"
+  region = var.secondary_region
 
   name = var.rName
 }

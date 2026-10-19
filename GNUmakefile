@@ -3,6 +3,7 @@ SHELL := /bin/bash
 ACCTEST_PARALLELISM          ?= 20
 ACCTEST_TIMEOUT              ?= 360m
 BASE_REF                     ?= main
+GOFMT                        ?= $(shell $(GO_VER) env GOROOT 2>/dev/null)/bin/gofmt
 GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
 P                            ?= 20
 PKG_NAME                     ?= internal
@@ -16,6 +17,10 @@ SWEEP_DIR                    ?= ./internal/sweep
 SWEEP_TIMEOUT                ?= 360m
 TEST                         ?= ./...
 TEST_COUNT                   ?= 1
+
+GOTOOLCHAIN_PIN     := $(or $(addprefix go,$(shell sed -n 's/^go //p' go.mod)),auto)
+GOTOOLCHAIN         ?= $(GOTOOLCHAIN_PIN)
+export GOTOOLCHAIN
 
 # NOTE:
 # 1. Keep targets in alphabetical order
@@ -173,9 +178,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep shellcheck skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae shellcheck website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -344,7 +349,7 @@ docs-markdown-lint: ## [CI] Documentation Checks / markdown-lint
 
 docs-misspell: ## [CI] Documentation Checks / misspell
 	@echo "make: Documentation Checks / misspell..."
-	@misspell -error -source text docs/
+	@misspell -error -source text docs/*.md docs/*/*.md
 
 examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	@echo "make: Examples Checks / tflint..."
@@ -377,19 +382,19 @@ fix-imports-core: ## Fixing core directory imports with goimports
 		fi; \
 	done
 
-fmt: ## Fix Go source formatting
+fmt: prereq-go ## Fix Go source formatting
 	@echo "make: Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+	"$(GOFMT)" -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
-fmt-core: ## Fix Go source formatting in core directories
+fmt-core: prereq-go ## Fix Go source formatting in core directories
 	@echo "make: Fixing core directory source code with gofmt..."
 	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/' | sed 's|github.com/hashicorp/terraform-provider-aws|.|'); \
-	gofmt -s -w $$core_pkgs
+	"$(GOFMT)" -s -w $$core_pkgs
 
 # Currently required by tf-deploy compile
-fmt-check: ## Verify Go source is formatted
+fmt-check: prereq-go ## Verify Go source is formatted
 	@echo "make: Verifying source code with gofmt..."
-	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
+	@GOFMT="$(GOFMT)" sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 fumpt: ## Run gofumpt
 	@echo "make: Fixing source code with gofumpt..."
@@ -429,10 +434,6 @@ go-build: ## [CI] Provider Checks / go-build
 	@os_arch=`go env GOOS`_`go env GOARCH` ; \
 	echo "make: Provider Checks / go-build ($$os_arch)..." ; \
 	go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
-
-go-misspell: ## [CI] Provider Checks / misspell
-	@echo "make: Provider Checks / misspell..."
-	@misspell -error -source auto -i "littel,ceasar,ect" internal/
 
 golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 golangci-lint4 golangci-lint5 ## [CI] All golangci-lint Checks
 
@@ -483,7 +484,7 @@ makefile-lint: prereq-go ## [CI] Makefile Linting / alignment check
 	@echo "make: Makefile Linting / alignment check..."
 	@cd tools/makelign && $(GO_VER) run . -strict ../..
 
-misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
+misspell: changelog-misspell docs-misspell website-misspell ## [CI] Run all CI misspell checks
 
 modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
 	@echo "make: Checking for modern Go code..."
@@ -572,18 +573,121 @@ provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 		--ignore markdown/internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs \
 		/markdown/**/*.md
 
-# The 2 smoke test targets run exactly the same set of acceptance tests.
-# The tests must pass in the AWS Commercial and AWS GovCloud (US) partitions.
-# The tests must pass on the earliest supported Terraform version (0.12.31).
+# The smoke tests must pass in the AWS Commercial and AWS GovCloud (US) partitions.
+# The smoke tests must pass on the earliest supported Terraform version (0.12.31).
+
+SMOKE_TESTS_IAM = \
+	TestAccIAMRole_basic \
+	TestAccIAMRole_namePrefix \
+	TestAccIAMRole_disappears \
+	TestAccIAMRole_InlinePolicy_basic \
+	TestAccIAMPolicyDocumentDataSource_basic \
+	TestAccIAMPolicyDocumentDataSource_sourceConflicting \
+	TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON \
+	TestAccIAMRolePolicyAttachment_basic \
+	TestAccIAMRolePolicyAttachment_disappears \
+	TestAccIAMRolePolicyAttachment_Disappears_role \
+	TestAccIAMPolicy_basic \
+	TestAccIAMPolicy_policy \
+	TestAccIAMPolicy_tags \
+	TestAccIAMRolePolicy_basic \
+	TestAccIAMRolePolicy_unknownsInPolicy \
+	TestAccIAMInstanceProfile_basic \
+	TestAccIAMInstanceProfile_tags \
+	TestAccIAMPolicy_List_basic \
+	TestAccIAMRole_Identity_basic
+
+SMOKE_TESTS_LOGS = \
+	TestAccLogsLogGroup_basic \
+	TestAccLogsLogGroup_multiple
+
+SMOKE_TESTS_EC2 = \
+	TestAccVPCSecurityGroup_basic \
+	TestAccVPCSecurityGroup_egressMode \
+	TestAccVPCSecurityGroup_vpcAllEgress \
+	TestAccVPCSecurityGroupRule_race \
+	TestAccVPCSecurityGroupRule_protocolChange \
+	TestAccVPCDataSource_basic \
+	TestAccVPCSubnet_basic \
+	TestAccVPC_tenancy \
+	TestAccVPCRouteTableAssociation_Subnet_basic \
+	TestAccVPCRouteTable_basic
+
+SMOKE_TESTS_ECS = \
+	TestAccECSTaskDefinition_basic \
+	TestAccECSService_basic
+
+SMOKE_TESTS_ELBV2 = \
+	TestAccELBV2TargetGroup_basic
+
+SMOKE_TESTS_EVENTS = \
+	TestAccEventsPutEventsAction_basic
+
+SMOKE_TESTS_KMS = \
+	TestAccKMSKey_basic
+
+SMOKE_TESTS_LAMBDA = \
+	TestAccLambdaFunction_basic \
+	TestAccLambdaPermission_basic \
+	TestAccLambdaCapacityProvider_List_basic
+
+SMOKE_TESTS_STAGE_2 = \
+	$(SMOKE_TESTS_EC2) \
+	$(SMOKE_TESTS_LOGS) \
+	$(SMOKE_TESTS_ECS) \
+	$(SMOKE_TESTS_ELBV2) \
+	$(SMOKE_TESTS_EVENTS) \
+	$(SMOKE_TESTS_KMS)
+
+SMOKE_TESTS_META = \
+	TestAccMetaRegionDataSource_basic \
+	TestAccMetaRegionDataSource_endpoint \
+	TestAccMetaPartitionDataSource_basic
+
+SMOKE_TESTS_ROUTE53 = \
+	TestAccRoute53Record_basic_FullName \
+	TestAccRoute53Record_basic_ShortName \
+	TestAccRoute53Record_Latency_basic \
+	TestAccRoute53ZoneDataSource_name
+
+SMOKE_TESTS_S3 = \
+	TestAccS3Bucket_Basic_basic \
+	TestAccS3Bucket_Security_corsUpdate \
+	TestAccS3BucketPublicAccessBlock_basic \
+	TestAccS3BucketPolicy_basic \
+	TestAccS3BucketACL_updateACL \
+	TestAccS3Object_basic
+
+SMOKE_TESTS_SSM = \
+	TestAccSSMParameterEphemeral_basic
+
+SMOKE_TESTS_SECRETSMANAGER = \
+	TestAccSecretsManagerSecret_basic
+
+SMOKE_TESTS_STS = \
+	TestAccSTSCallerIdentityDataSource_basic
+
+SMOKE_TESTS_FUNCTION = \
+	TestARNParseFunction_known
+
+SMOKE_TESTS_STAGE_3 = \
+	$(SMOKE_TESTS_LAMBDA) \
+	$(SMOKE_TESTS_META) \
+	$(SMOKE_TESTS_ROUTE53) \
+	$(SMOKE_TESTS_S3) \
+	$(SMOKE_TESTS_SSM) \
+	$(SMOKE_TESTS_SECRETSMANAGER) \
+	$(SMOKE_TESTS_STS) \
+	$(SMOKE_TESTS_FUNCTION)
 
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
-	@echo "make: Like 'sanity' except full output and stops soon after 1st error"
+	@echo "make: Like 'smoke-core-services' except full output and stops soon after 1st error"
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$'
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_IAM)))$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
@@ -592,7 +696,7 @@ sane: prereq-go ## Run sane check
 		./internal/service/events/... \
 		./internal/service/kms/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$'
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_2)))$$'
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -603,50 +707,7 @@ sane: prereq-go ## Run sane check
 		./internal/service/sts/... \
 		./internal/function/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$'
-
-sanity: prereq-go ## Run sanity check (failures allowed)
-	@echo "make: Sanity Smoke Tests (x tests of Top y resources)"
-	@echo "make: Like 'sane' but less output and runs all tests despite most errors"
-	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
-	@iam=`TF_ACC=1 $(GO_VER) test \
-		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' || true` ; \
-	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
-	passes=$$(( 18-$$fails1 )) ; \
-	echo "18 of 54 complete: $$passes passed, $$fails1 failed" ; \
-	logs=`TF_ACC=1 $(GO_VER) test \
-		./internal/service/logs/... \
-		./internal/service/ec2/... \
-		./internal/service/ecs/... \
-		./internal/service/elbv2/... \
-		./internal/service/events/... \
-		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' || true` ; \
-	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
-	tot_fails=$$(( $$fails1+$$fails2 )) ; \
-	passes=$$(( 35-$$tot_fails )) ; \
-	echo "35 of 54 complete: $$passes passed, $$tot_fails failed" ; \
-	lambda=`TF_ACC=1 $(GO_VER) test \
-		./internal/service/lambda/... \
-		./internal/service/meta/... \
-		./internal/service/route53/... \
-		./internal/service/s3/... \
-		./internal/service/secretsmanager/... \
-		./internal/service/sts/... \
-		./internal/function/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) -vet=off -buildvcs=false \
-		-run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' || true` ; \
-	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
-	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
-	passes=$$(( 54-$$tot_fails )) ; \
-	echo "54 of 54 complete: $$passes passed, $$tot_fails failed" ; \
-	if [ $$tot_fails -gt 0 ] ; then \
-		echo "Sanity tests failed"; \
-		exit 1; \
-	fi
+		-run='^$(subst $(eval) ,$$|^,$(strip $(SMOKE_TESTS_STAGE_3)))$$'
 
 schema-validate: ## Validate schemas
 	@echo "make: Validating schemas"
@@ -825,6 +886,10 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
 
+shellcheck: ## Lint shell scripts with ShellCheck
+	@echo "make: Lint shell scripts with ShellCheck..."
+	@find . -name '*.sh' -not -path './.git/*' -not -path './.teamcity/scripts/performance.sh' -exec shellcheck --severity=warning {} +
+
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
@@ -834,7 +899,23 @@ skaff-check-compile: ## [CI] Skaff Checks / Compile skaff
 	@cd skaff ; \
 	go build
 
-smoke: sane ## Smoke tests (alias of sane)
+smoke: smoke-core-services smoke-identity smoke-logging ## Run smoke tests
+
+smoke-core-services: prereq-go ## Run core-service smoke tests
+	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
+	GO_BIN=$(GO_VER) PACKAGE_PARALLELISM=$$((cores / 2)) sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-core-services.sh'"
+
+smoke-identity: prereq-go ## Run Resource Identity smoke tests
+	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
+	GO_BIN=$(GO_VER) PACKAGE_PARALLELISM=$$((cores / 2)) sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-identity.sh'"
+
+SMOKE_LOGGING_LEVELS := DEBUG WARN
+SMOKE_LOGGING_TARGETS := $(addprefix smoke-logging-,$(SMOKE_LOGGING_LEVELS))
+
+smoke-logging: $(SMOKE_LOGGING_TARGETS) ## Run logging smoke tests at all log levels
+
+smoke-logging-%: prereq-go ## Run logging smoke tests at a specific log level (e.g. make smoke-logging-DEBUG)
+	GO_BIN=$(GO_VER) TF_LOG=$* sh -c "'$(CURDIR)/.ci/scripts/smoke-tests-logging.sh'"
 
 sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
@@ -905,11 +986,10 @@ test: prereq-go ## Run unit tests (auto-detects environment and scope)
 	fi
 
 test-single-service: ## [internal] test single service
-	@# macOS: use temp cache to avoid CrowdStrike scanning
+	@# macOS: use a temporary work directory to avoid CrowdStrike scanning.
 	@if [ "$$(uname)" = "Darwin" ]; then \
-		build_dir="/tmp/terraform-$(or $(PKG),$(K))-$$$$"; \
-		mkdir -p "$$build_dir/cache"; \
-		export GOCACHE="$$build_dir/cache"; \
+		build_dir="$${TMPDIR:-/tmp}/terraform-$(or $(PKG),$(K))-$$$$"; \
+		mkdir -p "$$build_dir"; \
 		export GOTMPDIR="$$build_dir"; \
 	fi; \
 	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 8); \
@@ -926,12 +1006,11 @@ test-single-service: ## [internal] test single service
 	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
 
 test-full: ## [internal] test full codebase
-	@# macOS: use temp cache to avoid CrowdStrike scanning
+	@# macOS: use a temporary work directory to avoid CrowdStrike scanning.
 	@if [ "$$(uname)" = "Darwin" ]; then \
-		build_dir="/tmp/terraform-aws-build-$$$$"; \
-		mkdir -p "$$build_dir/cache" "$$build_dir/tmp"; \
-		export GOCACHE="$$build_dir/cache"; \
-		export GOTMPDIR="$$build_dir/tmp"; \
+		build_dir="$${TMPDIR:-/tmp}/terraform-aws-build-$$$$"; \
+		mkdir -p "$$build_dir"; \
+		export GOTMPDIR="$$build_dir"; \
 	fi; \
 	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
 	test_p=$${TEST_P:-$$cores}; \
@@ -1055,14 +1134,14 @@ tflint-init: ## Initialize tflint
 tools: prereq-go ## Install tools
 	@echo "make: Installing tools..."
 	cd .ci/providerlint && $(GO_VER) install .
-	cd .ci/tools && $(GO_VER) install github.com/YakDriver/swissshepherd
-	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
-	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/copyplop
+	cd .ci/tools && $(GO_VER) install github.com/YakDriver/swissshepherd
+	cd .ci/tools && $(GO_VER) install github.com/golangci/misspell/cmd/misspell
+	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/tools && $(GO_VER) install github.com/katbyte/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
-	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
 	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
@@ -1153,7 +1232,7 @@ website-markdown-lint: ## [CI] Website Checks / markdown-lint
 
 website-misspell: ## [CI] Website Checks / misspell
 	@echo "make: Website Checks / misspell..."
-	@misspell -error -source text website/
+	@misspell -error -source text website/docs/*.html.markdown website/docs/*/*.html.markdown
 
 website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
@@ -1259,7 +1338,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	generate-changelog \
 	gh-workflow-lint \
 	go-build \
-	go-misspell \
 	golangci-lint \
 	golangci-lint1 \
 	golangci-lint2 \
@@ -1285,7 +1363,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	quick-fix-core-heading \
 	quick-fix-heading \
 	sane \
-	sanity \
 	schema-validate \
 	semgrep \
 	semgrep-all \
@@ -1300,9 +1377,13 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-service-naming \
 	semgrep-test \
 	semgrep-validate \
+	shellcheck \
 	skaff \
 	skaff-check-compile \
 	smoke \
+	smoke-core-services \
+	smoke-identity \
+	smoke-logging \
 	sweep \
 	sweeper \
 	sweeper-check \

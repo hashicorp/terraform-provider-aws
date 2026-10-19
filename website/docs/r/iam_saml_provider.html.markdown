@@ -57,7 +57,7 @@ resource "aws_iam_saml_provider" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the IAM SAML provider.
+- `arn` (String) ARN of the IAM SAML provider.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM SAML Providers using the `arn`. For example:
 

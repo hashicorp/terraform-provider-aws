@@ -29,7 +29,7 @@ This resource supports the following arguments:
 
 * `allow_external_principals` - (Optional) Whether principals outside your organization can be associated with a resource share.
 * `name` - (Required) Name of the resource share.
-* `permission_arns` - (Optional) Amazon Resource Names (ARNs) of the RAM permission to associate with the resource share. If you do not specify an ARN for the permission, RAM automatically attaches the default version of the permission for each resource type. You can associate only one permission with each resource type included in the resource share.
+* `permission_arns` - (Optional) ARNs of the RAM permission to associate with the resource share. If you do not specify an ARN for the permission, RAM automatically attaches the default version of the permission for each resource type. You can associate only one permission with each resource type included in the resource share.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_share_configuration` - (Optional) Configuration block for the resource share. See [`resource_share_configuration` Block](#resource_share_configuration-block) for details.
 * `tags` - (Optional) Map of tags to assign to the resource share. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -44,8 +44,8 @@ The `resource_share_configuration` configuration block supports the following ar
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the resource share.
-* `id` - Amazon Resource Name (ARN) of the resource share.
+* `arn` - ARN of the resource share.
+* `id` - ARN of the resource share.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

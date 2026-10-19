@@ -70,6 +70,7 @@ The following arguments are optional:
 * `ingress_point_configuration` - (Optional) Configuration used to authenticate with the ingress point. See [`ingress_point_configuration` Block](#ingress_point_configuration-block) for details.
 * `network_configuration` - (Optional) Network configuration for the ingress point. See [`network_configuration` Block](#network_configuration-block) for details. Changing this value forces a new resource.
 * `region` - (Optional) Region where this resource is managed.
+* `status_to_update` - (Optional) Status to apply to the ingress point. Valid values are `ACTIVE` and `CLOSED`.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tls_policy` - (Optional) TLS policy for the ingress point. Valid values are `REQUIRED`, `OPTIONAL`, and `FIPS`.
 
@@ -78,8 +79,8 @@ The following arguments are optional:
 The `ingress_point_configuration` block supports the following:
 
 * `secret_arn` - (Optional) ARN of the secret in AWS Secrets Manager that holds the SMTP password, used for `AUTH` ingress points.
-* `smtp_password_wo` - (Optional, Write-Only) SMTP password used for `AUTH` ingress points. This argument is not stored in state. Requires `smtp_password_wo_version` to be set. See [Write-Only Arguments](https://developer.hashicorp.com/terraform/language/resources/syntax#write-only-arguments) for more information.
-* `smtp_password_wo_version` - (Optional) Version number for `smtp_password_wo`. Increment this value to trigger a password update. Required when using `smtp_password_wo`.
+* `smtp_password_wo` - (Optional, Write-Only) SMTP password used for `AUTH` ingress points. This argument is not stored in state. If set, requires `smtp_password_wo_version` to be set.
+* `smtp_password_wo_version` - (Optional) Required when `smtp_password_wo` is set. Changing this value triggers an update to `smtp_password_wo`.
 * `tls_auth_configuration` - (Optional) Configuration used to authenticate with `MTLS` ingress points. See [`tls_auth_configuration` Block](#tls_auth_configuration-block) for details.
 
 ### `tls_auth_configuration` Block

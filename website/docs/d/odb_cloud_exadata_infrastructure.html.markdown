@@ -38,7 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `activated_storage_count` - Number of storage servers requested for the Exadata infrastructure.
 * `additional_storage_count` - Number of storage servers requested for the Exadata infrastructure.
-* `arn` - Amazon Resource Name (ARN) for the Exadata infrastructure.
+* `arn` - ARN for the Exadata infrastructure.
 * `availability_zone` - Name of the Availability Zone (AZ) where the Exadata infrastructure is located.
 * `availability_zone_id` - AZ ID of the AZ where the Exadata infrastructure is located.
 * `available_storage_size_in_gbs` - Amount of available storage, in gigabytes (GB), for the Exadata infrastructure.

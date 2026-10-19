@@ -111,7 +111,6 @@ resource "aws_vpclattice_resource_configuration" "test" {
 The following arguments are required:
 
 * `name` - (Required) Name for the Resource Configuration.
-* `port_ranges` - (Required) Port ranges to access the Resource either single port `80` or range `80-81` range.
 * `resource_configuration_definition` - (Required) Details of the Resource Configuration. See [`resource_configuration_definition` Block](#resource_configuration_definition-block) for details.
 
 The following arguments are optional:
@@ -119,6 +118,7 @@ The following arguments are optional:
 * `allow_association_to_shareable_service_network` - (Optional) Allow or Deny the association of this resource to a shareable service network.
 * `custom_domain_name` - (Optional) Custom domain name for your resource configuration. Additionally, provide a `domain_verification_id` to prove your ownership of a domain.
 * `domain_verification_id` - (Optional) Domain verification ID of your verified custom domain name. If you don't provide an ID, you must configure the DNS settings yourself.
+* `port_ranges` - (Optional) Port ranges to access the Resource either single port `80` or range `80-81` range.
 * `protocol` - (Optional) Protocol for the Resource `TCP` is currently the only supported value.  MUST be specified if `resource_configuration_group_id` is not.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_configuration_group_id` - (Optional) ID of Resource Configuration where `type` is `CHILD`.

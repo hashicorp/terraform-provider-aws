@@ -3,12 +3,12 @@ subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_security_group"
 description: |-
-  Lists EC2 (Elastic Compute Cloud) Security Group resources.
+  Lists EC2 Security Group resources.
 ---
 
 # List Resource: aws_security_group
 
-Lists EC2 (Elastic Compute Cloud) Security Group resources.
+Lists EC2 Security Group resources.
 
 ## Example Usage
 
@@ -78,7 +78,7 @@ This list resource supports the following arguments:
 * `group_ids` - (Optional) List of security group IDs to filter results. If specified, only security groups with the provided IDs will be returned.
 * `region` - (Optional) Region to query. Defaults to provider region.
 
-### filter Configuration Block
+### `filter` Block
 
 The `filter` block supports the following:
 

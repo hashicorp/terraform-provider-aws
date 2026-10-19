@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -52,13 +53,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	hierarchicalLevelConfigurations          = 2
-	hierarchicalMaxTokens                    = 8192
-	semanticBreakpointPercentileThresholdMin = 50
-	semanticBreakpointPercentileThresholdMax = 99
-)
-
 // @FrameworkResource("aws_bedrockagent_data_source", name="Data Source")
 func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dataSourceResource{}
@@ -77,6 +71,12 @@ type dataSourceResource struct {
 }
 
 func (r *dataSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	const (
+		hierarchicalLevelConfigurations          = 2
+		hierarchicalMaxTokens                    = 8192
+		semanticBreakpointPercentileThresholdMin = 50
+		semanticBreakpointPercentileThresholdMax = 99
+	)
 	crawlerConfigurationNestedObjectSchema := schema.NestedBlockObject{
 		Blocks: map[string]schema.Block{
 			"filter_configuration": schema.ListNestedBlock{
@@ -279,8 +279,12 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 												},
 												"deletion_protection_threshold": schema.Int32Attribute{
 													Optional: true,
+													Computed: true,
 													Validators: []validator.Int32{
 														int32validator.Between(0, 100),
+													},
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.UseNonNullStateForUnknown(),
 													},
 												},
 											},
@@ -330,6 +334,86 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 														Attributes: map[string]schema.Attribute{
 															"video_extraction_status": schema.StringAttribute{
 																CustomType: fwtypes.StringEnumType[awstypes.EnabledOrDisabledState](),
+																Required:   true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"sync_schedule": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[syncScheduleModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												tfobjectvalidator.ExactlyOneOfChildren(
+													path.MatchRelative().AtName("daily"),
+													path.MatchRelative().AtName("monthly"),
+													path.MatchRelative().AtName("weekly"),
+												),
+											},
+											Blocks: map[string]schema.Block{
+												"daily": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[dailyScheduleModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{},
+												},
+												"monthly": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[monthlyScheduleModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"day_of_month": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[dayOfMonthModel](ctx),
+																Validators: []validator.List{
+																	listvalidator.IsRequired(),
+																	listvalidator.SizeAtLeast(1),
+																	listvalidator.SizeAtMost(1),
+																},
+																NestedObject: schema.NestedBlockObject{
+																	Validators: []validator.Object{
+																		tfobjectvalidator.ExactlyOneOfChildren(
+																			path.MatchRelative().AtName("day_number"),
+																			path.MatchRelative().AtName("last_day_of_month"),
+																		),
+																	},
+																	Attributes: map[string]schema.Attribute{
+																		"day_number": schema.Int32Attribute{
+																			Optional: true,
+																			Validators: []validator.Int32{
+																				int32validator.Between(1, 28),
+																			},
+																		},
+																	},
+																	Blocks: map[string]schema.Block{
+																		"last_day_of_month": schema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[lastDayOfMonthModel](ctx),
+																			Validators: []validator.List{
+																				listvalidator.SizeAtMost(1),
+																			},
+																			NestedObject: schema.NestedBlockObject{},
+																		},
+																	},
+																},
+															}},
+													},
+												},
+												"weekly": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[weeklyScheduleModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"day_of_week": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.DayOfWeek](),
 																Required:   true,
 															},
 														},
@@ -759,6 +843,77 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 								},
 							},
 						},
+						"context_enrichment_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[contextEnrichmentConfigurationModel](ctx),
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrType: schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.ContextEnrichmentType](),
+										Required:   true,
+										Validators: []validator.String{
+											tfstringvalidator.DiscriminatorRequires(map[awstypes.ContextEnrichmentType]path.Expression{
+												awstypes.ContextEnrichmentTypeBedrockFoundationModel: path.MatchRelative().AtParent().AtName("bedrock_foundation_model_configuration"),
+											}),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"bedrock_foundation_model_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockFoundationModelContextEnrichmentConfigurationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"model_arn": schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+											Blocks: map[string]schema.Block{
+												"enrichment_strategy_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[enrichmentStrategyConfigurationModel](ctx),
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"method": schema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EnrichmentStrategyMethod](),
+																Required:   true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"custom_transformation_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[customTransformationConfigurationModel](ctx),
 							PlanModifiers: []planmodifier.List{
@@ -992,9 +1147,8 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 	}
 
 	ds := output.DataSource
-	dataSourceID, knowledgeBaseID := aws.ToString(ds.DataSourceId), fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
+	dataSourceID, knowledgeBaseID := aws.ToString(ds.DataSourceId), aws.ToString(ds.KnowledgeBaseId)
 	id := dataSourceCreateResourceID(dataSourceID, knowledgeBaseID)
-	data.DataSourceID = fwflex.StringValueToFramework(ctx, dataSourceID)
 	data.ID = fwflex.StringValueToFramework(ctx, id)
 
 	ds, err = waitDataSourceCreated(ctx, conn, dataSourceID, knowledgeBaseID, r.CreateTimeout(ctx, data.Timeouts))
@@ -1008,6 +1162,12 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 	}
 
 	data.DataDeletionPolicy = fwtypes.StringEnumValue(ds.DataDeletionPolicy)
+
+	// Set values for unknowns.
+	response.Diagnostics.Append(r.flatten(ctx, ds, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -1043,7 +1203,7 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, ds, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, ds, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -1081,7 +1241,7 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	if _, err := waitDataSourceUpdated(ctx, conn, dataSourceID, knowledgeBaseID, r.DeleteTimeout(ctx, new.Timeouts)); err != nil {
+	if _, err := waitDataSourceUpdated(ctx, conn, dataSourceID, knowledgeBaseID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) update", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
@@ -1121,6 +1281,12 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 
 		return
 	}
+}
+
+func (r *dataSourceResource) flatten(ctx context.Context, ds *awstypes.DataSource, data *dataSourceResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, ds, data)...)
+	return diags
 }
 
 func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) (*awstypes.DataSource, error) {
@@ -1268,9 +1434,10 @@ type dataSourceConfigurationModel struct {
 }
 
 type managedKnowledgeBaseConnectorConfigurationModel struct {
-	ConnectorParameters             fwtypes.SmithyJSON[document.Interface]                                `tfsdk:"connector_parameters"`
+	ConnectorParameters             fwtypes.SmithyJSON[document.Interface]                                `tfsdk:"connector_parameters" autoflex:"-"`
 	DeletionProtectionConfiguration fwtypes.ListNestedObjectValueOf[deletionProtectionConfigurationModel] `tfsdk:"deletion_protection_configuration"`
 	MediaExtractionConfiguration    fwtypes.ListNestedObjectValueOf[mediaExtractionConfigurationModel]    `tfsdk:"media_extraction_configuration"`
+	SyncSchedule                    fwtypes.ListNestedObjectValueOf[syncScheduleModel]                    `tfsdk:"sync_schedule"`
 }
 
 var (
@@ -1281,55 +1448,36 @@ var (
 func (m managedKnowledgeBaseConnectorConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var r awstypes.ManagedKnowledgeBaseConnectorConfiguration
-
+	// To prevent infinite recursion...
+	type modelAlias managedKnowledgeBaseConnectorConfigurationModel
+	alias := modelAlias(m)
+	diags.Append(fwflex.Expand(ctx, alias, &r)...)
 	if !m.ConnectorParameters.IsNull() {
 		v, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.ConnectorParameters), document.NewLazyDocument)
 		if err != nil {
-			diags.AddError("creating Smithy document", err.Error())
+			diags.Append(fwdiag.NewDecodingJSONErrorDiagnostic(err))
 			return nil, diags
 		}
 		r.ConnectorParameters = v
 	}
-
-	if !m.DeletionProtectionConfiguration.IsNull() {
-		data, d := m.DeletionProtectionConfiguration.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var v awstypes.DeletionProtectionConfiguration
-		diags.Append(fwflex.Expand(ctx, data, &v)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		r.DeletionProtectionConfiguration = &v
-	}
-
-	if !m.MediaExtractionConfiguration.IsNull() {
-		data, d := m.MediaExtractionConfiguration.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		var v awstypes.MediaExtractionConfiguration
-		diags.Append(fwflex.Expand(ctx, data, &v)...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		r.MediaExtractionConfiguration = &v
-	}
-
 	return &r, diags
 }
 
 func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	// To prevent infinite recursion...
+	type modelAlias *managedKnowledgeBaseConnectorConfigurationModel
+	alias := modelAlias(m)
 	switch t := v.(type) {
 	case awstypes.ManagedKnowledgeBaseConnectorConfiguration:
+		diags.Append(fwflex.Flatten(ctx, t, alias)...)
+		if diags.HasError() {
+			return diags
+		}
 		if v := t.ConnectorParameters; v != nil {
 			v, err := tfsmithy.DocumentToJSONString(v)
 			if err != nil {
-				diags.AddError("reading Smithy document", err.Error())
+				diags.Append(fwdiag.NewEncodingJSONErrorDiagnostic(err))
 				return diags
 			}
 
@@ -1337,40 +1485,22 @@ func (m *managedKnowledgeBaseConnectorConfigurationModel) Flatten(ctx context.Co
 			if strings.HasPrefix(v, `"{`) && strings.HasSuffix(v, `}"`) {
 				var inner string
 				if err := tfjson.DecodeFromString(v, &inner); err != nil {
-					diags.AddError("Decoding", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %s", err))
+					diags.Append(fwdiag.NewDecodingJSONErrorDiagnostic(err))
+					return diags
 				}
 				v = inner
 			}
 
 			m.ConnectorParameters = fwtypes.NewSmithyJSONValue(v, document.NewLazyDocument)
-		} else {
-			m.ConnectorParameters = fwtypes.NewSmithyJSONNull[document.Interface]()
 		}
 
-		if v := t.DeletionProtectionConfiguration; v != nil {
-			var data deletionProtectionConfigurationModel
-			diags.Append(fwflex.Flatten(ctx, v, &data)...)
-			if diags.HasError() {
-				return diags
-			}
-			m.DeletionProtectionConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
-		} else {
-			m.DeletionProtectionConfiguration = fwtypes.NewListNestedObjectValueOfNull[deletionProtectionConfigurationModel](ctx)
-		}
-
-		if v := t.MediaExtractionConfiguration; v != nil {
-			var data mediaExtractionConfigurationModel
-			diags.Append(fwflex.Flatten(ctx, v, &data)...)
-			if diags.HasError() {
-				return diags
-			}
-			m.MediaExtractionConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
-		} else {
-			m.MediaExtractionConfiguration = fwtypes.NewListNestedObjectValueOfNull[mediaExtractionConfigurationModel](ctx)
-		}
 	default:
-		diags.AddError("Unsupported Type", fmt.Sprintf("managed_knowledge_base_connector_configuration flatten: %T", v))
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("managedKnowledgeBaseConnectorConfigurationModel.Flatten: %T", v),
+		)
 	}
+
 	return diags
 }
 
@@ -1395,6 +1525,180 @@ type imageExtractionConfigurationModel struct {
 
 type videoExtractionConfigurationModel struct {
 	VideoExtractionStatus fwtypes.StringEnum[awstypes.EnabledOrDisabledState] `tfsdk:"video_extraction_status"`
+}
+
+type syncScheduleModel struct {
+	Daily   fwtypes.ListNestedObjectValueOf[dailyScheduleModel]   `tfsdk:"daily"`
+	Monthly fwtypes.ListNestedObjectValueOf[monthlyScheduleModel] `tfsdk:"monthly"`
+	Weekly  fwtypes.ListNestedObjectValueOf[weeklyScheduleModel]  `tfsdk:"weekly"`
+}
+
+var (
+	_ fwflex.Expander  = syncScheduleModel{}
+	_ fwflex.Flattener = &syncScheduleModel{}
+)
+
+func (m *syncScheduleModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.SyncScheduleMemberDaily:
+		var model dailyScheduleModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Daily, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+
+	case awstypes.SyncScheduleMemberMonthly:
+		var model monthlyScheduleModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Monthly, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+
+	case awstypes.SyncScheduleMemberWeekly:
+		var model weeklyScheduleModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Weekly, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("syncScheduleModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m syncScheduleModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.Daily.IsNull():
+		model, d := m.Daily.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.SyncScheduleMemberDaily
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.Monthly.IsNull():
+		model, d := m.Monthly.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.SyncScheduleMemberMonthly
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.Weekly.IsNull():
+		model, d := m.Weekly.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.SyncScheduleMemberWeekly
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type dailyScheduleModel struct{}
+
+type monthlyScheduleModel struct {
+	DayOfMonth fwtypes.ListNestedObjectValueOf[dayOfMonthModel] `tfsdk:"day_of_month"`
+}
+
+type dayOfMonthModel struct {
+	DayNumber      types.Int32                                          `tfsdk:"day_number"`
+	LastDayOfMonth fwtypes.ListNestedObjectValueOf[lastDayOfMonthModel] `tfsdk:"last_day_of_month"`
+}
+
+var (
+	_ fwflex.Expander  = dayOfMonthModel{}
+	_ fwflex.Flattener = &dayOfMonthModel{}
+)
+
+func (m *dayOfMonthModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.DayOfMonthMemberDayNumber:
+		m.DayNumber = types.Int32Value(t.Value)
+
+	case awstypes.DayOfMonthMemberLastDayOfMonth:
+		var model lastDayOfMonthModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.LastDayOfMonth, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("dayOfMonthModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m dayOfMonthModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.DayNumber.IsNull():
+		r := awstypes.DayOfMonthMemberDayNumber{
+			Value: m.DayNumber.ValueInt32(),
+		}
+		return &r, diags
+
+	case !m.LastDayOfMonth.IsNull():
+		model, d := m.LastDayOfMonth.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.DayOfMonthMemberLastDayOfMonth
+		diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type lastDayOfMonthModel struct{}
+
+type weeklyScheduleModel struct {
+	DayOfWeek fwtypes.StringEnum[awstypes.DayOfWeek] `tfsdk:"day_of_week"`
 }
 
 type confluenceDataSourceConfigurationModel struct {
@@ -1429,8 +1733,23 @@ type serverSideEncryptionConfigurationModel struct {
 
 type vectorIngestionConfigurationModel struct {
 	ChunkingConfiguration             fwtypes.ListNestedObjectValueOf[chunkingConfigurationModel]             `tfsdk:"chunking_configuration"`
+	ContextEnrichmentConfiguration    fwtypes.ListNestedObjectValueOf[contextEnrichmentConfigurationModel]    `tfsdk:"context_enrichment_configuration"`
 	CustomTransformationConfiguration fwtypes.ListNestedObjectValueOf[customTransformationConfigurationModel] `tfsdk:"custom_transformation_configuration"`
 	ParsingConfiguration              fwtypes.ListNestedObjectValueOf[parsingConfigurationModel]              `tfsdk:"parsing_configuration"`
+}
+
+type contextEnrichmentConfigurationModel struct {
+	BedrockFoundationModelConfiguration fwtypes.ListNestedObjectValueOf[bedrockFoundationModelContextEnrichmentConfigurationModel] `tfsdk:"bedrock_foundation_model_configuration"`
+	Type                                fwtypes.StringEnum[awstypes.ContextEnrichmentType]                                         `tfsdk:"type"`
+}
+
+type bedrockFoundationModelContextEnrichmentConfigurationModel struct {
+	EnrichmentStrategyConfiguration fwtypes.ListNestedObjectValueOf[enrichmentStrategyConfigurationModel] `tfsdk:"enrichment_strategy_configuration"`
+	ModelARN                        fwtypes.ARN                                                           `tfsdk:"model_arn"`
+}
+
+type enrichmentStrategyConfigurationModel struct {
+	Method fwtypes.StringEnum[awstypes.EnrichmentStrategyMethod] `tfsdk:"method"`
 }
 
 type parsingConfigurationModel struct {
@@ -1551,67 +1870,6 @@ type patternObjectFilterModel struct {
 	ExclusionFilters fwtypes.SetOfString `tfsdk:"exclusion_filters"`
 	InclusionFilters fwtypes.SetOfString `tfsdk:"inclusion_filters"`
 	ObjectType       types.String        `tfsdk:"object_type"`
-}
-
-func (c crawlFilterConfigurationModel) GetCrawlerSchema(ctx context.Context) schema.NestedBlockObject {
-	return schema.NestedBlockObject{
-		Blocks: map[string]schema.Block{
-			"filter_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[crawlFilterConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrType: schema.StringAttribute{
-							Required: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"pattern_object_filter": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilterConfigurationModel](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{
-									"filters": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[patternObjectFilterModel](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"exclusion_filters": schema.SetAttribute{
-													CustomType:  fwtypes.SetOfStringType,
-													ElementType: types.StringType,
-													Optional:    true,
-													Validators: []validator.Set{
-														setvalidator.SizeBetween(1, 25),
-														setvalidator.ValueStringsAre(
-															stringvalidator.LengthBetween(1, 1000),
-														),
-													},
-												},
-												"inclusion_filters": schema.SetAttribute{
-													CustomType:  fwtypes.SetOfStringType,
-													ElementType: types.StringType,
-													Optional:    true,
-													Validators: []validator.Set{
-														setvalidator.SizeBetween(1, 25),
-														setvalidator.ValueStringsAre(
-															stringvalidator.LengthBetween(1, 1000),
-														),
-													},
-												},
-												"object_type": schema.StringAttribute{
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
 }
 
 type chunkingConfigurationModel struct {

@@ -87,7 +87,7 @@ This data source exports the following attributes in addition to the arguments a
 * `email_sending_account` - Email sending account.
 * `from` - Email sender address.
 * `reply_to_email_address` - Reply-to email address.
-* `source_arn` - Source Amazon Resource Name (ARN) for emails.
+* `source_arn` - Source ARN for emails.
 
 ### lambda config
 

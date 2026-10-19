@@ -94,11 +94,14 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transit_gateway_attachment_id` - (Required) Identifier of EC2 Transit Gateway Attachment.
 * `transit_gateway_route_table_id` - (Required) Identifier of EC2 Transit Gateway Route Table.
+
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -109,6 +112,31 @@ This resource exports the following attributes in addition to the arguments abov
 * `resource_type` - Type of the resource
 
 ## Import
+
+In Terraform v1.12.0 and later, use the [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_route_table_propagation` using the EC2 Transit Gateway Route Table identifier and the EC2 Transit Gateway Attachment identifier. For example:
+
+```terraform
+import {
+  to = aws_ec2_transit_gateway_route_table_propagation.example
+
+  identity = {
+    transit_gateway_attachment_id  = "tgw-attach-87654321"
+    transit_gateway_route_table_id = "tgw-rtb-12345678"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `transit_gateway_attachment_id` (String) EC2 Transit Gateway Attachment identifier.
+* `transit_gateway_route_table_id` (String) EC2 Transit Gateway Route Table identifier.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_route_table_propagation` using the EC2 Transit Gateway Route Table identifier, an underscore, and the EC2 Transit Gateway Attachment identifier. For example:
 

@@ -35,20 +35,8 @@ type ingressPointListResource struct {
 	framework.WithList
 }
 
-type listIngressPointModel struct {
-	framework.WithRegionModel
-}
-
 func (l *ingressPointListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().MailManagerClient(ctx)
-
-	var query listIngressPointModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input mailmanager.ListIngressPointsInput

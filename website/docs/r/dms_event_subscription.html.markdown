@@ -35,8 +35,8 @@ This resource supports the following arguments:
 * `name` - (Required) Name of event subscription.
 * `enabled` - (Optional, Default: true) Whether the event subscription should be enabled.
 * `event_categories` - (Optional) List of event categories to listen for, see `DescribeEventCategories` for a canonical list.
-* `sns_topic_arn` - (Required) SNS topic arn to send events on.
-* `source_ids` - (Optional) Ids of sources to listen to. If you don't specify a value, notifications are provided for all sources.
+* `sns_topic_arn` - (Required) SNS topic ARN to send events on.
+* `source_ids` - (Optional) IDs of sources to listen to. If you don't specify a value, notifications are provided for all sources.
 * `source_type` - (Required) Type of source for events. Valid values: `replication-instance` or `replication-task`
 * `tags` - (Optional) Map of resource tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -44,7 +44,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the DMS Event Subscription.
+* `arn` - ARN of the DMS Event Subscription.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

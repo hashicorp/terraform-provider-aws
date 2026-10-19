@@ -44,6 +44,7 @@ import (
 // @Testing(generator="randomWithPrefixAndUnderscore(t)")
 // @Testing(importStateIdAttribute="registry_id")
 // @Testing(preCheck="testAccPreCheckRegistries")
+// @Testing(identityTest=false)
 func newRegistryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &registryResource{}
 
@@ -62,7 +63,7 @@ type registryResource struct {
 
 func (r *registryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		DeprecationMessage: "This resource is deprecated and will continue to work until September 17, 2026.",
+		DeprecationMessage: "This resource is deprecated and will continue to work until September 17, 2026. Use the `aws_agentregistry_registry` resource for all new registries.",
 		Attributes: map[string]schema.Attribute{
 			"approval_configuration": framework.ResourceOptionalComputedSingleNestedObjectAttribute[approvalConfigurationModel](ctx),
 			"authorizer_type": schema.StringAttribute{
@@ -89,8 +90,8 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[A-Za-z0-9_-]+$`),
-						"must contain only letters, numbers, hyphens, and underscores",
+						regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_\-\.\/]{0,63}$`),
+						`Must start with a letter or digit. Valid characters are a-z, A-Z, 0-9, _ (underscore), - (hyphen), . (dot), and / (forward slash). The name can have up to 64 characters.`,
 					),
 					stringvalidator.LengthBetween(1, 64),
 				},
@@ -99,7 +100,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 			"registry_id":  framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"authorizer_configuration": authorizerConfigurationSchema(ctx),
+			"authorizer_configuration": authorizerConfigurationBlock(ctx),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,

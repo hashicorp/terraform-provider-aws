@@ -586,7 +586,7 @@ This resource is deprecated and will be removed in a future version. [Effective 
 
 * Remove `elastic_gpu_specifications`—it is no longer supported. Amazon Elastic Graphics reached end of life in January 2024.
 * Remove `elastic_inference_accelerator`—it is no longer supported. Amazon Elastic Inference reached end of life in April 2024.
-* See also [changes](#typenullablebool-validation-update) to `block_device_mappings.ebs.delete_on_termination`, `block_device_mappings.ebs.encrypted`, `ebs_optimized`, `network_interfaces.associate_carrier_ip_address`, `network_interfaces.associate_public_ip_address`, `network_interfaces.delete_on_termination`, and `network_interfaces.primary_ipv6`.
+* See also [changes](#nullable-boolean-validation-update) to `block_device_mappings.ebs.delete_on_termination`, `block_device_mappings.ebs.encrypted`, `ebs_optimized`, `network_interfaces.associate_carrier_ip_address`, `network_interfaces.associate_public_ip_address`, `network_interfaces.delete_on_termination`, and `network_interfaces.primary_ipv6`.
 
 ## Resource `aws_lb_listener`
 

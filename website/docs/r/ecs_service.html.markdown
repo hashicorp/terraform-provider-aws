@@ -45,7 +45,7 @@ resource "aws_ecs_service" "mongo" {
 
 ### Ignoring Changes to Desired Count
 
-You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an ECS service with an initial count of running instances, then ignore any changes to that count caused externally (e.g., Application Autoscaling).
+You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an ECS service with an initial count of running instances, then ignore any changes to that count caused externally (e.g., Application Auto Scaling).
 
 ```terraform
 resource "aws_ecs_service" "example" {
@@ -297,7 +297,7 @@ The `managed_ebs_volume` configuration block supports the following:
 * `encrypted` - (Optional) Whether the volume should be encrypted. Default value is `true`.
 * `file_system_type` - (Optional) Linux filesystem type for the volume. For volumes created from a snapshot, same filesystem type must be specified that the volume was using when the snapshot was created. Valid values are `ext3`, `ext4`, `xfs`. Default value is `xfs`.
 * `iops` - (Optional) Number of I/O operations per second (IOPS).
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) identifier of the Amazon Web Services Key Management Service key to use for Amazon EBS encryption.
+* `kms_key_id` - (Optional) ARN identifier of the Amazon Web Services KMS key to use for Amazon EBS encryption.
 * `role_arn` - (Required) Amazon ECS infrastructure IAM role that is used to manage your Amazon Web Services infrastructure. Recommended using the Amazon ECS-managed `AmazonECSInfrastructureRolePolicyForVolumes` IAM policy with this role.
 * `size_in_gb` - (Optional) Size of the volume in GiB. You must specify either a `size_in_gb` or a `snapshot_id`. You can optionally specify a volume size greater than or equal to the snapshot size.
 * `snapshot_id` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
@@ -312,7 +312,7 @@ The `capacity_provider_strategy` configuration block supports the following:
 
 * `base` - (Optional) Number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
 * `capacity_provider` - (Required) Short name of the capacity provider.
-* `weight` - (Required) Relative percentage of the total number of launched tasks that should use the specified capacity provider.
+* `weight` - (Optional) Relative percentage of the total number of launched tasks that should use the specified capacity provider.
 
 ### `deployment_configuration` Block
 
@@ -329,23 +329,32 @@ The `deployment_configuration` configuration block supports the following:
 The `lifecycle_hook` configuration block supports the following:
 
 * `hook_details` - (Optional) Custom parameters that Amazon ECS will pass to the hook target invocations (such as a Lambda function).
-* `hook_target_arn` - (Required) ARN of the Lambda function to invoke for the lifecycle hook.
+* `hook_target_arn` - (Optional) ARN of the Lambda function to invoke for the lifecycle hook. Required when `target_type` is `AWS_LAMBDA`. Not used when `target_type` is `PAUSE`.
 * `lifecycle_stages` - (Required) Stages during the deployment when the hook should be invoked. Valid values: `RECONCILE_SERVICE`, `PRE_SCALE_UP`, `POST_SCALE_UP`, `TEST_TRAFFIC_SHIFT`, `POST_TEST_TRAFFIC_SHIFT`, `PRODUCTION_TRAFFIC_SHIFT`, `POST_PRODUCTION_TRAFFIC_SHIFT`.
-* `role_arn` - (Required) ARN of the IAM role that grants the service permission to invoke the Lambda function.
+* `role_arn` - (Optional) ARN of the IAM role that grants the service permission to invoke the Lambda function. Required when `target_type` is `AWS_LAMBDA`. Not used when `target_type` is `PAUSE`.
+* `target_type` - (Optional) Type of hook target. Valid values: `AWS_LAMBDA`, `PAUSE`. Default: `AWS_LAMBDA`. `PAUSE` hooks cannot use the `TEST_TRAFFIC_SHIFT` or `PRODUCTION_TRAFFIC_SHIFT` lifecycle stages.
+* `timeout_configuration` - (Optional) Configuration block defining the timeout behavior for a `PAUSE` hook. Only valid when `target_type` is `PAUSE`. [See below](#timeout_configuration-block).
+
+### `timeout_configuration` Block
+
+The `timeout_configuration` configuration block supports the following:
+
+* `action` - (Optional) Action ECS takes when the pause hook times out. Valid values: `ROLLBACK`, `CONTINUE`. Default: `ROLLBACK`.
+* `timeout_in_minutes` - (Optional) Number of minutes to wait before executing the timeout action. Valid range: 1-20160 minutes. Default: `1440` (24 hours).
 
 ### `linear_configuration` Block
 
 The `linear_configuration` configuration block supports the following:
 
 * `step_bake_time_in_minutes` - (Optional) Number of minutes to wait between each step during a linear deployment. Valid range: 0-1440 minutes.
-* `step_percent` - (Required) Percentage of traffic to shift in each step during a linear deployment. Valid range: 3.0-100.0.
+* `step_percent` - (Optional) Percentage of traffic to shift in each step during a linear deployment. Valid range: 3.0-100.0.
 
 ### `canary_configuration` Block
 
 The `canary_configuration` configuration block supports the following:
 
 * `canary_bake_time_in_minutes` - (Optional) Number of minutes to wait before shifting all traffic to the new deployment. Valid range: 0-1440 minutes.
-* `canary_percent` - (Required) Percentage of traffic to route to the canary deployment. Valid range: 0.1-100.0.
+* `canary_percent` - (Optional) Percentage of traffic to route to the canary deployment. Valid range: 0.1-100.0.
 
 ### `deployment_circuit_breaker` Block
 
@@ -461,7 +470,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `ingress_port_override` - (Optional) Port number for the Service Connect proxy to listen on.
 * `port_name` - (Required) Name of one of the `portMappings` from all the containers in the task definition of this Amazon ECS service.
 * `timeout` - (Optional) Configuration timeouts for Service Connect
-* `tls` - (Optional) Configuration for enabling Transport Layer Security (TLS)
+* `tls` - (Optional) Configuration for enabling TLS
 
 ### `timeout` Block
 
@@ -482,7 +491,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 `issuer_cert_authority` supports the following:
 
-* `aws_pca_authority_arn` - (Optional) ARN of the [`aws_acmpca_certificate_authority`](/docs/providers/aws/r/acmpca_certificate_authority.html) used to create the TLS Certificates.
+* `aws_pca_authority_arn` - (Required) ARN of the [`aws_acmpca_certificate_authority`](/docs/providers/aws/r/acmpca_certificate_authority.html) used to create the TLS Certificates.
 
 ### `client_alias` Block
 
@@ -564,7 +573,7 @@ resource "aws_ecs_service" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS services using the `name` together with ecs cluster `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS services using the `name` together with ECS cluster `name`. For example:
 
 ```terraform
 import {
@@ -573,7 +582,7 @@ import {
 }
 ```
 
-Using `terraform import`, import ECS services using the `name` together with ecs cluster `name`. For example:
+Using `terraform import`, import ECS services using the `name` together with ECS cluster `name`. For example:
 
 ```console
 % terraform import aws_ecs_service.imported cluster-name/service-name

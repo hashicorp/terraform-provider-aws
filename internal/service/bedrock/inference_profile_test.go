@@ -23,11 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Regions are hard coded due to limited availability of Bedrock service
-const (
-	foundationModelARN = "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0" // lintignore:AWSAT003,AWSAT005
-)
-
 func TestAccBedrockInferenceProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var inferenceprofile bedrock.GetInferenceProfileOutput
@@ -46,7 +41,7 @@ func TestAccBedrockInferenceProfile_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
+				Config: testAccInferenceProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInferenceProfileExists(ctx, t, resourceName, &inferenceprofile),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`application-inference-profile/[a-z0-9]+$`)),
@@ -54,7 +49,7 @@ func TestAccBedrockInferenceProfile_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "models.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "models.0.model_arn", foundationModelARN),
+					resource.TestCheckResourceAttrPair(resourceName, "models.0.model_arn", "data.aws_bedrock_foundation_model.test", "model_arn"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.InferenceProfileStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.InferenceProfileTypeApplication)),
@@ -72,7 +67,7 @@ func TestAccBedrockInferenceProfile_basic(t *testing.T) {
 			// Validate a replacement is not planned following import.
 			// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/45705
 			{
-				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
+				Config: testAccInferenceProfileConfig_basic(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -101,7 +96,7 @@ func TestAccBedrockInferenceProfile_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
+				Config: testAccInferenceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceProfileExists(ctx, t, resourceName, &inferenceprofile),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceInferenceProfile, resourceName),
@@ -138,7 +133,7 @@ func TestAccBedrockInferenceProfile_description(t *testing.T) {
 		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInferenceProfileConfig_description(rName, foundationModelARN, names.AttrDescription),
+				Config: testAccInferenceProfileConfig_description(rName, names.AttrDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInferenceProfileExists(ctx, t, resourceName, &inferenceprofile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
@@ -153,7 +148,7 @@ func TestAccBedrockInferenceProfile_description(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccInferenceProfileConfig_description(rName, foundationModelARN, "updated"),
+				Config: testAccInferenceProfileConfig_description(rName, "updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInferenceProfileExists(ctx, t, resourceName, &inferenceprofile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated"),
@@ -248,27 +243,38 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccInferenceProfileConfig_basic(rName, source string) string {
-	return fmt.Sprintf(`
+func testAccInferenceProfileConfig_base() string {
+	return `
+data "aws_bedrock_foundation_model" "test" {
+  model_id = "amazon.nova-lite-v1:0"
+}
+`
+}
+func testAccInferenceProfileConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInferenceProfileConfig_base(),
+		fmt.Sprintf(`
 resource "aws_bedrock_inference_profile" "test" {
   name = %[1]q
 
   model_source {
-    copy_from = %[2]q
+    copy_from = data.aws_bedrock_foundation_model.test.model_arn
   }
 }
-`, rName, source)
+`, rName))
 }
 
-func testAccInferenceProfileConfig_description(rName, source, description string) string {
-	return fmt.Sprintf(`
+func testAccInferenceProfileConfig_description(rName, description string) string {
+	return acctest.ConfigCompose(
+		testAccInferenceProfileConfig_base(),
+		fmt.Sprintf(`
 resource "aws_bedrock_inference_profile" "test" {
   name        = %[1]q
-  description = %[3]q
+  description = %[2]q
 
   model_source {
-    copy_from = %[2]q
+    copy_from = data.aws_bedrock_foundation_model.test.model_arn
   }
 }
-`, rName, source, description)
+`, rName, description))
 }
