@@ -18,12 +18,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -74,14 +76,43 @@ var (
 			ForceNew: true,
 		},
 		"platform_credential": {
-			Type:      schema.TypeString,
-			Required:  true,
-			Sensitive: true,
+			Type:         schema.TypeString,
+			Optional:     true,
+			Sensitive:    true,
+			ExactlyOneOf: []string{"platform_credential", "platform_credential_wo"},
 		},
+		"platform_credential_wo": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Sensitive:    true,
+			WriteOnly:    true,
+			ExactlyOneOf: []string{"platform_credential", "platform_credential_wo"},
+			RequiredWith: []string{"platform_credential_wo_version"},
+		},
+		"platform_credential_wo_version": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			RequiredWith: []string{"platform_credential_wo"},
+		},
+		// The principal is optional in the API (only some platforms use it), so the pair uses ConflictsWith rather than ExactlyOneOf.
 		"platform_principal": {
-			Type:      schema.TypeString,
-			Optional:  true,
-			Sensitive: true,
+			Type:          schema.TypeString,
+			Optional:      true,
+			Sensitive:     true,
+			ConflictsWith: []string{"platform_principal_wo"},
+		},
+		"platform_principal_wo": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Sensitive:     true,
+			WriteOnly:     true,
+			ConflictsWith: []string{"platform_principal"},
+			RequiredWith:  []string{"platform_principal_wo_version"},
+		},
+		"platform_principal_wo_version": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			RequiredWith: []string{"platform_principal_wo"},
 		},
 		"success_feedback_role_arn": {
 			Type:     schema.TypeString,
@@ -131,6 +162,11 @@ func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceDa
 	attributes, err := platformApplicationAttributeMap.ResourceDataToAPIAttributesCreate(d)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	diags = append(diags, expandPlatformApplicationSecretAttributes(d, attributes)...)
+	if diags.HasError() {
+		return diags
 	}
 
 	name := d.Get(names.AttrName).(string)
@@ -199,7 +235,7 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("apple_platform_bundle_id", "apple_platform_team_id", "platform_credential", "platform_principal") {
+	if d.HasChanges("apple_platform_bundle_id", "apple_platform_team_id", "platform_credential", "platform_credential_wo_version", "platform_principal", "platform_principal_wo_version") {
 		// If APNS platform was configured with token-based authentication then the only way to update them
 		// is to update all 4 attributes as they must be specified together in the request.
 		if d.HasChanges("apple_platform_team_id", "apple_platform_bundle_id") {
@@ -217,12 +253,12 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 			return diags
 		}
 
-		attributes[platformApplicationAttributeNamePlatformCredential] = d.Get("platform_credential").(string)
 		// If the platform requires a principal it must also be specified, even if it didn't change
 		// since credential is stored as a hash, the only way to update principal is to update both
 		// as they must be specified together in the request.
-		if v, ok := d.GetOk("platform_principal"); ok {
-			attributes[platformApplicationAttributeNamePlatformPrincipal] = v.(string)
+		diags = append(diags, expandPlatformApplicationSecretAttributes(d, attributes)...)
+		if diags.HasError() {
+			return diags
 		}
 	}
 
@@ -310,6 +346,38 @@ func parsePlatformApplicationResourceID(input string) (arnS, name, platform stri
 	name = platformApplicationArnResourceParts[2]
 	platform = platformApplicationArnResourceParts[1]
 	return
+}
+
+// Helper method to add the configured "platform credential" and "principal" secrets to the API attributes map.
+// This is split out to encapsulate handling both the regular and write-only variants of these attributes, which
+// are mutually exclusive.
+func expandPlatformApplicationSecretAttributes(d *schema.ResourceData, attributes map[string]string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	for _, secret := range []struct {
+		apiAttributeName  string
+		tfAttributeName   string
+		tfAttributeNameWO string
+	}{
+		{platformApplicationAttributeNamePlatformCredential, "platform_credential", "platform_credential_wo"},
+		{platformApplicationAttributeNamePlatformPrincipal, "platform_principal", "platform_principal_wo"},
+	} {
+		v, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath(secret.tfAttributeNameWO))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return diags
+		}
+
+		// If the write-only ("_wo"-suffix) variant isn't set, it's null in the state and so the lookup
+		// comes back as an empty string. When this happens, fall back to the "regular" version of the attribute.
+		if v == "" {
+			v = d.Get(secret.tfAttributeName).(string)
+		} else {
+			attributes[secret.apiAttributeName] = v
+		}
+	}
+
+	return diags
 }
 
 func isChangeSha256Removal(oldRaw, newRaw any) bool {
