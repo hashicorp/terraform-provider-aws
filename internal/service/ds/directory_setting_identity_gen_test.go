@@ -25,7 +25,6 @@ func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_directory_service_directory_setting.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -44,8 +43,7 @@ func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					"domain": config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectorySettingExists(ctx, t, resourceName),
@@ -67,8 +65,7 @@ func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					"domain": config.StringVariable(domain),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", names.AttrName),
@@ -82,8 +79,7 @@ func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					"domain": config.StringVariable(domain),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -102,8 +98,7 @@ func TestAccDSDirectorySetting_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
+					"domain": config.StringVariable(domain),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -124,7 +119,6 @@ func TestAccDSDirectorySetting_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_directory_service_directory_setting.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -143,9 +137,8 @@ func TestAccDSDirectorySetting_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"domain": config.StringVariable(domain),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -164,9 +157,8 @@ func TestAccDSDirectorySetting_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"domain": config.StringVariable(domain),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "directory_id", names.AttrName),
@@ -180,9 +172,8 @@ func TestAccDSDirectorySetting_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"domain": config.StringVariable(domain),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -201,9 +192,8 @@ func TestAccDSDirectorySetting_Identity_regionOverride(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectorySetting/region_override/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"domain":        config.StringVariable(domain),
-					"region":        config.StringVariable(acctest.AlternateRegion()),
+					"domain": config.StringVariable(domain),
+					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,

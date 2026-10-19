@@ -38,6 +38,7 @@ import (
 // @IdentityAttribute("directory_id")
 // @IdentityAttribute("name")
 // @ImportIDHandler("directorySettingsImportID")
+// @Testing(generator=false)
 // @Testing(preCheck="acctest.PreCheckDirectoryService")
 // @Testing(domainTfVar="domain")
 // @Testing(hasNoPreExistingResource=true)
