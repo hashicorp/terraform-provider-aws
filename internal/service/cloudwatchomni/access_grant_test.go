@@ -467,7 +467,7 @@ func testAccAccessGrant_validation(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ExpectError: regexache.MustCompile(`signal_types and row_scope_group must be specified together`),
+				ExpectError: regexache.MustCompile(`These attributes must be configured together`),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessGrant/validation_action_name/"),

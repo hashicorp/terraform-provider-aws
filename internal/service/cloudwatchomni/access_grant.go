@@ -215,6 +215,12 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 								listvalidator.SizeAtMost(10),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.RequiredTogetherChildren(
+										path.MatchRelative().AtParent().AtAnyListIndex().AtName("row_scope_group"),
+										path.MatchRelative().AtParent().AtAnyListIndex().AtName("signal_types"),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									"resource_arns": schema.ListAttribute{
 										CustomType:  fwtypes.ListOfStringType,
@@ -295,46 +301,6 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 		},
-	}
-}
-
-func (r *accessGrantResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	var data accessGrantResourceModel
-	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	scopedActions, d := data.ScopedActions.ToSlice(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, d)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	for i, scopedAction := range scopedActions {
-		if scopedAction.Resources.IsUnknown() {
-			continue
-		}
-
-		resources, d := scopedAction.Resources.ToSlice(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, d)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		for j, scope := range resources {
-			if scope.SignalTypes.IsUnknown() || scope.RowScopeGroups.IsUnknown() {
-				continue
-			}
-
-			if hasSignalTypes, hasRowScopeGroups := !scope.SignalTypes.IsNull(), scope.RowScopeGroups.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0; hasSignalTypes != hasRowScopeGroups {
-				response.Diagnostics.AddAttributeError(
-					path.Root("scoped_action").AtListIndex(i).AtName("resource").AtListIndex(j),
-					"Invalid Attribute Combination",
-					"signal_types and row_scope_group must be specified together",
-				)
-			}
-		}
 	}
 }
 
