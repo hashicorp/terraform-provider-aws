@@ -53,10 +53,6 @@ resource "aws_cloudwatchomni_access_grant" "example" {
   scoped_action {
     actions = ["cloudwatch:GetRecords"]
 
-    context_conditions = {
-      channelNames = ["example"]
-    }
-
     resource {
       resource_type = "DataSet"
       signal_types  = ["LOGS"]
@@ -104,7 +100,6 @@ At least one of `principal_id` or `principal_attribute` must be specified.
 ### `scoped_action` Block
 
 * `actions` - (Required) 1-50 actions this group applies to, each in `vendor-code:Action` form, for example `cloudwatch:GetRecords`. Wildcards are not permitted.
-* `context_conditions` - (Optional) Map of up to 10 context condition keys to allowed values, for fine-grained access control on these actions.
 * `resource` - (Optional) Resource scope constraining these actions to specific resources. Up to 10 blocks. [See below](#resource-block).
 
 ### `resource` Block

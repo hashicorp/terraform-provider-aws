@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -200,13 +199,14 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 								),
 							},
 						},
-						"context_conditions": schema.MapAttribute{
-							CustomType: fwtypes.MapOfListOfStringType,
-							Optional:   true,
-							Validators: []validator.Map{
-								mapvalidator.SizeAtMost(10),
-							},
-						},
+						// ContextConditions are not currently working server-side.
+						// "context_conditions": schema.MapAttribute{
+						// 	CustomType: fwtypes.MapOfListOfStringType,
+						// 	Optional:   true,
+						// 	Validators: []validator.Map{
+						// 		mapvalidator.SizeAtMost(10),
+						// 	},
+						// },
 					},
 					Blocks: map[string]schema.Block{
 						"resource": schema.ListNestedBlock{
@@ -540,60 +540,9 @@ type accessGrantPrincipalAttributeModel struct {
 }
 
 type scopedActionsModel struct {
-	Actions           fwtypes.ListOfString                                `tfsdk:"actions"`
-	ContextConditions fwtypes.MapOfListOfString                           `tfsdk:"context_conditions"`
-	Resources         fwtypes.ListNestedObjectValueOf[resourceScopeModel] `tfsdk:"resource"`
-}
-
-// scopedActionsAutoFlexModel has the fields of scopedActionsModel but not its
-// Flatten method, so AutoFlex can convert the fields it supports.
-type scopedActionsAutoFlexModel scopedActionsModel
-
-var _ fwflex.Flattener = &scopedActionsModel{}
-
-// Flatten converts ContextConditions, which AutoFlex can expand but not flatten.
-func (m *scopedActionsModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	var apiObject awstypes.ScopedActions
-	switch v := v.(type) {
-	case awstypes.ScopedActions:
-		apiObject = v
-	case *awstypes.ScopedActions:
-		if v != nil {
-			apiObject = *v
-		}
-	default:
-		diags.AddError("Unexpected type", fmt.Sprintf("flattening %T into scoped actions", v))
-		return diags
-	}
-
-	// Unset collections are returned empty rather than absent; treat them as absent.
-	if len(apiObject.Resources) == 0 {
-		apiObject.Resources = nil
-	}
-
-	var data scopedActionsAutoFlexModel
-	diags.Append(fwflex.Flatten(ctx, apiObject, &data, fwflex.WithIgnoredFieldNamesAppend("ContextConditions"))...)
-	if diags.HasError() {
-		return diags
-	}
-	*m = scopedActionsModel(data)
-
-	if len(apiObject.ContextConditions) == 0 {
-		m.ContextConditions = fwtypes.NewMapValueOfNull[fwtypes.ListOfString](ctx)
-		return diags
-	}
-
-	elements := make(map[string]attr.Value, len(apiObject.ContextConditions))
-	for k, v := range apiObject.ContextConditions {
-		elements[k] = fwflex.FlattenFrameworkStringValueListOfString(ctx, v)
-	}
-	contextConditions, d := fwtypes.NewMapValueOf[fwtypes.ListOfString](ctx, elements)
-	diags.Append(d...)
-	m.ContextConditions = contextConditions
-
-	return diags
+	Actions fwtypes.ListOfString `tfsdk:"actions"`
+	// ContextConditions fwtypes.MapOfListOfString                           `tfsdk:"context_conditions"`
+	Resources fwtypes.ListNestedObjectValueOf[resourceScopeModel] `tfsdk:"resource"`
 }
 
 type resourceScopeModel struct {
