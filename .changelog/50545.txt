@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sns_platform_application: Add `platform_credential_wo`, `platform_credential_wo_version`, `platform_principal_wo`, and `platform_principal_wo_version` arguments
+```
