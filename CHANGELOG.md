@@ -5,6 +5,7 @@ FEATURES:
 * **New List Resource:** `aws_cloudwatchomni_access_profile` ([#50471](https://github.com/hashicorp/terraform-provider-aws/issues/50471))
 * **New List Resource:** `aws_cloudwatchomni_view` ([#50428](https://github.com/hashicorp/terraform-provider-aws/issues/50428))
 * **New List Resource:** `aws_directoryservicedata_group` ([#50221](https://github.com/hashicorp/terraform-provider-aws/issues/50221))
+* **New Resource:** `aws_bedrock_enforced_guardrail_configuration` ([#47408](https://github.com/hashicorp/terraform-provider-aws/issues/47408))
 * **New Resource:** `aws_cloudwatchomni_access_profile` ([#50471](https://github.com/hashicorp/terraform-provider-aws/issues/50471))
 * **New Resource:** `aws_cloudwatchomni_view` ([#50428](https://github.com/hashicorp/terraform-provider-aws/issues/50428))
 * **New Resource:** `aws_directoryservicedata_group` ([#50221](https://github.com/hashicorp/terraform-provider-aws/issues/50221))
@@ -12,6 +13,7 @@ FEATURES:
 BUG FIXES:
 
 * resource/aws_prometheus_scraper: Fix update failure on scrapers with a CloudWatch destination by omitting unchanged `destination` from update requests ([#50463](https://github.com/hashicorp/terraform-provider-aws/issues/50463))
+* resource/aws_secretsmanager_secret_version: Fix read and delete errors when the version is no longer current and its KMS key has been disabled or deleted, such as after the secret moved to a new key. Terraform keeps the value from state and shows a warning ([#50369](https://github.com/hashicorp/terraform-provider-aws/issues/50369))
 
 ## 6.69.1 (October 15, 2026)
 
