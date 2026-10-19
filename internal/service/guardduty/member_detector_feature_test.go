@@ -8,10 +8,15 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -40,12 +45,14 @@ func testAccMemberDetectorFeature_basic(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListSizeExact(0)),
+				},
 			},
 			{
 				Config: testAccMemberDetectorFeatureConfig_basic("RDS_LOGIN_EVENTS", "DISABLED", accountID),
@@ -56,12 +63,14 @@ func testAccMemberDetectorFeature_basic(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DISABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListSizeExact(0)),
+				},
 			},
 		},
 	})
@@ -87,16 +96,25 @@ func testAccMemberDetectorFeature_additionalConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.1.status", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.1.name", "ECS_FARGATE_AGENT_MANAGEMENT"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.2.status", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.2.name", "EC2_AGENT_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RUNTIME_MONITORING"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationEksAddonManagement),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationEc2AgentManagement),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationEcsFargateAgentManagement),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -126,13 +144,15 @@ func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk(t *testing
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "RDS_DATA_RISK"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccMemberDetectorFeatureConfig_additionalConfiguration_rdsDataRisk(accountID, "DISABLED"),
@@ -143,13 +163,15 @@ func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk(t *testing
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "RDS_DATA_RISK"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccMemberDetectorFeatureConfig_basic("RDS_LOGIN_EVENTS", "ENABLED", accountID),
@@ -160,11 +182,10 @@ func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk(t *testing
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListSizeExact(0)),
+				},
 			},
 		},
 	})
