@@ -200,10 +200,10 @@ The `cloudwatch_log_options` blocks supports the following arguments:
 
 * `bgp_log_enabled` - (Optional) Whether to enable the BGP logging feature. The default is `false`.
 * `bgp_log_group_arn` - (Optional) ARN of the CloudWatch log group to send BGP logs to.
-* `bgp_log_output_format` - (Optional) Set BGP log format. Default format is json. Possible values are: `json` and `text`. The default is `json`.
+* `bgp_log_output_format` - (Optional) Set BGP log format. Default format is JSON. Possible values are: `json` and `text`. The default is `json`.
 * `log_enabled` - (Optional) Whether to enable the VPN tunnel logging feature. The default is `false`.
 * `log_group_arn` - (Optional) ARN of the CloudWatch log group to send logs to.
-* `log_output_format` - (Optional) Set log format. Default format is json. Possible values are: `json` and `text`. The default is `json`.
+* `log_output_format` - (Optional) Set log format. Default format is JSON. Possible values are: `json` and `text`. The default is `json`.
 
 ## Attribute Reference
 
@@ -221,14 +221,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `transit_gateway_attachment_id` - When associated with an EC2 Transit Gateway (`transit_gateway_id` argument), the attachment ID. See also the [`aws_ec2_tag` resource](/docs/providers/aws/r/ec2_tag.html) for tagging the EC2 Transit Gateway VPN Attachment.
 * `tunnel1_address` - Public IP address of the first VPN tunnel.
-* `tunnel1_bgp_asn` - Bgp asn number of the first VPN tunnel.
-* `tunnel1_bgp_holdtime` - Bgp holdtime of the first VPN tunnel.
+* `tunnel1_bgp_asn` - BGP ASN number of the first VPN tunnel.
+* `tunnel1_bgp_holdtime` - BGP holdtime of the first VPN tunnel.
 * `tunnel1_cgw_inside_address` - RFC 6890 link-local address of the first VPN tunnel (Customer Gateway Side).
 * `tunnel1_preshared_key` - Preshared key of the first VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel1_vgw_inside_address` - RFC 6890 link-local address of the first VPN tunnel (VPN Gateway Side).
 * `tunnel2_address` - Public IP address of the second VPN tunnel.
-* `tunnel2_bgp_asn` - Bgp asn number of the second VPN tunnel.
-* `tunnel2_bgp_holdtime` - Bgp holdtime of the second VPN tunnel.
+* `tunnel2_bgp_asn` - BGP ASN number of the second VPN tunnel.
+* `tunnel2_bgp_holdtime` - BGP holdtime of the second VPN tunnel.
 * `tunnel2_cgw_inside_address` - RFC 6890 link-local address of the second VPN tunnel (Customer Gateway Side).
 * `tunnel2_preshared_key` - Preshared key of the second VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel2_vgw_inside_address` - RFC 6890 link-local address of the second VPN tunnel (VPN Gateway Side).

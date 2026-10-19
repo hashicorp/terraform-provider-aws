@@ -30,29 +30,29 @@ resource "aws_memorydb_parameter_group" "example" {
 
 The following arguments are required:
 
-* `family` - (Required, Forces new resource) The engine version that the parameter group can be used with.
+* `family` - (Required, Forces new resource) Engine version that the parameter group can be used with.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `description` - (Optional, Forces new resource) Description for the parameter group. Defaults to `"Managed by Terraform"`.
 * `name` - (Optional, Forces new resource) Name of the parameter group. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `description` - (Optional, Forces new resource) Description for the parameter group. Defaults to `"Managed by Terraform"`.
 * `parameter` - (Optional) Set of MemoryDB parameters to apply. Any parameters not specified will fall back to their family defaults. Detailed below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### parameter Configuration Block
+### `parameter` Block
 
-* `name` - (Required) The name of the parameter.
-* `value` - (Required) The value of the parameter.
+* `name` - (Required) Name of the parameter.
+* `value` - (Required) Value of the parameter.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the parameter group.
 * `id` - Same as `name`.
-* `arn` - The ARN of the parameter group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

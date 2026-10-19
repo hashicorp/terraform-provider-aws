@@ -284,7 +284,7 @@ The following arguments are optional:
 * `container_properties` - (Optional) Valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
 * `deregister_on_new_revision` - (Optional) When updating a job definition a new revision is created. This parameter determines if the previous version is `deregistered` (`INACTIVE`) or left  `ACTIVE`. Defaults to `true`.
 * `ecs_properties` - (Optional) Valid [ECS properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
-* `eks_properties` - (Optional) Valid [eks properties](#eks_properties-block). This parameter is only valid if the `type` parameter is `container`.
+* `eks_properties` - (Optional) Valid [EKS properties](#eks_properties-block). This parameter is only valid if the `type` parameter is `container`.
 * `node_properties` - (Optional) Valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
 * `parameters` - (Optional) Parameter substitution placeholders to set in the job definition.
 * `platform_capabilities` - (Optional) Platform capabilities required by the job definition. If no value is specified, it defaults to `EC2`. To run the job on Fargate resources, specify `FARGATE`.

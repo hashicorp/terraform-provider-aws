@@ -39,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IOT Thing Types using the name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Thing Types using the name. For example:
 
 ```terraform
 import {
@@ -48,7 +48,7 @@ import {
 }
 ```
 
-Using `terraform import`, import IOT Thing Types using the name. For example:
+Using `terraform import`, import IoT Thing Types using the name. For example:
 
 ```console
 % terraform import aws_iot_thing_type.example example

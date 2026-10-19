@@ -33,7 +33,7 @@ This resource supports the following arguments:
 
 * `virtual_mfa_device_name` - (Required) Name of the virtual MFA device. Use with path to uniquely identify a virtual MFA device.
 * `path` - (Optional) Path for the virtual MFA device.
-* `tags` - (Optional) Map of resource tags for the virtual mfa device. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of resource tags for the virtual MFA device. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 

@@ -38,27 +38,29 @@ resource "aws_memorydb_cluster" "example" {
 
 The following arguments are required:
 
-* `multi_region_cluster_name_suffix` - (Required, Forces new resource) A suffix to be added to the multi-region cluster name. An AWS generated prefix is automatically applied to the multi-region cluster name when it is created.
-* `node_type` - (Required) The node type to be used for the multi-region cluster.
+* `multi_region_cluster_name_suffix` - (Required, Forces new resource) Suffix to be added to the multi-region cluster name. An AWS generated prefix is automatically applied to the multi-region cluster name when it is created.
+* `node_type` - (Required) Node type to be used for the multi-region cluster.
 
 The following arguments are optional:
 
+* `description` - (Optional) Description for the multi-region cluster.
+* `engine` - (Optional) Name of the engine to be used for the multi-region cluster. Valid values are `redis` and `valkey`.
+* `engine_version` - (Optional) Version of the engine to be used for the multi-region cluster. Downgrades are not supported.
+* `multi_region_parameter_group_name` - (Optional) Name of the multi-region parameter group to be associated with the cluster.
+* `num_shards` - (Optional) Number of shards for the multi-region cluster.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional) description for the multi-region cluster.
-* `engine` - (Optional) The name of the engine to be used for the multi-region cluster. Valid values are `redis` and `valkey`.
-* `engine_version` - (Optional) The version of the engine to be used for the multi-region cluster. Downgrades are not supported.
-* `multi_region_parameter_group_name` - (Optional) The name of the multi-region parameter group to be associated with the cluster.
-* `num_shards` - (Optional) The number of shards for the multi-region cluster.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tls_enabled` - (Optional, Forces new resource) A flag to enable in-transit encryption on the cluster.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tls_enabled` - (Optional, Forces new resource) Whether to enable in-transit encryption on the cluster.
+* `update_strategy` - (Optional) Strategy to use for the multi-region cluster update. Valid values are `coordinated` and `uncoordinated`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the multi-region cluster.
-* `multi_region_cluster_name` - The name of the multi-region cluster.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the multi-region cluster.
+* `multi_region_cluster_name` - Name of the multi-region cluster.
+* `status` - Status of the multi-region cluster.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

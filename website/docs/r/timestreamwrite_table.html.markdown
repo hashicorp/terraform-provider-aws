@@ -87,7 +87,7 @@ The `s3_configuration` block supports the following arguments:
 
 * `bucket_name` - (Optional) Bucket name of the customer S3 bucket.
 * `encryption_option` - (Optional) Encryption option for the customer s3 location. Options are S3 server side encryption with an S3-managed key or KMS managed key. Valid values are `SSE_KMS` and `SSE_S3`.
-* `kms_key_id` - (Optional) KMS key arn for the customer s3 location when encrypting with a KMS managed key.
+* `kms_key_id` - (Optional) KMS key ARN for the customer s3 location when encrypting with a KMS managed key.
 * `object_key_prefix` - (Optional) Object key prefix for the customer S3 location.
 
 ### `retention_properties` Block

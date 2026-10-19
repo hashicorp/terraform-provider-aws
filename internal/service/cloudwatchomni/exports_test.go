@@ -5,7 +5,13 @@ package cloudwatchomni
 
 // Exports for use in tests only.
 var (
-	ResourceDomain = newDomainResource
+	ResourceAccessProfile = newAccessProfileResource
+	ResourceDomain        = newDomainResource
+	ResourceSpace         = newSpaceResource
+	ResourceView          = newViewResource
 
-	FindDomainByID = findDomainByID
+	FindAccessProfileByTwoPartKey = findAccessProfileByTwoPartKey
+	FindDomainByID                = findDomainByID
+	FindSpaceByID                 = findSpaceByID
+	FindViewByName                = findViewByName
 )

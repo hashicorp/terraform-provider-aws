@@ -37,37 +37,37 @@ resource "aws_msk_serverless_cluster" "example" {
 
 This resource supports the following arguments:
 
+* `client_authentication` - (Required) Client authentication information for the serverless cluster. See [`client_authentication` Block](#client_authentication-block) below.
+* `cluster_name` - (Required) Name of the serverless cluster.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `client_authentication` - (Required) Specifies client authentication information for the serverless cluster. See below.
-* `cluster_name` - (Required) The name of the serverless cluster.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc_config` - (Required) VPC configuration information. See below.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_config` - (Required) VPC configuration information. See [`vpc_config` Block](#vpc_config-block) below.
 
-### client_authentication Argument Reference
+### `client_authentication` Block
 
-* `sasl` - (Required) Details for client authentication using SASL. See below.
+* `sasl` - (Required) Details for client authentication using SASL. See [`sasl` Block](#sasl-block) below.
 
-### sasl Argument Reference
+### `sasl` Block
 
-* `iam` - (Required) Details for client authentication using IAM. See below.
+* `iam` - (Required) Details for client authentication using IAM. See [`iam` Block](#iam-block) below.
 
-### iam Argument Reference
+### `iam` Block
 
 * `enabled` - (Required) Whether SASL/IAM authentication is enabled or not.
 
-### vpc_config Argument Reference
+### `vpc_config` Block
 
-* `security_group_ids` - (Optional) Specifies up to five security groups that control inbound and outbound traffic for the serverless cluster.
-* `subnet_ids` - (Required) A list of subnets in at least two different Availability Zones that host your client applications.
+* `security_group_ids` - (Optional) Up to five security groups that control inbound and outbound traffic for the serverless cluster.
+* `subnet_ids` - (Required) List of subnets in at least two different Availability Zones that host your client applications.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the serverless cluster.
+* `arn` - ARN of the serverless cluster.
 * `bootstrap_brokers_sasl_iam` - One or more DNS names (or IP addresses) and SASL IAM port pairs. For example, `boot-abcdefg.c2.kafka-serverless.eu-central-1.amazonaws.com:9098`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `cluster_uuid` - UUID of the serverless cluster, for use in IAM policies.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

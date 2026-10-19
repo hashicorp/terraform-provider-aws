@@ -404,9 +404,7 @@ func unprocessedAccountsError(apiObjects []awstypes.UnprocessedAccount) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := unprocessedAccountError(apiObject); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.AccountId), err))
-		}
+		errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.AccountId), unprocessedAccountError(apiObject)))
 	}
 
 	return errors.Join(errs...)
