@@ -8,10 +8,16 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,7 +27,6 @@ func testAccEnforcedGuardrailConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_enforced_guardrail_configuration.test"
-	guardrailResourceName := "aws_bedrock_guardrail.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -30,25 +35,38 @@ func testAccEnforcedGuardrailConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckEnforcedGuardrailConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnforcedGuardrailConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/EnforcedGuardrailConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnforcedGuardrailConfigurationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "config_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "guardrail_arn", guardrailResourceName, "guardrail_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "guardrail_version"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated_by"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "ACCOUNT"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("config_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("guardraila_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("guardrail_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("guardrail_version"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model_enforcement"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrOwner), tfknownvalue.StringExact(awstypes.ConfigurationOwnerAccount)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("selective_content_guarding"), knownvalue.ListSizeExact(0)),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigDirectory: config.StaticDirectory("testdata/EnforcedGuardrailConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "config_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "config_id",
 			},
 		},
 	})
@@ -66,74 +84,23 @@ func testAccEnforcedGuardrailConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckEnforcedGuardrailConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnforcedGuardrailConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/EnforcedGuardrailConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnforcedGuardrailConfigurationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceEnforcedGuardrailConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
-			},
-		},
-	})
-}
-
-func testAccEnforcedGuardrailConfiguration_selectiveContentGuarding(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrock_enforced_guardrail_configuration.test"
-
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnforcedGuardrailConfigurationDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEnforcedGuardrailConfigurationConfig_selectiveContentGuarding(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnforcedGuardrailConfigurationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "selective_content_guarding.0.messages", "COMPREHENSIVE"),
-					resource.TestCheckResourceAttr(resourceName, "selective_content_guarding.0.system", "COMPREHENSIVE"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccEnforcedGuardrailConfiguration_modelEnforcement(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_bedrock_enforced_guardrail_configuration.test"
-
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnforcedGuardrailConfigurationDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEnforcedGuardrailConfigurationConfig_modelEnforcement(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnforcedGuardrailConfigurationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "model_enforcement.0.included_models.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "model_enforcement.0.included_models.0", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "model_enforcement.0.excluded_models.#", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -151,30 +118,59 @@ func testAccEnforcedGuardrailConfiguration_update(t *testing.T) {
 		CheckDestroy:             testAccCheckEnforcedGuardrailConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnforcedGuardrailConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/EnforcedGuardrailConfiguration/model_enforcement/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnforcedGuardrailConfigurationExists(ctx, t, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model_enforcement"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("selective_content_guarding"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"included_models": knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.StringExact("ALL"),
+						}),
+						"excluded_models": knownvalue.ListSizeExact(0),
+					})})),
+				},
 			},
 			{
-				Config: testAccEnforcedGuardrailConfigurationConfig_selectiveContentGuarding(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/EnforcedGuardrailConfiguration/model_enforcement/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "config_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "config_id",
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/EnforcedGuardrailConfiguration/selective_content_guarding/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnforcedGuardrailConfigurationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "selective_content_guarding.0.messages", "COMPREHENSIVE"),
-					resource.TestCheckResourceAttr(resourceName, "selective_content_guarding.0.system", "COMPREHENSIVE"),
 				),
-			},
-			{
-				Config: testAccEnforcedGuardrailConfigurationConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnforcedGuardrailConfigurationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "selective_content_guarding.#", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model_enforcement"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("selective_content_guarding"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"messages": tfknownvalue.StringExact(awstypes.SelectiveGuardingModeComprehensive),
+						"system":   tfknownvalue.StringExact(awstypes.SelectiveGuardingModeSelective),
+					})})),
+				},
 			},
 		},
 	})
@@ -182,14 +178,14 @@ func testAccEnforcedGuardrailConfiguration_update(t *testing.T) {
 
 func testAccCheckEnforcedGuardrailConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
-		_, err := tfbedrock.FindEnforcedGuardrailConfiguration(ctx, conn)
+		_, err := tfbedrock.FindEnforcedGuardrailConfigurationByID(ctx, conn, rs.Primary.Attributes["config_id"])
 
 		return err
 	}
@@ -203,7 +199,7 @@ func testAccCheckEnforcedGuardrailConfigurationDestroy(ctx context.Context, t *t
 				continue
 			}
 
-			_, err := tfbedrock.FindEnforcedGuardrailConfiguration(ctx, conn)
+			_, err := tfbedrock.FindEnforcedGuardrailConfigurationByID(ctx, conn, rs.Primary.Attributes["config_id"])
 
 			if retry.NotFound(err) {
 				continue
@@ -213,68 +209,9 @@ func testAccCheckEnforcedGuardrailConfigurationDestroy(ctx context.Context, t *t
 				return err
 			}
 
-			return fmt.Errorf("Bedrock Enforced Guardrail Configuration %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Bedrock Enforced Guardrail Configuration %s still exists", rs.Primary.Attributes["config_id"])
 		}
 
 		return nil
 	}
-}
-
-func testAccEnforcedGuardrailConfigurationConfig_base(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrock_guardrail" "test" {
-  name                      = %[1]q
-  blocked_input_messaging   = "Blocked input"
-  blocked_outputs_messaging = "Blocked output"
-  description               = "Test guardrail for enforced guardrail configuration"
-
-  word_policy_config {
-    words_config {
-      text = "deny"
-    }
-  }
-}
-
-resource "aws_bedrock_guardrail_version" "test" {
-  guardrail_arn = aws_bedrock_guardrail.test.guardrail_arn
-  description   = "Test guardrail version"
-}
-`, rName)
-}
-
-func testAccEnforcedGuardrailConfigurationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccEnforcedGuardrailConfigurationConfig_base(rName), `
-resource "aws_bedrock_enforced_guardrail_configuration" "test" {
-  guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
-  guardrail_version    = aws_bedrock_guardrail_version.test.version
-}
-`)
-}
-
-func testAccEnforcedGuardrailConfigurationConfig_selectiveContentGuarding(rName string) string {
-	return acctest.ConfigCompose(testAccEnforcedGuardrailConfigurationConfig_base(rName), `
-resource "aws_bedrock_enforced_guardrail_configuration" "test" {
-  guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
-  guardrail_version    = aws_bedrock_guardrail_version.test.version
-
-  selective_content_guarding {
-    messages = "COMPREHENSIVE"
-    system   = "COMPREHENSIVE"
-  }
-}
-`)
-}
-
-func testAccEnforcedGuardrailConfigurationConfig_modelEnforcement(rName string) string {
-	return acctest.ConfigCompose(testAccEnforcedGuardrailConfigurationConfig_base(rName), `
-resource "aws_bedrock_enforced_guardrail_configuration" "test" {
-  guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
-  guardrail_version    = aws_bedrock_guardrail_version.test.version
-
-  model_enforcement {
-    included_models = ["ALL"]
-    excluded_models = []
-  }
-}
-`)
 }

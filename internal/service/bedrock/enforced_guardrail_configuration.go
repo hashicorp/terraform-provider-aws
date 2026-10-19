@@ -5,14 +5,14 @@ package bedrock
 
 import (
 	"context"
+	"fmt"
+	"iter"
 
-	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -25,14 +25,17 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bedrock_enforced_guardrail_configuration", name="Enforced Guardrail Configuration")
-// @SingletonIdentity(identityDuplicateAttributes="id")
+// @IdentityAttribute("config_id")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttribute="config_id")
+// @Testing(serialize=true)
 func newEnforcedGuardrailConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &enforcedGuardrailConfigurationResource{}, nil
 }
@@ -45,48 +48,23 @@ type enforcedGuardrailConfigurationResource struct {
 func (r *enforcedGuardrailConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
-			"config_id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"guardrail_identifier": schema.StringAttribute{
-				Required: true,
-			},
-			"guardrail_version": schema.StringAttribute{
-				Required: true,
-			},
+			"config_id": framework.IDAttribute(),
 			"guardrail_arn": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
 			"guardrail_id": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrCreatedAt: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"created_by": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			"updated_by": schema.StringAttribute{
-				Computed: true,
+			"guardrail_version": schema.StringAttribute{
+				Required: true,
 			},
 			names.AttrOwner: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ConfigurationOwner](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -98,14 +76,12 @@ func (r *enforcedGuardrailConfigurationResource) Schema(ctx context.Context, req
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"excluded_models": schema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringType,
-							Required:    true,
-							ElementType: types.StringType,
+							CustomType: fwtypes.ListOfStringType,
+							Required:   true,
 						},
 						"included_models": schema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringType,
-							Required:    true,
-							ElementType: types.StringType,
+							CustomType: fwtypes.ListOfStringType,
+							Required:   true,
 						},
 					},
 				},
@@ -141,22 +117,21 @@ func (r *enforcedGuardrailConfigurationResource) Create(ctx context.Context, req
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	// Set values for unknowns.
-	data.ID = types.StringValue(r.Meta().Region(ctx))
-
-	r.putEnforcedGuardrailConfiguration(ctx, conn, &data, &response.Diagnostics)
+	configID, diags := r.putEnforcedGuardrailConfiguration(ctx, conn, &data)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Read back the full configuration to populate computed attributes.
-	output, err := findEnforcedGuardrailConfiguration(ctx, conn)
+	id := aws.ToString(configID)
+	output, err := findEnforcedGuardrailConfigurationByID(ctx, conn, id)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	r.flattenOutput(ctx, output, &data, &response.Diagnostics)
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -173,7 +148,8 @@ func (r *enforcedGuardrailConfigurationResource) Read(ctx context.Context, reque
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	output, err := findEnforcedGuardrailConfiguration(ctx, conn)
+	id := fwflex.StringValueFromFramework(ctx, data.ConfigID)
+	output, err := findEnforcedGuardrailConfigurationByID(ctx, conn, id)
 
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -182,11 +158,11 @@ func (r *enforcedGuardrailConfigurationResource) Read(ctx context.Context, reque
 	}
 
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	r.flattenOutput(ctx, output, &data, &response.Diagnostics)
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -203,19 +179,21 @@ func (r *enforcedGuardrailConfigurationResource) Update(ctx context.Context, req
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	r.putEnforcedGuardrailConfiguration(ctx, conn, &data, &response.Diagnostics)
+	id := fwflex.StringValueFromFramework(ctx, data.ConfigID)
+	_, diags := r.putEnforcedGuardrailConfiguration(ctx, conn, &data)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Read back the full configuration to populate computed attributes.
-	output, err := findEnforcedGuardrailConfiguration(ctx, conn)
+	output, err := findEnforcedGuardrailConfigurationByID(ctx, conn, id)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	r.flattenOutput(ctx, output, &data, &response.Diagnostics)
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -232,8 +210,9 @@ func (r *enforcedGuardrailConfigurationResource) Delete(ctx context.Context, req
 
 	conn := r.Meta().BedrockClient(ctx)
 
+	id := fwflex.StringValueFromFramework(ctx, data.ConfigID)
 	input := bedrock.DeleteEnforcedGuardrailConfigurationInput{
-		ConfigId: data.ConfigID.ValueStringPointer(),
+		ConfigId: aws.String(id),
 	}
 
 	_, err := conn.DeleteEnforcedGuardrailConfiguration(ctx, &input)
@@ -243,82 +222,88 @@ func (r *enforcedGuardrailConfigurationResource) Delete(ctx context.Context, req
 	}
 
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 }
 
-func (r *enforcedGuardrailConfigurationResource) putEnforcedGuardrailConfiguration(ctx context.Context, conn *bedrock.Client, data *enforcedGuardrailConfigurationResourceModel, diags *diag.Diagnostics) {
+func (r *enforcedGuardrailConfigurationResource) flatten(ctx context.Context, cfg *awstypes.AccountEnforcedGuardrailOutputConfiguration, data *enforcedGuardrailConfigurationResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, cfg, data)...)
+	return diags
+}
+
+func (r *enforcedGuardrailConfigurationResource) putEnforcedGuardrailConfiguration(ctx context.Context, conn *bedrock.Client, data *enforcedGuardrailConfigurationResourceModel) (*string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	var inferenceConfig awstypes.AccountEnforcedGuardrailInferenceInputConfiguration
-	smerr.AddEnrich(ctx, diags, fwflex.Expand(ctx, data, &inferenceConfig))
+	diags.Append(fwflex.Expand(ctx, data, &inferenceConfig)...)
 	if diags.HasError() {
-		return
+		return nil, diags
 	}
 
 	input := bedrock.PutEnforcedGuardrailConfigurationInput{
 		GuardrailInferenceConfig: &inferenceConfig,
 	}
-
 	// Pass configId on update.
-	if !data.ConfigID.IsNull() && !data.ConfigID.IsUnknown() {
-		input.ConfigId = data.ConfigID.ValueStringPointer()
+	if configID := fwflex.StringValueFromFramework(ctx, data.ConfigID); configID != "" {
+		input.ConfigId = aws.String(configID)
+	}
+	output, err := conn.PutEnforcedGuardrailConfiguration(ctx, &input)
+	if err != nil {
+		smerr.AddError(ctx, &diags, err)
+		return nil, diags
 	}
 
-	_, err := conn.PutEnforcedGuardrailConfiguration(ctx, &input)
-	if err != nil {
-		smerr.AddError(ctx, diags, err, smerr.ID, data.ID.String())
-	}
+	return output.ConfigId, diags
 }
 
-func (r *enforcedGuardrailConfigurationResource) flattenOutput(ctx context.Context, output *awstypes.AccountEnforcedGuardrailOutputConfiguration, data *enforcedGuardrailConfigurationResourceModel, diags *diag.Diagnostics) {
-	smerr.AddEnrich(ctx, diags, fwflex.Flatten(ctx, output, data))
-	if diags.HasError() {
-		return
-	}
-
-	// Populate guardrail_identifier from guardrail_arn on read so that import works correctly.
-	if data.GuardrailIdentifier.IsNull() || data.GuardrailIdentifier.ValueString() == "" {
-		data.GuardrailIdentifier = types.StringPointerValue(output.GuardrailArn)
-	}
+func findEnforcedGuardrailConfigurationByID(ctx context.Context, conn *bedrock.Client, id string) (*awstypes.AccountEnforcedGuardrailOutputConfiguration, error) {
+	var input bedrock.ListEnforcedGuardrailsConfigurationInput
+	return findEnforcedGuardrailConfiguration(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.AccountEnforcedGuardrailOutputConfiguration) bool {
+		return aws.ToString(v.ConfigId) == id
+	}))
 }
 
-func findEnforcedGuardrailConfiguration(ctx context.Context, conn *bedrock.Client) (*awstypes.AccountEnforcedGuardrailOutputConfiguration, error) {
-	input := bedrock.ListEnforcedGuardrailsConfigurationInput{}
-
-	output, err := conn.ListEnforcedGuardrailsConfiguration(ctx, &input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{
-			LastError: err,
-		})
-	}
+func findEnforcedGuardrailConfiguration(ctx context.Context, conn *bedrock.Client, input *bedrock.ListEnforcedGuardrailsConfigurationInput, optFns ...tfslices.FinderOptionsFunc[awstypes.AccountEnforcedGuardrailOutputConfiguration]) (*awstypes.AccountEnforcedGuardrailOutputConfiguration, error) {
+	output, err := findEnforcedGuardrailConfigurations(ctx, conn, input, optFns...)
 
 	if err != nil {
-		return nil, smarterr.NewError(err)
+		return nil, err
 	}
 
-	if output == nil || len(output.GuardrailsConfig) == 0 {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
-	}
+	return tfresource.AssertSingleValueResult(output)
+}
 
-	return &output.GuardrailsConfig[0], nil
+func findEnforcedGuardrailConfigurations(ctx context.Context, conn *bedrock.Client, input *bedrock.ListEnforcedGuardrailsConfigurationInput, optFns ...tfslices.FinderOptionsFunc[awstypes.AccountEnforcedGuardrailOutputConfiguration]) ([]awstypes.AccountEnforcedGuardrailOutputConfiguration, error) {
+	return tfslices.CollectAndConcatWithError(listEnforcedGuardrailConfigurationPages(ctx, conn, input), optFns...)
+}
+
+func listEnforcedGuardrailConfigurationPages(ctx context.Context, conn *bedrock.Client, input *bedrock.ListEnforcedGuardrailsConfigurationInput, optFns ...func(*bedrock.Options)) iter.Seq2[[]awstypes.AccountEnforcedGuardrailOutputConfiguration, error] {
+	return func(yield func([]awstypes.AccountEnforcedGuardrailOutputConfiguration, error) bool) {
+		pages := bedrock.NewListEnforcedGuardrailsConfigurationPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing Bedrock Enforced Guardrail Configurations: %w", err))
+				return
+			}
+
+			if !yield(page.GuardrailsConfig, nil) {
+				return
+			}
+		}
+	}
 }
 
 type enforcedGuardrailConfigurationResourceModel struct {
 	framework.WithRegionModel
-	ID                       types.String                                                   `tfsdk:"id"`
 	ConfigID                 types.String                                                   `tfsdk:"config_id"`
-	CreatedAt                timetypes.RFC3339                                              `tfsdk:"created_at"`
-	CreatedBy                types.String                                                   `tfsdk:"created_by"`
-	GuardrailArn             types.String                                                   `tfsdk:"guardrail_arn"`
-	GuardrailId              types.String                                                   `tfsdk:"guardrail_id"`
-	GuardrailIdentifier      types.String                                                   `tfsdk:"guardrail_identifier"`
+	GuardrailARN             types.String                                                   `tfsdk:"guardrail_arn"`
+	GuardrailID              types.String                                                   `tfsdk:"guardrail_id"`
 	GuardrailVersion         types.String                                                   `tfsdk:"guardrail_version"`
 	ModelEnforcement         fwtypes.ListNestedObjectValueOf[modelEnforcementModel]         `tfsdk:"model_enforcement"`
 	Owner                    fwtypes.StringEnum[awstypes.ConfigurationOwner]                `tfsdk:"owner"`
 	SelectiveContentGuarding fwtypes.ListNestedObjectValueOf[selectiveContentGuardingModel] `tfsdk:"selective_content_guarding"`
-	UpdatedAt                timetypes.RFC3339                                              `tfsdk:"updated_at"`
-	UpdatedBy                types.String                                                   `tfsdk:"updated_by"`
 }
 
 type modelEnforcementModel struct {

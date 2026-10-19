@@ -38,8 +38,8 @@ resource "aws_bedrock_guardrail_version" "example" {
 }
 
 resource "aws_bedrock_enforced_guardrail_configuration" "example" {
-  guardrail_identifier = aws_bedrock_guardrail.example.guardrail_arn
-  guardrail_version    = aws_bedrock_guardrail_version.example.version
+  guardrail_arn     = aws_bedrock_guardrail.example.guardrail_arn
+  guardrail_version = aws_bedrock_guardrail_version.example.version
 }
 ```
 
@@ -65,8 +65,8 @@ resource "aws_bedrock_guardrail_version" "example" {
 }
 
 resource "aws_bedrock_enforced_guardrail_configuration" "example" {
-  guardrail_identifier = aws_bedrock_guardrail.example.guardrail_arn
-  guardrail_version    = aws_bedrock_guardrail_version.example.version
+  guardrail_arn     = aws_bedrock_guardrail.example.guardrail_arn
+  guardrail_version = aws_bedrock_guardrail_version.example.version
 
   selective_content_guarding {
     messages = "COMPREHENSIVE"
@@ -97,8 +97,8 @@ resource "aws_bedrock_guardrail_version" "example" {
 }
 
 resource "aws_bedrock_enforced_guardrail_configuration" "example" {
-  guardrail_identifier = aws_bedrock_guardrail.example.guardrail_arn
-  guardrail_version    = aws_bedrock_guardrail_version.example.version
+  guardrail_arn     = aws_bedrock_guardrail.example.guardrail_arn
+  guardrail_version = aws_bedrock_guardrail_version.example.version
 
   model_enforcement {
     included_models = ["ALL"]
@@ -111,7 +111,7 @@ resource "aws_bedrock_enforced_guardrail_configuration" "example" {
 
 The following arguments are required:
 
-* `guardrail_identifier` - (Required) Identifier for the guardrail, can be the guardrail ID or the guardrail ARN.
+* `guardrail_arn` - (Required) Guardrail ARN.
 * `guardrail_version` - (Required) Numerical guardrail version. Must be a published version number (e.g., `1`, `2`). `DRAFT` is not supported.
 
 The following arguments are optional:
@@ -135,14 +135,8 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `config_id` - Unique ID for the account enforced configuration.
-* `created_at` - Timestamp when the configuration was created.
-* `created_by` - ARN of the role used to create the configuration.
-* `guardrail_arn` - ARN of the guardrail.
 * `guardrail_id` - Unique ID of the guardrail.
-* `id` - AWS Region.
 * `owner` - Configuration owner type. Value: `ACCOUNT`.
-* `updated_at` - Timestamp when the configuration was last updated.
-* `updated_by` - ARN of the role used to update the configuration.
 
 ## Import
 
@@ -152,7 +146,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_bedrock_enforced_guardrail_configuration.example
   identity = {
-    region = "us-east-1"
+    config_id = "TODO"
   }
 }
 
@@ -163,22 +157,26 @@ resource "aws_bedrock_enforced_guardrail_configuration" "example" {
 
 ### Identity Schema
 
+#### Required
+
+* `config_id` (String) Configuration ID.
+
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Enforced Guardrail Configuration using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Enforced Guardrail Configuration using `config_id`. For example:
 
 ```terraform
 import {
   to = aws_bedrock_enforced_guardrail_configuration.example
-  id = "us-east-1"
+  id = "TODO"
 }
 ```
 
-Using `terraform import`, import Bedrock Enforced Guardrail Configuration using the `id`. For example:
+Using `terraform import`, import Bedrock Enforced Guardrail Configuration using `config_id`. For example:
 
 ```console
-% terraform import aws_bedrock_enforced_guardrail_configuration.example us-east-1
+% terraform import aws_bedrock_enforced_guardrail_configuration.example TODO
 ```

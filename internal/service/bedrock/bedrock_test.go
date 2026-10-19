@@ -38,12 +38,10 @@ func TestAccBedrock_serial(t *testing.T) {
 			"Identity":                              testAccBedrockCustomModel_identitySerial,
 		},
 		"EnforcedGuardrailConfiguration": {
-			acctest.CtBasic:            testAccEnforcedGuardrailConfiguration_basic,
-			acctest.CtDisappears:       testAccEnforcedGuardrailConfiguration_disappears,
-			"modelEnforcement":         testAccEnforcedGuardrailConfiguration_modelEnforcement,
-			"selectiveContentGuarding": testAccEnforcedGuardrailConfiguration_selectiveContentGuarding,
-			"update":                   testAccEnforcedGuardrailConfiguration_update,
-			"Identity":                 testAccBedrockEnforcedGuardrailConfiguration_identitySerial,
+			acctest.CtBasic:      testAccEnforcedGuardrailConfiguration_basic,
+			acctest.CtDisappears: testAccEnforcedGuardrailConfiguration_disappears,
+			"update":             testAccEnforcedGuardrailConfiguration_update,
+			"Identity":           testAccBedrockEnforcedGuardrailConfiguration_identitySerial,
 		},
 		"ModelInvocationLoggingConfiguration": {
 			acctest.CtBasic:      testAccModelInvocationLoggingConfiguration_basic,

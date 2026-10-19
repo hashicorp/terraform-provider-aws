@@ -1,6 +1,13 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_bedrock_enforced_guardrail_configuration" "test" {
+  region = var.region
+
+  guardrail_arn     = aws_bedrock_guardrail.test.guardrail_arn
+  guardrail_version = aws_bedrock_guardrail_version.test.version
+}
+
 resource "aws_bedrock_guardrail" "test" {
   region = var.region
 
@@ -22,14 +29,6 @@ resource "aws_bedrock_guardrail_version" "test" {
   guardrail_arn = aws_bedrock_guardrail.test.guardrail_arn
   description   = "Test guardrail version"
 }
-
-resource "aws_bedrock_enforced_guardrail_configuration" "test" {
-  region = var.region
-
-  guardrail_identifier = aws_bedrock_guardrail.test.guardrail_arn
-  guardrail_version    = aws_bedrock_guardrail_version.test.version
-}
-
 variable "rName" {
   description = "Name for resource"
   type        = string

@@ -16,7 +16,7 @@ var (
 	ResourceFoundationModelAgreement            = newFoundationModelAgreementResource
 
 	FindCustomModelByID                     = findCustomModelByID
-	FindEnforcedGuardrailConfiguration      = findEnforcedGuardrailConfiguration
+	FindEnforcedGuardrailConfigurationByID  = findEnforcedGuardrailConfigurationByID
 	FindEvaluationJobByARN                  = findEvaluationJobByARN
 	FindGuardrailByTwoPartKey               = findGuardrailByTwoPartKey
 	FindModelCustomizationJobByID           = findModelCustomizationJobByID
