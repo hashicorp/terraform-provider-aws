@@ -151,7 +151,17 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VersionStages = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.PutSecretValue(ctx, input)
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func(ctx context.Context) (*secretsmanager.PutSecretValueOutput, error) {
+			return conn.PutSecretValue(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if isKMSKeyCreatingError(err) {
+				return true, err
+			}
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting Secrets Manager Secret (%s) value: %s", secretID, err)
@@ -476,7 +486,17 @@ func findSecretVersionEntryByTwoPartKey(ctx context.Context, conn *secretsmanage
 }
 
 func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
-	output, err := conn.GetSecretValue(ctx, input)
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func(ctx context.Context) (*secretsmanager.GetSecretValueOutput, error) {
+			return conn.GetSecretValue(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if isKMSKeyCreatingError(err) {
+				return true, err
+			}
+			return false, err
+		},
+	)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
 		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
@@ -683,4 +703,11 @@ func secretVersionForceNewCustomDiffInner(ctx context.Context, diff sdkv2.Resour
 	}
 
 	return nil
+}
+
+// KMS is eventually consistent: https://docs.aws.amazon.com/kms/latest/developerguide/accessing-kms.html#programming-eventual-consistency
+func isKMSKeyCreatingError(err error) bool {
+	return errs.IsAErrorMessageContains[*types.PreconditionNotMetException](err, "is creating") ||
+		errs.IsAErrorMessageContains[*types.EncryptionFailure](err, "is creating") ||
+		errs.IsAErrorMessageContains[*types.DecryptionFailure](err, "is creating")
 }
