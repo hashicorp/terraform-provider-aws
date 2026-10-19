@@ -116,16 +116,16 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `model_enforcement` - (Optional) Model-specific information for the enforced guardrail configuration. If not present, the configuration is enforced on all models. See [`model_enforcement`](#model_enforcement) below.
+* `model_enforcement` - (Optional) Model-specific information for the enforced guardrail configuration. If not present, the configuration is enforced on all models. See [`model_enforcement` Block](#model_enforcement-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `selective_content_guarding` - (Optional) Selective content guarding controls for enforced guardrails. See [`selective_content_guarding`](#selective_content_guarding) below.
+* `selective_content_guarding` - (Optional) Selective content guarding controls for enforced guardrails. See [`selective_content_guarding` Block](#selective_content_guarding-block) below.
 
-### `model_enforcement`
+### `model_enforcement` Block
 
 * `excluded_models` - (Required) List of models to exclude from enforcement of the guardrail.
 * `included_models` - (Required) List of models to enforce the guardrail on. Use `ALL` to enforce on all models.
 
-### `selective_content_guarding`
+### `selective_content_guarding` Block
 
 * `messages` - (Optional) Selective guarding mode for user messages. Valid values: `SELECTIVE`, `COMPREHENSIVE`.
 * `system` - (Optional) Selective guarding mode for system prompts. Valid values: `SELECTIVE`, `COMPREHENSIVE`.
