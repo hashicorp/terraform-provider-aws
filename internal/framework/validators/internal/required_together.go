@@ -86,7 +86,7 @@ func (v requiredTogetherValidator) validate(ctx context.Context, request validat
 			case mpVal.IsUnknown():
 				// If value is unknown, it may be null or a value, so we cannot
 				// know if the validator should succeed or not. Collect the path
-				// path so we use it to skip the validation later and continue to
+				// so we use it to skip the validation later and continue to
 				// collect all path matching diagnostics.
 				unknownPaths.Append(mp)
 				continue
