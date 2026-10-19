@@ -76,7 +76,7 @@ The `primary_container` and `container` block both support:
 ### Image Config
 
 * `repository_access_mode` - (Required) Whether the model container is in Amazon ECR or a private Docker registry accessible from your VPC. Allowed values are: `Platform` and `Vpc`.
-* `repository_auth_config` - (Optional) Specifies an authentication configuration for the private docker registry where your model image is hosted. Specify a value for this property only if you specified Vpc as the value for the RepositoryAccessMode field, and the private Docker registry where the model image is hosted requires authentication. see [Repository Auth Config](#repository-auth-config).
+* `repository_auth_config` - (Optional) Specifies an authentication configuration for the private docker registry where your model image is hosted. Specify a value for this property only if you specified `Vpc` as the value for the RepositoryAccessMode field, and the private Docker registry where the model image is hosted requires authentication. see [Repository Auth Config](#repository-auth-config).
 
 #### Repository Auth Config
 
@@ -94,11 +94,11 @@ The `primary_container` and `container` block both support:
 #### S3 Data Source
 
 * `compression_type` - (Required) How the model data is prepared. Allowed values are: `None` and `Gzip`.
-* `model_access_config` - (Optional) Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the [`model_access_config` configuration block]. See [Model Access Config](#model-access-config).
+* `model_access_config` - (Optional) Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the [`model_access_config` configuration block](#model-access-config). See [Model Access Config](#model-access-config).
 * `s3_data_type` - (Required) Type of model data to deploy. Allowed values are: `S3Object` and `S3Prefix`.
 * `s3_uri` - (Required) The S3 path of model data to deploy.
 
-##### Model Access Config
+#### Model Access Config
 
 * `accept_eula` - (Required) Specifies agreement to the model end-user license agreement (EULA). The value must be set to `true` in order to accept the EULA that this model requires. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.
 

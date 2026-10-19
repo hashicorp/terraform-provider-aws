@@ -176,7 +176,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `experiment_options` - (Optional) Experiment options for the experiment template. See [experiment_options](#experiment_options) below for more details!
+* `experiment_options` - (Optional) Experiment options for the experiment template. See [experiment_options](#experiment_options-block) below for more details!
 * `experiment_report_configuration` - (Optional) Configuration for [experiment reporting](https://docs.aws.amazon.com/fis/latest/userguide/experiment-report-configuration.html). See below.
 * `log_configuration` - (Optional) Configuration for experiment logging. See below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -268,7 +268,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 #### `cloudwatch_dashboard` Block
 
-* `dashboard_arn` - (Required) ARN of the CloudWatch dashboard.
+* `dashboard_arn` - (Optional) ARN of the CloudWatch dashboard.
 
 #### `outputs` Block
 

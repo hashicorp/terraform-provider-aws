@@ -17,6 +17,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_bedrock_evaluation_job", sweepEvaluationJobs)
+	awsv2.Register("aws_bedrock_model_invocation_job", sweepModelInvocationJobs)
 }
 
 func sweepEvaluationJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -36,6 +37,33 @@ func sweepEvaluationJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.
 			// StopEvaluationJob only supports jobs that are In-Progress.
 			// All other status values are terminal states.
 			if v.Status == awstypes.EvaluationJobStatusInProgress {
+				sweepResources = append(sweepResources, framework.NewSweepResource(newEvaluationJobResource, client,
+					framework.NewAttribute("job_arn", aws.ToString(v.JobArn))),
+				)
+			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepModelInvocationJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := &bedrock.ListModelInvocationJobsInput{}
+	conn := client.BedrockClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := bedrock.NewListModelInvocationJobsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.InvocationJobSummaries {
+			// StopModelInvocationJob only supports jobs that are In-Progress.
+			// All other status values are terminal states.
+			if v.Status == awstypes.ModelInvocationJobStatusInProgress {
 				sweepResources = append(sweepResources, framework.NewSweepResource(newEvaluationJobResource, client,
 					framework.NewAttribute("job_arn", aws.ToString(v.JobArn))),
 				)

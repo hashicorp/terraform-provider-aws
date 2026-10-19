@@ -930,6 +930,48 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 				}
 			}
 
+		case reflect.Int32:
+			switch tTo := tTo.(type) {
+			case basetypes.MapTypable:
+				//
+				// map[string]int32 -> types.Map(OfInt32).
+				//
+				if vFrom.IsNil() {
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapNull")
+					to, d := tTo.ValueFromMap(ctx, types.MapNull(types.Int32Type))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+
+				from := vFrom.Interface().(map[string]int32)
+				tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapValue", map[string]any{
+					logAttrKeySourceSize: len(from),
+				})
+				elements := make(map[string]attr.Value, len(from))
+				for k, v := range from {
+					elements[k] = types.Int32Value(v)
+				}
+				map_, d := types.MapValue(types.Int32Type, elements)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				to, d := tTo.ValueFromMap(ctx, map_)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+
 		case reflect.String:
 			switch tTo := tTo.(type) {
 			case basetypes.MapTypable:
@@ -972,6 +1014,81 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 				return diags
 			}
 
+		case reflect.Slice:
+			switch tTo := tTo.(type) {
+			case basetypes.MapTypable:
+				//
+				// map[string][]string -> types.Map(OfList[types.String]).
+				//
+				if vFrom.IsNil() {
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapNull")
+					to, d := tTo.ValueFromMap(ctx, types.MapNull(types.ListType{ElemType: types.StringType}))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+
+				switch tMapElem.Elem().Kind() {
+				case reflect.String:
+					from := vFrom.Interface().(map[string][]string)
+
+					ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceSize, len(from))
+
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map")
+
+					if xTo, ok := tTo.(attr.TypeWithElementType); ok {
+						targetEltType := xTo.ElementType().ValueType(ctx)
+
+						elements := make(map[string]attr.Value, len(from))
+						for k, v := range from {
+							innerCtx := setLogFields(ctx, map[string]any{
+								logAttrKeySourcePath: sourcePath.AtMapKey(k).String(),
+								logAttrKeySourceType: fullTypeName(reflect.TypeFor[[]string]()),
+								logAttrKeySourceSize: len(v),
+								logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
+								logAttrKeyTargetType: fullTypeName(reflect.TypeOf(targetEltType)),
+							})
+
+							innerElements := make([]attr.Value, len(v))
+							for ik, iv := range v {
+								innerElements[ik] = types.StringValue(iv)
+							}
+
+							tflog.SubsystemTrace(innerCtx, subsystemName, "Flattening with NewListValueOf")
+
+							innerList, d := fwtypes.NewListValueOf[types.String](innerCtx, innerElements)
+							diags.Append(d...)
+							if diags.HasError() {
+								tflog.SubsystemError(innerCtx, subsystemName, "Error flattening with NewListValueOf")
+								return diags
+							}
+
+							elements[k] = innerList
+						}
+						map_, d := fwtypes.NewMapValueOf[fwtypes.ListValueOf[types.String]](ctx, elements)
+						diags.Append(d...)
+						if diags.HasError() {
+							tflog.SubsystemError(ctx, subsystemName, "Error flattening outer map")
+							return diags
+						}
+
+						to, d := tTo.ValueFromMap(ctx, map_.MapValue)
+						diags.Append(d...)
+						if diags.HasError() {
+							tflog.SubsystemError(ctx, subsystemName, "Error populating map")
+							return diags
+						}
+
+						vTo.Set(reflect.ValueOf(to))
+						return diags
+					}
+				}
+			}
+
 		case reflect.Map:
 			switch tTo := tTo.(type) {
 			case basetypes.MapTypable:
@@ -993,86 +1110,111 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 				switch tMapElem.Elem().Kind() {
 				case reflect.String:
 					from := vFrom.Interface().(map[string]map[string]string)
-					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map", map[string]any{
-						logAttrKeySourceSize: len(from),
-					})
 
-					elements := make(map[string]attr.Value, len(from))
-					for k, v := range from {
-						innerElements := make(map[string]attr.Value, len(v))
-						for ik, iv := range v {
-							innerElements[ik] = types.StringValue(iv)
+					ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceSize, len(from))
+
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map")
+
+					if xTo, ok := tTo.(attr.TypeWithElementType); ok {
+						targetEltType := xTo.ElementType().ValueType(ctx)
+
+						elements := make(map[string]attr.Value, len(from))
+						for k, v := range from {
+							innerCtx := setLogFields(ctx, map[string]any{
+								logAttrKeySourcePath: sourcePath.AtMapKey(k).String(),
+								logAttrKeySourceType: fullTypeName(reflect.TypeFor[map[string]string]()),
+								logAttrKeySourceSize: len(v),
+								logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
+								logAttrKeyTargetType: fullTypeName(reflect.TypeOf(targetEltType)),
+							})
+
+							innerElements := make(map[string]attr.Value, len(v))
+							for ik, iv := range v {
+								innerElements[ik] = types.StringValue(iv)
+							}
+
+							tflog.SubsystemTrace(innerCtx, subsystemName, "Flattening with NewMapValueOf")
+
+							innerMap, d := fwtypes.NewMapValueOf[types.String](innerCtx, innerElements)
+							diags.Append(d...)
+							if diags.HasError() {
+								tflog.SubsystemError(innerCtx, subsystemName, "Error flattening with NewMapValueOf")
+								return diags
+							}
+
+							elements[k] = innerMap
 						}
-						tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NewMapValueOf", map[string]any{
-							logAttrKeySourcePath: sourcePath.AtMapKey(k).String(),
-							logAttrKeySourceType: fullTypeName(reflect.TypeFor[map[string]string]()),
-							logAttrKeySourceSize: len(v),
-							logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
-							logAttrKeyTargetType: fullTypeName(reflect.TypeFor[map[string]attr.Value]()),
-						})
-						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
+						map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
 						diags.Append(d...)
 						if diags.HasError() {
+							tflog.SubsystemError(ctx, subsystemName, "Error flattening outer map")
 							return diags
 						}
 
-						elements[k] = innerMap
-					}
-					map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
-					diags.Append(d...)
-					if diags.HasError() {
+						to, d := tTo.ValueFromMap(ctx, map_.MapValue)
+						diags.Append(d...)
+						if diags.HasError() {
+							tflog.SubsystemError(ctx, subsystemName, "Error populating map")
+							return diags
+						}
+
+						vTo.Set(reflect.ValueOf(to))
 						return diags
 					}
-
-					to, d := tTo.ValueFromMap(ctx, map_.MapValue)
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
 
 				case reflect.Pointer:
 					from := vFrom.Interface().(map[string]map[string]*string)
-					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map", map[string]any{
-						logAttrKeySourceSize: len(from),
-					})
-					elements := make(map[string]attr.Value, len(from))
-					for k, v := range from {
-						innerElements := make(map[string]attr.Value, len(v))
-						for ik, iv := range v {
-							innerElements[ik] = types.StringValue(*iv)
+
+					ctx := tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceSize, len(from))
+
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map")
+
+					if xTo, ok := tTo.(attr.TypeWithElementType); ok {
+						targetEltType := xTo.ElementType().ValueType(ctx)
+
+						elements := make(map[string]attr.Value, len(from))
+						for k, v := range from {
+							innerCtx := setLogFields(ctx, map[string]any{
+								logAttrKeySourcePath: sourcePath.AtMapKey(k).String(),
+								logAttrKeySourceType: fullTypeName(reflect.TypeFor[map[string]*string]()),
+								logAttrKeySourceSize: len(v),
+								logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
+								logAttrKeyTargetType: fullTypeName(reflect.TypeOf(targetEltType)),
+							})
+
+							innerElements := make(map[string]attr.Value, len(v))
+							for ik, iv := range v {
+								innerElements[ik] = types.StringPointerValue(iv)
+							}
+
+							tflog.SubsystemTrace(innerCtx, subsystemName, "Flattening with NewMapValueOf")
+
+							innerMap, d := fwtypes.NewMapValueOf[types.String](innerCtx, innerElements)
+							diags.Append(d...)
+							if diags.HasError() {
+								tflog.SubsystemError(innerCtx, subsystemName, "Error flattening with NewMapValueOf")
+								return diags
+							}
+
+							elements[k] = innerMap
 						}
-						tflog.SubsystemTrace(ctx, subsystemName, "Flattening with NewMapValueOf", map[string]any{
-							logAttrKeySourcePath: sourcePath.AtMapKey(k).String(),
-							logAttrKeySourceType: fullTypeName(reflect.TypeFor[map[string]*string]()),
-							logAttrKeySourceSize: len(v),
-							logAttrKeyTargetPath: targetPath.AtMapKey(k).String(),
-							logAttrKeyTargetType: fullTypeName(reflect.TypeFor[map[string]attr.Value]()),
-						})
-						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
+						map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
 						diags.Append(d...)
 						if diags.HasError() {
+							tflog.SubsystemError(ctx, subsystemName, "Error flattening outer map")
 							return diags
 						}
 
-						elements[k] = innerMap
-					}
-					map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
-					diags.Append(d...)
-					if diags.HasError() {
+						to, d := tTo.ValueFromMap(ctx, map_.MapValue)
+						diags.Append(d...)
+						if diags.HasError() {
+							tflog.SubsystemError(ctx, subsystemName, "Error populating map")
+							return diags
+						}
+
+						vTo.Set(reflect.ValueOf(to))
 						return diags
 					}
-
-					to, d := tTo.ValueFromMap(ctx, map_.MapValue)
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
 				}
 			}
 
@@ -1084,6 +1226,48 @@ func flattenMap(ctx context.Context, flattener *autoFlattener, sourcePath path.P
 				//
 				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 					diags.Append(flattenStructMapToObjectList(ctx, flattener, sourcePath, vFrom, targetPath, tTo, vTo)...)
+					return diags
+				}
+
+			case reflect.Int32:
+				switch tTo := tTo.(type) {
+				case basetypes.MapTypable:
+					//
+					// map[string]int32 -> types.Map(OfInt32).
+					//
+					if vFrom.IsNil() {
+						tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapNull")
+						to, d := tTo.ValueFromMap(ctx, types.MapNull(types.Int32Type))
+						diags.Append(d...)
+						if diags.HasError() {
+							return diags
+						}
+
+						vTo.Set(reflect.ValueOf(to))
+						return diags
+					}
+
+					from := vFrom.Interface().(map[string]*int32)
+					tflog.SubsystemTrace(ctx, subsystemName, "Flattening with MapValue", map[string]any{
+						logAttrKeySourceSize: len(from),
+					})
+					elements := make(map[string]attr.Value, len(from))
+					for k, v := range from {
+						elements[k] = types.Int32PointerValue(v)
+					}
+					map_, d := types.MapValue(types.Int32Type, elements)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					to, d := tTo.ValueFromMap(ctx, map_)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
 					return diags
 				}
 

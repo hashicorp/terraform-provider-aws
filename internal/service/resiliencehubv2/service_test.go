@@ -446,7 +446,7 @@ func TestAccResilienceHubV2Service_regions(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Service/regions/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"regions":       config.SetVariable(acctest.ListOfStringVariables(acctest.Region(), acctest.AlternateRegion())...),
+					"regions":       acctest.SetOfStringsVariable(acctest.Region(), acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &svc),
@@ -467,7 +467,7 @@ func TestAccResilienceHubV2Service_regions(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Service/regions/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"regions":       config.SetVariable(acctest.ListOfStringVariables(acctest.Region(), acctest.AlternateRegion(), acctest.ThirdRegion())...),
+					"regions":       acctest.SetOfStringsVariable(acctest.Region(), acctest.AlternateRegion(), acctest.ThirdRegion()),
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &svc),

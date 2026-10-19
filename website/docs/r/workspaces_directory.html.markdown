@@ -197,6 +197,79 @@ resource "aws_workspaces_ip_group" "example" {
 }
 ```
 
+### VPC Endpoint Streaming
+
+```terraform
+resource "aws_workspaces_directory" "example" {
+  directory_id = aws_directory_service_directory.example.id
+
+  workspace_access_properties {
+    device_type_windows = "ALLOW"
+
+    access_endpoint_config {
+      access_endpoints {
+        access_endpoint_type = "STREAMING_WSP"
+        vpc_endpoint_id      = aws_vpc_endpoint.workspaces.id
+      }
+
+      internet_fallback_protocols = ["PCOIP"]
+    }
+  }
+}
+
+resource "aws_vpc_endpoint" "workspaces" {
+  vpc_id              = aws_vpc.example.id
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.highlander"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.example_a.id, aws_subnet.example_b.id]
+  security_group_ids  = [aws_security_group.workspaces_streaming.id]
+  private_dns_enabled = true
+}
+
+resource "aws_security_group" "workspaces_streaming" {
+  name   = "workspaces-streaming-endpoint"
+  vpc_id = aws_vpc.example.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "workspaces_streaming_tcp_443" {
+  security_group_id = aws_security_group.workspaces_streaming.id
+
+  cidr_ipv4   = aws_vpc.example.cidr_block
+  from_port   = 443
+  to_port     = 443
+  ip_protocol = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "workspaces_streaming_tcp_4195" {
+  security_group_id = aws_security_group.workspaces_streaming.id
+
+  cidr_ipv4   = aws_vpc.example.cidr_block
+  from_port   = 4195
+  to_port     = 4195
+  ip_protocol = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "workspaces_streaming_udp_443" {
+  security_group_id = aws_security_group.workspaces_streaming.id
+
+  cidr_ipv4   = aws_vpc.example.cidr_block
+  from_port   = 443
+  to_port     = 443
+  ip_protocol = "udp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "workspaces_streaming_udp_4195" {
+  security_group_id = aws_security_group.workspaces_streaming.id
+
+  cidr_ipv4   = aws_vpc.example.cidr_block
+  from_port   = 4195
+  to_port     = 4195
+  ip_protocol = "udp"
+}
+
+data "aws_region" "current" {}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -241,6 +314,7 @@ This resource supports the following arguments:
 
 ### workspace_access_properties
 
+* `access_endpoint_config` - (Optional) Configuration for accessing WorkSpaces through VPC endpoints instead of the public internet. Defined below.
 * `device_type_android` - (Optional) Indicates whether users can use Android devices to access their WorkSpaces.
 * `device_type_chromeos` - (Optional) Indicates whether users can use Chromebooks to access their WorkSpaces.
 * `device_type_ios` - (Optional) Indicates whether users can use iOS devices to access their WorkSpaces.
@@ -250,11 +324,21 @@ This resource supports the following arguments:
 * `device_type_windows` - (Optional) Indicates whether users can use Windows clients to access their WorkSpaces.
 * `device_type_zeroclient` - (Optional) Indicates whether users can use zero client devices to access their WorkSpaces.
 
+### access_endpoint_config
+
+* `access_endpoints` - (Required) Set of access endpoints used to control the network paths that users use to access their WorkSpaces. Defined below.
+* `internet_fallback_protocols` - (Optional) List of protocols that fall back to the public internet when streaming over a VPC endpoint is unavailable. Valid value is `PCOIP`.
+
+### access_endpoints
+
+* `access_endpoint_type` - (Required) Type of access endpoint. Valid value is `STREAMING_WSP`.
+* `vpc_endpoint_id` - (Required) Identifier of the VPC endpoint that the access endpoint uses.
+
 ### workspace_creation_properties
 
 -> **Note:** Once you specified `custom_security_group_id` or `default_ou`, there is no way to delete these attributes. If you cleanup them from the configuration, they still be present in state.
 
-* `custom_security_group_id` - (Optional) The identifier of your custom security group. Should relate to the same VPC, where workspaces reside in.
+* `custom_security_group_id` - (Optional) The identifier of your custom security group. Should relate to the same VPC, where WorkSpaces reside in.
 * `default_ou` - (Optional) The default organizational unit (OU) for your WorkSpace directories. Should conform `"OU=<value>,DC=<value>,...,DC=<value>"` pattern.
 * `enable_internet_access` - (Optional) Indicates whether internet access is enabled for your WorkSpaces.
 * `enable_maintenance_mode` - (Optional) Indicates whether maintenance mode is enabled for your WorkSpaces. Valid only if `workspace_type` is set to `PERSONAL`.
@@ -285,7 +369,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Workspaces directory using the directory ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkSpaces directory using the directory ID. For example:
 
 ```terraform
 import {
@@ -294,7 +378,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Workspaces directory using the directory ID. For example:
+Using `terraform import`, import WorkSpaces directory using the directory ID. For example:
 
 ```console
 % terraform import aws_workspaces_directory.main d-4444444444

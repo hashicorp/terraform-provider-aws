@@ -100,7 +100,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Data Exchange Event Action using the id. For example:
+Using `terraform import`, import Data Exchange Event Action using the ID. For example:
 
 ```console
 % terraform import aws_dataexchange_event_action.example example-event-action-id

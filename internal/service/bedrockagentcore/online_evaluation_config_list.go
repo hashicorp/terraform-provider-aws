@@ -38,14 +38,6 @@ type onlineEvaluationConfigListResource struct {
 func (l *onlineEvaluationConfigListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().BedrockAgentCoreClient(ctx)
 
-	var query listOnlineEvaluationConfigModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input bedrockagentcorecontrol.ListOnlineEvaluationConfigsInput
 		for item, err := range listOnlineEvaluationConfigs(ctx, conn, &input) {
@@ -94,10 +86,6 @@ func (l *onlineEvaluationConfigListResource) List(ctx context.Context, request l
 			}
 		}
 	}
-}
-
-type listOnlineEvaluationConfigModel struct {
-	framework.WithRegionModel
 }
 
 func listOnlineEvaluationConfigs(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListOnlineEvaluationConfigsInput) iter.Seq2[awstypes.OnlineEvaluationConfigSummary, error] {

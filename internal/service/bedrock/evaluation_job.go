@@ -47,6 +47,7 @@ import (
 // @Tags(identifierAttribute="job_arn")
 // @ArnIdentity("job_arn")
 // @Testing(preCheck="testAccPreCheckEvaluationJob")
+// @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(checkDestroyNoop=true)
 func newEvaluationJobResource(_ context.Context) (resource.ResourceWithConfigure, error) {

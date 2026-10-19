@@ -46,22 +46,22 @@ resource "aws_sesv2_configuration_set" "example" {
 
 This resource supports the following arguments:
 
+* `configuration_set_name` - (Required) Name of the configuration set.
+* `delivery_options` - (Optional) Object that defines the dedicated IP pool that is used to send emails that you send using the configuration set. See [`delivery_options` Block](#delivery_options-block) for details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `configuration_set_name` - (Required) The name of the configuration set.
-* `delivery_options` - (Optional) An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set. See [`delivery_options` Block](#delivery_options-block) for details.
-* `reputation_options` - (Optional) An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set. See [`reputation_options` Block](#reputation_options-block) for details.
-* `sending_options` - (Optional) An object that defines whether or not Amazon SES can send email that you send using the configuration set. See [`sending_options` Block](#sending_options-block) for details.
-* `suppression_options` - (Optional) An object that contains information about the suppression list preferences for your account. See [`suppression_options` Block](#suppression_options-block) for details.
-* `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tracking_options` - (Optional) An object that defines the open and click tracking options for emails that you send using the configuration set. See [`tracking_options` Block](#tracking_options-block) for details.
-* `vdm_options` - (Optional) An object that defines the VDM settings that apply to emails that you send using the configuration set. See [`vdm_options` Block](#vdm_options-block) for details.
+* `reputation_options` - (Optional) Object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set. See [`reputation_options` Block](#reputation_options-block) for details.
+* `sending_options` - (Optional) Object that defines whether or not Amazon SES can send email that you send using the configuration set. See [`sending_options` Block](#sending_options-block) for details.
+* `suppression_options` - (Optional) Object that contains information about the suppression list preferences for your account. See [`suppression_options` Block](#suppression_options-block) for details.
+* `tags` - (Optional) Map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tracking_options` - (Optional) Object that defines the open and click tracking options for emails that you send using the configuration set. See [`tracking_options` Block](#tracking_options-block) for details.
+* `vdm_options` - (Optional) Object that defines the VDM settings that apply to emails that you send using the configuration set. See [`vdm_options` Block](#vdm_options-block) for details.
 
 ### `delivery_options` Block
 
 The `delivery_options` configuration block supports the following arguments:
 
-* `max_delivery_seconds` - The maximum amount of time, in seconds, that Amazon SES API v2 will attempt delivery of email. If specified, the value must greater than or equal to 300 seconds (5 minutes) and less than or equal to 50400 seconds (840 minutes).
-* `sending_pool_name` - (Optional) The name of the dedicated IP pool to associate with the configuration set.
+* `max_delivery_seconds` - (Optional) Maximum amount of time, in seconds, that Amazon SES API v2 will attempt delivery of email. If specified, the value must be greater than or equal to 300 seconds (5 minutes) and less than or equal to 50400 seconds (840 minutes).
+* `sending_pool_name` - (Optional) Name of the dedicated IP pool to associate with the configuration set.
 * `tls_policy` - (Optional) Whether messages that use the configuration set are required to use TLS. Valid values: `REQUIRE`, `OPTIONAL`.
 
 ### `reputation_options` Block
@@ -80,41 +80,40 @@ The `sending_options` configuration block supports the following arguments:
 
 The `suppression_options` configuration block supports the following arguments:
 
-* `suppressed_reasons` - (Optional) A list that contains the reasons that email addresses are automatically added to the suppression list for your account. Valid values: `BOUNCE`, `COMPLAINT`.
+* `suppressed_reasons` - (Optional) List that contains the reasons that email addresses are automatically added to the suppression list for your account. Valid values: `BOUNCE`, `COMPLAINT`.
 
 ### `tracking_options` Block
 
 The `tracking_options` configuration block supports the following arguments:
 
-* `custom_redirect_domain` - (Required) The domain to use for tracking open and click events.
-* `https_policy`: The https policy to use for tracking open and click events. Valid values are `REQUIRE`, `REQUIRE_OPEN_ONLY` or `OPTIONAL`.
+* `custom_redirect_domain` - (Required) Domain to use for tracking open and click events.
+* `https_policy` - (Optional) HTTPS policy to use for tracking open and click events. Valid values are `REQUIRE`, `REQUIRE_OPEN_ONLY` or `OPTIONAL`.
 
 ### `vdm_options` Block
 
 The `vdm_options` configuration block supports the following arguments:
 
-* `dashboard_options` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Dashboard. See [`dashboard_options` Block](#dashboard_options-block) for details.
-* `guardian_options` - (Optional) Specifies additional settings for your VDM configuration as applicable to the Guardian. See [`guardian_options` Block](#guardian_options-block) for details.
+* `dashboard_options` - (Optional) Additional settings for your VDM configuration as applicable to the Dashboard. See [`dashboard_options` Block](#dashboard_options-block) for details.
+* `guardian_options` - (Optional) Additional settings for your VDM configuration as applicable to the Guardian. See [`guardian_options` Block](#guardian_options-block) for details.
 
 ### `dashboard_options` Block
 
 The `dashboard_options` configuration block supports the following arguments:
 
-* `engagement_metrics` - (Optional) Specifies the status of your VDM engagement metrics collection. Valid values: `ENABLED`, `DISABLED`.
+* `engagement_metrics` - (Optional) Status of your VDM engagement metrics collection. Valid values: `ENABLED`, `DISABLED`.
 
 ### `guardian_options` Block
 
 The `guardian_options` configuration block supports the following arguments:
 
-* `optimized_shared_delivery` - (Optional) Specifies the status of your VDM optimized shared delivery. Valid values: `ENABLED`, `DISABLED`.
+* `optimized_shared_delivery` - (Optional) Status of your VDM optimized shared delivery. Valid values: `ENABLED`, `DISABLED`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Configuration Set.
-* `reputation_options` - An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set.
-    * `last_fresh_start` - The date and time (in Unix time) when the reputation metrics were last given a fresh start. When your account is given a fresh start, your reputation metrics are calculated starting from the date of the fresh start.
+* `reputation_options.last_fresh_start` - Date and time (in Unix time) when the reputation metrics were last given a fresh start. When your account is given a fresh start, your reputation metrics are calculated starting from the date of the fresh start.
 
 ## Import
 

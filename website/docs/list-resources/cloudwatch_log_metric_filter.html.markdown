@@ -22,4 +22,5 @@ list "aws_cloudwatch_log_metric_filter" "example" {
 
 This list resource supports the following arguments:
 
+* `log_group_name` - (Required) Name of the log group.
 * `region` - (Optional) Region to query. Defaults to provider region.

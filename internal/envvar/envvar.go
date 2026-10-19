@@ -6,6 +6,7 @@ package envvar
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	testing "github.com/mitchellh/go-testing-interface"
 )
@@ -195,4 +196,21 @@ func SkipIfAllEmpty(t testing.T, names []string, usageMessage string) (string, s
 	}
 
 	return name, value
+}
+
+// SkipIfNotTrue verifies that an environment variable is set to a true value or skips the test.
+//
+// True values are those accepted by [strconv.ParseBool].
+func SkipIfNotTrue(t testing.T, name string, usageMessage string) {
+	t.Helper()
+
+	value := os.Getenv(name)
+
+	if v, _ := strconv.ParseBool(value); !v {
+		msg := fmt.Sprintf("skipping test; environment variable %s must be set to a true value.", name)
+		if usageMessage != "" {
+			msg += ". Usage: " + usageMessage
+		}
+		t.Skip(msg)
+	}
 }

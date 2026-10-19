@@ -35,14 +35,6 @@ type pipelineEndpointListResource struct {
 func (l *pipelineEndpointListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().OpenSearchIngestionClient(ctx)
 
-	var query listPipelineEndpointModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input osis.ListPipelineEndpointsInput
 		for item, err := range listPipelineEndpoints(ctx, conn, &input) {
@@ -72,10 +64,6 @@ func (l *pipelineEndpointListResource) List(ctx context.Context, request list.Li
 			}
 		}
 	}
-}
-
-type listPipelineEndpointModel struct {
-	framework.WithRegionModel
 }
 
 func listPipelineEndpoints(ctx context.Context, conn *osis.Client, input *osis.ListPipelineEndpointsInput) iter.Seq2[awstypes.PipelineEndpoint, error] {

@@ -30,12 +30,11 @@ import (
 
 // @SDKResource("aws_cloudwatch_event_endpoint", name="Global Endpoint")
 // @IdentityAttribute("name")
+// @Testing(name="Endpoint")
 // @Testing(idAttrDuplicates="name")
 // @Testing(preIdentityVersion="v6.53.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeEndpointOutput")
-// @Testing(altRegionProvider=true)
-// Alternate region not working
-// @Testing(identityTest=false)
+// @Testing(altRegionTfVars=true)
 func resourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,

@@ -65,7 +65,7 @@ The `rule` configuration block supports the following arguments:
 The `default_retention` configuration block supports the following arguments:
 
 * `days` - (Optional, Required if `years` is not specified) Number of days that you want to specify for the default retention period.
-* `mode` - (Required) Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: `COMPLIANCE`, `GOVERNANCE`.
+* `mode` - (Optional) Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: `COMPLIANCE`, `GOVERNANCE`.
 * `years` - (Optional, Required if `days` is not specified) Number of years that you want to specify for the default retention period.
 
 ## Attribute Reference

@@ -1655,7 +1655,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 			input := ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
-				UserData: &awstypes.BlobAttributeValue{
+				UserData: &awstypes.SecureBlobAttributeValue{
 					Value: v,
 				},
 			}
@@ -1675,7 +1675,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 			input := ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
-				UserData: &awstypes.BlobAttributeValue{
+				UserData: &awstypes.SecureBlobAttributeValue{
 					Value: v,
 				},
 			}

@@ -34,7 +34,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Account ID.
-* `arn` - ARN of the SecurityHub Hub created in the account.
+* `arn` - ARN of the Security Hub Hub created in the account.
 
 ## Import
 

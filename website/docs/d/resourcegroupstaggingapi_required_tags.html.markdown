@@ -28,7 +28,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `required_tags` - List of required tag configurations. See [`required_tags`](#required_tags) below.
+* `required_tags` - List of required tag configurations. See [`required_tags`](#required_tags-block) below.
 
 ### `required_tags` Block
 

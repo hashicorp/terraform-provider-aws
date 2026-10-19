@@ -55,7 +55,6 @@ resource "aws_bedrockagentcore_memory" "example" {
   event_expiry_duration     = 60
   encryption_key_arn        = aws_kms_key.example.arn
   memory_execution_role_arn = aws_iam_role.example.arn
-  client_token              = "unique-client-token"
 }
 ```
 
@@ -70,7 +69,7 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the memory.
 * `encryption_key_arn` - (Optional) ARN of the KMS key used to encrypt the memory. If not provided, AWS managed encryption is used.
-* `indexed_key` - (Optional) Metadata keys to index for filtering. Up to 10 entries. Changing this forces a new resource to be created. See [`indexed_key` Block](#indexed_key-block) below.
+* `indexed_key` - (Optional) Metadata keys to index for filtering. Up to 10 entries. Additional keys can be added in place; removing or changing an existing key forces a new resource to be created, because previously indexed keys cannot be removed. See [`indexed_key` Block](#indexed_key-block) below.
 * `memory_execution_role_arn` - (Optional) ARN of the IAM role that the memory service assumes to perform operations. Required when using custom memory strategies with model processing.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `stream_delivery_resources` - (Optional) Configuration for streaming memory record data to external resources. See [`stream_delivery_resources` Block](#stream_delivery_resources-block) below.
@@ -93,7 +92,7 @@ The `stream_delivery_resources` configuration block supports the following argum
 
 The `resource` configuration block supports the following arguments:
 
-* `kinesis` - (Optional) Kinesis Data Stream configuration. See [`kinesis` Block](#kinesis-block) below.
+* `kinesis` - (Required) Kinesis Data Stream configuration. See [`kinesis` Block](#kinesis-block) below.
 
 ### `kinesis` Block
 
@@ -150,7 +149,7 @@ resource "aws_bedrockagentcore_memory" "example" {
 
 #### Optional
 
-* `account_id` (String) Account ID where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import memories using `id`. For example:

@@ -3,7 +3,6 @@
 
 resource "aws_iam_policy_attachment" "test" {
   name       = var.rName
-  groups     = aws_iam_group.test[*].name
   roles      = aws_iam_role.test[*].name
   policy_arn = aws_iam_policy.test.arn
 }
@@ -26,11 +25,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
-}
-
-resource "aws_iam_group" "test" {
-  count = 2
-  name  = format("${var.rName}-%d", count.index + 1)
 }
 
 resource "aws_iam_role" "test" {

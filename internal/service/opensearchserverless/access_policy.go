@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -154,7 +155,7 @@ func (r *accessPolicyResource) Read(ctx context.Context, request resource.ReadRe
 	}
 
 	// Set attributes for import.
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -223,6 +224,10 @@ func (r *accessPolicyResource) Delete(ctx context.Context, request resource.Dele
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
+}
+
+func (r *accessPolicyResource) flatten(ctx context.Context, output *awstypes.AccessPolicyDetail, data *accessPolicyResourceModel) diag.Diagnostics {
+	return fwflex.Flatten(ctx, output, data)
 }
 
 type accessPolicyResourceModel struct {

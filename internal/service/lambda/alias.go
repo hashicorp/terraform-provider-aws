@@ -24,20 +24,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_alias", name="Alias")
+// @IdentityAttribute("function_name")
+// @IdentityAttribute("name")
+// @ImportIDHandler("aliasImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetAliasOutput")
+// @Testing(preIdentityVersion="v6.63.0")
+// @Testing(importStateIdFunc="testAccAliasImportStateIDFunc")
 func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
 		ReadWithoutTimeout:   resourceAliasRead,
 		UpdateWithoutTimeout: resourceAliasUpdate,
 		DeleteWithoutTimeout: resourceAliasDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceAliasImport,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Update: schema.DefaultTimeout(15 * time.Minute),
@@ -133,10 +136,18 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	aliasARN := aws.ToString(output.AliasArn)
 	d.SetId(aliasARN) // For import.
+
+	return append(diags, resourceAliasFlatten(ctx, meta.(*conns.AWSClient), d, output)...)
+}
+
+func resourceAliasFlatten(ctx context.Context, awsClient *conns.AWSClient, d *schema.ResourceData, output *lambda.GetAliasOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	aliasARN := aws.ToString(output.AliasArn)
 	d.Set(names.AttrARN, aliasARN)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("function_version", output.FunctionVersion)
-	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), aliasARN))
+	d.Set("invoke_arn", invokeARN(ctx, awsClient, aliasARN))
 	d.Set(names.AttrName, output.Name)
 	if err := d.Set("routing_config", flattenAliasRoutingConfiguration(output.RoutingConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting routing_config: %s", err)
@@ -191,20 +202,6 @@ func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
-}
-
-func resourceAliasImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "/")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", d.Id())
-	}
-
-	functionName := idParts[0]
-	alias := idParts[1]
-
-	d.Set("function_name", functionName)
-	d.Set(names.AttrName, alias)
-	return []*schema.ResourceData{d}, nil
 }
 
 func findAliasByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, aliasName string) (*lambda.GetAliasOutput, error) {
@@ -307,4 +304,24 @@ func suppressEquivalentFunctionNameOrARN(k, old, new string, d *schema.ResourceD
 	oldFunctionName, oldFunctionNameErr := getFunctionNameFromARN(old)
 	newFunctionName, newFunctionNameErr := getFunctionNameFromARN(new)
 	return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
+}
+
+var _ inttypes.SDKv2ImportID = aliasImportID{}
+
+type aliasImportID struct{}
+
+func (aliasImportID) Create(d *schema.ResourceData) string {
+	return d.Get("function_name").(string) + "/" + d.Get(names.AttrName).(string)
+}
+
+func (aliasImportID) Parse(id string) (string, map[string]any, error) {
+	idParts := strings.Split(id, "/")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return "", nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", id)
+	}
+
+	return id, map[string]any{
+		"function_name": idParts[0],
+		names.AttrName:  idParts[1],
+	}, nil
 }

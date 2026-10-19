@@ -48,6 +48,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `billing_view` - List of billing view objects with the following attributes:
     * `arn` - ARN of the billing view.
+    * `billing_view_type` - Type of the billing view.
     * `description` - Description of the billing view.
     * `name` - Name of the billing view.
     * `owner_account_id` - Account ID of the billing view owner.

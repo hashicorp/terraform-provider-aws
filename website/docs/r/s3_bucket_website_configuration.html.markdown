@@ -71,12 +71,12 @@ EOF
 This resource supports the following arguments:
 
 * `bucket` - (Required, Forces new resource) Name of the bucket.
-* `error_document` - (Optional, Conflicts with `redirect_all_requests_to`) Name of the error document for the website. [See below](#error_document).
+* `error_document` - (Optional, Conflicts with `redirect_all_requests_to`) Name of the error document for the website. [See below](#error_document-block).
 * `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
-* `index_document` - (Optional, Required if `redirect_all_requests_to` is not specified) Name of the index document for the website. [See below](#index_document).
-* `redirect_all_requests_to` - (Optional, Required if `index_document` is not specified) Redirect behavior for every request to this bucket's website endpoint. [See below](#redirect_all_requests_to). Conflicts with `error_document`, `index_document`, and `routing_rule`.
+* `index_document` - (Optional, Required if `redirect_all_requests_to` is not specified) Name of the index document for the website. [See below](#index_document-block).
+* `redirect_all_requests_to` - (Optional, Required if `index_document` is not specified) Redirect behavior for every request to this bucket's website endpoint. [See below](#redirect_all_requests_to-block). Conflicts with `error_document`, `index_document`, and `routing_rule`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `routing_rule` - (Optional, Conflicts with `redirect_all_requests_to` and `routing_rules`) List of rules that define when a redirect is applied and the redirect behavior. [See below](#routing_rule).
+* `routing_rule` - (Optional, Conflicts with `redirect_all_requests_to` and `routing_rules`) List of rules that define when a redirect is applied and the redirect behavior. [See below](#routing_rule-block).
 * `routing_rules` - (Optional, Conflicts with `routing_rule` and `redirect_all_requests_to`) JSON array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html) describing redirect behavior and when redirects are applied. Use this parameter when your routing rules contain empty String values (`""`) as seen in the [example above](#with-routing_rules-configured).
 
 ### `error_document` Block
@@ -102,8 +102,8 @@ The `redirect_all_requests_to` configuration block supports the following argume
 
 The `routing_rule` configuration block supports the following arguments:
 
-* `condition` - (Optional) Configuration block for describing a condition that must be met for the specified redirect to apply. [See below](#condition).
-* `redirect` - (Required) Configuration block for redirect information. [See below](#redirect).
+* `condition` - (Optional) Configuration block for describing a condition that must be met for the specified redirect to apply. [See below](#condition-block).
+* `redirect` - (Required) Configuration block for redirect information. [See below](#redirect-block).
 
 ### `condition` Block
 

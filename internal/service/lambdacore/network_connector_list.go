@@ -37,14 +37,6 @@ type networkConnectorListResource struct {
 func (l *networkConnectorListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().LambdaCoreClient(ctx)
 
-	var query listNetworkConnectorModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input lambdacore.ListNetworkConnectorsInput
 		for item, err := range listNetworkConnectors(ctx, conn, &input) {
@@ -91,10 +83,6 @@ func (l *networkConnectorListResource) List(ctx context.Context, request list.Li
 			}
 		}
 	}
-}
-
-type listNetworkConnectorModel struct {
-	framework.WithRegionModel
 }
 
 func listNetworkConnectors(ctx context.Context, conn *lambdacore.Client, input *lambdacore.ListNetworkConnectorsInput, optFns ...func(*lambdacore.Options)) iter.Seq2[awstypes.NetworkConnectorSummary, error] {

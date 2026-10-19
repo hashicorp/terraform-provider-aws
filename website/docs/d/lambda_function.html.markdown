@@ -143,22 +143,22 @@ This data source exports the following attributes in addition to the arguments a
 
 * `architectures` - Instruction set architecture for the Lambda function.
 * `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `qualified_arn`.
-* `capacity_provider_config` - Configuration for Lambda function's capacity provider. [See below](#capacity_provider_config).
+* `capacity_provider_config` - Configuration for Lambda function's capacity provider. See [`capacity_provider_config`](#capacity_provider_config-block) below.
 * `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `code_signing_config_arn` - ARN for a Code Signing Configuration.
-* `dead_letter_config` - Configuration for the function's dead letter queue. [See below](#dead_letter_config-attribute-reference).
+* `dead_letter_config` - Configuration for the function's dead letter queue. See [`dead_letter_config`](#dead_letter_config-block) below.
 * `description` - Description of what your Lambda Function does.
-* `durable_config` - Configuration for the function's durable settings. [See below](#durable_config-attribute-reference).
-* `environment` - Lambda environment's configuration settings. [See below](#environment-attribute-reference).
-* `ephemeral_storage` - Amount of ephemeral storage (`/tmp`) allocated for the Lambda Function. [See below](#ephemeral_storage-attribute-reference).
-* `file_system_config` - Connection settings for an Amazon EFS file system. [See below](#file_system_config-attribute-reference).
+* `durable_config` - Configuration for the function's durable settings. See [`durable_config`](#durable_config-block) below.
+* `environment` - Lambda environment's configuration settings. See [`environment`](#environment-block) below.
+* `ephemeral_storage` - Amount of ephemeral storage (`/tmp`) allocated for the Lambda Function. See [`ephemeral_storage`](#ephemeral_storage-block) below.
+* `file_system_config` - Connection settings for an Amazon EFS file system. See [`file_system_config`](#file_system_config-block) below.
 * `handler` - Function entrypoint in your code.
 * `image_uri` - URI of the container image.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway. **Note:** Starting with `v4.51.0` of the provider, this will not include the qualifier.
 * `kms_key_arn` - ARN for the KMS encryption key.
 * `last_modified` - Date this resource was last modified.
 * `layers` - List of Lambda Layer ARNs attached to your Lambda Function.
-* `logging_config` - Advanced logging settings. [See below](#logging_config-attribute-reference).
+* `logging_config` - Advanced logging settings. See [`logging_config`](#logging_config-block) below.
 * `memory_size` - Amount of memory in MB your Lambda Function can use at runtime.
 * `qualified_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `arn`.
 * `qualified_invoke_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN to be used for invoking Lambda Function from API Gateway. See also `invoke_arn`.
@@ -172,58 +172,62 @@ This data source exports the following attributes in addition to the arguments a
 * `source_code_size` - Size in bytes of the function .zip file.
 * `source_kms_key_arn` - ARN of the KMS key used to encrypt the function's `.zip` deployment package.
 * `tags` - Map of tags assigned to the Lambda Function.
+* `tenancy_config` - Tenancy settings of the function. See [`tenancy_config`](#tenancy_config-block) below.
 * `timeout` - Function execution time at which Lambda should terminate the function.
-* `tenancy_config` - Tenancy settings of the function. [See below](#tenancy_config-attribute-reference).
-* `tracing_config` - Tracing settings of the function. [See below](#tracing_config-attribute-reference).
+* `tracing_config` - Tracing settings of the function. See [`tracing_config`](#tracing_config-block) below.
 * `version` - Version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
-* `vpc_config` - VPC configuration associated with your Lambda function. [See below](#vpc_config-attribute-reference).
+* `vpc_config` - VPC configuration associated with your Lambda function. See [`vpc_config`](#vpc_config-block) below.
 
-### capacity_provider_config
+### `capacity_provider_config` Block
 
-* `lambda_managed_instances_capacity_provider_config` - Configuration block for Lambda Managed Instances Capacity Provider.
-    * `capacity_provider_arn` - ARN of the Capacity Provider.
-    * `execution_environment_memory_gib_per_vcpu` - Memory GiB per vCPU for the execution environment.
-    * `per_execution_environment_max_concurrency` - Maximum concurrency per execution environment.
+* `lambda_managed_instances_capacity_provider_config` - Configuration block for Lambda Managed Instances Capacity Provider. See [`lambda_managed_instances_capacity_provider_config`](#lambda_managed_instances_capacity_provider_config-block) below.
 
-### dead_letter_config
+### `lambda_managed_instances_capacity_provider_config` Block
+
+* `capacity_provider_arn` - ARN of the Capacity Provider.
+* `execution_environment_memory_gib_per_vcpu` - Memory GiB per vCPU for the execution environment.
+* `per_execution_environment_max_concurrency` - Maximum concurrency per execution environment.
+
+### `dead_letter_config` Block
 
 * `target_arn` - ARN of an SNS topic or SQS queue to notify when an invocation fails.
 
-### durable_config
+### `durable_config` Block
 
 * `execution_timeout` - Maximum execution time in seconds for the durable function.
 * `retention_period` - Number of days to retain the function's execution state.
 
-### environment
+### `environment` Block
 
 * `variables` - Map of environment variables that are accessible from the function code during execution.
 
-### ephemeral_storage
+### `ephemeral_storage` Block
 
 * `size` - Size of the Lambda function ephemeral storage (`/tmp`) in MB.
 
-### file_system_config
+### `file_system_config` Block
 
 * `arn` - ARN of the Amazon EFS Access Point that provides access to the file system.
 * `local_mount_path` - Path where the function can access the file system, starting with `/mnt/`.
 
-### logging_config
+### `logging_config` Block
 
 * `application_log_level` - Detail level of the logs your application sends to CloudWatch when using supported logging libraries.
 * `log_format` - Format for your function's logs. Valid values: `Text`, `JSON`.
 * `log_group` - CloudWatch log group your function sends logs to.
 * `system_log_level` - Detail level of the Lambda platform event logs sent to CloudWatch.
 
-### tenancy_config
+### `tenancy_config` Block
 
-* `tenant_isolation_mode` - (Required) Tenant Isolation Mode. Valid values: `PER_TENANT`.
+* `tenant_isolation_mode` - Tenant Isolation Mode. Valid values: `PER_TENANT`.
 
-### tracing_config
+### `tracing_config` Block
 
 * `mode` - Tracing mode. Valid values: `Active`, `PassThrough`.
 
-### vpc_config
+### `vpc_config` Block
 
+* `ipv6_allowed_for_dual_stack` - Whether IPv6 is allowed for dual-stack VPC.
 * `security_group_ids` - List of security group IDs associated with the Lambda function.
 * `subnet_ids` - List of subnet IDs associated with the Lambda function.
 * `vpc_id` - ID of the VPC.

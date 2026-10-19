@@ -11,7 +11,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
+	"github.com/google/go-cmp/cmp"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -3585,4 +3587,75 @@ resource "aws_pipes_pipe" "test" {
   }
 }
 `, rName))
+}
+
+// Verifies that an unset "server_root_ca_certificate" is expanded to a nil ServerRootCaCertificate on create.
+func TestExpandSourceSelfManagedKafkaParameters_serverRootCACertificate(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		serverRootCACertificate string
+		want                    *string
+	}{
+		"empty": {
+			serverRootCACertificate: "",
+			want:                    nil,
+		},
+		"non-empty": {
+			serverRootCACertificate: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-AbCdEf",             //lintignore:AWSAT003,AWSAT005
+			want:                    aws.String("arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-AbCdEf"), //lintignore:AWSAT003,AWSAT005
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			tfMap := map[string]any{
+				"server_root_ca_certificate": tc.serverRootCACertificate,
+				"topic_name":                 "test-topic",
+			}
+
+			got := tfpipes.ExpandSourceSelfManagedKafkaParameters(tfMap)
+
+			if diff := cmp.Diff(tc.want, got.ServerRootCaCertificate); diff != "" {
+				t.Errorf("unexpected ServerRootCaCertificate difference: %s", diff)
+			}
+		})
+	}
+}
+
+// Verifies that an unset "server_root_ca_certificate" is expanded to a nil ServerRootCaCertificate on update.
+func TestExpandUpdateSourceSelfManagedKafkaParameters_serverRootCACertificate(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		serverRootCACertificate string
+		want                    *string
+	}{
+		"empty": {
+			serverRootCACertificate: "",
+			want:                    nil,
+		},
+		"non-empty": {
+			serverRootCACertificate: "arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-AbCdEf",             //lintignore:AWSAT003,AWSAT005
+			want:                    aws.String("arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-AbCdEf"), //lintignore:AWSAT003,AWSAT005
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			tfMap := map[string]any{
+				"server_root_ca_certificate": tc.serverRootCACertificate,
+			}
+
+			got := tfpipes.ExpandUpdateSourceSelfManagedKafkaParameters(tfMap)
+
+			if diff := cmp.Diff(tc.want, got.ServerRootCaCertificate); diff != "" {
+				t.Errorf("unexpected ServerRootCaCertificate difference: %s", diff)
+			}
+		})
+	}
 }

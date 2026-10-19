@@ -1,10 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-provider "awsalternate" {
-  region = var.alt_region
-}
-
 provider "null" {}
 
 resource "aws_dynamodb_table_replica" "test" {
@@ -16,7 +12,8 @@ resource "aws_dynamodb_table_replica" "test" {
 }
 
 resource "aws_dynamodb_table" "test" {
-  provider         = "awsalternate"
+  region = var.secondary_region
+
   name             = var.rName
   hash_key         = "TestTableHashKey"
   billing_mode     = "PAY_PER_REQUEST"
@@ -51,8 +48,8 @@ variable "unknownTagKey" {
   nullable = false
 }
 
-variable "alt_region" {
-  description = "Region for provider awsalternate"
+variable "secondary_region" {
+  description = "Secondary region"
   type        = string
   nullable    = false
 }

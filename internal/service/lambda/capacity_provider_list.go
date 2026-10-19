@@ -32,15 +32,6 @@ type listResourceCapacityProvider struct {
 
 func (r *listResourceCapacityProvider) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := r.Meta().LambdaClient(ctx)
-	var query capacityProviderListModel
-
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		var input lambda.ListCapacityProvidersInput
@@ -85,10 +76,6 @@ func (r *listResourceCapacityProvider) List(ctx context.Context, request list.Li
 			}
 		}
 	}
-}
-
-type capacityProviderListModel struct {
-	framework.WithRegionModel
 }
 
 func listCapacityProviders(ctx context.Context, conn *lambda.Client, input *lambda.ListCapacityProvidersInput) iter.Seq2[awstypes.CapacityProvider, error] {

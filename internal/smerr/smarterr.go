@@ -5,9 +5,11 @@ package smerr
 
 import (
 	"context"
+	"iter"
 
 	"github.com/YakDriver/smarterr"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	sdkdiag "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -55,6 +57,28 @@ func AddEnrich(ctx context.Context, existing *fwdiag.Diagnostics, incoming fwdia
 // Deprecated: Use AddEnrich instead.
 func EnrichAppend(ctx context.Context, existing *fwdiag.Diagnostics, incoming fwdiag.Diagnostics, keyvals ...any) {
 	smarterr.AddEnrich(ctx, existing, incoming, injectContext(ctx, keyvals...)...)
+}
+
+// The following wrap smarterr's list-resource sinks. A ListResource.List method
+// streams iter.Seq[list.ListResult] instead of returning diagnostics; these
+// inject resource and service context just like the CRUD wrappers above.
+
+// NewListResultError enriches smarterr.NewListResultError with resource and service context if available.
+// Use it to surface a fatal per-item or pagination error from inside a List iterator: yield(smerr.NewListResultError(ctx, err, smerr.ID, id)).
+func NewListResultError(ctx context.Context, err error, keyvals ...any) list.ListResult {
+	return smarterr.NewListResultError(ctx, err, injectContext(ctx, keyvals...)...)
+}
+
+// ListStreamError enriches smarterr.ListStreamError with resource and service context if available.
+// Use it for a fatal error before streaming begins: stream.Results = smerr.ListStreamError(ctx, err).
+func ListStreamError(ctx context.Context, err error, keyvals ...any) iter.Seq[list.ListResult] {
+	return smarterr.ListStreamError(ctx, err, injectContext(ctx, keyvals...)...)
+}
+
+// ListStreamEnrich enriches smarterr.ListStreamEnrich with resource and service context if available.
+// Use it for the config-decode path: stream.Results = smerr.ListStreamEnrich(ctx, diags).
+func ListStreamEnrich(ctx context.Context, incoming fwdiag.Diagnostics, keyvals ...any) iter.Seq[list.ListResult] {
+	return smarterr.ListStreamEnrich(ctx, incoming, injectContext(ctx, keyvals...)...)
 }
 
 func injectContext(ctx context.Context, keyvals ...any) []any {

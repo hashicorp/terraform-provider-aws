@@ -50,7 +50,7 @@ This resource supports the following arguments:
 The `validator` block supports the following:
 
 * `content` - (Optional, Required when `type` is `LAMBDA`) Either the JSON Schema content or the ARN of an AWS Lambda function.
-* `type` - (Optional) Type of validator. Valid values: `JSON_SCHEMA` and `LAMBDA`.
+* `type` - (Required) Type of validator. Valid values: `JSON_SCHEMA` and `LAMBDA`.
 
 ## Attribute Reference
 

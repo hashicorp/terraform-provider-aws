@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS Bedrock AgentCore Registry. A registry serves as a centralized catalog for organizing and managing registry records, including MCP servers, A2A agents, agent skills, and custom resource types.
 
-!> **Warning:** This resource is deprecated. AWS Agent Registry is currently available in public preview. [On August 6, 2026]((https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/registry-faq.html#registry-faq-what-is-changing)) functionality will move from the `bedrock-agentcore` namespace to the `agent-registry` namespace. This resource will continue to work until [September 17, 2026](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/registry-faq.
+!> **Warning:** This resource is deprecated. AWS Agent Registry is currently available in public preview. [On August 6, 2026](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/registry-faq.html#registry-faq-what-is-changing) functionality will move from the `bedrock-agentcore` namespace to the `agent-registry` namespace. This resource will continue to work until [September 17, 2026](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/registry-faq.html). Use the [`aws_agentregistry_registry`](/docs/providers/aws/r/agentregistry_registry.html) resource for all new registries.
 
 ## Example Usage
 
@@ -26,9 +26,12 @@ resource "aws_bedrockagentcore_registry" "example" {
 
 ```terraform
 resource "aws_bedrockagentcore_registry" "example" {
-  name          = "example_registry"
-  description   = "MCP servers and tools for the platform team"
-  auto_approval = true
+  name        = "example_registry"
+  description = "MCP servers and tools for the platform team"
+
+  approval_configuration {
+    auto_approval = true
+  }
 }
 ```
 
@@ -53,7 +56,7 @@ resource "aws_bedrockagentcore_registry" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the registry. Must be unique within your account and contain only letters, numbers, hyphens, and underscores. Maximum length of 64 characters.
+* `name` - (Required) Name of the registry. Must be unique within your account, start with a letter or number, and contain only letters, numbers, underscores, hyphens, periods, and forward slashes. Maximum length of 64 characters.
 
 The following arguments are optional:
 
@@ -67,30 +70,30 @@ The following arguments are optional:
 
 The `approval_configuration` configuration block supports the following arguments:
 
-* `auto_approval` - (Optional) Whether registry records are auto-approved. When set to `true`, records are automatically approved upon creation. When set to `false` (the default), records require explicit approval.
+* `auto_approval` - (Optional) Whether to auto-approve registry records. When set to `true`, records are automatically approved upon creation. When set to `false` (the default), records require explicit approval.
 
 ### `authorizer_configuration` Block
 
 The `authorizer_configuration` block supports the following:
 
-* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer) below.
+* `custom_jwt_authorizer` - (Required) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer-block) below.
 
 ### `custom_jwt_authorizer` Block
 
 The `custom_jwt_authorizer` block supports the following:
 
-* `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `allowed_audience` - (Optional) Set of allowed audience values for JWT token validation.
 * `allowed_clients` - (Optional) Set of allowed client IDs for JWT token validation.
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
-* `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration) below.
-* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim) below.
-* `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint) below.
-* `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides) below.
+* `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration-block) below.
+* `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim-block) below.
+* `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
+* `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint-block) below.
+* `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides-block) below.
 
 ### `allowed_workload_configuration` Block
 
-* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. See [`hosting_environment`](#hosting_environment) below.
+* `hosting_environment` - (Optional) Hosting environments allowed to use the authorizer. Between 1 and 10 entries. See [`hosting_environment`](#hosting_environment-block) below.
 * `workload_identities` - (Optional) List of workload identity names allowed to use the authorizer. Between 1 and 10 entries.
 
 ### `hosting_environment` Block
@@ -100,33 +103,33 @@ The `custom_jwt_authorizer` block supports the following:
 ### `private_endpoint_overrides` Block
 
 * `domain` - (Required) Domain the override applies to.
-* `private_endpoint` - (Required) Private endpoint configuration. See [`private_endpoint`](#private_endpoint) below.
+* `private_endpoint` - (Required) Private endpoint configuration. See [`private_endpoint`](#private_endpoint-block) below.
 
 ### `private_endpoint` Block
 
 Exactly one of the following must be specified:
 
-* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource) below.
-* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource) below.
+* `managed_vpc_resource` - (Optional) Managed VPC resource configuration. See [`managed_vpc_resource`](#managed_vpc_resource-block) below.
+* `self_managed_lattice_resource` - (Optional) Self-managed VPC Lattice resource configuration. See [`self_managed_lattice_resource`](#self_managed_lattice_resource-block) below.
 
 ### `managed_vpc_resource` Block
 
 * `endpoint_ip_address_type` - (Required) IP address type for the endpoint. Valid values are `IPV4` and `IPV6`.
-* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
-* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
 * `routing_domain` - (Optional) Routing domain for the endpoint.
 * `security_group_ids` - (Optional) IDs of the security groups for the endpoint.
+* `subnet_ids` - (Required) IDs of the subnets for the endpoint.
 * `tags` - (Optional) Tags to assign to the managed VPC resource.
+* `vpc_identifier` - (Required) Identifier of the VPC for the endpoint.
 
 ### `self_managed_lattice_resource` Block
 
-* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration.
+* `resource_configuration_identifier` - (Optional) Identifier of the VPC Lattice resource configuration.
 
 ### `custom_claim` Block
 
 The `custom_claim` block supports the following:
 
-* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value) below.
+* `authorizing_claim_match_value` - (Required) Configuration block to define the value or values to match for and the relationship of the match. See [`authorizing_claim_match_value`](#authorizing_claim_match_value-block) below.
 * `inbound_token_claim_name` - (Required) Name of the custom claim field to check.
 * `inbound_token_claim_value_type` - (Required) Data type of the claim value to check for. Valid values are `STRING` and `STRING_ARRAY`.
 
@@ -135,7 +138,7 @@ The `custom_claim` block supports the following:
 The `authorizing_claim_match_value` block supports the following:
 
 * `claim_match_operator` - (Required) Relationship between the claim field value and the value or values to match for. Valid values are `EQUALS`, `CONTAINS`, and `CONTAINS_ANY`. `EQUALS` can be used only when `inbound_token_claim_value_type` is `STRING`. `CONTAINS` or `CONTAINS_ANY` can be used only when `inbound_token_claim_value_type` is `STRING_ARRAY`.
-* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value) below.
+* `claim_match_value` - (Required) Value or values to match for. See [`claim_match_value`](#claim_match_value-block) below.
 
 ### `claim_match_value` Block
 
@@ -161,7 +164,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.12.0 and later, you can use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
@@ -180,12 +183,12 @@ resource "aws_bedrockagentcore_registry" "example" {
 
 #### Required
 
-- `registry_id` (String) Registry ID.
+* `registry_id` (String) Registry ID.
 
 #### Optional
 
-* `account_id` (String) AWS account ID for this resource.
-* `region` (String) AWS Region for this resource.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Bedrock AgentCore Registry by registry ID. For example:
 

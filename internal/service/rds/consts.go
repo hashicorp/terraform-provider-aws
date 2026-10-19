@@ -128,6 +128,7 @@ const (
 	globalClusterStatusCreating  = "creating"
 	globalClusterStatusDeleting  = "deleting"
 	globalClusterStatusModifying = "modifying"
+	globalClusterStatusPromoting = "promoting"
 	globalClusterStatusUpgrading = "upgrading"
 )
 

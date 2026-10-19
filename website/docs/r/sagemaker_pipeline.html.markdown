@@ -55,7 +55,7 @@ This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the S3 bucket.
 * `object_key` - (Required) The object key (or key name) uniquely identifies the object in an S3 bucket.
-* `version_id` - (Optional) Version Id of the pipeline definition file. If not specified, Amazon SageMaker AI will retrieve the latest version.
+* `version_id` - (Optional) Version ID of the pipeline definition file. If not specified, Amazon SageMaker AI will retrieve the latest version.
 
 ## Attribute Reference
 

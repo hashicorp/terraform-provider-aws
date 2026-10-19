@@ -65,7 +65,7 @@ This resource supports the following arguments:
 * `environment` - (Optional) Sets the environment variables in the container that the monitoring job runs. A list of key value pairs.
 * `image_uri` - (Required) The container image that the data quality monitoring job runs.
 * `post_analytics_processor_source_uri` - (Optional) An Amazon S3 URI to a script that is called after analysis has been performed. Applicable only for the built-in (first party) containers.
-* `record_preprocessor_source_uri` - (Optional) An Amazon S3 URI to a script that is called per row prior to running analysis. It can base64 decode the payload and convert it into a flatted json so that the built-in container can use the converted data. Applicable only for the built-in (first party) containers.
+* `record_preprocessor_source_uri` - (Optional) An Amazon S3 URI to a script that is called per row prior to running analysis. It can base64 decode the payload and convert it into a flatted JSON so that the built-in container can use the converted data. Applicable only for the built-in (first party) containers.
 
 ### data_quality_baseline_config
 
@@ -93,18 +93,18 @@ This resource supports the following arguments:
 * `s3_data_distribution_type` - (Optional) Whether input data distributed in Amazon S3 is fully replicated or sharded by an S3 key. Defaults to `FullyReplicated`. Valid values are `FullyReplicated` or `ShardedByS3Key`
 * `s3_input_mode` - (Optional) Whether the `Pipe` or `File` is used as the input mode for transferring data for the monitoring job. `Pipe` mode is recommended for large datasets. `File` mode is useful for small files that fit in memory. Defaults to `File`.  Valid values are `Pipe` or `File`
 
-##### dataset_format
+#### dataset_format
 
 * `csv` - (Optional) The CSV dataset used in the monitoring job. Fields are documented below.
 * `json` - (Optional) The JSON dataset used in the monitoring job. Fields are documented below.
 
-###### csv
+#### `csv`
 
 * `header` - (Optional) Indicates if the CSV data has a header.
 
-###### json
+#### `json`
 
-* `line` - (Optional) Indicates if the file should be read as a json object per line.
+* `line` - (Optional) Indicates if the file should be read as a JSON object per line.
 
 #### endpoint_input
 
@@ -122,7 +122,7 @@ This resource supports the following arguments:
 
 * `s3_output` - (Required) The Amazon S3 storage location where the results of a monitoring job are saved. Fields are documented below.
 
-##### s3_output
+#### s3_output
 
 * `local_path` - (Optional) The local path to the Amazon S3 storage location where Amazon SageMaker AI saves the results of a monitoring job. LocalPath is an absolute path for the output data. Defaults to `/opt/ml/processing/output`.
 * `s3_upload_mode` - (Optional) Whether to upload the results of the monitoring job continuously or after the job completes. Valid values are `Continuous` or `EndOfJob`

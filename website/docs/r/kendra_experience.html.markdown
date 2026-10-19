@@ -37,52 +37,52 @@ resource "aws_kendra_experience" "example" {
 
 The following arguments are required:
 
-* `index_id` - (Required, Forces new resource) The identifier of the index for your Amazon Kendra experience.
-* `name` - (Required) A name for your Amazon Kendra experience.
+* `index_id` - (Required, Forces new resource) Identifier of the index for your Amazon Kendra experience.
+* `name` - (Required) Name for your Amazon Kendra experience.
 * `role_arn` - (Required) ARN of a role with permission to access `Query API`, `QuerySuggestions API`, `SubmitFeedback API`, and `AWS SSO` that stores your user and group information. For more information, see [IAM roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 
 The following arguments are optional:
 
+* `configuration` - (Optional) Configuration information for your Amazon Kendra experience. Terraform will only perform drift detection of its value when present in a configuration. [Detailed below](#configuration-block).
+* `description` - (Optional, Forces new resource if removed) Description for your Amazon Kendra experience.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional, Forces new resource if removed) A description for your Amazon Kendra experience.
-* `configuration` - (Optional) Configuration information for your Amazon Kendra experience. Terraform will only perform drift detection of its value when present in a configuration. [Detailed below](#configuration).
 
 ~> **NOTE:** By default of the AWS Kendra API, updates to an existing `aws_kendra_experience` resource (e.g. updating the `name`) will also update the `configuration.content_source_configuration.direct_put_content` parameter to `false` if not already provided.
 
-### `configuration`
+### `configuration` Block
 
 ~> **NOTE:** By default of the AWS Kendra API, the `content_source_configuration.direct_put_content` parameter will be set to `false` if not provided.  
 
 The `configuration` configuration block supports the following arguments:
 
-* `content_source_configuration` - (Optional, Required if `user_identity_configuration` not provided) The identifiers of your data sources and FAQs. Or, you can specify that you want to use documents indexed via the `BatchPutDocument API`. Terraform will only perform drift detection of its value when present in a configuration. [Detailed below](#content_source_configuration).
-* `user_identity_configuration` - (Optional, Required if `content_source_configuration` not provided) The AWS SSO field name that contains the identifiers of your users, such as their emails. [Detailed below](#user_identity_configuration).
+* `content_source_configuration` - (Optional, Required if `user_identity_configuration` not provided) Identifiers of your data sources and FAQs. Or, you can specify that you want to use documents indexed via the `BatchPutDocument API`. Terraform will only perform drift detection of its value when present in a configuration. [Detailed below](#content_source_configuration-block).
+* `user_identity_configuration` - (Optional, Required if `content_source_configuration` not provided) AWS SSO field name that contains the identifiers of your users, such as their emails. [Detailed below](#user_identity_configuration-block).
 
-### `content_source_configuration`
+### `content_source_configuration` Block
 
 The `content_source_configuration` configuration block supports the following arguments:
 
-* `data_source_ids` - (Optional) The identifiers of the data sources you want to use for your Amazon Kendra experience. Maximum number of 100 items.
+* `data_source_ids` - (Optional) Identifiers of the data sources you want to use for your Amazon Kendra experience. Maximum number of 100 items.
 * `direct_put_content` - (Optional) Whether to use documents you indexed directly using the `BatchPutDocument API`. Defaults to `false`.
-* `faq_ids` - (Optional) The identifier of the FAQs that you want to use for your Amazon Kendra experience. Maximum number of 100 items.
+* `faq_ids` - (Optional) Identifier of the FAQs that you want to use for your Amazon Kendra experience. Maximum number of 100 items.
 
-### `user_identity_configuration`
+### `user_identity_configuration` Block
 
 The `user_identity_configuration` configuration block supports the following argument:
 
-* `identity_attribute_name` - (Required) The AWS SSO field name that contains the identifiers of your users, such as their emails.
+* `identity_attribute_name` - (Required) AWS SSO field name that contains the identifiers of your users, such as their emails.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The unique identifiers of the experience and index separated by a slash (`/`).
 * `arn` - ARN of the Experience.
 * `endpoints` - Shows the endpoint URLs for your Amazon Kendra experiences. The URLs are unique and fully hosted by AWS.
-    * `endpoint` - The endpoint of your Amazon Kendra experience.
-    * `endpoint_type` - The type of endpoint for your Amazon Kendra experience.
-* `experience_id` - The unique identifier of the experience.
-* `status` - The current processing status of your Amazon Kendra experience.
+    * `endpoint` - Endpoint of your Amazon Kendra experience.
+    * `endpoint_type` - Type of endpoint for your Amazon Kendra experience.
+* `experience_id` - Unique identifier of the experience.
+* `id` - Unique identifiers of the experience and index separated by a slash (`/`).
+* `status` - Current processing status of your Amazon Kendra experience.
 
 ## Timeouts
 

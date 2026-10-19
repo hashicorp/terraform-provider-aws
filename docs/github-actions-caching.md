@@ -217,11 +217,12 @@ This cache:
 The same strategy is used in the `GNUmakefile` for local testing:
 
 ```bash
-# On macOS (with CrowdStrike), uses temp cache to avoid scanning
-make test-fast
+# On macOS (with CrowdStrike), temporary build files use a directory outside
+# the Go build cache to avoid scanning while preserving compiled dependencies.
+make test
 
 # Automatically detects:
-# - macOS: Uses /tmp cache to avoid security software overhead
+# - macOS: Uses a temporary directory for build files and the persistent Go build cache
 # - Linux: Uses default cache location
 ```
 

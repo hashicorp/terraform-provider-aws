@@ -169,7 +169,7 @@ resource "aws_db_instance" "test" {
 data "aws_rds_orderable_db_instance" "test" {
   engine        = "oracle-se2"
   license_model = "bring-your-own-license"
-  storage_type  = "standard"
+  storage_type  = "gp2"
 
   preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
 }

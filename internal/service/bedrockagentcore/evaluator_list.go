@@ -39,14 +39,6 @@ type evaluatorListResource struct {
 func (l *evaluatorListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().BedrockAgentCoreClient(ctx)
 
-	var query listEvaluatorModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input bedrockagentcorecontrol.ListEvaluatorsInput
 
@@ -99,10 +91,6 @@ func (l *evaluatorListResource) List(ctx context.Context, request list.ListReque
 			}
 		}
 	}
-}
-
-type listEvaluatorModel struct {
-	framework.WithRegionModel
 }
 
 func listEvaluators(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListEvaluatorsInput) iter.Seq2[awstypes.EvaluatorSummary, error] {

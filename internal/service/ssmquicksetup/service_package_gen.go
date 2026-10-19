@@ -7,7 +7,6 @@ package ssmquicksetup
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmquicksetup"
@@ -30,10 +29,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newConfigurationManagerResource,
 			TypeName: "aws_ssmquicksetup_configuration_manager",
 			Name:     "Configuration Manager",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "manager_arn",
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute("manager_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -52,7 +49,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ssmquicksetup.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*ssmquicksetup.Options){
 		ssmquicksetup.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

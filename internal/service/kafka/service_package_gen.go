@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -35,6 +34,21 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newChannelResource,
+			TypeName: "aws_msk_channel",
+			Name:     "Channel",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrARN, true),
+				inttypes.StringIdentityAttribute("cluster_arn", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      channelImportID{},
+			},
+		},
 		{
 			Factory:  newSingleSCRAMSecretAssociationResource,
 			TypeName: "aws_msk_single_scram_secret_association",
@@ -91,7 +105,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceCluster,
 			TypeName: "aws_msk_cluster",
 			Name:     "Cluster",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -110,7 +124,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceVPCConnection,
 			TypeName: "aws_msk_vpc_connection",
 			Name:     "VPC Connection",
-			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
@@ -122,10 +136,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceCluster,
 			TypeName: "aws_msk_cluster",
 			Name:     "Cluster",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
@@ -149,10 +161,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceReplicator,
 			TypeName: "aws_msk_replicator",
 			Name:     "Replicator",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
@@ -170,10 +180,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceServerlessCluster,
 			TypeName: "aws_msk_serverless_cluster",
 			Name:     "Serverless Cluster",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
 			),
@@ -185,10 +193,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceVPCConnection,
 			TypeName: "aws_msk_vpc_connection",
 			Name:     "VPC Connection",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
-			Region: inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
 }
@@ -200,9 +206,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_msk_cluster",
 			Name:     "Cluster",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
@@ -210,9 +214,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			TypeName: "aws_msk_serverless_cluster",
 			Name:     "Serverless Cluster",
 			Region:   inttypes.ResourceRegionDefault(),
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 	})
@@ -224,7 +226,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*kafka.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*kafka.Options){
 		kafka.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
