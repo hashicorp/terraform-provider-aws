@@ -419,21 +419,21 @@ The following arguments are optional:
 ### `rds_create_cross_region_read_replica_config` Block
 
 * `cross_account_role` - (Optional) ARN of the cross-account role to assume.
-* `db_instance_arn_map` - (Required) Map of source DB instance identifiers to target DB instance ARNs.
+* `db_instance_arn_map` - (Required) Map of regions to DB instance ARNs. Provide an ARN for each region in the plan.
 * `external_id` - (Optional) External ID for cross-account role assumption.
 * `timeout_minutes` - (Optional) Timeout in minutes.
 
 ### `rds_promote_read_replica_config` Block
 
 * `cross_account_role` - (Optional) ARN of the cross-account role to assume.
-* `db_instance_arn_map` - (Required) Map of source DB instance identifiers to target DB instance ARNs.
+* `db_instance_arn_map` - (Required) Map of regions to DB instance ARNs. Provide an ARN for each region in the plan.
 * `external_id` - (Optional) External ID for cross-account role assumption.
 * `timeout_minutes` - (Optional) Timeout in minutes.
 
 ### `rds_switchover_read_replica_config` Block
 
 * `cross_account_role` - (Optional) ARN of the cross-account role to assume.
-* `db_instance_arn_map` - (Required) Map of source DB instance identifiers to target DB instance ARNs.
+* `db_instance_arn_map` - (Required) Map of regions to DB instance ARNs. Provide an ARN for each region in the plan.
 * `external_id` - (Optional) External ID for cross-account role assumption.
 * `timeout_minutes` - (Optional) Timeout in minutes.
 * `ungraceful` - (Optional) Ungraceful behavior configuration. See [`workflow.step.rds_switchover_read_replica_config.ungraceful` Block](#workflowsteprds_switchover_read_replica_configungraceful-block) for details.
