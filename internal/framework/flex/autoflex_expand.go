@@ -751,33 +751,13 @@ func expandListOrSetOfInt64(ctx context.Context, expander *autoExpander, vFrom v
 				//
 				// types.List(OfInt64) -> []*int32.
 				//
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
-				})
-				var to []*int32
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
+				return expandWithElementsAs[[]*int32](ctx, vFrom, vTo)
 
 			case reflect.Int64:
 				//
 				// types.List(OfInt64) -> []*int64.
 				//
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
-				})
-				var to []*int64
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
+				return expandWithElementsAs[[]*int64](ctx, vFrom, vTo)
 			}
 		}
 
@@ -844,17 +824,7 @@ func expandListOrSetOfString(ctx context.Context, expander *autoExpander, vFrom 
 				//
 				// types.List(OfString) -> []*string.
 				//
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
-				})
-				var to []*string
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
+				return expandWithElementsAs[[]*string](ctx, vFrom, vTo)
 			}
 		}
 
@@ -900,17 +870,7 @@ func expandListOrSetOfInt32(ctx context.Context, expander *autoExpander, vFrom v
 			//
 			// types.Set(OfInt32) -> []int32
 			//
-			tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-				logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
-			})
-			var to []int32
-			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-			if diags.HasError() {
-				return diags
-			}
-
-			vTo.Set(reflect.ValueOf(to))
-			return diags
+			return expandWithElementsAs[[]int32](ctx, vFrom, vTo)
 
 		case reflect.Pointer:
 			switch tSliceElem.Elem().Kind() {
@@ -918,17 +878,7 @@ func expandListOrSetOfInt32(ctx context.Context, expander *autoExpander, vFrom v
 				//
 				// types.Set(OfInt32) -> []*int32
 				//
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
-				})
-				var to []*int32
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
+				return expandWithElementsAs[[]*int32](ctx, vFrom, vTo)
 			}
 		}
 
@@ -964,6 +914,10 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 	}
 
 	switch v.ElementType(ctx).(type) {
+	case basetypes.Int32Typable:
+		diags.Append(expandMapOfInt32(ctx, expander, v, vTo)...)
+		return diags
+
 	case basetypes.StringTypable:
 		diags.Append(expandMapOfString(ctx, expander, v, vTo)...)
 		return diags
@@ -981,18 +935,7 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 			//
 			switch k := tMapElem.Elem().Kind(); k {
 			case reflect.String:
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: data.Length(fwtypes.CollectionLengthUnhandledAsZero),
-				})
-				var out map[string][]string
-				diags.Append(data.ElementsAs(ctx, &out, false)...)
-
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(out))
-				return diags
+				return expandWithElementsAs[map[string][]string](ctx, data, vTo)
 			}
 		}
 
@@ -1004,23 +947,12 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 		}
 		switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
 		case reflect.Map:
-			//
-			// types.Map(OfMap[types.String]) -> map[string]map[string]string.
-			//
 			switch k := tMapElem.Elem().Kind(); k {
 			case reflect.String:
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: data.Length(fwtypes.CollectionLengthUnhandledAsZero),
-				})
-				var out map[string]map[string]string
-				diags.Append(data.ElementsAs(ctx, &out, false)...)
-
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(out))
-				return diags
+				//
+				// types.Map(OfMap[types.String]) -> map[string]map[string]string.
+				//
+				return expandWithElementsAs[map[string]map[string]string](ctx, data, vTo)
 
 			case reflect.Pointer:
 				switch k := tMapElem.Elem().Elem().Kind(); k {
@@ -1028,18 +960,7 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 					//
 					// types.Map(OfMap[types.String]) -> map[string]map[string]*string.
 					//
-					tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-						logAttrKeySourceSize: data.Length(fwtypes.CollectionLengthUnhandledAsZero),
-					})
-					var to map[string]map[string]*string
-					diags.Append(data.ElementsAs(ctx, &to, false)...)
-
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
+					return expandWithElementsAs[map[string]map[string]*string](ctx, data, vTo)
 				}
 			}
 		}
@@ -1066,17 +987,7 @@ func expandMapOfString(ctx context.Context, _ *autoExpander, vFrom basetypes.Map
 				//
 				// types.Map(OfString) -> map[string]string.
 				//
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
-				})
-				var to map[string]string
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
+				return expandWithElementsAs[map[string]string](ctx, vFrom, vTo)
 
 			case reflect.Pointer:
 				switch k := tMapElem.Elem().Kind(); k {
@@ -1084,26 +995,45 @@ func expandMapOfString(ctx context.Context, _ *autoExpander, vFrom basetypes.Map
 					//
 					// types.Map(OfString) -> map[string]*string.
 					//
-					tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-						logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
-					})
-					var to map[string]*string
-					diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
+					return expandWithElementsAs[map[string]*string](ctx, vFrom, vTo)
 				}
 			}
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		logAttrKeyFrom: fmt.Sprintf("map[string, %s]", vFrom.ElementType(ctx)),
-		logAttrKeyTo:   vTo.Kind(),
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+
+	return diags
+}
+
+// expandMapOfInt32 copies a Plugin Framework MapOfInt32(ish) value to a compatible AWS API value.
+func expandMapOfInt32(ctx context.Context, _ *autoExpander, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch vTo.Kind() {
+	case reflect.Map:
+		switch tMapKey := vTo.Type().Key(); tMapKey.Kind() {
+		case reflect.String: // key
+			switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
+			case reflect.Int32:
+				//
+				// types.Map(OfInt32) -> map[string]int32.
+				//
+				return expandWithElementsAs[map[string]int32](ctx, vFrom, vTo)
+
+			case reflect.Pointer:
+				switch k := tMapElem.Elem().Kind(); k {
+				case reflect.Int32:
+					//
+					// types.Map(OfInt32) -> map[string]*int32.
+					//
+					return expandWithElementsAs[map[string]*int32](ctx, vFrom, vTo)
+				}
+			}
+		}
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
 
 	return diags
 }
@@ -1660,6 +1590,25 @@ func expandTypedExpander(ctx context.Context, fromTypedExpander TypedExpander, t
 
 	toVal.Set(expandedVal)
 
+	return diags
+}
+
+type elementsAs interface {
+	ElementsAs(context.Context, any, bool) diag.Diagnostics
+	Length(basetypes.CollectionLengthOptions) int
+}
+
+func expandWithElementsAs[T any](ctx context.Context, vFrom elementsAs, vTo reflect.Value) (diags diag.Diagnostics) {
+	tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+		logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
+	})
+	var to T
+	diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(to))
 	return diags
 }
 

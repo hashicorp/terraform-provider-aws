@@ -45,7 +45,7 @@ resource "aws_ecs_service" "mongo" {
 
 ### Ignoring Changes to Desired Count
 
-You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an ECS service with an initial count of running instances, then ignore any changes to that count caused externally (e.g., Application Autoscaling).
+You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an ECS service with an initial count of running instances, then ignore any changes to that count caused externally (e.g., Application Auto Scaling).
 
 ```terraform
 resource "aws_ecs_service" "example" {
@@ -573,7 +573,7 @@ resource "aws_ecs_service" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS services using the `name` together with ecs cluster `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS services using the `name` together with ECS cluster `name`. For example:
 
 ```terraform
 import {
@@ -582,7 +582,7 @@ import {
 }
 ```
 
-Using `terraform import`, import ECS services using the `name` together with ecs cluster `name`. For example:
+Using `terraform import`, import ECS services using the `name` together with ECS cluster `name`. For example:
 
 ```console
 % terraform import aws_ecs_service.imported cluster-name/service-name

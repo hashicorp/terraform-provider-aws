@@ -40,7 +40,7 @@ This data source exports the following attributes in addition to the arguments a
 * `image_recipe_arn` - ARN of the image recipe.
 * `image_tests_configuration` - List of an object with image scanning configuration.
     * `image_scanning_enabled`  - Whether image scanning is enabled.
-    * `ecr_configuration`  - List if an object with ecr configuration for image scanning
+    * `ecr_configuration`  - List if an object with ECR configuration for image scanning
         * `container_tags`  - Tags that are added to the output containers that are scanned
         * `repository_name`  - The name of the container repository that Amazon Inspector scans
 * `image_tests_configuration` - List of an object with image tests configuration.

@@ -43,7 +43,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Combination of attributes, separated by a `/` to create a unique id: `verifiedaccess_instance_id`,`verifiedaccess_trust_provider_id`
+* `id` - Combination of attributes, separated by a `/` to create a unique ID: `verifiedaccess_instance_id`,`verifiedaccess_trust_provider_id`
 
 ## Import
 

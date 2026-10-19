@@ -37,30 +37,30 @@ resource "aws_glue_security_configuration" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `encryption_configuration` - (Required) Configuration block containing encryption configuration. Detailed below.
 * `name` - (Required) Name of the security configuration.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### encryption_configuration Argument Reference
+### `encryption_configuration` Block
 
-* `cloudwatch_encryption ` - (Required) A `cloudwatch_encryption ` block as described below, which contains encryption configuration for CloudWatch.
-* `job_bookmarks_encryption ` - (Required) A `job_bookmarks_encryption ` block as described below, which contains encryption configuration for job bookmarks.
-* `s3_encryption` - (Required) A `s3_encryption ` block as described below, which contains encryption configuration for S3 data.
+* `cloudwatch_encryption` - (Required) `cloudwatch_encryption` block as described below, which contains encryption configuration for CloudWatch.
+* `job_bookmarks_encryption` - (Required) `job_bookmarks_encryption` block as described below, which contains encryption configuration for job bookmarks.
+* `s3_encryption` - (Required) `s3_encryption` block as described below, which contains encryption configuration for S3 data.
 
-#### cloudwatch_encryption Argument Reference
+#### `cloudwatch_encryption` Block
 
 * `cloudwatch_encryption_mode` - (Optional) Encryption mode to use for CloudWatch data. Valid values: `DISABLED`, `SSE-KMS`. Default value: `DISABLED`.
 * `kms_key_arn` - (Optional) ARN of the KMS key to be used to encrypt the data.
 
-#### job_bookmarks_encryption Argument Reference
+#### `job_bookmarks_encryption` Block
 
 * `job_bookmarks_encryption_mode` - (Optional) Encryption mode to use for job bookmarks data. Valid values: `CSE-KMS`, `DISABLED`. Default value: `DISABLED`.
 * `kms_key_arn` - (Optional) ARN of the KMS key to be used to encrypt the data.
 
-#### s3_encryption Argument Reference
+#### `s3_encryption` Block
 
-* `s3_encryption_mode` - (Optional) Encryption mode to use for S3 data. Valid values: `DISABLED`, `SSE-KMS`, `SSE-S3`. Default value: `DISABLED`.
 * `kms_key_arn` - (Optional) ARN of the KMS key to be used to encrypt the data.
+* `s3_encryption_mode` - (Optional) Encryption mode to use for S3 data. Valid values: `DISABLED`, `SSE-KMS`, `SSE-S3`. Default value: `DISABLED`.
 
 ## Attribute Reference
 
