@@ -10,7 +10,7 @@ description: |-
 
 Manages a CloudWatch Omni Access Grant. An access grant gives a principal a permission within a CloudWatch Omni space.
 
-~> **NOTE:** CloudWatch Omni does not support updating an access grant, so changing any argument replaces it.
+~> **NOTE:** CloudWatch Omni does not support updating an access grant, so changing any argument other than `tags` replaces it. Tags are updated in place.
 
 ~> **NOTE:** Except for `CUSTOM` grants, a principal can hold only one grant of each permission in a space. Creating a duplicate returns `ConflictException`.
 
@@ -30,6 +30,10 @@ resource "aws_cloudwatchomni_access_grant" "example" {
   principal {
     principal_type = "IAM_ROLE"
     principal_id   = aws_iam_role.example.arn
+  }
+
+  tags = {
+    Environment = "production"
   }
 }
 ```
@@ -83,6 +87,7 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource is managed. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `scoped_action` - (Optional) Group of actions to allow, with the resource scopes and conditions that limit them. Up to 20 blocks. Required for the `CUSTOM` permission, and can also be used with the other permissions. [See below](#scoped_action-block). Changing this forces a new resource.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `principal` Block
 
@@ -127,8 +132,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the access grant.
 * `grant_id` - Unique ID of the access grant.
 * `grant_type` - Who manages the access grant.
-
-~> **NOTE:** This resource does not support tags. `CreateAccessGrant` accepts tags, but CloudWatch Omni does not return them on read and provides no tag read or write operations, so tags could not be refreshed, updated, or imported.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

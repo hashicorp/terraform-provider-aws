@@ -295,6 +295,61 @@ func testAccAccessGrant_principal(t *testing.T) {
 	})
 }
 
+func testAccAccessGrant_principalAccessProfile(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.AccessGrant
+	resourceName := "aws_cloudwatchomni_access_grant.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchOmniServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessGrantDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccessGrant/principal_access_profile/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessGrantExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkAccessGrantARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("grant_id"), checkAccessGrantID),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("permission"), tfknownvalue.StringExact(awstypes.AccessGrantPermissionRead)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPrincipal), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"principal_attribute": knownvalue.ListSizeExact(0),
+						"principal_id":        knownvalue.NotNull(),
+						"principal_type":      tfknownvalue.StringExact(awstypes.AccessGrantPrincipalTypeAccessProfile),
+					})})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrPrincipal).AtSliceIndex(0).AtMapKey("principal_id"), "aws_cloudwatchomni_access_profile.test", tfjsonpath.New("profile_id"), compare.ValuesSame()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/AccessGrant/principal_access_profile/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "grant_id"),
+				ImportStateVerifyIdentifierAttribute: "grant_id",
+			},
+		},
+	})
+}
+
 func testAccAccessGrant_scopedAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.AccessGrant

@@ -9,6 +9,7 @@ resource "aws_cloudwatchomni_access_grant" "test" {
     principal_type = "IAM_ROLE"
     principal_id   = aws_iam_role.test.arn
   }
+{{- template "tags" . }}
 }
 
 resource "aws_cloudwatchomni_space" "test" {

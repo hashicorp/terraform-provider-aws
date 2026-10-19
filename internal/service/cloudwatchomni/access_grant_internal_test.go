@@ -61,8 +61,7 @@ func TestFlattenExpandAccessGrantRoundTrip(t *testing.T) {
 				},
 				ScopedActions: []awstypes.ScopedActions{
 					{
-						Actions:   []string{"cloudwatch:GetOmniDashboard"},
-						Resources: []awstypes.ResourceScope{},
+						Actions: []string{"cloudwatch:GetOmniDashboard"},
 					},
 					{
 						Actions:           []string{"cloudwatch:GetRecords"},
@@ -103,8 +102,7 @@ func TestFlattenExpandAccessGrantRoundTrip(t *testing.T) {
 						Actions: []string{"cloudwatch:GetOmniDashboard"},
 					},
 					{
-						Actions:           []string{"cloudwatch:GetRecords"},
-						ContextConditions: map[string][]string{"channelNames": {"a", "b"}},
+						Actions: []string{"cloudwatch:GetRecords"},
 						Resources: []awstypes.ResourceScope{
 							{
 								ResourceType: aws.String("DataSet"),

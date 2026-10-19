@@ -13,6 +13,8 @@ resource "aws_cloudwatchomni_access_grant" "test" {
     principal_type = "IAM_ROLE"
     principal_id   = aws_iam_role.principal[count.index].arn
   }
+
+  tags = var.resource_tags
 }
 
 resource "aws_cloudwatchomni_space" "test" {
@@ -78,5 +80,11 @@ variable "rName" {
 variable "resource_count" {
   description = "Number of resources to create"
   type        = number
+  nullable    = false
+}
+
+variable "resource_tags" {
+  description = "Tags to set on resource"
+  type        = map(string)
   nullable    = false
 }

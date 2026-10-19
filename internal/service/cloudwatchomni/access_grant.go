@@ -37,11 +37,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_cloudwatchomni_access_grant", name="Access Grant")
+// @Tags(identifierAttribute="arn")
 // @IdentityAttribute("grant_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types;awstypes;awstypes.AccessGrant")
 // @Testing(preCheck="testAccPreCheck")
@@ -54,10 +56,9 @@ func newAccessGrantResource(context.Context) (resource.ResourceWithConfigure, er
 	return r, nil
 }
 
-// There is no UpdateAccessGrant operation, so every argument forces replacement.
+// There is no UpdateAccessGrant operation, so every argument except tags forces replacement.
 type accessGrantResource struct {
 	framework.ResourceWithModel[accessGrantResourceModel]
-	framework.WithNoUpdate
 	framework.WithImportByIdentity
 }
 
@@ -114,6 +115,8 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`), "must be a CloudWatch Omni space ID"),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrPrincipal: schema.ListNestedBlock{
@@ -323,6 +326,11 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 
+	// CreateAccessGrant takes a tag map, but the tag operations live in the cloudwatch package and use a slice.
+	if tags := keyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {
+		input.Tags = tags
+	}
+
 	// A newly created IAM principal can take a while to become visible to CloudWatch Omni.
 	output, err := tfresource.RetryWhenIsAErrorMessageContains[*cloudwatchomni.CreateAccessGrantOutput, *awstypes.ValidationException](ctx, propagationTimeout,
 		func(ctx context.Context) (*cloudwatchomni.CreateAccessGrantOutput, error) {
@@ -339,6 +347,8 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	grantID := aws.ToString(output.AccessGrant.GrantId)
 	grant, err := findAccessGrantByID(ctx, conn, grantID)
 	if err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("grant_id"), grantID)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, grantID)
 		return
 	}
@@ -492,6 +502,8 @@ type accessGrantResourceModel struct {
 	Principal     fwtypes.ListNestedObjectValueOf[accessGrantPrincipalModel] `tfsdk:"principal"`
 	ScopedActions fwtypes.ListNestedObjectValueOf[scopedActionsModel]        `tfsdk:"scoped_action"`
 	SpaceID       types.String                                               `tfsdk:"space_id"`
+	Tags          tftags.Map                                                 `tfsdk:"tags"`
+	TagsAll       tftags.Map                                                 `tfsdk:"tags_all"`
 }
 
 type accessGrantPrincipalModel struct {

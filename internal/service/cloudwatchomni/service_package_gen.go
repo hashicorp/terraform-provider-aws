@@ -31,6 +31,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newAccessGrantResource,
 			TypeName: "aws_cloudwatchomni_access_grant",
 			Name:     "Access Grant",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("grant_id", true)),
 			Import: inttypes.FrameworkImport{
@@ -91,6 +92,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newAccessGrantResourceAsListResource,
 			TypeName: "aws_cloudwatchomni_access_grant",
 			Name:     "Access Grant",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("grant_id", true)),
 		},

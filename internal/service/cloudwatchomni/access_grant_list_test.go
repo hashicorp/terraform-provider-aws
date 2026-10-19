@@ -105,6 +105,9 @@ func testAccAccessGrant_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
@@ -121,6 +124,9 @@ func testAccAccessGrant_List_includeResource(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"resource_count": config.IntegerVariable(2),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_cloudwatchomni_access_grant.test", identity1.Checks()),
@@ -136,6 +142,12 @@ func testAccAccessGrant_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("scoped_action"), knownvalue.ListSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("space_id"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					}),
 
 					tfquerycheck.ExpectIdentityFunc("aws_cloudwatchomni_access_grant.test", identity2.Checks()),
