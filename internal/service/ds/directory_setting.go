@@ -117,14 +117,18 @@ func (r *directorySettingsResource) Create(ctx context.Context, req resource.Cre
 		},
 	}
 
-	_, err := conn.UpdateSettings(ctx, &input)
+	// The UpdateSettings retries and the waiter share one deadline.
+	createDeadline := time.Now().Add(r.CreateTimeout(ctx, plan.Timeouts))
+
+	_, err := tfresource.RetryWhenIsA[*directoryservice.UpdateSettingsOutput, *awstypes.DirectoryUnavailableException](ctx, time.Until(createDeadline), func(ctx context.Context) (*directoryservice.UpdateSettingsOutput, error) {
+		return conn.UpdateSettings(ctx, &input)
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, directoryID)
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	entry, err := waitDirectorySettingUpdated(ctx, conn, directoryID, plan.Name.ValueString(), createTimeout)
+	entry, err := waitDirectorySettingUpdated(ctx, conn, directoryID, plan.Name.ValueString(), time.Until(createDeadline))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, directoryID)
 		return
@@ -189,14 +193,18 @@ func (r *directorySettingsResource) Update(ctx context.Context, req resource.Upd
 			},
 		}
 
-		_, err := conn.UpdateSettings(ctx, &input)
+		// The UpdateSettings retries and the waiter share one deadline.
+		updateDeadline := time.Now().Add(r.UpdateTimeout(ctx, plan.Timeouts))
+
+		_, err := tfresource.RetryWhenIsA[*directoryservice.UpdateSettingsOutput, *awstypes.DirectoryUnavailableException](ctx, time.Until(updateDeadline), func(ctx context.Context) (*directoryservice.UpdateSettingsOutput, error) {
+			return conn.UpdateSettings(ctx, &input)
+		})
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, directoryID)
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		entry, err := waitDirectorySettingUpdated(ctx, conn, directoryID, plan.Name.ValueString(), updateTimeout)
+		entry, err := waitDirectorySettingUpdated(ctx, conn, directoryID, plan.Name.ValueString(), time.Until(updateDeadline))
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, directoryID)
 			return
