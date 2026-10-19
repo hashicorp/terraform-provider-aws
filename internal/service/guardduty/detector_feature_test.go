@@ -100,34 +100,49 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("ENABLED", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationEksAddonManagement),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("DISABLED", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DISABLED"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationEksAddonManagement),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("ENABLED", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationEksAddonManagement),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
+						}),
+					})),
+				},
 			},
 		},
 	})
