@@ -15,10 +15,6 @@ resource "aws_cloudwatchomni_access_grant" "test" {
   scoped_action {
     actions = ["cloudwatch:GetRecords"]
 
-    context_conditions = {
-      channelNames = ["channel-a", "channel-b"]
-    }
-
     resource {
       resource_type = "DataSet"
       signal_types  = ["LOGS"]

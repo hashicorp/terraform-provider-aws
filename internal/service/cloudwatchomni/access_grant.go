@@ -514,18 +514,10 @@ type scopedActionsModel struct {
 type resourceScopeModel struct {
 	ResourceARNs   fwtypes.ListOfString                                `tfsdk:"resource_arns"`
 	ResourceType   types.String                                        `tfsdk:"resource_type"`
-	RowScopeGroups fwtypes.ListNestedObjectValueOf[rowScopeGroupModel] `tfsdk:"row_scope_group"`
+	RowScopeGroups fwtypes.ListNestedObjectValueOf[rowScopeGroupModel] `tfsdk:"row_scope_group" autoflex:"-"`
 	SignalTypes    fwtypes.ListOfStringEnum[awstypes.SignalType]       `tfsdk:"signal_types"`
 	Tags           fwtypes.MapOfString                                 `tfsdk:"tags"`
 }
-
-// resourceScopeAutoFlexModel has the fields of resourceScopeModel but not its
-// Expand and Flatten methods, so AutoFlex can convert the fields it supports.
-type resourceScopeAutoFlexModel resourceScopeModel
-
-// Tags on a resource scope are a match condition rather than resource tags,
-// so they are not ignored the way AutoFlex ignores Tags by default.
-var resourceScopeAutoFlexOptions = fwflex.WithIgnoredFieldNames([]string{"RowScopeGroups"})
 
 var (
 	_ fwflex.Expander  = resourceScopeModel{}
@@ -536,9 +528,12 @@ var (
 // API's list-of-lists RowScopeGroups.
 func (m resourceScopeModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	var apiObject awstypes.ResourceScope
-
-	diags.Append(fwflex.Expand(ctx, resourceScopeAutoFlexModel(m), &apiObject, resourceScopeAutoFlexOptions)...)
+	var r awstypes.ResourceScope
+	// To prevent infinite recursion...
+	type modelAlias resourceScopeModel
+	alias := modelAlias(m)
+	// No ignored field names to handle Tags.
+	diags.Append(fwflex.Expand(ctx, alias, &r, fwflex.WithNoIgnoredFieldNames())...)
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -555,29 +550,19 @@ func (m resourceScopeModel) Expand(ctx context.Context) (any, diag.Diagnostics) 
 		if diags.HasError() {
 			return nil, diags
 		}
-		apiObject.RowScopeGroups = append(apiObject.RowScopeGroups, rowScopes)
+		r.RowScopeGroups = append(r.RowScopeGroups, rowScopes)
 	}
 
-	return &apiObject, diags
+	return &r, diags
 }
 
-// Flatten is the inverse of Expand.
 func (m *resourceScopeModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	// To prevent infinite recursion...
+	type modelAlias *resourceScopeModel
+	alias := modelAlias(m)
 
-	var apiObject awstypes.ResourceScope
-	switch v := v.(type) {
-	case awstypes.ResourceScope:
-		apiObject = v
-	case *awstypes.ResourceScope:
-		if v != nil {
-			apiObject = *v
-		}
-	default:
-		diags.AddError("Unexpected type", fmt.Sprintf("flattening %T into resource scope", v))
-		return diags
-	}
-
+	apiObject := v.(awstypes.ResourceScope)
 	// Unset collections are returned empty rather than absent; treat them as absent.
 	if len(apiObject.ResourceArns) == 0 {
 		apiObject.ResourceArns = nil
@@ -586,12 +571,11 @@ func (m *resourceScopeModel) Flatten(ctx context.Context, v any) diag.Diagnostic
 		apiObject.Tags = nil
 	}
 
-	var data resourceScopeAutoFlexModel
-	diags.Append(fwflex.Flatten(ctx, apiObject, &data, resourceScopeAutoFlexOptions)...)
+	// No ignored field names to handle Tags.
+	diags.Append(fwflex.Flatten(ctx, apiObject, alias, fwflex.WithNoIgnoredFieldNames())...)
 	if diags.HasError() {
 		return diags
 	}
-	*m = resourceScopeModel(data)
 
 	if len(apiObject.RowScopeGroups) == 0 {
 		m.RowScopeGroups = fwtypes.NewListNestedObjectValueOfNull[rowScopeGroupModel](ctx)
@@ -610,6 +594,9 @@ func (m *resourceScopeModel) Flatten(ctx context.Context, v any) diag.Diagnostic
 
 	rowScopeGroups, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, groups, nil)
 	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
 	m.RowScopeGroups = rowScopeGroups
 
 	return diags
