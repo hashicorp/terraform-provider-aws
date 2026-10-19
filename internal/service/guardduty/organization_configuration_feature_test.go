@@ -8,11 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -68,22 +72,31 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccOrganizationConfigurationFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "NEW"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.auto_enable", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationEksAddonManagement),
+							"auto_enable":  tfknownvalue.StringExact(awstypes.OrgFeatureStatusNone),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccOrganizationConfigurationFeatureConfig_additionalConfiguration("ALL", "ALL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccOrganizationConfigurationFeatureExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.auto_enable", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationEksAddonManagement),
+							"auto_enable":  tfknownvalue.StringExact(awstypes.OrgFeatureStatusAll),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -113,11 +126,16 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration_rdsDataRisk
 				Check: resource.ComposeTestCheckFunc(
 					testAccOrganizationConfigurationFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "NEW"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.auto_enable", "NEW"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "RDS_DATA_RISK"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationRdsDataRisk),
+							"auto_enable":  tfknownvalue.StringExact(awstypes.OrgFeatureStatusNew),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccOrganizationConfigurationFeatureConfig_additionalConfiguration_rdsDataRisk("NEW", "NONE"),
@@ -129,11 +147,16 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration_rdsDataRisk
 				Check: resource.ComposeTestCheckFunc(
 					testAccOrganizationConfigurationFeatureExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "NEW"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.auto_enable", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "RDS_DATA_RISK"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationRdsDataRisk),
+							"auto_enable":  tfknownvalue.StringExact(awstypes.OrgFeatureStatusNone),
+						}),
+					})),
+				},
 			},
 			{
 				Config: testAccOrganizationConfigurationFeatureConfig_basic("RDS_LOGIN_EVENTS", "NEW"),
@@ -150,6 +173,14 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration_rdsDataRisk
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "NEW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationRdsDataRisk),
+							"auto_enable":  tfknownvalue.StringExact(awstypes.OrgFeatureStatusNone),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -241,7 +272,7 @@ func testAccOrganizationConfigurationFeatureExists(ctx context.Context, t *testi
 	}
 }
 
-var testAccOrganizationConfigurationFeatureConfig_base = testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers(types.AutoEnableMembersNone)
+var testAccOrganizationConfigurationFeatureConfig_base = testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers(awstypes.AutoEnableMembersNone)
 
 func testAccOrganizationConfigurationFeatureConfig_basic(name, autoEnable string) string {
 	return acctest.ConfigCompose(
