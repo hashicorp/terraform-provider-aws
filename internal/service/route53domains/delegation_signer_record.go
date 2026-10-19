@@ -120,13 +120,13 @@ func (r *delegationSignerRecordResource) Create(ctx context.Context, request res
 
 	conn := r.Meta().Route53DomainsClient(ctx)
 
-	input := &route53domains.AssociateDelegationSignerToDomainInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	var input route53domains.AssociateDelegationSignerToDomainInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := conn.AssociateDelegationSignerToDomain(ctx, input)
+	output, err := conn.AssociateDelegationSignerToDomain(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Route 53 Domains Delegation Signer Record", err.Error())
@@ -146,32 +146,36 @@ func (r *delegationSignerRecordResource) Create(ctx context.Context, request res
 		return
 	}
 
-	dnssecKey, err := findDNSSECKeyByThreePartKey(ctx, conn, data.DomainName.ValueString(), int(signingAttributes.Flags.ValueInt64()), int(signingAttributes.Algorithm.ValueInt64()), signingAttributes.PublicKey.ValueString())
+	domainName := fwflex.StringValueFromFramework(ctx, data.DomainName)
+	flags := fwflex.Int32ValueFromFrameworkInt64(ctx, signingAttributes.Flags)
+	algorithm := fwflex.Int32ValueFromFrameworkInt64(ctx, signingAttributes.Algorithm)
+	publicKey := fwflex.StringValueFromFramework(ctx, signingAttributes.PublicKey)
+	dnssecKey, err := findDNSSECKeyByThreePartKey(ctx, conn, domainName, flags, algorithm, publicKey)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key", data.DomainName.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key", domainName), err.Error())
 
 		return
 	}
 
 	// Store actual AWS ID for Delete operations, but compute digest for state ID stability.
 	// This ensures registrar-agnostic state tracking (Gandi vs Amazon Registrar, etc).
-	expectedDigest := CalculateExpectedDigest(data.DomainName.ValueString(), int(signingAttributes.Flags.ValueInt64()), int(signingAttributes.Algorithm.ValueInt64()), signingAttributes.PublicKey.ValueString())
+	expectedDigest := calculateExpectedDigest(domainName, flags, algorithm, publicKey)
 
-	// Set state ID using digest for stability
+	// Set state ID using digest for stability.
 	parts := []string{
-		data.DomainName.ValueString(),
+		domainName,
 		expectedDigest,
 	}
 	resourceID, err := flex.FlattenResourceId(parts, delegationSignerRecordResourceIDPartCount, false)
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID Route 53 Domains Domain (%s) DNSSEC key", data.DomainName.ValueString()), err.Error())
+		response.Diagnostics.Append(fwdiag.NewCreatingResourceIDErrorDiagnostic(err))
 		return
 	}
 
-	// Store actual AWS ID for API operations (Delete, etc)
+	// Store actual AWS ID for API operations (Delete, etc).
 	data.DNSSECKeyID = fwflex.StringToFramework(ctx, dnssecKey.Id)
-	data.ID = types.StringValue(resourceID)
+	data.ID = fwflex.StringValueToFramework(ctx, resourceID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -186,7 +190,7 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 	// Extract domain and digest from stable resource ID
 	idParts, err := flex.ExpandResourceId(data.ID.ValueString(), delegationSignerRecordResourceIDPartCount, false)
 	if err != nil {
-		response.Diagnostics.AddError("parsing delegation signer record resource ID", err.Error())
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
 	}
 	domainName := idParts[0]
@@ -240,10 +244,11 @@ func (r *delegationSignerRecordResource) Delete(ctx context.Context, request res
 
 	conn := r.Meta().Route53DomainsClient(ctx)
 
-	output, err := conn.DisassociateDelegationSignerFromDomain(ctx, &route53domains.DisassociateDelegationSignerFromDomainInput{
-		DomainName: data.DomainName.ValueStringPointer(),
-		Id:         data.DNSSECKeyID.ValueStringPointer(),
-	})
+	input := route53domains.DisassociateDelegationSignerFromDomainInput{
+		DomainName: fwflex.StringFromFramework(ctx, data.DomainName),
+		Id:         fwflex.StringFromFramework(ctx, data.DNSSECKeyID),
+	}
+	output, err := conn.DisassociateDelegationSignerFromDomain(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Domains Delegation Signer Record (%s)", data.ID.ValueString()), err.Error())
@@ -275,23 +280,9 @@ type delegationSignerRecordSigningAttributesModel struct {
 }
 
 const (
-	delegationSignerRecordResourceIDPartCount = 2
-	dnssecProtocol                            = 3 // RFC 4034: DNSSEC protocol number
+	delegationSignerRecordResourceIDPartCount int   = 2
+	dnssecProtocol                            uint8 = 3 // RFC 4034: DNSSEC protocol number
 )
-
-func (data *delegationSignerRecordResourceModel) InitFromID() error {
-	id := data.ID.ValueString()
-	parts, err := flex.ExpandResourceId(id, delegationSignerRecordResourceIDPartCount, false)
-
-	if err != nil {
-		return err
-	}
-
-	data.DNSSECKeyID = types.StringValue(parts[1])
-	data.DomainName = types.StringValue(parts[0])
-
-	return nil
-}
 
 func findDNSSECKeyByTwoPartKey(ctx context.Context, conn *route53domains.Client, domainName, keyID string) (*awstypes.DnssecKey, error) {
 	output, err := findDomainDetailByName(ctx, conn, domainName)
@@ -317,7 +308,7 @@ func findDNSSECKeyByDigest(ctx context.Context, conn *route53domains.Client, dom
 	}))
 }
 
-func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Client, domainName string, flags int, algorithm int, publicKey string) (*awstypes.DnssecKey, error) {
+func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Client, domainName string, flags, algorithm int32, publicKey string) (*awstypes.DnssecKey, error) {
 	output, err := findDomainDetailByName(ctx, conn, domainName)
 
 	if err != nil {
@@ -328,14 +319,14 @@ func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Clien
 	// For .uk/.co.uk domains, the registry only returns Digest (partial data).
 	// Try exact match first on Flags + PublicKey (standard TLDs).
 	result, err := tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
-		return int(aws.ToInt32(v.Flags)) == flags && aws.ToString(v.PublicKey) == publicKey
+		return aws.ToInt32(v.Flags) == flags && aws.ToString(v.PublicKey) == publicKey
 	}))
 
 	// Fallback: If exact match fails but keys exist, compute RFC 4034 digest locally
 	// and match against the AWS-returned Digest field (always present, registrar-agnostic).
 	// This handles registry limitations and multi-key scenarios (e.g., during key rollover).
 	if err != nil && len(output.DnssecKeys) > 0 {
-		expectedDigest := CalculateExpectedDigest(domainName, flags, algorithm, publicKey)
+		expectedDigest := calculateExpectedDigest(domainName, flags, algorithm, publicKey)
 
 		fallbackResult, fallbackErr := tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
 			return strings.EqualFold(aws.ToString(v.Digest), expectedDigest)
@@ -352,7 +343,7 @@ func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Clien
 // CalculateExpectedDigest generates the RFC 4034 compliant SHA-256 digest
 // from Terraform resource configuration. This is deterministic and works
 // across all registrars since AWS always returns the Digest field.
-func CalculateExpectedDigest(domainName string, flags int, algorithm int, publicKey string) string {
+func calculateExpectedDigest(domainName string, flags, algorithm int32, publicKey string) string {
 	var buf bytes.Buffer
 
 	// 1. Convert domain name to DNS wire-format labels (lowercase per RFC 4034)

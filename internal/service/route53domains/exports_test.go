@@ -11,4 +11,6 @@ var (
 
 	FindDNSSECKeyByTwoPartKey = findDNSSECKeyByTwoPartKey
 	FindDomainDetailByName    = findDomainDetailByName
+
+	CalculateExpectedDigest = calculateExpectedDigest
 )

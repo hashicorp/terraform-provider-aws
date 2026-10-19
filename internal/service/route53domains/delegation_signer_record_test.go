@@ -17,6 +17,66 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// TestCalculateExpectedDigest verifies RFC 4034 compliant digest generation
+func TestCalculateExpectedDigest(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Valid RFC 4034 digest generation", func(t *testing.T) {
+		t.Parallel()
+		domainName := "example.com"
+		var (
+			flags, algorithm int32 = 257, 13
+		)
+		publicKey := "AwEAAazJ1O4G2F9O7lYvRjWp1A5MvXk1zY7B2C4D5E6F7G8H9I0J"
+
+		digest := tfroute53domains.CalculateExpectedDigest(domainName, flags, algorithm, publicKey)
+
+		if len(digest) != 64 {
+			t.Errorf("Expected 64-char hex digest, got %d chars: %s", len(digest), digest)
+		}
+
+		for _, ch := range digest {
+			if !((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F')) {
+				t.Errorf("Digest contains non-hex character: %c", ch)
+			}
+		}
+	})
+
+	t.Run("Domain case insensitivity (RFC 4034)", func(t *testing.T) {
+		t.Parallel()
+
+		domainLower := "example.com"
+		domainUpper := "EXAMPLE.COM"
+		var (
+			flags, algorithm int32 = 257, 13
+		)
+		publicKey := "AwEAAazJ1O4G2F9O7lYvRjWp1A5MvXk1zY7B2C4D5E6F7G8H9I0J"
+
+		digestLower := tfroute53domains.CalculateExpectedDigest(domainLower, flags, algorithm, publicKey)
+		digestUpper := tfroute53domains.CalculateExpectedDigest(domainUpper, flags, algorithm, publicKey)
+
+		if digestLower != digestUpper {
+			t.Errorf("Domain case sensitivity violation.\nLower: %s\nUpper: %s", digestLower, digestUpper)
+		}
+	})
+
+	t.Run("Invalid Base64 public key graceful handling", func(t *testing.T) {
+		t.Parallel()
+
+		domainName := "example.com"
+		var (
+			flags, algorithm int32 = 257, 13
+		)
+		invalidKey := "not_valid_base64!!!"
+
+		digest := tfroute53domains.CalculateExpectedDigest(domainName, flags, algorithm, invalidKey)
+
+		if len(digest) == 0 {
+			t.Errorf("Digest should not be empty even with invalid key")
+		}
+	})
+}
+
 func testAccDelegationSignerRecord_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	domainName := acctest.SkipIfEnvVarNotSet(t, "ROUTE53DOMAINS_DOMAIN_NAME")
@@ -142,61 +202,4 @@ resource "aws_route53domains_delegation_signer_record" "test" {
   }
 }
 `, domainName, publicKey)
-}
-
-// TestCalculateExpectedDigest verifies RFC 4034 compliant digest generation
-func TestCalculateExpectedDigest(t *testing.T) {
-	t.Parallel()
-
-	t.Run("Valid RFC 4034 digest generation", func(t *testing.T) {
-		t.Parallel()
-		domainName := "example.com"
-		flags := 257
-		algorithm := 13
-		publicKey := "AwEAAazJ1O4G2F9O7lYvRjWp1A5MvXk1zY7B2C4D5E6F7G8H9I0J"
-
-		digest := tfroute53domains.CalculateExpectedDigest(domainName, flags, algorithm, publicKey)
-
-		if len(digest) != 64 {
-			t.Errorf("Expected 64-char hex digest, got %d chars: %s", len(digest), digest)
-		}
-
-		for _, ch := range digest {
-			if !((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F')) {
-				t.Errorf("Digest contains non-hex character: %c", ch)
-			}
-		}
-	})
-
-	t.Run("Domain case insensitivity (RFC 4034)", func(t *testing.T) {
-		t.Parallel()
-
-		domainLower := "example.com"
-		domainUpper := "EXAMPLE.COM"
-		flags := 257
-		algorithm := 13
-		publicKey := "AwEAAazJ1O4G2F9O7lYvRjWp1A5MvXk1zY7B2C4D5E6F7G8H9I0J"
-
-		digestLower := tfroute53domains.CalculateExpectedDigest(domainLower, flags, algorithm, publicKey)
-		digestUpper := tfroute53domains.CalculateExpectedDigest(domainUpper, flags, algorithm, publicKey)
-
-		if digestLower != digestUpper {
-			t.Errorf("Domain case sensitivity violation.\nLower: %s\nUpper: %s", digestLower, digestUpper)
-		}
-	})
-
-	t.Run("Invalid Base64 public key graceful handling", func(t *testing.T) {
-		t.Parallel()
-
-		domainName := "example.com"
-		flags := 257
-		algorithm := 13
-		invalidKey := "not_valid_base64!!!"
-
-		digest := tfroute53domains.CalculateExpectedDigest(domainName, flags, algorithm, invalidKey)
-
-		if len(digest) == 0 {
-			t.Errorf("Digest should not be empty even with invalid key")
-		}
-	})
 }
