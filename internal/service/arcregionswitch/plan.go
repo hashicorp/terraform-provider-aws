@@ -630,30 +630,27 @@ func rdsSwitchoverReadReplicaConfigBlock(ctx context.Context) fwschema.Block {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[rdsSwitchoverReadReplicaConfigModel](ctx),
 		NestedObject: fwschema.NestedBlockObject{
 			Attributes: map[string]fwschema.Attribute{
-				"cross_account_role": fwschema.StringAttribute{
-					Optional: true,
-				},
-				"db_instance_arn_map": fwschema.MapAttribute{
-					CustomType: fwtypes.MapOfStringType,
-					Required:   true,
-				},
-				names.AttrExternalID: fwschema.StringAttribute{
-					Optional: true,
-				},
-				"timeout_minutes": fwschema.Int32Attribute{
-					Optional: true,
-				},
+				"cross_account_role":  fwschema.StringAttribute{Optional: true},
+				"db_instance_arn_map": fwschema.MapAttribute{CustomType: fwtypes.MapOfStringType, Required: true},
+				names.AttrExternalID:  fwschema.StringAttribute{Optional: true},
+				"timeout_minutes":     fwschema.Int32Attribute{Optional: true},
 			},
 			Blocks: map[string]fwschema.Block{
 				"ungraceful": fwschema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[rdsSwitchoverUngracefulModel](ctx),
 					NestedObject: fwschema.NestedBlockObject{
 						Attributes: map[string]fwschema.Attribute{
-							"ungraceful": fwschema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RdsUngracefulBehavior](), Optional: true},
+							"ungraceful": fwschema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RdsUngracefulBehavior](), Required: true},
 						},
+					},
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
 					},
 				},
 			},
+		},
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
 		},
 	}
 }
@@ -2331,7 +2328,7 @@ type rdsPromoteReadReplicaConfigModel struct {
 
 type rdsSwitchoverReadReplicaConfigModel struct {
 	CrossAccountRole types.String                                                  `tfsdk:"cross_account_role"`
-	DbInstanceArnMap fwtypes.MapOfString                                           `tfsdk:"db_instance_arn_map"`
+	DBInstanceARNMap fwtypes.MapOfString                                           `tfsdk:"db_instance_arn_map"`
 	ExternalID       types.String                                                  `tfsdk:"external_id"`
 	TimeoutMinutes   types.Int32                                                   `tfsdk:"timeout_minutes"`
 	Ungraceful       fwtypes.ListNestedObjectValueOf[rdsSwitchoverUngracefulModel] `tfsdk:"ungraceful"`
