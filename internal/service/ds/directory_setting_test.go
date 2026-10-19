@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -102,6 +103,75 @@ func TestAccDSDirectorySetting_update(t *testing.T) {
 			},
 		},
 	})
+}
+
+// TestAccDSDirectorySetting_disappears_Directory verifies that the setting
+// resource detects its backing directory disappearing out of band. Because
+// aws_directory_service_directory_setting uses WithNoOpDelete, the parent
+// directory is disappeared instead.
+func TestAccDSDirectorySetting_disappears_Directory(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName(t)
+	resourceName := "aws_directory_service_directory_setting.test"
+	directoryResourceName := "aws_directory_service_directory.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DSEndpointID)
+			acctest.PreCheckDirectoryService(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectorySettingDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectorySettingsConfig_basic(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectorySettingExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceDirectory(), directoryResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckDirectorySettingDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_directory_service_directory_setting" {
+				continue
+			}
+
+			_, err := tfds.FindDirectorySettingByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes[names.AttrName])
+			if retry.NotFound(err) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Directory Service Directory Setting %s still exists", rs.Primary.Attributes["directory_id"])
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckDirectorySettingExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
