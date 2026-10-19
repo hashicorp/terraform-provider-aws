@@ -158,6 +158,45 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration_rdsDataRisk
 					})),
 				},
 			},
+		},
+	})
+}
+
+func testAccOrganizationConfigurationFeature_additionalConfiguration_rdsDataRisk_remove(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_organization_configuration_feature.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationConfigurationFeatureConfig_additionalConfiguration_rdsDataRisk("NEW", "NEW"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccOrganizationConfigurationFeatureExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", "NEW"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationRdsDataRisk),
+							"auto_enable":  tfknownvalue.StringExact(awstypes.OrgFeatureStatusNew),
+						}),
+					})),
+				},
+			},
 			{
 				Config: testAccOrganizationConfigurationFeatureConfig_basic("RDS_LOGIN_EVENTS", "NEW"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -177,7 +216,7 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration_rdsDataRisk
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrName: tfknownvalue.StringExact(awstypes.OrgFeatureAdditionalConfigurationRdsDataRisk),
-							"auto_enable":  tfknownvalue.StringExact(awstypes.OrgFeatureStatusNone),
+							"auto_enable":  tfknownvalue.StringExact(awstypes.OrgFeatureStatusNew),
 						}),
 					})),
 				},

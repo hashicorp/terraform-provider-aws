@@ -68,10 +68,11 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"malwareProtection":             testAccOrganizationConfiguration_malwareprotection,
 		},
 		"OrganizationConfigurationFeature": {
-			acctest.CtBasic:                          testAccOrganizationConfigurationFeature_basic,
-			"additional_configuration":               testAccOrganizationConfigurationFeature_additionalConfiguration,
-			"additional_configuration_rds_data_risk": testAccOrganizationConfigurationFeature_additionalConfiguration_rdsDataRisk,
-			"multiple":                               testAccOrganizationConfigurationFeature_multiple,
+			acctest.CtBasic:                                 testAccOrganizationConfigurationFeature_basic,
+			"additional_configuration":                      testAccOrganizationConfigurationFeature_additionalConfiguration,
+			"additional_configuration_rds_data_risk":        testAccOrganizationConfigurationFeature_additionalConfiguration_rdsDataRisk,
+			"additional_configuration_rds_data_risk_remove": testAccOrganizationConfigurationFeature_additionalConfiguration_rdsDataRisk_remove,
+			"multiple": testAccOrganizationConfigurationFeature_multiple,
 		},
 		"MemberDetectorFeature": {
 			acctest.CtBasic:            testAccMemberDetectorFeature_basic,
