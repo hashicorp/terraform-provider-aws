@@ -120,7 +120,7 @@ func testAccMemberDetectorFeature_additionalConfiguration(t *testing.T) {
 	})
 }
 
-func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk(t *testing.T) {
+func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk_enabledToDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_guardduty_member_detector_feature.test"
 	accountID := testAccMemberAccountFromEnv(t)
@@ -169,6 +169,101 @@ func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk(t *testing
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk_disabledToEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_member_detector_feature.test"
+	accountID := testAccMemberAccountFromEnv(t)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheckDetectorExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemberDetectorFeatureConfig_additionalConfiguration_rdsDataRisk(accountID, "DISABLED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusDisabled),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccMemberDetectorFeatureConfig_additionalConfiguration_rdsDataRisk(accountID, "ENABLED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk_remove(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_member_detector_feature.test"
+	accountID := testAccMemberAccountFromEnv(t)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheckDetectorExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemberDetectorFeatureConfig_additionalConfiguration_rdsDataRisk(accountID, "ENABLED"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccMemberDetectorFeatureExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("additional_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:   tfknownvalue.StringExact(awstypes.FeatureAdditionalConfigurationRdsDataRisk),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.FeatureStatusEnabled),
 						}),
 					})),
 				},

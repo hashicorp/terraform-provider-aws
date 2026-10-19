@@ -74,10 +74,12 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"multiple":                               testAccOrganizationConfigurationFeature_multiple,
 		},
 		"MemberDetectorFeature": {
-			acctest.CtBasic:                          testAccMemberDetectorFeature_basic,
-			"additional_configuration":               testAccMemberDetectorFeature_additionalConfiguration,
-			"additional_configuration_rds_data_risk": testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk,
-			"multiple":                               testAccMemberDetectorFeature_multiple,
+			acctest.CtBasic:            testAccMemberDetectorFeature_basic,
+			"additional_configuration": testAccMemberDetectorFeature_additionalConfiguration,
+			"additional_configuration_rds_data_risk_disabled_to_enabled": testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk_disabledToEnabled,
+			"additional_configuration_rds_data_risk_enabled_to_disabled": testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk_enabledToDisabled,
+			"additional_configuration_rds_data_risk_remove":              testAccMemberDetectorFeature_additionalConfiguration_rdsDataRisk_remove,
+			"multiple": testAccMemberDetectorFeature_multiple,
 		},
 		"ThreatIntelSet": {
 			acctest.CtBasic:      testAccThreatIntelSet_basic,
