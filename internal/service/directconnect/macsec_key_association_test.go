@@ -59,7 +59,7 @@ func TestAccDirectConnectMacSecKeyAssociation_withCkn(t *testing.T) {
 }
 
 func TestAccDirectConnectMacSecKeyAssociation_writeOnly(t *testing.T) {
-	for _, testCase := range []struct {
+	for _, testCase := range []struct { //nolint:paralleltest // acctest.ParallelTest calls t.Parallel.
 		name       string
 		cakVersion int
 		cknVersion int
