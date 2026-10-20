@@ -1,5 +1,13 @@
 ## 6.70.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_route53domains_delegation_signer_record: Change the format of the import ID from `domain_name,dnssec_key_id` to `domain_name,flags,algorithm,public_key`. This is acceptable in a minor version because AWS no longer return [DNSKEY flags](https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_DnssecKey.html#API_domains_DnssecKey_Contents) and delegation signer records can no longer reliably be found by domain name and key ID ([#50522](https://github.com/hashicorp/terraform-provider-aws/issues/50522))
+
+NOTES:
+
+* resource/aws_dx_macsec_key_association: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#50559](https://github.com/hashicorp/terraform-provider-aws/issues/50559))
+
 FEATURES:
 
 * **New List Resource:** `aws_cloudwatchomni_access_grant` ([#50483](https://github.com/hashicorp/terraform-provider-aws/issues/50483))
@@ -16,11 +24,21 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_arcregionswitch_plan: Add `step.rds_switchover_read_replica_config` argument ([#49675](https://github.com/hashicorp/terraform-provider-aws/issues/49675))
+* resource/aws_dx_macsec_key_association: Add `cak_wo`, `cak_wo_version`, `ckn_wo`, and `ckn_wo_version` arguments ([#50559](https://github.com/hashicorp/terraform-provider-aws/issues/50559))
+* resource/aws_elasticache_global_replication_group: Enable Global Replication Group Failover. Changing `primary_replication_group_id` no longer replaces resource. ([#47913](https://github.com/hashicorp/terraform-provider-aws/issues/47913))
+* resource/aws_guardduty_detector_feature: Add `RDS_DATA_RISK` as a valid value for `additional_configuration.name` ([#50445](https://github.com/hashicorp/terraform-provider-aws/issues/50445))
+* resource/aws_guardduty_member_detector_feature: Add `RDS_DATA_RISK` as a valid value for `additional_configuration.name` ([#50445](https://github.com/hashicorp/terraform-provider-aws/issues/50445))
+* resource/aws_guardduty_organization_configuration_feature: Add `RDS_DATA_RISK` as a valid value for `additional_configuration.name` ([#50445](https://github.com/hashicorp/terraform-provider-aws/issues/50445))
 * resource/aws_neptune_cluster: Add `network_type` argument ([#50331](https://github.com/hashicorp/terraform-provider-aws/issues/50331))
 
 BUG FIXES:
 
+* resource/aws_guardduty_detector_feature: Fix perpetual diff when `additional_configuration` is omitted and AWS returns default entries such as `RDS_DATA_RISK` ([#50445](https://github.com/hashicorp/terraform-provider-aws/issues/50445))
+* resource/aws_guardduty_member_detector_feature: Fix perpetual diff when `additional_configuration` is omitted and AWS returns default entries such as `RDS_DATA_RISK` ([#50445](https://github.com/hashicorp/terraform-provider-aws/issues/50445))
+* resource/aws_guardduty_organization_configuration_feature: Fix forced replacement when `additional_configuration` is omitted and AWS returns default entries such as `RDS_DATA_RISK` ([#50445](https://github.com/hashicorp/terraform-provider-aws/issues/50445))
 * resource/aws_prometheus_scraper: Fix update failure on scrapers with a CloudWatch destination by omitting unchanged `destination` from update requests ([#50463](https://github.com/hashicorp/terraform-provider-aws/issues/50463))
+* resource/aws_route53domains_delegation_signer_record: Fix handling of null Flags and PublicKey fields for `.uk`/`.co.uk` domain registries which caused resources to be removed from state when they existed at AWS ([#50522](https://github.com/hashicorp/terraform-provider-aws/issues/50522))
 * resource/aws_secretsmanager_secret_version: Fix read and delete errors when the version is no longer current and its KMS key has been disabled or deleted, such as after the secret moved to a new key. Terraform keeps the value from state and shows a warning ([#50369](https://github.com/hashicorp/terraform-provider-aws/issues/50369))
 
 ## 6.69.1 (October 15, 2026)
