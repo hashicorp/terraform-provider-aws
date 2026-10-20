@@ -168,8 +168,9 @@ The `tags_all` attribute contains a union of the tags set directly on the resour
     }
     ```
 
-For data sources, use `tftags.TagsAttributeComputedOnly()` (Plugin Framework) or `tftags.TagsSchemaComputed()` (Plugin SDK V2) for `tags`.
+For data sources, use `tftags.TagsAttributeComputedOnly()` (Plugin Framework) or `tftags.TagsSchemaComputedOnly()` (Plugin SDK V2) for `tags`.
 Both are Computed only.
+Don't use `tftags.TagsSchemaComputed()` in data sources. It's Optional+Computed for resource `tags_all` and warns when configured.
 Use `tftags.TagsSchemaOptionalComputed()` only when the data source's Read uses the configured `tags` to find the result, for example as EC2 tag filters.
 Document `tags` under Argument Reference only in that case.
 
