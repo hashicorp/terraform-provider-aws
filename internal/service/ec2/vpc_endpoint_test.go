@@ -1038,6 +1038,83 @@ func TestAccVPCEndpoint_resourceConfigurationPrivateDNSOptions(t *testing.T) {
 	})
 }
 
+func TestAccVPCEndpoint_tunnel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	resourceConfigurationName := "aws_vpclattice_resource_configuration.test"
+	vpcResourceName := "aws_vpc.endpoint"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// private_dns_enabled is deliberately left unset: Create always sends
+				// PrivateDnsEnabled (false when unset), which the API documents as
+				// Interface-only.
+				Config: testAccVPCEndpointConfig_tunnel(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_arn", resourceConfigurationName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.endpoint", names.AttrID),
+					// Unlike other endpoint types, which report "available", the EC2 API
+					// reports Tunnel endpoint state using the SDK enum casing.
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.StateAvailable)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Tunnel"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCEndpointConfig_tunnelSecurityGroupsUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.endpoint", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.endpoint2", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.StateAvailable)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Tunnel"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccVPCEndpoint_serviceNetwork(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.VpcEndpoint
@@ -2796,6 +2873,142 @@ resource "aws_vpc_endpoint" "test" {
   }
 }
 `, rName, privateDNSPreference))
+}
+
+// A Tunnel endpoint requires a CIDR resource configuration, whose resource
+// gateway must use IN_VPC DNS resolution. The endpoint's subnets must be in the
+// resource gateway's Availability Zones, and consumers send GENEVE-encapsulated
+// traffic (UDP 6081) to the endpoint.
+func testAccVPCEndpointConfig_tunnelBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index + 1)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpclattice_resource_gateway" "test" {
+  name       = %[1]q
+  vpc_id     = aws_vpc.test.id
+  subnet_ids = aws_subnet.test[*].id
+
+  resource_config_dns_resolution = "IN_VPC"
+}
+
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  type        = "CIDR"
+  protocol    = "TCP_UDP"
+  port_ranges = ["53", "443"]
+
+  resource_configuration_definition {
+    cidr_resource {
+      cidr_ranges = ["10.0.0.0/24"]
+    }
+  }
+}
+
+resource "aws_vpc" "endpoint" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "endpoint" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  vpc_id            = aws_vpc.endpoint.id
+  cidr_block        = cidrsubnet(aws_vpc.endpoint.cidr_block, 8, count.index + 1)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "endpoint" {
+  name   = %[1]q
+  vpc_id = aws_vpc.endpoint.id
+
+  ingress {
+    from_port   = 6081
+    to_port     = 6081
+    protocol    = "udp"
+    cidr_blocks = [aws_vpc.endpoint.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "endpoint2" {
+  name   = "%[1]s-2"
+  vpc_id = aws_vpc.endpoint.id
+
+  ingress {
+    from_port   = 6081
+    to_port     = 6081
+    protocol    = "udp"
+    cidr_blocks = [aws_vpc.endpoint.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCEndpointConfig_tunnel(rName string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointConfig_tunnelBase(rName), fmt.Sprintf(`
+resource "aws_vpc_endpoint" "test" {
+  resource_configuration_arn = aws_vpclattice_resource_configuration.test.arn
+  security_group_ids         = [aws_security_group.endpoint.id]
+  subnet_ids                 = aws_subnet.endpoint[*].id
+  vpc_endpoint_type          = "Tunnel"
+  vpc_id                     = aws_vpc.endpoint.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCEndpointConfig_tunnelSecurityGroupsUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointConfig_tunnelBase(rName), fmt.Sprintf(`
+resource "aws_vpc_endpoint" "test" {
+  resource_configuration_arn = aws_vpclattice_resource_configuration.test.arn
+  security_group_ids         = [aws_security_group.endpoint.id, aws_security_group.endpoint2.id]
+  subnet_ids                 = aws_subnet.endpoint[*].id
+  vpc_endpoint_type          = "Tunnel"
+  vpc_id                     = aws_vpc.endpoint.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccVPCEndpointConfig_serviceNetwork(rName string) string {
