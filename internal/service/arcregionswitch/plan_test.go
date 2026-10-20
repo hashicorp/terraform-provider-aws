@@ -2319,7 +2319,7 @@ func testAccPlanConfig_update(rName, description string, rto int) string {
 	alarms := fmt.Sprintf(`
   associated_alarms {
     map_block_key       = "test-alarm-1"
-    alarm_type          = "applicationHealth"
+    alarm_type          = "trigger"
     resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-1"
   }`, acctest.Region())
 
@@ -2327,7 +2327,7 @@ func testAccPlanConfig_update(rName, description string, rto int) string {
 		alarms += fmt.Sprintf(`
   associated_alarms {
     map_block_key       = "test-alarm-2"
-    alarm_type          = "applicationHealth"
+    alarm_type          = "trigger"
     resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-2"
   }`, acctest.Region())
 	}
