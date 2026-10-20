@@ -172,7 +172,7 @@ func dataSourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"tls_enabled": {
 					Type:     schema.TypeBool,
 					Computed: true,

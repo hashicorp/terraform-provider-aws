@@ -75,7 +75,7 @@ func dataSourceFramework() *schema.Resource {
 												Type: schema.TypeString,
 											},
 										},
-										names.AttrTags: tftags.TagsSchemaComputed(),
+										names.AttrTags: tftags.TagsSchemaComputedOnly(),
 									},
 								},
 							},
@@ -102,7 +102,7 @@ func dataSourceFramework() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}

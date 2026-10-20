@@ -50,7 +50,7 @@ func dataSourceReplicationSubnetGroup() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				names.AttrVPCID: {
 					Type:     schema.TypeString,
 					Computed: true,

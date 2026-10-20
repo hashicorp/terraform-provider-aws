@@ -45,7 +45,7 @@ func dataSourceVPCConnection() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"target_cluster_arn": {
 					Type:     schema.TypeString,
 					Computed: true,

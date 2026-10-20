@@ -124,7 +124,7 @@ func dataSourceInfrastructureConfiguration() *schema.Resource {
 						},
 					},
 				},
-				names.AttrResourceTags: tftags.TagsSchemaComputed(),
+				names.AttrResourceTags: tftags.TagsSchemaComputedOnly(),
 				names.AttrSecurityGroupIDs: {
 					Type:     schema.TypeSet,
 					Computed: true,
@@ -138,7 +138,7 @@ func dataSourceInfrastructureConfiguration() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"terminate_instance_on_failure": {
 					Type:     schema.TypeBool,
 					Computed: true,

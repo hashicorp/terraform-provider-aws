@@ -121,7 +121,7 @@ func dataSourceRoutingProfile() *schema.Resource {
 					Computed:     true,
 					ExactlyOneOf: []string{"routing_profile_id", names.AttrName},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}

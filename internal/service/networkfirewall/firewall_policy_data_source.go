@@ -188,7 +188,7 @@ func dataSourceFirewallPolicy() *schema.Resource {
 					AtLeastOneOf: []string{names.AttrARN, names.AttrName},
 					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"update_token": {
 					Type:     schema.TypeString,
 					Computed: true,

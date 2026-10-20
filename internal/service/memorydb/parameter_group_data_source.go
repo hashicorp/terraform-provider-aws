@@ -59,7 +59,7 @@ func dataSourceParameterGroup() *schema.Resource {
 					},
 					Set: parameterHash,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}

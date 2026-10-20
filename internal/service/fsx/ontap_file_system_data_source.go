@@ -157,7 +157,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 						Type: schema.TypeString,
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"throughput_capacity": {
 					Type:     schema.TypeInt,
 					Computed: true,

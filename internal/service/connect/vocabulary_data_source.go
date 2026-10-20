@@ -68,7 +68,7 @@ func dataSourceVocabulary() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"vocabulary_id": {
 					Type:         schema.TypeString,
 					Optional:     true,

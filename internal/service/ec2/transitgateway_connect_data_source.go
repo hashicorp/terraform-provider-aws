@@ -38,7 +38,7 @@ func dataSourceTransitGatewayConnect() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"transit_gateway_connect_id": {
 					Type:     schema.TypeString,
 					Optional: true,

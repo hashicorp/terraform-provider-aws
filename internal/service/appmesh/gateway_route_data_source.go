@@ -59,7 +59,7 @@ func dataSourceGatewayRoute() *schema.Resource {
 					Computed: true,
 				},
 				"spec":         sdkv2.ComputedOnlyFromSchema(resourceGatewayRouteSpecSchema()),
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"virtual_gateway_name": {
 					Type:     schema.TypeString,
 					Required: true,

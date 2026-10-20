@@ -255,7 +255,7 @@ func dataSourceFunction() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				names.AttrTimeout: {
 					Type:     schema.TypeInt,
 					Computed: true,

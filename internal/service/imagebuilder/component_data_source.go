@@ -72,7 +72,7 @@ func dataSourceComponent() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				names.AttrType: {
 					Type:     schema.TypeString,
 					Computed: true,

@@ -239,7 +239,7 @@ func dataSourceTable() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"ttl": {
 					Type:     schema.TypeSet,
 					Computed: true,
