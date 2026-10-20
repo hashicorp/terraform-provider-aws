@@ -6,10 +6,263 @@ package main
 import (
 	"go/ast"
 	"go/parser"
+	"go/token"
 	"go/types"
+	"maps"
+	"path/filepath"
 	"slices"
 	"testing"
 )
+
+// testdataRoot is the root of a fixture shaped like the provider repository. See testdata/README.md.
+const testdataRoot = "testdata"
+
+func TestLoad(t *testing.T) {
+	t.Parallel()
+
+	a, err := load(testdataRoot)
+	if err != nil {
+		t.Fatalf("load(%q): %s", testdataRoot, err)
+	}
+
+	wantClientMethods := map[string]string{
+		"ExampleBuildConstraintsClient": "github.com/aws/aws-sdk-go-v2/service/examplebuildconstraints",
+		"ExampleCRUDClient":             "github.com/aws/aws-sdk-go-v2/service/examplecrud",
+		"ExampleCrossServiceClient":     "github.com/aws/aws-sdk-go-v2/service/examplecrossservice",
+		"ExampleCustomizeDiffClient":    "github.com/aws/aws-sdk-go-v2/service/examplecustomizediff",
+		"ExampleFuncRefsClient":         "github.com/aws/aws-sdk-go-v2/service/examplefuncrefs",
+		"ExampleImportClient":           "github.com/aws/aws-sdk-go-v2/service/exampleimport",
+		"ExampleStructFieldClient":      "github.com/aws/aws-sdk-go-v2/service/examplestructfield",
+		"ExampleTagsClient":             "github.com/aws/aws-sdk-go-v2/service/exampletags",
+		"ExampleTagsGenClient":          "github.com/aws/aws-sdk-go-v2/service/exampletagsgen",
+		"ExampleTagsUpdateOnlyClient":   "github.com/aws/aws-sdk-go-v2/service/exampletagsupdateonly",
+	}
+	if !maps.Equal(a.clientMethods, wantClientMethods) {
+		t.Errorf("client methods = %v, want %v", a.clientMethods, wantClientMethods)
+	}
+
+	// Directories with no buildable Go files, or only test files, are not service packages.
+	gotFiles := make(map[string][]string)
+	for importPath, pkg := range a.services {
+		gotFiles[importPath] = fileNames(a, pkg.files)
+	}
+	wantFiles := map[string][]string{
+		servicePathPrefix + "examplebuildconstraints": {
+			"included.go",
+		},
+		servicePathPrefix + "examplecrossservice": {
+			"exports.go",
+			"thing.go",
+		},
+		servicePathPrefix + "examplecrud": {
+			"find.go",
+			"gadget.go",
+			"gizmo.go",
+			"status.go",
+			"wait.go",
+			"widget.go",
+		},
+		servicePathPrefix + "examplecustomizediff": {
+			"customize_diff.go",
+			"thing.go",
+		},
+		servicePathPrefix + "examplefuncrefs": {
+			"call_expression.go",
+			"method_value.go",
+		},
+		servicePathPrefix + "exampleimport": {
+			"import.go",
+			"thing.go",
+		},
+		servicePathPrefix + "examplestructfield": {
+			"database.go",
+			"orchestrator.go",
+			"parent_lookup.go",
+			"retryer.go",
+			"rule.go",
+		},
+		servicePathPrefix + "exampletags": {
+			"gadget.go",
+			"service_package.go",
+			"tags.go",
+			"widget.go",
+			"without_identifier.go",
+		},
+		servicePathPrefix + "exampletagsgen": {
+			"exports.go",
+			"service_package.go",
+			"tags_gen.go",
+			"thing.go",
+		},
+		servicePathPrefix + "exampletagsupdateonly": {
+			"service_package.go",
+			"tags_gen.go",
+			"thing.go",
+		},
+	}
+	if !maps.EqualFunc(gotFiles, wantFiles, slices.Equal) {
+		t.Errorf("service package files = %v, want %v", gotFiles, wantFiles)
+	}
+
+	for importPath, pkg := range a.services {
+		if want := filepath.Base(importPath); pkg.name != want {
+			t.Errorf("service package %s name = %q, want %q", importPath, pkg.name, want)
+		}
+	}
+}
+
+func TestLoadInvalidRoot(t *testing.T) {
+	t.Parallel()
+
+	root := filepath.Join(testdataRoot, "nonexistent")
+
+	if _, err := load(root); err == nil {
+		t.Errorf("load(%q) succeeded, want error", root)
+	}
+}
+
+func TestParsePackage(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		dir       string
+		wantFiles []string
+		wantErr   bool
+	}{
+		"conns": {
+			dir:       "internal/conns",
+			wantFiles: []string{"awsclient.go"},
+		},
+		"excludes test files and unsatisfied build constraints": {
+			dir:       "internal/service/examplebuildconstraints",
+			wantFiles: []string{"included.go"},
+		},
+		"several files": {
+			dir: "internal/service/examplecrud",
+			wantFiles: []string{
+				"find.go",
+				"gadget.go",
+				"gizmo.go",
+				"status.go",
+				"wait.go",
+				"widget.go",
+			},
+		},
+		"no buildable Go files": {
+			dir: "internal/service/examplenogofiles",
+		},
+		"only test files": {
+			dir: "internal/service/exampletestonly",
+		},
+		"nonexistent directory": {
+			dir:     "internal/service/examplenonexistent",
+			wantErr: true,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			a := newTestAnalyzer()
+			dir := filepath.Join(testdataRoot, filepath.FromSlash(testCase.dir))
+
+			files, err := a.parsePackage(dir)
+
+			if testCase.wantErr {
+				if err == nil {
+					t.Errorf("parsePackage(%q) succeeded, want error", dir)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("parsePackage(%q): %s", dir, err)
+			}
+			if got := fileNames(a, files); !slices.Equal(got, testCase.wantFiles) {
+				t.Errorf("parsePackage(%q) files = %q, want %q", dir, got, testCase.wantFiles)
+			}
+		})
+	}
+}
+
+func TestParsePackageImports(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		dir  string
+		file string
+		want map[string]string
+	}{
+		"aliases and default names": {
+			dir:  "internal/service/examplecrud",
+			file: "gadget.go",
+			want: map[string]string{
+				"aws":                   "github.com/aws/aws-sdk-go-v2/aws",
+				"awstypes":              "github.com/aws/aws-sdk-go-v2/service/examplecrud/types",
+				"conns":                 "github.com/hashicorp/terraform-provider-aws/internal/conns",
+				"context":               "context",
+				"diag":                  "github.com/hashicorp/terraform-plugin-sdk/v2/diag",
+				"errs":                  "github.com/hashicorp/terraform-provider-aws/internal/errs",
+				"examplecrud":           "github.com/aws/aws-sdk-go-v2/service/examplecrud",
+				"log":                   "log",
+				"retry":                 "github.com/hashicorp/terraform-provider-aws/internal/retry",
+				"schema":                "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
+				"sdkdiag":               "github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag",
+				"tfexamplecrossservice": "github.com/hashicorp/terraform-provider-aws/internal/service/examplecrossservice",
+				"tfresource":            "github.com/hashicorp/terraform-provider-aws/internal/tfresource",
+				"time":                  "time",
+			},
+		},
+		"imports are recorded per file": {
+			dir:  "internal/service/examplecrud",
+			file: "status.go",
+			want: map[string]string{
+				"context":     "context",
+				"examplecrud": "github.com/aws/aws-sdk-go-v2/service/examplecrud",
+				"retry":       "github.com/hashicorp/terraform-provider-aws/internal/retry",
+			},
+		},
+		"file with build constraint": {
+			dir:  "internal/service/examplebuildconstraints",
+			file: "included.go",
+			want: map[string]string{
+				"aws":                     "github.com/aws/aws-sdk-go-v2/aws",
+				"awstypes":                "github.com/aws/aws-sdk-go-v2/service/examplebuildconstraints/types",
+				"conns":                   "github.com/hashicorp/terraform-provider-aws/internal/conns",
+				"context":                 "context",
+				"diag":                    "github.com/hashicorp/terraform-plugin-sdk/v2/diag",
+				"errs":                    "github.com/hashicorp/terraform-provider-aws/internal/errs",
+				"examplebuildconstraints": "github.com/aws/aws-sdk-go-v2/service/examplebuildconstraints",
+				"log":                     "log",
+				"schema":                  "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
+				"sdkdiag":                 "github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag",
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			a := newTestAnalyzer()
+			dir := filepath.Join(testdataRoot, filepath.FromSlash(testCase.dir))
+
+			files, err := a.parsePackage(dir)
+			if err != nil {
+				t.Fatalf("parsePackage(%q): %s", dir, err)
+			}
+
+			i := slices.IndexFunc(fileNames(a, files), func(name string) bool { return name == testCase.file })
+			if i < 0 {
+				t.Fatalf("parsePackage(%q) did not parse %s", dir, testCase.file)
+			}
+
+			if got := a.importsOf(files[i]); !maps.Equal(got, testCase.want) {
+				t.Errorf("imports of %s = %v, want %v", testCase.file, got, testCase.want)
+			}
+		})
+	}
+}
 
 func TestParseAnnotations(t *testing.T) {
 	t.Parallel()
@@ -485,6 +738,26 @@ func TestIsSDKPackage(t *testing.T) {
 			}
 		})
 	}
+}
+
+// newTestAnalyzer returns an analyzer for testdataRoot with nothing loaded.
+func newTestAnalyzer() *analyzer {
+	return &analyzer{
+		root:          testdataRoot,
+		fset:          token.NewFileSet(),
+		imports:       make(map[*token.File]map[string]string),
+		clientMethods: make(map[string]string),
+		services:      make(map[string]*servicePackage),
+	}
+}
+
+// fileNames returns the base names of parsed files.
+func fileNames(a *analyzer, files []*ast.File) []string {
+	var names []string
+	for _, file := range files {
+		names = append(names, filepath.Base(a.fset.File(file.Pos()).Name()))
+	}
+	return names
 }
 
 // mustParseExpr parses a Go expression, failing the test if it is invalid.
