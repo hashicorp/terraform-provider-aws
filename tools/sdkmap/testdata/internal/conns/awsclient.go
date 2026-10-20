@@ -13,10 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/examplecustomizediff"
 	"github.com/aws/aws-sdk-go-v2/service/examplefuncrefs"
 	"github.com/aws/aws-sdk-go-v2/service/exampleimport"
+	"github.com/aws/aws-sdk-go-v2/service/exampleinterface"
 	"github.com/aws/aws-sdk-go-v2/service/examplestructfield"
 	"github.com/aws/aws-sdk-go-v2/service/exampletags"
 	"github.com/aws/aws-sdk-go-v2/service/exampletagsgen"
 	"github.com/aws/aws-sdk-go-v2/service/exampletagsupdateonly"
+	"github.com/aws/aws-sdk-go-v2/service/exampleunanalyzed"
 )
 
 type AWSClient struct {
@@ -62,6 +64,10 @@ func (c *AWSClient) ExampleImportClient(ctx context.Context) *exampleimport.Clie
 	return client[*exampleimport.Client](ctx, c, "exampleimport")
 }
 
+func (c *AWSClient) ExampleInterfaceClient(ctx context.Context) *exampleinterface.Client {
+	return client[*exampleinterface.Client](ctx, c, "exampleinterface")
+}
+
 func (c *AWSClient) ExampleStructFieldClient(ctx context.Context) *examplestructfield.Client {
 	return client[*examplestructfield.Client](ctx, c, "examplestructfield")
 }
@@ -76,6 +82,10 @@ func (c *AWSClient) ExampleTagsGenClient(ctx context.Context) *exampletagsgen.Cl
 
 func (c *AWSClient) ExampleTagsUpdateOnlyClient(ctx context.Context) *exampletagsupdateonly.Client {
 	return client[*exampletagsupdateonly.Client](ctx, c, "exampletagsupdateonly")
+}
+
+func (c *AWSClient) ExampleUnanalyzedClient(ctx context.Context) *exampleunanalyzed.Client {
+	return client[*exampleunanalyzed.Client](ctx, c, "exampleunanalyzed")
 }
 
 func client[T any](_ context.Context, c *AWSClient, servicePackageName string) T {
