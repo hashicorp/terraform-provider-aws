@@ -5,11 +5,13 @@ package cloudwatchomni
 
 // Exports for use in tests only.
 var (
+	ResourceAccessGrant   = newAccessGrantResource
 	ResourceAccessProfile = newAccessProfileResource
 	ResourceDomain        = newDomainResource
 	ResourceSpace         = newSpaceResource
 	ResourceView          = newViewResource
 
+	FindAccessGrantByID           = findAccessGrantByID
 	FindAccessProfileByTwoPartKey = findAccessProfileByTwoPartKey
 	FindDomainByID                = findDomainByID
 	FindSpaceByID                 = findSpaceByID
