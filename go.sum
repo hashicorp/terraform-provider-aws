@@ -209,8 +209,8 @@ github.com/aws/aws-sdk-go-v2/service/dax v1.38.8 h1:Y9wzUUn52QvKHo1p5885nNmcOSep
 github.com/aws/aws-sdk-go-v2/service/dax v1.38.8/go.mod h1:MvxQA5l/PiJrOVv7CGgQIgHtGKnQ5YlgontdF2URGBY=
 github.com/aws/aws-sdk-go-v2/service/detective v1.47.5 h1:TECx+CeIZZXC0CN3DQD+qtym8+zyX5/l232CPQYl69Q=
 github.com/aws/aws-sdk-go-v2/service/detective v1.47.5/go.mod h1:dG4raKxe5bY7JmLio7EbuQ5ZuEd3nqdEj5X2HLWjjG0=
-github.com/aws/aws-sdk-go-v2/service/devicefarm v1.52.1 h1:WsNRrDlsf/PzvuweGtSwnPtMVHQ2vhm1V7s2qcD/daY=
-github.com/aws/aws-sdk-go-v2/service/devicefarm v1.52.1/go.mod h1:W/5Q2XTWbJLFPl15+3mLfuUfo/mV3Q4MO/XMO748mV8=
+github.com/aws/aws-sdk-go-v2/service/devicefarm v1.52.2 h1:i98ECsNyWPYr02HEuuJR+EcEyxb48yjwT8YWVLsmCRg=
+github.com/aws/aws-sdk-go-v2/service/devicefarm v1.52.2/go.mod h1:W/5Q2XTWbJLFPl15+3mLfuUfo/mV3Q4MO/XMO748mV8=
 github.com/aws/aws-sdk-go-v2/service/devopsagent v1.19.0 h1:OIikxHWe9TAxq6I3NsQdV7VfN3qv7+7lQ/c9PY9MC4Y=
 github.com/aws/aws-sdk-go-v2/service/devopsagent v1.19.0/go.mod h1:Bk9N+kCih4QLzsrpDtjvDYrFlv8jp6+e32vmZZxtYX4=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.48.4 h1:GdG/aTTXrnGg8XElVE4e/GUy8b3LShw3UQhdWwy/UxQ=
