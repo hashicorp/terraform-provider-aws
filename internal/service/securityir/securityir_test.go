@@ -35,6 +35,9 @@ func TestAccSecurityIR_serial(t *testing.T) {
 			"organizationalUnits":     testAccMembership_organizationalUnits,
 			"tags":                    testAccSecurityIRMembership_tagsSerial,
 			"Identity":                testAccSecurityIRMembership_identitySerial,
+			"List_basic":              testAccMembership_List_basic,
+			"List_includeResource":    testAccMembership_List_includeResource,
+			"List_regionOverride":     testAccMembership_List_regionOverride,
 		},
 	}
 
