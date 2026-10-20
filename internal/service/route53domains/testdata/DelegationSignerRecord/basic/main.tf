@@ -12,11 +12,11 @@ resource "aws_route53domains_delegation_signer_record" "test" {
 }
 
 variable "domain_name" {
-  type        = string
-  nullable    = false
+  type     = string
+  nullable = false
 }
 
 variable "public_key" {
-  type        = string
-  nullable    = false
+  type     = string
+  nullable = false
 }
