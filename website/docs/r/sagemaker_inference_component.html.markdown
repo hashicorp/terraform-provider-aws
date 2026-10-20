@@ -222,13 +222,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Status of the inference component (e.g., `InService`, `Creating`, `Updating`, `Failed`, `Deleting`).
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-### `runtime_config` Attribute Reference
+### `runtime_config` Block
 
 * `current_copy_count` - Number of runtime copies currently deployed.
 * `desired_copy_count` - Number of runtime copies requested.
 * `placement_status` - Placement status of the inference component copies across instance types. See below.
 
-### `placement_status` Attribute Reference
+### `placement_status` Block
 
 * `current_copy_count` - Number of copies placed on this instance type.
 * `instance_type` - Instance type on which the copies are placed.
