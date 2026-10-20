@@ -867,7 +867,14 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	c := meta.(*conns.AWSClient)
 	conn := c.S3Client(ctx)
 
-	_, err := findBucket(ctx, conn, d.Id())
+	var err error
+	if d.IsNewResource() {
+		_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (any, error) {
+			return findBucket(ctx, conn, d.Id())
+		})
+	} else {
+		_, err = findBucket(ctx, conn, d.Id())
+	}
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
@@ -1192,7 +1199,14 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Region etc.
 	//
-	region, err := findBucketRegion(ctx, c, d.Id())
+	var region string
+	if d.IsNewResource() {
+		region, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (string, error) {
+			return findBucketRegion(ctx, c, d.Id())
+		})
+	} else {
+		region, err = findBucketRegion(ctx, c, d.Id())
+	}
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
