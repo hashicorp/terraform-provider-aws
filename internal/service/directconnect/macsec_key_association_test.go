@@ -301,7 +301,7 @@ func TestMacSecKeyAssociationSchema(t *testing.T) {
 	t.Parallel()
 
 	key := strings.Repeat("a", 64)
-	secretARN := "arn:aws:secretsmanager:us-west-2:123456789012:secret:example"
+	secretARN := "arn:aws:secretsmanager:us-west-2:123456789012:secret:example" //lintignore:AWSAT003,AWSAT005
 	testCases := map[string]struct {
 		config      map[string]any
 		expectError bool
