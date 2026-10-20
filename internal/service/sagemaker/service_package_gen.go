@@ -150,6 +150,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
 		},
 		{
+			Factory:  newInferenceComponentResourceAsListResource,
+			TypeName: "aws_sagemaker_inference_component",
+			Name:     "Inference Component",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrName, true)),
+		},
+		{
 			Factory:  newTrainingJobResourceAsListResource,
 			TypeName: "aws_sagemaker_training_job",
 			Name:     "Training Job",
