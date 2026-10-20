@@ -9,8 +9,8 @@ var (
 	ResourceDomain                 = newDomainResource
 	ResourceRegisteredDomain       = resourceRegisteredDomain
 
-	FindDNSSECKeyByTwoPartKey = findDNSSECKeyByTwoPartKey
-	FindDomainDetailByName    = findDomainDetailByName
+	FindDNSSECKeyByDomainNameAndKeyID = findDNSSECKeyByDomainNameAndKeyID
+	FindDomainDetailByName            = findDomainDetailByName
 
-	CalculateExpectedDigest = calculateExpectedDigest
+	DelegationSignerDigest = delegationSignerDigest
 )
