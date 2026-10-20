@@ -1,5 +1,9 @@
 ```release-note:breaking-change
-provider: Reject `tags_all` in Plugin SDK V2 resource configurations and `tags` in data source configurations that don't filter by tags. Neither value was ever used, so this only affects configurations that had no effect.
+provider: Reject `tags` in data source configurations that don't filter by tags. The value was never used, so this only affects configurations that had no effect.
+```
+
+```release-note:note
+provider: Warn when `tags_all` is set in Plugin SDK V2 resource configurations. A future version of the provider will reject it.
 ```
 
 ```release-note:bug
