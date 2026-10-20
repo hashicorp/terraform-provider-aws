@@ -2,12 +2,26 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_cloudwatchomni_access_grant` ([#50483](https://github.com/hashicorp/terraform-provider-aws/issues/50483))
+* **New List Resource:** `aws_cloudwatchomni_access_profile` ([#50471](https://github.com/hashicorp/terraform-provider-aws/issues/50471))
 * **New List Resource:** `aws_cloudwatchomni_view` ([#50428](https://github.com/hashicorp/terraform-provider-aws/issues/50428))
+* **New List Resource:** `aws_directory_service_directory_setting` ([#50145](https://github.com/hashicorp/terraform-provider-aws/issues/50145))
+* **New List Resource:** `aws_directoryservicedata_group` ([#50221](https://github.com/hashicorp/terraform-provider-aws/issues/50221))
+* **New Resource:** `aws_bedrock_enforced_guardrail_configuration` ([#47408](https://github.com/hashicorp/terraform-provider-aws/issues/47408))
+* **New Resource:** `aws_cloudwatchomni_access_grant` ([#50483](https://github.com/hashicorp/terraform-provider-aws/issues/50483))
+* **New Resource:** `aws_cloudwatchomni_access_profile` ([#50471](https://github.com/hashicorp/terraform-provider-aws/issues/50471))
 * **New Resource:** `aws_cloudwatchomni_view` ([#50428](https://github.com/hashicorp/terraform-provider-aws/issues/50428))
+* **New Resource:** `aws_directory_service_directory_setting` ([#50145](https://github.com/hashicorp/terraform-provider-aws/issues/50145))
+* **New Resource:** `aws_directoryservicedata_group` ([#50221](https://github.com/hashicorp/terraform-provider-aws/issues/50221))
+
+ENHANCEMENTS:
+
+* resource/aws_neptune_cluster: Add `network_type` argument ([#50331](https://github.com/hashicorp/terraform-provider-aws/issues/50331))
 
 BUG FIXES:
 
 * resource/aws_prometheus_scraper: Fix update failure on scrapers with a CloudWatch destination by omitting unchanged `destination` from update requests ([#50463](https://github.com/hashicorp/terraform-provider-aws/issues/50463))
+* resource/aws_secretsmanager_secret_version: Fix read and delete errors when the version is no longer current and its KMS key has been disabled or deleted, such as after the secret moved to a new key. Terraform keeps the value from state and shows a warning ([#50369](https://github.com/hashicorp/terraform-provider-aws/issues/50369))
 
 ## 6.69.1 (October 15, 2026)
 
