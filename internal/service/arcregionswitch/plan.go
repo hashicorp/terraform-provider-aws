@@ -938,6 +938,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"rds_switchover_read_replica_config":          rdsSwitchoverReadReplicaConfigBlock(ctx),
 															"region_switch_plan_config":                   regionSwitchPlanConfigBlock(ctx),
 															"route53_health_check_config":                 route53HealthCheckConfigBlock(ctx),
+															"ssm_send_command_config":                     ssmSendCommandConfigBlock(ctx),
 														},
 													},
 												},
@@ -945,6 +946,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 										},
 									},
 									"route53_health_check_config": route53HealthCheckConfigBlock(ctx),
+									"ssm_send_command_config":     ssmSendCommandConfigBlock(ctx),
 								}, // blocks
 							},
 						},
@@ -1324,6 +1326,7 @@ type stepModel struct {
 	RdsSwitchoverReadReplicaConfig        fwtypes.ListNestedObjectValueOf[rdsSwitchoverReadReplicaConfigModel]        `tfsdk:"rds_switchover_read_replica_config" autoflex:"-"`
 	RegionSwitchPlanConfig                fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]                `tfsdk:"region_switch_plan_config" autoflex:"-"`
 	Route53HealthCheckConfig              fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]              `tfsdk:"route53_health_check_config" autoflex:"-"`
+	SsmSendCommandConfig                  fwtypes.ListNestedObjectValueOf[ssmSendCommandConfigModel]                  `tfsdk:"ssm_send_command_config" autoflex:"-"`
 }
 
 var (
@@ -1561,6 +1564,18 @@ func (m stepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
 			return nil, diags
 		}
 		result.ExecutionBlockConfiguration = &r
+	case !m.SsmSendCommandConfig.IsNull():
+		config, d := m.SsmSendCommandConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberSsmSendCommandConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
 	}
 
 	return &result, diags
@@ -1622,6 +1637,8 @@ func (m *stepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsSwitchoverReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.Route53HealthCheckConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberSsmSendCommandConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.SsmSendCommandConfig)...)
 		}
 	}
 
@@ -2000,6 +2017,7 @@ type parallelStepModel struct {
 	RdsSwitchoverReadReplicaConfig        fwtypes.ListNestedObjectValueOf[rdsSwitchoverReadReplicaConfigModel]        `tfsdk:"rds_switchover_read_replica_config" autoflex:"-"`
 	RegionSwitchPlanConfig                fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]                `tfsdk:"region_switch_plan_config" autoflex:"-"`
 	Route53HealthCheckConfig              fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]              `tfsdk:"route53_health_check_config" autoflex:"-"`
+	SsmSendCommandConfig                  fwtypes.ListNestedObjectValueOf[ssmSendCommandConfigModel]                  `tfsdk:"ssm_send_command_config" autoflex:"-"`
 }
 
 var (
@@ -2225,6 +2243,18 @@ func (m parallelStepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics)
 			return nil, diags
 		}
 		result.ExecutionBlockConfiguration = &r
+	case !m.SsmSendCommandConfig.IsNull():
+		config, d := m.SsmSendCommandConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberSsmSendCommandConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
 	}
 
 	return &result, diags
@@ -2284,6 +2314,8 @@ func (m *parallelStepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnosti
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsSwitchoverReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.Route53HealthCheckConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberSsmSendCommandConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.SsmSendCommandConfig)...)
 		}
 	}
 
@@ -2614,5 +2646,233 @@ func (m *lambdaEventSourceMappingConfigModel) Flatten(ctx context.Context, v any
 		}
 		m.RegionEventSourceMappings = mappings
 	}
+	return diags
+}
+
+// SSM Send Command Configuration
+
+func ssmSendCommandConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ssmSendCommandConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"retry_interval_minutes": fwschema.Float32Attribute{
+					Required: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"region_document": fwschema.SetNestedBlock{
+					CustomType: fwtypes.NewSetNestedObjectTypeOf[ssmRegionDocumentModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							names.AttrRegion:     fwschema.StringAttribute{Required: true},
+							"document_arn":       fwschema.StringAttribute{Required: true},
+							"document_version":   fwschema.StringAttribute{Optional: true},
+							"cross_account_role": fwschema.StringAttribute{Optional: true},
+							names.AttrExternalID: fwschema.StringAttribute{Optional: true},
+							"parameters": fwschema.MapAttribute{
+								CustomType: fwtypes.NewMapTypeOf[fwtypes.ListValueOf[types.String]](ctx),
+								Optional:   true,
+							},
+						},
+						Blocks: map[string]fwschema.Block{
+							"target": fwschema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[ssmTargetModel](ctx),
+								NestedObject: fwschema.NestedBlockObject{
+									Attributes: map[string]fwschema.Attribute{
+										"key": fwschema.StringAttribute{Required: true},
+										"values": fwschema.ListAttribute{
+											CustomType: fwtypes.ListOfStringType,
+											Required:   true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[ssmSendCommandUngracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"behavior": fwschema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.SsmSendCommandUngracefulBehavior](), Required: true},
+						},
+					},
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+				},
+			},
+		},
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+	}
+}
+
+type ssmSendCommandConfigModel struct {
+	RegionDocuments      fwtypes.SetNestedObjectValueOf[ssmRegionDocumentModel]         `tfsdk:"region_document" autoflex:"-"`
+	RetryIntervalMinutes types.Float32                                                  `tfsdk:"retry_interval_minutes"`
+	TimeoutMinutes       types.Int32                                                    `tfsdk:"timeout_minutes"`
+	Ungraceful           fwtypes.ListNestedObjectValueOf[ssmSendCommandUngracefulModel] `tfsdk:"ungraceful"`
+}
+
+type ssmRegionDocumentModel struct {
+	Region           types.String                                          `tfsdk:"region"`
+	DocumentARN      types.String                                          `tfsdk:"document_arn"`
+	DocumentVersion  types.String                                          `tfsdk:"document_version"`
+	CrossAccountRole types.String                                          `tfsdk:"cross_account_role"`
+	ExternalID       types.String                                          `tfsdk:"external_id"`
+	Parameters       fwtypes.MapValueOf[fwtypes.ListValueOf[types.String]] `tfsdk:"parameters"`
+	Targets          fwtypes.ListNestedObjectValueOf[ssmTargetModel]       `tfsdk:"target" autoflex:"-"`
+}
+
+type ssmTargetModel struct {
+	Key    types.String                      `tfsdk:"key"`
+	Values fwtypes.ListValueOf[types.String] `tfsdk:"values"`
+}
+
+type ssmSendCommandUngracefulModel struct {
+	Behavior fwtypes.StringEnum[awstypes.SsmSendCommandUngracefulBehavior] `tfsdk:"behavior"`
+}
+
+var (
+	_ flex.Expander  = ssmSendCommandConfigModel{}
+	_ flex.Flattener = &ssmSendCommandConfigModel{}
+)
+
+func (m ssmSendCommandConfigModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
+	var result awstypes.SsmSendCommandConfiguration
+	var diags fwdiag.Diagnostics
+
+	diags.Append(flex.Expand(ctx, m.RetryIntervalMinutes, &result.RetryIntervalMinutes)...)
+	diags.Append(flex.Expand(ctx, m.TimeoutMinutes, &result.TimeoutMinutes)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	if !m.Ungraceful.IsNull() && !m.Ungraceful.IsUnknown() {
+		ungracefulModel, d := m.Ungraceful.ToPtr(ctx)
+		diags.Append(d...)
+		if !diags.HasError() && ungracefulModel != nil {
+			result.Ungraceful = &awstypes.SsmSendCommandUngraceful{Behavior: ungracefulModel.Behavior.ValueEnum()}
+		}
+	}
+
+	if !m.RegionDocuments.IsNull() && !m.RegionDocuments.IsUnknown() {
+		var docModels []ssmRegionDocumentModel
+		diags.Append(m.RegionDocuments.ElementsAs(ctx, &docModels, false)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.RegionDocuments = make(map[string]awstypes.SsmDocumentConfig, len(docModels))
+		for _, dm := range docModels {
+			var doc awstypes.SsmDocumentConfig
+			doc.DocumentArn = dm.DocumentARN.ValueStringPointer()
+			diags.Append(flex.Expand(ctx, dm.DocumentVersion, &doc.DocumentVersion)...)
+			diags.Append(flex.Expand(ctx, dm.CrossAccountRole, &doc.CrossAccountRole)...)
+			diags.Append(flex.Expand(ctx, dm.ExternalID, &doc.ExternalId)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			if !dm.Targets.IsNull() && !dm.Targets.IsUnknown() {
+				var targetModels []ssmTargetModel
+				diags.Append(dm.Targets.ElementsAs(ctx, &targetModels, false)...)
+				if diags.HasError() {
+					return nil, diags
+				}
+				doc.Targets = make([]awstypes.SsmTarget, len(targetModels))
+				for i, tm := range targetModels {
+					var values []string
+					diags.Append(tm.Values.ElementsAs(ctx, &values, false)...)
+					if diags.HasError() {
+						return nil, diags
+					}
+					doc.Targets[i] = awstypes.SsmTarget{Key: tm.Key.ValueStringPointer(), Values: values}
+				}
+			}
+			diags.Append(flex.Expand(ctx, dm.Parameters, &doc.Parameters)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			result.RegionDocuments[dm.Region.ValueString()] = doc
+		}
+	}
+
+	return &result, diags
+}
+
+func (m *ssmSendCommandConfigModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
+	var diags fwdiag.Diagnostics
+
+	config, ok := v.(awstypes.SsmSendCommandConfiguration)
+	if !ok {
+		diags.AddError("Unexpected Type", "Expected awstypes.SsmSendCommandConfiguration")
+		return diags
+	}
+
+	diags.Append(flex.Flatten(ctx, config.RetryIntervalMinutes, &m.RetryIntervalMinutes)...)
+	diags.Append(flex.Flatten(ctx, config.TimeoutMinutes, &m.TimeoutMinutes)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if config.Ungraceful != nil {
+		ungraceful, d := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []ssmSendCommandUngracefulModel{{Behavior: fwtypes.StringEnumValue(config.Ungraceful.Behavior)}})
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		m.Ungraceful = ungraceful
+	}
+
+	if len(config.RegionDocuments) > 0 {
+		docModels := make([]ssmRegionDocumentModel, 0, len(config.RegionDocuments))
+		for region, doc := range config.RegionDocuments {
+			dm := ssmRegionDocumentModel{
+				Region:      types.StringValue(region),
+				DocumentARN: types.StringValue(aws.ToString(doc.DocumentArn)),
+			}
+			diags.Append(flex.Flatten(ctx, doc.DocumentVersion, &dm.DocumentVersion)...)
+			diags.Append(flex.Flatten(ctx, doc.CrossAccountRole, &dm.CrossAccountRole)...)
+			diags.Append(flex.Flatten(ctx, doc.ExternalId, &dm.ExternalID)...)
+			if diags.HasError() {
+				return diags
+			}
+			if len(doc.Targets) > 0 {
+				targetModels := make([]ssmTargetModel, len(doc.Targets))
+				for i, t := range doc.Targets {
+					var tm ssmTargetModel
+					tm.Key = types.StringValue(aws.ToString(t.Key))
+					diags.Append(flex.Flatten(ctx, t.Values, &tm.Values)...)
+					if diags.HasError() {
+						return diags
+					}
+					targetModels[i] = tm
+				}
+				targets, d := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, targetModels)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+				dm.Targets = targets
+			}
+			diags.Append(flex.Flatten(ctx, doc.Parameters, &dm.Parameters)...)
+			if diags.HasError() {
+				return diags
+			}
+			docModels = append(docModels, dm)
+		}
+		docs, d := fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, docModels)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		m.RegionDocuments = docs
+	}
+
 	return diags
 }

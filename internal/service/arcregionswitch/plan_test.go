@@ -1250,6 +1250,66 @@ func TestAccARCRegionSwitchPlan_lambdaEventSourceMapping(t *testing.T) {
 	})
 }
 
+func TestAccARCRegionSwitchPlan_ssmSendCommand(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_ssmSendCommand(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+
+					// Verify SSMSendCommand execution block
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": "SSMSendCommand",
+						names.AttrName:         "ssm-send-command-step",
+					}),
+
+					// Verify config values (custom Expand/Flatten)
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ssm_send_command_config.*", map[string]string{
+						"retry_interval_minutes": "5",
+						"timeout_minutes":        "30",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ssm_send_command_config.*.region_document.*", map[string]string{
+						names.AttrRegion:        acctest.Region(),
+						"document_arn":          fmt.Sprintf("arn:aws:ssm:%s:123456789012:document/MyRunbook", acctest.Region()),
+						"parameters.commands.0": "echo hello",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ssm_send_command_config.*.region_document.*", map[string]string{
+						names.AttrRegion: acctest.AlternateRegion(),
+						"document_arn":   fmt.Sprintf("arn:aws:ssm:%s:123456789012:document/MyRunbook", acctest.AlternateRegion()),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ssm_send_command_config.*.ungraceful.*", map[string]string{
+						"behavior": "skip",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
 func TestAccARCRegionSwitchPlan_reportConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
@@ -1584,6 +1644,46 @@ resource "aws_arcregionswitch_plan" "test" {
 
         ungraceful {
           ungraceful = "failover"
+        }
+      }
+    }
+
+    # SSMSendCommand step
+    step {
+      name                 = "ssm-send-command-step"
+      execution_block_type = "SSMSendCommand"
+      description          = "SSM Send Command step"
+
+      ssm_send_command_config {
+        retry_interval_minutes = 5
+        timeout_minutes        = 30
+
+        region_document {
+          region       = %[2]q
+          document_arn = "arn:aws:ssm:%[2]s:123456789012:document/MyRunbook"
+
+          target {
+            key    = "InstanceIds"
+            values = ["i-1234567890abcdef0"]
+          }
+
+          parameters = {
+            commands = ["echo hello"]
+          }
+        }
+
+        region_document {
+          region       = %[3]q
+          document_arn = "arn:aws:ssm:%[3]s:123456789012:document/MyRunbook"
+
+          target {
+            key    = "InstanceIds"
+            values = ["i-0987654321fedcba0"]
+          }
+        }
+
+        ungraceful {
+          behavior = "skip"
         }
       }
     }
@@ -3123,6 +3223,78 @@ resource "aws_arcregionswitch_plan" "test" {
         region_event_source_mapping {
           region = %[3]q
           arn    = "arn:aws:lambda:%[3]s:123456789012:event-source-mapping:bbbbbbbb-5555-6666-7777-888888888888"
+        }
+
+        ungraceful {
+          behavior = "skip"
+        }
+      }
+    }
+  }
+}
+`, rName, acctest.Region(), acctest.AlternateRegion())
+}
+
+func testAccPlanConfig_ssmSendCommand(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[2]q, %[3]q]
+  primary_region    = %[2]q
+
+  workflow {
+    workflow_target_action = "activate"
+
+    step {
+      name                 = "ssm-send-command-step"
+      execution_block_type = "SSMSendCommand"
+      description          = "SSM Send Command step"
+
+      ssm_send_command_config {
+        retry_interval_minutes = 5
+        timeout_minutes        = 30
+
+        region_document {
+          region       = %[2]q
+          document_arn = "arn:aws:ssm:%[2]s:123456789012:document/MyRunbook"
+
+          target {
+            key    = "InstanceIds"
+            values = ["i-1234567890abcdef0"]
+          }
+
+          parameters = {
+            commands = ["echo hello"]
+          }
+        }
+
+        region_document {
+          region       = %[3]q
+          document_arn = "arn:aws:ssm:%[3]s:123456789012:document/MyRunbook"
+
+          target {
+            key    = "InstanceIds"
+            values = ["i-0987654321fedcba0"]
+          }
         }
 
         ungraceful {
