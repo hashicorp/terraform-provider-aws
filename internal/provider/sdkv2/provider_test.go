@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"iter"
 	"os"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -761,4 +763,92 @@ func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int,
 	}
 
 	return errors.Join(errs...)
+}
+
+func TestTagsSchemas(t *testing.T) {
+	t.Parallel()
+
+	p, err := NewProvider(t.Context())
+	if err != nil {
+		t.Fatalf("Initializing SDKv2 provider: %s", err)
+	}
+
+	t.Run("data sources don't use TagsSchemaComputed", func(t *testing.T) {
+		t.Parallel()
+
+		// TagsSchemaComputed is Optional so that resource configurations setting tags_all keep working.
+		// Data sources must use TagsSchemaComputedOnly, or TagsSchemaOptionalComputed for tag filters.
+		warn := reflect.ValueOf(tftags.TagsSchemaComputed().ValidateDiagFunc).Pointer()
+		var walk func(name, path string, m map[string]*schema.Schema)
+		walk = func(name, path string, m map[string]*schema.Schema) {
+			for k, s := range m {
+				if s.ValidateDiagFunc != nil && reflect.ValueOf(s.ValidateDiagFunc).Pointer() == warn {
+					t.Errorf("%s: %s%s uses tftags.TagsSchemaComputed", name, path, k)
+				}
+				if r, ok := s.Elem.(*schema.Resource); ok {
+					walk(name, path+k+".", r.SchemaMap())
+				}
+			}
+		}
+		for name, r := range p.DataSourcesMap {
+			walk(name, "", r.SchemaMap())
+		}
+	})
+
+	testCases := map[string]struct {
+		typeName     string
+		dataSource   bool
+		config       map[string]any
+		wantWarnings int
+		wantErrors   int
+	}{
+		"resource tags": {
+			typeName: "aws_sns_topic",
+			config:   map[string]any{names.AttrTags: map[string]any{"k": "v"}},
+		},
+		"resource tags_all": {
+			typeName:     "aws_sns_topic",
+			config:       map[string]any{names.AttrTagsAll: map[string]any{"k": "v"}},
+			wantWarnings: 1,
+		},
+		"resource empty tags_all": {
+			typeName:     "aws_sns_topic",
+			config:       map[string]any{names.AttrTagsAll: map[string]any{}},
+			wantWarnings: 1,
+		},
+		"data source attribute tags": {
+			typeName:   "aws_sns_topic",
+			dataSource: true,
+			config:     map[string]any{names.AttrName: "n", names.AttrTags: map[string]any{"k": "v"}},
+			wantErrors: 1,
+		},
+		"data source filter tags": {
+			typeName:   "aws_vpc",
+			dataSource: true,
+			config:     map[string]any{names.AttrTags: map[string]any{"k": "v"}},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			r := p.ResourcesMap[tc.typeName]
+			if tc.dataSource {
+				r = p.DataSourcesMap[tc.typeName]
+			}
+
+			var warnings, errs int
+			for _, d := range r.Validate(terraform.NewResourceConfigRaw(tc.config)) {
+				if d.Severity == diag.Warning {
+					warnings++
+				} else {
+					errs++
+				}
+			}
+			if warnings != tc.wantWarnings || errs != tc.wantErrors {
+				t.Errorf("got %d warnings and %d errors, want %d and %d", warnings, errs, tc.wantWarnings, tc.wantErrors)
+			}
+		})
+	}
 }
