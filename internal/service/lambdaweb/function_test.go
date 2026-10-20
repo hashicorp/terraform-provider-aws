@@ -95,7 +95,7 @@ func TestAccLambdaWebFunction_basic(t *testing.T) {
 						"auto_deployment_mode": tfknownvalue.StringExact(awstypes.AutoDeploymentModeLatestRevision),
 						names.AttrDescription:  knownvalue.Null(),
 						"endpoint_name":        knownvalue.StringExact("default"),
-						"endpoint_type":        tfknownvalue.StringExact(awstypes.EndpointTypeHomeRegion),
+						names.AttrEndpointType: tfknownvalue.StringExact(awstypes.EndpointTypeHomeRegion),
 						"regions": knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.StringExact(acctest.Region()),
 						}),
