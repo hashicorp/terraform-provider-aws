@@ -476,27 +476,28 @@ func (a *analyzer) addFuncRefs(pkg *servicePackage, r *resource, lit *ast.Compos
 	}
 }
 
-// hasSDKCalls reports whether any of a resource's functions calls an AWS SDK client method.
-func (r *resource) hasSDKCalls() bool {
-	refs := []*funcRef{r.Create, r.Read, r.Update, r.Delete, r.CustomizeDiff, r.Import}
-	return slices.ContainsFunc(refs, (*funcRef).hasSDKCalls)
-}
-
-// hasSDKCalls reports whether the function calls an AWS SDK client method. ref may be nil.
-func (ref *funcRef) hasSDKCalls() bool {
-	return ref != nil && len(ref.SDKCalls) > 0
-}
-
-// logWarnings logs the warnings for each of a resource's functions, including its tag methods.
-func (r *resource) logWarnings() {
+// funcRefs returns the resource's function references that are set, including its tag methods.
+func (r *resource) funcRefs() []*funcRef {
 	refs := []*funcRef{r.Create, r.Read, r.Update, r.Delete, r.CustomizeDiff, r.Import}
 	if r.Tags != nil {
 		refs = append(refs, r.Tags.List, r.Tags.Update)
 	}
-	for _, ref := range refs {
-		if ref == nil {
-			continue
-		}
+	return slices.DeleteFunc(refs, func(ref *funcRef) bool { return ref == nil })
+}
+
+// hasSDKCalls reports whether any of a resource's functions calls an AWS SDK client method.
+func (r *resource) hasSDKCalls() bool {
+	return slices.ContainsFunc(r.funcRefs(), (*funcRef).hasSDKCalls)
+}
+
+// hasSDKCalls reports whether the function calls an AWS SDK client method.
+func (ref *funcRef) hasSDKCalls() bool {
+	return len(ref.SDKCalls) > 0
+}
+
+// logWarnings logs the warnings for each of a resource's functions.
+func (r *resource) logWarnings() {
+	for _, ref := range r.funcRefs() {
 		for _, warning := range ref.warnings {
 			log.Printf("%s: %s: %s", r.Location, ref.Expr, warning)
 		}
