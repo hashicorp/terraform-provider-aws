@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_identitystore_group: Use revisions to detect concurrent modifications
+```
+
+```release-note:enhancement
+resource/aws_identitystore_user: Use revisions to detect concurrent modifications
+```
