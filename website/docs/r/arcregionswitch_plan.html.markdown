@@ -212,7 +212,7 @@ The following arguments are optional:
 * `ecs_capacity_increase_config` - (Optional) Configuration for ECS service capacity increase. See [`ecs_capacity_increase_config` Block](#ecs_capacity_increase_config-block) for details.
 * `eks_resource_scaling_config` - (Optional) Configuration for EKS resource scaling. See [`eks_resource_scaling_config` Block](#eks_resource_scaling_config-block) for details.
 * `execution_approval_config` - (Optional) Configuration for manual approval steps. See [`execution_approval_config` Block](#execution_approval_config-block) for details.
-* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `RdsCreateCrossRegionReplica`, `RdsPromoteReadReplica`, `Route53HealthCheck`.
+* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `RdsCreateCrossRegionReplica`, `RdsPromoteReadReplica`, `RdsSwitchoverReadReplica`, `Route53HealthCheck`.
 * `global_aurora_config` - (Optional) Configuration for Aurora Global Database operations. See [`global_aurora_config` Block](#global_aurora_config-block) for details.
 * `lambda_event_source_mapping_config` - (Optional) Configuration for Lambda event source mapping operations. See [`lambda_event_source_mapping_config` Block](#lambda_event_source_mapping_config-block) for details.
 * `name` - (Required) Name of the step.
@@ -220,6 +220,7 @@ The following arguments are optional:
 * `parallel_config` - (Optional) Configuration for parallel execution of multiple steps. See [`parallel_config` Block](#parallel_config-block) for details.
 * `rds_create_cross_region_read_replica_config` - (Optional) Configuration for creating cross-region RDS read replicas. See [`rds_create_cross_region_read_replica_config` Block](#rds_create_cross_region_read_replica_config-block) for details.
 * `rds_promote_read_replica_config` - (Optional) Configuration for promoting RDS read replicas. See [`rds_promote_read_replica_config` Block](#rds_promote_read_replica_config-block) for details.
+* `rds_switchover_read_replica_config` - (Optional) Configuration for switching over RDS read replicas. See [`rds_switchover_read_replica_config` Block](#rds_switchover_read_replica_config-block) for details.
 * `region_switch_plan_config` - (Optional) Configuration for executing a nested region switch plan. See [`region_switch_plan_config` Block](#region_switch_plan_config-block) for details.
 * `route53_health_check_config` - (Optional) Configuration for Route53 health check operations. See [`route53_health_check_config` Block](#route53_health_check_config-block) for details.
 
@@ -418,16 +419,28 @@ The following arguments are optional:
 ### `rds_create_cross_region_read_replica_config` Block
 
 * `cross_account_role` - (Optional) ARN of the cross-account role to assume.
-* `db_instance_arn_map` - (Required) Map of source DB instance identifiers to target DB instance ARNs.
+* `db_instance_arn_map` - (Required) Map of regions to DB instance ARNs. Provide an ARN for each region in the plan.
 * `external_id` - (Optional) External ID for cross-account role assumption.
 * `timeout_minutes` - (Optional) Timeout in minutes.
 
 ### `rds_promote_read_replica_config` Block
 
 * `cross_account_role` - (Optional) ARN of the cross-account role to assume.
-* `db_instance_arn_map` - (Required) Map of source DB instance identifiers to target DB instance ARNs.
+* `db_instance_arn_map` - (Required) Map of regions to DB instance ARNs. Provide an ARN for each region in the plan.
 * `external_id` - (Optional) External ID for cross-account role assumption.
 * `timeout_minutes` - (Optional) Timeout in minutes.
+
+### `rds_switchover_read_replica_config` Block
+
+* `cross_account_role` - (Optional) ARN of the cross-account role to assume.
+* `db_instance_arn_map` - (Required) Map of regions to DB instance ARNs. Provide an ARN for each region in the plan.
+* `external_id` - (Optional) External ID for cross-account role assumption.
+* `timeout_minutes` - (Optional) Timeout in minutes.
+* `ungraceful` - (Optional) Ungraceful behavior configuration. See [`workflow.step.rds_switchover_read_replica_config.ungraceful` Block](#workflowsteprds_switchover_read_replica_configungraceful-block) for details.
+
+### `workflow.step.rds_switchover_read_replica_config.ungraceful` Block
+
+* `ungraceful` - (Required) Ungraceful behavior. Valid values: `promoteReadReplica`.
 
 ### `region_switch_plan_config` Block
 
@@ -451,13 +464,14 @@ The following arguments are optional:
 * `ecs_capacity_increase_config` - (Optional) Configuration for ECS service capacity increase. See [`ecs_capacity_increase_config` Block](#ecs_capacity_increase_config-block) for details.
 * `eks_resource_scaling_config` - (Optional) Configuration for EKS resource scaling. See [`eks_resource_scaling_config` Block](#eks_resource_scaling_config-block) for details.
 * `execution_approval_config` - (Optional) Configuration for manual approval steps. See [`execution_approval_config` Block](#execution_approval_config-block) for details.
-* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `RdsCreateCrossRegionReplica`, `RdsPromoteReadReplica`, `Route53HealthCheck`.
+* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `RdsCreateCrossRegionReplica`, `RdsPromoteReadReplica`, `RdsSwitchoverReadReplica`, `Route53HealthCheck`.
 * `global_aurora_config` - (Optional) Configuration for Aurora Global Database operations. See [`global_aurora_config` Block](#global_aurora_config-block) for details.
 * `lambda_event_source_mapping_config` - (Optional) Configuration for Lambda event source mapping operations. See [`lambda_event_source_mapping_config` Block](#lambda_event_source_mapping_config-block) for details.
 * `name` - (Required) Name of the step.
 * `neptune_global_database_config` - (Optional) Configuration for Neptune global database operations. See [`neptune_global_database_config` Block](#neptune_global_database_config-block) for details.
 * `rds_create_cross_region_read_replica_config` - (Optional) Configuration for creating cross-region RDS read replicas. See [`rds_create_cross_region_read_replica_config` Block](#rds_create_cross_region_read_replica_config-block) for details.
 * `rds_promote_read_replica_config` - (Optional) Configuration for promoting RDS read replicas. See [`rds_promote_read_replica_config` Block](#rds_promote_read_replica_config-block) for details.
+* `rds_switchover_read_replica_config` - (Optional) Configuration for switching over RDS read replicas. See [`rds_switchover_read_replica_config` Block](#rds_switchover_read_replica_config-block) for details.
 * `region_switch_plan_config` - (Optional) Configuration for executing a nested region switch plan. See [`region_switch_plan_config` Block](#region_switch_plan_config-block) for details.
 * `route53_health_check_config` - (Optional) Configuration for Route53 health check operations. See [`route53_health_check_config` Block](#route53_health_check_config-block) for details.
 
@@ -540,6 +554,10 @@ The following arguments are optional:
 ### `workflow.step.parallel_config.step.neptune_global_database_config.ungraceful` Block
 
 * `ungraceful` - (Required) Ungraceful behavior.
+
+### `workflow.step.parallel_config.step.rds_switchover_read_replica_config.ungraceful` Block
+
+* `ungraceful` - (Required) Ungraceful behavior. Valid values: `promoteReadReplica`.
 
 ## Attribute Reference
 
