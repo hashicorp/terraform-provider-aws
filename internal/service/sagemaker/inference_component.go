@@ -159,6 +159,7 @@ func (r *inferenceComponentResource) Schema(ctx context.Context, req resource.Sc
 							CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceComponentRollingUpdatePolicyModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.IsRequired(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -449,6 +450,10 @@ func inferenceComponentSpecificationSchema(ctx context.Context) schema.NestedBlo
 									},
 									"max_imbalance": schema.Int32Attribute{
 										Optional: true,
+										Computed: true,
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
 									},
 								},
 							},

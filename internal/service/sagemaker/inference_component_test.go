@@ -315,6 +315,20 @@ func TestAccSageMakerInferenceComponent_schedulingConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckInferenceComponentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
+				// max_imbalance is omitted, so the service applies its default. The
+				// attribute is Computed to absorb that value without an inconsistent
+				// result after apply.
+				Config: testAccInferenceComponentConfig_schedulingConfigMaxImbalanceOmitted(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInferenceComponentExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "specification.0.scheduling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "specification.0.scheduling_config.0.placement_strategy", "SPREAD"),
+					resource.TestCheckResourceAttr(resourceName, "specification.0.scheduling_config.0.availability_zone_balance.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "specification.0.scheduling_config.0.availability_zone_balance.0.enforcement_mode", "PERMISSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "specification.0.scheduling_config.0.availability_zone_balance.0.max_imbalance", "0"),
+				),
+			},
+			{
 				Config: testAccInferenceComponentConfig_schedulingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceComponentExists(ctx, t, resourceName),
@@ -1080,6 +1094,40 @@ resource "aws_sagemaker_inference_component" "test" {
       availability_zone_balance {
         enforcement_mode = "PERMISSIVE"
         max_imbalance    = 1
+      }
+    }
+  }
+
+  runtime_config {
+    copy_count = 1
+  }
+}
+`, rName))
+}
+
+func testAccInferenceComponentConfig_schedulingConfigMaxImbalanceOmitted(rName string) string {
+	return acctest.ConfigCompose(testAccInferenceComponentConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_inference_component" "test" {
+  name          = %[1]q
+  endpoint_name = aws_sagemaker_endpoint.test.name
+  variant_name  = "variant-1"
+
+  specification {
+    container {
+      image        = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+      artifact_url = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
+    }
+
+    compute_resource_requirements {
+      min_memory_required_in_mb    = 1024
+      number_of_cpu_cores_required = 1
+    }
+
+    scheduling_config {
+      placement_strategy = "SPREAD"
+
+      availability_zone_balance {
+        enforcement_mode = "PERMISSIVE"
       }
     }
   }
