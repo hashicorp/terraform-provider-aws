@@ -458,6 +458,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activeActive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "service_quota_checks_enabled", acctest.CtTrue),
 
 					// Check that we have both activate and deactivate workflows
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*", map[string]string{
@@ -540,6 +541,11 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 						"retry_interval_minutes": "5",
 					}),
 
+					// CustomActionLambda payload
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.custom_action_lambda_config.*.lambda.*", map[string]string{
+						"payload": "{\"action\":\"activate\"}",
+					}),
+
 					// ManualApproval config
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.execution_approval_config.*", map[string]string{
 						"timeout_minutes": "30",
@@ -554,16 +560,18 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 
 					// EC2AutoScaling config
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ec2_asg_capacity_increase_config.*", map[string]string{
-						"capacity_monitoring_approach": "sampledMaxInLast24Hours",
-						"target_percent":               "150",
-						"timeout_minutes":              "20",
+						"capacity_monitoring_approach":  "sampledMaxInLast24Hours",
+						"target_percent":                "150",
+						"timeout_minutes":               "20",
+						"wait_elb_target_group_healthy": names.AttrEnabled,
 					}),
 
 					// ECSServiceScaling config
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ecs_capacity_increase_config.*", map[string]string{
-						"capacity_monitoring_approach": "containerInsightsMaxInLast24Hours",
-						"target_percent":               "200",
-						"timeout_minutes":              "25",
+						"capacity_monitoring_approach":  "containerInsightsMaxInLast24Hours",
+						"target_percent":                "200",
+						"timeout_minutes":               "25",
+						"wait_elb_target_group_healthy": "disabled",
 					}),
 
 					// EKSResourceScaling config
@@ -641,6 +649,7 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 					// Verify basic attributes
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Complex test plan with multiple execution block types"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_time_objective_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceName, "service_quota_checks_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "associated_alarms.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "report_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "report_configuration.*.report_output.*.s3_configuration.*", map[string]string{
@@ -723,6 +732,11 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 						"retry_interval_minutes": "5",
 					}),
 
+					// CustomActionLambda payload
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.custom_action_lambda_config.*.lambda.*", map[string]string{
+						"payload": "{\"action\":\"activate\"}",
+					}),
+
 					// ManualApproval config
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.execution_approval_config.*", map[string]string{
 						"timeout_minutes": "30",
@@ -737,16 +751,18 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 
 					// EC2AutoScaling config
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ec2_asg_capacity_increase_config.*", map[string]string{
-						"capacity_monitoring_approach": "sampledMaxInLast24Hours",
-						"target_percent":               "150",
-						"timeout_minutes":              "20",
+						"capacity_monitoring_approach":  "sampledMaxInLast24Hours",
+						"target_percent":                "150",
+						"timeout_minutes":               "20",
+						"wait_elb_target_group_healthy": names.AttrEnabled,
 					}),
 
 					// ECSServiceScaling config
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ecs_capacity_increase_config.*", map[string]string{
-						"capacity_monitoring_approach": "containerInsightsMaxInLast24Hours",
-						"target_percent":               "200",
-						"timeout_minutes":              "25",
+						"capacity_monitoring_approach":  "containerInsightsMaxInLast24Hours",
+						"target_percent":                "200",
+						"timeout_minutes":               "25",
+						"wait_elb_target_group_healthy": "disabled",
 					}),
 
 					// EKSResourceScaling config
@@ -1493,6 +1509,7 @@ resource "aws_arcregionswitch_plan" "test" {
   primary_region                  = %[2]q
   description                     = "Complex test plan with multiple execution block types"
   recovery_time_objective_minutes = 60
+  service_quota_checks_enabled    = true
 
   report_configuration {
     report_output {
@@ -1553,7 +1570,8 @@ resource "aws_arcregionswitch_plan" "test" {
         timeout_minutes        = 30
 
         lambda {
-          arn = "arn:aws:lambda:%[3]s:123456789012:function:test-function"
+          arn     = "arn:aws:lambda:%[3]s:123456789012:function:test-function"
+          payload = "{\"action\":\"activate\"}"
         }
         lambda {
           arn = "arn:aws:lambda:%[2]s:123456789012:function:test-function-primary"
@@ -1607,6 +1625,8 @@ resource "aws_arcregionswitch_plan" "test" {
         target_percent               = 150
         timeout_minutes              = 20
 
+        wait_elb_target_group_healthy = "enabled"
+
         ungraceful {
           minimum_success_percentage = 80
         }
@@ -1633,6 +1653,8 @@ resource "aws_arcregionswitch_plan" "test" {
         capacity_monitoring_approach = "containerInsightsMaxInLast24Hours"
         target_percent               = 200
         timeout_minutes              = 25
+
+        wait_elb_target_group_healthy = "disabled"
 
         ungraceful {
           minimum_success_percentage = 90
@@ -1860,6 +1882,7 @@ resource "aws_arcregionswitch_plan" "test" {
   primary_region                  = %[2]q
   description                     = "Complex test plan with multiple execution block types"
   recovery_time_objective_minutes = 60
+  service_quota_checks_enabled    = false
 
   associated_alarms {
     map_block_key       = "test-alarm-1"
@@ -1920,7 +1943,8 @@ resource "aws_arcregionswitch_plan" "test" {
         timeout_minutes        = 30
 
         lambda {
-          arn = "arn:aws:lambda:%[3]s:123456789012:function:test-function"
+          arn     = "arn:aws:lambda:%[3]s:123456789012:function:test-function"
+          payload = "{\"action\":\"activate\"}"
         }
         lambda {
           arn = "arn:aws:lambda:%[2]s:123456789012:function:test-function-primary"
@@ -1974,6 +1998,8 @@ resource "aws_arcregionswitch_plan" "test" {
         target_percent               = 150
         timeout_minutes              = 20
 
+        wait_elb_target_group_healthy = "enabled"
+
         ungraceful {
           minimum_success_percentage = 80
         }
@@ -2000,6 +2026,8 @@ resource "aws_arcregionswitch_plan" "test" {
         capacity_monitoring_approach = "containerInsightsMaxInLast24Hours"
         target_percent               = 200
         timeout_minutes              = 25
+
+        wait_elb_target_group_healthy = "disabled"
 
         ungraceful {
           minimum_success_percentage = 90

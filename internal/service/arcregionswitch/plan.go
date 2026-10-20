@@ -19,6 +19,7 @@ import (
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -138,6 +139,10 @@ func customActionLambdaConfigBlock(ctx context.Context) fwschema.Block {
 							names.AttrExternalID: fwschema.StringAttribute{
 								Optional: true,
 							},
+							"payload": fwschema.StringAttribute{
+								Optional:  true,
+								Sensitive: true,
+							},
 						},
 					},
 				},
@@ -215,6 +220,10 @@ func ec2ASGCapacityIncreaseConfigBlock(ctx context.Context) fwschema.Block {
 				"timeout_minutes": fwschema.Int32Attribute{
 					Optional: true,
 				},
+				"wait_elb_target_group_healthy": fwschema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.WaitELBTargetGroupHealthy](),
+					Optional:   true,
+				},
 			},
 			Blocks: map[string]fwschema.Block{
 				"asg": fwschema.ListNestedBlock{
@@ -265,6 +274,10 @@ func ecsCapacityIncreaseConfigBlock(ctx context.Context) fwschema.Block {
 				},
 				"timeout_minutes": fwschema.Int32Attribute{
 					Optional: true,
+				},
+				"wait_elb_target_group_healthy": fwschema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.WaitELBTargetGroupHealthy](),
+					Optional:   true,
 				},
 			},
 			Blocks: map[string]fwschema.Block{
@@ -757,6 +770,13 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"recovery_time_objective_minutes": fwschema.Int64Attribute{
 				Optional: true,
 			},
+			"service_quota_checks_enabled": fwschema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -1077,6 +1097,7 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 	input.AssociatedAlarms = createInput.AssociatedAlarms
 	input.Triggers = createInput.Triggers
 	input.ReportConfiguration = createInput.ReportConfiguration
+	input.ServiceQuotaChecksEnabled = createInput.ServiceQuotaChecksEnabled
 
 	_, err := conn.UpdatePlan(ctx, &input)
 	if err != nil {
@@ -1227,6 +1248,7 @@ type resourcePlanModel struct {
 	RecoveryTimeObjectiveMinutes types.Int64                                               `tfsdk:"recovery_time_objective_minutes"`
 	Regions                      fwtypes.ListOfString                                      `tfsdk:"regions"`
 	ReportConfiguration          fwtypes.ListNestedObjectValueOf[reportConfigurationModel] `tfsdk:"report_configuration"`
+	ServiceQuotaChecksEnabled    types.Bool                                                `tfsdk:"service_quota_checks_enabled"`
 	Tags                         tftags.Map                                                `tfsdk:"tags"`
 	TagsAll                      tftags.Map                                                `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                            `tfsdk:"timeouts"`
@@ -1753,6 +1775,7 @@ type lambdaModel struct {
 	ARN              types.String `tfsdk:"arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
 	ExternalID       types.String `tfsdk:"external_id"`
+	Payload          types.String `tfsdk:"payload"`
 }
 
 type ungracefulModel struct {
@@ -1781,6 +1804,7 @@ type ec2ASGCapacityIncreaseConfigModel struct {
 	TargetPercent              types.Int64                                                   `tfsdk:"target_percent"`
 	TimeoutMinutes             types.Int32                                                   `tfsdk:"timeout_minutes"`
 	Ungraceful                 fwtypes.ListNestedObjectValueOf[ec2UngracefulModel]           `tfsdk:"ungraceful"`
+	WaitELBTargetGroupHealthy  fwtypes.StringEnum[awstypes.WaitELBTargetGroupHealthy]        `tfsdk:"wait_elb_target_group_healthy"`
 }
 
 type asgModel struct {
@@ -1800,6 +1824,7 @@ type ecsCapacityIncreaseConfigModel struct {
 	TargetPercent              types.Int64                                                `tfsdk:"target_percent"`
 	TimeoutMinutes             types.Int32                                                `tfsdk:"timeout_minutes"`
 	Ungraceful                 fwtypes.ListNestedObjectValueOf[ecsUngracefulModel]        `tfsdk:"ungraceful"`
+	WaitELBTargetGroupHealthy  fwtypes.StringEnum[awstypes.WaitELBTargetGroupHealthy]     `tfsdk:"wait_elb_target_group_healthy"`
 }
 
 type serviceModel struct {
