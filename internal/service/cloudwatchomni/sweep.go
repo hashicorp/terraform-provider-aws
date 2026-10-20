@@ -18,10 +18,32 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_cloudwatchomni_access_grant", sweepAccessGrants)
 	awsv2.Register("aws_cloudwatchomni_access_profile", sweepAccessProfiles)
 	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space")
-	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces, "aws_cloudwatchomni_access_profile")
+	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces, "aws_cloudwatchomni_access_grant", "aws_cloudwatchomni_access_profile")
 	awsv2.Register("aws_cloudwatchomni_view", sweepViews)
+}
+
+func sweepAccessGrants(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.CloudWatchOmniClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	for v, err := range listRegionalAccessGrants(ctx, conn) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		if v.GrantType == awstypes.AccessGrantTypeServiceManaged {
+			continue
+		}
+
+		sweepResources = append(sweepResources, framework.NewSweepResource(newAccessGrantResource, client,
+			framework.NewAttribute("grant_id", aws.ToString(v.GrantId))),
+		)
+	}
+
+	return sweepResources, nil
 }
 
 func sweepAccessProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
