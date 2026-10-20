@@ -95,6 +95,10 @@ type funcRef struct {
 
 	// Functions lists the functions combined by customdiff.All or customdiff.Sequence, flattened.
 	Functions []*funcRef `json:"functions,omitempty"`
+
+	// warnings describes the AWS SDK clients passed to functions that aren't analyzed, e.g. an SDK
+	// waiter, which may call operations missing from SDKCalls. They are logged, not written.
+	warnings []string
 }
 
 // resourceTags holds the service package methods through which the tags interceptor lists and
@@ -174,8 +178,8 @@ type servicePackage struct {
 	methods map[string]map[string]*ast.FuncDecl
 	// interfaces maps interface type names to their method names.
 	interfaces map[string][]string
-	// fieldTypes maps struct field names, on any struct type, to their types.
-	fieldTypes map[string]string
+	// fieldTypes maps struct type names to their field names to the fields' types.
+	fieldTypes map[string]map[string]string
 	// factories holds the functions annotated with @SDKResource.
 	factories map[ast.Node]bool
 }
@@ -283,7 +287,7 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 		decls:      make(map[string]ast.Node),
 		methods:    make(map[string]map[string]*ast.FuncDecl),
 		interfaces: make(map[string][]string),
-		fieldTypes: make(map[string]string),
+		fieldTypes: make(map[string]map[string]string),
 		factories:  make(map[ast.Node]bool),
 	}
 
@@ -315,11 +319,13 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 					case *ast.TypeSpec:
 						switch t := s.Type.(type) {
 						case *ast.StructType:
+							fields := make(map[string]string)
 							for _, field := range t.Fields.List {
 								for _, id := range field.Names {
-									pkg.fieldTypes[id.Name] = resolveType(field.Type, imports)
+									fields[id.Name] = resolveType(field.Type, imports)
 								}
 							}
+							pkg.fieldTypes[s.Name.Name] = fields
 						case *ast.InterfaceType:
 							for _, method := range t.Methods.List {
 								for _, id := range method.Names {
@@ -373,6 +379,7 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 					Update: a.newMethodRef(pkg, "servicePackage", "UpdateTags"),
 				}
 			}
+			r.logWarnings()
 
 			// A factory function can be registered under several type names.
 			for _, typeName := range typeNames {
@@ -480,6 +487,22 @@ func (ref *funcRef) hasSDKCalls() bool {
 	return ref != nil && len(ref.SDKCalls) > 0
 }
 
+// logWarnings logs the warnings for each of a resource's functions, including its tag methods.
+func (r *resource) logWarnings() {
+	refs := []*funcRef{r.Create, r.Read, r.Update, r.Delete, r.CustomizeDiff, r.Import}
+	if r.Tags != nil {
+		refs = append(refs, r.Tags.List, r.Tags.Update)
+	}
+	for _, ref := range refs {
+		if ref == nil {
+			continue
+		}
+		for _, warning := range ref.warnings {
+			log.Printf("%s: %s: %s", r.Location, ref.Expr, warning)
+		}
+	}
+}
+
 // isCustomDiffCombinator reports whether expr is a call to customdiff.All or customdiff.Sequence.
 func isCustomDiffCombinator(expr ast.Expr) bool {
 	call, ok := expr.(*ast.CallExpr)
@@ -501,7 +524,8 @@ func customizeDiffFuncs(expr ast.Expr) []ast.Expr {
 }
 
 func (a *analyzer) newFuncRef(pkg *servicePackage, expr ast.Expr, varTypes map[string]string) *funcRef {
-	ref := &funcRef{Expr: types.ExprString(expr), SDKCalls: a.findSDKCalls(pkg, expr, varTypes)}
+	ref := &funcRef{Expr: types.ExprString(expr)}
+	ref.SDKCalls, ref.warnings = a.findSDKCalls(pkg, expr, varTypes)
 
 	switch e := expr.(type) {
 	case *ast.Ident:
@@ -536,7 +560,9 @@ func (a *analyzer) newMethodRef(pkg *servicePackage, recv, name string) *funcRef
 	if strings.HasPrefix(expr, "*") {
 		expr = "(" + expr + ")"
 	}
-	return &funcRef{Expr: expr + "." + name, Location: a.location(m), SDKCalls: a.findSDKCalls(pkg, m, nil)}
+	ref := &funcRef{Expr: expr + "." + name, Location: a.location(m)}
+	ref.SDKCalls, ref.warnings = a.findSDKCalls(pkg, m, nil)
+	return ref
 }
 
 // location returns where node is, as "<file>:<line>" relative to the repository root.
@@ -549,27 +575,30 @@ func (a *analyzer) location(node ast.Node) string {
 	return fmt.Sprintf("%s:%d", filepath.ToSlash(rel), pos.Line)
 }
 
-// callFinder collects the AWS SDK client methods called from the declarations it follows.
+// callFinder collects the AWS SDK client methods called from the declarations it follows, and the
+// AWS SDK clients passed to functions it can't follow.
 type callFinder struct {
 	*analyzer
-	visited map[ast.Node]bool
-	calls   map[string]bool
+	visited  map[ast.Node]bool
+	calls    map[string]bool
+	warnings map[string]bool
 }
 
 // findSDKCalls returns the sorted set of AWS SDK client methods reachable from node, e.g. a
-// declaration or a function reference from a resource's schema.Resource. varTypes holds the types
-// of variables in scope at node, e.g. from factoryVarTypes, and may be nil.
-func (a *analyzer) findSDKCalls(pkg *servicePackage, node ast.Node, varTypes map[string]string) []string {
-	f := &callFinder{analyzer: a, visited: make(map[ast.Node]bool), calls: make(map[string]bool)}
+// declaration or a function reference from a resource's schema.Resource, and the sorted warnings
+// about AWS SDK clients passed to functions that aren't analyzed. varTypes holds the types of
+// variables in scope at node, e.g. from factoryVarTypes, and may be nil.
+func (a *analyzer) findSDKCalls(pkg *servicePackage, node ast.Node, varTypes map[string]string) (calls, warnings []string) {
+	f := &callFinder{analyzer: a, visited: make(map[ast.Node]bool), calls: make(map[string]bool), warnings: make(map[string]bool)}
 
 	v := f.newVisitor(pkg, node)
 	maps.Copy(v.varTypes, varTypes)
 	f.visited[node] = true
 	ast.Walk(v, node)
 
-	calls := slices.AppendSeq(make([]string, 0, len(f.calls)), maps.Keys(f.calls))
+	calls = slices.AppendSeq(make([]string, 0, len(f.calls)), maps.Keys(f.calls))
 	slices.Sort(calls)
-	return calls
+	return calls, slices.Sorted(maps.Keys(f.warnings))
 }
 
 // factoryVarTypes returns the types of the variables declared in the body of a resource's factory
@@ -646,11 +675,20 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 			if sel.Sel.Name != "Options" {
 				v.finder.calls[path.Base(typ)+"."+sel.Sel.Name] = true
 			}
-		} else if x, ok := sel.X.(*ast.Ident); ok && isSDKPackage(v.imports[x.Name]) {
-			// A paginator calls its operation, e.g. s3.NewListObjectsV2Paginator calls
-			// ListObjectsV2.
-			if m := paginatorRegexp.FindStringSubmatch(sel.Sel.Name); m != nil {
-				v.finder.calls[path.Base(v.imports[x.Name])+"."+m[1]] = true
+		} else if x, ok := sel.X.(*ast.Ident); ok && v.imports[x.Name] != "" {
+			importPath := v.imports[x.Name]
+			if m := paginatorRegexp.FindStringSubmatch(sel.Sel.Name); m != nil && isSDKPackage(importPath) {
+				// A paginator calls its operation, e.g. s3.NewListObjectsV2Paginator calls
+				// ListObjectsV2.
+				v.finder.calls[path.Base(importPath)+"."+m[1]] = true
+			} else if _, ok := v.finder.services[importPath]; !ok {
+				// Functions outside the service packages aren't analyzed, so the operations they
+				// call on a client passed to them, e.g. an SDK waiter's, aren't found.
+				for _, arg := range n.Args {
+					if typ := v.typeOf(arg); isSDKPackage(typ) {
+						v.finder.warnings[fmt.Sprintf("%s client passed to unanalyzed function %s", path.Base(typ), types.ExprString(sel))] = true
+					}
+				}
 			}
 		}
 
@@ -741,7 +779,7 @@ func (v *declVisitor) typeOf(expr ast.Expr) string {
 	case *ast.CompositeLit:
 		return resolveType(e.Type, nil)
 	case *ast.SelectorExpr:
-		return v.pkg.fieldTypes[e.Sel.Name]
+		return v.pkg.fieldTypes[v.typeOf(e.X)][e.Sel.Name]
 	case *ast.CallExpr:
 		switch fun := e.Fun.(type) {
 		case *ast.SelectorExpr:
