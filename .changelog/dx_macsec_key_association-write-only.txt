@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dx_macsec_key_association: Add `cak_wo`, `cak_wo_version`, `ckn_wo`, and `ckn_wo_version` arguments
+```
