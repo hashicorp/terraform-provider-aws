@@ -130,34 +130,43 @@ func TestStepModelsFlattenRDSSwitchoverReadReplicaConfig(t *testing.T) {
 		},
 	}
 
-	var parallelStep tfarcregionswitch.ParallelStepModel
-	var directStep tfarcregionswitch.StepModel
-
-	testCases := map[string]struct {
+	type flattenTarget struct {
 		flattener flex.Flattener
 		config    func() fwtypes.ListNestedObjectValueOf[tfarcregionswitch.RDSSwitchoverReadReplicaConfigModel]
-	}{
-		"parallel step": {
-			flattener: &parallelStep,
-			config: func() fwtypes.ListNestedObjectValueOf[tfarcregionswitch.RDSSwitchoverReadReplicaConfigModel] {
-				return parallelStep.RdsSwitchoverReadReplicaConfig
-			},
+	}
+
+	testCases := map[string]func() flattenTarget{
+		"parallel step": func() flattenTarget {
+			var model tfarcregionswitch.ParallelStepModel
+			return flattenTarget{
+				flattener: &model,
+				config: func() fwtypes.ListNestedObjectValueOf[tfarcregionswitch.RDSSwitchoverReadReplicaConfigModel] {
+					return model.RdsSwitchoverReadReplicaConfig
+				},
+			}
 		},
-		"step": {
-			flattener: &directStep,
-			config: func() fwtypes.ListNestedObjectValueOf[tfarcregionswitch.RDSSwitchoverReadReplicaConfigModel] {
-				return directStep.RdsSwitchoverReadReplicaConfig
-			},
+		"step": func() flattenTarget {
+			var model tfarcregionswitch.StepModel
+			return flattenTarget{
+				flattener: &model,
+				config: func() fwtypes.ListNestedObjectValueOf[tfarcregionswitch.RDSSwitchoverReadReplicaConfigModel] {
+					return model.RdsSwitchoverReadReplicaConfig
+				},
+			}
 		},
 	}
 
-	for name, testCase := range testCases {
+	for name, newTarget := range testCases {
 		t.Run(name, func(t *testing.T) {
-			if diags := testCase.flattener.Flatten(ctx, step); diags.HasError() {
+			t.Parallel()
+
+			target := newTarget()
+
+			if diags := target.flattener.Flatten(ctx, step); diags.HasError() {
 				t.Fatalf("unexpected diagnostics: %s", diags)
 			}
 
-			config, diags := testCase.config().ToPtr(ctx)
+			config, diags := target.config().ToPtr(ctx)
 			if diags.HasError() {
 				t.Fatalf("unexpected diagnostics: %s", diags)
 			}
