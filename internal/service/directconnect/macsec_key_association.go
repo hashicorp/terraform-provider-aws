@@ -140,16 +140,16 @@ func resourceMacSecKeyAssociatioCreate(ctx context.Context, d *schema.ResourceDa
 		ConnectionId: aws.String(connectionID),
 	}
 
-	if v, ok := d.GetOk("ckn"); ok {
-		input.Ckn = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("cak"); ok {
 		input.Cak = aws.String(v.(string))
 	}
 
 	if cakWO != "" {
 		input.Cak = aws.String(cakWO)
+	}
+
+	if v, ok := d.GetOk("ckn"); ok {
+		input.Ckn = aws.String(v.(string))
 	}
 
 	if cknWO != "" {
