@@ -166,7 +166,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kms v1.61.5
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.113.1
-	github.com/aws/aws-sdk-go-v2/service/lambdacore v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/lambdacore v1.12.1
 	github.com/aws/aws-sdk-go-v2/service/lambdamicrovms v1.11.1
 	github.com/aws/aws-sdk-go-v2/service/lambdaweb v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.23.4
