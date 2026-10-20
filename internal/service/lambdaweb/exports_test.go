@@ -9,7 +9,7 @@ var (
 	ResourceFunction       = newFunctionResource
 	ResourceResourcePolicy = newResourcePolicyResource
 
-	FindEndpointByName      = findEndpointByName
-	FindResourcePolicyByARN = findResourcePolicyByARN
-	FindWebFunctionByName   = findWebFunctionByName
+	FindWebFunctionEndpointByTwoPartKey = findWebFunctionEndpointByTwoPartKey
+	FindResourcePolicyByARN             = findResourcePolicyByARN
+	FindWebFunctionByName               = findWebFunctionByName
 )

@@ -63,39 +63,15 @@ func (d *endpointDataSource) Schema(ctx context.Context, request datasource.Sche
 				Computed:    true,
 				ElementType: types.StringType,
 			},
-			"scaling_config": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[scalingConfigModel](ctx),
-				Computed:   true,
-			},
+			"revision_weights": framework.DataSourceComputedListOfObjectAttribute[revisionWeightModel](ctx),
+			"scaling_config":   framework.DataSourceComputedListOfObjectAttribute[scalingConfigModel](ctx),
 			names.AttrState: schema.StringAttribute{
 				Computed: true,
 			},
 			"state_reason": schema.StringAttribute{
 				Computed: true,
 			},
-			"throttle_config": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[throttleConfigModel](ctx),
-				Computed:   true,
-			},
-		},
-		// A nested block rather than a nested attribute: the provider serves
-		// protocol version 5, which cannot carry nested attributes.
-		Blocks: map[string]schema.Block{
-			// The routing an endpoint serves is the main thing worth reading back:
-			// under Disabled these are the weights a canary or blue/green shift set.
-			"revision_weights": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[revisionWeightModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"revision_id": schema.StringAttribute{
-							Computed: true,
-						},
-						names.AttrWeight: schema.Int64Attribute{
-							Computed: true,
-						},
-					},
-				},
-			},
+			"throttle_config": framework.DataSourceComputedListOfObjectAttribute[throttleConfigModel](ctx),
 		},
 	}
 }
@@ -108,10 +84,9 @@ func (d *endpointDataSource) Read(ctx context.Context, request datasource.ReadRe
 	}
 
 	conn := d.Meta().LambdaWebClient(ctx)
-	functionName := data.FunctionName.ValueString()
-	endpointName := data.EndpointName.ValueString()
 
-	out, err := findEndpointByName(ctx, conn, functionName, endpointName)
+	functionName, endpointName := fwflex.StringValueFromFramework(ctx, data.FunctionName), fwflex.StringValueFromFramework(ctx, data.EndpointName)
+	out, err := findWebFunctionEndpointByTwoPartKey(ctx, conn, functionName, endpointName)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, endpointName)
 		return

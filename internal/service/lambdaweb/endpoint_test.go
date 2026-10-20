@@ -47,10 +47,6 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypeHomeRegion)),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", string(awstypes.AuthTypeApplicationManaged)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
-					// Unset scaling and throttling are not reported by the API:
-					// account-level defaults apply server-side, invisibly.
-					resource.TestCheckNoResourceAttr(resourceName, "scaling_config.max_environments"),
-					resource.TestCheckNoResourceAttr(resourceName, "throttle_config.rate_limit"),
 				),
 			},
 			{
@@ -96,8 +92,8 @@ func TestAccLambdaWebEndpoint_scalingAndThrottle(t *testing.T) {
 				Config: testAccEndpointConfig_scalingAndThrottle(rName, 4, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "scaling_config.max_environments", "4"),
-					resource.TestCheckResourceAttr(resourceName, "throttle_config.rate_limit", "100"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_environments", "4"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_config.0.rate_limit", "100"),
 				),
 			},
 			{
@@ -115,8 +111,8 @@ func TestAccLambdaWebEndpoint_scalingAndThrottle(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "scaling_config.max_environments", "6"),
-					resource.TestCheckResourceAttr(resourceName, "throttle_config.rate_limit", "200"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_environments", "6"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_config.0.rate_limit", "200"),
 				),
 			},
 		},
@@ -176,8 +172,8 @@ func TestAccLambdaWebEndpoint_multiRegion(t *testing.T) {
 					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypeMultiRegion)),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment_mode", string(awstypes.AutoDeploymentModeDisabled)),
-					resource.TestCheckResourceAttr(resourceName, "revision_weights.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "revision_weights.0.weight", "100"),
+					resource.TestCheckResourceAttr(resourceName, "revision_weight.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revision_weight.0.weight", "100"),
 				),
 			},
 			{
@@ -242,7 +238,7 @@ func testAccCheckEndpointDestroy(ctx context.Context, t *testing.T) resource.Tes
 				continue
 			}
 
-			_, err := tflambdaweb.FindEndpointByName(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["endpoint_name"])
+			_, err := tflambdaweb.FindWebFunctionEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["endpoint_name"])
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -266,7 +262,7 @@ func testAccCheckEndpointExists(ctx context.Context, t *testing.T, n string, v *
 
 		conn := acctest.ProviderMeta(ctx, t).LambdaWebClient(ctx)
 
-		out, err := tflambdaweb.FindEndpointByName(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["endpoint_name"])
+		out, err := tflambdaweb.FindWebFunctionEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["endpoint_name"])
 		if err != nil {
 			return smarterr.NewError(err)
 		}
@@ -314,11 +310,11 @@ resource "aws_lambdaweb_endpoint" "test" {
   endpoint_type = "HomeRegion"
   auth_type     = "ApplicationManaged"
 
-  scaling_config = {
+  scaling_config {
     max_environments = %[1]d
   }
 
-  throttle_config = {
+  throttle_config {
     rate_limit = %[2]d
   }
 }
@@ -342,7 +338,7 @@ resource "aws_lambdaweb_endpoint" "test" {
   auth_type            = "ApplicationManaged"
   auto_deployment_mode = "Disabled"
 
-  revision_weights {
+  revision_weight {
     revision_id = aws_lambdaweb_function.test.latest_revision_id
     weight      = 100
   }

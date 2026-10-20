@@ -36,12 +36,12 @@ resource "aws_lambdaweb_endpoint" "example" {
   auth_type            = "IamAuth"
   auto_deployment_mode = "Disabled"
 
-  revision_weights {
+  revision_weight {
     revision_id = "rev-aaaaaaaa"
     weight      = 90
   }
 
-  revision_weights {
+  revision_weight {
     revision_id = aws_lambdaweb_function.example.latest_revision_id
     weight      = 10
   }
@@ -65,7 +65,7 @@ resource "aws_lambdaweb_endpoint" "app" {
   auth_type            = "ApplicationManaged"
   auto_deployment_mode = "Disabled"
 
-  revision_weights {
+  revision_weight {
     revision_id = aws_lambdaweb_function.example.latest_revision_id
     weight      = 100
   }
@@ -141,28 +141,24 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `auto_deployment_mode` - (Optional) Deployment mode. `LatestRevision` makes the endpoint follow the latest revision automatically; `Disabled` requires explicit `revision_weights`. `MultiRegion` and `PerRegion` endpoints require `Disabled`. Defaults to `LatestRevision`.
+* `auto_deployment_mode` - (Optional) Deployment mode. `LatestRevision` makes the endpoint follow the latest revision automatically; `Disabled` requires explicit `revision_weight`s. `MultiRegion` and `PerRegion` endpoints require `Disabled`. Defaults to `LatestRevision`.
 * `description` - (Optional) Description of the endpoint.
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
 * `regions` - (Optional) Regions the endpoint spans. The maximum number of Regions per endpoint is a service quota, enforced by the API. Required for `PerRegion` endpoints, which need at least 2 distinct Regions: the home Region is added automatically, so list at least one other Region. Changing this forces a new resource.
-* `revision_weights` - (Optional) Traffic routing. Required when `auto_deployment_mode` is `Disabled` and must be omitted when `LatestRevision`. One or two entries; weights must sum to 100. [See below](#revision_weights-block). When a new revision is rolled on the function, update these weights to shift traffic to it — with `auto_deployment_mode = "Disabled"` traffic never moves automatically.
+* `revision_weight` - (Optional) Traffic routing. Required when `auto_deployment_mode` is `Disabled` and must be omitted when `LatestRevision`. One or two entries; weights must sum to 100. [See below](#revision_weight-block). When a new revision is rolled on the function, update these weights to shift traffic to it — with `auto_deployment_mode = "Disabled"` traffic never moves automatically.
 * `scaling_config` - (Optional) Scaling limits for the endpoint. When unset, the service applies account-level defaults and reports no value. [See below](#scaling_config-block).
 * `throttle_config` - (Optional) Request throttling for the endpoint. When unset, the service applies account-level defaults and reports no value. [See below](#throttle_config-block).
 
-### `revision_weights` Block
+### `revision_weight` Block
 
 * `revision_id` - (Required) ID of the revision to route traffic to.
 * `weight` - (Required) Percentage of traffic for this revision (1-100). With one entry the weight must be 100; with two entries the weights must sum to 100.
 
 ### `scaling_config` Block
 
-An object, assigned with `=`:
-
 * `max_environments` - (Required) Maximum number of concurrent execution environments the endpoint may scale to, minimum 2.
 
 ### `throttle_config` Block
-
-An object, assigned with `=`:
 
 * `rate_limit` - (Required) Maximum request rate for the endpoint, in requests per second. The service only accepts quantized values: `0`, `100`-`1000` in steps of 100, and `2000`-`10000` in steps of 1000.
 
@@ -173,8 +169,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the endpoint in the format `arn:aws:lambda:{region}:{account}:web-function/{function_name}|{endpoint_name}`.
 * `domain_name` - HTTPS domain name of the endpoint. Empty for `PerRegion` endpoints, which only expose `regional_domain_names`.
 * `regional_domain_names` - Map of Region to that Region's independent domain name.
-* `state` - Current state of the endpoint.
-* `state_reason` - Reason for the current state, useful when a regional deployment is `Pending` or `Failed`.
 
 ## Timeouts
 

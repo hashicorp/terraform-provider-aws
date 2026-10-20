@@ -408,7 +408,7 @@ func testAccCheckFunctionEndpointServesLatestRevision(ctx context.Context, t *te
 
 		var got []awstypes.RevisionWeight
 		err := tfresource.WaitUntil(ctx, 5*time.Minute, func(ctx context.Context) (bool, error) {
-			out, err := tflambdaweb.FindEndpointByName(ctx, conn, functionName, endpointName)
+			out, err := tflambdaweb.FindWebFunctionEndpointByTwoPartKey(ctx, conn, functionName, endpointName)
 			if err != nil {
 				return false, err
 			}

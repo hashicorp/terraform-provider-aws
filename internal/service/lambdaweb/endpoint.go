@@ -5,11 +5,14 @@ package lambdaweb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maps"
+	"slices"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
@@ -21,13 +24,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -37,6 +41,7 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -59,10 +64,6 @@ func newEndpointResource(_ context.Context) (resource.ResourceWithConfigure, err
 	return r, nil
 }
 
-const (
-	ResNameEndpoint = "Endpoint"
-)
-
 type endpointResource struct {
 	framework.ResourceWithModel[endpointResourceModel]
 	framework.WithTimeouts
@@ -73,16 +74,6 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
-			"function_name": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 64),
-				},
-			},
 			"endpoint_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -90,13 +81,6 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
-				},
-			},
-			names.AttrEndpointType: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.EndpointType](),
-				Required:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			// Editable in place: UpdateWebFunctionEndpoint accepts authType and
@@ -116,25 +100,34 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			// scaling_config and throttle_config are objects rather than blocks:
-			// the service assigns account-level defaults when they are unset, so
-			// they must be Computed, and blocks cannot be Computed. Objects are
-			// carried fine by protocol version 5 (nested attribute schemas are
-			// not, hence ObjectAttribute).
-			"scaling_config": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[scalingConfigModel](ctx),
-				Optional:   true,
-				Computed:   true,
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
+			names.AttrDomainName: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"throttle_config": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[throttleConfigModel](ctx),
-				Optional:   true,
-				Computed:   true,
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
+			names.AttrEndpointType: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.EndpointType](),
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"function_name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 64),
+				},
+			},
+			"regional_domain_names": schema.MapAttribute{
+				CustomType:  fwtypes.MapOfStringType,
+				Computed:    true,
+				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.Map{
+					mapplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"regions": schema.SetAttribute{
@@ -152,31 +145,11 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 					setvalidator.SizeBetween(1, 100),
 				},
 			},
-			names.AttrDomainName: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"regional_domain_names": schema.MapAttribute{
-				CustomType:  fwtypes.MapOfStringType,
-				Computed:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.Map{
-					mapplanmodifier.UseStateForUnknown(),
-				},
-			},
-			names.AttrState: schema.StringAttribute{
-				Computed: true,
-			},
-			// Why an endpoint is Pending or Failed: without it a failed regional
-			// deployment is invisible from Terraform.
-			"state_reason": schema.StringAttribute{
-				Computed: true,
-			},
+			"scaling_config":  framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithPlanModifiers[scalingConfigModel](listplanmodifier.UseStateForUnknown())),
+			"throttle_config": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithPlanModifiers[throttleConfigModel](listplanmodifier.UseStateForUnknown())),
 		},
 		Blocks: map[string]schema.Block{
-			"revision_weights": schema.ListNestedBlock{
+			"revision_weight": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[revisionWeightModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, 2),
@@ -281,14 +254,15 @@ func (r *endpointResource) ValidateConfig(ctx context.Context, req resource.Vali
 }
 
 func (r *endpointResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().LambdaWebClient(ctx)
-
 	var plan endpointResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().LambdaWebClient(ctx)
+
+	functionName, endpointName := fwflex.StringValueFromFramework(ctx, plan.FunctionName), fwflex.StringValueFromFramework(ctx, plan.EndpointName)
 	var input lambdaweb.CreateWebFunctionEndpointInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
@@ -302,25 +276,17 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		input.AutoDeploymentMode = awstypes.AutoDeploymentModeLatestRevision
 	}
 
-	functionName := plan.FunctionName.ValueString()
-	endpointName := plan.EndpointName.ValueString()
-
-	if _, err := conn.CreateWebFunctionEndpoint(ctx, &input); err != nil {
+	_, err := conn.CreateWebFunctionEndpoint(ctx, &input)
+	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
-		return
-	}
-
-	// Set partial state so a failed wait below does not orphan the endpoint
-	// (for example when a region cannot host the revision).
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), endpointCreateResourceID(functionName, endpointName))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), functionName)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("endpoint_name"), endpointName)...)
-	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := waitEndpointActive(ctx, conn, functionName, endpointName, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
+		// Taint the resource.
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), functionName)...)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("endpoint_name"), endpointName)...)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
 		return
 	}
@@ -333,22 +299,22 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 	plan.Description = normalizeDescription(plan.Description)
 	setRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
 
-	plan.ID = types.StringValue(endpointCreateResourceID(functionName, endpointName))
 	plan.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().LambdaWebClient(ctx)
-
 	var state endpointResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findEndpointByName(ctx, conn, state.FunctionName.ValueString(), state.EndpointName.ValueString())
+	conn := r.Meta().LambdaWebClient(ctx)
+
+	functionName, endpointName := fwflex.StringValueFromFramework(ctx, state.FunctionName), fwflex.StringValueFromFramework(ctx, state.EndpointName)
+	out, err := findWebFunctionEndpointByTwoPartKey(ctx, conn, functionName, endpointName)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -367,14 +333,9 @@ func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 	state.Description = normalizeDescription(state.Description)
 	setRegionalDomainNames(ctx, &state, out.RegionalEndpoints)
 
-	state.ID = types.StringValue(endpointCreateResourceID(state.FunctionName.ValueString(), state.EndpointName.ValueString()))
 	state.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
-}
-
-func endpointCreateResourceID(functionName, endpointName string) string {
-	return functionName + flex.ResourceIdSeparator + endpointName
 }
 
 func (r *endpointResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -422,33 +383,30 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 	normalizeRevisionWeights(ctx, &plan)
 	plan.Description = normalizeDescription(plan.Description)
 	setRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
-	plan.ID = types.StringValue(endpointCreateResourceID(functionName, endpointName))
 	plan.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *endpointResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().LambdaWebClient(ctx)
-
 	var state endpointResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	functionName := state.FunctionName.ValueString()
-	endpointName := state.EndpointName.ValueString()
+	conn := r.Meta().LambdaWebClient(ctx)
 
+	functionName, endpointName := fwflex.StringValueFromFramework(ctx, state.FunctionName), fwflex.StringValueFromFramework(ctx, state.EndpointName)
 	input := lambdaweb.DeleteWebFunctionEndpointInput{
 		FunctionName: aws.String(functionName),
 		EndpointName: aws.String(endpointName),
 	}
 	_, err := conn.DeleteWebFunctionEndpoint(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
 		return
 	}
@@ -494,43 +452,179 @@ func (endpointImportID) Parse(id string) (string, map[string]any, error) {
 	}, nil
 }
 
-// ModifyPlan pins the volatile computed attribute (state) to prior state when no
-// configurable attribute is changing, so a no-op plan stays empty; on create or a
-// real update it stays unknown so the server's recomputed value avoids an
-// "inconsistent result after apply" error.
-func (r *endpointResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
-		return
+func findWebFunctionEndpointByTwoPartKey(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
+	input := lambdaweb.GetWebFunctionEndpointInput{
+		FunctionName: aws.String(functionName),
+		EndpointName: aws.String(endpointName),
+	}
+	return findWebFunctionEndpoint(ctx, conn, &input)
+}
+
+func findWebFunctionEndpoint(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.GetWebFunctionEndpointInput) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
+	out, err := conn.GetWebFunctionEndpoint(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+	if out == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
-	var state, plan, config endpointResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &config))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	return out, nil
+}
 
-	unchanged := unchangedOrUnset(config.AuthType.StringValue, state.AuthType.StringValue) &&
-		unchangedOrUnset(config.Description, state.Description) &&
-		unchangedOrUnset(config.AutoDeploymentMode.StringValue, state.AutoDeploymentMode.StringValue) &&
-		(config.RevisionWeights.IsNull() || config.RevisionWeights.Equal(state.RevisionWeights)) &&
-		(config.Regions.IsNull() || config.Regions.Equal(state.Regions)) &&
-		(config.ScalingConfig.IsNull() || config.ScalingConfig.Equal(state.ScalingConfig)) &&
-		(config.ThrottleConfig.IsNull() || config.ThrottleConfig.Equal(state.ThrottleConfig))
+func statusEndpoint(conn *lambdaweb.Client, functionName, endpointName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findWebFunctionEndpointByTwoPartKey(ctx, conn, functionName, endpointName)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
 
-	if unchanged {
-		// Only pin the volatile "state" attribute: writing the whole plan model
-		// races with the provider framework's region interceptors and can clear
-		// the "region" meta-attribute, which then reads as a change and forces a
-		// spurious replacement on any out-of-band drift.
-		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(names.AttrState), state.State)...)
-		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("state_reason"), state.StateReason)...)
+		return out, string(out.State), nil
 	}
 }
 
-func unchangedOrUnset(config, state types.String) bool {
-	return config.IsNull() || config.Equal(state)
+func statusEndpointUpdate(conn *lambdaweb.Client, functionName, endpointName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findWebFunctionEndpointByTwoPartKey(ctx, conn, functionName, endpointName)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		return out, string(out.UpdateStatus), nil
+	}
+}
+
+func waitEndpointActive(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.EndpointStatePending),
+		Target:                    enum.Slice(awstypes.EndpointStateActive),
+		Refresh:                   statusEndpoint(conn, functionName, endpointName),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionEndpointOutput); ok {
+		if reason := endpointStateReason(out); reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+// endpointStateReason expands an endpoint's state reason with the per-region
+// reasons. When a MultiRegion or PerRegion endpoint fails in one of its regions
+// the top-level reason only says to "check the regional endpoint states for more
+// details", which a Terraform user never sees: the detail lives in
+// regionalEndpoints. Appending it turns an opaque failed apply into one that
+// names the region and the cause.
+func endpointStateReason(out *lambdaweb.GetWebFunctionEndpointOutput) string {
+	if out == nil {
+		return ""
+	}
+
+	return appendRegionalReasons(aws.ToString(out.StateReason), out.RegionalEndpoints,
+		func(regional awstypes.RegionalEndpoint) (string, bool) {
+			if regional.State == awstypes.EndpointStateActive {
+				return "", false
+			}
+			if reason := aws.ToString(regional.StateReason); reason != "" {
+				return reason, true
+			}
+			return string(regional.State), true
+		})
+}
+
+// endpointUpdateStatusReason is endpointStateReason for the update path, where
+// the regional detail lives in updateStatusReason instead.
+func endpointUpdateStatusReason(out *lambdaweb.GetWebFunctionEndpointOutput) string {
+	if out == nil {
+		return ""
+	}
+
+	return appendRegionalReasons(aws.ToString(out.UpdateStatusReason), out.RegionalEndpoints,
+		func(regional awstypes.RegionalEndpoint) (string, bool) {
+			if regional.UpdateStatus == awstypes.EndpointUpdateStatusSuccessful || regional.UpdateStatus == "" {
+				return "", false
+			}
+			if reason := aws.ToString(regional.UpdateStatusReason); reason != "" {
+				return reason, true
+			}
+			return string(regional.UpdateStatus), true
+		})
+}
+
+func appendRegionalReasons(reason string, regionalEndpoints map[string]awstypes.RegionalEndpoint, detail func(awstypes.RegionalEndpoint) (string, bool)) string {
+	var b strings.Builder
+	b.WriteString(reason)
+
+	for _, region := range slices.Sorted(maps.Keys(regionalEndpoints)) {
+		if d, ok := detail(regionalEndpoints[region]); ok {
+			fmt.Fprintf(&b, " [%s: %s]", region, d)
+		}
+	}
+
+	return b.String()
+}
+
+func waitEndpointUpdated(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		// An empty updateStatus can be observed if the endpoint has never been
+		// updated before and the PATCH has not propagated to the Get yet.
+		Pending:                   append(enum.Slice(awstypes.EndpointUpdateStatusInProgress), ""),
+		Target:                    enum.Slice(awstypes.EndpointUpdateStatusSuccessful),
+		Refresh:                   statusEndpointUpdate(conn, functionName, endpointName),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionEndpointOutput); ok {
+		if reason := endpointUpdateStatusReason(out); reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitEndpointDeleted(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		// Every state an endpoint can hold on the way out, because the target is
+		// "gone" and anything unlisted aborts the destroy. A MultiRegion endpoint
+		// sits Pending for minutes while it replicates and settles in Failed when
+		// a region cannot take the revision, and both accept a delete: observing
+		// either one is a matter of when the first refresh lands.
+		Pending: enum.Slice(awstypes.EndpointStatePending, awstypes.EndpointStateActive,
+			awstypes.EndpointStateFailed, awstypes.EndpointStateDeleting),
+		Target:  []string{},
+		Refresh: statusEndpoint(conn, functionName, endpointName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionEndpointOutput); ok {
+		if reason := aws.ToString(out.StateReason); reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
 }
 
 type endpointResourceModel struct {
@@ -543,13 +637,10 @@ type endpointResourceModel struct {
 	EndpointName        types.String                                         `tfsdk:"endpoint_name"`
 	EndpointType        fwtypes.StringEnum[awstypes.EndpointType]            `tfsdk:"endpoint_type"`
 	FunctionName        types.String                                         `tfsdk:"function_name"`
-	ID                  types.String                                         `tfsdk:"id"`
 	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
 	Regions             fwtypes.SetOfString                                  `tfsdk:"regions"`
-	RevisionWeights     fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weights"`
+	RevisionWeights     fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weight"`
 	ScalingConfig       fwtypes.ObjectValueOf[scalingConfigModel]            `tfsdk:"scaling_config"`
-	State               types.String                                         `tfsdk:"state"`
-	StateReason         types.String                                         `tfsdk:"state_reason"`
 	ThrottleConfig      fwtypes.ObjectValueOf[throttleConfigModel]           `tfsdk:"throttle_config"`
 	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
 }

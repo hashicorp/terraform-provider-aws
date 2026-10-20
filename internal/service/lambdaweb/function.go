@@ -668,7 +668,7 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		}
 	}
 	if endpointName != "" {
-		endpoint, err = findEndpointByName(ctx, conn, name, endpointName)
+		endpoint, err = findWebFunctionEndpointByTwoPartKey(ctx, conn, name, endpointName)
 		switch {
 		case retry.NotFound(err):
 			// The endpoint described by endpoint_config was deleted outside of
