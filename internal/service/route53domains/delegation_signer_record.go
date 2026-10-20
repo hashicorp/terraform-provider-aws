@@ -148,7 +148,7 @@ func (r *delegationSignerRecordResource) Create(ctx context.Context, request res
 	digest := signingAttributes.digest(ctx, domainName)
 	dnssecKey, err := findDNSSECKeyByDomainNameAndDigest(ctx, conn, domainName, digest)
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key", domainName), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key (%s)", domainName, digest), err.Error())
 		return
 	}
 
@@ -193,7 +193,7 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 		return
 	}
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key", domainName), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key (%s)", domainName, digest), err.Error())
 		return
 	}
 
@@ -240,49 +240,29 @@ func (r *delegationSignerRecordResource) Delete(ctx context.Context, request res
 func (r *delegationSignerRecordResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	// Try first with the "new" import ID format: domain_name:flags,algorithm,public_key.
 	const (
-		newImportIDPartCount = 4
+		importIDPartCount = 4
 	)
-	if idParts, err := intflex.ExpandResourceId(request.ID, newImportIDPartCount, false); err == nil {
-		domainName := idParts[0]
-		flags := intflex.StringValueToInt64Value(idParts[1])
-		algorithm := intflex.StringValueToInt64Value(idParts[2])
-		publicKey := idParts[3]
-
-		model := dnssecSigningAttributesModel{
-			Algorithm: types.Int64Value(algorithm),
-			Flags:     types.Int64Value(flags),
-			PublicKey: types.StringValue(publicKey),
-		}
-		signingAttributes, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
-		response.Diagnostics.Append(diags...)
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrDomainName), domainName)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("signing_attributes"), signingAttributes)...)
-	} else if idParts, err = intflex.ExpandResourceId(request.ID, delegationSignerRecordResourceIDPartCount, false); err != nil {
+	idParts, err := intflex.ExpandResourceId(request.ID, importIDPartCount, false)
+	if err != nil {
 		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
-	} else {
-		conn := r.Meta().Route53DomainsClient(ctx)
-
-		domainName := idParts[0]
-		keyID := idParts[1]
-		dnssecKey, err := findDNSSECKeyByDomainNameAndKeyID(ctx, conn, domainName, keyID)
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key (%s)", domainName, keyID), err.Error())
-			return
-		}
-
-		model := dnssecSigningAttributesModel{
-			Algorithm: fwflex.Int32ToFrameworkInt64(ctx, dnssecKey.Algorithm),
-			Flags:     fwflex.Int32ToFrameworkInt64(ctx, dnssecKey.Flags),
-			PublicKey: fwflex.StringToFramework(ctx, dnssecKey.PublicKey),
-		}
-		signingAttributes, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
-		response.Diagnostics.Append(diags...)
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrDomainName), domainName)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("signing_attributes"), signingAttributes)...)
 	}
+
+	domainName := idParts[0]
+	flags := intflex.StringValueToInt64Value(idParts[1])
+	algorithm := intflex.StringValueToInt64Value(idParts[2])
+	publicKey := idParts[3]
+
+	model := dnssecSigningAttributesModel{
+		Algorithm: types.Int64Value(algorithm),
+		Flags:     types.Int64Value(flags),
+		PublicKey: types.StringValue(publicKey),
+	}
+	signingAttributes, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+	response.Diagnostics.Append(diags...)
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrDomainName), domainName)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("signing_attributes"), signingAttributes)...)
 }
 
 func delegationSignerRecordCreateResourceID(domainName, keyID string) (string, error) {

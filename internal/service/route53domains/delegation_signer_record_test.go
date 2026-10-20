@@ -121,7 +121,7 @@ func testAccDelegationSignerRecord_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrDomainName,
-				ImportStateIdFunc:                    testAccDelegationSignerAssociationNewImportStateIDFunc(ctx, resourceName),
+				ImportStateIdFunc:                    testAccDelegationSignerAssociationImportStateIDFunc(ctx, resourceName),
 			},
 		},
 	})
@@ -204,10 +204,6 @@ func testAccCheckDelegationSignerAssociationExists(ctx context.Context, t *testi
 	}
 }
 
-func testAccDelegationSignerAssociationOldImportStateIDFunc(_ context.Context, n string) resource.ImportStateIdFunc {
-	return acctest.AttrsImportStateIdFunc(n, ",", names.AttrDomainName, "dnssec_key_id")
-}
-
-func testAccDelegationSignerAssociationNewImportStateIDFunc(_ context.Context, n string) resource.ImportStateIdFunc {
+func testAccDelegationSignerAssociationImportStateIDFunc(_ context.Context, n string) resource.ImportStateIdFunc {
 	return acctest.AttrsImportStateIdFunc(n, ",", names.AttrDomainName, "signing_attributes.0.flags", "signing_attributes.0.algorithm", "signing_attributes.0.public_key")
 }
