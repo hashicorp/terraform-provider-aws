@@ -46,6 +46,7 @@ func TestAccIdentityStoreGroup_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDisplayName), knownvalue.StringExact(displayName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("group_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision"), knownvalue.NotNull()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("identity_store_id"), "data.aws_ssoadmin_instances.test", tfjsonpath.New("identity_store_ids").AtSliceIndex(0), compare.ValuesSame()),
 				},
 				Check: resource.ComposeTestCheckFunc(
