@@ -21,8 +21,8 @@ var TagsSchema = sync.OnceValue(func() *schema.Schema {
 })
 
 // TagsSchemaComputed returns the schema to use for resource `tags_all` and other resource tags
-// that the provider computes. Validation warns when it's configured; it stays Optional until the
-// next major version so that existing configurations keep working.
+// that the provider computes. Validation warns when it's configured; it stays Optional for now so
+// that existing configurations keep working.
 var TagsSchemaComputed = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:             schema.TypeMap,
@@ -37,7 +37,7 @@ func warnComputedTagsConfigured(any, cty.Path) diag.Diagnostics {
 	return diag.Diagnostics{{
 		Severity: diag.Warning,
 		Summary:  "Argument is computed",
-		Detail:   "The provider sets this attribute. Remove it from your configuration. A future major version of the provider will reject it.",
+		Detail:   "The provider sets this attribute. Remove it from your configuration. A future version of the provider will reject it.",
 	}}
 }
 
