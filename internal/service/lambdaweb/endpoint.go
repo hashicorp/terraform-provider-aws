@@ -50,6 +50,7 @@ import (
 // @IdentityAttribute("function_name")
 // @IdentityAttribute("endpoint_name")
 // @ImportIDHandler("endpointImportID")
+// @Testing(importStateIdAttribute="endpoint_name")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdaweb;lambdaweb.GetWebFunctionEndpointOutput")
@@ -640,8 +641,8 @@ type endpointResourceModel struct {
 	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
 	Regions             fwtypes.SetOfString                                  `tfsdk:"regions"`
 	RevisionWeights     fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weight"`
-	ScalingConfig       fwtypes.ObjectValueOf[scalingConfigModel]            `tfsdk:"scaling_config"`
-	ThrottleConfig      fwtypes.ObjectValueOf[throttleConfigModel]           `tfsdk:"throttle_config"`
+	ScalingConfig       fwtypes.ListNestedObjectValueOf[scalingConfigModel]  `tfsdk:"scaling_config"`
+	ThrottleConfig      fwtypes.ListNestedObjectValueOf[throttleConfigModel] `tfsdk:"throttle_config"`
 	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
 }
 

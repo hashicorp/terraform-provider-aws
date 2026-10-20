@@ -124,8 +124,8 @@ type endpointDataSourceModel struct {
 	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
 	Regions             fwtypes.SetOfString                                  `tfsdk:"regions"`
 	RevisionWeights     fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weights"`
-	ScalingConfig       fwtypes.ObjectValueOf[scalingConfigModel]            `tfsdk:"scaling_config"`
+	ScalingConfig       fwtypes.ListNestedObjectValueOf[scalingConfigModel]  `tfsdk:"scaling_config"`
 	State               types.String                                         `tfsdk:"state"`
 	StateReason         types.String                                         `tfsdk:"state_reason"`
-	ThrottleConfig      fwtypes.ObjectValueOf[throttleConfigModel]           `tfsdk:"throttle_config"`
+	ThrottleConfig      fwtypes.ListNestedObjectValueOf[throttleConfigModel] `tfsdk:"throttle_config"`
 }

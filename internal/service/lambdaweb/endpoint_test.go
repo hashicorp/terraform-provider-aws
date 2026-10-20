@@ -50,10 +50,11 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccEndpointImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    testAccEndpointImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "endpoint_name",
 			},
 			{
 				// auth_type is updated in place and the domain name is kept.
@@ -97,10 +98,11 @@ func TestAccLambdaWebEndpoint_scalingAndThrottle(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccEndpointImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    testAccEndpointImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "endpoint_name",
 			},
 			{
 				Config: testAccEndpointConfig_scalingAndThrottle(rName, 6, 200),
@@ -177,10 +179,11 @@ func TestAccLambdaWebEndpoint_multiRegion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccEndpointImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    testAccEndpointImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "endpoint_name",
 			},
 		},
 	})
@@ -211,10 +214,11 @@ func TestAccLambdaWebEndpoint_perRegion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccEndpointImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    testAccEndpointImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "endpoint_name",
 			},
 		},
 	})
@@ -246,7 +250,7 @@ func testAccCheckEndpointDestroy(ctx context.Context, t *testing.T) resource.Tes
 				return smarterr.NewError(err)
 			}
 
-			return fmt.Errorf("Web Functions Endpoint %s still exists", rs.Primary.Attributes["endpoint_name"])
+			return fmt.Errorf("Lambda Web Function Endpoint %s still exists", rs.Primary.Attributes["endpoint_name"])
 		}
 
 		return nil
@@ -274,13 +278,7 @@ func testAccCheckEndpointExists(ctx context.Context, t *testing.T, n string, v *
 }
 
 func testAccEndpointImportStateIDFunc(n string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["function_name"], rs.Primary.Attributes["endpoint_name"]), nil
-	}
+	return acctest.AttrsImportStateIdFunc(n, ",", "function_name", "endpoint_name")
 }
 
 func testAccEndpointConfig_basic(rName string) string {
