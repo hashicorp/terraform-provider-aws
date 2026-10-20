@@ -11,6 +11,7 @@ import (
 	"maps"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -32,10 +33,12 @@ func TestLoad(t *testing.T) {
 		"ExampleCustomizeDiffClient":    "github.com/aws/aws-sdk-go-v2/service/examplecustomizediff",
 		"ExampleFuncRefsClient":         "github.com/aws/aws-sdk-go-v2/service/examplefuncrefs",
 		"ExampleImportClient":           "github.com/aws/aws-sdk-go-v2/service/exampleimport",
+		"ExampleInterfaceClient":        "github.com/aws/aws-sdk-go-v2/service/exampleinterface",
 		"ExampleStructFieldClient":      "github.com/aws/aws-sdk-go-v2/service/examplestructfield",
 		"ExampleTagsClient":             "github.com/aws/aws-sdk-go-v2/service/exampletags",
 		"ExampleTagsGenClient":          "github.com/aws/aws-sdk-go-v2/service/exampletagsgen",
 		"ExampleTagsUpdateOnlyClient":   "github.com/aws/aws-sdk-go-v2/service/exampletagsupdateonly",
+		"ExampleUnanalyzedClient":       "github.com/aws/aws-sdk-go-v2/service/exampleunanalyzed",
 	}
 	if !maps.Equal(a.clientMethods, wantClientMethods) {
 		t.Errorf("client methods = %v, want %v", a.clientMethods, wantClientMethods)
@@ -74,6 +77,9 @@ func TestLoad(t *testing.T) {
 			"import.go",
 			"thing.go",
 		},
+		servicePathPrefix + "exampleinterface": {
+			"thing.go",
+		},
 		servicePathPrefix + "examplestructfield": {
 			"database.go",
 			"orchestrator.go",
@@ -97,6 +103,9 @@ func TestLoad(t *testing.T) {
 		servicePathPrefix + "exampletagsupdateonly": {
 			"service_package.go",
 			"tags_gen.go",
+			"thing.go",
+		},
+		servicePathPrefix + "exampleunanalyzed": {
 			"thing.go",
 		},
 	}
@@ -259,6 +268,209 @@ func TestParsePackageImports(t *testing.T) {
 
 			if got := a.importsOf(files[i]); !maps.Equal(got, testCase.want) {
 				t.Errorf("imports of %s = %v, want %v", testCase.file, got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestFindSDKCalls(t *testing.T) {
+	t.Parallel()
+
+	a, err := load(testdataRoot)
+	if err != nil {
+		t.Fatalf("load(%q): %s", testdataRoot, err)
+	}
+
+	testCases := map[string]struct {
+		pkg string
+		// decl is a package-level function, or a method as "Type.Method".
+		decl         string
+		want         []string
+		wantWarnings []string
+	}{
+		"direct client call": {
+			pkg:  "examplecrud",
+			decl: "resourceGizmoDelete",
+			want: []string{"examplecrud.DeleteGizmo"},
+		},
+		"CRUD function called from another": {
+			pkg:  "examplecrud",
+			decl: "resourceGizmoCreate",
+			want: []string{"examplecrud.CreateGizmo", "examplecrud.GetGizmo"},
+		},
+		"finder": {
+			pkg:  "examplecrud",
+			decl: "resourceGadgetRead",
+			want: []string{"examplecrud.DescribeGadget"},
+		},
+		"status function": {
+			pkg:  "examplecrud",
+			decl: "statusWidget",
+			want: []string{"examplecrud.DescribeWidget"},
+		},
+		"waiter, status function, and finder": {
+			pkg:  "examplecrud",
+			decl: "waitWidgetCreated",
+			want: []string{"examplecrud.DescribeWidget"},
+		},
+		"waiter in CRUD function": {
+			pkg:  "examplecrud",
+			decl: "resourceWidgetCreate",
+			want: []string{"examplecrud.CreateWidget", "examplecrud.DescribeWidget"},
+		},
+		"Options is not an operation": {
+			pkg:  "examplecrud",
+			decl: "resourceWidgetRead",
+			want: []string{"examplecrud.DescribeWidget"},
+		},
+		"paginator": {
+			pkg:  "examplecrud",
+			decl: "deleteWidgetParts",
+			want: []string{"examplecrud.DeleteWidgetPart", "examplecrud.ListWidgetParts"},
+		},
+		"paginator in CRUD function": {
+			pkg:  "examplecrud",
+			decl: "resourceWidgetDelete",
+			want: []string{
+				"examplecrud.DeleteWidget",
+				"examplecrud.DeleteWidgetPart",
+				"examplecrud.DescribeWidget",
+				"examplecrud.ListWidgetParts",
+			},
+		},
+		"AWSClient getter on a variable, cross-service finder, and retry.Op closure": {
+			pkg:  "examplecrud",
+			decl: "resourceGadgetCreate",
+			want: []string{
+				"examplecrossservice.DescribeThing",
+				"examplecrud.CreateGadget",
+				"examplecrud.DescribeGadget",
+				"examplecrud.DescribeWidget",
+			},
+		},
+		"generic retry closure": {
+			pkg:  "examplecrud",
+			decl: "resourceGadgetDelete",
+			want: []string{"examplecrud.DeleteGadget"},
+		},
+		"method on a concrete receiver": {
+			pkg:  "examplefuncrefs",
+			decl: "attributeHandler.Upsert",
+			want: []string{"examplefuncrefs.GetThingAttribute", "examplefuncrefs.SetThingAttribute"},
+		},
+		"method without SDK calls": {
+			pkg:  "examplefuncrefs",
+			decl: "attributeHandler.Import",
+		},
+		"CRUD function returned by a call": {
+			pkg:  "examplefuncrefs",
+			decl: "resourceCallExpressionPut",
+			want: []string{"examplefuncrefs.GetThingConfiguration", "examplefuncrefs.PutThingConfiguration"},
+		},
+		"client in a struct field, through a constructor's result": {
+			pkg:  "examplestructfield",
+			decl: "resourceRuleCreate",
+			want: []string{
+				"examplestructfield.CreateRule",
+				"examplestructfield.GetChangeToken",
+				"examplestructfield.GetRule",
+			},
+		},
+		"client in a struct field, with methods called directly and deferred": {
+			pkg:  "examplestructfield",
+			decl: "resourceDatabaseUpdate",
+			want: []string{
+				"examplestructfield.CreateDeployment",
+				"examplestructfield.DeleteDeployment",
+				"examplestructfield.DescribeDatabase",
+				"examplestructfield.SwitchoverDeployment",
+			},
+		},
+		"struct field with the same name as another struct's": {
+			pkg:  "examplestructfield",
+			decl: "parentLookup.Find",
+			want: []string{"examplecrossservice.DescribeThing"},
+		},
+		"struct fields with the same name, in one function": {
+			pkg:  "examplestructfield",
+			decl: "resourceDatabaseCreate",
+			want: []string{
+				"examplecrossservice.DescribeThing",
+				"examplestructfield.CreateDatabase",
+				"examplestructfield.DescribeDatabase",
+			},
+		},
+		"interface dispatch includes every implementation": {
+			pkg:  "exampleinterface",
+			decl: "resourceThingCreate",
+			want: []string{"exampleinterface.CreateAdvancedThing", "exampleinterface.CreateBasicThing"},
+		},
+		"client as a package interface wrapping an SDK operation is missed": {
+			pkg:  "exampleinterface",
+			decl: "findThingByID",
+		},
+		"exported variables in another service package": {
+			pkg:  "exampletags",
+			decl: "servicePackage.ListTags",
+			want: []string{
+				"exampletags.ListGadgetTags",
+				"exampletags.ListWidgetTags",
+				"exampletagsgen.ListTagsForResource",
+			},
+		},
+		"every branch on resource type": {
+			pkg:  "exampletags",
+			decl: "servicePackage.UpdateTags",
+			want: []string{
+				"exampletags.TagGadget",
+				"exampletags.TagWidget",
+				"exampletags.UntagGadget",
+				"exampletags.UntagWidget",
+				"exampletagsgen.TagResource",
+				"exampletagsgen.UntagResource",
+			},
+		},
+		"paginator in generated tags": {
+			pkg:  "exampletagsgen",
+			decl: "servicePackage.ListTags",
+			want: []string{"exampletagsgen.ListTagsForResource"},
+		},
+		"resource factory call is not followed": {
+			pkg:  "examplecustomizediff",
+			decl: "customizeDiffComputedOnUpdate",
+		},
+		"client passed to an SDK waiter and presign client": {
+			pkg:  "exampleunanalyzed",
+			decl: "resourceThingCreate",
+			want: []string{"exampleunanalyzed.CreateThing", "exampleunanalyzed.ListThings"},
+			wantWarnings: []string{
+				"exampleunanalyzed client passed to unanalyzed function exampleunanalyzed.NewPresignClient",
+				"exampleunanalyzed client passed to unanalyzed function exampleunanalyzed.NewThingReadyWaiter",
+			},
+		},
+		"client passed to an SDK paginator": {
+			pkg:  "exampleunanalyzed",
+			decl: "findThingByName",
+			want: []string{"exampleunanalyzed.ListThings"},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			pkg, ok := a.services[servicePathPrefix+testCase.pkg]
+			if !ok {
+				t.Fatalf("service package %s not loaded", testCase.pkg)
+			}
+			decl := mustFindDecl(t, pkg, testCase.decl)
+
+			got, gotWarnings := a.findSDKCalls(pkg, decl, nil)
+			if !slices.Equal(got, testCase.want) {
+				t.Errorf("findSDKCalls(%s) calls = %q, want %q", testCase.decl, got, testCase.want)
+			}
+			if !slices.Equal(gotWarnings, testCase.wantWarnings) {
+				t.Errorf("findSDKCalls(%s) warnings = %q, want %q", testCase.decl, gotWarnings, testCase.wantWarnings)
 			}
 		})
 	}
@@ -769,4 +981,23 @@ func mustParseExpr(t *testing.T, src string) ast.Expr {
 		t.Fatalf("parsing %q: %s", src, err)
 	}
 	return expr
+}
+
+// mustFindDecl returns the declaration of a package-level function, or of a method named as
+// "Type.Method", failing the test if there is none.
+func mustFindDecl(t *testing.T, pkg *servicePackage, name string) ast.Node {
+	t.Helper()
+
+	var decl ast.Node
+	if recv, method, ok := strings.Cut(name, "."); ok {
+		if m, ok := pkg.methods[recv][method]; ok {
+			decl = m
+		}
+	} else if d, ok := pkg.decls[name].(*ast.FuncDecl); ok {
+		decl = d
+	}
+	if decl == nil {
+		t.Fatalf("%s: no function or method %s", pkg.name, name)
+	}
+	return decl
 }
