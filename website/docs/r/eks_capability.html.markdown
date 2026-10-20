@@ -98,6 +98,7 @@ The `configuration` block contains the following:
 The `argo_cd` block contains the following:
 
 * `aws_idc` - (Optional) AWS IAM Identity Center configuration. See [`aws_idc`](#aws_idc) below.
+* `endpoint_prefix` - (Optional) Prefix used to construct the hostname of the Argo CD server endpoint. If not specified, Amazon EKS automatically generates the endpoint. This value can't be changed after the capability is created.
 * `namespace` - (Optional) Kubernetes namespace for ArgoCD.
 * `network_access` - (Optional) Network access configuration. See [`network_access`](#network_access) below.
 * `rbac_role_mapping` - (Optional) RBAC role mappings. See [`rbac_role_mapping`](#rbac_role_mapping) below.
