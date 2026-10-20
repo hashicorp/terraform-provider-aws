@@ -125,7 +125,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.70.5
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.52.0
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.50.1
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.55.4
 	github.com/aws/aws-sdk-go-v2/service/eventbridgev2 v1.0.4
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.30.0
