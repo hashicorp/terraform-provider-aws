@@ -6,6 +6,8 @@ package tags
 import (
 	"sync"
 
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,15 +20,26 @@ var TagsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-// TagsSchemaComputed returns the schema to use for computed tags: resource `tags_all`
-// and data source tags that are attributes only. Users can't set it in configuration.
+// TagsSchemaComputed returns the schema to use for resource `tags_all` and other resource tags
+// that the provider computes. Validation warns when it's configured; it stays Optional until the
+// next major version so that existing configurations keep working.
 var TagsSchemaComputed = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeMap,
-		Computed: true,
-		Elem:     &schema.Schema{Type: schema.TypeString},
+		Type:             schema.TypeMap,
+		Optional:         true,
+		Computed:         true,
+		Elem:             &schema.Schema{Type: schema.TypeString},
+		ValidateDiagFunc: warnComputedTagsConfigured,
 	}
 })
+
+func warnComputedTagsConfigured(any, cty.Path) diag.Diagnostics {
+	return diag.Diagnostics{{
+		Severity: diag.Warning,
+		Summary:  "Argument is computed",
+		Detail:   "The provider sets this attribute. Remove it from your configuration. A future major version of the provider will reject it.",
+	}}
+}
 
 // TagsSchemaComputedOnly returns the schema to use for data source tags that are attributes only.
 // Users can't set it in configuration.
