@@ -899,16 +899,17 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
 
 // Level-based scope_down blocks — mirrors web_acl_rule_statement_models_gen.go.
 // Level 0 blocks: leaf statements only (no and/not/or).
-// Level 1 blocks: leaf + and/not/or at level 0.
+// Level 1 blocks: leaf + and/not/or at level 0. As in AWS WAF, AND can't directly contain AND and
+// OR can't directly contain OR, so AND and OR each get their own level-1 statement block.
 // scopeDownStatementBlock (used in scope_down_statement) references and/not/or at level 1.
 // No var/var cycles since each level only refers to the level below.
 
-// scopeDownStatementBlockLevel0NoMinMax: level-0 statements, used by AND/OR at level 0.
-var scopeDownStatementBlockLevel0NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+// scopeDownStatementBlockLevel0Multiple: at least two level-0 statements, used by AND/OR at level 0.
+var scopeDownStatementBlockLevel0Multiple = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
 		Validators: []validator.List{
-			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtLeast(2),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: scopeDownLeafStatementBlocks(ctx),
@@ -938,7 +939,7 @@ var scopeDownAndStatementBlockLevel0 = tfsync.OnceValueCtx(func(ctx context.Cont
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": scopeDownStatementBlockLevel0NoMinMax(ctx),
+				"statement": scopeDownStatementBlockLevel0Multiple(ctx),
 			},
 		},
 		Description: "Logical AND statement.",
@@ -964,28 +965,44 @@ var scopeDownOrStatementBlockLevel0 = tfsync.OnceValueCtx(func(ctx context.Conte
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": scopeDownStatementBlockLevel0NoMinMax(ctx),
+				"statement": scopeDownStatementBlockLevel0Multiple(ctx),
 			},
 		},
 		Description: "Logical OR statement.",
 	}
 })
 
-// scopeDownStatementBlockLevel1NoMinMax: level-1 statements (leaf + and/not/or at level 0), used by AND/OR at level 1.
-var scopeDownStatementBlockLevel1NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+// scopeDownStatementBlockLevel1InAnd: at least two level-1 statements (leaf + not/or at level 0), used by AND at level 1.
+var scopeDownStatementBlockLevel1InAnd = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := scopeDownLeafStatementBlocks(ctx)
-	blocks["and_statement"] = scopeDownAndStatementBlockLevel0(ctx)
 	blocks["not_statement"] = scopeDownNotStatementBlockLevel0(ctx)
 	blocks["or_statement"] = scopeDownOrStatementBlockLevel0(ctx)
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel1Model](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel1InAndModel](ctx),
 		Validators: []validator.List{
-			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtLeast(2),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: blocks,
 		},
-		Description: "Nested statements for logical operations within scope_down_statement.",
+		Description: "Nested statements for AND operation within scope_down_statement.",
+	}
+})
+
+// scopeDownStatementBlockLevel1InOr: at least two level-1 statements (leaf + and/not at level 0), used by OR at level 1.
+var scopeDownStatementBlockLevel1InOr = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	blocks := scopeDownLeafStatementBlocks(ctx)
+	blocks["and_statement"] = scopeDownAndStatementBlockLevel0(ctx)
+	blocks["not_statement"] = scopeDownNotStatementBlockLevel0(ctx)
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel1InOrModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(2),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: blocks,
+		},
+		Description: "Nested statements for OR operation within scope_down_statement.",
 	}
 })
 
@@ -1008,7 +1025,7 @@ var scopeDownStatementBlockLevel1Single = tfsync.OnceValueCtx(func(ctx context.C
 	}
 })
 
-// scopeDownAndStatementBlock: AND at level 1, wrapping level-1 statements.
+// scopeDownAndStatementBlock: AND at level 1, wrapping level-1 statements other than AND.
 // Type alias: webACLRuleScopeDownAndStatementModel = webACLRuleScopeDownAndStatementLevel1Model.
 var scopeDownAndStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
@@ -1016,7 +1033,7 @@ var scopeDownAndStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) s
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": scopeDownStatementBlockLevel1NoMinMax(ctx),
+				"statement": scopeDownStatementBlockLevel1InAnd(ctx),
 			},
 		},
 		Description: "Logical AND statement.",
@@ -1038,7 +1055,7 @@ var scopeDownNotStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) s
 	}
 })
 
-// scopeDownOrStatementBlock: OR at level 1, wrapping level-1 statements.
+// scopeDownOrStatementBlock: OR at level 1, wrapping level-1 statements other than OR.
 // Type alias: webACLRuleScopeDownOrStatementModel = webACLRuleScopeDownOrStatementLevel1Model.
 var scopeDownOrStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
@@ -1046,7 +1063,7 @@ var scopeDownOrStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sc
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": scopeDownStatementBlockLevel1NoMinMax(ctx),
+				"statement": scopeDownStatementBlockLevel1InOr(ctx),
 			},
 		},
 		Description: "Logical OR statement.",

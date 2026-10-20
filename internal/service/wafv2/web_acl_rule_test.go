@@ -885,6 +885,30 @@ func TestAccWAFV2WebACLRule_invalidLogicalStatementNesting(t *testing.T) {
 				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch)),
 				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
 			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch))),
+				ExpectError: regexache.MustCompile(`Blocks of type "and_statement" are not expected here`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch))),
+				ExpectError: regexache.MustCompile(`Blocks of type "or_statement" are not expected here`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch))),
+				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch))),
+				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch)))),
+				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch)))),
+				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+			},
 		},
 	})
 }
@@ -2779,6 +2803,17 @@ func testAccWebACLRuleStatement_or(statements ...string) string {
 
 func testAccWebACLRuleStatement_not(statement string) string {
 	return fmt.Sprintf("not_statement {\n%s\n}", testAccWebACLRuleStatements([]string{statement}))
+}
+
+func testAccWebACLRuleStatement_rateBasedScopeDown(statement string) string {
+	return fmt.Sprintf(`rate_based_statement {
+  limit              = 1000
+  aggregate_key_type = "IP"
+
+  scope_down_statement {
+%s
+  }
+}`, statement)
 }
 
 func testAccWebACLRuleStatements(statements []string) string {

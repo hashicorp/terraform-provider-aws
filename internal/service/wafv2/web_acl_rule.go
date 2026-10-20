@@ -1638,7 +1638,7 @@ type webACLRuleRuleActionOverrideModel struct {
 }
 
 // Level-based scope_down statement models — mirrors the pattern in web_acl_rule_statement_models_gen.go.
-// Level 0: leaf statements only. Level 1: leaf + and/not/or at level 0.
+// Level 0: leaf statements only. Level 1: leaf + and/not/or at level 0 (no AND in AND, no OR in OR).
 // webACLRuleScopeDownStatementModel (the top level) references and/not/or at level 1.
 // Each level only references the level below it, so the type graph is acyclic.
 
@@ -1688,9 +1688,43 @@ type webACLRuleScopeDownStatementLevel1Model struct {
 	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 }
 
+// webACLRuleScopeDownStatementLevel1InAndModel contains leaf statements plus not/or at level 0.
+// AWS WAF doesn't accept an AND statement directly inside an AND statement.
+type webACLRuleScopeDownStatementLevel1InAndModel struct {
+	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel0Model]       `tfsdk:"not_statement"`
+	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel0Model]        `tfsdk:"or_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
+	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+}
+
+// webACLRuleScopeDownStatementLevel1InOrModel contains leaf statements plus and/not at level 0.
+// AWS WAF doesn't accept an OR statement directly inside an OR statement.
+type webACLRuleScopeDownStatementLevel1InOrModel struct {
+	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel0Model]       `tfsdk:"and_statement"`
+	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel0Model]       `tfsdk:"not_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
+	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+}
+
 // webACLRuleScopeDownAndStatementLevel1Model wraps level-1 statements for an AND operation.
 type webACLRuleScopeDownAndStatementLevel1Model struct {
-	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel1Model] `tfsdk:"statement"`
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel1InAndModel] `tfsdk:"statement"`
 }
 
 // webACLRuleScopeDownNotStatementLevel1Model wraps a single level-1 statement for a NOT operation.
@@ -1700,7 +1734,7 @@ type webACLRuleScopeDownNotStatementLevel1Model struct {
 
 // webACLRuleScopeDownOrStatementLevel1Model wraps level-1 statements for an OR operation.
 type webACLRuleScopeDownOrStatementLevel1Model struct {
-	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel1Model] `tfsdk:"statement"`
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel1InOrModel] `tfsdk:"statement"`
 }
 
 // Type aliases so the rest of the code (flattenScopeDownStatement, Expand, etc.) keeps working unchanged.
