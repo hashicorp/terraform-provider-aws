@@ -633,7 +633,7 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		revision, err = findWebFunctionRevisionByTwoPartKey(ctx, conn, name, revisionID)
 		switch {
 		case retry.NotFound(err):
-			revision, err = nil, nil
+			revision, err = nil, nil //nolint:ineffassign,wastedassign // future-proof
 		case err != nil:
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
@@ -677,7 +677,7 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 			// traffic, and pairing a stale endpoint_config with the null
 			// domain_name set above breaks every configuration that references
 			// the domain, leaving plan and apply unable to run at all.
-			endpoint, err = nil, nil
+			endpoint, err = nil, nil //nolint:ineffassign,wastedassign // future-proof
 		case err != nil:
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
