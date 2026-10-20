@@ -450,10 +450,6 @@ func inferenceComponentSpecificationSchema(ctx context.Context) schema.NestedBlo
 									},
 									"max_imbalance": schema.Int32Attribute{
 										Optional: true,
-										Computed: true,
-										PlanModifiers: []planmodifier.Int32{
-											int32planmodifier.UseStateForUnknown(),
-										},
 									},
 								},
 							},

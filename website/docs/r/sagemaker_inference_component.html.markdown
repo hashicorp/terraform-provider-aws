@@ -172,7 +172,7 @@ This resource supports the following arguments:
 ### `availability_zone_balance` Block
 
 * `enforcement_mode` - (Required) How strictly the AZ balance constraint is enforced. Valid values: `PERMISSIVE`.
-* `max_imbalance` - (Optional) Maximum allowed difference in copy count between any two Availability Zones. Default: `0`.
+* `max_imbalance` - (Optional) Maximum allowed difference in copy count between any two Availability Zones. Defaults to `0`, which the service applies but does not report, so the value stays absent from state unless configured.
 
 ### `startup_parameters` Block
 

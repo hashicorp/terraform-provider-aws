@@ -315,9 +315,9 @@ func TestAccSageMakerInferenceComponent_schedulingConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckInferenceComponentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				// max_imbalance is omitted, so the service applies its default. The
-				// attribute is Computed to absorb that value without an inconsistent
-				// result after apply.
+				// DescribeInferenceComponent does not report max_imbalance when it is
+				// omitted, even though the service applies a default of 0, so the
+				// attribute stays absent from state and must not be Computed.
 				Config: testAccInferenceComponentConfig_schedulingConfigMaxImbalanceOmitted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceComponentExists(ctx, t, resourceName),
@@ -325,7 +325,7 @@ func TestAccSageMakerInferenceComponent_schedulingConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "specification.0.scheduling_config.0.placement_strategy", "SPREAD"),
 					resource.TestCheckResourceAttr(resourceName, "specification.0.scheduling_config.0.availability_zone_balance.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "specification.0.scheduling_config.0.availability_zone_balance.0.enforcement_mode", "PERMISSIVE"),
-					resource.TestCheckResourceAttr(resourceName, "specification.0.scheduling_config.0.availability_zone_balance.0.max_imbalance", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "specification.0.scheduling_config.0.availability_zone_balance.0.max_imbalance"),
 				),
 			},
 			{
