@@ -50,7 +50,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.73.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockruntime v1.63.5
-	github.com/aws/aws-sdk-go-v2/service/billing v1.22.3
+	github.com/aws/aws-sdk-go-v2/service/billing v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/chime v1.50.4
