@@ -90,7 +90,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.43.5
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.74.2
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.35.2
-	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.72.4
+	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.73.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.75.2
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.50.5
