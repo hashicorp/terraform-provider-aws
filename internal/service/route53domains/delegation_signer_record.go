@@ -152,7 +152,7 @@ func (r *delegationSignerRecordResource) Create(ctx context.Context, request res
 		return
 	}
 
-	// Keep resource ID as domain_name,dnssec_key_id for backwards compatability.
+	// Keep resource ID as domain_name,dnssec_key_id for backwards compatibility.
 	keyID := aws.ToString(dnssecKey.Id)
 	resourceID, err := delegationSignerRecordCreateResourceID(domainName, keyID)
 	if err != nil {
@@ -238,7 +238,6 @@ func (r *delegationSignerRecordResource) Delete(ctx context.Context, request res
 }
 
 func (r *delegationSignerRecordResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	// Try first with the "new" import ID format: domain_name:flags,algorithm,public_key.
 	const (
 		importIDPartCount = 4
 	)
