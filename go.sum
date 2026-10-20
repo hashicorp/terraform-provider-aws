@@ -77,8 +77,8 @@ github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.44.5 h1:+T5rwaDlIa73
 github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.44.5/go.mod h1:J/Eky4OjBoDf4nrFj7HSzjpt9wC748o2qOWXw1gzt7I=
 github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.34.2 h1:bDTnUg7ux2VT/r53Z0eBN+UA31YZgWVRtspd+zmznF8=
 github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.34.2/go.mod h1:uWEh+zYD/rVQf2lM5bL4oz0guC7PxiNtFqRf53Wfrbc=
-github.com/aws/aws-sdk-go-v2/service/appmesh v1.44.4 h1:QnOoZTB/PY0j2LlDY9y6GBFWb9hxKk/AyjCL6auGJmE=
-github.com/aws/aws-sdk-go-v2/service/appmesh v1.44.4/go.mod h1:dn/JwP4taS1nRvNF3qIcNoHaOwXkXmx54XdhzseFUDQ=
+github.com/aws/aws-sdk-go-v2/service/appmesh v1.44.5 h1:sY8b3cxE4pJKu4mf01lkxYuwwjb6pZR3Wn5ZJZOI8yA=
+github.com/aws/aws-sdk-go-v2/service/appmesh v1.44.5/go.mod h1:dn/JwP4taS1nRvNF3qIcNoHaOwXkXmx54XdhzseFUDQ=
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.48.4 h1:XfP+Xk8XAISHjmbzb+u+pIX0Qn5DGk4FLCxK4mdxAVg=
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.48.4/go.mod h1:ixOPxuTeorrOs24dWFsioPlqqGAZWiRJWdVr+X9dFSg=
 github.com/aws/aws-sdk-go-v2/service/appstream v1.72.0 h1:CESCUnAamLO1J1XAEg1K/A21/78A+468QGieJ9eo3wM=
