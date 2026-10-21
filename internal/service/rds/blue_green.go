@@ -128,7 +128,7 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds.CreateBlueGreenDeploymentInput {
+func (h *instanceHandler) createBlueGreenInput(ctx context.Context, d *schema.ResourceData) *rds.CreateBlueGreenDeploymentInput {
 	input := &rds.CreateBlueGreenDeploymentInput{
 		BlueGreenDeploymentName: aws.String(d.Get(names.AttrIdentifier).(string)),
 		Source:                  aws.String(d.Get(names.AttrARN).(string)),
@@ -140,6 +140,7 @@ func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds.Crea
 	if d.HasChange(names.AttrParameterGroupName) {
 		input.TargetDBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 	}
+	input.Tags = getTagsIn(ctx)
 
 	return input
 }
