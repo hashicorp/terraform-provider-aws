@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_organizations_account: Increase default delete timeout to handle delayed account closure in AWS Organizations.
+```
