@@ -5,11 +5,8 @@ package lambdaweb
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"maps"
-	"slices"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -35,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -318,7 +315,7 @@ func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.EndpointName.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
 		return
 	}
 
@@ -331,8 +328,6 @@ func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *endpointResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().LambdaWebClient(ctx)
-
 	var plan, state endpointResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -340,16 +335,15 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	functionName := plan.FunctionName.ValueString()
-	endpointName := plan.EndpointName.ValueString()
+	conn := r.Meta().LambdaWebClient(ctx)
 
+	functionName, endpointName := fwflex.StringValueFromFramework(ctx, plan.FunctionName), fwflex.StringValueFromFramework(ctx, plan.EndpointName)
 	var input lambdaweb.UpdateWebFunctionEndpointInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	input.FunctionName = aws.String(functionName)
-	input.EndpointName = aws.String(endpointName)
+
 	// An omitted description means "leave unchanged" to the API, so removing one
 	// from the configuration would never reach the service and the read-back
 	// would not match the plan. An empty string is what clears it.
@@ -357,7 +351,8 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 		input.Description = aws.String("")
 	}
 
-	if _, err := conn.UpdateWebFunctionEndpoint(ctx, &input); err != nil {
+	_, err := conn.UpdateWebFunctionEndpoint(ctx, &input)
+	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
 		return
 	}
@@ -450,14 +445,17 @@ var _ inttypes.ImportIDParser = endpointImportID{}
 type endpointImportID struct{}
 
 func (endpointImportID) Parse(id string) (string, map[string]any, error) {
-	functionName, endpointName, found := strings.Cut(id, flex.ResourceIdSeparator)
-	if !found {
-		return "", nil, fmt.Errorf("id %q should be in the format <function-name>%s<endpoint-name>", id, flex.ResourceIdSeparator)
+	const (
+		importIDParts = 2
+	)
+	parts, err := intflex.ExpandResourceId(id, importIDParts, true)
+	if err != nil {
+		return "", nil, err
 	}
 
 	return id, map[string]any{
-		"function_name": functionName,
-		"endpoint_name": endpointName,
+		"function_name": parts[0],
+		"endpoint_name": parts[1],
 	}, nil
 }
 
@@ -525,68 +523,10 @@ func waitEndpointActive(ctx context.Context, conn *lambdaweb.Client, functionNam
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionEndpointOutput); ok {
-		if reason := endpointStateReason(out); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
-		return out, smarterr.NewError(err)
+		retry.SetLastError(err, endpointError(out))
 	}
 
 	return nil, smarterr.NewError(err)
-}
-
-// endpointStateReason expands an endpoint's state reason with the per-region
-// reasons. When a MultiRegion or PerRegion endpoint fails in one of its regions
-// the top-level reason only says to "check the regional endpoint states for more
-// details", which a Terraform user never sees: the detail lives in
-// regionalEndpoints. Appending it turns an opaque failed apply into one that
-// names the region and the cause.
-func endpointStateReason(out *lambdaweb.GetWebFunctionEndpointOutput) string {
-	if out == nil {
-		return ""
-	}
-
-	return appendRegionalReasons(aws.ToString(out.StateReason), out.RegionalEndpoints,
-		func(regional awstypes.RegionalEndpoint) (string, bool) {
-			if regional.State == awstypes.EndpointStateActive {
-				return "", false
-			}
-			if reason := aws.ToString(regional.StateReason); reason != "" {
-				return reason, true
-			}
-			return string(regional.State), true
-		})
-}
-
-// endpointUpdateStatusReason is endpointStateReason for the update path, where
-// the regional detail lives in updateStatusReason instead.
-func endpointUpdateStatusReason(out *lambdaweb.GetWebFunctionEndpointOutput) string {
-	if out == nil {
-		return ""
-	}
-
-	return appendRegionalReasons(aws.ToString(out.UpdateStatusReason), out.RegionalEndpoints,
-		func(regional awstypes.RegionalEndpoint) (string, bool) {
-			if regional.UpdateStatus == awstypes.EndpointUpdateStatusSuccessful || regional.UpdateStatus == "" {
-				return "", false
-			}
-			if reason := aws.ToString(regional.UpdateStatusReason); reason != "" {
-				return reason, true
-			}
-			return string(regional.UpdateStatus), true
-		})
-}
-
-func appendRegionalReasons(reason string, regionalEndpoints map[string]awstypes.RegionalEndpoint, detail func(awstypes.RegionalEndpoint) (string, bool)) string {
-	var b strings.Builder
-	b.WriteString(reason)
-
-	for _, region := range slices.Sorted(maps.Keys(regionalEndpoints)) {
-		if d, ok := detail(regionalEndpoints[region]); ok {
-			fmt.Fprintf(&b, " [%s: %s]", region, d)
-		}
-	}
-
-	return b.String()
 }
 
 func waitEndpointUpdated(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
@@ -602,10 +542,7 @@ func waitEndpointUpdated(ctx context.Context, conn *lambdaweb.Client, functionNa
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionEndpointOutput); ok {
-		if reason := endpointUpdateStatusReason(out); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
-		return out, smarterr.NewError(err)
+		retry.SetLastError(err, endpointUpdateError(out))
 	}
 
 	return nil, smarterr.NewError(err)
@@ -627,10 +564,7 @@ func waitEndpointDeleted(ctx context.Context, conn *lambdaweb.Client, functionNa
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionEndpointOutput); ok {
-		if reason := aws.ToString(out.StateReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
-		return out, smarterr.NewError(err)
+		retry.SetLastError(err, endpointError(out))
 	}
 
 	return nil, smarterr.NewError(err)
