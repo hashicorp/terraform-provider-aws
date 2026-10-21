@@ -1354,12 +1354,8 @@ func (r *intentResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	_, err := conn.DeleteIntent(ctx, in)
 	if err != nil {
 		// lexv2models does not seem to use this approach like other services
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
 		// PreconditionFailedException: Failed to retrieve resource since it does not exist
-		if errs.IsA[*awstypes.PreconditionFailedException](err) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.PreconditionFailedException](err) {
 			return
 		}
 
