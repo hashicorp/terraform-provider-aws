@@ -143,7 +143,6 @@ func resourceDeliveryStream() *schema.Resource {
 				return &schema.Schema{
 					Type:     schema.TypeList,
 					Optional: true,
-					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrDatabaseName: {
@@ -2527,7 +2526,11 @@ func expandIcebergDestinationUpdate(tfMap map[string]any) *types.IcebergDestinat
 	}
 
 	if _, ok := tfMap["destination_table_configuration"]; ok {
+		// A nil list is omitted from the request and leaves the existing tables in place.
 		apiObject.DestinationTableConfigurationList = expandDestinationTableConfigurationList(tfMap)
+		if apiObject.DestinationTableConfigurationList == nil {
+			apiObject.DestinationTableConfigurationList = []types.DestinationTableConfiguration{}
+		}
 	}
 
 	if _, ok := tfMap["processing_configuration"]; ok {
