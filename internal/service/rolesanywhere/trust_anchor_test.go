@@ -206,6 +206,62 @@ func TestAccRolesAnywhereTrustAnchor_certificateBundle(t *testing.T) {
 	})
 }
 
+// TestAccRolesAnywhereTrustAnchor_notificationSettingsUpdate exercises an in-place
+// update of an already-configured notification_settings event (as opposed to
+// TestAccRolesAnywhereTrustAnchor_notificationSettings, which only covers setting and
+// fully removing the block). notification_settings previously required ForceNew for any
+// change, and the resource's CustomizeDiff unconditionally suppressed diffs whenever the
+// prior state's entries were AWS-computed defaults -- which is true for every event the
+// user hasn't already customized via Terraform. That meant a value change to an event the
+// user *did* configure was silently dropped: no error, no plan diff, no API call, and the
+// live setting never changed. See https://github.com/hashicorp/terraform-provider-aws/issues/41668.
+func TestAccRolesAnywhereTrustAnchor_notificationSettingsUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rolesanywhere_trust_anchor.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustAnchorDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustAnchorConfig_notificationSettingsUpdate(t, rName, true, 45),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustAnchorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "notification_settings.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "notification_settings.*", map[string]string{
+						"event":     string(awstypes.NotificationEventEndEntityCertificateExpiry),
+						"enabled":   acctest.CtTrue,
+						"threshold": "45",
+					}),
+				),
+			},
+			{
+				// The exact production bug: the user changes a value (threshold) on an
+				// event that was already explicitly configured. Before the fix this was
+				// silently dropped -- no diff, no API call, no error, no plan change.
+				Config: testAccTrustAnchorConfig_notificationSettingsUpdate(t, rName, true, 60),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustAnchorExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "notification_settings.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "notification_settings.*", map[string]string{
+						"event":     string(awstypes.NotificationEventEndEntityCertificateExpiry),
+						"enabled":   acctest.CtTrue,
+						"threshold": "60",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRolesAnywhereTrustAnchor_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -427,6 +483,30 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(caCertificate))
+}
+
+func testAccTrustAnchorConfig_notificationSettingsUpdate(t *testing.T, rName string, enabled bool, threshold int) string {
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t, caKey)
+
+	return fmt.Sprintf(`
+resource "aws_rolesanywhere_trust_anchor" "test" {
+  name = %[1]q
+  source {
+    source_data {
+      x509_certificate_data = "%[2]s"
+    }
+    source_type = "CERTIFICATE_BUNDLE"
+  }
+
+  notification_settings {
+    channel   = "ALL"
+    enabled   = %[3]t
+    event     = "END_ENTITY_CERTIFICATE_EXPIRY"
+    threshold = %[4]d
+  }
+}
+`, rName, acctest.TLSPEMEscapeNewlines(caCertificate), enabled, threshold)
 }
 
 func testAccTrustAnchorConfig_enabled(t *testing.T, rName string, enabled bool) string {
