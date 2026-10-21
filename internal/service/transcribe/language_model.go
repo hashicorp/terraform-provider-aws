@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -203,8 +204,7 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 	_, err := conn.DeleteLanguageModel(ctx, &input)
 
-	var resourceNotFoundException *types.NotFoundException
-	if errors.As(err, &resourceNotFoundException) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -255,8 +255,7 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 
 	out, err := conn.DescribeLanguageModel(ctx, in)
 
-	var bre *types.BadRequestException
-	if errors.As(err, &bre) {
+	if errs.IsA[*types.BadRequestException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
