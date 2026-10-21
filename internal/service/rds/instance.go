@@ -765,6 +765,17 @@ func resourceInstance() *schema.Resource {
 				old, new := d.GetChange("multi_tenant")
 				return old.(bool) && !new.(bool)
 			}),
+			// RDS applies the conversion, and any pending modifications, immediately.
+			// Require explicit consent rather than applying deferred changes outside the maintenance window.
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" || !d.HasChange("multi_tenant") || !d.NewValueKnown("multi_tenant") || !d.NewValueKnown(names.AttrApplyImmediately) {
+					return nil
+				}
+				if d.Get("multi_tenant").(bool) && !d.Get(names.AttrApplyImmediately).(bool) {
+					return errors.New(`"apply_immediately" must be true to convert to the multi-tenant configuration`)
+				}
+				return nil
+			},
 		),
 	}
 }
@@ -1961,6 +1972,20 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	// Restores and read replicas can't request the multi-tenant configuration at creation.
+	if d.Get("multi_tenant").(bool) {
+		instance, err := findDBInstanceByID(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", identifier, err)
+		}
+
+		if !aws.ToBool(instance.MultiTenant) {
+			if err := dbInstanceConvertToMultiTenant(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (%s): converting to multi-tenant configuration: %s", identifier, err)
+			}
+		}
+	}
+
 	if v, ok := d.GetOk("warning_event_categories"); ok {
 		diags = append(diags, surfaceEvents(ctx, conn, identifier, types.SourceTypeDbInstance, createStart,
 			flex.ExpandStringValueSet(v.(*schema.Set)))...)
@@ -2424,7 +2449,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	// upgrades or ManageMasterUserPassword) and always requires ApplyImmediately.
 	// A change from true to false forces replacement (see CustomizeDiff).
 	if d.HasChange("multi_tenant") && d.Get("multi_tenant").(bool) {
-		if err := dbInstanceConvertToMultiTenant(ctx, conn, d.Id(), d.Get(names.AttrIdentifier).(string), deadline.Remaining()); err != nil {
+		if err := dbInstanceConvertToMultiTenant(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): converting to multi-tenant configuration: %s", d.Get(names.AttrIdentifier).(string), err)
 		}
 	}
@@ -2833,14 +2858,20 @@ func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, 
 	return nil
 }
 
-func dbInstanceConvertToMultiTenant(ctx context.Context, conn *rds.Client, resourceID, identifier string, timeout time.Duration) error {
-	input := rds.ModifyDBInstanceInput{
-		ApplyImmediately:     aws.Bool(true),
-		DBInstanceIdentifier: aws.String(identifier),
-		MultiTenant:          aws.Bool(true),
-	}
-
+func dbInstanceConvertToMultiTenant(ctx context.Context, conn *rds.Client, resourceID string, timeout time.Duration) error {
 	_, err := tfresource.RetryWhenIsA[*rds.ModifyDBInstanceOutput, *types.InvalidDBInstanceStateFault](ctx, timeout, func(ctx context.Context) (*rds.ModifyDBInstanceOutput, error) {
+		// Look up the current identifier; a rename in the same apply may not have taken effect yet.
+		instance, err := findDBInstanceByID(ctx, conn, resourceID)
+		if err != nil {
+			return nil, err
+		}
+
+		input := rds.ModifyDBInstanceInput{
+			ApplyImmediately:     aws.Bool(true),
+			DBInstanceIdentifier: instance.DBInstanceIdentifier,
+			MultiTenant:          aws.Bool(true),
+		}
+
 		return conn.ModifyDBInstance(ctx, &input)
 	})
 
