@@ -79,6 +79,11 @@ func testAccDetectorFeature_basic(t *testing.T) {
 					})),
 				},
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
