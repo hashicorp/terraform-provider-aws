@@ -1,0 +1,48 @@
+[
+  {
+    "service": "exampletagsupdateonly",
+    "resource_type": "aws_exampletagsupdateonly_thing",
+    "plugin_type": "SDKv2",
+    "expr": "resourceThing",
+    "location": "internal/service/exampletagsupdateonly/thing.go:23",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/exampletagsupdateonly/thing.go:46",
+      "sdk_calls": [
+        "exampletagsupdateonly.CreateThing",
+        "exampletagsupdateonly.GetThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/exampletagsupdateonly/thing.go:65",
+      "sdk_calls": [
+        "exampletagsupdateonly.GetThing"
+      ]
+    },
+    "update": {
+      "expr": "resourceThingUpdate",
+      "location": "internal/service/exampletagsupdateonly/thing.go:93",
+      "sdk_calls": [
+        "exampletagsupdateonly.GetThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/exampletagsupdateonly/thing.go:98",
+      "sdk_calls": [
+        "exampletagsupdateonly.DeleteThing"
+      ]
+    },
+    "tags": {
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/exampletagsupdateonly/tags_gen.go:90",
+        "sdk_calls": [
+          "exampletagsupdateonly.TagResource",
+          "exampletagsupdateonly.UntagResource"
+        ]
+      }
+    }
+  }
+]

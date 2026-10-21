@@ -1,0 +1,31 @@
+[
+  {
+    "service": "examplecrossservice",
+    "resource_type": "aws_examplecrossservice_thing",
+    "plugin_type": "SDKv2",
+    "expr": "resourceThing",
+    "location": "internal/service/examplecrossservice/thing.go:23",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/examplecrossservice/thing.go:43",
+      "sdk_calls": [
+        "examplecrossservice.CreateThing",
+        "examplecrossservice.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/examplecrossservice/thing.go:63",
+      "sdk_calls": [
+        "examplecrossservice.DescribeThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/examplecrossservice/thing.go:84",
+      "sdk_calls": [
+        "examplecrossservice.DeleteThing"
+      ]
+    }
+  }
+]

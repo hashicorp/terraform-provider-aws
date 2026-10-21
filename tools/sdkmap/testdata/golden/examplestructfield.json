@@ -1,0 +1,82 @@
+[
+  {
+    "service": "examplestructfield",
+    "resource_type": "aws_examplestructfield_database",
+    "plugin_type": "SDKv2",
+    "expr": "resourceDatabase",
+    "location": "internal/service/examplestructfield/database.go:23",
+    "create": {
+      "expr": "resourceDatabaseCreate",
+      "location": "internal/service/examplestructfield/database.go:49",
+      "sdk_calls": [
+        "examplecrossservice.DescribeThing",
+        "examplestructfield.CreateDatabase",
+        "examplestructfield.DescribeDatabase"
+      ]
+    },
+    "read": {
+      "expr": "resourceDatabaseRead",
+      "location": "internal/service/examplestructfield/database.go:77",
+      "sdk_calls": [
+        "examplestructfield.DescribeDatabase"
+      ]
+    },
+    "update": {
+      "expr": "resourceDatabaseUpdate",
+      "location": "internal/service/examplestructfield/database.go:99",
+      "sdk_calls": [
+        "examplestructfield.CreateDeployment",
+        "examplestructfield.DeleteDeployment",
+        "examplestructfield.DescribeDatabase",
+        "examplestructfield.SwitchoverDeployment"
+      ]
+    },
+    "delete": {
+      "expr": "resourceDatabaseDelete",
+      "location": "internal/service/examplestructfield/database.go:126",
+      "sdk_calls": [
+        "examplestructfield.DeleteDatabase"
+      ]
+    }
+  },
+  {
+    "service": "examplestructfield",
+    "resource_type": "aws_examplestructfield_rule",
+    "plugin_type": "SDKv2",
+    "expr": "resourceRule",
+    "location": "internal/service/examplestructfield/rule.go:23",
+    "create": {
+      "expr": "resourceRuleCreate",
+      "location": "internal/service/examplestructfield/rule.go:44",
+      "sdk_calls": [
+        "examplestructfield.CreateRule",
+        "examplestructfield.GetChangeToken",
+        "examplestructfield.GetRule"
+      ]
+    },
+    "read": {
+      "expr": "resourceRuleRead",
+      "location": "internal/service/examplestructfield/rule.go:67",
+      "sdk_calls": [
+        "examplestructfield.GetRule"
+      ]
+    },
+    "update": {
+      "expr": "resourceRuleUpdate",
+      "location": "internal/service/examplestructfield/rule.go:89",
+      "sdk_calls": [
+        "examplestructfield.GetChangeToken",
+        "examplestructfield.GetRule",
+        "examplestructfield.UpdateRule"
+      ]
+    },
+    "delete": {
+      "expr": "resourceRuleDelete",
+      "location": "internal/service/examplestructfield/rule.go:110",
+      "sdk_calls": [
+        "examplestructfield.DeleteRule",
+        "examplestructfield.GetChangeToken"
+      ]
+    }
+  }
+]

@@ -1,0 +1,31 @@
+[
+  {
+    "service": "examplebuildconstraints",
+    "resource_type": "aws_examplebuildconstraints_included",
+    "plugin_type": "SDKv2",
+    "expr": "resourceIncluded",
+    "location": "internal/service/examplebuildconstraints/included.go:23",
+    "create": {
+      "expr": "resourceIncludedCreate",
+      "location": "internal/service/examplebuildconstraints/included.go:39",
+      "sdk_calls": [
+        "examplebuildconstraints.CreateThing",
+        "examplebuildconstraints.GetThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceIncludedRead",
+      "location": "internal/service/examplebuildconstraints/included.go:59",
+      "sdk_calls": [
+        "examplebuildconstraints.GetThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceIncludedDelete",
+      "location": "internal/service/examplebuildconstraints/included.go:84",
+      "sdk_calls": [
+        "examplebuildconstraints.DeleteThing"
+      ]
+    }
+  }
+]

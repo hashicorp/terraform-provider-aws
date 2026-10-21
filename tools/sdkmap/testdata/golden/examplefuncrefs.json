@@ -1,0 +1,106 @@
+[
+  {
+    "service": "examplefuncrefs",
+    "resource_type": "aws_examplefuncrefs_call_expression",
+    "plugin_type": "SDKv2",
+    "expr": "resourceCallExpression",
+    "location": "internal/service/examplefuncrefs/call_expression.go:23",
+    "create": {
+      "expr": "resourceCallExpressionPut(...)",
+      "location": "internal/service/examplefuncrefs/call_expression.go:48",
+      "sdk_calls": [
+        "examplefuncrefs.GetThingConfiguration",
+        "examplefuncrefs.PutThingConfiguration"
+      ]
+    },
+    "read": {
+      "expr": "resourceCallExpressionRead",
+      "location": "internal/service/examplefuncrefs/call_expression.go:72",
+      "sdk_calls": [
+        "examplefuncrefs.GetThingConfiguration"
+      ]
+    },
+    "update": {
+      "expr": "resourceCallExpressionPut(...)",
+      "location": "internal/service/examplefuncrefs/call_expression.go:48",
+      "sdk_calls": [
+        "examplefuncrefs.GetThingConfiguration",
+        "examplefuncrefs.PutThingConfiguration"
+      ]
+    },
+    "delete": {
+      "expr": "resourceCallExpressionDelete",
+      "location": "internal/service/examplefuncrefs/call_expression.go:94",
+      "sdk_calls": [
+        "examplefuncrefs.DeleteThingConfiguration"
+      ]
+    }
+  },
+  {
+    "service": "examplefuncrefs",
+    "resource_type": "aws_examplefuncrefs_method_value",
+    "plugin_type": "SDKv2",
+    "expr": "resourceMethodValue",
+    "location": "internal/service/examplefuncrefs/method_value.go:23",
+    "create": {
+      "expr": "h.Upsert",
+      "sdk_calls": [
+        "examplefuncrefs.GetThingAttribute",
+        "examplefuncrefs.SetThingAttribute"
+      ]
+    },
+    "read": {
+      "expr": "h.Read",
+      "sdk_calls": [
+        "examplefuncrefs.GetThingAttribute"
+      ]
+    },
+    "update": {
+      "expr": "h.Upsert",
+      "sdk_calls": [
+        "examplefuncrefs.GetThingAttribute",
+        "examplefuncrefs.SetThingAttribute"
+      ]
+    },
+    "delete": {
+      "expr": "h.Delete",
+      "sdk_calls": [
+        "examplefuncrefs.DeleteThingAttribute"
+      ]
+    }
+  },
+  {
+    "service": "examplefuncrefs",
+    "resource_type": "aws_examplefuncrefs_noop",
+    "plugin_type": "SDKv2",
+    "expr": "resourceNoop",
+    "location": "internal/service/examplefuncrefs/noop.go:18",
+    "create": {
+      "expr": "resourceNoopUpsert",
+      "location": "internal/service/examplefuncrefs/noop.go:36",
+      "sdk_calls": [
+        "examplefuncrefs.GetAccountSettings",
+        "examplefuncrefs.SetAccountSettings"
+      ]
+    },
+    "read": {
+      "expr": "resourceNoopRead",
+      "location": "internal/service/examplefuncrefs/noop.go:57",
+      "sdk_calls": [
+        "examplefuncrefs.GetAccountSettings"
+      ]
+    },
+    "update": {
+      "expr": "resourceNoopUpsert",
+      "location": "internal/service/examplefuncrefs/noop.go:36",
+      "sdk_calls": [
+        "examplefuncrefs.GetAccountSettings",
+        "examplefuncrefs.SetAccountSettings"
+      ]
+    },
+    "delete": {
+      "expr": "schema.NoopContext",
+      "sdk_calls": []
+    }
+  }
+]
