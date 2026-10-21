@@ -137,6 +137,7 @@ func (d *savingsPlanDataSource) Read(ctx context.Context, req datasource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	data.SavingsPlanOfferingID = fwflex.StringToFramework(ctx, out.OfferingId)
 
 	setTagsOut(ctx, out.Tags)
@@ -145,7 +146,7 @@ func (d *savingsPlanDataSource) Read(ctx context.Context, req datasource.ReadReq
 }
 
 type savingsPlanDataSourceModel struct {
-	Commitment             types.String         `tfsdk:"commitment"`
+	Commitment             CommitmentString     `tfsdk:"commitment"`
 	Currency               types.String         `tfsdk:"currency"`
 	Description            types.String         `tfsdk:"description"`
 	EC2InstanceFamily      types.String         `tfsdk:"ec2_instance_family"`
