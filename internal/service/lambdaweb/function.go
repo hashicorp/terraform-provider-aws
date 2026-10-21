@@ -968,9 +968,7 @@ func waitFunctionCreated(ctx context.Context, conn *lambdaweb.Client, name strin
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionOutput); ok {
-		if reason := aws.ToString(out.StateReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
+		retry.SetLastError(err, errors.New(aws.ToString(out.StateReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -988,9 +986,7 @@ func waitFunctionUpdated(ctx context.Context, conn *lambdaweb.Client, name strin
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionOutput); ok {
-		if reason := aws.ToString(out.StateReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
+		retry.SetLastError(err, errors.New(aws.ToString(out.StateReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -1007,9 +1003,7 @@ func waitFunctionDeleted(ctx context.Context, conn *lambdaweb.Client, name strin
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionOutput); ok {
-		if reason := aws.ToString(out.StateReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
+		retry.SetLastError(err, errors.New(aws.ToString(out.StateReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -1066,9 +1060,7 @@ func waitFunctionRevisionActive(ctx context.Context, conn *lambdaweb.Client, fun
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionRevisionOutput); ok {
-		if reason := aws.ToString(out.StateReason); reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
+		retry.SetLastError(err, errors.New(aws.ToString(out.StateReason)))
 		return out, smarterr.NewError(err)
 	}
 

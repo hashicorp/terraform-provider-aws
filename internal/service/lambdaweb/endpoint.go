@@ -524,6 +524,7 @@ func waitEndpointActive(ctx context.Context, conn *lambdaweb.Client, functionNam
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionEndpointOutput); ok {
 		retry.SetLastError(err, endpointError(out))
+		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
@@ -543,6 +544,7 @@ func waitEndpointUpdated(ctx context.Context, conn *lambdaweb.Client, functionNa
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionEndpointOutput); ok {
 		retry.SetLastError(err, endpointUpdateError(out))
+		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
@@ -565,6 +567,7 @@ func waitEndpointDeleted(ctx context.Context, conn *lambdaweb.Client, functionNa
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionEndpointOutput); ok {
 		retry.SetLastError(err, endpointError(out))
+		return out, smarterr.NewError(err)
 	}
 
 	return nil, smarterr.NewError(err)
