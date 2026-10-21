@@ -1,0 +1,31 @@
+[
+  {
+    "service": "exampleunanalyzed",
+    "resource_type": "aws_exampleunanalyzed_thing",
+    "plugin_type": "SDKv2",
+    "expr": "resourceThing",
+    "location": "internal/service/exampleunanalyzed/thing.go:24",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/exampleunanalyzed/thing.go:49",
+      "sdk_calls": [
+        "exampleunanalyzed.CreateThing",
+        "exampleunanalyzed.ListThings"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/exampleunanalyzed/thing.go:92",
+      "sdk_calls": [
+        "exampleunanalyzed.ListThings"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/exampleunanalyzed/thing.go:113",
+      "sdk_calls": [
+        "exampleunanalyzed.DeleteThing"
+      ]
+    }
+  }
+]

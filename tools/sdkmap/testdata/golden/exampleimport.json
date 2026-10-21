@@ -1,0 +1,130 @@
+[
+  {
+    "service": "exampleimport",
+    "resource_type": "aws_exampleimport_function",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFunction",
+    "location": "internal/service/exampleimport/import.go:31",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/exampleimport/thing.go:37",
+      "sdk_calls": [
+        "exampleimport.CreateThing",
+        "exampleimport.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/exampleimport/thing.go:58",
+      "sdk_calls": [
+        "exampleimport.DescribeThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/exampleimport/thing.go:80",
+      "sdk_calls": [
+        "exampleimport.DeleteThing"
+      ]
+    },
+    "import": {
+      "expr": "resourceFunctionImport",
+      "location": "internal/service/exampleimport/import.go:83",
+      "sdk_calls": []
+    }
+  },
+  {
+    "service": "exampleimport",
+    "resource_type": "aws_exampleimport_function_literal",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFunctionLiteral",
+    "location": "internal/service/exampleimport/import.go:46",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/exampleimport/thing.go:37",
+      "sdk_calls": [
+        "exampleimport.CreateThing",
+        "exampleimport.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/exampleimport/thing.go:58",
+      "sdk_calls": [
+        "exampleimport.DescribeThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/exampleimport/thing.go:80",
+      "sdk_calls": [
+        "exampleimport.DeleteThing"
+      ]
+    },
+    "import": {
+      "expr": "func literal",
+      "location": "internal/service/exampleimport/import.go:53",
+      "sdk_calls": [
+        "exampleimport.DescribeThing"
+      ]
+    }
+  },
+  {
+    "service": "exampleimport",
+    "resource_type": "aws_exampleimport_none",
+    "plugin_type": "SDKv2",
+    "expr": "resourceNone",
+    "location": "internal/service/exampleimport/import.go:73",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/exampleimport/thing.go:37",
+      "sdk_calls": [
+        "exampleimport.CreateThing",
+        "exampleimport.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/exampleimport/thing.go:58",
+      "sdk_calls": [
+        "exampleimport.DescribeThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/exampleimport/thing.go:80",
+      "sdk_calls": [
+        "exampleimport.DeleteThing"
+      ]
+    }
+  },
+  {
+    "service": "exampleimport",
+    "resource_type": "aws_exampleimport_passthrough",
+    "plugin_type": "SDKv2",
+    "expr": "resourcePassthrough",
+    "location": "internal/service/exampleimport/import.go:16",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/exampleimport/thing.go:37",
+      "sdk_calls": [
+        "exampleimport.CreateThing",
+        "exampleimport.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/exampleimport/thing.go:58",
+      "sdk_calls": [
+        "exampleimport.DescribeThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/exampleimport/thing.go:80",
+      "sdk_calls": [
+        "exampleimport.DeleteThing"
+      ]
+    }
+  }
+]

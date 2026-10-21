@@ -4,11 +4,14 @@
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"go/types"
 	"maps"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -17,6 +20,11 @@ import (
 
 // testdataRoot is the root of a fixture shaped like the provider repository. See testdata/README.md.
 const testdataRoot = "testdata"
+
+// goldenDir holds the golden files that TestFindSDKResources compares results with.
+var goldenDir = filepath.Join(testdataRoot, "golden")
+
+var update = flag.Bool("update", false, "update the golden files in "+goldenDir)
 
 func TestLoad(t *testing.T) {
 	t.Parallel()
@@ -72,6 +80,7 @@ func TestLoad(t *testing.T) {
 		servicePathPrefix + "examplefuncrefs": {
 			"call_expression.go",
 			"method_value.go",
+			"noop.go",
 		},
 		servicePathPrefix + "exampleimport": {
 			"import.go",
@@ -358,9 +367,9 @@ func TestFindSDKCalls(t *testing.T) {
 			decl: "attributeHandler.Upsert",
 			want: []string{"examplefuncrefs.GetThingAttribute", "examplefuncrefs.SetThingAttribute"},
 		},
-		"method without SDK calls": {
-			pkg:  "examplefuncrefs",
-			decl: "attributeHandler.Import",
+		"function without SDK calls": {
+			pkg:  "exampleimport",
+			decl: "resourceFunctionImport",
 		},
 		"CRUD function returned by a call": {
 			pkg:  "examplefuncrefs",
@@ -471,6 +480,117 @@ func TestFindSDKCalls(t *testing.T) {
 			}
 			if !slices.Equal(gotWarnings, testCase.wantWarnings) {
 				t.Errorf("findSDKCalls(%s) warnings = %q, want %q", testCase.decl, gotWarnings, testCase.wantWarnings)
+			}
+		})
+	}
+}
+
+func TestFindSDKResources(t *testing.T) {
+	t.Parallel()
+
+	a, err := load(testdataRoot)
+	if err != nil {
+		t.Fatalf("load(%q): %s", testdataRoot, err)
+	}
+
+	// The resources found in each service package are compared with the golden file
+	// testdata/golden/<pkg>.json. See testdata/README.md.
+	testCases := map[string]struct {
+		pkg string
+	}{
+		"build constraints": {
+			pkg: "examplebuildconstraints",
+		},
+		"exported finder": {
+			pkg: "examplecrossservice",
+		},
+		"CRUD": {
+			pkg: "examplecrud",
+		},
+		"CustomizeDiff": {
+			pkg: "examplecustomizediff",
+		},
+		"function references": {
+			pkg: "examplefuncrefs",
+		},
+		"importers": {
+			pkg: "exampleimport",
+		},
+		"interface dispatch": {
+			pkg: "exampleinterface",
+		},
+		"struct fields": {
+			pkg: "examplestructfield",
+		},
+		"shared tag handlers include all branch operations": {
+			pkg: "exampletags",
+		},
+		"generated tags": {
+			pkg: "exampletagsgen",
+		},
+		"generated UpdateTags only": {
+			pkg: "exampletagsupdateonly",
+		},
+		"unanalyzed functions": {
+			pkg: "exampleunanalyzed",
+		},
+	}
+
+	// Every service package, and every golden file, must have a test case.
+	tested := make(map[string]bool)
+	for _, testCase := range testCases {
+		tested[testCase.pkg] = true
+	}
+	for _, pkg := range a.servicePackages() {
+		if !tested[pkg.name] {
+			t.Errorf("no test case for service package %s", pkg.name)
+		}
+	}
+	goldenFiles, err := filepath.Glob(filepath.Join(goldenDir, "*.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, goldenFile := range goldenFiles {
+		if !tested[strings.TrimSuffix(filepath.Base(goldenFile), ".json")] {
+			t.Errorf("no test case for golden file %s", goldenFile)
+		}
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			pkg, ok := a.services[servicePathPrefix+testCase.pkg]
+			if !ok {
+				t.Fatalf("service package %s not loaded", testCase.pkg)
+			}
+
+			resources := a.findSDKResources(pkg)
+
+			// Order isn't asserted.
+			slices.SortFunc(resources, func(x, y resource) int {
+				return strings.Compare(x.ResourceType, y.ResourceType)
+			})
+			got, err := json.MarshalIndent(resources, "", "  ")
+			if err != nil {
+				t.Fatal(err)
+			}
+			got = append(got, '\n')
+
+			goldenFile := filepath.Join(goldenDir, testCase.pkg+".json")
+			if *update {
+				if err := os.WriteFile(goldenFile, got, 0o644); err != nil {
+					t.Fatal(err)
+				}
+				return
+			}
+
+			want, err := os.ReadFile(goldenFile)
+			if err != nil {
+				t.Fatalf("reading golden file: %s; to create it, run go test -run TestFindSDKResources -update", err)
+			}
+			if line, gotLine, wantLine, ok := firstDifference(got, want); ok {
+				t.Errorf("findSDKResources(%s) differs from %s at line %d:\n got: %s\nwant: %s\nIf the change is intended, run go test -run TestFindSDKResources -update", testCase.pkg, goldenFile, line, gotLine, wantLine)
 			}
 		})
 	}
@@ -1000,4 +1120,23 @@ func mustFindDecl(t *testing.T, pkg *servicePackage, name string) ast.Node {
 		t.Fatalf("%s: no function or method %s", pkg.name, name)
 	}
 	return decl
+}
+
+// firstDifference returns the first line, numbered from 1, at which got and want differ, and that
+// line of each. ok is false if they are equal.
+func firstDifference(got, want []byte) (line int, gotLine, wantLine string, ok bool) {
+	gotLines, wantLines := strings.Split(string(got), "\n"), strings.Split(string(want), "\n")
+	lineAt := func(lines []string, i int) string {
+		if i < len(lines) {
+			return lines[i]
+		}
+		return "(end of file)"
+	}
+
+	for i := range max(len(gotLines), len(wantLines)) {
+		if g, w := lineAt(gotLines, i), lineAt(wantLines, i); g != w {
+			return i + 1, g, w, true
+		}
+	}
+	return 0, "", "", false
 }
