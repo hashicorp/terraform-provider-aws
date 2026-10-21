@@ -1,0 +1,110 @@
+[
+  {
+    "service": "examplecrud",
+    "resource_type": "aws_examplecrud_gadget",
+    "plugin_type": "SDKv2",
+    "expr": "resourceGadget",
+    "location": "internal/service/examplecrud/gadget.go:29",
+    "create": {
+      "expr": "resourceGadgetCreate",
+      "location": "internal/service/examplecrud/gadget.go:55",
+      "sdk_calls": [
+        "examplecrossservice.DescribeThing",
+        "examplecrud.CreateGadget",
+        "examplecrud.DescribeGadget",
+        "examplecrud.DescribeWidget"
+      ]
+    },
+    "read": {
+      "expr": "resourceGadgetRead",
+      "location": "internal/service/examplecrud/gadget.go:96",
+      "sdk_calls": [
+        "examplecrud.DescribeGadget"
+      ]
+    },
+    "update": {
+      "expr": "resourceGadgetUpdate",
+      "location": "internal/service/examplecrud/gadget.go:118",
+      "sdk_calls": [
+        "examplecrud.DescribeGadget",
+        "examplecrud.UpdateGadget"
+      ]
+    },
+    "delete": {
+      "expr": "resourceGadgetDelete",
+      "location": "internal/service/examplecrud/gadget.go:136",
+      "sdk_calls": [
+        "examplecrud.DeleteGadget"
+      ]
+    }
+  },
+  {
+    "service": "examplecrud",
+    "resource_type": "aws_examplecrud_gizmo",
+    "plugin_type": "SDKv2",
+    "expr": "resourceGizmo",
+    "location": "internal/service/examplecrud/gizmo.go:21",
+    "create": {
+      "expr": "resourceGizmoCreate",
+      "location": "internal/service/examplecrud/gizmo.go:37",
+      "sdk_calls": [
+        "examplecrud.CreateGizmo",
+        "examplecrud.GetGizmo"
+      ]
+    },
+    "read": {
+      "expr": "resourceGizmoRead",
+      "location": "internal/service/examplecrud/gizmo.go:57",
+      "sdk_calls": [
+        "examplecrud.GetGizmo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceGizmoDelete",
+      "location": "internal/service/examplecrud/gizmo.go:82",
+      "sdk_calls": [
+        "examplecrud.DeleteGizmo"
+      ]
+    }
+  },
+  {
+    "service": "examplecrud",
+    "resource_type": "aws_examplecrud_widget",
+    "plugin_type": "SDKv2",
+    "expr": "resourceWidget",
+    "location": "internal/service/examplecrud/widget.go:23",
+    "create": {
+      "expr": "resourceWidgetCreate",
+      "location": "internal/service/examplecrud/widget.go:53",
+      "sdk_calls": [
+        "examplecrud.CreateWidget",
+        "examplecrud.DescribeWidget"
+      ]
+    },
+    "read": {
+      "expr": "resourceWidgetRead",
+      "location": "internal/service/examplecrud/widget.go:78",
+      "sdk_calls": [
+        "examplecrud.DescribeWidget"
+      ]
+    },
+    "update": {
+      "expr": "resourceWidgetUpdate",
+      "location": "internal/service/examplecrud/widget.go:101",
+      "sdk_calls": [
+        "examplecrud.DescribeWidget",
+        "examplecrud.UpdateWidget"
+      ]
+    },
+    "delete": {
+      "expr": "resourceWidgetDelete",
+      "location": "internal/service/examplecrud/widget.go:119",
+      "sdk_calls": [
+        "examplecrud.DeleteWidget",
+        "examplecrud.DeleteWidgetPart",
+        "examplecrud.DescribeWidget",
+        "examplecrud.ListWidgetParts"
+      ]
+    }
+  }
+]
