@@ -569,6 +569,13 @@ func resourceListener() *schema.Resource {
 					// Attribute only valid for HTTP and HTTPS (ALB) listeners
 					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps),
 				},
+				"send_tcp_reset_on_idle_timeout_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					// Attribute only valid for GENEVE (GWLB) listeners
+					DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve),
+				},
 				"ssl_policy": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -922,6 +929,12 @@ var listenerAttributes = listenerAttributeMap(map[string]listenerAttributeInfo{
 		apiAttributeKey:        "tcp.idle_timeout.seconds",
 		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumTcp, awstypes.ProtocolEnumGeneve},
 		tfType:                 schema.TypeInt,
+	},
+	// Attribute only supported on GENEVE listeners.
+	"send_tcp_reset_on_idle_timeout_enabled": {
+		apiAttributeKey:        "send_tcp_reset.on_idle_timeout.enabled",
+		listenerTypesSupported: []awstypes.ProtocolEnum{awstypes.ProtocolEnumGeneve},
+		tfType:                 schema.TypeBool,
 	},
 	// Attributes only supported on HTTPS listeners.
 	"routing_http_request_x_amzn_mtls_clientcert_header_name": {
