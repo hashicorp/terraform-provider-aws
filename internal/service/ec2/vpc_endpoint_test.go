@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestFlattenDNSOptions_privateDnsPreferenceCaseNormalization(t *testing.T) {
+func TestFlattenDnsOptions_privateDnsPreferenceCaseNormalization(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -66,7 +66,7 @@ func TestFlattenDNSOptions_privateDnsPreferenceCaseNormalization(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := tfec2.FlattenDNSOptions(tc.apiObject)
+			got := tfec2.FlattenDnsOptions(tc.apiObject)
 			if tc.apiObject == nil {
 				if got != nil {
 					t.Fatalf("expected nil, got %v", got)
