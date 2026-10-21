@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_ami_watermark
+```
+
+```release-note:enhancement
+data-source/aws_ami: Add `watermarks` attribute with `watermark_key`, `watermark_creation_time`, `source_image_id`, `source_image_region`, and `source_image_creation_time` sub-attributes
+```
+
+```release-note:enhancement
+data-source/aws_ami_ids: Add `watermark_keys` argument to filter AMIs by watermark key
+```
