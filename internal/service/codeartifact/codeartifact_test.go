@@ -34,6 +34,12 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"ignoreEquivalent":   testAccDomainPermissionsPolicy_ignoreEquivalent,
 			"Identity":           testAccCodeArtifactDomainPermissionsPolicy_identitySerial,
 		},
+		"PackageOriginConfiguration": {
+			acctest.CtBasic:      testAccPackageOriginConfiguration_basic,
+			acctest.CtDisappears: testAccPackageOriginConfiguration_disappears,
+			"update":             testAccPackageOriginConfiguration_update,
+			"Identity":           testAccCodeArtifactPackageOriginConfiguration_identitySerial,
+		},
 		"Repository": {
 			acctest.CtBasic:      testAccRepository_basic,
 			"description":        testAccRepository_description,
