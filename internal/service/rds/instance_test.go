@@ -6246,6 +6246,172 @@ func TestAccRDSInstance_Oracle_noNationalCharacterSet(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_Oracle_multiTenantCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_Oracle_multiTenant(rName, acctest.CtTrue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "db_name", "TFTEST"),
+					resource.TestCheckResourceAttr(resourceName, "multi_tenant", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "tfacctest"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					// Multi-tenant instances don't return DBName or MasterUsername.
+					"db_name",
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					names.AttrUsername,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_Oracle_multiTenantUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Single-tenant configuration (multi_tenant omitted).
+				Config: testAccInstanceConfig_Oracle_multiTenant(rName, "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "db_name", "TFTEST"),
+					resource.TestCheckResourceAttr(resourceName, "multi_tenant", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "tfacctest"),
+				),
+			},
+			{
+				// Convert to the multi-tenant configuration in place.
+				Config: testAccInstanceConfig_Oracle_multiTenant(rName, acctest.CtTrue),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "db_name", "TFTEST"),
+					resource.TestCheckResourceAttr(resourceName, "multi_tenant", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "tfacctest"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					// Multi-tenant instances don't return DBName or MasterUsername.
+					"db_name",
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					names.AttrUsername,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
+// TestAccRDSInstance_Oracle_multiTenantOutOfBand verifies that converting to the multi-tenant
+// configuration outside of Terraform (e.g. with the AWS CLI) doesn't cause drift or replacement.
+func TestAccRDSInstance_Oracle_multiTenantOutOfBand(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// After the out-of-band conversion, the post-apply refresh and plan must be empty.
+				Config: testAccInstanceConfig_Oracle_multiTenant(rName, "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "multi_tenant", acctest.CtFalse),
+					testAccCheckDBInstanceConvertToMultiTenant(ctx, t, &v1),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_Oracle_multiTenant(rName, acctest.CtTrue),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "db_name", "TFTEST"),
+					resource.TestCheckResourceAttr(resourceName, "multi_tenant", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "tfacctest"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_Outposts_coIPEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -8173,6 +8339,33 @@ func testAccCheckDBInstanceExists(ctx context.Context, t *testing.T, n string, v
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+// testAccCheckDBInstanceConvertToMultiTenant converts the DB instance to the multi-tenant
+// configuration directly via the API, simulating a change made outside of Terraform.
+func testAccCheckDBInstanceConvertToMultiTenant(ctx context.Context, t *testing.T, v *types.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
+		timeout := 60 * time.Minute
+
+		input := rds.ModifyDBInstanceInput{
+			ApplyImmediately:     aws.Bool(true),
+			DBInstanceIdentifier: v.DBInstanceIdentifier,
+			MultiTenant:          aws.Bool(true),
+		}
+		_, err := tfresource.RetryWhenIsA[*rds.ModifyDBInstanceOutput, *types.InvalidDBInstanceStateFault](ctx, timeout, func(ctx context.Context) (*rds.ModifyDBInstanceOutput, error) {
+			return conn.ModifyDBInstance(ctx, &input)
+		})
+		if err != nil {
+			return err
+		}
+
+		if err := tfrds.WaitDBInstanceMultiTenant(ctx, conn, aws.ToString(v.DbiResourceId), timeout); err != nil {
+			return err
+		}
 
 		return nil
 	}
@@ -10359,6 +10552,47 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, tfrds.InstanceEngineOracleStandard2, mainInstanceClasses, rName))
+}
+
+func testAccInstanceConfig_Oracle_multiTenant(rName, multiTenant string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_baseVPC(rName),
+		fmt.Sprintf(`
+# The multi-tenant configuration requires Oracle Database 19c RU 2022-01 or higher.
+data "aws_rds_engine_version" "test" {
+  engine  = %[1]q
+  version = "19"
+  latest  = true
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = data.aws_rds_engine_version.test.engine
+  engine_version = data.aws_rds_engine_version.test.version_actual
+  license_model  = "bring-your-own-license"
+  storage_type   = "gp3"
+
+  preferred_instance_classes = [%[2]s]
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage    = 20
+  apply_immediately    = true
+  db_name              = "TFTEST"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier           = %[3]q
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model        = data.aws_rds_orderable_db_instance.test.license_model
+  multi_tenant         = %[4]s
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = 1
+  skip_final_snapshot  = true
+  storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
+  username             = "tfacctest"
+}
+`, tfrds.InstanceEngineOracleStandard2CDB, mainInstanceClasses, rName, multiTenant))
 }
 
 func testAccInstanceConfig_CloudWatchLogsExport_mssql(rName string) string {
