@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -653,4 +654,75 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
   }
 }
 `, rName, tagValue))
+}
+
+func TestAccLogsDeliveryDestination_ignoreTagUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var destination awstypes.DeliveryDestination
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_delivery_destination.test"
+	check := resource.ComposeAggregateTestCheckFunc(
+		testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &destination),
+		func(_ *terraform.State) error {
+			conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
+			output, err := conn.ListTagsForResource(ctx, &cloudwatchlogs.ListTagsForResourceInput{ResourceArn: destination.Arn})
+			if err != nil {
+				return err
+			}
+			if output.Tags["CreatedOn"] != "a" {
+				return fmt.Errorf("delivery destination creation tag = %q, want a", output.Tags["CreatedOn"])
+			}
+			return nil
+		},
+		resource.TestCheckNoResourceAttr(resourceName, "tags_all.CreatedOn"),
+	)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{Config: testAccDeliveryDestinationConfig_ignoreTagUpdates(rName, "a", "before"), Check: check},
+			{
+				Config:           testAccDeliveryDestinationConfig_ignoreTagUpdates(rName, "b", "before"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()}},
+			},
+			{
+				Config: testAccDeliveryDestinationConfig_ignoreTagUpdates(rName, "b", "after"),
+				Check:  check,
+				ConfigPlanChecks: resource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+				}},
+			},
+		},
+	})
+}
+
+func testAccDeliveryDestinationConfig_ignoreTagUpdates(rName, createdOn, destinationPath string) string {
+	// Provider configuration is required to exercise creation-only default tags.
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  default_tags {
+    tags = {
+      CreatedOn = %[2]q
+    }
+  }
+  ignore_tag_updates {
+    keys = ["CreatedOn"]
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name          = %[1]q
+  output_format = "json"
+  delivery_destination_configuration {
+    destination_resource_arn = "${aws_s3_bucket.test.arn}/%[3]s"
+  }
+}
+`, rName, createdOn, destinationPath)
 }
