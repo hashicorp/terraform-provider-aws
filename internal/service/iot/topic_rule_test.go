@@ -1833,6 +1833,59 @@ func TestAccIoTTopicRule_republishWithQos(t *testing.T) {
 	})
 }
 
+func TestAccIoTTopicRule_republishWithHeaders(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := testAccTopicRuleName(t)
+	resourceName := "aws_iot_topic_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicRuleConfig_republishHeaders(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "republish.*", map[string]string{
+						"qos":                                "1",
+						"topic":                              "mytopic",
+						"headers.#":                          "1",
+						"headers.0.content_type":             "application/json",
+						"headers.0.correlation_data":         "cmVxdWVzdC0xMjM=",
+						"headers.0.message_expiry":           "300",
+						"headers.0.payload_format_indicator": "UTF8_DATA",
+						"headers.0.response_topic":           "response/topic",
+						"headers.0.user_properties.#":        "2",
+						"headers.0.user_properties.0.key":    "origin",
+						"headers.0.user_properties.0.value":  "thing-42",
+						"headers.0.user_properties.1.key":    "deployment",
+						"headers.0.user_properties.1.value":  "staging",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicRuleConfig_republish(rName, "mytopic"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "republish.*", map[string]string{
+						"topic":     "mytopic",
+						"headers.#": "0",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIoTTopicRule_s3(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := testAccTopicRuleName(t)
@@ -3056,6 +3109,43 @@ resource "aws_iot_topic_rule" "test" {
   }
 }
 `, rName, topic))
+}
+
+func testAccTopicRuleConfig_republishHeaders(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTopicRuleConfig_destinationRole(rName),
+		fmt.Sprintf(`
+resource "aws_iot_topic_rule" "test" {
+  name        = %[1]q
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  republish {
+    role_arn = aws_iam_role.test.arn
+    topic    = "mytopic"
+    qos      = 1
+
+    headers {
+      content_type             = "application/json"
+      correlation_data         = "cmVxdWVzdC0xMjM="
+      message_expiry           = "300"
+      payload_format_indicator = "UTF8_DATA"
+      response_topic           = "response/topic"
+
+      user_properties {
+        key   = "origin"
+        value = "thing-42"
+      }
+
+      user_properties {
+        key   = "deployment"
+        value = "staging"
+      }
+    }
+  }
+}
+`, rName))
 }
 
 func testAccTopicRuleConfig_republishQoS(rName string) string {
