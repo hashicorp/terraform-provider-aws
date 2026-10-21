@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaWebEndpoint_Identity_basic(t *testing.T) {
+func TestAccLambdaWebFunctionEndpoint_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdaweb.GetWebFunctionEndpointOutput
@@ -37,17 +37,17 @@ func TestAccLambdaWebEndpoint_Identity_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Endpoint/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, t, resourceName, &v),
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -64,12 +64,12 @@ func TestAccLambdaWebEndpoint_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Endpoint/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    testAccEndpointImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    testAccFunctionEndpointImportStateIDFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -78,14 +78,14 @@ func TestAccLambdaWebEndpoint_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Endpoint/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: testAccEndpointImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccFunctionEndpointImportStateIDFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.NotNull()),
@@ -97,7 +97,7 @@ func TestAccLambdaWebEndpoint_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Endpoint/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -116,7 +116,7 @@ func TestAccLambdaWebEndpoint_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaWebEndpoint_Identity_regionOverride(t *testing.T) {
+func TestAccLambdaWebFunctionEndpoint_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lambdaweb_endpoint.test"
@@ -136,7 +136,7 @@ func TestAccLambdaWebEndpoint_Identity_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Endpoint/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -156,13 +156,13 @@ func TestAccLambdaWebEndpoint_Identity_regionOverride(t *testing.T) {
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Endpoint/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccEndpointImportStateIDFunc),
+				ImportStateIdFunc:                    acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccFunctionEndpointImportStateIDFunc),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -171,7 +171,7 @@ func TestAccLambdaWebEndpoint_Identity_regionOverride(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Endpoint/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -179,7 +179,7 @@ func TestAccLambdaWebEndpoint_Identity_regionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccEndpointImportStateIDFunc),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccFunctionEndpointImportStateIDFunc),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.NotNull()),
@@ -191,7 +191,7 @@ func TestAccLambdaWebEndpoint_Identity_regionOverride(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Endpoint/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),

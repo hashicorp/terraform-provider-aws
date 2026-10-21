@@ -44,16 +44,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_lambdaweb_endpoint", name="Endpoint")
+// @FrameworkResource("aws_lambdaweb_endpoint", name="Function Endpoint")
 // @IdentityAttribute("function_name")
 // @IdentityAttribute("endpoint_name")
-// @ImportIDHandler("endpointImportID")
+// @ImportIDHandler("functionEndpointImportID")
 // @Testing(importStateIdAttribute="endpoint_name")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdaweb;lambdaweb.GetWebFunctionEndpointOutput")
-// @Testing(importStateIdFunc="testAccEndpointImportStateIDFunc")
-func newEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+// @Testing(importStateIdFunc="testAccFunctionEndpointImportStateIDFunc")
+func newFunctionEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &endpointResource{}
 
 	r.SetDefaultCreateTimeout(15 * time.Minute)
@@ -440,11 +440,11 @@ func regionalDomainNames(ctx context.Context, regionalEndpoints map[string]awsty
 	return fwflex.FlattenFrameworkStringValueMapOfString(ctx, m)
 }
 
-var _ inttypes.ImportIDParser = endpointImportID{}
+var _ inttypes.ImportIDParser = functionEndpointImportID{}
 
-type endpointImportID struct{}
+type functionEndpointImportID struct{}
 
-func (endpointImportID) Parse(id string) (string, map[string]any, error) {
+func (functionEndpointImportID) Parse(id string) (string, map[string]any, error) {
 	const (
 		importIDParts = 2
 	)

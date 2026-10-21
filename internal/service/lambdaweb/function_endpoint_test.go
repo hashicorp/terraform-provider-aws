@@ -36,12 +36,12 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`web-function/.+/endpoint/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", "extra"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypeHomeRegion)),
@@ -50,7 +50,7 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 				),
 			},
 			{
-				ImportStateIdFunc:                    testAccEndpointImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    testAccFunctionEndpointImportStateIDFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -65,7 +65,7 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, t, resourceName, &updated),
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &updated),
 					testAccCheckEndpointNotRecreated(&endpoint, &updated),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", string(awstypes.AuthTypeIamAuth)),
 				),
@@ -87,18 +87,18 @@ func TestAccLambdaWebEndpoint_scalingAndThrottle(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_scalingAndThrottle(rName, 4, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_environments", "4"),
 					resource.TestCheckResourceAttr(resourceName, "throttle_config.0.rate_limit", "100"),
 				),
 			},
 			{
-				ImportStateIdFunc:                    testAccEndpointImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    testAccFunctionEndpointImportStateIDFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -112,7 +112,7 @@ func TestAccLambdaWebEndpoint_scalingAndThrottle(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_environments", "6"),
 					resource.TestCheckResourceAttr(resourceName, "throttle_config.0.rate_limit", "200"),
 				),
@@ -134,13 +134,13 @@ func TestAccLambdaWebEndpoint_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambdaweb.ResourceEndpoint, resourceName),
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambdaweb.ResourceFunctionEndpoint, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -166,12 +166,12 @@ func TestAccLambdaWebEndpoint_multiRegion(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_multiRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypeMultiRegion)),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment_mode", string(awstypes.AutoDeploymentModeDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "revision_weight.#", "1"),
@@ -179,7 +179,7 @@ func TestAccLambdaWebEndpoint_multiRegion(t *testing.T) {
 				),
 			},
 			{
-				ImportStateIdFunc:                    testAccEndpointImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    testAccFunctionEndpointImportStateIDFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -202,19 +202,19 @@ func TestAccLambdaWebEndpoint_perRegion(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_typeWithRegions(rName, string(awstypes.EndpointTypePerRegion)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, t, resourceName, &endpoint),
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypePerRegion)),
 					// PerRegion endpoints expose one independent domain per region.
 					resource.TestCheckResourceAttr(resourceName, "regional_domain_names.%", "2"),
 				),
 			},
 			{
-				ImportStateIdFunc:                    testAccEndpointImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    testAccFunctionEndpointImportStateIDFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -233,7 +233,7 @@ func testAccCheckEndpointNotRecreated(before, after *lambdaweb.GetWebFunctionEnd
 	}
 }
 
-func testAccCheckEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckFunctionEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LambdaWebClient(ctx)
 
@@ -257,7 +257,7 @@ func testAccCheckEndpointDestroy(ctx context.Context, t *testing.T) resource.Tes
 	}
 }
 
-func testAccCheckEndpointExists(ctx context.Context, t *testing.T, n string, v *lambdaweb.GetWebFunctionEndpointOutput) resource.TestCheckFunc {
+func testAccCheckFunctionEndpointExists(ctx context.Context, t *testing.T, n string, v *lambdaweb.GetWebFunctionEndpointOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -277,7 +277,7 @@ func testAccCheckEndpointExists(ctx context.Context, t *testing.T, n string, v *
 	}
 }
 
-func testAccEndpointImportStateIDFunc(n string) resource.ImportStateIdFunc {
+func testAccFunctionEndpointImportStateIDFunc(n string) resource.ImportStateIdFunc {
 	return acctest.AttrsImportStateIdFunc(n, ",", "function_name", "endpoint_name")
 }
 

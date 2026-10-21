@@ -22,9 +22,9 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newEndpointDataSource,
+			Factory:  newFunctionEndpointDataSource,
 			TypeName: "aws_lambdaweb_endpoint",
-			Name:     "Endpoint",
+			Name:     "Function Endpoint",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
@@ -40,9 +40,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newEndpointResource,
+			Factory:  newFunctionEndpointResource,
 			TypeName: "aws_lambdaweb_endpoint",
-			Name:     "Endpoint",
+			Name:     "Function Endpoint",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("function_name", true),
@@ -50,7 +50,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
-				ImportID:      endpointImportID{},
+				ImportID:      functionEndpointImportID{},
 			},
 		},
 		{

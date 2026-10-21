@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_lambdaweb_endpoint", name="Endpoint")
-func newEndpointDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+// @FrameworkDataSource("aws_lambdaweb_endpoint", name="Function Endpoint")
+func newFunctionEndpointDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &endpointDataSource{}, nil
 }
 

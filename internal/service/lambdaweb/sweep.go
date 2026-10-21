@@ -16,7 +16,7 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_lambdaweb_endpoint", sweepEndpoints)
+	awsv2.Register("aws_lambdaweb_endpoint", sweepFunctionEndpoints)
 	awsv2.Register("aws_lambdaweb_function", sweepFunctions, "aws_lambdaweb_endpoint")
 }
 
@@ -46,7 +46,7 @@ func sweepFunctions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweep
 	return sweepResources, nil
 }
 
-func sweepEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+func sweepFunctionEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.LambdaWebClient(ctx)
 	var sweepResources []sweep.Sweepable
 
@@ -70,7 +70,7 @@ func sweepEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweep
 				}
 
 				for _, endpoint := range endpointsOut.Endpoints {
-					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newEndpointResource, client,
+					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newFunctionEndpointResource, client,
 						sweepfw.NewAttribute("function_name", functionName),
 						sweepfw.NewAttribute("endpoint_name", aws.ToString(endpoint.EndpointName))),
 					)
