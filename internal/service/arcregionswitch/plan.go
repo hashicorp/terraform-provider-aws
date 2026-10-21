@@ -6,7 +6,6 @@ package arcregionswitch
 import (
 	"cmp"
 	"context"
-	"errors"
 	"slices"
 	"time"
 
@@ -1129,8 +1128,7 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	_, err := conn.DeletePlan(ctx, &input)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 		// Retry if health check allocation is in progress (check error message generically)
@@ -1143,7 +1141,7 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 			// Retry delete
 			_, err = conn.DeletePlan(ctx, &input)
 			if err != nil {
-				if errors.As(err, &nfe) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					return
 				}
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
@@ -1164,8 +1162,7 @@ func findPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string
 	output, err := conn.GetPlan(ctx, &input)
 
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
