@@ -303,7 +303,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 			return sdkdiag.AppendErrorf(diags, "updating ElastiCache User (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitUserUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), 10*time.Second); err != nil {
+		if _, err := waitUserUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), userUpdatedDelay); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -402,6 +402,10 @@ const (
 	userStatusCreating  = "creating"
 	userStatusDeleting  = "deleting"
 	userStatusModifying = "modifying"
+)
+
+const (
+	userUpdatedDelay = 10 * time.Second
 )
 
 func waitUserCreated(ctx context.Context, conn *elasticache.Client, id string, timeout time.Duration) (*awstypes.User, error) {
