@@ -43,7 +43,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name for the virtual interface.
 * `vlan` - (Required) The VLAN ID.
 * `amazon_address` - (Optional) The IPv4 CIDR address to use to send traffic to Amazon. Required for IPv4 BGP peers.
-* `bgp_auth_key` - (Optional) The authentication key for BGP configuration.
+* `bgp_auth_key` - (Optional) Authentication key for BGP configuration. Terraform marks this value as sensitive and redacts it from normal output, but configured or Direct Connect-generated values remain stored in Terraform state. References to this attribute propagate sensitivity, so outputs exposing it must also be marked sensitive. Users must secure and restrict access to Terraform state.
 * `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
 * `mtu` - (Optional) The maximum transmission unit (MTU) is the size, in bytes, of the largest permissible packet that can be passed over the connection.
 The MTU of a virtual transit interface can be either `1500` or `8500` (jumbo frames). Default is `1500`.
