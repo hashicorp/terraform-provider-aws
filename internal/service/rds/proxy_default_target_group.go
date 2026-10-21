@@ -263,11 +263,11 @@ func expandConnectionPoolConfiguration(tfMap map[string]any) *types.ConnectionPo
 		MaxIdleConnectionsPercent: aws.Int32(int32(tfMap["max_idle_connections_percent"].(int))),
 	}
 
-	if v, ok := tfMap["init_query"].(string); ok && v != "" {
+	if v, ok := tfMap["init_query"].(string); ok {
 		apiObject.InitQuery = aws.String(v)
 	}
 
-	if v, ok := tfMap["session_pinning_filters"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["session_pinning_filters"].(*schema.Set); ok {
 		apiObject.SessionPinningFilters = flex.ExpandStringValueSet(v)
 	}
 
