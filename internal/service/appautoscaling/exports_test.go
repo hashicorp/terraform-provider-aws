@@ -15,4 +15,6 @@ var (
 
 	PolicyParseImportID = policyParseImportID
 	TargetParseImportID = targetParseImportID
+
+	PolicyReadRetryable = policyReadRetryable
 )
