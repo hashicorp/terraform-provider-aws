@@ -899,7 +899,7 @@ skaff-check-compile: ## [CI] Skaff Checks / Compile skaff
 	@cd skaff ; \
 	go build
 
-smoke: sane ## Smoke tests (alias of sane)
+smoke: smoke-core-services smoke-identity smoke-logging ## Run smoke tests
 
 smoke-core-services: prereq-go ## Run core-service smoke tests
 	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
@@ -1384,7 +1384,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	smoke-core-services \
 	smoke-identity \
 	smoke-logging \
-	$(SMOKE_LOGGING_TARGETS) \
 	sweep \
 	sweeper \
 	sweeper-check \
