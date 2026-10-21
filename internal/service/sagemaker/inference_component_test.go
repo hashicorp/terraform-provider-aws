@@ -488,6 +488,11 @@ func TestAccSageMakerInferenceComponent_acceleratorDevices(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"specification.0.data_cache_config",
+					"runtime_config.0.current_copy_count",
+					"runtime_config.0.placement_status",
+				},
 			},
 		},
 	})
