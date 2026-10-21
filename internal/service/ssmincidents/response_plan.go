@@ -308,7 +308,6 @@ func resourceResponsePlanDelete(ctx context.Context, d *schema.ResourceData, met
 	_, err := client.DeleteResponsePlan(ctx, input)
 
 	if err != nil {
-
 		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return diags
 		}
