@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_kinesisanalyticsv2_application_maintenance_configuration
+```
