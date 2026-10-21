@@ -168,6 +168,10 @@ linters:
         text: 'SA1019: \S+ is deprecated: AWS has deprecated this service. It is no longer available for use.'
       - linters:
           - staticcheck
+        path: internal/service/finspace/
+        text: 'SA1019: \S+ is deprecated: AWS has deprecated this service. It is no longer available for use.'
+      - linters:
+          - staticcheck
         path: internal/service/firehose/
         text: 'SA1019: \S+ is deprecated: (\w+) has been deprecated'
       - linters:

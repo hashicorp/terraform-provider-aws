@@ -54,7 +54,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 // @Testing(importStateIdAttribute="space_id")
-// @Testing(tagsTest=false)
 func newSpaceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &spaceResource{}
 
