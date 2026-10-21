@@ -33,7 +33,7 @@ func resourceMethodValue() *schema.Resource {
 		DeleteWithoutTimeout: h.Delete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: h.Import,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -119,12 +119,6 @@ func (h *attributeHandler) Delete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
-}
-
-func (h *attributeHandler) Import(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	d.Set("thing_id", d.Id())
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func findThingAttributeByTwoPartKey(ctx context.Context, conn *examplefuncrefs.Client, thingID string, attributeName awstypes.ThingAttributeName) (string, error) {

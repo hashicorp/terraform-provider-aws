@@ -1,0 +1,55 @@
+[
+  {
+    "service": "exampletagsgen",
+    "resource_type": "aws_exampletagsgen_thing",
+    "plugin_type": "SDKv2",
+    "expr": "resourceThing",
+    "location": "internal/service/exampletagsgen/thing.go:25",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/exampletagsgen/thing.go:52",
+      "sdk_calls": [
+        "exampletagsgen.CreateThing",
+        "exampletagsgen.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/exampletagsgen/thing.go:73",
+      "sdk_calls": [
+        "exampletagsgen.DescribeThing"
+      ]
+    },
+    "update": {
+      "expr": "resourceThingUpdate",
+      "location": "internal/service/exampletagsgen/thing.go:95",
+      "sdk_calls": [
+        "exampletagsgen.DescribeThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/exampletagsgen/thing.go:100",
+      "sdk_calls": [
+        "exampletagsgen.DeleteThing"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/exampletagsgen/tags_gen.go:51",
+        "sdk_calls": [
+          "exampletagsgen.ListTagsForResource"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/exampletagsgen/tags_gen.go:152",
+        "sdk_calls": [
+          "exampletagsgen.TagResource",
+          "exampletagsgen.UntagResource"
+        ]
+      }
+    }
+  }
+]

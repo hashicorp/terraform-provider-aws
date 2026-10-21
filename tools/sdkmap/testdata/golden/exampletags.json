@@ -1,0 +1,208 @@
+[
+  {
+    "service": "exampletags",
+    "resource_type": "aws_exampletags_gadget",
+    "plugin_type": "SDKv2",
+    "expr": "resourceGadget",
+    "location": "internal/service/exampletags/gadget.go:25",
+    "create": {
+      "expr": "resourceGadgetCreate",
+      "location": "internal/service/exampletags/gadget.go:43",
+      "sdk_calls": [
+        "exampletags.CreateGadget",
+        "exampletags.DescribeGadget"
+      ]
+    },
+    "read": {
+      "expr": "resourceGadgetRead",
+      "location": "internal/service/exampletags/gadget.go:62",
+      "sdk_calls": [
+        "exampletags.DescribeGadget"
+      ]
+    },
+    "update": {
+      "expr": "resourceGadgetUpdate",
+      "location": "internal/service/exampletags/gadget.go:83",
+      "sdk_calls": [
+        "exampletags.DescribeGadget"
+      ]
+    },
+    "delete": {
+      "expr": "resourceGadgetDelete",
+      "location": "internal/service/exampletags/gadget.go:88",
+      "sdk_calls": [
+        "exampletags.DeleteGadget"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/exampletags/tags.go:21",
+        "sdk_calls": [
+          "exampletags.ListGadgetTags",
+          "exampletags.ListWidgetTags",
+          "exampletagsgen.ListTagsForResource"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/exampletags/tags.go:57",
+        "sdk_calls": [
+          "exampletags.TagGadget",
+          "exampletags.TagWidget",
+          "exampletags.UntagGadget",
+          "exampletags.UntagWidget",
+          "exampletagsgen.TagResource",
+          "exampletagsgen.UntagResource"
+        ]
+      }
+    }
+  },
+  {
+    "service": "exampletags",
+    "resource_type": "aws_exampletags_legacy_widget",
+    "plugin_type": "SDKv2",
+    "expr": "resourceWidget",
+    "location": "internal/service/exampletags/widget.go:26",
+    "create": {
+      "expr": "resourceWidgetCreate",
+      "location": "internal/service/exampletags/widget.go:49",
+      "sdk_calls": [
+        "exampletags.CreateWidget",
+        "exampletags.DescribeWidget"
+      ]
+    },
+    "read": {
+      "expr": "resourceWidgetRead",
+      "location": "internal/service/exampletags/widget.go:70",
+      "sdk_calls": [
+        "exampletags.DescribeWidget"
+      ]
+    },
+    "update": {
+      "expr": "resourceWidgetUpdate",
+      "location": "internal/service/exampletags/widget.go:92",
+      "sdk_calls": [
+        "exampletags.DescribeWidget"
+      ]
+    },
+    "delete": {
+      "expr": "resourceWidgetDelete",
+      "location": "internal/service/exampletags/widget.go:97",
+      "sdk_calls": [
+        "exampletags.DeleteWidget"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/exampletags/tags.go:21",
+        "sdk_calls": [
+          "exampletags.ListGadgetTags",
+          "exampletags.ListWidgetTags",
+          "exampletagsgen.ListTagsForResource"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/exampletags/tags.go:57",
+        "sdk_calls": [
+          "exampletags.TagGadget",
+          "exampletags.TagWidget",
+          "exampletags.UntagGadget",
+          "exampletags.UntagWidget",
+          "exampletagsgen.TagResource",
+          "exampletagsgen.UntagResource"
+        ]
+      }
+    }
+  },
+  {
+    "service": "exampletags",
+    "resource_type": "aws_exampletags_widget",
+    "plugin_type": "SDKv2",
+    "expr": "resourceWidget",
+    "location": "internal/service/exampletags/widget.go:26",
+    "create": {
+      "expr": "resourceWidgetCreate",
+      "location": "internal/service/exampletags/widget.go:49",
+      "sdk_calls": [
+        "exampletags.CreateWidget",
+        "exampletags.DescribeWidget"
+      ]
+    },
+    "read": {
+      "expr": "resourceWidgetRead",
+      "location": "internal/service/exampletags/widget.go:70",
+      "sdk_calls": [
+        "exampletags.DescribeWidget"
+      ]
+    },
+    "update": {
+      "expr": "resourceWidgetUpdate",
+      "location": "internal/service/exampletags/widget.go:92",
+      "sdk_calls": [
+        "exampletags.DescribeWidget"
+      ]
+    },
+    "delete": {
+      "expr": "resourceWidgetDelete",
+      "location": "internal/service/exampletags/widget.go:97",
+      "sdk_calls": [
+        "exampletags.DeleteWidget"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/exampletags/tags.go:21",
+        "sdk_calls": [
+          "exampletags.ListGadgetTags",
+          "exampletags.ListWidgetTags",
+          "exampletagsgen.ListTagsForResource"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/exampletags/tags.go:57",
+        "sdk_calls": [
+          "exampletags.TagGadget",
+          "exampletags.TagWidget",
+          "exampletags.UntagGadget",
+          "exampletags.UntagWidget",
+          "exampletagsgen.TagResource",
+          "exampletagsgen.UntagResource"
+        ]
+      }
+    }
+  },
+  {
+    "service": "exampletags",
+    "resource_type": "aws_exampletags_without_identifier",
+    "plugin_type": "SDKv2",
+    "expr": "resourceWithoutIdentifier",
+    "location": "internal/service/exampletags/without_identifier.go:23",
+    "create": {
+      "expr": "resourceWithoutIdentifierCreate",
+      "location": "internal/service/exampletags/without_identifier.go:36",
+      "sdk_calls": [
+        "exampletags.CreateSprocket",
+        "exampletags.GetSprocket"
+      ]
+    },
+    "read": {
+      "expr": "resourceWithoutIdentifierRead",
+      "location": "internal/service/exampletags/without_identifier.go:55",
+      "sdk_calls": [
+        "exampletags.GetSprocket"
+      ]
+    },
+    "delete": {
+      "expr": "resourceWithoutIdentifierDelete",
+      "location": "internal/service/exampletags/without_identifier.go:80",
+      "sdk_calls": [
+        "exampletags.DeleteSprocket"
+      ]
+    }
+  }
+]

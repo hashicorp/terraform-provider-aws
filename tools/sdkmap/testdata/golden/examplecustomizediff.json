@@ -1,0 +1,383 @@
+[
+  {
+    "service": "examplecustomizediff",
+    "resource_type": "aws_examplecustomizediff_call",
+    "plugin_type": "SDKv2",
+    "expr": "resourceCall",
+    "location": "internal/service/examplecustomizediff/customize_diff.go:135",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "sdk_calls": [
+        "examplecustomizediff.CreateThing",
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "update": {
+      "expr": "resourceThingUpdate",
+      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing",
+        "examplecustomizediff.UpdateThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "sdk_calls": [
+        "examplecustomizediff.DeleteThing"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customizeDiffValidateQuota(...)",
+      "location": "internal/service/examplecustomizediff/customize_diff.go:198",
+      "sdk_calls": [
+        "examplecustomizediff.GetQuota"
+      ]
+    }
+  },
+  {
+    "service": "examplecustomizediff",
+    "resource_type": "aws_examplecustomizediff_factory_reference",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFactoryReference",
+    "location": "internal/service/examplecustomizediff/customize_diff.go:149",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "sdk_calls": [
+        "examplecustomizediff.CreateThing",
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "update": {
+      "expr": "resourceThingUpdate",
+      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing",
+        "examplecustomizediff.UpdateThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "sdk_calls": [
+        "examplecustomizediff.DeleteThing"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customizeDiffComputedOnUpdate",
+      "location": "internal/service/examplecustomizediff/customize_diff.go:218",
+      "sdk_calls": []
+    }
+  },
+  {
+    "service": "examplecustomizediff",
+    "resource_type": "aws_examplecustomizediff_force_new_if",
+    "plugin_type": "SDKv2",
+    "expr": "resourceForceNewIf",
+    "location": "internal/service/examplecustomizediff/customize_diff.go:105",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "sdk_calls": [
+        "examplecustomizediff.CreateThing",
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "update": {
+      "expr": "resourceThingUpdate",
+      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing",
+        "examplecustomizediff.UpdateThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "sdk_calls": [
+        "examplecustomizediff.DeleteThing"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customdiff.ForceNewIf(...)",
+      "location": "internal/service/examplecustomizediff/customize_diff.go:112",
+      "sdk_calls": []
+    }
+  },
+  {
+    "service": "examplecustomizediff",
+    "resource_type": "aws_examplecustomizediff_function_literal",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFunctionLiteral",
+    "location": "internal/service/examplecustomizediff/customize_diff.go:85",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "sdk_calls": [
+        "examplecustomizediff.CreateThing",
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "update": {
+      "expr": "resourceThingUpdate",
+      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing",
+        "examplecustomizediff.UpdateThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "sdk_calls": [
+        "examplecustomizediff.DeleteThing"
+      ]
+    },
+    "customize_diff": {
+      "expr": "func literal",
+      "location": "internal/service/examplecustomizediff/customize_diff.go:92",
+      "sdk_calls": []
+    }
+  },
+  {
+    "service": "examplecustomizediff",
+    "resource_type": "aws_examplecustomizediff_identifier",
+    "plugin_type": "SDKv2",
+    "expr": "resourceIdentifier",
+    "location": "internal/service/examplecustomizediff/customize_diff.go:17",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "sdk_calls": [
+        "examplecustomizediff.CreateThing",
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "update": {
+      "expr": "resourceThingUpdate",
+      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing",
+        "examplecustomizediff.UpdateThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "sdk_calls": [
+        "examplecustomizediff.DeleteThing"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customizeDiffChecksum",
+      "location": "internal/service/examplecustomizediff/customize_diff.go:167",
+      "sdk_calls": []
+    }
+  },
+  {
+    "service": "examplecustomizediff",
+    "resource_type": "aws_examplecustomizediff_nested",
+    "plugin_type": "SDKv2",
+    "expr": "resourceNested",
+    "location": "internal/service/examplecustomizediff/customize_diff.go:48",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "sdk_calls": [
+        "examplecustomizediff.CreateThing",
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "update": {
+      "expr": "resourceThingUpdate",
+      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing",
+        "examplecustomizediff.UpdateThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "sdk_calls": [
+        "examplecustomizediff.DeleteThing"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customdiff.All(...)",
+      "location": "internal/service/examplecustomizediff/customize_diff.go:55",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeParent",
+        "examplecustomizediff.GetQuota"
+      ],
+      "functions": [
+        {
+          "expr": "validateSize",
+          "location": "internal/service/examplecustomizediff/customize_diff.go:175",
+          "sdk_calls": []
+        },
+        {
+          "expr": "validateParentExists",
+          "location": "internal/service/examplecustomizediff/customize_diff.go:183",
+          "sdk_calls": [
+            "examplecustomizediff.DescribeParent"
+          ]
+        },
+        {
+          "expr": "customdiff.ForceNewIfChange(...)",
+          "location": "internal/service/examplecustomizediff/customize_diff.go:60",
+          "sdk_calls": []
+        },
+        {
+          "expr": "func literal",
+          "location": "internal/service/examplecustomizediff/customize_diff.go:61",
+          "sdk_calls": [
+            "examplecustomizediff.GetQuota"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "service": "examplecustomizediff",
+    "resource_type": "aws_examplecustomizediff_sequence",
+    "plugin_type": "SDKv2",
+    "expr": "resourceSequence",
+    "location": "internal/service/examplecustomizediff/customize_diff.go:31",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "sdk_calls": [
+        "examplecustomizediff.CreateThing",
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "update": {
+      "expr": "resourceThingUpdate",
+      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing",
+        "examplecustomizediff.UpdateThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "sdk_calls": [
+        "examplecustomizediff.DeleteThing"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customdiff.Sequence(...)",
+      "location": "internal/service/examplecustomizediff/customize_diff.go:38",
+      "sdk_calls": [],
+      "functions": [
+        {
+          "expr": "customizeDiffChecksum",
+          "location": "internal/service/examplecustomizediff/customize_diff.go:167",
+          "sdk_calls": []
+        },
+        {
+          "expr": "validateSize",
+          "location": "internal/service/examplecustomizediff/customize_diff.go:175",
+          "sdk_calls": []
+        }
+      ]
+    }
+  },
+  {
+    "service": "examplecustomizediff",
+    "resource_type": "aws_examplecustomizediff_variable",
+    "plugin_type": "SDKv2",
+    "expr": "resourceVariable",
+    "location": "internal/service/examplecustomizediff/customize_diff.go:121",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "sdk_calls": [
+        "examplecustomizediff.CreateThing",
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing"
+      ]
+    },
+    "update": {
+      "expr": "resourceThingUpdate",
+      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeThing",
+        "examplecustomizediff.UpdateThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "sdk_calls": [
+        "examplecustomizediff.DeleteThing"
+      ]
+    },
+    "customize_diff": {
+      "expr": "thingCustomizeDiff",
+      "location": "internal/service/examplecustomizediff/customize_diff.go:162",
+      "sdk_calls": [
+        "examplecustomizediff.DescribeParent"
+      ]
+    }
+  }
+]
