@@ -253,6 +253,7 @@ func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
 		tags                  map[string]any
 		envvars               map[string]string
 		expectedDefaultConfig *tftags.DefaultConfig
+		expectError           bool
 	}{
 		"nil": {
 			tags:                  nil,
@@ -296,6 +297,116 @@ func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
 				}),
 			},
 		},
+		"comma-separated envvar": {
+			tags: nil,
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVar: "Owner=my-team,Access-Project=foobar",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Owner":          "my-team",
+					"Access-Project": "foobar",
+				}),
+			},
+		},
+		"comma-separated envvar with whitespace and trailing comma": {
+			tags: nil,
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVar: " Owner=my-team , Access-Project=foobar ,",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Owner":          "my-team",
+					"Access-Project": "foobar",
+				}),
+			},
+		},
+		"comma-separated envvar with empty value": {
+			tags: nil,
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVar: "Owner=",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Owner": "",
+				}),
+			},
+		},
+		"comma-separated envvar with value containing equals sign": {
+			tags: nil,
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVar: "Formula=a=b",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Formula": "a=b",
+				}),
+			},
+		},
+		"comma-separated envvar and prefixed envvar": {
+			tags: nil,
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVar:                       "Application=my-app,Owner=other-team",
+				tftags.DefaultTagsEnvVarPrefix + "Application": "prefixed-app",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Application": "prefixed-app",
+					"Owner":       "other-team",
+				}),
+			},
+		},
+		"comma-separated envvar and config": {
+			tags: map[string]any{
+				"Application": "foobar",
+			},
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVar: "Application=my-app,Owner=my-team",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Application": "foobar",
+					"Owner":       "my-team",
+				}),
+			},
+		},
+		"comma-separated envvar, prefixed envvar, and config": {
+			tags: map[string]any{
+				"Application": "foobar",
+			},
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVar:                       "Application=my-app,Owner=other-team,CostCenter=1234",
+				tftags.DefaultTagsEnvVarPrefix + "Application": "prefixed-app",
+				tftags.DefaultTagsEnvVarPrefix + "Owner":       "my-team",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Application": "foobar",
+					"Owner":       "my-team",
+					"CostCenter":  "1234",
+				}),
+			},
+		},
+		"comma-separated envvar with entry missing equals sign": {
+			tags: nil,
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVar: "Owner=my-team,oops",
+			},
+			expectedDefaultConfig: &tftags.DefaultConfig{
+				Tags: tftags.New(ctx, map[string]string{
+					"Owner": "my-team",
+				}),
+			},
+			expectError: true,
+		},
+		"comma-separated envvar with entry missing key": {
+			tags: nil,
+			envvars: map[string]string{
+				tftags.DefaultTagsEnvVar: "=value",
+			},
+			expectedDefaultConfig: nil,
+			expectError:           true,
+		},
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest
@@ -307,9 +418,13 @@ func TestExpandDefaultTags(t *testing.T) { //nolint:paralleltest
 				os.Setenv(k, v) //nolint:usetesting // stashEnv & popEnv require os.Setenv
 			}
 
-			results := expandDefaultTags(ctx, map[string]any{
+			results, diags := expandDefaultTags(ctx, map[string]any{
 				"tags": testcase.tags,
 			})
+
+			if diags.HasError() != testcase.expectError {
+				t.Errorf("Expected HasError %t, got %t: %v", testcase.expectError, diags.HasError(), diags)
+			}
 
 			if results == nil {
 				if testcase.expectedDefaultConfig == nil {
