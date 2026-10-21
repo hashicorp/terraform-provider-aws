@@ -41,4 +41,4 @@ A new service package needs a test case in `TestFindSDKResources`; a golden file
 - `examplecustomizediff`: `aws_examplecustomizediff_variable`'s CustomizeDiff, a package-level `customdiff.All`, has its SDK calls but no `functions`; `aws_examplecustomizediff_factory_reference`'s CustomizeDiff has no SDK calls, because the resource factory it calls isn't followed.
 - `examplefuncrefs`: method values, e.g. `h.Upsert`, and `schema.NoopContext` have no `location`.
 - `exampletags`: each tagged resource's `tags` has the SDK calls of every resource type that shares `ListTags` and `UpdateTags`.
-- `exampleunanalyzed`: SDK calls made through the SDK waiter and presign client are missing. The warnings sdkmap logs for them aren't in the golden files; `TestFindSDKCalls` checks them.
+- `exampleunanalyzed`: SDK calls made through the SDK waiter and presign client are missing. The warnings sdkmap logs for them aren't in the golden files and aren't tested.
