@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -36,6 +38,116 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestInstanceMultiTenantDiff(t *testing.T) {
+	t.Parallel()
+
+	// Legacy SDK representation of an unknown value (hcl2shim.UnknownVariableValue).
+	const unknown = "74D93920-ED26-11E3-AC10-0800200C9A66"
+
+	type testCase struct {
+		state            *bool // multi_tenant in prior state; nil means absent (e.g. state from an earlier provider version)
+		config           any   // multi_tenant in configuration; nil means not set
+		applyImmediately bool
+		wantErr          bool
+		wantDiff         bool
+		wantRequiresNew  bool
+	}
+	testCases := map[string]testCase{
+		"absent from state, not set": {
+			config: nil,
+		},
+		"absent from state, single-tenant to multi-tenant": {
+			config:           true,
+			applyImmediately: true,
+			wantDiff:         true,
+		},
+		"single-tenant, not set": {
+			state:  aws.Bool(false),
+			config: nil,
+		},
+		"multi-tenant, not set": {
+			state:  aws.Bool(true),
+			config: nil,
+		},
+		"multi-tenant, unchanged": {
+			state:  aws.Bool(true),
+			config: true,
+		},
+		"single-tenant to multi-tenant": {
+			state:            aws.Bool(false),
+			config:           true,
+			applyImmediately: true,
+			wantDiff:         true,
+		},
+		"single-tenant to multi-tenant, not applied immediately": {
+			state:   aws.Bool(false),
+			config:  true,
+			wantErr: true,
+		},
+		"multi-tenant to single-tenant": {
+			state:           aws.Bool(true),
+			config:          false,
+			wantDiff:        true,
+			wantRequiresNew: true,
+		},
+		"multi-tenant to unknown": {
+			state:    aws.Bool(true),
+			config:   unknown,
+			wantDiff: true,
+		},
+	}
+
+	for name, test := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
+
+			raw := map[string]any{
+				"instance_class": "db.t3.small",
+			}
+			if test.config != nil {
+				raw["multi_tenant"] = test.config
+			}
+			if test.applyImmediately {
+				raw[names.AttrApplyImmediately] = test.applyImmediately
+			}
+
+			state := &terraformsdk.InstanceState{
+				ID: "db-ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+				Attributes: map[string]string{
+					"instance_class": "db.t3.small",
+				},
+			}
+			if test.state != nil {
+				state.Attributes["multi_tenant"] = strconv.FormatBool(*test.state)
+			}
+
+			diff, err := tfrds.ResourceInstance().Diff(ctx, state, terraformsdk.NewResourceConfigRaw(raw), nil)
+			if got := err != nil; got != test.wantErr {
+				t.Fatalf("error: expected %t, got %v", test.wantErr, err)
+			}
+			if test.wantErr {
+				if !strings.Contains(err.Error(), names.AttrApplyImmediately) {
+					t.Errorf("unexpected error: %s", err)
+				}
+				return
+			}
+
+			var attr *terraformsdk.ResourceAttrDiff
+			if diff != nil {
+				attr = diff.Attributes["multi_tenant"]
+			}
+
+			if got := attr != nil; got != test.wantDiff {
+				t.Fatalf("multi_tenant diff: expected %t, got %t (%#v)", test.wantDiff, got, attr)
+			}
+			if got := diff.RequiresNew(); got != test.wantRequiresNew {
+				t.Errorf("requires new: expected %t, got %t", test.wantRequiresNew, got)
+			}
+		})
+	}
+}
 
 func TestAccRDSInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -6412,6 +6524,44 @@ func TestAccRDSInstance_Oracle_multiTenantOutOfBand(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_Oracle_multiTenantRestore(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var source, snapshotRestore, pitrRestore types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_instance.snapshot"
+	pitrResourceName := "aws_db_instance.pitr"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_Oracle_multiTenantRestore(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &source),
+					testAccCheckDBInstanceExists(ctx, t, snapshotResourceName, &snapshotRestore),
+					testAccCheckDBInstanceExists(ctx, t, pitrResourceName, &pitrRestore),
+					resource.TestCheckResourceAttr(sourceResourceName, "multi_tenant", acctest.CtFalse),
+					resource.TestCheckResourceAttr(snapshotResourceName, "multi_tenant", acctest.CtTrue),
+					resource.TestCheckResourceAttr(pitrResourceName, "multi_tenant", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_Outposts_coIPEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -10593,6 +10743,74 @@ resource "aws_db_instance" "test" {
   username             = "tfacctest"
 }
 `, tfrds.InstanceEngineOracleStandard2CDB, mainInstanceClasses, rName, multiTenant))
+}
+
+func testAccInstanceConfig_Oracle_multiTenantRestore(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_baseVPC(rName),
+		fmt.Sprintf(`
+# The multi-tenant configuration requires Oracle Database 19c RU 2022-01 or higher.
+data "aws_rds_engine_version" "test" {
+  engine  = %[1]q
+  version = "19"
+  latest  = true
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = data.aws_rds_engine_version.test.engine
+  engine_version = data.aws_rds_engine_version.test.version_actual
+  license_model  = "bring-your-own-license"
+  storage_type   = "gp3"
+
+  preferred_instance_classes = [%[2]s]
+}
+
+# Single-tenant source.
+resource "aws_db_instance" "source" {
+  allocated_storage       = 20
+  backup_retention_period = 1
+  db_name                 = "TFTEST"
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = %[3]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model           = data.aws_rds_orderable_db_instance.test.license_model
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
+  skip_final_snapshot     = true
+  storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
+  username                = "tfacctest"
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.source.identifier
+  db_snapshot_identifier = %[3]q
+}
+
+resource "aws_db_instance" "snapshot" {
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  identifier           = "%[3]s-snapshot"
+  instance_class       = aws_db_instance.source.instance_class
+  multi_tenant         = true
+  skip_final_snapshot  = true
+  snapshot_identifier  = aws_db_snapshot.test.id
+}
+
+resource "aws_db_instance" "pitr" {
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  identifier           = "%[3]s-pitr"
+  instance_class       = aws_db_instance.source.instance_class
+  multi_tenant         = true
+  skip_final_snapshot  = true
+
+  restore_to_point_in_time {
+    source_dbi_resource_id     = aws_db_instance.source.resource_id
+    use_latest_restorable_time = true
+  }
+}
+`, tfrds.InstanceEngineOracleStandard2CDB, mainInstanceClasses, rName))
 }
 
 func testAccInstanceConfig_CloudWatchLogsExport_mssql(rName string) string {
