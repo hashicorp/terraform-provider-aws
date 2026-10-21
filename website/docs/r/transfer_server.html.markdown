@@ -166,8 +166,15 @@ THe `protocol_details` configuration block supports the following arguments:
 
 * `as2_transports` - (Optional) Transport method for the AS2 messages. Currently, only `HTTP` is supported.
 * `passive_ip` - (Optional) Passive mode, for FTP and FTPS protocols. Enter a single IPv4 address, such as the public IP address of a firewall, router, or load balancer.
+* `proxy_config` - (Optional) Configuration for PROXY protocol version 2 (PPv2) support on the Transfer Family server. See [`proxy_config` Block](#proxy_config-block) below for details.
 * `set_stat_option` - (Optional) Use to ignore the error that is generated when the client attempts to use `SETSTAT` on a file you are uploading to an S3 bucket. Valid values: `DEFAULT`, `ENABLE_NO_OP`.
 * `tls_session_resumption_mode` - (Optional) Property used with Transfer Family servers that use the FTPS protocol. Provides a mechanism to resume or share a negotiated secret key between the control and data connection for an FTPS session. Valid values: `DISABLED`, `ENABLED`, `ENFORCED`.
+
+#### `proxy_config` Block
+
+The `proxy_config` configuration block supports the following arguments:
+
+* `sftp_mode` - (Optional) Mode for handling PPv2 headers containing the client's source IP address on incoming SFTP connections. Valid values are `NONE` and `PROXY_PROTOCOL_V2_ENFORCED`. Defaults to `NONE`. When set to `PROXY_PROTOCOL_V2_ENFORCED`, restrict the server's VPC endpoint security group to allow inbound traffic only from the trusted NLB. See [Working with Network Load Balancers](https://docs.aws.amazon.com/transfer/latest/userguide/working-with-nlb.html) for details.
 
 ### `s3_storage_options` Block
 
