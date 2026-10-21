@@ -351,11 +351,7 @@ func testAccCheckContactChannelDestroy(ctx context.Context, t *testing.T) resour
 
 			if err != nil {
 				// Getting resources may return validation exception when the replication set has been destroyed
-				if errs.IsA[*types.ValidationException](err) {
-					continue
-				}
-
-				if errs.IsA[*types.ResourceNotFoundException](err) {
+				if errs.IsA[*types.ValidationException](err) || errs.IsA[*types.ResourceNotFoundException](err) {
 					continue
 				}
 
