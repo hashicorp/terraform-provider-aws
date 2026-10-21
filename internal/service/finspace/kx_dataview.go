@@ -329,7 +329,6 @@ func FindKxDataviewById(ctx context.Context, conn *finspace.Client, id string) (
 
 	out, err := conn.GetKxDataview(ctx, in)
 	if err != nil {
-
 		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
