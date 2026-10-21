@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_event_target: Retry the post-create read to handle EventBridge `ListTargetsByRule` eventual consistency, fixing intermittent `empty result` errors on apply
+```
