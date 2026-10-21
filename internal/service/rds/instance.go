@@ -757,7 +757,12 @@ func resourceInstance() *schema.Resource {
 				return nil
 			},
 			// Conversion to the multi-tenant configuration is irreversible.
-			customdiff.ForceNewIfChange("multi_tenant", func(_ context.Context, old, new, meta any) bool {
+			// Skip unknown values, which ResourceDiff reports as false.
+			customdiff.ForceNewIf("multi_tenant", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
+				if !d.NewValueKnown("multi_tenant") {
+					return false
+				}
+				old, new := d.GetChange("multi_tenant")
 				return old.(bool) && !new.(bool)
 			}),
 		),
