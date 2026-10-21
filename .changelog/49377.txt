@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_ecr_repositories: Return an empty list instead of `null` for `names` when no repositories are found
+```
