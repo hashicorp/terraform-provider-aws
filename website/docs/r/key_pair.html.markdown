@@ -18,6 +18,8 @@ When importing an existing key pair the public key material may be in any format
 * Base64 encoded DER format
 * SSH public key file format as specified in RFC4716
 
+~> **NOTE:** AWS only accepts `RSA` and `ED25519` key types. Other key types, such as `ECDSA` or `DSA`, are not supported and will be rejected by the AWS API.
+
 ## Example Usage
 
 ```terraform
