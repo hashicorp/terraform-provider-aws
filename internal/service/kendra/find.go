@@ -72,7 +72,6 @@ func FindQuerySuggestionsBlockListByID(ctx context.Context, conn *kendra.Client,
 
 	out, err := conn.DescribeQuerySuggestionsBlockList(ctx, in)
 	if err != nil {
-
 		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
