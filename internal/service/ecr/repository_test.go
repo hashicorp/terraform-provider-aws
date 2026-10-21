@@ -42,6 +42,7 @@ func TestAccECRRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					testAccCheckRepositoryRegistryID(ctx, resourceName),
 					testAccCheckRepositoryRepositoryURL(ctx, resourceName, rName),
+					testAccCheckRepositoryRepositoryURLDualStack(ctx, resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeAes256)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_key", ""),
@@ -522,6 +523,13 @@ func testAccCheckRepositoryRepositoryURL(ctx context.Context, resourceName, repo
 	return func(s *terraform.State) error {
 		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s", acctest.AccountID(ctx), acctest.Region(), repositoryName)
 		return resource.TestCheckResourceAttr(resourceName, "repository_url", attributeValue)(s)
+	}
+}
+
+func testAccCheckRepositoryRepositoryURLDualStack(ctx context.Context, resourceName, repositoryName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := fmt.Sprintf("%s.dkr-ecr.%s.on.aws/%s", acctest.AccountID(ctx), acctest.Region(), repositoryName)
+		return resource.TestCheckResourceAttr(resourceName, "repository_url_dualstack", attributeValue)(s)
 	}
 }
 
