@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaWebEndpointDataSource_basic(t *testing.T) {
+func TestAccLambdaWebFunctionEndpointDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dataSourceName := "data.aws_lambdaweb_endpoint.test"
-	resourceName := "aws_lambdaweb_endpoint.test"
+	dataSourceName := "data.aws_lambdaweb_function_endpoint.test"
+	resourceName := "aws_lambdaweb_function_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -27,7 +27,7 @@ func TestAccLambdaWebEndpointDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointDataSourceConfig_basic(rName),
+				Config: testAccFunctionEndpointDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
@@ -42,11 +42,11 @@ func TestAccLambdaWebEndpointDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccEndpointDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointConfig_basic(rName), `
-data "aws_lambdaweb_endpoint" "test" {
-  function_name = aws_lambdaweb_endpoint.test.function_name
-  endpoint_name = aws_lambdaweb_endpoint.test.endpoint_name
+func testAccFunctionEndpointDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionEndpointConfig_basic(rName), `
+data "aws_lambdaweb_function_endpoint" "test" {
+  function_name = aws_lambdaweb_function_endpoint.test.function_name
+  endpoint_name = aws_lambdaweb_function_endpoint.test.endpoint_name
 }
 `)
 }

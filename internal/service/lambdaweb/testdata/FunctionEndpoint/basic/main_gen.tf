@@ -1,7 +1,7 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_lambdaweb_endpoint" "test" {
+resource "aws_lambdaweb_function_endpoint" "test" {
   function_name = aws_lambdaweb_function.test.function_name
   endpoint_name = "extra"
   endpoint_type = "HomeRegion"

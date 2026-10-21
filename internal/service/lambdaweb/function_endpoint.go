@@ -44,7 +44,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_lambdaweb_endpoint", name="Function Endpoint")
+// @FrameworkResource("aws_lambdaweb_function_endpoint", name="Function Endpoint")
 // @IdentityAttribute("function_name")
 // @IdentityAttribute("endpoint_name")
 // @ImportIDHandler("functionEndpointImportID")
@@ -54,7 +54,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdaweb;lambdaweb.GetWebFunctionEndpointOutput")
 // @Testing(importStateIdFunc="testAccFunctionEndpointImportStateIDFunc")
 func newFunctionEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &endpointResource{}
+	r := &functionEndpointResource{}
 
 	r.SetDefaultCreateTimeout(15 * time.Minute)
 	r.SetDefaultUpdateTimeout(15 * time.Minute)
@@ -63,13 +63,13 @@ func newFunctionEndpointResource(_ context.Context) (resource.ResourceWithConfig
 	return r, nil
 }
 
-type endpointResource struct {
-	framework.ResourceWithModel[endpointResourceModel]
+type functionEndpointResource struct {
+	framework.ResourceWithModel[functionEndpointResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
-func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *functionEndpointResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -176,8 +176,8 @@ func (r *endpointResource) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *endpointResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var cfg endpointResourceModel
+func (r *functionEndpointResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var cfg functionEndpointResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &cfg))
 	if resp.Diagnostics.HasError() {
 		return
@@ -252,8 +252,8 @@ func (r *endpointResource) ValidateConfig(ctx context.Context, req resource.Vali
 	}
 }
 
-func (r *endpointResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan endpointResourceModel
+func (r *functionEndpointResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan functionEndpointResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -281,7 +281,7 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	out, err := waitEndpointActive(ctx, conn, functionName, endpointName, r.CreateTimeout(ctx, plan.Timeouts))
+	out, err := waitFunctionEndpointActive(ctx, conn, functionName, endpointName, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		// Taint the resource.
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), functionName)...)
@@ -298,8 +298,8 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state endpointResourceModel
+func (r *functionEndpointResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state functionEndpointResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -327,8 +327,8 @@ func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *endpointResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state endpointResourceModel
+func (r *functionEndpointResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state functionEndpointResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -357,7 +357,7 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	out, err := waitEndpointUpdated(ctx, conn, functionName, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
+	out, err := waitFunctionEndpointUpdated(ctx, conn, functionName, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
 		return
@@ -371,8 +371,8 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *endpointResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state endpointResourceModel
+func (r *functionEndpointResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state functionEndpointResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -394,13 +394,13 @@ func (r *endpointResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	if _, err := waitEndpointDeleted(ctx, conn, functionName, endpointName, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+	if _, err := waitFunctionEndpointDeleted(ctx, conn, functionName, endpointName, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
 		return
 	}
 }
 
-func (r *endpointResource) flatten(ctx context.Context, endpoint *lambdaweb.GetWebFunctionEndpointOutput, data *endpointResourceModel) diag.Diagnostics {
+func (r *functionEndpointResource) flatten(ctx context.Context, endpoint *lambdaweb.GetWebFunctionEndpointOutput, data *functionEndpointResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// normalizeDescription maps the empty string the API reports for a cleared
@@ -484,7 +484,7 @@ func findWebFunctionEndpoint(ctx context.Context, conn *lambdaweb.Client, input 
 	return out, nil
 }
 
-func statusEndpoint(conn *lambdaweb.Client, functionName, endpointName string) retry.StateRefreshFunc {
+func statusFunctionEndpoint(conn *lambdaweb.Client, functionName, endpointName string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findWebFunctionEndpointByTwoPartKey(ctx, conn, functionName, endpointName)
 		if retry.NotFound(err) {
@@ -498,7 +498,7 @@ func statusEndpoint(conn *lambdaweb.Client, functionName, endpointName string) r
 	}
 }
 
-func statusEndpointUpdate(conn *lambdaweb.Client, functionName, endpointName string) retry.StateRefreshFunc {
+func statusFunctionEndpointUpdate(conn *lambdaweb.Client, functionName, endpointName string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findWebFunctionEndpointByTwoPartKey(ctx, conn, functionName, endpointName)
 		if retry.NotFound(err) {
@@ -512,11 +512,11 @@ func statusEndpointUpdate(conn *lambdaweb.Client, functionName, endpointName str
 	}
 }
 
-func waitEndpointActive(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
+func waitFunctionEndpointActive(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EndpointStatePending),
 		Target:                    enum.Slice(awstypes.EndpointStateActive),
-		Refresh:                   statusEndpoint(conn, functionName, endpointName),
+		Refresh:                   statusFunctionEndpoint(conn, functionName, endpointName),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -530,13 +530,13 @@ func waitEndpointActive(ctx context.Context, conn *lambdaweb.Client, functionNam
 	return nil, smarterr.NewError(err)
 }
 
-func waitEndpointUpdated(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
+func waitFunctionEndpointUpdated(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		// An empty updateStatus can be observed if the endpoint has never been
 		// updated before and the PATCH has not propagated to the Get yet.
 		Pending:                   append(enum.Slice(awstypes.EndpointUpdateStatusInProgress), ""),
 		Target:                    enum.Slice(awstypes.EndpointUpdateStatusSuccessful),
-		Refresh:                   statusEndpointUpdate(conn, functionName, endpointName),
+		Refresh:                   statusFunctionEndpointUpdate(conn, functionName, endpointName),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -550,7 +550,7 @@ func waitEndpointUpdated(ctx context.Context, conn *lambdaweb.Client, functionNa
 	return nil, smarterr.NewError(err)
 }
 
-func waitEndpointDeleted(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
+func waitFunctionEndpointDeleted(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string, timeout time.Duration) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		// Every state an endpoint can hold on the way out, because the target is
 		// "gone" and anything unlisted aborts the destroy. A MultiRegion endpoint
@@ -560,7 +560,7 @@ func waitEndpointDeleted(ctx context.Context, conn *lambdaweb.Client, functionNa
 		Pending: enum.Slice(awstypes.EndpointStatePending, awstypes.EndpointStateActive,
 			awstypes.EndpointStateFailed, awstypes.EndpointStateDeleting),
 		Target:  []string{},
-		Refresh: statusEndpoint(conn, functionName, endpointName),
+		Refresh: statusFunctionEndpoint(conn, functionName, endpointName),
 		Timeout: timeout,
 	}
 
@@ -573,7 +573,7 @@ func waitEndpointDeleted(ctx context.Context, conn *lambdaweb.Client, functionNa
 	return nil, smarterr.NewError(err)
 }
 
-type endpointResourceModel struct {
+type functionEndpointResourceModel struct {
 	framework.WithRegionModel
 	AuthType            fwtypes.StringEnum[awstypes.AuthType]                `tfsdk:"auth_type"`
 	AutoDeploymentMode  fwtypes.StringEnum[awstypes.AutoDeploymentMode]      `tfsdk:"auto_deployment_mode"`

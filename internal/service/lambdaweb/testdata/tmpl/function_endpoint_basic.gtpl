@@ -1,4 +1,4 @@
-resource "aws_lambdaweb_endpoint" "test" {
+resource "aws_lambdaweb_function_endpoint" "test" {
 {{- template "region" }}
   function_name = aws_lambdaweb_function.test.function_name
   endpoint_name = "extra"

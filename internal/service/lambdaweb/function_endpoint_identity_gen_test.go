@@ -25,7 +25,7 @@ func TestAccLambdaWebFunctionEndpoint_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lambdaweb.GetWebFunctionEndpointOutput
-	resourceName := "aws_lambdaweb_endpoint.test"
+	resourceName := "aws_lambdaweb_function_endpoint.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -119,7 +119,7 @@ func TestAccLambdaWebFunctionEndpoint_Identity_basic(t *testing.T) {
 func TestAccLambdaWebFunctionEndpoint_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_lambdaweb_endpoint.test"
+	resourceName := "aws_lambdaweb_function_endpoint.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

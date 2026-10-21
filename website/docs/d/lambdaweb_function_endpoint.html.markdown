@@ -1,7 +1,7 @@
 ---
 subcategory: "Lambda Web"
 layout: "aws"
-page_title: "AWS: aws_lambdaweb_endpoint"
+page_title: "AWS: aws_lambdaweb_function_endpoint"
 description: |-
   Provides details about an AWS Lambda Web endpoint.
 ---
@@ -9,14 +9,14 @@ description: |-
 <!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
-# Data Source: aws_lambdaweb_endpoint
+# Data Source: aws_lambdaweb_function_endpoint
 
-Provides details about an AWS Lambda Web endpoint, including its HTTPS domain names.
+Provides details about an AWS Lambda Web function endpoint, including its HTTPS domain names.
 
 ## Example Usage
 
 ```terraform
-data "aws_lambdaweb_endpoint" "example" {
+data "aws_lambdaweb_function_endpoint" "example" {
   function_name = "example"
   endpoint_name = "default"
 }

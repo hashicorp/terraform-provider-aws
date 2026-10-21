@@ -23,11 +23,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaWebEndpoint_basic(t *testing.T) {
+func TestAccLambdaWebFunctionEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint, updated lambdaweb.GetWebFunctionEndpointOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambdaweb_endpoint.test"
+	resourceName := "aws_lambdaweb_function_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -39,7 +39,7 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_basic(rName),
+				Config: testAccFunctionEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`web-function/.+/endpoint/.+`)),
@@ -58,7 +58,7 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 			},
 			{
 				// auth_type is updated in place and the domain name is kept.
-				Config: testAccEndpointConfig_authType(rName, string(awstypes.AuthTypeIamAuth)),
+				Config: testAccFunctionEndpointConfig_authType(rName, string(awstypes.AuthTypeIamAuth)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -66,7 +66,7 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &updated),
-					testAccCheckEndpointNotRecreated(&endpoint, &updated),
+					testAccCheckFunctionEndpointNotRecreated(&endpoint, &updated),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", string(awstypes.AuthTypeIamAuth)),
 				),
 			},
@@ -74,11 +74,11 @@ func TestAccLambdaWebEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaWebEndpoint_scalingAndThrottle(t *testing.T) {
+func TestAccLambdaWebFunctionEndpoint_scalingAndThrottle(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint lambdaweb.GetWebFunctionEndpointOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambdaweb_endpoint.test"
+	resourceName := "aws_lambdaweb_function_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -90,7 +90,7 @@ func TestAccLambdaWebEndpoint_scalingAndThrottle(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_scalingAndThrottle(rName, 4, 100),
+				Config: testAccFunctionEndpointConfig_scalingAndThrottle(rName, 4, 100),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_environments", "4"),
@@ -105,7 +105,7 @@ func TestAccLambdaWebEndpoint_scalingAndThrottle(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "endpoint_name",
 			},
 			{
-				Config: testAccEndpointConfig_scalingAndThrottle(rName, 6, 200),
+				Config: testAccFunctionEndpointConfig_scalingAndThrottle(rName, 6, 200),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -121,11 +121,11 @@ func TestAccLambdaWebEndpoint_scalingAndThrottle(t *testing.T) {
 	})
 }
 
-func TestAccLambdaWebEndpoint_disappears(t *testing.T) {
+func TestAccLambdaWebFunctionEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint lambdaweb.GetWebFunctionEndpointOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambdaweb_endpoint.test"
+	resourceName := "aws_lambdaweb_function_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -137,7 +137,7 @@ func TestAccLambdaWebEndpoint_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_basic(rName),
+				Config: testAccFunctionEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambdaweb.ResourceFunctionEndpoint, resourceName),
@@ -153,11 +153,11 @@ func TestAccLambdaWebEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccLambdaWebEndpoint_multiRegion(t *testing.T) {
+func TestAccLambdaWebFunctionEndpoint_multiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint lambdaweb.GetWebFunctionEndpointOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambdaweb_endpoint.test"
+	resourceName := "aws_lambdaweb_function_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -169,7 +169,7 @@ func TestAccLambdaWebEndpoint_multiRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_multiRegion(rName),
+				Config: testAccFunctionEndpointConfig_multiRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypeMultiRegion)),
@@ -189,11 +189,11 @@ func TestAccLambdaWebEndpoint_multiRegion(t *testing.T) {
 	})
 }
 
-func TestAccLambdaWebEndpoint_perRegion(t *testing.T) {
+func TestAccLambdaWebFunctionEndpoint_perRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint lambdaweb.GetWebFunctionEndpointOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambdaweb_endpoint.test"
+	resourceName := "aws_lambdaweb_function_endpoint.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -205,7 +205,7 @@ func TestAccLambdaWebEndpoint_perRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_typeWithRegions(rName, string(awstypes.EndpointTypePerRegion)),
+				Config: testAccFunctionEndpointConfig_typeWithRegions(rName, string(awstypes.EndpointTypePerRegion)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypePerRegion)),
@@ -224,7 +224,7 @@ func TestAccLambdaWebEndpoint_perRegion(t *testing.T) {
 	})
 }
 
-func testAccCheckEndpointNotRecreated(before, after *lambdaweb.GetWebFunctionEndpointOutput) resource.TestCheckFunc {
+func testAccCheckFunctionEndpointNotRecreated(before, after *lambdaweb.GetWebFunctionEndpointOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if b, a := aws.ToString(before.DomainName), aws.ToString(after.DomainName); b != a {
 			return fmt.Errorf("Lambda Web Endpoint was recreated: domain name %s became %s", b, a)
@@ -238,7 +238,7 @@ func testAccCheckFunctionEndpointDestroy(ctx context.Context, t *testing.T) reso
 		conn := acctest.ProviderMeta(ctx, t).LambdaWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_lambdaweb_endpoint" {
+			if rs.Type != "aws_lambdaweb_function_endpoint" {
 				continue
 			}
 
@@ -281,13 +281,13 @@ func testAccFunctionEndpointImportStateIDFunc(n string) resource.ImportStateIdFu
 	return acctest.AttrsImportStateIdFunc(n, ",", "function_name", "endpoint_name")
 }
 
-func testAccEndpointConfig_basic(rName string) string {
-	return testAccEndpointConfig_authType(rName, "ApplicationManaged")
+func testAccFunctionEndpointConfig_basic(rName string) string {
+	return testAccFunctionEndpointConfig_authType(rName, "ApplicationManaged")
 }
 
-func testAccEndpointConfig_authType(rName, authType string) string {
+func testAccFunctionEndpointConfig_authType(rName, authType string) string {
 	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), fmt.Sprintf(`
-resource "aws_lambdaweb_endpoint" "test" {
+resource "aws_lambdaweb_function_endpoint" "test" {
   function_name = aws_lambdaweb_function.test.function_name
   endpoint_name = "extra"
   endpoint_type = "HomeRegion"
@@ -296,13 +296,13 @@ resource "aws_lambdaweb_endpoint" "test" {
 `, authType))
 }
 
-func testAccEndpointConfig_multiRegion(rName string) string {
-	return testAccEndpointConfig_typeWithRegions(rName, "MultiRegion")
+func testAccFunctionEndpointConfig_multiRegion(rName string) string {
+	return testAccFunctionEndpointConfig_typeWithRegions(rName, "MultiRegion")
 }
 
-func testAccEndpointConfig_scalingAndThrottle(rName string, maxEnvironments, rateLimit int) string {
+func testAccFunctionEndpointConfig_scalingAndThrottle(rName string, maxEnvironments, rateLimit int) string {
 	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), fmt.Sprintf(`
-resource "aws_lambdaweb_endpoint" "test" {
+resource "aws_lambdaweb_function_endpoint" "test" {
   function_name = aws_lambdaweb_function.test.function_name
   endpoint_name = "extra"
   endpoint_type = "HomeRegion"
@@ -319,7 +319,7 @@ resource "aws_lambdaweb_endpoint" "test" {
 `, maxEnvironments, rateLimit))
 }
 
-func testAccEndpointConfig_typeWithRegions(rName, endpointType string) string {
+func testAccFunctionEndpointConfig_typeWithRegions(rName, endpointType string) string {
 	// Pick a second region distinct from the test region. Regions with the
 	// service active as of July 2026: us-east-1 and eu-west-1 (us-west-2
 	// rollout pending; PreCheckRegion admits it for when it lands).
@@ -328,7 +328,7 @@ func testAccEndpointConfig_typeWithRegions(rName, endpointType string) string {
 		secondRegion = endpoints.UsEast1RegionID
 	}
 	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), fmt.Sprintf(`
-resource "aws_lambdaweb_endpoint" "test" {
+resource "aws_lambdaweb_function_endpoint" "test" {
   function_name        = aws_lambdaweb_function.test.function_name
   endpoint_name        = "multi"
   endpoint_type        = %[3]q

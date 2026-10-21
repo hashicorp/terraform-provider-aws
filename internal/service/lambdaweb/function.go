@@ -574,7 +574,7 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	endpoint, err = waitEndpointActive(ctx, conn, name, endpointName, r.CreateTimeout(ctx, plan.Timeouts))
+	endpoint, err = waitFunctionEndpointActive(ctx, conn, name, endpointName, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
@@ -775,7 +775,7 @@ func (r *functionResource) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 
-		endpoint, err := waitEndpointUpdated(ctx, conn, name, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
+		endpoint, err := waitFunctionEndpointUpdated(ctx, conn, name, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return

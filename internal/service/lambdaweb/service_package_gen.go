@@ -22,16 +22,16 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newFunctionEndpointDataSource,
-			TypeName: "aws_lambdaweb_endpoint",
-			Name:     "Function Endpoint",
-			Region:   inttypes.ResourceRegionDefault(),
-		},
-		{
 			Factory:  newFunctionDataSource,
 			TypeName: "aws_lambdaweb_function",
 			Name:     "Function",
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newFunctionEndpointDataSource,
+			TypeName: "aws_lambdaweb_function_endpoint",
+			Name:     "Function Endpoint",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
@@ -39,20 +39,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
-		{
-			Factory:  newFunctionEndpointResource,
-			TypeName: "aws_lambdaweb_endpoint",
-			Name:     "Function Endpoint",
-			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("function_name", true),
-				inttypes.StringIdentityAttribute("endpoint_name", true),
-			}),
-			Import: inttypes.FrameworkImport{
-				WrappedImport: true,
-				ImportID:      functionEndpointImportID{},
-			},
-		},
 		{
 			Factory:  newFunctionResource,
 			TypeName: "aws_lambdaweb_function",
@@ -62,6 +48,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("function_name", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newFunctionEndpointResource,
+			TypeName: "aws_lambdaweb_function_endpoint",
+			Name:     "Function Endpoint",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("endpoint_name", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      functionEndpointImportID{},
 			},
 		},
 		{

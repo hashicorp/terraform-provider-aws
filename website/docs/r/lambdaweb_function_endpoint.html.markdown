@@ -1,14 +1,14 @@
 ---
 subcategory: "Lambda Web"
 layout: "aws"
-page_title: "AWS: aws_lambdaweb_endpoint"
+page_title: "AWS: aws_lambdaweb_function_endpoint"
 description: |-
   Manages an AWS Lambda Web endpoint.
 ---
 
-# Resource: aws_lambdaweb_endpoint
+# Resource: aws_lambdaweb_function_endpoint
 
-Manages an AWS Lambda Web endpoint: an HTTPS domain for a function with its own authentication, region placement, and revision routing. A function can have up to 10 endpoints; manage the initial endpoint with the `endpoint_config` block on [`aws_lambdaweb_function`](lambdaweb_function.html.markdown) and additional endpoints with this resource.
+Manages an AWS Lambda Web function endpoint: an HTTPS domain for a function with its own authentication, region placement, and revision routing. A function can have up to 10 endpoints; manage the initial endpoint with the `endpoint_config` block on [`aws_lambdaweb_function`](lambdaweb_function.html.markdown) and additional endpoints with this resource.
 
 ~> **Note:** Lambda Web is not available in every AWS Region. In a Region where the service is not available, API calls fail with `AccessDeniedException`.
 
@@ -17,7 +17,7 @@ Manages an AWS Lambda Web endpoint: an HTTPS domain for a function with its own 
 ### Basic Usage
 
 ```terraform
-resource "aws_lambdaweb_endpoint" "example" {
+resource "aws_lambdaweb_function_endpoint" "example" {
   function_name = aws_lambdaweb_function.example.function_name
   endpoint_name = "canary"
   endpoint_type = "HomeRegion"
@@ -28,7 +28,7 @@ resource "aws_lambdaweb_endpoint" "example" {
 ### Weighted (Canary) Routing
 
 ```terraform
-resource "aws_lambdaweb_endpoint" "example" {
+resource "aws_lambdaweb_function_endpoint" "example" {
   function_name        = aws_lambdaweb_function.example.function_name
   endpoint_name        = "prod"
   endpoint_type        = "MultiRegion"
@@ -57,7 +57,7 @@ to the nearest deployed Region, and `regional_domain_names` is empty because the
 service does not publish per-Region domains for that endpoint type.
 
 ```terraform
-resource "aws_lambdaweb_endpoint" "app" {
+resource "aws_lambdaweb_function_endpoint" "app" {
   function_name        = aws_lambdaweb_function.example.function_name
   endpoint_name        = "public"
   endpoint_type        = "MultiRegion"
@@ -84,7 +84,7 @@ resource "aws_cloudfront_distribution" "app" {
 
   origin {
     origin_id   = "lambdaweb"
-    domain_name = aws_lambdaweb_endpoint.app.domain_name
+    domain_name = aws_lambdaweb_function_endpoint.app.domain_name
 
     custom_origin_config {
       origin_protocol_policy = "https-only"
@@ -184,7 +184,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_lambdaweb_endpoint.example
+  to = aws_lambdaweb_function_endpoint.example
 
   identity = {
     function_name = "example"
@@ -209,7 +209,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_lambdaweb_endpoint.example
+  to = aws_lambdaweb_function_endpoint.example
   id = "example,canary"
 }
 ```
@@ -217,5 +217,5 @@ import {
 Using `terraform import`, import a Lambda Web Endpoint using the `function_name` and `endpoint_name` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_lambdaweb_endpoint.example example,canary
+% terraform import aws_lambdaweb_function_endpoint.example example,canary
 ```

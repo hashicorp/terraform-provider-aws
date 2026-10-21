@@ -17,16 +17,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_lambdaweb_endpoint", name="Function Endpoint")
+// @FrameworkDataSource("aws_lambdaweb_function_endpoint", name="Function Endpoint")
 func newFunctionEndpointDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &endpointDataSource{}, nil
+	return &functionEndpointDataSource{}, nil
 }
 
-type endpointDataSource struct {
-	framework.DataSourceWithModel[endpointDataSourceModel]
+type functionEndpointDataSource struct {
+	framework.DataSourceWithModel[functionEndpointDataSourceModel]
 }
 
-func (d *endpointDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *functionEndpointDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -76,8 +76,8 @@ func (d *endpointDataSource) Schema(ctx context.Context, request datasource.Sche
 	}
 }
 
-func (d *endpointDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data endpointDataSourceModel
+func (d *functionEndpointDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data functionEndpointDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -111,7 +111,7 @@ func (d *endpointDataSource) Read(ctx context.Context, request datasource.ReadRe
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type endpointDataSourceModel struct {
+type functionEndpointDataSourceModel struct {
 	framework.WithRegionModel
 	ARN                 types.String                                         `tfsdk:"arn"`
 	AuthType            types.String                                         `tfsdk:"auth_type"`
