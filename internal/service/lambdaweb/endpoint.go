@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -292,15 +293,10 @@ func (r *endpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	normalizeRevisionWeights(ctx, &plan)
-	plan.Description = normalizeDescription(plan.Description)
-	setRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
-
-	plan.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -326,15 +322,10 @@ func (r *endpointResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	normalizeRevisionWeights(ctx, &state)
-	state.Description = normalizeDescription(state.Description)
-	setRegionalDomainNames(ctx, &state, out.RegionalEndpoints)
-
-	state.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -377,14 +368,10 @@ func (r *endpointResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	normalizeRevisionWeights(ctx, &plan)
-	plan.Description = normalizeDescription(plan.Description)
-	setRegionalDomainNames(ctx, &plan, out.RegionalEndpoints)
-	plan.ARN = fwflex.StringToFramework(ctx, out.EndpointArn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -418,23 +405,44 @@ func (r *endpointResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-// normalizeDescription maps the empty string the API reports for a cleared
-// description back to null, so it matches a configuration that omits it.
-func normalizeDescription(d types.String) types.String {
-	if !d.IsNull() && d.ValueString() == "" {
-		return types.StringNull()
+func (r *endpointResource) flatten(ctx context.Context, endpoint *lambdaweb.GetWebFunctionEndpointOutput, data *endpointResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// normalizeDescription maps the empty string the API reports for a cleared
+	// description back to null, so it matches a configuration that omits it.
+	if aws.ToString(endpoint.Description) == "" {
+		endpoint.Description = nil
 	}
-	return d
+
+	diags.Append(fwflex.Flatten(ctx, endpoint, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	data.RegionalDomainNames = regionalDomainNames(ctx, endpoint.RegionalEndpoints)
+
+	// normalizeRevisionWeights keeps revision_weights as configuration-only state:
+	// under LatestRevision the server reports its ephemeral routing weights, which
+	// must not surface as drift for a block the practitioner cannot configure.
+	// Under Disabled the weights are required configuration and reflect the server.
+	if data.AutoDeploymentMode.ValueEnum() == awstypes.AutoDeploymentModeLatestRevision {
+		data.RevisionWeights = fwtypes.NewListNestedObjectValueOfNull[revisionWeightModel](ctx)
+	}
+
+	return diags
 }
 
-// normalizeRevisionWeights keeps revision_weights as configuration-only state:
-// under LatestRevision the server reports its ephemeral routing weights, which
-// must not surface as drift for a block the practitioner cannot configure.
-// Under Disabled the weights are required configuration and reflect the server.
-func normalizeRevisionWeights(ctx context.Context, m *endpointResourceModel) {
-	if awstypes.AutoDeploymentMode(m.AutoDeploymentMode.ValueString()) == awstypes.AutoDeploymentModeLatestRevision {
-		m.RevisionWeights = fwtypes.NewListNestedObjectValueOfNull[revisionWeightModel](ctx)
-	}
+// regionalDomainNames projects the API regionalEndpoints map (region ->
+// RegionalEndpoint) onto the flat region -> domain name map exposed in state;
+// AutoFlex cannot derive this field projection. Only PerRegion endpoints carry
+// per-region domains: MultiRegion regional entries have no domain of their own
+// because traffic uses the global domain.
+func regionalDomainNames(ctx context.Context, regionalEndpoints map[string]awstypes.RegionalEndpoint) fwtypes.MapOfString {
+	m := tfmaps.ApplyToAllValues(regionalEndpoints, func(v awstypes.RegionalEndpoint) string {
+		return aws.ToString(v.DomainName)
+	})
+	maps.DeleteFunc(m, func(k string, v string) bool { return v == "" })
+	return fwflex.FlattenFrameworkStringValueMapOfString(ctx, m)
 }
 
 var _ inttypes.ImportIDParser = endpointImportID{}
@@ -630,11 +638,11 @@ func waitEndpointDeleted(ctx context.Context, conn *lambdaweb.Client, functionNa
 
 type endpointResourceModel struct {
 	framework.WithRegionModel
-	ARN                 types.String                                         `tfsdk:"arn"`
 	AuthType            fwtypes.StringEnum[awstypes.AuthType]                `tfsdk:"auth_type"`
 	AutoDeploymentMode  fwtypes.StringEnum[awstypes.AutoDeploymentMode]      `tfsdk:"auto_deployment_mode"`
 	Description         types.String                                         `tfsdk:"description"`
 	DomainName          types.String                                         `tfsdk:"domain_name"`
+	EndpointARN         types.String                                         `tfsdk:"arn"`
 	EndpointName        types.String                                         `tfsdk:"endpoint_name"`
 	EndpointType        fwtypes.StringEnum[awstypes.EndpointType]            `tfsdk:"endpoint_type"`
 	FunctionName        types.String                                         `tfsdk:"function_name"`
@@ -644,28 +652,6 @@ type endpointResourceModel struct {
 	ScalingConfig       fwtypes.ListNestedObjectValueOf[scalingConfigModel]  `tfsdk:"scaling_config"`
 	ThrottleConfig      fwtypes.ListNestedObjectValueOf[throttleConfigModel] `tfsdk:"throttle_config"`
 	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
-}
-
-// setRegionalDomainNames projects the API regionalEndpoints map (region ->
-// RegionalEndpoint) onto the flat region -> domain name map exposed in state;
-// AutoFlex cannot derive this field projection.
-// PerRegion endpoints have no top-level domain name; this is how callers
-// discover the per-region domains.
-func setRegionalDomainNames(ctx context.Context, m *endpointResourceModel, regionalEndpoints map[string]awstypes.RegionalEndpoint) {
-	m.RegionalDomainNames = regionalDomainNames(ctx, regionalEndpoints)
-}
-
-// regionalDomainNames projects the API regionalEndpoints map (region ->
-// RegionalEndpoint) onto the flat region -> domain name map exposed in state;
-// AutoFlex cannot derive this field projection. Only PerRegion endpoints carry
-// per-region domains: MultiRegion regional entries have no domain of their own
-// because traffic uses the global domain.
-func regionalDomainNames(ctx context.Context, regionalEndpoints map[string]awstypes.RegionalEndpoint) fwtypes.MapOfString {
-	m := tfmaps.ApplyToAllValues(regionalEndpoints, func(v awstypes.RegionalEndpoint) string {
-		return aws.ToString(v.DomainName)
-	})
-	maps.DeleteFunc(m, func(k string, v string) bool { return v == "" })
-	return fwflex.FlattenFrameworkStringValueMapOfString(ctx, m)
 }
 
 type revisionWeightModel struct {
