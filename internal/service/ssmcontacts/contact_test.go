@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfssmcontacts "github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -264,13 +265,11 @@ func testAccCheckContactDestroy(ctx context.Context, t *testing.T) resource.Test
 
 			if err != nil {
 				// Getting resources may return validation exception when the replication set has been destroyed
-				var ve *types.ValidationException
-				if errors.As(err, &ve) {
+				if errs.IsA[*types.ValidationException](err) {
 					continue
 				}
 
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
+				if errs.IsA[*types.ResourceNotFoundException](err) {
 					continue
 				}
 
