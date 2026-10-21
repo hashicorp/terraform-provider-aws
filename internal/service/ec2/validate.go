@@ -8,7 +8,28 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
+
+// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-add-user-data.html.
+// The limit applies to the raw (base64-decoded) data.
+const maxUserDataLength = 16384
+
+func validLaunchTemplateUserData(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+	blob, err := inttypes.Base64Decode(value)
+	if err != nil {
+		errors = append(errors, fmt.Errorf(
+			"%q must be base64-encoded", k))
+		return
+	}
+	if len(blob) > maxUserDataLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than %d bytes once base64-decoded; got %d bytes",
+			k, maxUserDataLength, len(blob)))
+	}
+	return
+}
 
 func validSecurityGroupRuleDescription(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
