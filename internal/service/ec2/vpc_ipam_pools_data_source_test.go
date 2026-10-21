@@ -70,6 +70,10 @@ func TestAccIPAMPoolsDataSource_identicalTags(t *testing.T) { // nosemgrep:ci.vp
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckIPAMPoolDestroy(ctx, t),
+			testAccCheckIPAMDestroy(ctx, t),
+		),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolsDataSourceConfig_identicalTags(rName),
