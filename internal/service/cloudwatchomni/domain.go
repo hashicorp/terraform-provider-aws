@@ -41,7 +41,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 // @Testing(importStateIdAttribute="domain_id")
-// @Testing(tagsTest=false)
 func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &domainResource{}, nil
 }

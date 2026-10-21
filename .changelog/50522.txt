@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_route53domains_delegation_signer_record: Fix handling of null Flags and PublicKey fields for `.uk`/`.co.uk` domain registries which caused resources to be removed from state when they existed at AWS
+```
+
+```release-note:breaking-change
+resource/aws_route53domains_delegation_signer_record: Change the format of the import ID from `domain_name,dnssec_key_id` to `domain_name,flags,algorithm,public_key`. This is acceptable in a minor version because AWS no longer return [DNSKEY flags](https://docs.aws.amazon.com/Route53/latest/APIReference/API_domains_DnssecKey.html#API_domains_DnssecKey_Contents) and delegation signer records can no longer reliably be found by domain name and key ID
+```
