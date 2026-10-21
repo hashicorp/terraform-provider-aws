@@ -8,6 +8,7 @@ package cloudwatch
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,6 +23,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+// propagationTimeout is the maximum amount of time to wait for CloudWatch
+// read-after-write eventual consistency: a GetDashboard issued immediately after
+// a successful PutDashboard can transiently return ResourceNotFound.
+const propagationTimeout = 2 * time.Minute
 
 // @SDKResource("aws_cloudwatch_dashboard", name="Dashboard")
 // @IdentityAttribute("dashboard_name")
@@ -84,7 +90,13 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	output, err := findDashboardByName(ctx, conn, d.Id())
+	// A GetDashboard immediately after a successful PutDashboard can transiently
+	// return ResourceNotFound due to CloudWatch read-after-write eventual
+	// consistency. Retry the read for a new resource instead of failing the
+	// apply, matching the standard pattern used elsewhere in the provider.
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*cloudwatch.GetDashboardOutput, error) {
+		return findDashboardByName(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
