@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_fms_policy: Fix `resource_tag_logical_operator` being silently overwritten with an empty value (interpreted by AWS as `AND`) on apply when left unset in configuration
+```
