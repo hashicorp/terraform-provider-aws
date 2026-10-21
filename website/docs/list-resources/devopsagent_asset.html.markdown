@@ -10,6 +10,10 @@ description: |-
 
 Lists AWS DevOps Agent Assets in an Agent Space.
 
+Each result includes the asset's identity (`agent_space_id`, `asset_id`, `account_id`, and `region`) and uses the asset ID as its display name.
+
+When `include_resource = true`, results include the attributes described in the [`aws_devopsagent_asset` resource](../r/devopsagent_asset.html.markdown#attribute-reference). The `content` and `metadata` inputs are not returned by AWS and remain unset. The merged metadata returned by AWS is available in `metadata_all`.
+
 ## Example Usage
 
 ### Basic Usage
@@ -52,9 +56,3 @@ The following arguments are optional:
 * `region` - (Optional) Region to query. Defaults to provider region.
 * `updated_after` - (Optional) Limits results to assets updated after this timestamp.
 * `updated_before` - (Optional) Limits results to assets updated before this timestamp.
-
-## Attribute Reference
-
-Each result includes the asset's identity (`agent_space_id`, `asset_id`, `account_id`, and `region`) and uses the asset ID as its display name.
-
-When `include_resource = true`, results include the attributes described in the [`aws_devopsagent_asset` resource](../r/devopsagent_asset.html.markdown#attribute-reference). The `content` and `metadata` inputs are not returned by AWS and remain unset. The merged metadata returned by AWS is available in `metadata_all`.

@@ -63,8 +63,8 @@ Exactly one of the following blocks must be configured:
 ### `file` Block
 
 * `body` - (Required) File content. See [`body` Block](#body-block) below.
-* `path` - (Required) Path of the file within the asset.
 * `metadata` - (Optional) JSON metadata for the file.
+* `path` - (Required) Path of the file within the asset.
 
 ### `body` Block
 
