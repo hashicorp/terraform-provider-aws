@@ -13,6 +13,7 @@ var (
 	ResourceCustomerManagedPolicyAttachment           = resourceCustomerManagedPolicyAttachment
 	ResourceCustomerManagedPolicyAttachmentsExclusive = newCustomerManagedPolicyAttachmentsExclusiveResource
 	ResourceInstanceAccessControlAttributes           = resourceInstanceAccessControlAttributes
+	ResourceInstance                                  = newInstanceResource
 	ResourceManagedPolicyAttachment                   = resourceManagedPolicyAttachment
 	ResourceManagedPolicyAttachmentsExclusive         = newManagedPolicyAttachmentsExclusiveResource
 	ResourcePermissionsBoundaryAttachment             = resourcePermissionsBoundaryAttachment
@@ -29,6 +30,7 @@ var (
 	FindCustomerManagedPolicyAttachmentsByTwoPartKey = findCustomerManagedPolicyAttachmentsByTwoPartKey
 	FindCustomerManagedPolicyByFourPartKey           = findCustomerManagedPolicyByFourPartKey
 	FindInstanceAttributeControlAttributesByARN      = findInstanceAttributeControlAttributesByARN
+	FindInstanceByARN                                = findInstanceByARN
 	FindManagedPolicyAttachmentsByTwoPartKey         = findManagedPolicyAttachmentsByTwoPartKey
 	FindManagedPolicyByThreePartKey                  = findManagedPolicyByThreePartKey
 	FindPermissionsBoundaryByTwoPartKey              = findPermissionsBoundaryByTwoPartKey
