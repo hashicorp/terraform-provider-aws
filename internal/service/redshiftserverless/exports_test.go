@@ -21,3 +21,5 @@ var (
 	FindUsageLimitByName                    = findUsageLimitByName
 	FindWorkgroupByName                     = findWorkgroupByName
 )
+
+type ResourcePolicyDoc = resourcePolicyDoc
