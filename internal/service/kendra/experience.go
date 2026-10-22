@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -332,8 +333,7 @@ func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta 
 		IndexId: aws.String(indexId),
 	})
 
-	var resourceNotFoundException *types.ResourceNotFoundException
-	if errors.As(err, &resourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -428,9 +428,8 @@ func FindExperienceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	}
 
 	out, err := conn.DescribeExperience(ctx, in)
-	var resourceNotFoundException *types.ResourceNotFoundException
 
-	if errors.As(err, &resourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}

@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -1352,13 +1353,9 @@ func (r *intentResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	_, err := conn.DeleteIntent(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException // lexv2models does not seem to use this approach like other services
-		if errors.As(err, &nfe) {
-			return
-		}
-
-		var pfe *awstypes.PreconditionFailedException // PreconditionFailedException: Failed to retrieve resource since it does not exist
-		if errors.As(err, &pfe) {
+		// lexv2models does not seem to use this approach like other services
+		// PreconditionFailedException: Failed to retrieve resource since it does not exist
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.PreconditionFailedException](err) {
 			return
 		}
 
@@ -1466,8 +1463,7 @@ func findIntentByIDs(ctx context.Context, conn *lexmodelsv2.Client, intentID, bo
 
 	out, err := conn.DescribeIntent(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

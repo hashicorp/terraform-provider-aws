@@ -1,4 +1,6 @@
-## 6.70.0 (Unreleased)
+## 6.71.0 (Unreleased)
+
+## 6.70.0 (October 21, 2026)
 
 BREAKING CHANGES:
 
@@ -6,6 +8,7 @@ BREAKING CHANGES:
 
 NOTES:
 
+* provider: The provider is now built with Go 1.26.10, which no longer trusts certificates issued through a set of compromised eMudhra intermediate CAs (CVE-2026-111943) ([#50555](https://github.com/hashicorp/terraform-provider-aws/issues/50555))
 * resource/aws_dx_macsec_key_association: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#50559](https://github.com/hashicorp/terraform-provider-aws/issues/50559))
 
 FEATURES:

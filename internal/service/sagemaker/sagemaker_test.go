@@ -20,6 +20,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"is not supported in region",
 		"is not supported for the chosen region",
 		"No available licenses were found",
+		"InsufficientInstanceCapacity",
 	)
 }
 

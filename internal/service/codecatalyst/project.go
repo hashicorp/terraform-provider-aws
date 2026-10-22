@@ -166,8 +166,7 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	_, err := conn.DeleteProject(ctx, &input)
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return diags
 		}
 
