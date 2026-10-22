@@ -855,27 +855,27 @@ func TestAccWAFV2WebACLRule_invalidLogicalStatementNesting(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_rateBased, testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`Blocks of type "rate_based_statement" are not expected here`),
+				ExpectError: regexache.MustCompile(`rate_based_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
 			},
 			{
 				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_managedRuleGroup, testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`Blocks of type "managed_rule_group_statement" are not expected here`),
+				ExpectError: regexache.MustCompile(`managed_rule_group_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
 			},
 			{
 				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_ruleGroupReference)),
-				ExpectError: regexache.MustCompile(`Blocks of type "rule_group_reference_statement" are not expected here`),
+				ExpectError: regexache.MustCompile(`rule_group_reference_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
 			},
 			{
 				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_rateBased), testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`Blocks of type "rate_based_statement" are not expected here`),
+				ExpectError: regexache.MustCompile(`rate_based_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
 			},
 			{
 				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`Blocks of type "and_statement" are not expected here`),
+				ExpectError: regexache.MustCompile(`and_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
 			},
 			{
 				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`Blocks of type "or_statement" are not expected here`),
+				ExpectError: regexache.MustCompile(`or_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
 			},
 			{
 				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch)),
@@ -915,6 +915,42 @@ func TestAccWAFV2WebACLRule_invalidLogicalStatementNesting(t *testing.T) {
 
 // State written before and_statement, or_statement and not_statement were narrowed to the
 // statement types AWS WAF accepts in them still holds the removed blocks as empty lists.
+func TestAccWAFV2WebACLRule_logicalStatementEmptyDynamicBlocks(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_logicalStatementEmptyDynamicBlocks(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.geo_match_statement.0.country_codes.0", "US"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.rate_based_statement.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.and_statement.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.or_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.or_statement.0.statement.0.managed_rule_group_statement.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.or_statement.0.statement.1.or_statement.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.or_statement.0.statement.1.not_statement.0.statement.0.rule_group_reference_statement.#", "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
 func TestWebACLRuleUpgradeResourceState_logicalStatementNesting(t *testing.T) {
 	t.Parallel()
 
@@ -936,9 +972,9 @@ func TestWebACLRuleUpgradeResourceState_logicalStatementNesting(t *testing.T) {
 	}
 	stateType := schema.ValueType()
 
-	// The fixture holds blocks that the current schema no longer has.
-	if _, err := tftypes.ValueFromJSONWithOpts([]byte(testAccWebACLRuleStateJSON_logicalStatementNesting), stateType, tftypes.ValueFromJSONOpts{}); err == nil {
-		t.Fatal("expected the fixture to contain attributes that are no longer in the schema")
+	// The current schema still holds every block of the fixture.
+	if _, err := tftypes.ValueFromJSONWithOpts([]byte(testAccWebACLRuleStateJSON_logicalStatementNesting), stateType, tftypes.ValueFromJSONOpts{}); err != nil {
+		t.Fatalf("fixture does not match the current schema: %s", err)
 	}
 
 	resp, err := server.UpgradeResourceState(ctx, &tfprotov5.UpgradeResourceStateRequest{
@@ -2729,6 +2765,109 @@ resource "aws_wafv2_web_acl_rule" "test" {
                 label_match_statement {
                   scope = "NAMESPACE"
                   key   = "test:"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName))
+}
+
+// testAccWebACLRuleConfig_logicalStatementEmptyDynamicBlocks names statements that AWS WAF rejects
+// in a logical statement only in dynamic blocks that emit nothing.
+func testAccWebACLRuleConfig_logicalStatementEmptyDynamicBlocks(rName string) string {
+	return acctest.ConfigCompose(testAccWebACLRuleConfig_webACLOnly(rName), fmt.Sprintf(`
+variable "rate_limits" {
+  type    = list(number)
+  default = []
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    and_statement {
+      statement {
+        geo_match_statement {
+          country_codes = ["US"]
+        }
+
+        dynamic "rate_based_statement" {
+          for_each = var.rate_limits
+          content {
+            limit              = rate_based_statement.value
+            aggregate_key_type = "IP"
+          }
+        }
+
+        dynamic "and_statement" {
+          for_each = []
+          content {
+            statement {
+              geo_match_statement {
+                country_codes = ["CA"]
+              }
+            }
+          }
+        }
+      }
+
+      statement {
+        or_statement {
+          statement {
+            label_match_statement {
+              scope = "LABEL"
+              key   = "test:label"
+            }
+
+            dynamic "managed_rule_group_statement" {
+              for_each = []
+              content {
+                name        = "AWSManagedRulesCommonRuleSet"
+                vendor_name = "AWS"
+              }
+            }
+          }
+
+          statement {
+            not_statement {
+              statement {
+                geo_match_statement {
+                  country_codes = ["GB"]
+                }
+
+                dynamic "rule_group_reference_statement" {
+                  for_each = []
+                  content {
+                    arn = aws_wafv2_web_acl.test.arn
+                  }
+                }
+              }
+            }
+
+            dynamic "or_statement" {
+              for_each = []
+              content {
+                statement {
+                  geo_match_statement {
+                    country_codes = ["MX"]
+                  }
                 }
               }
             }

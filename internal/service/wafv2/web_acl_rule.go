@@ -2119,6 +2119,29 @@ type webACLRuleRateBasedStatementModel struct {
 	ScopeDownStatement  fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementModel]          `tfsdk:"scope_down_statement"`
 }
 
+// webACLRuleNestedRateBasedStatementModel and webACLRuleNestedManagedRuleGroupStatementModel are the
+// shapes of rate_based_statement and managed_rule_group_statement inside a logical statement. AWS WAF
+// rejects both there; the blocks exist so that configurations which never populate them (for example
+// an empty dynamic block) stay valid. Their scope_down_statement is leaf-only, as before logical
+// scope-down statements were added.
+type webACLRuleNestedRateBasedStatementModel struct {
+	Limit               types.Int64                                                                 `tfsdk:"limit"`
+	AggregateKeyType    fwtypes.StringEnum[awstypes.RateBasedStatementAggregateKeyType]             `tfsdk:"aggregate_key_type"`
+	CustomKeys          fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyModel] `tfsdk:"custom_keys"`
+	EvaluationWindowSec types.Int64                                                                 `tfsdk:"evaluation_window_sec"`
+	ForwardedIPConfig   fwtypes.ListNestedObjectValueOf[webACLRuleForwardedIPConfigModel]           `tfsdk:"forwarded_ip_config"`
+	ScopeDownStatement  fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel0Model]    `tfsdk:"scope_down_statement"`
+}
+
+type webACLRuleNestedManagedRuleGroupStatementModel struct {
+	Name                    types.String                                                             `tfsdk:"name"`
+	VendorName              types.String                                                             `tfsdk:"vendor_name"`
+	Version                 types.String                                                             `tfsdk:"version"`
+	ManagedRuleGroupConfigs fwtypes.ListNestedObjectValueOf[webACLRuleManagedRuleGroupConfigModel]   `tfsdk:"managed_rule_group_configs"`
+	RuleActionOverrides     fwtypes.ListNestedObjectValueOf[webACLRuleRuleActionOverrideModel]       `tfsdk:"rule_action_override"`
+	ScopeDownStatement      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementLevel0Model] `tfsdk:"scope_down_statement"`
+}
+
 func (m webACLRuleRateBasedStatementModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	rbs := awstypes.RateBasedStatement{
 		AggregateKeyType: m.AggregateKeyType.ValueEnum(),
