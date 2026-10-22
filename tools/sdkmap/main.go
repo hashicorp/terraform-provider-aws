@@ -104,8 +104,9 @@ type funcRef struct {
 // resourceTags holds the service package methods through which the tags interceptor lists and
 // updates a resource's tags around its CRUD functions.
 //
-// The methods are analyzed as a whole: where they branch on @Tags(resourceType=...), e.g. in IAM
-// and S3, the SDK calls for every resource type that shares them are included.
+// Where the methods branch on @Tags(resourceType=...), e.g. in IAM and S3, with a switch on a
+// variable named resourceType, only the branch for the resource's type is analyzed. Otherwise, the
+// SDK calls for every resource type that shares them are included.
 type resourceTags struct {
 	// List is the service package's ListTags, called after Create, Read, and Update if they don't
 	// set tags themselves, and after Update if tags_all isn't known until apply.
@@ -352,7 +353,7 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 			if !ok || fn.Recv != nil {
 				continue
 			}
-			typeNames, tagged, _ := parseAnnotations(fn.Doc)
+			typeNames, tagged, tagsResourceType := parseAnnotations(fn.Doc)
 			if len(typeNames) == 0 {
 				continue
 			}
@@ -372,12 +373,7 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 				log.Printf("%s: no AWS SDK calls found for %s", r.Location, r.Expr)
 			}
 			if tagged {
-				// The tags interceptor lists and updates tags through the service package's
-				// ListTags and UpdateTags.
-				r.Tags = &resourceTags{
-					List:   a.newMethodRef(pkg, "servicePackage", "ListTags"),
-					Update: a.newMethodRef(pkg, "servicePackage", "UpdateTags"),
-				}
+				r.Tags = a.newResourceTags(pkg, tagsResourceType)
 			}
 			r.logWarnings()
 
@@ -556,21 +552,31 @@ func (a *analyzer) newFuncRef(pkg *servicePackage, expr ast.Expr, varTypes map[s
 	return ref
 }
 
-// newMethodRef returns a reference to the method name on the type recv in pkg, e.g.
-// "(*servicePackage).ListTags", or nil if there is no such method.
-func (a *analyzer) newMethodRef(pkg *servicePackage, recv, name string) *funcRef {
-	m, ok := pkg.methods[recv][name]
-	if !ok {
-		return nil
+// newResourceTags returns the service package's ListTags and UpdateTags, through which the tags
+// interceptor lists and updates the tags of a resource around its CRUD functions. resourceType is
+// the resource's @Tags resourceType, which the tags interceptor passes to them, or empty.
+func (a *analyzer) newResourceTags(pkg *servicePackage, resourceType string) *resourceTags {
+	newRef := func(name string) *funcRef {
+		m, ok := pkg.methods["servicePackage"][name]
+		if !ok {
+			return nil
+		}
+
+		expr := types.ExprString(m.Recv.List[0].Type)
+		if strings.HasPrefix(expr, "*") {
+			expr = "(" + expr + ")"
+		}
+		ref := &funcRef{Expr: expr + "." + name, Location: a.location(m)}
+		f := a.newCallFinder()
+		f.tagsResourceType = resourceType
+		ref.SDKCalls, ref.warnings = f.find(pkg, m, nil)
+		return ref
 	}
 
-	expr := types.ExprString(m.Recv.List[0].Type)
-	if strings.HasPrefix(expr, "*") {
-		expr = "(" + expr + ")"
+	return &resourceTags{
+		List:   newRef("ListTags"),
+		Update: newRef("UpdateTags"),
 	}
-	ref := &funcRef{Expr: expr + "." + name, Location: a.location(m)}
-	ref.SDKCalls, ref.warnings = a.findSDKCalls(pkg, m, nil)
-	return ref
 }
 
 // location returns where node is, as "<file>:<line>" relative to the repository root.
@@ -590,6 +596,21 @@ type callFinder struct {
 	visited  map[ast.Node]bool
 	calls    map[string]bool
 	warnings map[string]bool
+
+	// tagsResourceType is the resource type passed to the tags interceptor's ListTags and
+	// UpdateTags, if they are being analyzed for a resource with one. A switch on a variable named
+	// resourceType is then walked only through the case for it.
+	tagsResourceType string
+}
+
+// newCallFinder returns a callFinder that has followed nothing.
+func (a *analyzer) newCallFinder() *callFinder {
+	return &callFinder{
+		analyzer: a,
+		visited:  make(map[ast.Node]bool),
+		calls:    make(map[string]bool),
+		warnings: make(map[string]bool),
+	}
 }
 
 // findSDKCalls returns the sorted set of AWS SDK client methods reachable from node, e.g. a
@@ -597,8 +618,11 @@ type callFinder struct {
 // about AWS SDK clients passed to functions that aren't analyzed. varTypes holds the types of
 // variables in scope at node, e.g. from factoryVarTypes, and may be nil.
 func (a *analyzer) findSDKCalls(pkg *servicePackage, node ast.Node, varTypes map[string]string) (calls, warnings []string) {
-	f := &callFinder{analyzer: a, visited: make(map[ast.Node]bool), calls: make(map[string]bool), warnings: make(map[string]bool)}
+	return a.newCallFinder().find(pkg, node, varTypes)
+}
 
+// find is findSDKCalls, using f.
+func (f *callFinder) find(pkg *servicePackage, node ast.Node, varTypes map[string]string) (calls, warnings []string) {
 	v := f.newVisitor(pkg, node)
 	maps.Copy(v.varTypes, varTypes)
 	f.visited[node] = true
@@ -724,11 +748,59 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 			return nil
 		}
 
+	case *ast.SwitchStmt:
+		// The tags interceptor's ListTags and UpdateTags, or a helper they pass the resource type to,
+		// may branch on it. Only the branch taken for the resource's type is walked.
+		if tag, ok := n.Tag.(*ast.Ident); ok && tag.Name == "resourceType" && v.finder.tagsResourceType != "" {
+			if clause, ok := caseClauseFor(n, v.finder.tagsResourceType); ok {
+				if n.Init != nil {
+					ast.Walk(v, n.Init)
+				}
+				if clause != nil {
+					ast.Walk(v, clause)
+				}
+				return nil
+			}
+		}
+
 	case *ast.Ident:
 		v.finder.follow(v.pkg, v.pkg.decls[n.Name])
 	}
 
 	return v
+}
+
+// caseClauseFor returns the clause of a switch statement that is taken when its tag is the string
+// value: the case listing value as a string literal, or else the default clause, or nil if there is
+// none. ok is false if that can't be determined: a case lists something other than a string literal,
+// or the clause falls through.
+func caseClauseFor(s *ast.SwitchStmt, value string) (clause *ast.CaseClause, ok bool) {
+	var defaultClause *ast.CaseClause
+	for _, stmt := range s.Body.List {
+		c := stmt.(*ast.CaseClause)
+		if c.List == nil {
+			defaultClause = c
+		}
+		for _, expr := range c.List {
+			lit, isLit := expr.(*ast.BasicLit)
+			if !isLit || lit.Kind != token.STRING {
+				return nil, false
+			}
+			if v, err := strconv.Unquote(lit.Value); err == nil && v == value {
+				clause = c
+			}
+		}
+	}
+	if clause == nil {
+		clause = defaultClause
+	}
+
+	if clause != nil && len(clause.Body) > 0 {
+		if b, isBranch := clause.Body[len(clause.Body)-1].(*ast.BranchStmt); isBranch && b.Tok == token.FALLTHROUGH {
+			return nil, false
+		}
+	}
+	return clause, true
 }
 
 // setDeclaredTypes records the types of the variables assigned or declared by an *ast.AssignStmt or
