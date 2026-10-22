@@ -222,12 +222,14 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading ECR Repository (%s): %s", d.Id(), err)
 	}
 
-	resourceRepositoryFlatten(ctx, d, repository)
+	if err := resourceRepositoryFlatten(ctx, meta.(*conns.AWSClient), repository, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ECR Repository (%s): %s", d.Id(), err)
+	}
 
 	return diags
 }
 
-func resourceRepositoryFlatten(_ context.Context, d *schema.ResourceData, repository *types.Repository) {
+func resourceRepositoryFlatten(_ context.Context, _ *conns.AWSClient, repository *types.Repository, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, repository.RepositoryArn)
 	d.Set(names.AttrEncryptionConfiguration, flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration))
 	d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration))
@@ -236,6 +238,8 @@ func resourceRepositoryFlatten(_ context.Context, d *schema.ResourceData, reposi
 	d.Set(names.AttrName, repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
+
+	return nil
 }
 
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

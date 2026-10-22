@@ -222,7 +222,7 @@ func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading S3 Multi-Region Access Point (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceMultiRegionAccessPointFlatten(ctx, meta.(*conns.AWSClient), accountID, accessPoint, d); err != nil {
+	if err := resourceMultiRegionAccessPointFlatten(ctx, meta.(*conns.AWSClient), accessPoint, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -565,7 +565,9 @@ func multiRegionAccessPointARN(ctx context.Context, c *conns.AWSClient, alias st
 	return c.GlobalARN(ctx, "s3", "accesspoint/"+alias)
 }
 
-func resourceMultiRegionAccessPointFlatten(ctx context.Context, awsClient *conns.AWSClient, accountID string, accessPoint *types.MultiRegionAccessPointReport, d *schema.ResourceData) error {
+func resourceMultiRegionAccessPointFlatten(ctx context.Context, awsClient *conns.AWSClient, accessPoint *types.MultiRegionAccessPointReport, d *schema.ResourceData) error {
+	accountID := awsClient.AccountID(ctx)
+
 	alias := aws.ToString(accessPoint.Alias)
 	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrAlias, alias)
