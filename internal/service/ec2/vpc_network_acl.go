@@ -227,12 +227,14 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceNetworkACLFlatten(ctx, c, d, nacl)...)
+	if err := resourceNetworkACLFlatten(ctx, c, nacl, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceNetworkACLFlatten(ctx context.Context, c *conns.AWSClient, d *schema.ResourceData, networkACL *awstypes.NetworkAcl) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceNetworkACLFlatten(ctx context.Context, c *conns.AWSClient, networkACL *awstypes.NetworkAcl, d *schema.ResourceData) error {
 	ownerID := aws.ToString(networkACL.OwnerId)
 	d.Set(names.AttrARN, networkACLARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)
@@ -261,15 +263,15 @@ func resourceNetworkACLFlatten(ctx context.Context, c *conns.AWSClient, d *schem
 		}
 	}
 	if err := d.Set("egress", flattenNetworkACLEntries(egressEntries)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting egress: %s", err)
+		return fmt.Errorf("setting egress: %w", err)
 	}
 	if err := d.Set("ingress", flattenNetworkACLEntries(ingressEntries)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ingress: %s", err)
+		return fmt.Errorf("setting ingress: %w", err)
 	}
 
 	setTagsOut(ctx, networkACL.Tags)
 
-	return diags
+	return nil
 }
 
 func resourceNetworkACLUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

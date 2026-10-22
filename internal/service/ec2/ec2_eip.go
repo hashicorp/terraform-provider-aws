@@ -231,7 +231,9 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s): %s", d.Id(), err)
 	}
 
-	resourceEIPFlatten(ctx, awsClient, address, d)
+	if err := resourceEIPFlatten(ctx, awsClient, address, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s): %s", d.Id(), err)
+	}
 
 	// Force ID to be an Allocation ID if we're on a VPC.
 	// This allows users to import the EIP based on the IP if they are in a VPC.
@@ -416,7 +418,7 @@ func eipARN(ctx context.Context, c *conns.AWSClient, allocationID string) string
 	return c.RegionalARN(ctx, names.EC2, "elastic-ip/"+allocationID)
 }
 
-func resourceEIPFlatten(ctx context.Context, awsClient *conns.AWSClient, address *awstypes.Address, d *schema.ResourceData) {
+func resourceEIPFlatten(ctx context.Context, awsClient *conns.AWSClient, address *awstypes.Address, d *schema.ResourceData) error {
 	allocationID := aws.ToString(address.AllocationId)
 
 	d.Set("allocation_id", allocationID)
@@ -450,4 +452,6 @@ func resourceEIPFlatten(ctx context.Context, awsClient *conns.AWSClient, address
 	} else {
 		d.Set("public_dns", nil)
 	}
+
+	return nil
 }

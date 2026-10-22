@@ -11,114 +11,45 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_network_acl")
 func newNetworkACLResourceAsListResource() inttypes.ListResourceForSDK {
-	l := networkACLListResource{}
-	l.SetResourceSchema(resourceNetworkACL())
+	return framework.NewSDKListResource(resourceNetworkACL(), framework.SDKListSpec[awstypes.NetworkAcl, networkACLListResourceModel]{
+		ConfigSchema: listNetworkACLConfigSchema,
+		Items: func(ctx context.Context, c *conns.AWSClient, query networkACLListResourceModel) (iter.Seq2[awstypes.NetworkAcl, error], diag.Diagnostics) {
+			var input ec2.DescribeNetworkAclsInput
+			if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+				return nil, diags
+			}
 
-	return &l
-}
-
-var _ list.ListResource = &networkACLListResource{}
-
-type networkACLListResource struct {
-	framework.ListResourceWithSDKv2Resource
+			// The default network ACL belongs to aws_default_network_acl, and
+			// DescribeNetworkAcls cannot filter it out server side.
+			return tfiter.FilterValues(listNetworkACLs(ctx, c.EC2Client(ctx), &input), func(n awstypes.NetworkAcl) bool {
+				return !aws.ToBool(n.IsDefault)
+			}), nil
+		},
+		ID: func(n awstypes.NetworkAcl, _ networkACLListResourceModel) string {
+			return aws.ToString(n.NetworkAclId)
+		},
+		Flatten: resourceNetworkACLFlatten,
+	})
 }
 
 type networkACLListResourceModel struct {
 	framework.WithRegionModel
 	NetworkACLIDs fwtypes.ListValueOf[types.String] `tfsdk:"network_acl_ids"`
 	Filters       customListFilters                 `tfsdk:"filter"`
-}
-
-func (l *networkACLListResource) ListResourceConfigSchema(ctx context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			"network_acl_ids": listschema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-		},
-		Blocks: map[string]listschema.Block{
-			names.AttrFilter: customListFiltersBlock(ctx),
-		},
-	}
-}
-
-func (l *networkACLListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.EC2Client(ctx)
-
-	var query networkACLListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	var input ec2.DescribeNetworkAclsInput
-	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
-	}
-
-	tflog.Info(ctx, "Listing resources")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		for networkACL, err := range listNetworkACLs(ctx, conn, &input) {
-			if err != nil {
-				yield(fwdiag.NewListResultErrorDiagnostic(err))
-				return
-			}
-
-			if aws.ToBool(networkACL.IsDefault) {
-				continue
-			}
-
-			id := aws.ToString(networkACL.NetworkAclId)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
-
-			result := request.NewListResult(ctx)
-			rd := l.ResourceData()
-			rd.SetId(id)
-
-			if request.IncludeResource {
-				if diags := resourceNetworkACLFlatten(ctx, awsClient, rd, &networkACL); diags.HasError() {
-					tflog.Error(ctx, "Flattening EC2 Network ACL", map[string]any{
-						"diags": diags,
-					})
-					continue
-				}
-			}
-
-			result.DisplayName = id
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
 }
 
 func listNetworkACLs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) iter.Seq2[awstypes.NetworkAcl, error] {
@@ -137,5 +68,20 @@ func listNetworkACLs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeN
 				}
 			}
 		}
+	}
+}
+
+func listNetworkACLConfigSchema(ctx context.Context) listschema.Schema {
+	return listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			"network_acl_ids": listschema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+			},
+		},
+		Blocks: map[string]listschema.Block{
+			names.AttrFilter: customListFiltersBlock(ctx),
+		},
 	}
 }
