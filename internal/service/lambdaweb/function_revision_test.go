@@ -25,7 +25,7 @@ import (
 )
 
 func checkFunctionRevisionARN(functionName string) knownvalue.Check {
-	return tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`web-function/`+functionName+`/revision/r123`))
+	return tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`web-function/`+functionName+`/revision/rev-[0-9a-z]+`))
 }
 
 func TestAccLambdaWebFunctionRevision_basic(t *testing.T) {

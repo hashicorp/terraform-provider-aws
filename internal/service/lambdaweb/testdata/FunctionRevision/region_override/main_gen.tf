@@ -1,0 +1,111 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_lambdaweb_function_revision" "test" {
+  region = var.region
+
+  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
+
+  function_name = aws_lambdaweb_function.test.function_name
+
+  build_config {
+    runtime_config {
+      runtime = "nodejs24.x"
+    }
+
+    code_config {
+      s3_object {
+        bucket = aws_s3_object.test.bucket
+        key    = aws_s3_object.test.key
+      }
+    }
+  }
+
+  service_config {
+    execution_role_arn = aws_iam_role.test.arn
+  }
+}
+
+resource "aws_lambdaweb_function" "test" {
+  region = var.region
+
+  function_name = var.rName
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  region = var.region
+
+  bucket        = var.rName
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  region = var.region
+
+  bucket = aws_s3_bucket.test.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  region = var.region
+
+  bucket = aws_s3_bucket.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowLambdaAccess"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+      Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+      Resource = "${aws_s3_bucket.test.arn}/*"
+    }]
+  })
+}
+
+resource "aws_s3_object" "test" {
+  region = var.region
+
+  bucket = aws_s3_bucket_versioning.test.bucket
+  key    = "function.zip"
+  source = "test-fixtures/function.zip"
+}
+
+resource "aws_iam_role" "test" {
+  name = var.rName
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
+}

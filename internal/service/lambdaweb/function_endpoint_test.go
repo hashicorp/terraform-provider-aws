@@ -14,13 +14,19 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambdaweb "github.com/hashicorp/terraform-provider-aws/internal/service/lambdaweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkFunctionEndpointARN(functionName, endpointName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`web-function/`+functionName+`/endpoint`+endpointName))
+}
 
 func TestAccLambdaWebFunctionEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)

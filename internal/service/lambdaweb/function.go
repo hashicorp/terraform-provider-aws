@@ -1054,27 +1054,6 @@ func findNewestFunctionRevision(ctx context.Context, conn *lambdaweb.Client, fun
 	return newest, nil
 }
 
-func listFunctionRevisions(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionRevisionsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[awstypes.FunctionRevisionSummary, error] {
-	return tfiter.ConcatValuesWithError(listFunctionRevisionPages(ctx, conn, input, optFns...))
-}
-
-func listFunctionRevisionPages(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionRevisionsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[[]awstypes.FunctionRevisionSummary, error] {
-	return func(yield func([]awstypes.FunctionRevisionSummary, error) bool) {
-		pages := lambdaweb.NewListWebFunctionRevisionsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx, optFns...)
-			if err != nil {
-				yield(nil, fmt.Errorf("listing Lambda Web Function Revisions: %w", err))
-				return
-			}
-
-			if !yield(page.Revisions, nil) {
-				return
-			}
-		}
-	}
-}
-
 func findOldestFunctionEndpoint(ctx context.Context, conn *lambdaweb.Client, functionName string) (*awstypes.FunctionEndpointSummary, error) {
 	var oldest *awstypes.FunctionEndpointSummary
 	input := lambdaweb.ListWebFunctionEndpointsInput{

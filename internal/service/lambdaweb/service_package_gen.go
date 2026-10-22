@@ -65,6 +65,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newFunctionRevisionResource,
+			TypeName: "aws_lambdaweb_function_revision",
+			Name:     "Function Revision",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("revision_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      functionRevisionImportID{},
+			},
+		},
+		{
 			Factory:  newResourcePolicyResource,
 			TypeName: "aws_lambdaweb_resource_policy",
 			Name:     "Resource Policy",

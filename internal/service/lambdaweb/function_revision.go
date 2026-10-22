@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -40,13 +41,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_lambdaweb_function_revision", name="Function Revision")
 // @IdentityAttribute("function_name")
 // @IdentityAttribute("revision_id")
-// @ImportIDHandler("functionRevisionmportID")
+// @ImportIDHandler("functionRevisionImportID")
 // @Testing(importStateIdAttribute="revision_id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheck")
@@ -55,7 +57,7 @@ import (
 func newFunctionRevisionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &functionRevisionResource{}
 
-	r.SetDefaultUpdateTimeout(15 * time.Minute)
+	r.SetDefaultCreateTimeout(15 * time.Minute)
 
 	return r, nil
 }
@@ -87,6 +89,13 @@ func (r *functionRevisionResource) Schema(ctx context.Context, req resource.Sche
 				},
 				Validators: []validator.String{
 					validFunctionName,
+				},
+			},
+			names.AttrKMSKeyARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"revision_id": framework.IDAttribute(),
@@ -250,7 +259,7 @@ func (r *functionRevisionResource) Schema(ctx context.Context, req resource.Sche
 									"logging_config": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[loggingConfigModel](ctx),
 										PlanModifiers: []planmodifier.List{
-											listplanmodifier.RequiresReplace(),
+											listplanmodifier.RequiresReplaceIfConfigured(),
 										},
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
@@ -260,8 +269,10 @@ func (r *functionRevisionResource) Schema(ctx context.Context, req resource.Sche
 												"application_log_level": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.ApplicationLogLevel](),
 													Optional:   true,
+													Computed:   true,
 													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.RequiresReplace(),
+														stringplanmodifier.RequiresReplaceIfConfigured(),
+														stringplanmodifier.UseNonNullStateForUnknown(),
 													},
 												},
 												"log_group": schema.StringAttribute{
@@ -287,7 +298,7 @@ func (r *functionRevisionResource) Schema(ctx context.Context, req resource.Sche
 				},
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Update: true,
+				Create: true,
 			}),
 		},
 	}
@@ -316,7 +327,7 @@ func (r *functionRevisionResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	revisionID := aws.ToString(output.RevisionId)
-	out, err := waitFunctionRevisionActive(ctx, conn, functionName, revisionID, r.UpdateTimeout(ctx, plan.Timeouts))
+	out, err := waitFunctionRevisionActive(ctx, conn, functionName, revisionID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		// Taint the resource.
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("function_name"), functionName)...)
@@ -390,6 +401,25 @@ func (r *functionRevisionResource) flatten(ctx context.Context, revision *lambda
 	var diags diag.Diagnostics
 	diags.Append(fwflex.Flatten(ctx, revision, data)...)
 	return diags
+}
+
+var _ inttypes.ImportIDParser = functionRevisionImportID{}
+
+type functionRevisionImportID struct{}
+
+func (functionRevisionImportID) Parse(id string) (string, map[string]any, error) {
+	const (
+		importIDParts = 2
+	)
+	parts, err := intflex.ExpandResourceId(id, importIDParts, true)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return id, map[string]any{
+		"function_name": parts[0],
+		"revision_id":   parts[1],
+	}, nil
 }
 
 func listFunctionRevisions(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionRevisionsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[awstypes.FunctionRevisionSummary, error] {
