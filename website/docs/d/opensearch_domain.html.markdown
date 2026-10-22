@@ -92,6 +92,7 @@ This data source exports the following attributes in addition to the arguments a
     * `volume_type` - Type of EBS volumes attached to data nodes.
     * `volume_size` - Size of EBS volumes attached to data nodes (in GB).
     * `iops` - Baseline input/output (I/O) performance of EBS volumes attached to data nodes.
+* `engine_mode` - Engine mode for the domain. Either `GENERAL` or `OPTIMIZED`.
 * `engine_version` - OpenSearch version for the domain.
 * `encryption_at_rest` - Domain encryption at rest related options.
     * `enabled` - Whether encryption at rest is enabled in the domain.
@@ -122,6 +123,7 @@ This data source exports the following attributes in addition to the arguments a
 * `software_update_options` - Software update options for the domain
     * `auto_software_update_enabled` - Enabled or disabled.
 * `tags` - Tags assigned to the domain.
+* `use_case` - Use case for the domain. One of `SEARCH`, `VECTOR`, `OBSERVABILITY`, or `MIXED`.
 * `vpc_options` - VPC Options for private OpenSearch domains.
     * `availability_zones` - Availability zones used by the domain.
     * `security_group_ids` - Security groups used by the domain.
