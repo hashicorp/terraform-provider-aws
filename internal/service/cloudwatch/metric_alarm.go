@@ -453,7 +453,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta a
 		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	if err := resourceMetricAlarmFlatten(ctx, d, alarm); err != nil {
+	if err := resourceMetricAlarmFlatten(ctx, meta.(*conns.AWSClient), alarm, d); err != nil {
 		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
@@ -966,7 +966,7 @@ func expandMetricAlarmDimensions(tfMap map[string]any) []awstypes.Dimension {
 	return apiObjects
 }
 
-func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm *awstypes.MetricAlarm) error {
+func resourceMetricAlarmFlatten(_ context.Context, _ *conns.AWSClient, alarm *awstypes.MetricAlarm, d *schema.ResourceData) error {
 	d.Set("actions_enabled", alarm.ActionsEnabled)
 	d.Set("alarm_actions", alarm.AlarmActions)
 	d.Set("alarm_description", alarm.AlarmDescription)

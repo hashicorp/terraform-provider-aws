@@ -1491,7 +1491,9 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading AppFlow Connector Profile (%s): %s", d.Id(), err)
 	}
 
-	resourceConnectorProfileFlatten(ctx, connectorProfile, d)
+	if err := resourceConnectorProfileFlatten(ctx, meta.(*conns.AWSClient), connectorProfile, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Connector Profile (%s): %s", d.Id(), err)
+	}
 
 	return diags
 }
@@ -2394,7 +2396,7 @@ func flattenOAuth2Properties(properties *types.OAuth2Properties) []any {
 	return []any{m}
 }
 
-func resourceConnectorProfileFlatten(_ context.Context, connectorProfile *types.ConnectorProfile, rd *schema.ResourceData) {
+func resourceConnectorProfileFlatten(_ context.Context, _ *conns.AWSClient, connectorProfile *types.ConnectorProfile, rd *schema.ResourceData) error {
 	// Credentials are not returned by any API operation. Instead, a
 	// "credentials_arn" property is returned.
 	//
@@ -2409,4 +2411,6 @@ func resourceConnectorProfileFlatten(_ context.Context, connectorProfile *types.
 	rd.Set("connector_type", connectorProfile.ConnectorType)
 	rd.Set("credentials_arn", connectorProfile.CredentialsArn)
 	rd.Set(names.AttrName, connectorProfile.ConnectorProfileName)
+
+	return nil
 }

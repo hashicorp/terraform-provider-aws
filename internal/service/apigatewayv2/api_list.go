@@ -11,74 +11,28 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_apigatewayv2_api")
 func newAPIResourceAsListResource() inttypes.ListResourceForSDK {
-	l := apiListResource{}
-	l.SetResourceSchema(resourceAPI())
-	return &l
-}
+	return framework.NewSDKListResource(resourceAPI(), framework.SDKListSpec[awstypes.Api, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.Api, error], diag.Diagnostics) {
+			var input apigatewayv2.GetApisInput
 
-var _ list.ListResource = &apiListResource{}
-
-type apiListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *apiListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := l.Meta().APIGatewayV2Client(ctx)
-
-	tflog.Info(ctx, "Listing Resources")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		input := apigatewayv2.GetApisInput{}
-		for item, err := range listAPIs(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			id := aws.ToString(item.ApiId)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
-
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(id)
-
-			if request.IncludeResource {
-				if err := resourceAPIFlattenPage(ctx, l.Meta(), rd, &item); err != nil {
-					tflog.Error(ctx, "Reading API Gateway V2 API", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			result.DisplayName = aws.ToString(item.Name)
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			return listAPIs(ctx, c.APIGatewayV2Client(ctx), &input), nil
+		},
+		ID: func(a awstypes.Api, _ framework.RegionQuery) string {
+			return aws.ToString(a.ApiId)
+		},
+		Flatten:     resourceAPIFlattenPage,
+		DisplayName: func(a awstypes.Api) string { return aws.ToString(a.Name) },
+	})
 }
 
 func listAPIs(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetApisInput) iter.Seq2[awstypes.Api, error] {
@@ -102,7 +56,7 @@ func listAPIs(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv
 	}
 }
 
-func resourceAPIFlattenPage(ctx context.Context, awsClient *conns.AWSClient, d *schema.ResourceData, api *awstypes.Api) error {
+func resourceAPIFlattenPage(ctx context.Context, awsClient *conns.AWSClient, api *awstypes.Api, d *schema.ResourceData) error {
 	d.Set("api_endpoint", api.ApiEndpoint)
 	d.Set("api_key_selection_expression", api.ApiKeySelectionExpression)
 	d.Set(names.AttrARN, apiARN(ctx, awsClient, d.Id()))

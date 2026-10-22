@@ -12,14 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,66 +25,21 @@ import (
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_api_gateway_rest_api")
 func newRestAPIResourceAsListResource() inttypes.ListResourceForSDK {
-	l := restAPIListResource{}
-	l.SetResourceSchema(resourceRestAPI())
-	return &l
+	return framework.NewSDKListResource(resourceRestAPI(), framework.SDKListSpec[awstypes.RestApi, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.RestApi, error], diag.Diagnostics) {
+			var input apigateway.GetRestApisInput
+
+			return listRestAPIs(ctx, c.APIGatewayClient(ctx), &input), nil
+		},
+		ID: func(a awstypes.RestApi, _ framework.RegionQuery) string {
+			return aws.ToString(a.Id)
+		},
+		Flatten:     listResourceRestAPIFlatten,
+		DisplayName: func(a awstypes.RestApi) string { return aws.ToString(a.Name) },
+	})
 }
 
-var _ list.ListResource = &restAPIListResource{}
-var _ list.ListResourceWithRawV5Schemas = &restAPIListResource{}
-
-type restAPIListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *restAPIListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.APIGatewayClient(ctx)
-
-	tflog.Info(ctx, "Listing API Gateway REST APIs")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		input := apigateway.GetRestApisInput{}
-
-		for item, err := range listRestAPIs(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			id := aws.ToString(item.Id)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
-
-			result := request.NewListResult(ctx)
-			rd := l.ResourceData()
-			rd.SetId(id)
-
-			if request.IncludeResource {
-				if err := listResourceRestAPIFlatten(ctx, awsClient, rd, &item); err != nil {
-					tflog.Error(ctx, "Reading API Gateway REST API", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			result.DisplayName = aws.ToString(item.Name)
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
-}
-
-func listResourceRestAPIFlatten(ctx context.Context, c *conns.AWSClient, d *schema.ResourceData, api *awstypes.RestApi) error {
+func listResourceRestAPIFlatten(ctx context.Context, c *conns.AWSClient, api *awstypes.RestApi, d *schema.ResourceData) error {
 	d.Set("api_key_source", api.ApiKeySource)
 	d.Set(names.AttrARN, apiARN(ctx, c, d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
