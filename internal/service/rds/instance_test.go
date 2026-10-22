@@ -46,21 +46,19 @@ func TestInstanceMultiTenantDiff(t *testing.T) {
 	const unknown = "74D93920-ED26-11E3-AC10-0800200C9A66"
 
 	type testCase struct {
-		state            *bool // multi_tenant in prior state; nil means absent (e.g. state from an earlier provider version)
-		config           any   // multi_tenant in configuration; nil means not set
-		applyImmediately bool
-		wantErr          bool
-		wantDiff         bool
-		wantRequiresNew  bool
+		state           *bool // multi_tenant in prior state; nil means absent (e.g. state from an earlier provider version)
+		config          any   // multi_tenant in configuration; nil means not set
+		changeDBName    bool  // also change db_name, which forces replacement
+		wantDiff        bool
+		wantRequiresNew bool
 	}
 	testCases := map[string]testCase{
 		"absent from state, not set": {
 			config: nil,
 		},
 		"absent from state, single-tenant to multi-tenant": {
-			config:           true,
-			applyImmediately: true,
-			wantDiff:         true,
+			config:   true,
+			wantDiff: true,
 		},
 		"single-tenant, not set": {
 			state:  aws.Bool(false),
@@ -74,16 +72,18 @@ func TestInstanceMultiTenantDiff(t *testing.T) {
 			state:  aws.Bool(true),
 			config: true,
 		},
+		// apply_immediately is enforced in Update, so the plan must succeed without it.
 		"single-tenant to multi-tenant": {
-			state:            aws.Bool(false),
-			config:           true,
-			applyImmediately: true,
-			wantDiff:         true,
+			state:    aws.Bool(false),
+			config:   true,
+			wantDiff: true,
 		},
-		"single-tenant to multi-tenant, not applied immediately": {
-			state:   aws.Bool(false),
-			config:  true,
-			wantErr: true,
+		"single-tenant to multi-tenant with replacement": {
+			state:           aws.Bool(false),
+			config:          true,
+			changeDBName:    true,
+			wantDiff:        true,
+			wantRequiresNew: true,
 		},
 		"multi-tenant to single-tenant": {
 			state:           aws.Bool(true),
@@ -104,18 +104,20 @@ func TestInstanceMultiTenantDiff(t *testing.T) {
 			ctx := t.Context()
 
 			raw := map[string]any{
+				"db_name":        "TFTEST",
 				"instance_class": "db.t3.small",
 			}
 			if test.config != nil {
 				raw["multi_tenant"] = test.config
 			}
-			if test.applyImmediately {
-				raw[names.AttrApplyImmediately] = test.applyImmediately
+			if test.changeDBName {
+				raw["db_name"] = "TFTEST2"
 			}
 
 			state := &terraformsdk.InstanceState{
 				ID: "db-ABCDEFGHIJKLMNOPQRSTUVWXYZ",
 				Attributes: map[string]string{
+					"db_name":        "TFTEST",
 					"instance_class": "db.t3.small",
 				},
 			}
@@ -124,14 +126,8 @@ func TestInstanceMultiTenantDiff(t *testing.T) {
 			}
 
 			diff, err := tfrds.ResourceInstance().Diff(ctx, state, terraformsdk.NewResourceConfigRaw(raw), nil)
-			if got := err != nil; got != test.wantErr {
-				t.Fatalf("error: expected %t, got %v", test.wantErr, err)
-			}
-			if test.wantErr {
-				if !strings.Contains(err.Error(), names.AttrApplyImmediately) {
-					t.Errorf("unexpected error: %s", err)
-				}
-				return
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
 			}
 
 			var attr *terraformsdk.ResourceAttrDiff

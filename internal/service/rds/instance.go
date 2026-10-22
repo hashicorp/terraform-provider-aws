@@ -765,17 +765,6 @@ func resourceInstance() *schema.Resource {
 				old, new := d.GetChange("multi_tenant")
 				return old.(bool) && !new.(bool)
 			}),
-			// RDS applies the conversion, and any pending modifications, immediately.
-			// Require explicit consent rather than applying deferred changes outside the maintenance window.
-			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
-				if d.Id() == "" || !d.HasChange("multi_tenant") || !d.NewValueKnown("multi_tenant") || !d.NewValueKnown(names.AttrApplyImmediately) {
-					return nil
-				}
-				if d.Get("multi_tenant").(bool) && !d.Get(names.AttrApplyImmediately).(bool) {
-					return errors.New(`"apply_immediately" must be true to convert to the multi-tenant configuration`)
-				}
-				return nil
-			},
 		),
 	}
 }
@@ -2183,6 +2172,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutUpdate))
+
+	// RDS applies the conversion, and any pending modifications, immediately. Require explicit
+	// consent before making any changes. This is checked here rather than in CustomizeDiff, which
+	// can't tell whether the instance is being replaced (Create needs no conversion).
+	if d.HasChange("multi_tenant") && d.Get("multi_tenant").(bool) && !d.Get(names.AttrApplyImmediately).(bool) {
+		return sdkdiag.AppendErrorf(diags, `updating RDS DB Instance (%s): "apply_immediately" must be true to convert to the multi-tenant configuration`, d.Get(names.AttrIdentifier).(string))
+	}
 
 	// Separate request to promote a database.
 	if d.HasChange("replicate_source_db") {
