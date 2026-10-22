@@ -63,6 +63,40 @@ func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 	})
 }
 
+func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceListResolvedDomain(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ruleGroup networkfirewall.DescribeRuleGroupOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_rule_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_sourceListResolvedDomain(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.generated_rules_type", string(awstypes.GeneratedRulesTypeAllowlist)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", string(awstypes.TargetTypeAwsRoute53ResolvedDomain)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", string(awstypes.TargetTypeTlsSni)),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test.example.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccNetworkFirewallRuleGroup_Basic_referenceSets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
@@ -1150,6 +1184,26 @@ resource "aws_networkfirewall_rule_group" "test" {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
         target_types         = ["HTTP_HOST"]
+        targets              = ["test.example.com"]
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccRuleGroupConfig_sourceListResolvedDomain(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_rule_group" "test" {
+  capacity = 100
+  name     = %[1]q
+  type     = "STATEFUL"
+
+  rule_group {
+    rules_source {
+      rules_source_list {
+        generated_rules_type = "ALLOWLIST"
+        target_types         = ["TLS_SNI", "AWS_ROUTE_53_RESOLVED_DOMAIN"]
         targets              = ["test.example.com"]
       }
     }

@@ -411,7 +411,7 @@ The `rules_source_list` block supports the following arguments:
 
 * `generated_rules_type` - (Required) String value to specify whether domains in the target list are allowed or denied access. Valid values: `ALLOWLIST`, `DENYLIST`.
 
-* `target_types` - (Required) Set of types of domain specifications that are provided in the `targets` argument. Valid values: `HTTP_HOST`, `TLS_SNI`.
+* `target_types` - (Required) Set of types of domain specifications that are provided in the `targets` argument. Valid values: `HTTP_HOST`, `TLS_SNI`, `AWS_ROUTE_53_RESOLVED_DOMAIN`. `AWS_ROUTE_53_RESOLVED_DOMAIN` matches on the domain that the connection's destination IP address was resolved for by the Route 53 Resolver, and takes effect only when `route53_resolved_ip_validation` is configured on the firewall policy.
 
 * `targets` - (Required) Set of domains that you want to inspect for in your traffic flows.
 
