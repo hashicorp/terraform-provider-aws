@@ -11,15 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,101 +25,30 @@ import (
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_internet_gateway")
 func newInternetGatewayResourceAsListResource() inttypes.ListResourceForSDK {
-	l := internetGatewayListResource{}
-	l.SetResourceSchema(resourceInternetGateway())
+	return framework.NewSDKListResource(resourceInternetGateway(), framework.SDKListSpec[awstypes.InternetGateway, internetGatewayListResourceModel]{
+		ConfigSchema: listInternetGatewayConfigSchema,
+		Items: func(ctx context.Context, c *conns.AWSClient, query internetGatewayListResourceModel) (iter.Seq2[awstypes.InternetGateway, error], diag.Diagnostics) {
+			var input ec2.DescribeInternetGatewaysInput
+			if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+				return nil, diags
+			}
 
-	return &l
-}
-
-var _ list.ListResource = &internetGatewayListResource{}
-
-type internetGatewayListResource struct {
-	framework.ListResourceWithSDKv2Resource
+			return listInternetGateways(ctx, c.EC2Client(ctx), &input), nil
+		},
+		ID: func(ig awstypes.InternetGateway, _ internetGatewayListResourceModel) string {
+			return aws.ToString(ig.InternetGatewayId)
+		},
+		Flatten: resourceInternetGatewayFlatten,
+		DisplayName: func(ig awstypes.InternetGateway) string {
+			return listDisplayName(ig.Tags, aws.ToString(ig.InternetGatewayId))
+		},
+	})
 }
 
 type internetGatewayListResourceModel struct {
 	framework.WithRegionModel
 	InternetGatewayIDs fwtypes.ListValueOf[types.String] `tfsdk:"internet_gateway_ids"`
 	Filters            customListFilters                 `tfsdk:"filter"`
-}
-
-func (l *internetGatewayListResource) ListResourceConfigSchema(ctx context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			"internet_gateway_ids": listschema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-		},
-		Blocks: map[string]listschema.Block{
-			names.AttrFilter: customListFiltersBlock(ctx),
-		},
-	}
-}
-
-func (l *internetGatewayListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.EC2Client(ctx)
-
-	var query internetGatewayListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	var input ec2.DescribeInternetGatewaysInput
-	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
-	}
-
-	tflog.Info(ctx, "Listing resources")
-	stream.Results = func(yield func(list.ListResult) bool) {
-		for item, err := range listInternetGateways(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			id := aws.ToString(item.InternetGatewayId)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
-
-			result := request.NewListResult(ctx)
-			tags := keyValueTags(ctx, item.Tags)
-
-			rd := l.ResourceData()
-			rd.SetId(id)
-
-			if request.IncludeResource {
-				if err := resourceInternetGatewayFlatten(ctx, awsClient, &item, rd); err != nil {
-					tflog.Error(ctx, "Reading EC2 Internet Gateway", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			if v, ok := tags["Name"]; ok {
-				result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), id)
-			} else {
-				result.DisplayName = id
-			}
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
 }
 
 func listInternetGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInternetGatewaysInput) iter.Seq2[awstypes.InternetGateway, error] {
@@ -140,5 +67,20 @@ func listInternetGateways(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 				}
 			}
 		}
+	}
+}
+
+func listInternetGatewayConfigSchema(ctx context.Context) listschema.Schema {
+	return listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			"internet_gateway_ids": listschema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+			},
+		},
+		Blocks: map[string]listschema.Block{
+			names.AttrFilter: customListFiltersBlock(ctx),
+		},
 	}
 }
