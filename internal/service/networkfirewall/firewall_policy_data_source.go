@@ -83,6 +83,36 @@ func dataSourceFirewallPolicy() *schema.Resource {
 									},
 								},
 							},
+							"route53_resolved_ip_validation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAction: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"bypass_destination_validation_ip_ranges": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"dns_expiry_exception_policy": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"dns_firewall_rule_group_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"source_ip_ranges": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
 							"stateful_default_actions": {
 								Type:     schema.TypeSet,
 								Computed: true,

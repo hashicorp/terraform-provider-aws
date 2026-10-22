@@ -41,6 +41,7 @@ func TestAccNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.enable_tls_session_holding", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "0"),
@@ -173,6 +174,125 @@ func TestAccNetworkFirewallFirewallPolicy_policyVariables(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:pass"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewallPolicy_route53ResolvedIPValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var firewallPolicy1, firewallPolicy2, firewallPolicy3, firewallPolicy4 networkfirewall.DescribeFirewallPolicyOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+	dnsFirewallRuleGroupResourceName := "aws_route53_resolver_firewall_rule_group.test.0"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyConfig_route53ResolvedIPValidation(rName, "DROP", "CONTINUE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.action", string(awstypes.Route53ResolvedIPValidationActionDrop)),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.bypass_destination_validation_ip_ranges.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.dns_expiry_exception_policy", string(awstypes.DNSExpiryExceptionPolicyContinue)),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.dns_firewall_rule_group_id", dnsFirewallRuleGroupResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.source_ip_ranges.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallPolicyConfig_route53ResolvedIPValidationIPRanges(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy2),
+					testAccCheckFirewallPolicyNotRecreated(&firewallPolicy1, &firewallPolicy2),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.action", string(awstypes.Route53ResolvedIPValidationActionReject)),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.bypass_destination_validation_ip_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.bypass_destination_validation_ip_ranges.*", "192.0.2.0/24"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.bypass_destination_validation_ip_ranges.*", "2001:db8::/32"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.dns_expiry_exception_policy", string(awstypes.DNSExpiryExceptionPolicyDrop)),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.dns_firewall_rule_group_id", dnsFirewallRuleGroupResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.source_ip_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.source_ip_ranges.*", "10.0.0.0/16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.source_ip_ranges.*", "10.1.0.0/16"),
+				),
+			},
+			{
+				Config: testAccFirewallPolicyConfig_route53ResolvedIPValidationIPRangesUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy3),
+					testAccCheckFirewallPolicyNotRecreated(&firewallPolicy2, &firewallPolicy3),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.bypass_destination_validation_ip_ranges.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.source_ip_ranges.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.source_ip_ranges.*", "10.2.0.0/16"),
+				),
+			},
+			{
+				Config: testAccFirewallPolicyConfig_route53ResolvedIPValidationRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy4),
+					testAccCheckFirewallPolicyNotRecreated(&firewallPolicy3, &firewallPolicy4),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewallPolicy_route53ResolvedIPValidationUpdateRuleGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	var firewallPolicy1, firewallPolicy2 networkfirewall.DescribeFirewallPolicyOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyConfig_route53ResolvedIPValidationRuleGroupIndex(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy1),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.dns_firewall_rule_group_id", "aws_route53_resolver_firewall_rule_group.test.0", names.AttrID),
+				),
+			},
+			{
+				Config: testAccFirewallPolicyConfig_route53ResolvedIPValidationRuleGroupIndex(rName, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy2),
+					testAccCheckFirewallPolicyNotRecreated(&firewallPolicy1, &firewallPolicy2),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.route53_resolved_ip_validation.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.dns_firewall_rule_group_id", "aws_route53_resolver_firewall_rule_group.test.1", names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1594,6 +1714,108 @@ resource "aws_networkfirewall_firewall_policy" "test" {
   }
 }
 `, rName)
+}
+
+func testAccFirewallPolicyConfig_baseRoute53ResolverFirewallRuleGroup(rName string, count int) string {
+	return fmt.Sprintf(`
+resource "aws_route53_resolver_firewall_rule_group" "test" {
+  count = %[2]d
+
+  name = "%[1]s-${count.index}"
+}
+`, rName, count)
+}
+
+func testAccFirewallPolicyConfig_route53ResolvedIPValidation(rName, action, dnsExpiryExceptionPolicy string) string {
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseRoute53ResolverFirewallRuleGroup(rName, 1), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+
+    route53_resolved_ip_validation {
+      action                      = %[2]q
+      dns_expiry_exception_policy = %[3]q
+      dns_firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.test[0].id
+    }
+  }
+}
+`, rName, action, dnsExpiryExceptionPolicy))
+}
+
+func testAccFirewallPolicyConfig_route53ResolvedIPValidationIPRanges(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseRoute53ResolverFirewallRuleGroup(rName, 1), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+
+    route53_resolved_ip_validation {
+      action                                  = "REJECT"
+      bypass_destination_validation_ip_ranges = ["192.0.2.0/24", "2001:db8::/32"]
+      dns_expiry_exception_policy             = "DROP"
+      dns_firewall_rule_group_id              = aws_route53_resolver_firewall_rule_group.test[0].id
+      source_ip_ranges                        = ["10.0.0.0/16", "10.1.0.0/16"]
+    }
+  }
+}
+`, rName))
+}
+
+func testAccFirewallPolicyConfig_route53ResolvedIPValidationIPRangesUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseRoute53ResolverFirewallRuleGroup(rName, 1), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+
+    route53_resolved_ip_validation {
+      action                      = "REJECT"
+      dns_expiry_exception_policy = "DROP"
+      dns_firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.test[0].id
+      source_ip_ranges            = ["10.2.0.0/16"]
+    }
+  }
+}
+`, rName))
+}
+
+func testAccFirewallPolicyConfig_route53ResolvedIPValidationRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseRoute53ResolverFirewallRuleGroup(rName, 1), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+  }
+}
+`, rName))
+}
+
+func testAccFirewallPolicyConfig_route53ResolvedIPValidationRuleGroupIndex(rName string, index int) string {
+	return acctest.ConfigCompose(testAccFirewallPolicyConfig_baseRoute53ResolverFirewallRuleGroup(rName, 2), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+
+    route53_resolved_ip_validation {
+      action                      = "DROP"
+      dns_expiry_exception_policy = "CONTINUE"
+      dns_firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.test[%[2]d].id
+    }
+  }
+}
+`, rName, index))
 }
 
 func testAccFirewallPolicyConfig_ruleOrderOnly(rName, ruleOrder string) string {
