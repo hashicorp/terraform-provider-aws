@@ -566,7 +566,17 @@ func multiRegionAccessPointARN(ctx context.Context, c *conns.AWSClient, alias st
 }
 
 func resourceMultiRegionAccessPointFlatten(ctx context.Context, awsClient *conns.AWSClient, accessPoint *types.MultiRegionAccessPointReport, d *schema.ResourceData) error {
-	accountID := awsClient.AccountID(ctx)
+	// account_id is ForceNew, so it has to come from the account the resource ID
+	// names rather than whichever account the provider happens to be using. Both
+	// callers set the ID before flattening. A name-only ID comes from identity
+	// import, where the provider account is the right answer.
+	accountID, _, err := multiRegionAccessPointParseResourceID(d.Id())
+	if err != nil {
+		return err
+	}
+	if accountID == "" {
+		accountID = awsClient.AccountID(ctx)
+	}
 
 	alias := aws.ToString(accessPoint.Alias)
 	d.Set(names.AttrAccountID, accountID)
