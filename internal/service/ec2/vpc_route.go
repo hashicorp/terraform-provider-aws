@@ -379,6 +379,12 @@ func resourceRouteFlatten(d *schema.ResourceData, route *awstypes.Route) diag.Di
 
 func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	// If no route target attributes changed, there is nothing to update via the API.
+	if !d.HasChanges(routeValidTargets...) {
+		return diags
+	}
+
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
