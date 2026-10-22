@@ -38,6 +38,10 @@ func resourceConnectionConfirmation() *schema.Resource {
 				},
 			}
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
@@ -58,7 +62,7 @@ func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(connectionID)
 
-	if _, err := waitConnectionConfirmed(ctx, conn, d.Id()); err != nil {
+	if _, err := waitConnectionConfirmed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Connection (%s) confirm: %s", d.Id(), err)
 	}
 
@@ -84,10 +88,7 @@ func resourceConnectionConfirmationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func waitConnectionConfirmed(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) { //nolint:unparam
-	const (
-		timeout = 10 * time.Minute
-	)
+func waitConnectionConfirmed(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateRequested),
 		Target:  enum.Slice(awstypes.ConnectionStateAvailable),
