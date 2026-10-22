@@ -1,0 +1,40 @@
+[
+  {
+    "service": "exampletagsnohandlers",
+    "resource_type": "aws_exampletagsnohandlers_thing",
+    "plugin_type": "SDKv2",
+    "expr": "resourceThing",
+    "location": "internal/service/exampletagsnohandlers/thing.go:25",
+    "create": {
+      "expr": "resourceThingCreate",
+      "location": "internal/service/exampletagsnohandlers/thing.go:48",
+      "sdk_calls": [
+        "exampletagsnohandlers.CreateThing",
+        "exampletagsnohandlers.DescribeThing"
+      ]
+    },
+    "read": {
+      "expr": "resourceThingRead",
+      "location": "internal/service/exampletagsnohandlers/thing.go:69",
+      "sdk_calls": [
+        "exampletagsnohandlers.DescribeThing"
+      ]
+    },
+    "update": {
+      "expr": "resourceThingUpdate",
+      "location": "internal/service/exampletagsnohandlers/thing.go:93",
+      "sdk_calls": [
+        "exampletagsnohandlers.DescribeThing",
+        "exampletagsnohandlers.UpdateThing"
+      ]
+    },
+    "delete": {
+      "expr": "resourceThingDelete",
+      "location": "internal/service/exampletagsnohandlers/thing.go:111",
+      "sdk_calls": [
+        "exampletagsnohandlers.DeleteThing"
+      ]
+    },
+    "tags": {}
+  }
+]
