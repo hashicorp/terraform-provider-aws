@@ -60,8 +60,8 @@ func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "confirming Direct Connect Connection (%s): %s", connectionID, err)
 	}
 
-	if _, err := waitConnectionConfirmed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Connection (%s) confirm: %s", d.Id(), err)
+	if _, err := waitConnectionConfirmed(ctx, conn, connectionID, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Connection (%s) confirm: %s", connectionID, err)
 	}
 
 	// Setting ID is deferred until after the waiter to prevent a timeout from producing
