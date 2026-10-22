@@ -381,7 +381,7 @@ make makefile-lint
 
 ### Go Fix Check
 
-This check ensures that code uses current idiomatic Go. It runs `go fix -diff ./...`, which uses the modernizers built into the Go toolchain (`go tool fix help` lists them) and fails if any fixes apply.
+This check ensures that code uses current idiomatic Go. It runs `go fix -diff ./...`, which uses the fixers built into the Go toolchain (`go tool fix help` lists them) and fails if any fixes apply.
 
 Use the `fix-check` target to run the check on all packages, or limit it to a service package with `PKG`:
 
@@ -409,7 +409,7 @@ make fix
 make fix PKG=ec2
 ```
 
-The legacy `modern-check` and `modern-fix` targets are aliases for `fix-check` and `fix`.
+The legacy `modern-check`, `modern-fix`, and `modern-fix-core` targets are aliases for `fix-check`, `fix`, and `fix-core`.
 
 ### PR Target Check
 

@@ -358,7 +358,7 @@ examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
 		--disable-rule=terraform_typed_variables
 
-fix: prereq-go ## Apply go fix modernizers (all packages, or scoped to a service with PKG/K)
+fix: prereq-go ## Apply go fix (all packages, or scoped to a service with PKG/K)
 	@echo "make: Applying go fix..."
 	@$(GO_VER) fix $(TEST)
 
@@ -367,6 +367,11 @@ fix-check: prereq-go ## [CI] Go Fix Check / go fix (all packages, or scoped to a
 	@$(GO_VER) fix -diff $(TEST)
 
 fix-constants: semgrep-fix-constants fmt ## Use Semgrep to fix constants
+
+fix-core: prereq-go ## Apply go fix in core directories (non-internal/service)
+	@echo "make: Applying go fix in core directories..."
+	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/'); \
+	$(GO_VER) fix $$core_pkgs
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
@@ -521,10 +526,7 @@ modern-check: fix-check ## Legacy alias to fix-check
 
 modern-fix: fix ## Legacy alias to fix
 
-modern-fix-core: prereq-go ## Fix checks for modern Go code in core directories
-	@echo "make: Fixing checks for modern Go code in core directories..."
-	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/'); \
-	$(GO_VER) fix $$core_pkgs
+modern-fix-core: fix-core ## Legacy alias to fix-core
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
@@ -578,7 +580,7 @@ quick-fix-core-heading: ## [internal] Just a heading for quick-fix-core
 	@echo "make: Quick fixes for core (non-service) directories..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core modern-fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
+quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
 
 quick-fix-heading: ## [internal] Just a heading for quick-fix
 	@echo "make: Quick fixes..."
@@ -1355,6 +1357,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	fix \
 	fix-check \
 	fix-constants \
+	fix-core \
 	fix-imports \
 	fix-imports-core \
 	fmt \
