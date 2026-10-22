@@ -11,101 +11,35 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/configservice/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_config_remediation_configuration")
 func newRemediationConfigurationResourceAsListResource() inttypes.ListResourceForSDK {
-	l := remediationConfigurationListResource{}
-	l.SetResourceSchema(resourceRemediationConfiguration())
-	return &l
-}
+	return framework.NewSDKListResource(resourceRemediationConfiguration(), framework.SDKListSpec[awstypes.RemediationConfiguration, listRemediationConfigurationModel]{
+		ConfigSchema: listRemediationConfigurationConfigSchema,
+		Items: func(ctx context.Context, c *conns.AWSClient, query listRemediationConfigurationModel) (iter.Seq2[awstypes.RemediationConfiguration, error], diag.Diagnostics) {
+			input := configservice.DescribeRemediationConfigurationsInput{
+				ConfigRuleNames: fwflex.ExpandFrameworkStringValueList(ctx, query.ConfigRuleNames),
+			}
 
-var _ list.ListResource = &remediationConfigurationListResource{}
-
-type remediationConfigurationListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *remediationConfigurationListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			"config_rule_names": listschema.ListAttribute{
-				ElementType: types.StringType,
-				CustomType:  fwtypes.ListOfStringType,
-				Required:    true,
-				Description: "Names of the AWS Config rules.",
-			},
+			return listRemediationConfigurations(ctx, c.ConfigServiceClient(ctx), &input), nil
 		},
-	}
-}
-
-func (l *remediationConfigurationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := l.Meta().ConfigServiceClient(ctx)
-
-	var query listRemediationConfigurationModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	configRuleNames := fwflex.ExpandFrameworkStringValueList(ctx, query.ConfigRuleNames)
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		input := configservice.DescribeRemediationConfigurationsInput{
-			ConfigRuleNames: configRuleNames,
-		}
-		for item, err := range listRemediationConfigurations(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			arn := aws.ToString(item.Arn)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
-
-			result := request.NewListResult(ctx)
-
-			name := aws.ToString(item.ConfigRuleName)
-			rd := l.ResourceData()
-			rd.SetId(name)
-			rd.Set("config_rule_name", name)
-
-			if request.IncludeResource {
-				if err := resourceRemediationConfigurationFlatten(ctx, &item, rd); err != nil {
-					tflog.Error(ctx, "Reading Config Remediation Configuration", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			result.DisplayName = name
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+		ID: func(rc awstypes.RemediationConfiguration, _ listRemediationConfigurationModel) string {
+			return aws.ToString(rc.ConfigRuleName)
+		},
+		Flatten: resourceRemediationConfigurationFlatten,
+		DisplayName: func(rc awstypes.RemediationConfiguration) string {
+			return aws.ToString(rc.ConfigRuleName)
+		},
+	})
 }
 
 type listRemediationConfigurationModel struct {
@@ -126,5 +60,18 @@ func listRemediationConfigurations(ctx context.Context, conn *configservice.Clie
 				return
 			}
 		}
+	}
+}
+
+func listRemediationConfigurationConfigSchema(_ context.Context) listschema.Schema {
+	return listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			"config_rule_names": listschema.ListAttribute{
+				ElementType: types.StringType,
+				CustomType:  fwtypes.ListOfStringType,
+				Required:    true,
+				Description: "Names of the AWS Config rules.",
+			},
+		},
 	}
 }

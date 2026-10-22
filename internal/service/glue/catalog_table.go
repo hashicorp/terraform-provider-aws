@@ -723,14 +723,21 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceCatalogTableFlatten(ctx, c, catalogID, dbName, name, table, d); err != nil {
+	if err := resourceCatalogTableFlatten(ctx, c, table, d); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceCatalogTableFlatten(ctx context.Context, c *conns.AWSClient, catalogID, dbName, name string, table *awstypes.Table, d *schema.ResourceData) error {
+func resourceCatalogTableFlatten(ctx context.Context, c *conns.AWSClient, table *awstypes.Table, d *schema.ResourceData) error {
+	// The catalog, database, and table name are all carried by the resource ID,
+	// which the caller has already set.
+	catalogID, dbName, name, err := catalogTableParseResourceID(d.Id())
+	if err != nil {
+		return err
+	}
+
 	conn := c.GlueClient(ctx)
 
 	d.Set(names.AttrARN, tableARN(ctx, c, dbName, name))

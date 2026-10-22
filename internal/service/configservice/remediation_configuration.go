@@ -222,7 +222,7 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Remediation Configuration (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceRemediationConfigurationFlatten(ctx, remediationConfiguration, d); err != nil {
+	if err := resourceRemediationConfigurationFlatten(ctx, meta.(*conns.AWSClient), remediationConfiguration, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -260,7 +260,7 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceRemediationConfigurationFlatten(_ context.Context, remediationConfiguration *types.RemediationConfiguration, d *schema.ResourceData) error {
+func resourceRemediationConfigurationFlatten(_ context.Context, _ *conns.AWSClient, remediationConfiguration *types.RemediationConfiguration, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, remediationConfiguration.Arn)
 	d.Set("automatic", remediationConfiguration.Automatic)
 	d.Set("config_rule_name", remediationConfiguration.ConfigRuleName)

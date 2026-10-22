@@ -270,7 +270,7 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Config Rule (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceConfigRuleFlatten(ctx, rule, d); err != nil {
+	if err := resourceConfigRuleFlatten(ctx, meta.(*conns.AWSClient), rule, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -307,7 +307,7 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceConfigRuleFlatten(_ context.Context, rule *types.ConfigRule, d *schema.ResourceData) error {
+func resourceConfigRuleFlatten(_ context.Context, _ *conns.AWSClient, rule *types.ConfigRule, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, rule.ConfigRuleArn)
 	d.Set(names.AttrDescription, rule.Description)
 	if err := d.Set("evaluation_mode", flattenEvaluationModeConfigurations(rule.EvaluationModes)); err != nil {
