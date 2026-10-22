@@ -18,21 +18,15 @@ import (
 // StatementModelMaxLevel is the maximum nesting depth for logical statements.
 const StatementModelMaxLevel = 3
 
-// AWS WAF only accepts some statements in a logical statement:
+// Statements nested in a logical statement only offer the statement types AWS WAF accepts there:
 //   - rate_based_statement, managed_rule_group_statement and rule_group_reference_statement
 //     are only valid at the top level of a rule.
 //   - and_statement can't directly contain and_statement, and or_statement can't directly
 //     contain or_statement. not_statement can contain any logical statement.
 //   - and_statement and or_statement need at least 2 statements.
-//
-// The statements AWS WAF rejects are kept in the schema but fail validation when populated, so
-// configurations that never populate them, such as empty dynamic blocks, stay valid.
 
 // webACLRuleAndChildStatementLevel0Model is a statement nested directly in an and_statement at level 0.
 type webACLRuleAndChildStatementLevel0Model struct {
-	ManagedRuleGroupStatement         fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel]   `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement                fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]          `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement       fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]       `tfsdk:"rule_group_reference_statement"`
 	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
 	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
@@ -47,9 +41,6 @@ type webACLRuleAndChildStatementLevel0Model struct {
 
 // webACLRuleOrChildStatementLevel0Model is a statement nested directly in an or_statement at level 0.
 type webACLRuleOrChildStatementLevel0Model struct {
-	ManagedRuleGroupStatement         fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel]   `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement                fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]          `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement       fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]       `tfsdk:"rule_group_reference_statement"`
 	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
 	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
@@ -64,9 +55,6 @@ type webACLRuleOrChildStatementLevel0Model struct {
 
 // webACLRuleNotChildStatementLevel0Model is the statement nested in a not_statement at level 0.
 type webACLRuleNotChildStatementLevel0Model struct {
-	ManagedRuleGroupStatement         fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel]   `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement                fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]          `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement       fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]       `tfsdk:"rule_group_reference_statement"`
 	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
 	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
@@ -93,12 +81,8 @@ type webACLRuleOrStatementLevel0Model struct {
 
 // webACLRuleAndChildStatementLevel1Model is a statement nested directly in an and_statement at level 1.
 type webACLRuleAndChildStatementLevel1Model struct {
-	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel0Model]                `tfsdk:"and_statement"`
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel0Model]                `tfsdk:"not_statement"`
 	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleOrStatementLevel0Model]                 `tfsdk:"or_statement"`
-	ManagedRuleGroupStatement         fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel]   `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement                fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]          `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement       fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]       `tfsdk:"rule_group_reference_statement"`
 	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
 	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
@@ -113,12 +97,8 @@ type webACLRuleAndChildStatementLevel1Model struct {
 
 // webACLRuleOrChildStatementLevel1Model is a statement nested directly in an or_statement at level 1.
 type webACLRuleOrChildStatementLevel1Model struct {
-	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleOrStatementLevel0Model]                 `tfsdk:"or_statement"`
 	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel0Model]                `tfsdk:"and_statement"`
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel0Model]                `tfsdk:"not_statement"`
-	ManagedRuleGroupStatement         fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel]   `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement                fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]          `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement       fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]       `tfsdk:"rule_group_reference_statement"`
 	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
 	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
@@ -136,9 +116,6 @@ type webACLRuleNotChildStatementLevel1Model struct {
 	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel0Model]                `tfsdk:"and_statement"`
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel0Model]                `tfsdk:"not_statement"`
 	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleOrStatementLevel0Model]                 `tfsdk:"or_statement"`
-	ManagedRuleGroupStatement         fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel]   `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement                fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]          `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement       fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]       `tfsdk:"rule_group_reference_statement"`
 	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
 	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
@@ -165,12 +142,8 @@ type webACLRuleOrStatementLevel1Model struct {
 
 // webACLRuleAndChildStatementLevel2Model is a statement nested directly in an and_statement at level 2.
 type webACLRuleAndChildStatementLevel2Model struct {
-	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel1Model]                `tfsdk:"and_statement"`
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel1Model]                `tfsdk:"not_statement"`
 	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleOrStatementLevel1Model]                 `tfsdk:"or_statement"`
-	ManagedRuleGroupStatement         fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel]   `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement                fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]          `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement       fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]       `tfsdk:"rule_group_reference_statement"`
 	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
 	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
@@ -185,12 +158,8 @@ type webACLRuleAndChildStatementLevel2Model struct {
 
 // webACLRuleOrChildStatementLevel2Model is a statement nested directly in an or_statement at level 2.
 type webACLRuleOrChildStatementLevel2Model struct {
-	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleOrStatementLevel1Model]                 `tfsdk:"or_statement"`
 	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel1Model]                `tfsdk:"and_statement"`
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel1Model]                `tfsdk:"not_statement"`
-	ManagedRuleGroupStatement         fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel]   `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement                fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]          `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement       fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]       `tfsdk:"rule_group_reference_statement"`
 	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
 	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
@@ -208,9 +177,6 @@ type webACLRuleNotChildStatementLevel2Model struct {
 	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel1Model]                `tfsdk:"and_statement"`
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel1Model]                `tfsdk:"not_statement"`
 	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleOrStatementLevel1Model]                 `tfsdk:"or_statement"`
-	ManagedRuleGroupStatement         fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel]   `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement                fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]          `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement       fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]       `tfsdk:"rule_group_reference_statement"`
 	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
 	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
@@ -315,9 +281,6 @@ var andChildStatementBlockLevel0 = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
 	}
 
 	return schema.ListNestedBlock{
@@ -345,9 +308,6 @@ var orChildStatementBlockLevel0 = tfsync.OnceValueCtx(func(ctx context.Context) 
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
 	}
 
 	return schema.ListNestedBlock{
@@ -375,9 +335,6 @@ var notChildStatementBlockLevel0 = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
 	}
 
 	return schema.ListNestedBlock{
@@ -445,12 +402,8 @@ var andChildStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
 		"not_statement":                         notStatementBlockLevel0(ctx),
 		"or_statement":                          orStatementBlockLevel0(ctx),
-		"and_statement":                         notValidInLogicalStatement(andStatementBlockLevel0(ctx)),
 	}
 
 	return schema.ListNestedBlock{
@@ -478,12 +431,8 @@ var orChildStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context) 
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
 		"and_statement":                         andStatementBlockLevel0(ctx),
 		"not_statement":                         notStatementBlockLevel0(ctx),
-		"or_statement":                          notValidInLogicalStatement(orStatementBlockLevel0(ctx)),
 	}
 
 	return schema.ListNestedBlock{
@@ -511,9 +460,6 @@ var notChildStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
 		"and_statement":                         andStatementBlockLevel0(ctx),
 		"not_statement":                         notStatementBlockLevel0(ctx),
 		"or_statement":                          orStatementBlockLevel0(ctx),
@@ -584,12 +530,8 @@ var andChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
 		"not_statement":                         notStatementBlockLevel1(ctx),
 		"or_statement":                          orStatementBlockLevel1(ctx),
-		"and_statement":                         notValidInLogicalStatement(andStatementBlockLevel1(ctx)),
 	}
 
 	return schema.ListNestedBlock{
@@ -617,12 +559,8 @@ var orChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context) 
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
 		"and_statement":                         andStatementBlockLevel1(ctx),
 		"not_statement":                         notStatementBlockLevel1(ctx),
-		"or_statement":                          notValidInLogicalStatement(orStatementBlockLevel1(ctx)),
 	}
 
 	return schema.ListNestedBlock{
@@ -650,9 +588,6 @@ var notChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
 		"and_statement":                         andStatementBlockLevel1(ctx),
 		"not_statement":                         notStatementBlockLevel1(ctx),
 		"or_statement":                          orStatementBlockLevel1(ctx),
