@@ -145,6 +145,9 @@ func TestFindSDKResources(t *testing.T) {
 		"generated UpdateTags only": {
 			pkg: "exampletagsupdateonly",
 		},
+		"tagged without ListTags or UpdateTags": {
+			pkg: "exampletagsnohandlers",
+		},
 		"unanalyzed functions": {
 			pkg: "exampleunanalyzed",
 		},

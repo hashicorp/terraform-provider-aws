@@ -21,6 +21,7 @@ The service packages are mocks. Each is named for the behavior it covers and use
 | `internal/service/exampletags` | `ListTags`/`UpdateTags` shared by resource types and branching on them, calling another service's exported variables; one factory with several `@SDKResource` type names; `@Tags` without `identifierAttribute` |
 | `internal/service/exampletagsgen` | `ListTags`/`UpdateTags` shaped like generated code, which don't branch, with exported variables for other service packages |
 | `internal/service/exampletagsupdateonly` | Generated-style `UpdateTags` with `ListTags` only in a test file, and a Read that sets tags itself |
+| `internal/service/exampletagsnohandlers` | A tagged resource whose service package has neither `ListTags` nor `UpdateTags`, only generated tag conversion helpers, so its CRUD functions send and set tags themselves |
 | `internal/service/exampleunanalyzed` | A client passed to an SDK waiter and to an SDK presign client, which sdkmap doesn't analyze, and to an SDK paginator, which it does |
 | `internal/service/examplenogofiles` | A directory whose only Go file is excluded by a build constraint |
 | `internal/service/exampletestonly` | A directory containing only test files |
@@ -41,4 +42,5 @@ A new service package needs a test case in `TestFindSDKResources`; a golden file
 - `examplecustomizediff`: `aws_examplecustomizediff_variable`'s CustomizeDiff, a package-level `customdiff.All`, has its SDK calls but no `functions`; `aws_examplecustomizediff_factory_reference`'s CustomizeDiff has no SDK calls, because the resource factory it calls isn't followed.
 - `examplefuncrefs`: method values, e.g. `h.Upsert`, and `schema.NoopContext` have no `location`.
 - `exampletags`: each tagged resource's `tags` has the SDK calls of every resource type that shares `ListTags` and `UpdateTags`.
+- `exampletagsnohandlers`: the tagged resource has an empty `tags`, since there are no tag methods for the tags interceptor to call. An untagged resource has no `tags` at all.
 - `exampleunanalyzed`: SDK calls made through the SDK waiter and presign client are missing. The warnings sdkmap logs for them aren't in the golden files and aren't tested.
