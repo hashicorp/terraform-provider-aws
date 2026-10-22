@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -73,15 +74,6 @@ func (r *functionEndpointResource) Schema(ctx context.Context, req resource.Sche
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"endpoint_name": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 64),
-				},
-			},
 			// Editable in place: UpdateWebFunctionEndpoint accepts authType and
 			// the domain name survives the change (verified live 2026-10-05).
 			"auth_type": schema.StringAttribute{
@@ -92,6 +84,16 @@ func (r *functionEndpointResource) Schema(ctx context.Context, req resource.Sche
 				CustomType: fwtypes.StringEnumType[awstypes.AutoDeploymentMode](),
 				Optional:   true,
 				Computed:   true,
+				Validators: []validator.String{
+					tfstringvalidator.AlsoRequiresWhenEquals(
+						awstypes.AutoDeploymentModeDisabled,
+						path.MatchRoot("revision_weight"),
+					),
+					tfstringvalidator.ConflictsWithWhenNotEquals(
+						awstypes.AutoDeploymentModeDisabled,
+						path.MatchRoot("revision_weight"),
+					),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -103,6 +105,15 @@ func (r *functionEndpointResource) Schema(ctx context.Context, req resource.Sche
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"endpoint_name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 64),
 				},
 			},
 			names.AttrEndpointType: schema.StringAttribute{
@@ -177,41 +188,26 @@ func (r *functionEndpointResource) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *functionEndpointResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var cfg functionEndpointResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &cfg))
+	var data functionEndpointResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if cfg.AutoDeploymentMode.IsUnknown() || cfg.RevisionWeights.IsUnknown() || cfg.EndpointType.IsUnknown() {
+
+	if data.AutoDeploymentMode.IsUnknown() || data.EndpointType.IsUnknown() || data.RevisionWeights.IsUnknown() {
 		return
 	}
 
-	mode := awstypes.AutoDeploymentModeLatestRevision
-	if !cfg.AutoDeploymentMode.IsNull() {
-		mode = awstypes.AutoDeploymentMode(cfg.AutoDeploymentMode.ValueString())
-	}
-
-	weights, d := cfg.RevisionWeights.ToSlice(ctx)
+	weights, d := data.RevisionWeights.ToSlice(ctx)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	hasWeights := len(weights) > 0
 
-	if mode == awstypes.AutoDeploymentModeLatestRevision && hasWeights {
-		resp.Diagnostics.AddAttributeError(path.Root("revision_weights"),
-			"Invalid revision_weights",
-			"`revision_weights` must be omitted when `auto_deployment_mode` is `LatestRevision`.")
-	}
-	if mode == awstypes.AutoDeploymentModeDisabled && !hasWeights {
-		resp.Diagnostics.AddAttributeError(path.Root("revision_weights"),
-			"Missing revision_weights",
-			"`revision_weights` is required when `auto_deployment_mode` is `Disabled`.")
-	}
-	endpointType := cfg.EndpointType.ValueString()
-	multiRegional := endpointType == string(awstypes.EndpointTypeMultiRegion) || endpointType == string(awstypes.EndpointTypePerRegion)
-
-	if multiRegional && mode == awstypes.AutoDeploymentModeLatestRevision {
+	endpointType := data.EndpointType.ValueEnum()
+	multiRegional := endpointType == awstypes.EndpointTypeMultiRegion || endpointType == awstypes.EndpointTypePerRegion
+	if mode := data.AutoDeploymentMode.ValueEnum(); multiRegional && mode == awstypes.AutoDeploymentModeLatestRevision {
 		resp.Diagnostics.AddAttributeError(path.Root("auto_deployment_mode"),
 			"Invalid auto_deployment_mode",
 			fmt.Sprintf("%s endpoints require `auto_deployment_mode = \"Disabled\"` with explicit `revision_weights`.", endpointType))
@@ -222,7 +218,7 @@ func (r *functionEndpointResource) ValidateConfig(ctx context.Context, req resou
 	// (verified live 2026-10-05). A single region is valid when it is not the
 	// home region; the provider cannot tell at validation time, so that case
 	// is left to the API, whose error message names the resulting region set.
-	if endpointType == string(awstypes.EndpointTypePerRegion) && cfg.Regions.IsNull() {
+	if endpointType == awstypes.EndpointTypePerRegion && data.Regions.IsNull() {
 		resp.Diagnostics.AddAttributeError(path.Root("regions"),
 			"Missing regions",
 			fmt.Sprintf("%s endpoints require `regions` with at least one Region other than the home Region, which is added automatically.", endpointType))
@@ -557,8 +553,7 @@ func waitFunctionEndpointDeleted(ctx context.Context, conn *lambdaweb.Client, fu
 		// sits Pending for minutes while it replicates and settles in Failed when
 		// a region cannot take the revision, and both accept a delete: observing
 		// either one is a matter of when the first refresh lands.
-		Pending: enum.Slice(awstypes.EndpointStatePending, awstypes.EndpointStateActive,
-			awstypes.EndpointStateFailed, awstypes.EndpointStateDeleting),
+		Pending: enum.Values[awstypes.EndpointState](),
 		Target:  []string{},
 		Refresh: statusFunctionEndpoint(conn, functionName, endpointName),
 		Timeout: timeout,
