@@ -5,7 +5,6 @@ package lambdaweb
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"iter"
 	"time"
@@ -493,7 +492,7 @@ func waitFunctionRevisionActive(ctx context.Context, conn *lambdaweb.Client, fun
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionRevisionOutput); ok {
-		retry.SetLastError(err, errors.New(aws.ToString(out.StateReason)))
+		retry.SetLastError(err, revisionError(out))
 		return out, smarterr.NewError(err)
 	}
 

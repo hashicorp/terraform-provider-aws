@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 func endpointError(apiObject *lambdaweb.GetWebFunctionEndpointOutput) error {
@@ -37,4 +38,12 @@ func regionalEndpointError(apiObject awstypes.RegionalEndpoint) error {
 
 func regionalEndpointUpdateError(apiObject awstypes.RegionalEndpoint) error {
 	return fmt.Errorf("%s: %s", apiObject.UpdateStatus, aws.ToString(apiObject.UpdateStatusReason))
+}
+
+func revisionError(apiObject *lambdaweb.GetWebFunctionRevisionOutput) error {
+	return fmt.Errorf("%s: %w", aws.ToString(apiObject.StateReason), errors.Join(tfslices.ApplyToAll(apiObject.Errors, revisionErrorError)...))
+}
+
+func revisionErrorError(apiObject awstypes.RevisionError) error {
+	return fmt.Errorf("%s: %s: %s", aws.ToString(apiObject.Attribute), aws.ToString(apiObject.ErrorCode), aws.ToString(apiObject.ErrorMessage))
 }
