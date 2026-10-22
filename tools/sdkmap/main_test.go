@@ -714,6 +714,158 @@ func TestIsSDKPackage(t *testing.T) {
 	}
 }
 
+func TestCaseClauseFor(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		src   string // A switch statement.
+		value string
+		// wantClause is the index of the clause in the switch, or -1 for none.
+		wantClause int
+		wantOK     bool
+	}{
+		"matching case": {
+			src: `switch resourceType {
+			case "Role":
+				role()
+			case "User":
+				user()
+			}`,
+			value:      "User",
+			wantClause: 1,
+			wantOK:     true,
+		},
+		"case listing several values": {
+			src: `switch resourceType {
+			case "Bucket":
+				bucket()
+			case "Object", "ObjectCopy", "BucketObject":
+				object()
+			}`,
+			value:      "ObjectCopy",
+			wantClause: 1,
+			wantOK:     true,
+		},
+		"matching case without statements": {
+			src: `switch resourceType {
+			case "Role":
+			default:
+				other()
+			}`,
+			value:      "Role",
+			wantClause: 0,
+			wantOK:     true,
+		},
+		"default when no case matches": {
+			src: `switch resourceType {
+			case "Role":
+				role()
+			default:
+				other()
+			}`,
+			value:      "User",
+			wantClause: 1,
+			wantOK:     true,
+		},
+		"matching case before default": {
+			src: `switch resourceType {
+			default:
+				other()
+			case "Role":
+				role()
+			}`,
+			value:      "Role",
+			wantClause: 1,
+			wantOK:     true,
+		},
+		"no matching case and no default": {
+			src: `switch resourceType {
+			case "Role":
+				role()
+			}`,
+			value:      "User",
+			wantClause: -1,
+			wantOK:     true,
+		},
+		"no clauses": {
+			src:        `switch resourceType {}`,
+			value:      "Role",
+			wantClause: -1,
+			wantOK:     true,
+		},
+		"case that isn't a literal": {
+			src: `switch resourceType {
+			case "Role":
+				role()
+			case userType:
+				user()
+			}`,
+			value:      "Role",
+			wantClause: -1,
+		},
+		"case that isn't a string": {
+			src: `switch resourceType {
+			case 1:
+				one()
+			}`,
+			value:      "Role",
+			wantClause: -1,
+		},
+		"matching case falls through": {
+			src: `switch resourceType {
+			case "Role":
+				role()
+				fallthrough
+			case "User":
+				user()
+			}`,
+			value:      "Role",
+			wantClause: -1,
+		},
+		"default falls through": {
+			src: `switch resourceType {
+			default:
+				other()
+				fallthrough
+			case "Role":
+				role()
+			}`,
+			value:      "User",
+			wantClause: -1,
+		},
+		"other case falls through": {
+			src: `switch resourceType {
+			case "Role":
+				role()
+				fallthrough
+			case "User":
+				user()
+			}`,
+			value:      "User",
+			wantClause: 1,
+			wantOK:     true,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			s := mustParseSwitch(t, testCase.src)
+
+			clause, ok := caseClauseFor(s, testCase.value)
+
+			gotClause := -1
+			if clause != nil {
+				gotClause = slices.Index(s.Body.List, ast.Stmt(clause))
+			}
+			if gotClause != testCase.wantClause || ok != testCase.wantOK {
+				t.Errorf("caseClauseFor(%q) = clause %d, %t, want clause %d, %t", testCase.value, gotClause, ok, testCase.wantClause, testCase.wantOK)
+			}
+		})
+	}
+}
+
 // newTestAnalyzer returns an analyzer for testdataRoot with nothing loaded.
 func newTestAnalyzer() *analyzer {
 	return &analyzer{
@@ -743,6 +895,22 @@ func mustParseExpr(t *testing.T, src string) ast.Expr {
 		t.Fatalf("parsing %q: %s", src, err)
 	}
 	return expr
+}
+
+// mustParseSwitch parses a Go switch statement, failing the test if it is invalid.
+func mustParseSwitch(t *testing.T, src string) *ast.SwitchStmt {
+	t.Helper()
+
+	file, err := parser.ParseFile(token.NewFileSet(), "", "package p\n\nfunc f() {\n"+src+"\n}\n", 0)
+	if err != nil {
+		t.Fatalf("parsing %q: %s", src, err)
+	}
+	body := file.Decls[0].(*ast.FuncDecl).Body
+	s, ok := body.List[0].(*ast.SwitchStmt)
+	if !ok || len(body.List) != 1 {
+		t.Fatalf("%q is not a single switch statement", src)
+	}
+	return s
 }
 
 // firstDifference returns the first line, numbered from 1, at which got and want differ, and that
