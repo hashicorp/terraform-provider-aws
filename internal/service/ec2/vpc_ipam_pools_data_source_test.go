@@ -203,12 +203,20 @@ resource "aws_vpc_ipam_pool" "test1" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
   description    = "%[1]s-1"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_ipam_pool" "test2" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
   description    = "%[1]s-2"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_vpc_ipam_pools" "test" {
