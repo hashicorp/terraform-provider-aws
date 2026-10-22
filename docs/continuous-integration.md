@@ -381,7 +381,7 @@ make makefile-lint
 
 ### Modern Go Check
 
-This check ensures that code uses current idiomatic Go. Currently, the check is only run on a subset of services. To determine which services must have modern Go, check the `.github/workflows/modern_go.yml` file.
+This check ensures that code uses current idiomatic Go. It runs `go fix -diff ./...`, which uses the modernizers built into the Go toolchain (`go tool fix help` lists them) and fails if any fixes apply.
 
 Use the `modern-check` target to run the check:
 
