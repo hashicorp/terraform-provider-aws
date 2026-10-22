@@ -228,9 +228,10 @@ func TestParseAnnotations(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		doc           []string // nil means the function has no doc comment.
-		wantTypeNames []string
-		wantTagged    bool
+		doc                  []string // nil means the function has no doc comment.
+		wantTypeNames        []string
+		wantTagged           bool
+		wantTagsResourceType string
 	}{
 		"no doc": {},
 		"no annotations": {
@@ -358,8 +359,18 @@ func TestParseAnnotations(t *testing.T) {
 				`// @SDKResource("aws_s3_object", name="Object")`,
 				`// @Tags(identifierAttribute="arn", resourceType="Object")`,
 			},
-			wantTypeNames: []string{"aws_s3_object"},
-			wantTagged:    true,
+			wantTypeNames:        []string{"aws_s3_object"},
+			wantTagged:           true,
+			wantTagsResourceType: "Object",
+		},
+		"tags with resource type before identifier attribute": {
+			doc: []string{
+				`// @SDKResource("aws_s3_object", name="Object")`,
+				`// @Tags(resourceType="Object", identifierAttribute="arn")`,
+			},
+			wantTypeNames:        []string{"aws_s3_object"},
+			wantTagged:           true,
+			wantTagsResourceType: "Object",
 		},
 		"tags without arguments": {
 			doc: []string{
@@ -373,7 +384,18 @@ func TestParseAnnotations(t *testing.T) {
 				`// @SDKResource("aws_s3_object", name="Object")`,
 				`// @Tags(resourceType="Object")`,
 			},
-			wantTypeNames: []string{"aws_s3_object"},
+			wantTypeNames:        []string{"aws_s3_object"},
+			wantTagsResourceType: "Object",
+		},
+		"later tags resource type replaces earlier": {
+			doc: []string{
+				`// @SDKResource("aws_s3_object", name="Object")`,
+				`// @Tags(identifierAttribute="arn", resourceType="Object")`,
+				`// @Tags(resourceType="ObjectCopy")`,
+			},
+			wantTypeNames:        []string{"aws_s3_object"},
+			wantTagged:           true,
+			wantTagsResourceType: "ObjectCopy",
 		},
 		"tags with identifier attribute before tags without": {
 			doc: []string{
@@ -396,13 +418,16 @@ func TestParseAnnotations(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			gotTypeNames, gotTagged := parseAnnotations(toCommentGroup(testCase.doc))
+			gotTypeNames, gotTagged, gotTagsResourceType := parseAnnotations(toCommentGroup(testCase.doc))
 
 			if !slices.Equal(gotTypeNames, testCase.wantTypeNames) {
 				t.Errorf("type names = %q, want %q", gotTypeNames, testCase.wantTypeNames)
 			}
 			if gotTagged != testCase.wantTagged {
 				t.Errorf("tagged = %t, want %t", gotTagged, testCase.wantTagged)
+			}
+			if gotTagsResourceType != testCase.wantTagsResourceType {
+				t.Errorf("tags resource type = %q, want %q", gotTagsResourceType, testCase.wantTagsResourceType)
 			}
 		})
 	}
