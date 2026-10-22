@@ -353,7 +353,7 @@ func (v tokenVerifier) Verify(token string) (*Identity, error) {
 	}
 
 	// Obtain AWS Access Key ID from supplied credentials
-	accessKeyID := strings.Split(queryParamsLower.Get("x-amz-credential"), "/")[0]
+	accessKeyID, _, _ := strings.Cut(queryParamsLower.Get("x-amz-credential"), "/")
 
 	dateParam, err := time.Parse(dateHeaderFormat, date)
 	if err != nil {
