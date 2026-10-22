@@ -5,6 +5,7 @@ package acctest
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
@@ -32,8 +33,8 @@ type ConfigureWrapper func(next schema.ConfigureContextFunc) schema.ConfigureCon
 // wrapper in the slice runs outermost: its before-call code runs first
 // and its after-call code runs last. Nil wrappers are skipped.
 func chainConfigureWrappers(inner schema.ConfigureContextFunc, wrappers ...ConfigureWrapper) schema.ConfigureContextFunc {
-	for i := len(wrappers) - 1; i >= 0; i-- {
-		if w := wrappers[i]; w != nil {
+	for _, wrapper := range slices.Backward(wrappers) {
+		if w := wrapper; w != nil {
 			inner = w(inner)
 		}
 	}

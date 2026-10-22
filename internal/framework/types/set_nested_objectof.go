@@ -32,7 +32,7 @@ func NewSetNestedObjectTypeOf[T any](ctx context.Context, options ...NestedObjec
 	opts := newNestedObjectOfOptions(options...)
 
 	return setNestedObjectTypeOf[T]{
-		SetType:              basetypes.SetType{ElemType: NewObjectTypeOf[T](ctx)},
+		ElemType:             NewObjectTypeOf[T](ctx),
 		semanticEqualityFunc: opts.SemanticEqualityFunc,
 	}
 }
