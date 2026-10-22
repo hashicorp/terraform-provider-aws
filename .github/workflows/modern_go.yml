@@ -1,7 +1,7 @@
 # Copyright IBM Corp. 2014, 2026
 # "SPDX-License-Identifier: MPL-2.0"
 
-name: Modern Go Check
+name: Go Fix Check
 
 on:
   push:
@@ -24,8 +24,8 @@ permissions:
 
 jobs:
   modern:
-    name: Check for modern Go code
-    runs-on: custom-ubuntu-22.04-large
+    name: go fix
+    runs-on: custom-ubuntu-22.04-xl
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0

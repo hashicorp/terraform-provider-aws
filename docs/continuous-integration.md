@@ -379,7 +379,7 @@ Use the `makefile-lint` target to run the check:
 make makefile-lint
 ```
 
-### Modern Go Check
+### Go Fix Check
 
 This check ensures that code uses current idiomatic Go. It runs `go fix -diff ./...`, which uses the modernizers built into the Go toolchain (`go tool fix help` lists them) and fails if any fixes apply.
 
