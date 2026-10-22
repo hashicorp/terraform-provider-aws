@@ -16,8 +16,9 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_lambdaweb_endpoint", sweepFunctionEndpoints)
-	awsv2.Register("aws_lambdaweb_function", sweepFunctions, "aws_lambdaweb_endpoint")
+	awsv2.Register("aws_lambdaweb_function", sweepFunctions, "aws_lambdaweb_function_revision")
+	awsv2.Register("aws_lambdaweb_function_endpoint", sweepFunctionEndpoints)
+	awsv2.Register("aws_lambdaweb_function_revision", sweepFunctionRevisions, "aws_lambdaweb_function_endpoint")
 }
 
 func sweepFunctions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -60,6 +61,35 @@ func sweepFunctionEndpoints(ctx context.Context, client *conns.AWSClient) ([]swe
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newFunctionEndpointResource, client,
 				sweepfw.NewAttribute("function_name", functionName),
 				sweepfw.NewAttribute("endpoint_name", aws.ToString(v.EndpointName))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepFunctionRevisions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input lambdaweb.ListWebFunctionsInput
+	conn := client.LambdaWebClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	for v, err := range listFunctions(ctx, conn, &input) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		functionName := aws.ToString(v.FunctionName)
+		input := lambdaweb.ListWebFunctionRevisionsInput{
+			FunctionName: aws.String(functionName),
+		}
+		for v, err := range listFunctionRevisions(ctx, conn, &input) {
+			if err != nil {
+				return nil, smarterr.NewError(err)
+			}
+
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newFunctionEndpointResource, client,
+				sweepfw.NewAttribute("function_name", functionName),
+				sweepfw.NewAttribute("revision_id", aws.ToString(v.RevisionId))),
 			)
 		}
 	}

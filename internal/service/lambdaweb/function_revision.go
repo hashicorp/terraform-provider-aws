@@ -6,6 +6,8 @@ package lambdaweb
 import (
 	"context"
 	"errors"
+	"fmt"
+	"iter"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -34,6 +36,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -387,6 +390,27 @@ func (r *functionRevisionResource) flatten(ctx context.Context, revision *lambda
 	var diags diag.Diagnostics
 	diags.Append(fwflex.Flatten(ctx, revision, data)...)
 	return diags
+}
+
+func listFunctionRevisions(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionRevisionsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[awstypes.FunctionRevisionSummary, error] {
+	return tfiter.ConcatValuesWithError(listFunctionRevisionPages(ctx, conn, input, optFns...))
+}
+
+func listFunctionRevisionPages(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionRevisionsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[[]awstypes.FunctionRevisionSummary, error] {
+	return func(yield func([]awstypes.FunctionRevisionSummary, error) bool) {
+		pages := lambdaweb.NewListWebFunctionRevisionsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing Lambda Web Function Revisions: %w", err))
+				return
+			}
+
+			if !yield(page.Revisions, nil) {
+				return
+			}
+		}
+	}
 }
 
 func findWebFunctionRevisionByTwoPartKey(ctx context.Context, conn *lambdaweb.Client, functionName, revisionID string) (*lambdaweb.GetWebFunctionRevisionOutput, error) {
