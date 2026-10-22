@@ -919,6 +919,27 @@ func (r *functionResource) flattenEndpoint(ctx context.Context, endpoint *lambda
 	return diags
 }
 
+func listFunctions(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[awstypes.FunctionSummary, error] {
+	return tfiter.ConcatValuesWithError(listFunctionPages(ctx, conn, input, optFns...))
+}
+
+func listFunctionPages(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[[]awstypes.FunctionSummary, error] {
+	return func(yield func([]awstypes.FunctionSummary, error) bool) {
+		pages := lambdaweb.NewListWebFunctionsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing Lambda Web Functions: %w", err))
+				return
+			}
+
+			if !yield(page.Functions, nil) {
+				return
+			}
+		}
+	}
+}
+
 func findWebFunctionByName(ctx context.Context, conn *lambdaweb.Client, name string) (*lambdaweb.GetWebFunctionOutput, error) {
 	input := lambdaweb.GetWebFunctionInput{
 		FunctionName: aws.String(name),

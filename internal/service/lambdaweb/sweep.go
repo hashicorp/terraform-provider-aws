@@ -21,72 +21,47 @@ func RegisterSweepers() {
 }
 
 func sweepFunctions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input lambdaweb.ListWebFunctionsInput
 	conn := client.LambdaWebClient(ctx)
 	var sweepResources []sweep.Sweepable
 
-	input := lambdaweb.ListWebFunctionsInput{}
-	for {
-		out, err := conn.ListWebFunctions(ctx, &input)
+	for v, err := range listFunctions(ctx, conn, &input) {
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
 
-		for _, v := range out.Functions {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newFunctionResource, client,
-				sweepfw.NewAttribute("function_name", aws.ToString(v.FunctionName))),
-			)
-		}
-
-		if out.NextToken == nil {
-			break
-		}
-		input.NextToken = out.NextToken
+		sweepResources = append(sweepResources, sweepfw.NewSweepResource(newFunctionResource, client,
+			sweepfw.NewAttribute("function_name", aws.ToString(v.FunctionName))),
+		)
 	}
 
 	return sweepResources, nil
 }
 
 func sweepFunctionEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input lambdaweb.ListWebFunctionsInput
 	conn := client.LambdaWebClient(ctx)
 	var sweepResources []sweep.Sweepable
 
-	functionsInput := lambdaweb.ListWebFunctionsInput{}
-	for {
-		functionsOut, err := conn.ListWebFunctions(ctx, &functionsInput)
+	for v, err := range listFunctions(ctx, conn, &input) {
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
 
-		for _, function := range functionsOut.Functions {
-			functionName := aws.ToString(function.FunctionName)
-
-			endpointsInput := lambdaweb.ListWebFunctionEndpointsInput{
-				FunctionName: aws.String(functionName),
-			}
-			for {
-				endpointsOut, err := conn.ListWebFunctionEndpoints(ctx, &endpointsInput)
-				if err != nil {
-					return nil, smarterr.NewError(err)
-				}
-
-				for _, endpoint := range endpointsOut.Endpoints {
-					sweepResources = append(sweepResources, sweepfw.NewSweepResource(newFunctionEndpointResource, client,
-						sweepfw.NewAttribute("function_name", functionName),
-						sweepfw.NewAttribute("endpoint_name", aws.ToString(endpoint.EndpointName))),
-					)
-				}
-
-				if endpointsOut.NextToken == nil {
-					break
-				}
-				endpointsInput.NextToken = endpointsOut.NextToken
-			}
+		functionName := aws.ToString(v.FunctionName)
+		input := lambdaweb.ListWebFunctionEndpointsInput{
+			FunctionName: aws.String(functionName),
 		}
+		for v, err := range listFunctionEndpoints(ctx, conn, &input) {
+			if err != nil {
+				return nil, smarterr.NewError(err)
+			}
 
-		if functionsOut.NextToken == nil {
-			break
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newFunctionEndpointResource, client,
+				sweepfw.NewAttribute("function_name", functionName),
+				sweepfw.NewAttribute("endpoint_name", aws.ToString(v.EndpointName))),
+			)
 		}
-		functionsInput.NextToken = functionsOut.NextToken
 	}
 
 	return sweepResources, nil
