@@ -389,6 +389,12 @@ Use the `modern-check` target to run the check:
 make modern-check
 ```
 
+In CI, the check is split across parallel jobs using round-robin sharding by package. To reproduce a specific shard locally, use the `go-fix-check-shard` target:
+
+```console
+make go-fix-check-shard SHARD=0 TOTAL_SHARDS=4
+```
+
 Use the `fix` target to automatically apply fixes to all packages, or limit it to a service package with `PKG`:
 
 ```console

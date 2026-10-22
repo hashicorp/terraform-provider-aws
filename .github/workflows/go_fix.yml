@@ -11,7 +11,7 @@ on:
   pull_request:
     paths:
       - "**/*.go"
-      - .github/workflows/modern_go.yml
+      - .github/workflows/go_fix.yml
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
@@ -23,9 +23,14 @@ permissions:
   contents: read # required for checkout
 
 jobs:
-  modern:
-    name: go fix
+  go_fix:
+    name: go fix (shard ${{ matrix.shard }})
     runs-on: custom-ubuntu-22.04-xl
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+        total-shards: [4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -50,6 +55,5 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      # Don't use make target as it downloads a Go version.
-      # - run: make TEST=./... modern-check
-      - run: go fix -diff ./...
+      - name: go fix shard ${{ matrix.shard }}
+        run: make go-fix-check-shard GO_VER=go SHARD=${{ matrix.shard }} TOTAL_SHARDS=${{ matrix.total-shards }}

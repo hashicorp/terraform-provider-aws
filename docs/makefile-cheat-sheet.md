@@ -132,6 +132,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `generate-changelog` | Generate changelog |  |  | `CURDIR` |
 | `gh-workflow-lint` | Workflow Linting / actionlint | ✔️ |  |  |
 | `go-build` | Provider Checks / go-build | ✔️ |  |  |
+| `go-fix-check-shard` | Go Fix Check / go fix for a specific shard | ✔️ |  | `GO_VER`, `SHARD`, `TOTAL_SHARDS` |
 | `golangci-lint`<sup>M</sup> | All golangci-lint Checks | ✔️ |  | `K`, `PKG`, `TEST` |
 | `golangci-lint1` | golangci-lint Checks / 1 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
 | `golangci-lint2` | golangci-lint Checks / 2 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
