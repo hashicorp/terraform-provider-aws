@@ -136,7 +136,7 @@ func TestFindSDKResources(t *testing.T) {
 		"struct fields": {
 			pkg: "examplestructfield",
 		},
-		"shared tag handlers include all branch operations": {
+		"shared tag handlers branch on resource type": {
 			pkg: "exampletags",
 		},
 		"generated tags": {
