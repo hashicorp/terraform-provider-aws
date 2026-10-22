@@ -34,8 +34,8 @@ type ConfigureWrapper func(next schema.ConfigureContextFunc) schema.ConfigureCon
 // and its after-call code runs last. Nil wrappers are skipped.
 func chainConfigureWrappers(inner schema.ConfigureContextFunc, wrappers ...ConfigureWrapper) schema.ConfigureContextFunc {
 	for _, wrapper := range slices.Backward(wrappers) {
-		if w := wrapper; w != nil {
-			inner = w(inner)
+		if wrapper != nil {
+			inner = wrapper(inner)
 		}
 	}
 	return inner
