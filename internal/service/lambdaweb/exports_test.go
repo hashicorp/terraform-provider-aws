@@ -7,9 +7,11 @@ package lambdaweb
 var (
 	ResourceFunction         = newFunctionResource
 	ResourceFunctionEndpoint = newFunctionEndpointResource
+	ResourceFunctionRevision = newFunctionRevisionResource
 	ResourceResourcePolicy   = newResourcePolicyResource
 
 	FindResourcePolicyByARN             = findResourcePolicyByARN
 	FindWebFunctionEndpointByTwoPartKey = findWebFunctionEndpointByTwoPartKey
+	FindWebFunctionRevisionByTwoPartKey = findWebFunctionRevisionByTwoPartKey
 	FindWebFunctionByName               = findWebFunctionByName
 )

@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
@@ -18,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambdaweb "github.com/hashicorp/terraform-provider-aws/internal/service/lambdaweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -243,11 +242,11 @@ func testAccCheckFunctionEndpointDestroy(ctx context.Context, t *testing.T) reso
 			}
 
 			_, err := tflambdaweb.FindWebFunctionEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["endpoint_name"])
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-				return smarterr.NewError(err)
+				return err
 			}
 
 			return fmt.Errorf("Lambda Web Function Endpoint %s still exists", rs.Primary.Attributes["endpoint_name"])
@@ -268,7 +267,7 @@ func testAccCheckFunctionEndpointExists(ctx context.Context, t *testing.T, n str
 
 		out, err := tflambdaweb.FindWebFunctionEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["endpoint_name"])
 		if err != nil {
-			return smarterr.NewError(err)
+			return err
 		}
 
 		*v = *out
