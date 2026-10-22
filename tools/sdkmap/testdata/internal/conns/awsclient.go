@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/examplestructfield"
 	"github.com/aws/aws-sdk-go-v2/service/exampletags"
 	"github.com/aws/aws-sdk-go-v2/service/exampletagsgen"
+	"github.com/aws/aws-sdk-go-v2/service/exampletagsnohandlers"
 	"github.com/aws/aws-sdk-go-v2/service/exampletagsupdateonly"
 	"github.com/aws/aws-sdk-go-v2/service/exampleunanalyzed"
 )
@@ -78,6 +79,10 @@ func (c *AWSClient) ExampleTagsClient(ctx context.Context) *exampletags.Client {
 
 func (c *AWSClient) ExampleTagsGenClient(ctx context.Context) *exampletagsgen.Client {
 	return client[*exampletagsgen.Client](ctx, c, "exampletagsgen")
+}
+
+func (c *AWSClient) ExampleTagsNoHandlersClient(ctx context.Context) *exampletagsnohandlers.Client {
+	return client[*exampletagsnohandlers.Client](ctx, c, "exampletagsnohandlers")
 }
 
 func (c *AWSClient) ExampleTagsUpdateOnlyClient(ctx context.Context) *exampletagsupdateonly.Client {
