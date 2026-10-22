@@ -298,7 +298,7 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 			case *ast.FuncDecl:
 				if d.Recv == nil {
 					pkg.decls[d.Name.Name] = d
-					if typeNames, _ := parseAnnotations(d.Doc); len(typeNames) > 0 {
+					if typeNames, _, _ := parseAnnotations(d.Doc); len(typeNames) > 0 {
 						pkg.factories[d] = true
 					}
 					continue
@@ -352,7 +352,7 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 			if !ok || fn.Recv != nil {
 				continue
 			}
-			typeNames, tagged := parseAnnotations(fn.Doc)
+			typeNames, tagged, _ := parseAnnotations(fn.Doc)
 			if len(typeNames) == 0 {
 				continue
 			}
@@ -392,11 +392,12 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 	return resources
 }
 
-// parseAnnotations returns the type names from a function's @SDKResource annotations,
-// and whether its @Tags annotation means the tags interceptor lists and updates its tags.
-func parseAnnotations(doc *ast.CommentGroup) (typeNames []string, tagged bool) {
+// parseAnnotations returns the type names from a function's @SDKResource annotations, whether its
+// @Tags annotation means the tags interceptor lists and updates its tags, and the resource type
+// that the tags interceptor passes to them.
+func parseAnnotations(doc *ast.CommentGroup) (typeNames []string, tagged bool, tagsResourceType string) {
 	if doc == nil {
-		return nil, false
+		return nil, false, ""
 	}
 
 	for _, c := range doc.List {
@@ -418,12 +419,18 @@ func parseAnnotations(doc *ast.CommentGroup) (typeNames []string, tagged bool) {
 				break
 			}
 		case "Tags":
-			// As in the generator, a later @Tags annotation doesn't unset an identifierAttribute.
+			// As in the generator, a later @Tags annotation doesn't unset an identifierAttribute,
+			// but does replace a resourceType.
 			tagged = tagged || strings.Contains(args, "identifierAttribute")
+			for arg := range strings.SplitSeq(args, ",") {
+				if key, value, ok := strings.Cut(arg, "="); ok && strings.TrimSpace(key) == "resourceType" {
+					tagsResourceType = strings.Trim(strings.TrimSpace(value), `"`)
+				}
+			}
 		}
 	}
 
-	return typeNames, tagged
+	return typeNames, tagged, tagsResourceType
 }
 
 // returnedResource returns the &schema.Resource{...} literal returned at the end of fn, or nil.
