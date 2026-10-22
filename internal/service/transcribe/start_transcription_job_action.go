@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -242,11 +243,10 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 		},
 	})
 	if err != nil {
-		var timeoutErr *actionwait.TimeoutError
 		var failureErr *actionwait.FailureStateError
 		var unexpectedErr *actionwait.UnexpectedStateError
 
-		if errors.As(err, &timeoutErr) {
+		if errs.IsA[*actionwait.TimeoutError](err) {
 			resp.Diagnostics.AddError(
 				"Timeout Waiting for Transcription Job",
 				fmt.Sprintf("Transcription job %s did not reach a running state within %v", transcriptionJobName, timeout),
