@@ -100,6 +100,9 @@ func (r *functionEndpointResource) Schema(ctx context.Context, req resource.Sche
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 256),
+				},
 			},
 			names.AttrDomainName: schema.StringAttribute{
 				Computed: true,
@@ -129,7 +132,7 @@ func (r *functionEndpointResource) Schema(ctx context.Context, req resource.Sche
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 64),
+					validFunctionName,
 				},
 			},
 			"regional_domain_names": schema.MapAttribute{

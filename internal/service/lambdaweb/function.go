@@ -46,6 +46,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var validFunctionName validator.String = stringvalidator.RegexMatches(
+	regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z_-]{0,62}[0-9A-Za-z]$`),
+	`Function name must be 2 to 64 characters, and can't start or end with a hyphen (-) or underscore (_). Valid characters are a-z, A-Z, 0-9, hyphens (-), and underscores (_).`,
+)
+
 // @FrameworkResource("aws_lambdaweb_function", name="Function")
 // @IdentityAttribute("function_name")
 // @Tags(identifierAttribute="arn")
@@ -82,7 +87,7 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 64),
+					validFunctionName,
 				},
 			},
 			"latest_revision_id": schema.StringAttribute{
@@ -1031,63 +1036,6 @@ func waitFunctionDeleted(ctx context.Context, conn *lambdaweb.Client, name strin
 	return nil, smarterr.NewError(err)
 }
 
-func findWebFunctionRevisionByTwoPartKey(ctx context.Context, conn *lambdaweb.Client, functionName, revisionID string) (*lambdaweb.GetWebFunctionRevisionOutput, error) {
-	input := lambdaweb.GetWebFunctionRevisionInput{
-		FunctionName: aws.String(functionName),
-		RevisionId:   aws.String(revisionID),
-	}
-	return findWebFunctionRevision(ctx, conn, &input)
-}
-
-func findWebFunctionRevision(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.GetWebFunctionRevisionInput) (*lambdaweb.GetWebFunctionRevisionOutput, error) {
-	out, err := conn.GetWebFunctionRevision(ctx, input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{
-			LastError: err,
-		})
-	}
-	if err != nil {
-		return nil, smarterr.NewError(err)
-	}
-	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
-	}
-
-	return out, nil
-}
-
-func statusFunctionRevision(conn *lambdaweb.Client, functionName, revisionID string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		out, err := findWebFunctionRevisionByTwoPartKey(ctx, conn, functionName, revisionID)
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", smarterr.NewError(err)
-		}
-
-		return out, string(out.State), nil
-	}
-}
-
-func waitFunctionRevisionActive(ctx context.Context, conn *lambdaweb.Client, functionName, revisionID string, timeout time.Duration) (*lambdaweb.GetWebFunctionRevisionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.RevisionStatePending),
-		Target:                    enum.Slice(awstypes.RevisionStateActive),
-		Refresh:                   statusFunctionRevision(conn, functionName, revisionID),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionRevisionOutput); ok {
-		retry.SetLastError(err, errors.New(aws.ToString(out.StateReason)))
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
 func findNewestFunctionRevision(ctx context.Context, conn *lambdaweb.Client, functionName string) (*awstypes.FunctionRevisionSummary, error) {
 	var newest *awstypes.FunctionRevisionSummary
 	input := lambdaweb.ListWebFunctionRevisionsInput{
@@ -1236,42 +1184,4 @@ type revisionConfigModel struct {
 	Description   types.String                                        `tfsdk:"description"`
 	KMSKeyARN     fwtypes.ARN                                         `tfsdk:"kms_key_arn"`
 	ServiceConfig fwtypes.ListNestedObjectValueOf[serviceConfigModel] `tfsdk:"service_config"`
-}
-
-type buildConfigModel struct {
-	CodeConfig    fwtypes.ListNestedObjectValueOf[codeConfigModel]    `tfsdk:"code_config"`
-	RuntimeConfig fwtypes.ListNestedObjectValueOf[runtimeConfigModel] `tfsdk:"runtime_config"`
-}
-
-type codeConfigModel struct {
-	S3Object fwtypes.ListNestedObjectValueOf[s3ObjectModel] `tfsdk:"s3_object"`
-}
-
-type s3ObjectModel struct {
-	Bucket    types.String `tfsdk:"bucket"`
-	Key       types.String `tfsdk:"key"`
-	VersionID types.String `tfsdk:"version_id"`
-}
-
-type runtimeConfigModel struct {
-	Runtime types.String `tfsdk:"runtime"`
-}
-
-type serviceConfigModel struct {
-	EgressNetworkConnectorARN    types.String                                          `tfsdk:"egress_network_connector_arn"`
-	EnvironmentVariables         fwtypes.MapOfString                                   `tfsdk:"environment_variables"`
-	ExecutionRoleARN             fwtypes.ARN                                           `tfsdk:"execution_role_arn"`
-	MaxConcurrencyPerEnvironment types.Int64                                           `tfsdk:"max_concurrency_per_environment"`
-	TelemetryConfig              fwtypes.ListNestedObjectValueOf[telemetryConfigModel] `tfsdk:"telemetry_config"`
-	TimeoutSeconds               types.Int64                                           `tfsdk:"timeout_seconds"`
-}
-
-type telemetryConfigModel struct {
-	LoggingConfig fwtypes.ListNestedObjectValueOf[loggingConfigModel] `tfsdk:"logging_config"`
-}
-
-type loggingConfigModel struct {
-	ApplicationLogLevel fwtypes.StringEnum[awstypes.ApplicationLogLevel] `tfsdk:"application_log_level"`
-	LogGroup            types.String                                     `tfsdk:"log_group"`
-	SystemLogLevel      fwtypes.StringEnum[awstypes.SystemLogLevel]      `tfsdk:"system_log_level"`
 }
