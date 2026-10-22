@@ -5,6 +5,7 @@ package exampletags
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/exampletags"
@@ -16,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
-// ListTags lists the tags of a widget or gadget, and sets them in Context.
+// ListTags lists the tags of a widget, gadget, or gizmo, and sets them in Context.
 // It is called by the transparent tagging interceptor.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
 	var (
@@ -34,7 +35,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 			tags, err = widgetListTags(ctx, conn, identifier)
 		}
 
-	case "Gadget":
+	case "Gadget", "Gizmo":
 		tags, err = gadgetListTags(ctx, conn, identifier)
 
 	default:
@@ -52,10 +53,13 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	return nil
 }
 
-// UpdateTags updates the tags of a widget or gadget.
+// UpdateTags updates the tags of a widget, gadget, or gizmo.
 // It is called by the transparent tagging interceptor.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
-	c := meta.(*conns.AWSClient)
+	return updateTags(ctx, meta.(*conns.AWSClient), identifier, resourceType, oldTags, newTags)
+}
+
+func updateTags(ctx context.Context, c *conns.AWSClient, identifier, resourceType string, oldTags, newTags any) error {
 	conn := c.ExampleTagsClient(ctx)
 
 	switch resourceType {
@@ -67,11 +71,11 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, r
 		}
 		return err
 
-	case "Gadget":
+	case "Gadget", "Gizmo":
 		return gadgetUpdateTags(ctx, conn, identifier, oldTags, newTags)
 	}
 
-	return nil
+	return fmt.Errorf("unsupported resource type: %s", resourceType)
 }
 
 func widgetListTags(ctx context.Context, conn *exampletags.Client, identifier string) (tftags.KeyValueTags, error) {
