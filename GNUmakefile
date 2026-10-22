@@ -358,6 +358,10 @@ examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
 		--disable-rule=terraform_typed_variables
 
+fix: prereq-go ## Apply go fix modernizers (all packages, or scoped to a service with PKG/K)
+	@echo "make: Applying go fix..."
+	@$(GO_VER) fix $(TEST)
+
 fix-constants: semgrep-fix-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
@@ -1325,6 +1329,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	docs-markdown-lint \
 	docs-misspell \
 	examples-tflint \
+	fix \
 	fix-constants \
 	fix-imports \
 	fix-imports-core \

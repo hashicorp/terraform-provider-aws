@@ -389,7 +389,14 @@ Use the `modern-check` target to run the check:
 make modern-check
 ```
 
-Use the `modern-fix` target to automatically apply fixes:
+Use the `fix` target to automatically apply fixes to all packages, or limit it to a service package with `PKG`:
+
+```console
+make fix
+make fix PKG=ec2
+```
+
+The `modern-fix` target is equivalent:
 
 ```console
 make modern-fix

@@ -118,6 +118,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `docs-markdown-lint` | Documentation Checks / markdown-lint | ✔️ |  |  |
 | `docs-misspell` | Documentation Checks / misspell | ✔️ |  |  |
 | `examples-tflint` | Examples Checks / tflint | ✔️ |  |  |
+| `fix` | Apply `go fix` modernizers (all packages, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `TEST` |
 | `fix-constants`<sup>M</sup> | Use Semgrep to fix constants |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `fix-imports` | Fixing source code imports with goimports |  |  |  |
 | `fix-imports-core` | Fixing core directory imports with goimports |  |  |  |
