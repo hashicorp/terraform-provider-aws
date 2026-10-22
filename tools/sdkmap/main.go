@@ -770,10 +770,8 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-// caseClauseFor returns the clause of a switch statement that is taken when its tag is the string
-// value: the case listing value as a string literal, or else the default clause, or nil if there is
-// none. ok is false if that can't be determined: a case lists something other than a string literal,
-// or the clause falls through.
+// caseClauseFor returns the clause that switch s runs when its tag is value, or nil if none does.
+// ok is false if that can't be determined: a case isn't a string literal, or the clause falls through.
 func caseClauseFor(s *ast.SwitchStmt, value string) (clause *ast.CaseClause, ok bool) {
 	var defaultClause *ast.CaseClause
 	for _, stmt := range s.Body.List {
