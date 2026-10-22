@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -19,48 +19,17 @@ import (
 
 // @SDKListResource("aws_cloudwatch_log_group")
 func newLogGroupResourceAsListResource() inttypes.ListResourceForSDK {
-	l := logGroupListResource{}
-	l.SetResourceSchema(resourceGroup())
+	return framework.NewSDKListResource(resourceGroup(), framework.SDKListSpec[awstypes.LogGroup, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.LogGroup, error], diag.Diagnostics) {
+			var input cloudwatchlogs.DescribeLogGroupsInput
 
-	return &l
-}
-
-type logGroupListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.LogsClient(ctx)
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		result := request.NewListResult(ctx)
-		var input cloudwatchlogs.DescribeLogGroupsInput
-		for output, err := range listLogGroups(ctx, conn, &input) {
-			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			logGroupName := aws.ToString(output.LogGroupName)
-			rd := l.ResourceData()
-			rd.SetId(logGroupName)
-			resourceGroupFlatten(ctx, rd, output)
-
-			result.DisplayName = logGroupName
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			return listLogGroups(ctx, c.LogsClient(ctx), &input), nil
+		},
+		ID: func(lg awstypes.LogGroup, _ framework.RegionQuery) string {
+			return aws.ToString(lg.LogGroupName)
+		},
+		Flatten: resourceGroupFlatten,
+	})
 }
 
 func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.LogGroup, error] {

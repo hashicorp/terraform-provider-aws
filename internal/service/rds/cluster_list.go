@@ -11,72 +11,35 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_rds_cluster")
 func newClusterResourceAsListResource() inttypes.ListResourceForSDK {
-	l := clusterListResource{}
-	l.SetResourceSchema(resourceCluster())
-	return &l
-}
+	return framework.NewSDKListResource(resourceCluster(), framework.SDKListSpec[awstypes.DBCluster, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.DBCluster, error], diag.Diagnostics) {
+			var input rds.DescribeDBClustersInput
 
-var _ list.ListResource = &clusterListResource{}
-
-type clusterListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *clusterListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.RDSClient(ctx)
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		input := &rds.DescribeDBClustersInput{}
-		for item, err := range listDBClusters(ctx, conn, input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			id := aws.ToString(item.DBClusterIdentifier)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrClusterIdentifier), id)
-
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(id)
-			rd.Set(names.AttrClusterIdentifier, id)
-
-			if request.IncludeResource {
-				if err := resourceClusterFlatten(ctx, conn, &item, rd); err != nil {
-					tflog.Error(ctx, "Reading RDS Cluster", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			result.DisplayName = id
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			return listDBClusters(ctx, c.RDSClient(ctx), &input), nil
+		},
+		ID: func(dbc awstypes.DBCluster, _ framework.RegionQuery) string {
+			return aws.ToString(dbc.DBClusterIdentifier)
+		},
+		Prepare: func(_ context.Context, dbc awstypes.DBCluster, _ framework.RegionQuery, rd *schema.ResourceData) {
+			// Identity is the cluster identifier, and Flatten only runs when
+			// resource state is asked for.
+			rd.Set(names.AttrClusterIdentifier, aws.ToString(dbc.DBClusterIdentifier))
+		},
+		Flatten: resourceClusterFlatten,
+		// Flatten reads the cluster's parameters and members, so a listing that
+		// only wants identity should not pay for those calls.
+		FlattenWhenRequested: true,
+	})
 }
 
 func listDBClusters(ctx context.Context, conn *rds.Client, input *rds.DescribeDBClustersInput) iter.Seq2[awstypes.DBCluster, error] {
