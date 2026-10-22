@@ -11,114 +11,51 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_lb_listener_rule")
 func newListenerRuleResourceAsListResource() inttypes.ListResourceForSDK {
-	l := listenerRuleListResource{}
-	l.SetResourceSchema(resourceListenerRule())
-	return &l
-}
-
-var _ list.ListResource = &listenerRuleListResource{}
-
-type listenerRuleListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *listenerRuleListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			"listener_arn": listschema.StringAttribute{
-				CustomType:  fwtypes.ARNType,
-				Required:    true,
-				Description: "ARN of the Listener to list ListenerRules from.",
-			},
-		},
-	}
-}
-
-func (l *listenerRuleListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := l.Meta().ELBV2Client(ctx)
-
-	var query listListenerRuleModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	listenerARN := query.ListenerARN.ValueString()
-
-	logParams := map[string]any{
-		"tf_list.request.include_resource":    request.IncludeResource,
-		"tf_list.request.limit":               request.Limit,
-		"tf_list.request.config.listener_arn": listenerARN,
-	}
-	if !query.Region.IsNull() {
-		logParams["tf_list.request.config.region"] = query.Region.ValueString()
-	}
-
-	tflog.Info(ctx, "Listing Resources", logParams)
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		input := elasticloadbalancingv2.DescribeRulesInput{
-			ListenerArn: aws.String(listenerARN),
-		}
-		for item, err := range listListenerRules(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
+	return framework.NewSDKListResource(resourceListenerRule(), framework.SDKListSpec[listenerRuleResult, listListenerRuleModel]{
+		ConfigSchema: listListenerRuleConfigSchema,
+		Items: func(ctx context.Context, c *conns.AWSClient, query listListenerRuleModel) (iter.Seq2[listenerRuleResult, error], diag.Diagnostics) {
+			input := elasticloadbalancingv2.DescribeRulesInput{
+				ListenerArn: query.ListenerARN.ValueStringPointer(),
 			}
-			arn := aws.ToString(item.rule.RuleArn)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(arn)
-			rd.Set(names.AttrARN, arn)
-
-			if request.IncludeResource {
-				setTagsOut(ctx, item.tags)
-				rd.Set("listener_arn", listenerARN)
-				if err := resourceListenerRuleFlatten(ctx, &item.rule, rd); err != nil {
-					tflog.Error(ctx, "Reading ELB Listener Rule", map[string]any{
-						"error": err.Error(),
-					})
-					continue
+			return listListenerRules(ctx, c.ELBV2Client(ctx), &input), nil
+		},
+		ID: func(r listenerRuleResult, _ listListenerRuleModel) string {
+			return aws.ToString(r.rule.RuleArn)
+		},
+		Prepare: func(ctx context.Context, r listenerRuleResult, query listListenerRuleModel, rd *schema.ResourceData) {
+			// Both are part of this resource's identity. The tags came back
+			// with the page, so staging them costs nothing.
+			rd.Set(names.AttrARN, aws.ToString(r.rule.RuleArn))
+			rd.Set("listener_arn", query.ListenerARN.ValueString())
+			setTagsOut(ctx, r.tags)
+		},
+		Flatten: func(ctx context.Context, c *conns.AWSClient, r *listenerRuleResult, rd *schema.ResourceData) error {
+			return resourceListenerRuleFlatten(ctx, c, &r.rule, rd)
+		},
+		DisplayName: func(r listenerRuleResult) string {
+			// Rule ARNs are long and nearly identical, so prefer the Name tag.
+			for _, tag := range r.tags {
+				if aws.ToString(tag.Key) == "Name" {
+					return aws.ToString(tag.Value)
 				}
 			}
 
-			tags := keyValueTags(ctx, item.tags)
-			if v, ok := tags["Name"]; ok {
-				result.DisplayName = v.ValueString()
-			} else {
-				result.DisplayName = aws.ToString(item.rule.RuleArn)
-			}
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			return aws.ToString(r.rule.RuleArn)
+		},
+	})
 }
 
 type listListenerRuleModel struct {
@@ -165,5 +102,17 @@ func listListenerRules(ctx context.Context, conn *elasticloadbalancingv2.Client,
 				}
 			}
 		}
+	}
+}
+
+func listListenerRuleConfigSchema(_ context.Context) listschema.Schema {
+	return listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			"listener_arn": listschema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
+				Required:    true,
+				Description: "ARN of the Listener to list ListenerRules from.",
+			},
+		},
 	}
 }

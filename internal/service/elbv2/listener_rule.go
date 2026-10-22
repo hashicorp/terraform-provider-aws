@@ -700,14 +700,14 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	// The listener arn isn't in the response but can be derived from the rule arn
 	d.Set("listener_arn", listenerARNFromRuleARN(aws.ToString(rule.RuleArn)))
 
-	if err := resourceListenerRuleFlatten(ctx, rule, d); err != nil {
+	if err := resourceListenerRuleFlatten(ctx, meta.(*conns.AWSClient), rule, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
 }
 
-func resourceListenerRuleFlatten(_ context.Context, rule *awstypes.Rule, d *schema.ResourceData) error {
+func resourceListenerRuleFlatten(_ context.Context, _ *conns.AWSClient, rule *awstypes.Rule, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, rule.RuleArn)
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.

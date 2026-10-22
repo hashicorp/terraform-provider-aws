@@ -153,7 +153,10 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading EKS Access Policy Association (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceAccessPolicyAssociationFlatten(ctx, clusterName, principalARN, output, d); err != nil {
+	d.Set(names.AttrClusterName, clusterName)
+	d.Set("principal_arn", principalARN)
+
+	if err := resourceAccessPolicyAssociationFlatten(ctx, meta.(*conns.AWSClient), output, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -188,15 +191,13 @@ func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceAccessPolicyAssociationFlatten(_ context.Context, clusterName, principalARN string, item *types.AssociatedAccessPolicy, d *schema.ResourceData) error {
+func resourceAccessPolicyAssociationFlatten(_ context.Context, _ *conns.AWSClient, item *types.AssociatedAccessPolicy, d *schema.ResourceData) error {
 	if err := d.Set("access_scope", flattenAccessScope(item.AccessScope)); err != nil {
 		return fmt.Errorf("setting access_scope: %w", err)
 	}
 	d.Set("associated_at", aws.ToTime(item.AssociatedAt).String())
-	d.Set(names.AttrClusterName, clusterName)
 	d.Set("modified_at", aws.ToTime(item.ModifiedAt).String())
 	d.Set("policy_arn", item.PolicyArn)
-	d.Set("principal_arn", principalARN)
 
 	return nil
 }
