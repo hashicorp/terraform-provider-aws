@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_dx_connection: Add configurable `update` timeout. Defaults to the previously hard-coded value of `10m`.
+```
+```release-note:enhancement
+resource/aws_dx_connection_confirmation: Add configurable `create` timeout. Defaults to the previously hard-coded value of `10m`.
+```
