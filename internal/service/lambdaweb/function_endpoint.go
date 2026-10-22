@@ -6,6 +6,7 @@ package lambdaweb
 import (
 	"context"
 	"fmt"
+	"iter"
 	"maps"
 	"time"
 
@@ -37,6 +38,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -458,6 +460,27 @@ func (functionEndpointImportID) Parse(id string) (string, map[string]any, error)
 	}, nil
 }
 
+func listFunctionEndpoints(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionEndpointsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[awstypes.FunctionEndpointSummary, error] {
+	return tfiter.ConcatValuesWithError(listFunctionEndpointPages(ctx, conn, input, optFns...))
+}
+
+func listFunctionEndpointPages(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionEndpointsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[[]awstypes.FunctionEndpointSummary, error] {
+	return func(yield func([]awstypes.FunctionEndpointSummary, error) bool) {
+		pages := lambdaweb.NewListWebFunctionEndpointsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing Lambda Web Function Endpoints: %w", err))
+				return
+			}
+
+			if !yield(page.Endpoints, nil) {
+				return
+			}
+		}
+	}
+}
+
 func findWebFunctionEndpointByTwoPartKey(ctx context.Context, conn *lambdaweb.Client, functionName, endpointName string) (*lambdaweb.GetWebFunctionEndpointOutput, error) {
 	input := lambdaweb.GetWebFunctionEndpointInput{
 		FunctionName: aws.String(functionName),
@@ -592,4 +615,12 @@ type functionEndpointResourceModel struct {
 type revisionWeightModel struct {
 	RevisionID types.String `tfsdk:"revision_id"`
 	Weight     types.Int64  `tfsdk:"weight"`
+}
+
+type scalingConfigModel struct {
+	MaxEnvironments types.Int64 `tfsdk:"max_environments"`
+}
+
+type throttleConfigModel struct {
+	RateLimit types.Int64 `tfsdk:"rate_limit"`
 }

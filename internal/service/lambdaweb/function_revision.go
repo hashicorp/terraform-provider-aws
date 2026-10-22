@@ -402,6 +402,87 @@ func (r *functionRevisionResource) flatten(ctx context.Context, revision *lambda
 	return diags
 }
 
+/*
+// environmentVariablesMaxBytes is the documented 32 KB limit the service
+// enforces on a revision's environment variables.
+const environmentVariablesMaxBytes = 32 * 1024
+
+// validateEnvironmentVariablesSize reports environment variables that cannot
+// fit. The service rejects them, but only up to a point: past roughly 37 KB the
+// whole request is too large and the error stops mentioning environment
+// variables at all ("Request must be smaller than 37888 bytes"), which sends
+// people looking in the wrong place. The keys and values are summed without the
+// serialization overhead the service also counts, so this only ever rejects a
+// configuration the service would reject too.
+func validateEnvironmentVariablesSize(ctx context.Context, cfg functionResourceModel, resp *resource.ValidateConfigResponse) {
+	if cfg.RevisionConfig.IsNull() || cfg.RevisionConfig.IsUnknown() {
+		return
+	}
+
+	revisionConfig, d := cfg.RevisionConfig.ToPtr(ctx)
+	if d.HasError() || revisionConfig == nil || revisionConfig.ServiceConfig.IsNull() || revisionConfig.ServiceConfig.IsUnknown() {
+		return
+	}
+
+	serviceConfig, d := revisionConfig.ServiceConfig.ToPtr(ctx)
+	if d.HasError() || serviceConfig == nil || serviceConfig.EnvironmentVariables.IsNull() || serviceConfig.EnvironmentVariables.IsUnknown() {
+		return
+	}
+
+	var size int
+	for name, value := range serviceConfig.EnvironmentVariables.Elements() {
+		if value.IsUnknown() {
+			return
+		}
+		size += len(name)
+		if v, ok := value.(types.String); ok {
+			size += len(v.ValueString())
+		}
+	}
+
+	if size > environmentVariablesMaxBytes {
+		resp.Diagnostics.AddAttributeError(path.Root("revision_config"),
+			"Environment variables too large",
+			fmt.Sprintf("`environment_variables` must not exceed %d bytes across all names and values; the configuration holds %d.",
+				environmentVariablesMaxBytes, size))
+	}
+}
+*/
+
+/*
+// restoreTelemetryConfig keeps telemetry_config as configuration-only state.
+// The service assigns default telemetry (a log group and INFO log levels) to
+// every revision and reports it back, but revisions are immutable, so
+// telemetry the practitioner never wrote is a server default, not drift:
+// reading it into state breaks every apply with "block count changed from 0 to
+// 1", and a partially configured block (say, log_group only) would surface the
+// filled-in log levels as a perpetual diff. prior is the configured
+// revision_config (the plan on create, prior state on refresh); its
+// telemetry_config replaces the server's wholesale. On import there is no
+// prior, so telemetry_config is left unpopulated rather than importing the
+// server defaults.
+func restoreTelemetryConfig(ctx context.Context, revModel *revisionConfigModel, prior fwtypes.ListNestedObjectValueOf[revisionConfigModel]) {
+	desired := fwtypes.NewListNestedObjectValueOfNull[telemetryConfigModel](ctx)
+	if !prior.IsNull() && !prior.IsUnknown() {
+		if priorRev, d := prior.ToPtr(ctx); !d.HasError() && priorRev != nil && !priorRev.ServiceConfig.IsNull() && !priorRev.ServiceConfig.IsUnknown() {
+			if priorSvc, d := priorRev.ServiceConfig.ToPtr(ctx); !d.HasError() && priorSvc != nil && !priorSvc.TelemetryConfig.IsUnknown() {
+				desired = priorSvc.TelemetryConfig
+			}
+		}
+	}
+
+	if revModel.ServiceConfig.IsNull() || revModel.ServiceConfig.IsUnknown() {
+		return
+	}
+	svc, d := revModel.ServiceConfig.ToPtr(ctx)
+	if d.HasError() || svc == nil {
+		return
+	}
+	svc.TelemetryConfig = desired
+	revModel.ServiceConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, svc)
+}
+*/
+
 var _ inttypes.ImportIDParser = functionRevisionImportID{}
 
 type functionRevisionImportID struct{}
@@ -499,6 +580,24 @@ func waitFunctionRevisionActive(ctx context.Context, conn *lambdaweb.Client, fun
 	return nil, smarterr.NewError(err)
 }
 
+func findNewestFunctionRevision(ctx context.Context, conn *lambdaweb.Client, functionName string) (*awstypes.FunctionRevisionSummary, error) {
+	var newest *awstypes.FunctionRevisionSummary
+	input := lambdaweb.ListWebFunctionRevisionsInput{
+		FunctionName: aws.String(functionName),
+	}
+	for item, err := range listFunctionRevisions(ctx, conn, &input) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		if newest == nil || item.CreatedAt.After(aws.ToTime(newest.CreatedAt)) {
+			newest = &item
+		}
+	}
+
+	return newest, nil
+}
+
 type functionRevisionResourceModel struct {
 	framework.WithRegionModel
 	BuildConfig   fwtypes.ListNestedObjectValueOf[buildConfigModel]   `tfsdk:"build_config"`
@@ -510,6 +609,7 @@ type functionRevisionResourceModel struct {
 	ServiceConfig fwtypes.ListNestedObjectValueOf[serviceConfigModel] `tfsdk:"service_config"`
 	Timeouts      timeouts.Value                                      `tfsdk:"timeouts"`
 }
+
 type buildConfigModel struct {
 	CodeConfig    fwtypes.ListNestedObjectValueOf[codeConfigModel]    `tfsdk:"code_config"`
 	RuntimeConfig fwtypes.ListNestedObjectValueOf[runtimeConfigModel] `tfsdk:"runtime_config"`

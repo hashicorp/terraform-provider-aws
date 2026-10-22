@@ -16,18 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -36,8 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -62,7 +54,6 @@ func newFunctionResource(_ context.Context) (resource.ResourceWithConfigure, err
 	r := &functionResource{}
 
 	r.SetDefaultCreateTimeout(15 * time.Minute)
-	r.SetDefaultUpdateTimeout(15 * time.Minute)
 	r.SetDefaultDeleteTimeout(15 * time.Minute)
 
 	return r, nil
@@ -78,9 +69,6 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDomainName: schema.StringAttribute{
-				Computed: true,
-			},
 			"function_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -90,426 +78,16 @@ func (r *functionResource) Schema(ctx context.Context, req resource.SchemaReques
 					validFunctionName,
 				},
 			},
-			"latest_revision_id": schema.StringAttribute{
-				Computed: true,
-			},
-			// PerRegion endpoints serve an independent domain per region; without
-			// this the regional domains of an inline endpoint_config cannot be
-			// referenced from a configuration at all.
-			"regional_domain_names": schema.MapAttribute{
-				CustomType: fwtypes.MapOfStringType,
-				Computed:   true,
-			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			// revision_config and endpoint_config are both required by
-			// CreateWebFunction; IsRequired surfaces a missing block at plan
-			// time instead of midway through an apply.
-			"endpoint_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[endpointConfigModel](ctx),
-				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						// Editable in place: UpdateWebFunctionEndpoint accepts
-						// authType and the domain name survives the change
-						// (verified live 2026-10-05).
-						"auth_type": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.AuthType](),
-							Required:   true,
-						},
-						// Defaults to LatestRevision for HomeRegion endpoints (set
-						// explicitly in Create; the API default would be Disabled).
-						// MultiRegion and PerRegion require an explicit Disabled.
-						"auto_deployment_mode": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.AutoDeploymentMode](),
-							Optional:   true,
-							Computed:   true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-						names.AttrDescription: schema.StringAttribute{
-							Optional: true,
-						},
-						"endpoint_name": schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 64),
-							},
-						},
-						names.AttrEndpointType: schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.EndpointType](),
-							Required:   true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-						"regions": schema.SetAttribute{
-							CustomType: fwtypes.SetOfStringType,
-							Optional:   true,
-							Computed:   true,
-							PlanModifiers: []planmodifier.Set{
-								// Regions are immutable on an endpoint and
-								// UpdateWebFunctionEndpoint does not accept them.
-								setplanmodifier.RequiresReplace(),
-								// HomeRegion endpoints default to the function's
-								// region server-side when regions is omitted, so
-								// keep the known value to avoid post-apply drift.
-								setplanmodifier.UseStateForUnknown(),
-							},
-							Validators: []validator.Set{
-								setvalidator.ValueStringsAre(
-									fwvalidators.AWSRegion(),
-								),
-							},
-						},
-						// Objects rather than blocks: the service assigns
-						// account-level defaults when unset, so they must be
-						// Computed (see aws_lambdaweb_endpoint).
-						"scaling_config":  framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithPlanModifiers[scalingConfigModel](listplanmodifier.UseStateForUnknown())),
-						"throttle_config": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithPlanModifiers[throttleConfigModel](listplanmodifier.UseStateForUnknown())),
-					},
-				},
-			},
-			"revision_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[revisionConfigModel](ctx),
-				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrDescription: schema.StringAttribute{
-							Optional: true,
-						},
-						names.AttrKMSKeyARN: schema.StringAttribute{
-							CustomType: fwtypes.ARNType,
-							Optional:   true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"build_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[buildConfigModel](ctx),
-							Validators: []validator.List{
-								listvalidator.IsRequired(),
-								listvalidator.SizeAtLeast(1),
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{
-									"code_config": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[codeConfigModel](ctx),
-										Validators: []validator.List{
-											listvalidator.IsRequired(),
-											listvalidator.SizeAtLeast(1),
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"s3_object": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[s3ObjectModel](ctx),
-													Validators: []validator.List{
-														listvalidator.IsRequired(),
-														listvalidator.SizeAtLeast(1),
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															names.AttrBucket: schema.StringAttribute{
-																Required: true,
-																Validators: []validator.String{
-																	fwvalidators.S3BucketName,
-																},
-															},
-															names.AttrKey: schema.StringAttribute{
-																Required: true,
-															},
-															"version_id": schema.StringAttribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"runtime_config": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[runtimeConfigModel](ctx),
-										Validators: []validator.List{
-											listvalidator.IsRequired(),
-											listvalidator.SizeAtLeast(1),
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"runtime": schema.StringAttribute{
-													Required: true,
-													Validators: []validator.String{
-														stringvalidator.RegexMatches(
-															regexache.MustCompile(`^[a-z][a-z0-9]*[0-9]+(\.[a-z0-9]+)*$`),
-															"must be a runtime identifier such as nodejs24.x",
-														),
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"service_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[serviceConfigModel](ctx),
-							Validators: []validator.List{
-								listvalidator.IsRequired(),
-								listvalidator.SizeAtLeast(1),
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									// VPC egress. The API takes only a version-qualified connector
-									// ARN, which pins the revision to that connector version, and
-									// accepts it only for HomeRegion endpoints.
-									"egress_network_connector_arn": schema.StringAttribute{
-										Optional: true,
-										Validators: []validator.String{
-											stringvalidator.RegexMatches(
-												regexache.MustCompile(`^arn:aws[a-z-]*:lambda:[a-z0-9-]+:\d{12}:network-connector:[0-9A-Za-z_-]+:\d+$`),
-												"must be a version-qualified Lambda network connector ARN (ending in :<version>)",
-											),
-										},
-									},
-									"environment_variables": schema.MapAttribute{
-										CustomType: fwtypes.MapOfStringType,
-										Optional:   true,
-										Sensitive:  true,
-									},
-									names.AttrExecutionRoleARN: schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-									},
-									"max_concurrency_per_environment": schema.Int64Attribute{
-										Optional: true,
-										// Assigned by the service (64) when unset: see
-										// timeout_seconds above.
-										Computed: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.UseStateForUnknown(),
-										},
-										Validators: []validator.Int64{
-											int64validator.Between(1, 128),
-										},
-									},
-									"timeout_seconds": schema.Int64Attribute{
-										Optional: true,
-										// Assigned by the service (30) when unset: must be
-										// Computed, otherwise the value read back produces a
-										// perpetual diff.
-										Computed: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.UseStateForUnknown(),
-										},
-										Validators: []validator.Int64{
-											int64validator.Between(3, 900),
-										},
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"telemetry_config": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[telemetryConfigModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"logging_config": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[loggingConfigModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"application_log_level": schema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.ApplicationLogLevel](),
-																Optional:   true,
-															},
-															"log_group": schema.StringAttribute{
-																Optional: true,
-															},
-															"system_log_level": schema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.SystemLogLevel](),
-																Optional:   true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
 				Delete: true,
 			}),
 		},
 	}
-}
-
-// ValidateConfig applies the rules the service enforces on the inline
-// endpoint_config block and on the environment variables, so they surface at
-// plan time rather than as an API error midway through an apply.
-func (r *functionResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var cfg functionResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &cfg))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	validateEnvironmentVariablesSize(ctx, cfg, resp)
-
-	if cfg.EndpointConfig.IsNull() || cfg.EndpointConfig.IsUnknown() {
-		return
-	}
-
-	eps, d := cfg.EndpointConfig.ToSlice(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() || len(eps) == 0 {
-		return
-	}
-	ep := eps[0]
-	if ep.EndpointType.IsUnknown() || ep.AutoDeploymentMode.IsUnknown() {
-		return
-	}
-
-	endpointType := ep.EndpointType.ValueString()
-	if endpointType != string(awstypes.EndpointTypeMultiRegion) && endpointType != string(awstypes.EndpointTypePerRegion) {
-		return
-	}
-
-	mode := awstypes.AutoDeploymentModeLatestRevision
-	if !ep.AutoDeploymentMode.IsNull() {
-		mode = awstypes.AutoDeploymentMode(ep.AutoDeploymentMode.ValueString())
-	}
-	if mode != awstypes.AutoDeploymentModeDisabled {
-		resp.Diagnostics.AddAttributeError(path.Root("endpoint_config"),
-			"Invalid auto_deployment_mode",
-			fmt.Sprintf("%s endpoints require `auto_deployment_mode = \"Disabled\"`.", endpointType))
-	}
-
-	// A PerRegion endpoint needs at least 2 distinct regions after the service
-	// adds the home region, so omitting regions is rejected by the API
-	// (verified live 2026-10-05). A single region is valid when it is not the
-	// home region; the provider cannot tell at validation time, so that case
-	// is left to the API, whose error message names the resulting region set.
-	if endpointType == string(awstypes.EndpointTypePerRegion) && ep.Regions.IsNull() {
-		resp.Diagnostics.AddAttributeError(path.Root("endpoint_config"),
-			"Missing regions",
-			fmt.Sprintf("%s endpoints require `regions` with at least one Region other than the home Region, which is added automatically.", endpointType))
-	}
-}
-
-// environmentVariablesMaxBytes is the documented 32 KB limit the service
-// enforces on a revision's environment variables.
-const environmentVariablesMaxBytes = 32 * 1024
-
-// validateEnvironmentVariablesSize reports environment variables that cannot
-// fit. The service rejects them, but only up to a point: past roughly 37 KB the
-// whole request is too large and the error stops mentioning environment
-// variables at all ("Request must be smaller than 37888 bytes"), which sends
-// people looking in the wrong place. The keys and values are summed without the
-// serialization overhead the service also counts, so this only ever rejects a
-// configuration the service would reject too.
-func validateEnvironmentVariablesSize(ctx context.Context, cfg functionResourceModel, resp *resource.ValidateConfigResponse) {
-	if cfg.RevisionConfig.IsNull() || cfg.RevisionConfig.IsUnknown() {
-		return
-	}
-
-	revisionConfig, d := cfg.RevisionConfig.ToPtr(ctx)
-	if d.HasError() || revisionConfig == nil || revisionConfig.ServiceConfig.IsNull() || revisionConfig.ServiceConfig.IsUnknown() {
-		return
-	}
-
-	serviceConfig, d := revisionConfig.ServiceConfig.ToPtr(ctx)
-	if d.HasError() || serviceConfig == nil || serviceConfig.EnvironmentVariables.IsNull() || serviceConfig.EnvironmentVariables.IsUnknown() {
-		return
-	}
-
-	var size int
-	for name, value := range serviceConfig.EnvironmentVariables.Elements() {
-		if value.IsUnknown() {
-			return
-		}
-		size += len(name)
-		if v, ok := value.(types.String); ok {
-			size += len(v.ValueString())
-		}
-	}
-
-	if size > environmentVariablesMaxBytes {
-		resp.Diagnostics.AddAttributeError(path.Root("revision_config"),
-			"Environment variables too large",
-			fmt.Sprintf("`environment_variables` must not exceed %d bytes across all names and values; the configuration holds %d.",
-				environmentVariablesMaxBytes, size))
-	}
-}
-
-// ModifyPlan warns when an apply is about to publish a revision that the inline
-// endpoint will not serve. An endpoint with `auto_deployment_mode = "Disabled"`
-// keeps the traffic weights it already has, and weights are only settable
-// through UpdateWebFunctionEndpoint: CreateWebFunction's endpointConfig has no
-// revisionWeights member, so `endpoint_config` cannot express them. Without a
-// warning the apply reports success, the next plan is empty, and the endpoint
-// keeps serving the old revision indefinitely. `MultiRegion` and `PerRegion`
-// endpoints are always affected because the service requires `Disabled` there.
-func (r *functionResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
-		return
-	}
-
-	var state, plan functionResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Only a revision_config change publishes a new revision.
-	if plan.RevisionConfig.Equal(state.RevisionConfig) || plan.EndpointConfig.IsNull() || plan.EndpointConfig.IsUnknown() {
-		return
-	}
-
-	ep, d := plan.EndpointConfig.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() || ep == nil || ep.AutoDeploymentMode.IsUnknown() {
-		return
-	}
-	if ep.AutoDeploymentMode.ValueString() != string(awstypes.AutoDeploymentModeDisabled) {
-		return
-	}
-
-	resp.Diagnostics.AddAttributeWarning(path.Root("endpoint_config"),
-		"New revision will not receive traffic",
-		fmt.Sprintf("Endpoint %q uses `auto_deployment_mode = \"Disabled\"`, so it keeps serving the revision its traffic weights already point at. "+
-			"This apply publishes a new revision, but traffic weights are only settable through the UpdateWebFunctionEndpoint API, which `endpoint_config` "+
-			"does not expose. The apply will report success and the next plan will be empty while the endpoint still serves the previous revision.\n\n"+
-			"To shift traffic to new revisions, manage the endpoint with a separate `aws_lambdaweb_endpoint` resource and point its `revision_weights` at "+
-			"`latest_revision_id` of this function. `MultiRegion` and `PerRegion` endpoints always require `auto_deployment_mode = \"Disabled\"`.",
-			ep.EndpointName.ValueString()))
 }
 
 func (r *functionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -530,22 +108,10 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 
 	input.Tags = getTagsIn(ctx)
 
-	// CreateWebFunction defaults a missing autoDeploymentMode to Disabled,
-	// which pins the endpoint to the initial revision forever: every later
-	// revision_config change would publish a revision the endpoint never
-	// serves. Default HomeRegion endpoints to LatestRevision explicitly, the
-	// value ValidateConfig assumes and aws_lambdaweb_endpoint sends. MultiRegion
-	// and PerRegion must set Disabled explicitly (enforced in ValidateConfig).
-	endpointConfig := input.EndpointConfig
-	if endpointConfig.AutoDeploymentMode == "" && endpointConfig.EndpointType == awstypes.EndpointTypeHomeRegion {
-		endpointConfig.AutoDeploymentMode = awstypes.AutoDeploymentModeLatestRevision
-	}
-	endpointName := aws.ToString(endpointConfig.EndpointName)
-
 	// IAM/S3-policy eventual consistency: a freshly created execution role or
 	// bucket policy can take tens of seconds to become visible to the service.
-	output, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func(ctx context.Context) (*lambdaweb.CreateWebFunctionOutput, error) {
+	_, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.CreateWebFunction(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -565,12 +131,6 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	revisionID := aws.ToString(output.Revision.RevisionId)
-	var (
-		revision *lambdaweb.GetWebFunctionRevisionOutput
-		endpoint *lambdaweb.GetWebFunctionEndpointOutput
-	)
-
 	function, err := waitFunctionCreated(ctx, conn, name, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
 		// Taint the resource.
@@ -579,22 +139,7 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	endpoint, err = waitFunctionEndpointActive(ctx, conn, name, endpointName, r.CreateTimeout(ctx, plan.Timeouts))
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-		return
-	}
-
-	// Read the revision back: the function-level output carries no build or
-	// service configuration, so server-assigned values inside
-	// revision_config would otherwise remain unknown after apply.
-	revision, err = findWebFunctionRevisionByTwoPartKey(ctx, conn, name, revisionID)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, function, revision, endpoint, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, function, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -623,187 +168,12 @@ func (r *functionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	var (
-		revision *lambdaweb.GetWebFunctionRevisionOutput
-		endpoint *lambdaweb.GetWebFunctionEndpointOutput
-	)
-
-	switch revisionSummary, err := findNewestFunctionRevision(ctx, conn, name); {
-	case err != nil:
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-		return
-
-	case revisionSummary != nil:
-		revisionID := aws.ToString(revisionSummary.RevisionId)
-		revision, err = findWebFunctionRevisionByTwoPartKey(ctx, conn, name, revisionID)
-		switch {
-		case retry.NotFound(err):
-			revision, err = nil, nil //nolint:ineffassign,wastedassign // future-proof
-		case err != nil:
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-			return
-		}
-	}
-
-	endpointConfig, diags := state.EndpointConfig.ToPtr(ctx)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var endpointName string
-	if endpointConfig != nil {
-		endpointName = fwflex.StringValueFromFramework(ctx, endpointConfig.EndpointName)
-	} else {
-		// No configuration to match against, i.e. import. CreateWebFunction always
-		// creates an endpoint with the function, so the oldest endpoint is the one
-		// endpoint_config describes. Giving up when a function has several
-		// endpoints would leave the Required endpoint_config block empty in state,
-		// and populating it from null triggers the RequiresReplace plan modifiers
-		// on endpoint_name and endpoint_type: the first apply after import would
-		// then replace the function, silently deleting every other endpoint it
-		// owns along with their domain names.
-		switch endpointSummary, err := findOldestFunctionEndpoint(ctx, conn, name); {
-		case err != nil:
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-			return
-
-		case endpointSummary != nil:
-			endpointName = aws.ToString(endpointSummary.EndpointName)
-		}
-	}
-	if endpointName != "" {
-		endpoint, err = findWebFunctionEndpointByTwoPartKey(ctx, conn, name, endpointName)
-		switch {
-		case retry.NotFound(err):
-			// The endpoint described by endpoint_config was deleted outside of
-			// Terraform. Clear the block so the plan proposes restoring it:
-			// keeping it reports no changes while the function serves no
-			// traffic, and pairing a stale endpoint_config with the null
-			// domain_name set above breaks every configuration that references
-			// the domain, leaving plan and apply unable to run at all.
-			endpoint, err = nil, nil //nolint:ineffassign,wastedassign // future-proof
-		case err != nil:
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-			return
-		}
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, function, revision, endpoint, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, function, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
-}
-
-func (r *functionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state functionResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().LambdaWebClient(ctx)
-
-	name := fwflex.StringValueFromFramework(ctx, plan.FunctionName)
-
-	if !plan.RevisionConfig.Equal(state.RevisionConfig) {
-		// CreateWebFunctionRevision takes description/kmsKeyArn/buildConfig/
-		// serviceConfig at the top level (only CreateWebFunction nests them
-		// under revisionConfig), so expand the block, not the resource model.
-		revisionConfig, diags := plan.RevisionConfig.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		var input lambdaweb.CreateWebFunctionRevisionInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, revisionConfig, &input))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		input.FunctionName = aws.String(name)
-
-		output, err := conn.CreateWebFunctionRevision(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-			return
-		}
-
-		revisionID := aws.ToString(output.RevisionId)
-		if _, err := waitFunctionRevisionActive(ctx, conn, name, revisionID, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-			return
-		}
-
-		plan.LatestRevisionID = fwflex.StringToFramework(ctx, output.RevisionId)
-	} else {
-		plan.LatestRevisionID = state.LatestRevisionID
-	}
-
-	// Carried over unless the endpoint is actually updated below: both are
-	// computed, so leaving them unknown fails the apply.
-	plan.DomainName = state.DomainName
-	plan.RegionalDomainNames = state.RegionalDomainNames
-	if !plan.EndpointConfig.Equal(state.EndpointConfig) {
-		// UpdateWebFunctionEndpoint takes description/authType/
-		// autoDeploymentMode at the top level; expand the endpoint_config
-		// block, not the resource model.
-		endpointConfig, diags := plan.EndpointConfig.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		endpointName := fwflex.StringValueFromFramework(ctx, endpointConfig.EndpointName)
-
-		var input lambdaweb.UpdateWebFunctionEndpointInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, endpointConfig, &input))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		// An omitted description means "leave unchanged" to the API, so an empty
-		// string is what clears one that was removed from the configuration.
-		if endpointConfig.Description.IsNull() {
-			if prior, diags := state.EndpointConfig.ToPtr(ctx); !diags.HasError() && prior != nil && !prior.Description.IsNull() {
-				input.Description = aws.String("")
-			}
-		}
-		input.EndpointName = aws.String(endpointName)
-		input.FunctionName = aws.String(name)
-
-		if _, err := conn.UpdateWebFunctionEndpoint(ctx, &input); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-			return
-		}
-
-		endpoint, err := waitFunctionEndpointUpdated(ctx, conn, name, endpointName, r.UpdateTimeout(ctx, plan.Timeouts))
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-			return
-		}
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flattenEndpoint(ctx, endpoint, &state))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	function, err := waitFunctionUpdated(ctx, conn, name, r.UpdateTimeout(ctx, plan.Timeouts))
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flattenFunction(ctx, function, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *functionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -834,93 +204,9 @@ func (r *functionResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-func (r *functionResource) flatten(ctx context.Context, function *lambdaweb.GetWebFunctionOutput, revision *lambdaweb.GetWebFunctionRevisionOutput, endpoint *lambdaweb.GetWebFunctionEndpointOutput, data *functionResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-	diags.Append(r.flattenFunction(ctx, function, data)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	if revision != nil {
-		diags.Append(r.flattenRevision(ctx, revision, data)...)
-		if diags.HasError() {
-			return diags
-		}
-	} else {
-		data.LatestRevisionID = types.StringNull()
-		data.RevisionConfig = fwtypes.NewListNestedObjectValueOfNull[revisionConfigModel](ctx)
-	}
-
-	if endpoint != nil {
-		diags.Append(r.flattenEndpoint(ctx, endpoint, data)...)
-		if diags.HasError() {
-			return diags
-		}
-	} else {
-		data.EndpointConfig = fwtypes.NewListNestedObjectValueOfNull[endpointConfigModel](ctx)
-		data.DomainName = types.StringNull()
-		data.RegionalDomainNames = fwflex.FlattenFrameworkStringValueMapOfString(ctx, nil)
-	}
-
-	return diags
-}
-
-func (r *functionResource) flattenFunction(ctx context.Context, function *lambdaweb.GetWebFunctionOutput, data *functionResourceModel) diag.Diagnostics {
+func (r *functionResource) flatten(ctx context.Context, function *lambdaweb.GetWebFunctionOutput, data *functionResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 	diags.Append(fwflex.Flatten(ctx, function, data)...)
-	return diags
-}
-
-func (r *functionResource) flattenRevision(ctx context.Context, revision *lambdaweb.GetWebFunctionRevisionOutput, data *functionResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-	data.LatestRevisionID = fwflex.StringToFramework(ctx, revision.RevisionId)
-
-	priorRevisionConfig := data.RevisionConfig
-	model, d := fwtypes.Nullified[revisionConfigModel](ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-	diags.Append(fwflex.Flatten(ctx, revision, &model)...)
-	if diags.HasError() {
-		return diags
-	}
-	restoreTelemetryConfig(ctx, &model, priorRevisionConfig)
-
-	data.RevisionConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	return diags
-}
-
-func (r *functionResource) flattenEndpoint(ctx context.Context, endpoint *lambdaweb.GetWebFunctionEndpointOutput, data *functionResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-	if aws.ToString(endpoint.Description) == "" {
-		endpoint.Description = nil
-	}
-
-	model, d := fwtypes.Nullified[endpointConfigModel](ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-	diags.Append(fwflex.Flatten(ctx, endpoint, &model)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	data.EndpointConfig, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	data.DomainName = fwflex.StringToFramework(ctx, endpoint.DomainName)
-	data.RegionalDomainNames = regionalDomainNames(ctx, endpoint.RegionalEndpoints)
-
 	return diags
 }
 
@@ -1001,24 +287,6 @@ func waitFunctionCreated(ctx context.Context, conn *lambdaweb.Client, name strin
 	return nil, smarterr.NewError(err)
 }
 
-func waitFunctionUpdated(ctx context.Context, conn *lambdaweb.Client, name string, timeout time.Duration) (*lambdaweb.GetWebFunctionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.FunctionStatePending),
-		Target:                    enum.Slice(awstypes.FunctionStateActive),
-		Refresh:                   statusFunction(conn, name),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionOutput); ok {
-		retry.SetLastError(err, errors.New(aws.ToString(out.StateReason)))
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
 func waitFunctionDeleted(ctx context.Context, conn *lambdaweb.Client, name string, timeout time.Duration) (*lambdaweb.GetWebFunctionOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FunctionStateActive, awstypes.FunctionStateDeleting),
@@ -1036,131 +304,11 @@ func waitFunctionDeleted(ctx context.Context, conn *lambdaweb.Client, name strin
 	return nil, smarterr.NewError(err)
 }
 
-func findNewestFunctionRevision(ctx context.Context, conn *lambdaweb.Client, functionName string) (*awstypes.FunctionRevisionSummary, error) {
-	var newest *awstypes.FunctionRevisionSummary
-	input := lambdaweb.ListWebFunctionRevisionsInput{
-		FunctionName: aws.String(functionName),
-	}
-	for item, err := range listFunctionRevisions(ctx, conn, &input) {
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		if newest == nil || item.CreatedAt.After(aws.ToTime(newest.CreatedAt)) {
-			newest = &item
-		}
-	}
-
-	return newest, nil
-}
-
-func findOldestFunctionEndpoint(ctx context.Context, conn *lambdaweb.Client, functionName string) (*awstypes.FunctionEndpointSummary, error) {
-	var oldest *awstypes.FunctionEndpointSummary
-	input := lambdaweb.ListWebFunctionEndpointsInput{
-		FunctionName: aws.String(functionName),
-	}
-	for item, err := range listFunctionEndpoints(ctx, conn, &input) {
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		if oldest == nil || item.CreatedAt.Before(aws.ToTime(oldest.CreatedAt)) {
-			oldest = &item
-		}
-	}
-
-	return oldest, nil
-}
-
-func listFunctionEndpoints(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionEndpointsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[awstypes.FunctionEndpointSummary, error] {
-	return tfiter.ConcatValuesWithError(listFunctionEndpointPages(ctx, conn, input, optFns...))
-}
-
-func listFunctionEndpointPages(ctx context.Context, conn *lambdaweb.Client, input *lambdaweb.ListWebFunctionEndpointsInput, optFns ...func(*lambdaweb.Options)) iter.Seq2[[]awstypes.FunctionEndpointSummary, error] {
-	return func(yield func([]awstypes.FunctionEndpointSummary, error) bool) {
-		pages := lambdaweb.NewListWebFunctionEndpointsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx, optFns...)
-			if err != nil {
-				yield(nil, fmt.Errorf("listing Lambda Web Function Endpoints: %w", err))
-				return
-			}
-
-			if !yield(page.Endpoints, nil) {
-				return
-			}
-		}
-	}
-}
-
-// restoreTelemetryConfig keeps telemetry_config as configuration-only state.
-// The service assigns default telemetry (a log group and INFO log levels) to
-// every revision and reports it back, but revisions are immutable, so
-// telemetry the practitioner never wrote is a server default, not drift:
-// reading it into state breaks every apply with "block count changed from 0 to
-// 1", and a partially configured block (say, log_group only) would surface the
-// filled-in log levels as a perpetual diff. prior is the configured
-// revision_config (the plan on create, prior state on refresh); its
-// telemetry_config replaces the server's wholesale. On import there is no
-// prior, so telemetry_config is left unpopulated rather than importing the
-// server defaults.
-func restoreTelemetryConfig(ctx context.Context, revModel *revisionConfigModel, prior fwtypes.ListNestedObjectValueOf[revisionConfigModel]) {
-	desired := fwtypes.NewListNestedObjectValueOfNull[telemetryConfigModel](ctx)
-	if !prior.IsNull() && !prior.IsUnknown() {
-		if priorRev, d := prior.ToPtr(ctx); !d.HasError() && priorRev != nil && !priorRev.ServiceConfig.IsNull() && !priorRev.ServiceConfig.IsUnknown() {
-			if priorSvc, d := priorRev.ServiceConfig.ToPtr(ctx); !d.HasError() && priorSvc != nil && !priorSvc.TelemetryConfig.IsUnknown() {
-				desired = priorSvc.TelemetryConfig
-			}
-		}
-	}
-
-	if revModel.ServiceConfig.IsNull() || revModel.ServiceConfig.IsUnknown() {
-		return
-	}
-	svc, d := revModel.ServiceConfig.ToPtr(ctx)
-	if d.HasError() || svc == nil {
-		return
-	}
-	svc.TelemetryConfig = desired
-	revModel.ServiceConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, svc)
-}
-
 type functionResourceModel struct {
 	framework.WithRegionModel
-	DomainName          types.String                                         `tfsdk:"domain_name"`
-	EndpointConfig      fwtypes.ListNestedObjectValueOf[endpointConfigModel] `tfsdk:"endpoint_config"`
-	FunctionARN         types.String                                         `tfsdk:"arn"`
-	FunctionName        types.String                                         `tfsdk:"function_name"`
-	LatestRevisionID    types.String                                         `tfsdk:"latest_revision_id"`
-	RevisionConfig      fwtypes.ListNestedObjectValueOf[revisionConfigModel] `tfsdk:"revision_config"`
-	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
-	Tags                tftags.Map                                           `tfsdk:"tags"`
-	TagsAll             tftags.Map                                           `tfsdk:"tags_all"`
-	Timeouts            timeouts.Value                                       `tfsdk:"timeouts"`
-}
-
-type endpointConfigModel struct {
-	AuthType           fwtypes.StringEnum[awstypes.AuthType]                `tfsdk:"auth_type"`
-	AutoDeploymentMode fwtypes.StringEnum[awstypes.AutoDeploymentMode]      `tfsdk:"auto_deployment_mode"`
-	Description        types.String                                         `tfsdk:"description"`
-	EndpointName       types.String                                         `tfsdk:"endpoint_name"`
-	EndpointType       fwtypes.StringEnum[awstypes.EndpointType]            `tfsdk:"endpoint_type"`
-	Regions            fwtypes.SetOfString                                  `tfsdk:"regions"`
-	ScalingConfig      fwtypes.ListNestedObjectValueOf[scalingConfigModel]  `tfsdk:"scaling_config"`
-	ThrottleConfig     fwtypes.ListNestedObjectValueOf[throttleConfigModel] `tfsdk:"throttle_config"`
-}
-
-type scalingConfigModel struct {
-	MaxEnvironments types.Int64 `tfsdk:"max_environments"`
-}
-
-type throttleConfigModel struct {
-	RateLimit types.Int64 `tfsdk:"rate_limit"`
-}
-
-type revisionConfigModel struct {
-	BuildConfig   fwtypes.ListNestedObjectValueOf[buildConfigModel]   `tfsdk:"build_config"`
-	Description   types.String                                        `tfsdk:"description"`
-	KMSKeyARN     fwtypes.ARN                                         `tfsdk:"kms_key_arn"`
-	ServiceConfig fwtypes.ListNestedObjectValueOf[serviceConfigModel] `tfsdk:"service_config"`
+	FunctionARN  types.String   `tfsdk:"arn"`
+	FunctionName types.String   `tfsdk:"function_name"`
+	Tags         tftags.Map     `tfsdk:"tags"`
+	TagsAll      tftags.Map     `tfsdk:"tags_all"`
+	Timeouts     timeouts.Value `tfsdk:"timeouts"`
 }
