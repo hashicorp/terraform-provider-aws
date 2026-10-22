@@ -6562,6 +6562,43 @@ func TestAccRDSInstance_Oracle_multiTenantRestore(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_Oracle_multiTenantPassword(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_Oracle_multiTenantPassword(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "multi_tenant", acctest.CtTrue),
+				),
+			},
+			{
+				// The master user password belongs to the tenant databases after conversion.
+				Config:      testAccInstanceConfig_Oracle_multiTenantPassword(rName, 2),
+				ExpectError: regexache.MustCompile(`You can't use MasterUserPassword for an instance in the multi-tenant configuration`),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_Outposts_coIPEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -10743,6 +10780,46 @@ resource "aws_db_instance" "test" {
   username             = "tfacctest"
 }
 `, tfrds.InstanceEngineOracleStandard2CDB, mainInstanceClasses, rName, multiTenant))
+}
+
+func testAccInstanceConfig_Oracle_multiTenantPassword(rName string, passwordVersion int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		testAccInstanceConfig_baseVPC(rName),
+		fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine  = %[1]q
+  version = "19"
+  latest  = true
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = data.aws_rds_engine_version.test.engine
+  engine_version = data.aws_rds_engine_version.test.version_actual
+  license_model  = "bring-your-own-license"
+  storage_type   = "gp3"
+
+  preferred_instance_classes = [%[2]s]
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage    = 20
+  apply_immediately    = true
+  db_name              = "TFTEST"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier           = %[3]q
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model        = data.aws_rds_orderable_db_instance.test.license_model
+  multi_tenant         = true
+  password_wo          = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version  = %[4]d
+  skip_final_snapshot  = true
+  storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
+  username             = "tfacctest"
+}
+`, tfrds.InstanceEngineOracleStandard2CDB, mainInstanceClasses, rName, passwordVersion))
 }
 
 func testAccInstanceConfig_Oracle_multiTenantRestore(rName string) string {
