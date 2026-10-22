@@ -41,6 +41,6 @@ A new service package needs a test case in `TestFindSDKResources`; a golden file
 - `exampleinterface`: `aws_exampleinterface_thing`'s Read has no SDK calls, because its client is passed as a package interface that no type in the package implements.
 - `examplecustomizediff`: `aws_examplecustomizediff_variable`'s CustomizeDiff, a package-level `customdiff.All`, has its SDK calls but no `functions`; `aws_examplecustomizediff_factory_reference`'s CustomizeDiff has no SDK calls, because the resource factory it calls isn't followed.
 - `examplefuncrefs`: method values, e.g. `h.Upsert`, and `schema.NoopContext` have no `location`.
-- `exampletags`: each tagged resource's `tags` has the SDK calls of every resource type that shares `ListTags` and `UpdateTags`.
+- `exampletags`: each tagged resource's `tags` has only the SDK calls of the `switch resourceType` branch for its `@Tags(resourceType=...)`. `aws_exampletags_doohickey`'s type has no case, so its `tags` has no SDK calls.
 - `exampletagsnohandlers`: the tagged resource has an empty `tags`, since there are no tag methods for the tags interceptor to call. An untagged resource has no `tags` at all.
 - `exampleunanalyzed`: SDK calls made through the SDK waiter and presign client are missing. The warnings sdkmap logs for them aren't in the golden files and aren't tested.
