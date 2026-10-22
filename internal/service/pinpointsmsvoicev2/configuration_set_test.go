@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -151,6 +152,114 @@ func TestAccPinpointSMSVoiceV2ConfigurationSet_tags(t *testing.T) {
 	})
 }
 
+func TestAccPinpointSMSVoiceV2ConfigurationSet_defaultMessageType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var configurationSet awstypes.ConfigurationSetInformation
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_pinpointsmsvoicev2_configuration_set.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckConfigurationSet(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetConfig_defaultMessageType(rName, string(awstypes.MessageTypeTransactional)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, t, resourceName, &configurationSet),
+					testAccCheckConfigurationSetDefaults(&configurationSet, awstypes.MessageTypeTransactional, ""),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_message_type"), knownvalue.StringExact(string(awstypes.MessageTypeTransactional))),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConfigurationSetConfig_defaultMessageType(rName, string(awstypes.MessageTypePromotional)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, t, resourceName, &configurationSet),
+					testAccCheckConfigurationSetDefaults(&configurationSet, awstypes.MessageTypePromotional, ""),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_message_type"), knownvalue.StringExact(string(awstypes.MessageTypePromotional))),
+				},
+			},
+			{
+				Config: testAccConfigurationSetConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, t, resourceName, &configurationSet),
+					testAccCheckConfigurationSetDefaults(&configurationSet, "", ""),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_message_type"), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccPinpointSMSVoiceV2ConfigurationSet_defaultSenderID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var configurationSet awstypes.ConfigurationSetInformation
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_pinpointsmsvoicev2_configuration_set.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckConfigurationSet(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetConfig_defaultSenderID(rName, "example"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, t, resourceName, &configurationSet),
+					testAccCheckConfigurationSetDefaults(&configurationSet, "", "example"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_sender_id"), knownvalue.StringExact("example")),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConfigurationSetConfig_defaultSenderID(rName, "updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, t, resourceName, &configurationSet),
+					testAccCheckConfigurationSetDefaults(&configurationSet, "", "updated"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_sender_id"), knownvalue.StringExact("updated")),
+				},
+			},
+			{
+				Config: testAccConfigurationSetConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(ctx, t, resourceName, &configurationSet),
+					testAccCheckConfigurationSetDefaults(&configurationSet, "", ""),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_sender_id"), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckConfigurationSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
@@ -193,6 +302,21 @@ func testAccCheckConfigurationSetExists(ctx context.Context, t *testing.T, n str
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+// testAccCheckConfigurationSetDefaults checks the defaults AWS stored, which can differ from Terraform state.
+func testAccCheckConfigurationSetDefaults(v *awstypes.ConfigurationSetInformation, wantMessageType awstypes.MessageType, wantSenderID string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if got := v.DefaultMessageType; got != wantMessageType {
+			return fmt.Errorf("DefaultMessageType = %q, want %q", got, wantMessageType)
+		}
+
+		if got := aws.ToString(v.DefaultSenderId); got != wantSenderID {
+			return fmt.Errorf("DefaultSenderId = %q, want %q", got, wantSenderID)
+		}
 
 		return nil
 	}
@@ -245,4 +369,22 @@ resource "aws_pinpointsmsvoicev2_configuration_set" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccConfigurationSetConfig_defaultMessageType(rName, messageType string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_configuration_set" "test" {
+  name                 = %[1]q
+  default_message_type = %[2]q
+}
+`, rName, messageType)
+}
+
+func testAccConfigurationSetConfig_defaultSenderID(rName, senderID string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_configuration_set" "test" {
+  name              = %[1]q
+  default_sender_id = %[2]q
+}
+`, rName, senderID)
 }
