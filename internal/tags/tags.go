@@ -37,7 +37,7 @@ func warnComputedTagsConfigured(any, cty.Path) diag.Diagnostics {
 	return diag.Diagnostics{{
 		Severity: diag.Warning,
 		Summary:  "Argument is computed",
-		Detail:   "The provider sets this attribute. Remove it from your configuration. A future version of the provider will reject it.",
+		Detail:   "This attribute is meant to be set only by the provider. The provider accepted a configured value by mistake, and configuring it isn't supported. Remove it from your configuration. A future version of the provider will reject it.",
 	}}
 }
 
