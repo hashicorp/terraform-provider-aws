@@ -14,6 +14,7 @@ var (
 	ResourceGroupPolicyAttachment         = resourceGroupPolicyAttachment
 	ResourceInstanceProfile               = resourceInstanceProfile
 	ResourceOpenIDConnectProvider         = resourceOpenIDConnectProvider
+	ResourceOpenIDConnectProviderClientID = newOpenIDConnectProviderClientIDResource
 	ResourceOrganizationsFeatures         = newOrganizationsFeaturesResource
 	ResourceOutboundWebIdentityFederation = newOutboundWebIdentityFederationResource
 	ResourcePolicy                        = resourcePolicy
@@ -49,6 +50,7 @@ var (
 	FindGroupPolicyByTwoPartKey                 = findGroupPolicyByTwoPartKey
 	FindInstanceProfileByName                   = findInstanceProfileByName
 	FindOpenIDConnectProviderByARN              = findOpenIDConnectProviderByARN
+	FindOpenIDConnectProviderClientID           = findOpenIDConnectProviderClientID
 	FindOrganizationsFeatures                   = findOrganizationsFeatures
 	FindOutboundWebIdentityFederation           = findOutboundWebIdentityFederation
 	FindPolicyByARN                             = findPolicyByARN
