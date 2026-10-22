@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_wafv2_web_acl_rule: Remove `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement` from `statement` blocks nested in `and_statement`, `not_statement` and `or_statement`, `and_statement` from `statement` blocks nested in `and_statement`, and `or_statement` from `statement` blocks nested in `or_statement`. AWS WAF rejects all of them there. Configurations that name one only in an empty `dynamic` block must remove that block
+```
