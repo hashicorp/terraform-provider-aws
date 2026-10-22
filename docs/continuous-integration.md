@@ -383,10 +383,17 @@ make makefile-lint
 
 This check ensures that code uses current idiomatic Go. It runs `go fix -diff ./...`, which uses the modernizers built into the Go toolchain (`go tool fix help` lists them) and fails if any fixes apply.
 
-Use the `modern-check` target to run the check:
+Use the `fix-check` target to run the check on all packages, or limit it to a service package with `PKG`:
 
 ```console
-make modern-check
+make fix-check
+make fix-check PKG=ec2
+```
+
+In CI, the check is split across parallel jobs using round-robin sharding by package. To reproduce a specific shard locally, use the `go-fix-check-shard` target:
+
+```console
+make go-fix-check-shard SHARD=0 TOTAL_SHARDS=4
 ```
 
 In CI, the check is split across parallel jobs using round-robin sharding by package. To reproduce a specific shard locally, use the `go-fix-check-shard` target:
@@ -402,11 +409,7 @@ make fix
 make fix PKG=ec2
 ```
 
-The `modern-fix` target is equivalent:
-
-```console
-make modern-fix
-```
+The legacy `modern-check` and `modern-fix` targets are aliases for `fix-check` and `fix`.
 
 ### PR Target Check
 

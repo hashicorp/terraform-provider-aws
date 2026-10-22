@@ -362,6 +362,10 @@ fix: prereq-go ## Apply go fix modernizers (all packages, or scoped to a service
 	@echo "make: Applying go fix..."
 	@$(GO_VER) fix $(TEST)
 
+fix-check: prereq-go ## [CI] Go Fix Check / go fix (all packages, or scoped to a service with PKG/K)
+	@echo "make: Checking go fix..."
+	@$(GO_VER) fix -diff $(TEST)
+
 fix-constants: semgrep-fix-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
@@ -513,13 +517,9 @@ makefile-lint: prereq-go ## [CI] Makefile Linting / alignment check
 
 misspell: changelog-misspell docs-misspell website-misspell ## [CI] Run all CI misspell checks
 
-modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
-	@echo "make: Checking for modern Go code..."
-	@$(GO_VER) fix -diff $(TEST)
+modern-check: fix-check ## Legacy alias to fix-check
 
-modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
-	@echo "make: Fixing checks for modern Go code..."
-	@$(GO_VER) fix $(TEST)
+modern-fix: fix ## Legacy alias to fix
 
 modern-fix-core: prereq-go ## Fix checks for modern Go code in core directories
 	@echo "make: Fixing checks for modern Go code in core directories..."
@@ -584,7 +584,7 @@ quick-fix-heading: ## [internal] Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports modern-fix semgrep-fix terraform-fmt website-terrafmt-fix ## Some quick fixes
+quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports fix semgrep-fix terraform-fmt website-terrafmt-fix ## Some quick fixes
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
@@ -1353,6 +1353,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	docs-misspell \
 	examples-tflint \
 	fix \
+	fix-check \
 	fix-constants \
 	fix-imports \
 	fix-imports-core \
