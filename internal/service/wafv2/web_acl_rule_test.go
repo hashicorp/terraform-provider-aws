@@ -196,6 +196,37 @@ func TestAccWAFV2WebACLRule_managedRuleGroup(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_managedRuleGroupScopeDownAndNotStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_managedRuleGroupScopeDownAndNotStatement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.name", "AWSManagedRulesCommonRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.scope_down_statement.0.and_statement.0.statement.0.not_statement.0.statement.0.byte_match_statement.0.search_string", "basic"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.scope_down_statement.0.and_statement.0.statement.1.not_statement.0.statement.0.byte_match_statement.0.search_string", "bearer"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLRule_managedRuleGroupWithRuleActionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1828,6 +1859,99 @@ resource "aws_wafv2_web_acl_rule" "test" {
     managed_rule_group_statement {
       name        = "AWSManagedRulesCommonRuleSet"
       vendor_name = "AWS"
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleConfig_managedRuleGroupScopeDownAndNotStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  override_action {
+    none {}
+  }
+
+  statement {
+    managed_rule_group_statement {
+      name        = "AWSManagedRulesCommonRuleSet"
+      vendor_name = "AWS"
+
+      scope_down_statement {
+        and_statement {
+          statement {
+            not_statement {
+              statement {
+                byte_match_statement {
+                  search_string         = "basic"
+                  positional_constraint = "STARTS_WITH"
+
+                  field_to_match {
+                    single_header {
+                      name = "authorization"
+                    }
+                  }
+
+                  text_transformation {
+                    priority = 0
+                    type     = "LOWERCASE"
+                  }
+                }
+              }
+            }
+          }
+          statement {
+            not_statement {
+              statement {
+                byte_match_statement {
+                  search_string         = "bearer"
+                  positional_constraint = "STARTS_WITH"
+
+                  field_to_match {
+                    single_header {
+                      name = "authorization"
+                    }
+                  }
+
+                  text_transformation {
+                    priority = 0
+                    type     = "LOWERCASE"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
