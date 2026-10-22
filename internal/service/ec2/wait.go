@@ -2835,11 +2835,11 @@ func waitTransitGatewayPolicyTableAssociationDeleted(ctx context.Context, conn *
 	return nil, err
 }
 
-func waitTransitGatewayRouteTableAssociationCreated(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, transitGatewayAttachmentID string) error {
+func waitTransitGatewayRouteTableAssociationCreated(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, transitGatewayAttachmentID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayAssociationStateAssociating),
 		Target:  enum.Slice(awstypes.TransitGatewayAssociationStateAssociated),
-		Timeout: transitGatewayRouteTableAssociationCreatedTimeout,
+		Timeout: timeout,
 		Refresh: statusTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
 	}
 
@@ -2848,11 +2848,11 @@ func waitTransitGatewayRouteTableAssociationCreated(ctx context.Context, conn *e
 	return err
 }
 
-func waitTransitGatewayRouteTableAssociationDeleted(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, transitGatewayAttachmentID string) error {
+func waitTransitGatewayRouteTableAssociationDeleted(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, transitGatewayAttachmentID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.TransitGatewayAssociationStateAssociated, awstypes.TransitGatewayAssociationStateDisassociating),
 		Target:         []string{},
-		Timeout:        transitGatewayRouteTableAssociationDeletedTimeout,
+		Timeout:        timeout,
 		Refresh:        statusTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
 		NotFoundChecks: 1,
 	}
