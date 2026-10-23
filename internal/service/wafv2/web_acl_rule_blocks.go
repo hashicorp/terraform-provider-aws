@@ -879,23 +879,193 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 	}
 })
 
+// scopeDownLeafStatementBlocks returns only leaf statements (no managed_rule_group, rate_based,
+// or rule_group_reference) to avoid initialization cycles when used inside scope_down_statement
+// which is itself referenced by managed_rule_group_statement and rate_based_statement.
+func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
+	return map[string]schema.Block{
+		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
+		"geo_match_statement":                   geoMatchStatementBlock(ctx),
+		"byte_match_statement":                  byteMatchStatementBlock(ctx),
+		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
+		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+		"regex_match_statement":                 regexMatchStatementBlock(ctx),
+		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+		"label_match_statement":                 labelMatchStatementBlock(ctx),
+		"asn_match_statement":                   asnMatchStatementBlock(ctx),
+	}
+}
+
+// Level-based scope_down blocks — mirrors web_acl_rule_statement_models_gen.go.
+// Level 0 blocks: leaf statements only (no and/not/or).
+// Level 1 blocks: leaf + and/not/or at level 0.
+// scopeDownStatementBlock (used in scope_down_statement) references and/not/or at level 1.
+// No var/var cycles since each level only refers to the level below.
+
+// scopeDownStatementBlockLevel0NoMinMax: level-0 statements, used by AND/OR at level 0.
+var scopeDownStatementBlockLevel0NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: scopeDownLeafStatementBlocks(ctx),
+		},
+		Description: "Nested leaf statements for logical operations within scope_down_statement.",
+	}
+})
+
+// scopeDownStatementBlockLevel0Single: exactly one level-0 statement, used by NOT at level 0.
+var scopeDownStatementBlockLevel0Single = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: scopeDownLeafStatementBlocks(ctx),
+		},
+		Description: "Nested leaf statement for NOT operation within scope_down_statement.",
+	}
+})
+
+var scopeDownAndStatementBlockLevel0 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownAndStatementLevel0Model](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"statement": scopeDownStatementBlockLevel0NoMinMax(ctx),
+			},
+		},
+		Description: "Logical AND statement.",
+	}
+})
+
+var scopeDownNotStatementBlockLevel0 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownNotStatementLevel0Model](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"statement": scopeDownStatementBlockLevel0Single(ctx),
+			},
+		},
+		Description: "Logical NOT statement.",
+	}
+})
+
+var scopeDownOrStatementBlockLevel0 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownOrStatementLevel0Model](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"statement": scopeDownStatementBlockLevel0NoMinMax(ctx),
+			},
+		},
+		Description: "Logical OR statement.",
+	}
+})
+
+// scopeDownStatementBlockLevel1NoMinMax: level-1 statements (leaf + and/not/or at level 0), used by AND/OR at level 1.
+var scopeDownStatementBlockLevel1NoMinMax = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	blocks := scopeDownLeafStatementBlocks(ctx)
+	blocks["and_statement"] = scopeDownAndStatementBlockLevel0(ctx)
+	blocks["not_statement"] = scopeDownNotStatementBlockLevel0(ctx)
+	blocks["or_statement"] = scopeDownOrStatementBlockLevel0(ctx)
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel1Model](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: blocks,
+		},
+		Description: "Nested statements for logical operations within scope_down_statement.",
+	}
+})
+
+// scopeDownStatementBlockLevel1Single: exactly one level-1 statement, used by NOT at level 1.
+var scopeDownStatementBlockLevel1Single = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	blocks := scopeDownLeafStatementBlocks(ctx)
+	blocks["and_statement"] = scopeDownAndStatementBlockLevel0(ctx)
+	blocks["not_statement"] = scopeDownNotStatementBlockLevel0(ctx)
+	blocks["or_statement"] = scopeDownOrStatementBlockLevel0(ctx)
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel1Model](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: blocks,
+		},
+		Description: "Nested statement for NOT operation within scope_down_statement.",
+	}
+})
+
+// scopeDownAndStatementBlock: AND at level 1, wrapping level-1 statements.
+// Type alias: webACLRuleScopeDownAndStatementModel = webACLRuleScopeDownAndStatementLevel1Model.
+var scopeDownAndStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownAndStatementLevel1Model](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"statement": scopeDownStatementBlockLevel1NoMinMax(ctx),
+			},
+		},
+		Description: "Logical AND statement.",
+	}
+})
+
+// scopeDownNotStatementBlock: NOT at level 1, wrapping a single level-1 statement.
+// Type alias: webACLRuleScopeDownNotStatementModel = webACLRuleScopeDownNotStatementLevel1Model.
+var scopeDownNotStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownNotStatementLevel1Model](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"statement": scopeDownStatementBlockLevel1Single(ctx),
+			},
+		},
+		Description: "Logical NOT statement.",
+	}
+})
+
+// scopeDownOrStatementBlock: OR at level 1, wrapping level-1 statements.
+// Type alias: webACLRuleScopeDownOrStatementModel = webACLRuleScopeDownOrStatementLevel1Model.
+var scopeDownOrStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownOrStatementLevel1Model](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"statement": scopeDownStatementBlockLevel1NoMinMax(ctx),
+			},
+		},
+		Description: "Logical OR statement.",
+	}
+})
+
+// scopeDownStatementBlock adds logical statements (and/or/not) to the leaf statement blocks.
+// Uses scope-down-specific models to avoid type cycles with managed_rule_group and rate_based.
 var scopeDownStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	blocks := scopeDownLeafStatementBlocks(ctx)
+	blocks["and_statement"] = scopeDownAndStatementBlock(ctx)
+	blocks["not_statement"] = scopeDownNotStatementBlock(ctx)
+	blocks["or_statement"] = scopeDownOrStatementBlock(ctx)
+
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementModel](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
-			Blocks: map[string]schema.Block{
-				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
-				"geo_match_statement":                   geoMatchStatementBlock(ctx),
-				"byte_match_statement":                  byteMatchStatementBlock(ctx),
-				"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
-				"xss_match_statement":                   xssMatchStatementBlock(ctx),
-				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
-				"regex_match_statement":                 regexMatchStatementBlock(ctx),
-				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
-				"label_match_statement":                 labelMatchStatementBlock(ctx),
-				"asn_match_statement":                   asnMatchStatementBlock(ctx),
-			},
+			Blocks: blocks,
 		},
 		Description: "Scope down statement for managed rule groups.",
 	}

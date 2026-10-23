@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_wafv2_web_acl_rule: Fix `scope_down_statement` not supporting logical statements (`and_statement`, `not_statement`, `or_statement`), including `not_statement` nested inside `and_statement`
+```
