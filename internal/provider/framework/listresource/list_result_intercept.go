@@ -283,8 +283,8 @@ func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorPa
 						return diags
 					}
 
-					t := timeouts.Value{}
-					t.Object = nullObj
+					t := timeouts.Value{
+						Object: nullObj}
 					field.Set(reflect.ValueOf(t))
 				}
 			}
