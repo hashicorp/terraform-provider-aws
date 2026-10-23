@@ -482,6 +482,51 @@ func TestAccMWAAEnvironment_updateAirflowVersionMinor(t *testing.T) {
 	})
 }
 
+func TestAccMWAAEnvironment_updateAirflowVersionMajor(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var environment1, environment2 awstypes.Environment
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mwaa_environment.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MWAAServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_airflowVersion(rName, "2.10.3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment1),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.10.3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEnvironmentConfig_airflowVersion(rName, "3.0.4"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment2),
+					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "3.0.4"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMWAAEnvironment_updateAirflowWorkerReplacementStrategy(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
