@@ -507,10 +507,13 @@ func hasDomainTransferLock(statusList []string) bool {
 }
 
 func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, name string) (*route53domains.GetDomainDetailOutput, error) {
-	input := &route53domains.GetDomainDetailInput{
+	input := route53domains.GetDomainDetailInput{
 		DomainName: aws.String(name),
 	}
+	return findDomainDetail(ctx, conn, &input)
+}
 
+func findDomainDetail(ctx context.Context, conn *route53domains.Client, input *route53domains.GetDomainDetailInput) (*route53domains.GetDomainDetailOutput, error) {
 	output, err := conn.GetDomainDetail(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidInput](err, "not found") {

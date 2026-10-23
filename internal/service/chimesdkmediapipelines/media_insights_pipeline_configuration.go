@@ -505,8 +505,7 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 		var err error
 		out, err = conn.CreateMediaInsightsPipelineConfiguration(ctx, in)
 		if err != nil {
-			var forbiddenException *awstypes.ForbiddenException
-			if errors.As(err, &forbiddenException) {
+			if errs.IsA[*awstypes.ForbiddenException](err) {
 				return tfresource.RetryableError(err)
 			}
 			return tfresource.NonRetryableError(err)
@@ -589,8 +588,7 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 			var err error
 			_, err = conn.UpdateMediaInsightsPipelineConfiguration(ctx, in)
 			if err != nil {
-				var forbiddenException *awstypes.ForbiddenException
-				if errors.As(err, &forbiddenException) {
+				if errs.IsA[*awstypes.ForbiddenException](err) {
 					return tfresource.RetryableError(err)
 				}
 				return tfresource.NonRetryableError(err)
