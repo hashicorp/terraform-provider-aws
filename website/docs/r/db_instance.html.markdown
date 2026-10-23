@@ -35,7 +35,7 @@ Amazon RDS supports instance classes for General-purpose, Memory-optimized, Burs
 
 ### Low-Downtime Updates
 
-By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions. Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments.html) and switching over the instances when complete. Low-downtime updates are only available for MySQL, MariaDB, and PostgreSQL — other engines are not supported by RDS Blue/Green deployments — and cannot be used with DB Instances with replicas. Backups must be enabled. Enable low-downtime updates by setting `blue_green_update.enabled` to `true`.
+By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions. Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments.html) and switching over the instances when complete. Low-downtime updates are only available for MySQL, MariaDB, and PostgreSQL — other engines are not supported by RDS Blue/Green deployments — and cannot be used with DB Instances with replicas. Backups must be enabled. Enable low-downtime updates by setting `blue_green_update.enabled` to `true`. Storage changes (allocated storage, storage type, IOPS, and storage throughput) are also performed via the Blue/Green deployment.
 
 ## Example Usage
 
@@ -411,6 +411,7 @@ The `s3_import` block supports the following arguments:
 The `blue_green_update` block supports the following arguments:
 
 * `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`. Default is `false`.
+* `upgrade_target_storage_config` - (Optional) Whether to upgrade the storage file system configuration on the green DB instance. This migrates the green DB instance from the older 32-bit file system to the preferred configuration. Default is `false`.
 
 ## Attribute Reference
 
