@@ -84,7 +84,7 @@ func TestAccLambdaMicroVMsImage_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -138,7 +138,7 @@ func TestAccLambdaMicroVMsImage_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -186,7 +186,7 @@ func TestAccLambdaMicroVMsImage_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -222,7 +222,7 @@ func TestAccLambdaMicroVMsImage_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -294,7 +294,7 @@ func TestAccLambdaMicroVMsImage_Tags_null(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -354,7 +354,7 @@ func TestAccLambdaMicroVMsImage_Tags_emptyMap(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -446,7 +446,7 @@ func TestAccLambdaMicroVMsImage_Tags_addOnUpdate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -517,7 +517,7 @@ func TestAccLambdaMicroVMsImage_Tags_EmptyTag_onCreate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -553,7 +553,7 @@ func TestAccLambdaMicroVMsImage_Tags_EmptyTag_onCreate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -661,7 +661,7 @@ func TestAccLambdaMicroVMsImage_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -709,7 +709,7 @@ func TestAccLambdaMicroVMsImage_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -811,7 +811,7 @@ func TestAccLambdaMicroVMsImage_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -881,7 +881,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -933,7 +933,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -981,7 +981,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -1019,7 +1019,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -1099,7 +1099,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -1163,7 +1163,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -1201,7 +1201,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -1279,7 +1279,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -1343,7 +1343,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 			{
@@ -1399,7 +1399,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -1501,7 +1501,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_updateToProviderOnly(t *testing
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -1602,7 +1602,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_updateToResourceOnly(t *testing
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -1680,7 +1680,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_emptyResourceTag(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -1750,7 +1750,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_emptyProviderOnlyTag(t *testing
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -1829,7 +1829,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_nullOverlappingResourceTag(t *t
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -1910,7 +1910,7 @@ func TestAccLambdaMicroVMsImage_Tags_DefaultTags_nullNonOverlappingResourceTag(t
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
 					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -1977,7 +1977,7 @@ func TestAccLambdaMicroVMsImage_Tags_ComputedTag_onCreate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -2086,7 +2086,7 @@ func TestAccLambdaMicroVMsImage_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
@@ -2185,7 +2185,7 @@ func TestAccLambdaMicroVMsImage_Tags_ComputedTag_OnUpdate_replace(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
-					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "image_version",
+					"base_image_arn", "base_image_version", "build_role_arn", "code_artifact", "egress_network_connectors", "hooks", "image_version", "logging", names.AttrResources,
 				},
 			},
 		},
