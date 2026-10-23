@@ -19,11 +19,13 @@ import (
 
 const maxLevel = 3 // Change this to expand nesting depth
 
+const filename = "web_acl_rule_statement_models_gen.go"
+
 //go:embed web_acl_rule_statement_models.gtpl
 var modelTemplate string
 
 func main() {
-	fmt.Println("Generating web_acl_rule_statement_models_gen.go") // nosemgrep:ci.calling-fmt.Print-and-variants
+	fmt.Println("Generating " + filename) // nosemgrep:ci.calling-fmt.Print-and-variants
 
 	funcMap := template.FuncMap{
 		"minus": func(a int) int { return a - 1 },
@@ -58,11 +60,11 @@ func main() {
 	formatted, err := format.Source(buf.Bytes())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error formatting: %v\n", err)
-		os.WriteFile("web_acl_rule_statement_models_gen.go", buf.Bytes(), 0644)
+		os.WriteFile(filename, buf.Bytes(), 0644)
 		os.Exit(1)
 	}
 
-	if err := os.WriteFile("web_acl_rule_statement_models_gen.go", formatted, 0644); err != nil {
+	if err := os.WriteFile(filename, formatted, 0644); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing file: %v\n", err)
 		os.Exit(1)
 	}
