@@ -239,11 +239,15 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}
 
-	return resourceRouteTableFlatten(ctx, c, conn, d, routeTable)
+	if err := resourceRouteTableFlatten(ctx, c, routeTable, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceRouteTableFlatten(ctx context.Context, c *conns.AWSClient, conn *ec2.Client, d *schema.ResourceData, routeTable *awstypes.RouteTable) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceRouteTableFlatten(ctx context.Context, c *conns.AWSClient, routeTable *awstypes.RouteTable, d *schema.ResourceData) error {
+	conn := c.EC2Client(ctx)
 
 	ownerID := aws.ToString(routeTable.OwnerId)
 	d.Set(names.AttrARN, routeTableARN(ctx, c, ownerID, d.Id()))
@@ -252,14 +256,14 @@ func resourceRouteTableFlatten(ctx context.Context, c *conns.AWSClient, conn *ec
 		return aws.ToString(v.GatewayId)
 	}))
 	if err := d.Set("route", flattenRoutes(ctx, conn, d, routeTable.Routes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting route: %s", err)
+		return fmt.Errorf("setting route: %w", err)
 	}
 	d.Set(names.AttrVPCID, routeTable.VpcId)
 
 	// Ignore the AmazonFSx service tag in addition to standard ignores.
 	setTagsOut(ctx, svcTags(keyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
 
-	return diags
+	return nil
 }
 
 func resourceRouteTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

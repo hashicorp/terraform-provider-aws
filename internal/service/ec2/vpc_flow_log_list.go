@@ -11,70 +11,25 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_flow_log")
 func newFlowLogResourceAsListResource() inttypes.ListResourceForSDK {
-	l := flowLogListResource{}
-	l.SetResourceSchema(resourceFlowLog())
-	return &l
-}
+	return framework.NewSDKListResource(resourceFlowLog(), framework.SDKListSpec[awstypes.FlowLog, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.FlowLog, error], diag.Diagnostics) {
+			var input ec2.DescribeFlowLogsInput
 
-var _ list.ListResource = &flowLogListResource{}
-
-type flowLogListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *flowLogListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := l.Meta().EC2Client(ctx)
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		input := &ec2.DescribeFlowLogsInput{}
-		for item, err := range listFlowLogsPages(ctx, conn, input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			flowLogID := aws.ToString(item.FlowLogId)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), flowLogID)
-
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(flowLogID)
-
-			if request.IncludeResource {
-				if err := resourceFlowLogFlatten(ctx, l.Meta(), &item, rd); err != nil {
-					tflog.Error(ctx, "Reading Flow Log", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			result.DisplayName = flowLogID
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			return listFlowLogsPages(ctx, c.EC2Client(ctx), &input), nil
+		},
+		ID: func(f awstypes.FlowLog, _ framework.RegionQuery) string {
+			return aws.ToString(f.FlowLogId)
+		},
+		Flatten: resourceFlowLogFlatten,
+	})
 }
 
 func listFlowLogsPages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeFlowLogsInput) iter.Seq2[awstypes.FlowLog, error] {
