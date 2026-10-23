@@ -289,6 +289,7 @@ var (
 	FindVerifiedAccessInstanceTrustProviderAttachmentExists     = findVerifiedAccessInstanceTrustProviderAttachmentExists
 	FindVerifiedAccessTrustProviderByID                         = findVerifiedAccessTrustProviderByID
 	FindVolumeAttachmentInstanceByID                            = findVolumeAttachmentInstanceByID
+	FlattenDnsOptions                                            = flattenDNSOptions
 	FlattenNetworkInterfacePrivateIPAddresses                   = flattenNetworkInterfacePrivateIPAddresses
 	FlattenSecurityGroups                                       = flattenSecurityGroups
 	FlattenTransitGatewayPeeringAttachmentOptions               = flattenTransitGatewayPeeringAttachmentOptions

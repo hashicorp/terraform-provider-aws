@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,6 +27,58 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestFlattenDnsOptions_privateDnsPreferenceCaseNormalization(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		apiObject *awstypes.DnsOptions
+		wantKey   string
+		wantVal   string
+	}{
+		"uppercase from API": {
+			apiObject: &awstypes.DnsOptions{
+				PrivateDnsPreference: aws.String("SPECIFIED_DOMAINS_ONLY"),
+			},
+			wantKey: "private_dns_preference",
+			wantVal: "SPECIFIED_DOMAINS_ONLY",
+		},
+		"lowercase from API": {
+			apiObject: &awstypes.DnsOptions{
+				PrivateDnsPreference: aws.String("specified-domains-only"),
+			},
+			wantKey: "private_dns_preference",
+			wantVal: "SPECIFIED-DOMAINS-ONLY",
+		},
+		"mixed case from API": {
+			apiObject: &awstypes.DnsOptions{
+				PrivateDnsPreference: aws.String("Verified_Domains_Only"),
+			},
+			wantKey: "private_dns_preference",
+			wantVal: "VERIFIED_DOMAINS_ONLY",
+		},
+		"nil": {
+			apiObject: nil,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfec2.FlattenDnsOptions(tc.apiObject)
+			if tc.apiObject == nil {
+				if got != nil {
+					t.Fatalf("expected nil, got %v", got)
+				}
+				return
+			}
+			if got[tc.wantKey] != tc.wantVal {
+				t.Errorf("expected %s = %q, got %q", tc.wantKey, tc.wantVal, got[tc.wantKey])
+			}
+		})
+	}
+}
 
 func TestAccVPCEndpoint_gatewayBasic(t *testing.T) {
 	ctx := acctest.Context(t)
