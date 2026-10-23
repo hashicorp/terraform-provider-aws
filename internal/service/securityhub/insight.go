@@ -96,7 +96,7 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceInsightFlatten(ctx, insight, d); err != nil {
+	if err := resourceInsightFlatten(ctx, meta.(*conns.AWSClient), insight, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -153,7 +153,7 @@ func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-func resourceInsightFlatten(_ context.Context, insight *types.Insight, d *schema.ResourceData) error {
+func resourceInsightFlatten(_ context.Context, _ *conns.AWSClient, insight *types.Insight, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, insight.InsightArn)
 	if err := d.Set("filters", securityhubschema.FlattenSecurityFindingFilters(insight.Filters)); err != nil {
 		return fmt.Errorf("setting filters: %w", err)

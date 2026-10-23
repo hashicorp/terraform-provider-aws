@@ -5,94 +5,35 @@ package securityhub
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_securityhub_insight")
 func newInsightResourceAsListResource() inttypes.ListResourceForSDK {
-	l := insightListResource{}
-	l.SetResourceSchema(resourceInsight())
-	return &l
-}
+	return framework.NewSDKListResource(resourceInsight(), framework.SDKListSpec[awstypes.Insight, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.Insight, error], diag.Diagnostics) {
+			var input securityhub.GetInsightsInput
 
-var _ list.ListResource = &insightListResource{}
-
-type insightListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *insightListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := l.Meta().SecurityHubClient(ctx)
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		var input securityhub.GetInsightsInput
-		for item, err := range listInsights(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			arn := aws.ToString(item.InsightArn)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
-
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(arn)
-			rd.Set(names.AttrARN, arn)
-
-			if request.IncludeResource {
-				if err := resourceInsightFlatten(ctx, &item, rd); err != nil {
-					tflog.Error(ctx, "Reading Security Hub Insight", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			result.DisplayName = aws.ToString(item.Name)
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			return listInsights(ctx, c.SecurityHubClient(ctx), &input), nil
+		},
+		ID: func(i awstypes.Insight, _ framework.RegionQuery) string {
+			return aws.ToString(i.InsightArn)
+		},
+		Flatten:     resourceInsightFlatten,
+		DisplayName: func(i awstypes.Insight) string { return aws.ToString(i.Name) },
+	})
 }
 
 func listInsights(ctx context.Context, conn *securityhub.Client, input *securityhub.GetInsightsInput) iter.Seq2[awstypes.Insight, error] {
-	return func(yield func(awstypes.Insight, error) bool) {
-		pages := securityhub.NewGetInsightsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(inttypes.Zero[awstypes.Insight](), fmt.Errorf("listing Security Hub Insights: %w", err))
-				return
-			}
-
-			for _, item := range page.Insights {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
+	return tfiter.PageItems[securityhub.Options](ctx, "listing Security Hub Insights", securityhub.NewGetInsightsPaginator(conn, input),
+		func(o *securityhub.GetInsightsOutput) []awstypes.Insight { return o.Insights })
 }

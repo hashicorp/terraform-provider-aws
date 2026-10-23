@@ -11,102 +11,32 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_securityhub_standards_control")
 func newStandardsControlResourceAsListResource() inttypes.ListResourceForSDK {
-	l := standardsControlListResource{}
-	l.SetResourceSchema(resourceStandardsControl())
-	return &l
-}
+	return framework.NewSDKListResource(resourceStandardsControl(), framework.SDKListSpec[awstypes.StandardsControl, listStandardsControlModel]{
+		ConfigSchema: listStandardsControlConfigSchema,
+		Items: func(ctx context.Context, c *conns.AWSClient, query listStandardsControlModel) (iter.Seq2[awstypes.StandardsControl, error], diag.Diagnostics) {
+			input := securityhub.DescribeStandardsControlsInput{
+				StandardsSubscriptionArn: fwflex.StringFromFramework(ctx, query.StandardsSubscriptionARN),
+			}
 
-var _ list.ListResource = &standardsControlListResource{}
-
-type standardsControlListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *standardsControlListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			"standards_subscription_arn": listschema.StringAttribute{
-				CustomType:  fwtypes.ARNType,
-				Required:    true,
-				Description: "ARN that represents your subscription to a supported standard.",
-			},
+			return listStandardsControls(ctx, c.SecurityHubClient(ctx), &input), nil
 		},
-	}
-}
-
-func (l *standardsControlListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := l.Meta().SecurityHubClient(ctx)
-
-	var query listStandardsControlModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	standardsSubscriptionARN := fwflex.StringValueFromFramework(ctx, query.StandardsSubscriptionARN)
-
-	tflog.Info(ctx, "Listing Resources", map[string]any{
-		logging.ResourceAttributeKey("standards_subscription_arn"): standardsSubscriptionARN,
+		ID: func(sc awstypes.StandardsControl, _ listStandardsControlModel) string {
+			return aws.ToString(sc.StandardsControlArn)
+		},
+		Flatten:     resourceStandardsControlFlatten,
+		DisplayName: func(sc awstypes.StandardsControl) string { return aws.ToString(sc.Title) },
 	})
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		input := securityhub.DescribeStandardsControlsInput{
-			StandardsSubscriptionArn: aws.String(standardsSubscriptionARN),
-		}
-		for item, err := range listStandardsControls(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			arn := aws.ToString(item.StandardsControlArn)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
-
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(arn)
-			rd.Set("standards_control_arn", arn)
-
-			if request.IncludeResource {
-				if err := resourceStandardsControlFlatten(ctx, &item, rd); err != nil {
-					tflog.Error(ctx, "Reading Security Hub Standards Control", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			result.DisplayName = aws.ToString(item.Title)
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
 }
 
 type listStandardsControlModel struct {
@@ -130,5 +60,17 @@ func listStandardsControls(ctx context.Context, conn *securityhub.Client, input 
 				}
 			}
 		}
+	}
+}
+
+func listStandardsControlConfigSchema(_ context.Context) listschema.Schema {
+	return listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			"standards_subscription_arn": listschema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
+				Required:    true,
+				Description: "ARN that represents your subscription to a supported standard.",
+			},
+		},
 	}
 }
