@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -33,7 +34,11 @@ import (
 )
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_configuration_set", name="Configuration Set")
+// @IdentityAttribute("name", identityDuplicateAttributes="id")
 // @Tags(identifierAttribute="arn")
+// @Testing(preIdentityVersion="v6.67.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes;awstypes.ConfigurationSetInformation")
+// @Testing(preCheck="testAccPreCheckConfigurationSet")
 // @Testing(tagsTest=false)
 func newConfigurationSetResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &configurationSetResource{}
@@ -43,7 +48,7 @@ func newConfigurationSetResource(context.Context) (resource.ResourceWithConfigur
 
 type configurationSetResource struct {
 	framework.ResourceWithModel[configurationSetResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *configurationSetResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -141,7 +146,7 @@ func (r *configurationSetResource) Read(ctx context.Context, request resource.Re
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, out, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -227,6 +232,10 @@ func (r *configurationSetResource) Delete(ctx context.Context, request resource.
 
 		return
 	}
+}
+
+func (r *configurationSetResource) flatten(ctx context.Context, configurationSet *awstypes.ConfigurationSetInformation, data *configurationSetResourceModel) diag.Diagnostics {
+	return fwflex.Flatten(ctx, configurationSet, data)
 }
 
 type configurationSetResourceModel struct {
