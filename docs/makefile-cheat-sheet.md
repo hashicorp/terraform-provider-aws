@@ -118,7 +118,10 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `docs-markdown-lint` | Documentation Checks / markdown-lint | ✔️ |  |  |
 | `docs-misspell` | Documentation Checks / misspell | ✔️ |  |  |
 | `examples-tflint` | Examples Checks / tflint | ✔️ |  |  |
+| `fix` | Apply `go fix` (all packages, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `TEST` |
+| `fix-check` | Go Fix Check / go fix | ✔️ |  | `GO_VER`, `K`, `PKG`, `TEST` |
 | `fix-constants`<sup>M</sup> | Use Semgrep to fix constants |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
+| `fix-core` | Apply `go fix` in core directories (non-internal/service) |  |  |  |
 | `fix-imports` | Fixing source code imports with goimports |  |  |  |
 | `fix-imports-core` | Fixing core directory imports with goimports |  |  |  |
 | `fmt` | Fix Go source formatting |  |  | `K`, `PKG`, `PKG_NAME` |
@@ -131,6 +134,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `generate-changelog` | Generate changelog |  |  | `CURDIR` |
 | `gh-workflow-lint` | Workflow Linting / actionlint | ✔️ |  |  |
 | `go-build` | Provider Checks / go-build | ✔️ |  |  |
+| `go-fix-check-shard` | Go Fix Check / go fix for a specific shard | ✔️ |  | `GO_VER`, `SHARD`, `TOTAL_SHARDS` |
 | `golangci-lint`<sup>M</sup> | All golangci-lint Checks | ✔️ |  | `K`, `PKG`, `TEST` |
 | `golangci-lint1` | golangci-lint Checks / 1 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
 | `golangci-lint2` | golangci-lint Checks / 2 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
@@ -144,14 +148,14 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `lint-fix`<sup>M</sup> | Fix acceptance test, website, and docs linter findings |  |  |  |
 | `makefile-lint` | Makefile Linting / alignment check | ✔️ |  |  |
 | `misspell`<sup>M</sup> | Run all CI misspell checks | ✔️ |  |  |
-| `modern-check` | Check for modern Go | ✔️ |  | `TEST` |
-| `modern-fix` | Fix checks for modern Go | ✔️ |  | `TEST` |
-| `modern-fix-core` | Fix checks for modern Go in core directories |  |  |  |
+| `modern-check`<sup>D</sup> | Legacy alias to `fix-check` |  | ✔️ | `K`, `PKG`, `TEST` |
+| `modern-fix`<sup>D</sup> | Legacy alias to `fix` |  | ✔️ | `K`, `PKG`, `TEST` |
+| `modern-fix-core`<sup>D</sup> | Legacy alias to `fix-core` |  | ✔️ |  |
 | `pr-target-check` | Pull Request Target Check | ✔️ |  |  |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |
-| `quick-fix`<sup>M</sup> | Run multiple quick fixes (copyright, fmt, testacc-lint, imports, modern, semgrep, terraform-fmt, website-terrafmt) |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS`, `SVC_DIR` |
+| `quick-fix`<sup>M</sup> | Run multiple quick fixes (copyright, fmt, testacc-lint, imports, fix, semgrep, terraform-fmt, website-terrafmt) |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS`, `SVC_DIR` |
 | `quick-fix-core`<sup>M</sup> | Quick fixes for core directories (non-internal/service) |  |  |  |
 | `sane`<sup>D</sup> | Run sane check |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
 | `schema-validate` | Validate schemas | | | `GO_VER` |
