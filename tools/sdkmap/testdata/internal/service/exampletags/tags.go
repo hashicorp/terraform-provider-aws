@@ -39,7 +39,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 		tags, err = gadgetListTags(ctx, conn, identifier)
 
 	default:
-		return nil
+		tags, err = listTags(ctx, conn, identifier)
 	}
 
 	if err != nil {
@@ -126,6 +126,22 @@ func gadgetListTags(ctx context.Context, conn *exampletags.Client, identifier st
 	}
 
 	output, err := conn.ListGadgetTags(ctx, &input)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return keyValueTags(ctx, output.Tags), nil
+}
+
+// listTags lists tags through the service's generic tagging API, for resource types without their
+// own.
+func listTags(ctx context.Context, conn *exampletags.Client, identifier string) (tftags.KeyValueTags, error) {
+	input := exampletags.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(ctx, &input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
