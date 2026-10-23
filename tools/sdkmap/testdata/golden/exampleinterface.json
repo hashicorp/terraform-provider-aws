@@ -1,28 +1,28 @@
 [
   {
     "service": "exampleinterface",
-    "resource_type": "aws_exampleinterface_thing",
+    "resource_type": "aws_exampleinterface_foo",
     "plugin_type": "SDKv2",
-    "expr": "resourceThing",
-    "location": "internal/service/exampleinterface/thing.go:23",
+    "expr": "resourceFoo",
+    "location": "internal/service/exampleinterface/foo.go:23",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/exampleinterface/thing.go:44",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/exampleinterface/foo.go:44",
       "sdk_calls": [
-        "exampleinterface.CreateAdvancedThing",
-        "exampleinterface.CreateBasicThing"
+        "exampleinterface.CreateAdvancedFoo",
+        "exampleinterface.CreateBasicFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/exampleinterface/thing.go:65",
+      "expr": "resourceFooRead",
+      "location": "internal/service/exampleinterface/foo.go:65",
       "sdk_calls": []
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/exampleinterface/thing.go:87",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/exampleinterface/foo.go:87",
       "sdk_calls": [
-        "exampleinterface.DeleteThing"
+        "exampleinterface.DeleteFoo"
       ]
     }
   }

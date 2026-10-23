@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func thingSchema() map[string]*schema.Schema {
+func fooSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"checksum": {
 			Type:     schema.TypeString,
@@ -41,97 +41,97 @@ func thingSchema() map[string]*schema.Schema {
 	}
 }
 
-func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleCustomizeDiffClient(ctx)
 
-	input := examplecustomizediff.CreateThingInput{
+	input := examplecustomizediff.CreateFooInput{
 		Content:  aws.String(d.Get("content").(string)),
 		ParentId: aws.String(d.Get("parent_id").(string)),
 		Size:     aws.Int32(int32(d.Get("size").(int))),
 	}
 
-	output, err := conn.CreateThing(ctx, &input)
+	output, err := conn.CreateFoo(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Thing: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Foo: %s", err)
 	}
 
-	d.SetId(aws.ToString(output.ThingId))
+	d.SetId(aws.ToString(output.FooId))
 
-	return append(diags, resourceThingRead(ctx, d, meta)...)
+	return append(diags, resourceFooRead(ctx, d, meta)...)
 }
 
-func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleCustomizeDiffClient(ctx)
 
-	thing, err := findThingByID(ctx, conn, d.Id())
+	foo, err := findFooByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Thing (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Foo (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Foo (%s): %s", d.Id(), err)
 	}
 
-	d.Set("checksum", thing.Checksum)
-	d.Set("content", thing.Content)
-	d.Set("parent_id", thing.ParentId)
-	d.Set("size", thing.Size)
+	d.Set("checksum", foo.Checksum)
+	d.Set("content", foo.Content)
+	d.Set("parent_id", foo.ParentId)
+	d.Set("size", foo.Size)
 
 	return diags
 }
 
-func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleCustomizeDiffClient(ctx)
 
-	input := examplecustomizediff.UpdateThingInput{
+	input := examplecustomizediff.UpdateFooInput{
 		Content: aws.String(d.Get("content").(string)),
 		Size:    aws.Int32(int32(d.Get("size").(int))),
-		ThingId: aws.String(d.Id()),
+		FooId:   aws.String(d.Id()),
 	}
 
-	_, err := conn.UpdateThing(ctx, &input)
+	_, err := conn.UpdateFoo(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Foo (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceThingRead(ctx, d, meta)...)
+	return append(diags, resourceFooRead(ctx, d, meta)...)
 }
 
-func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleCustomizeDiffClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Thing: %s", d.Id())
-	input := examplecustomizediff.DeleteThingInput{
-		ThingId: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Foo: %s", d.Id())
+	input := examplecustomizediff.DeleteFooInput{
+		FooId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteThing(ctx, &input)
+	_, err := conn.DeleteFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Foo (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findThingByID(ctx context.Context, conn *examplecustomizediff.Client, id string) (*awstypes.Thing, error) {
-	input := examplecustomizediff.DescribeThingInput{
-		ThingId: aws.String(id),
+func findFooByID(ctx context.Context, conn *examplecustomizediff.Client, id string) (*awstypes.Foo, error) {
+	input := examplecustomizediff.DescribeFooInput{
+		FooId: aws.String(id),
 	}
 
-	output, err := conn.DescribeThing(ctx, &input)
+	output, err := conn.DescribeFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -143,11 +143,11 @@ func findThingByID(ctx context.Context, conn *examplecustomizediff.Client, id st
 		return nil, err
 	}
 
-	if output == nil || output.Thing == nil {
+	if output == nil || output.Foo == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Thing, nil
+	return output.Foo, nil
 }
 
 func findParentByID(ctx context.Context, conn *examplecustomizediff.Client, id string) (*awstypes.Parent, error) {

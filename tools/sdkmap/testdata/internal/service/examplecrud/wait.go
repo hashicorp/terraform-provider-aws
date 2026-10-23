@@ -13,34 +13,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func waitWidgetCreated(ctx context.Context, conn *examplecrud.Client, id string, timeout time.Duration) (*awstypes.Widget, error) {
+func waitFooCreated(ctx context.Context, conn *examplecrud.Client, id string, timeout time.Duration) (*awstypes.Foo, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.WidgetStatusCreating),
-		Target:  enum.Slice(awstypes.WidgetStatusAvailable),
-		Refresh: statusWidget(conn, id),
+		Pending: enum.Slice(awstypes.FooStatusCreating),
+		Target:  enum.Slice(awstypes.FooStatusAvailable),
+		Refresh: statusFoo(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.Widget); ok {
+	if output, ok := outputRaw.(*awstypes.Foo); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitWidgetDeleted(ctx context.Context, conn *examplecrud.Client, id string, timeout time.Duration) (*awstypes.Widget, error) {
+func waitFooDeleted(ctx context.Context, conn *examplecrud.Client, id string, timeout time.Duration) (*awstypes.Foo, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.WidgetStatusAvailable, awstypes.WidgetStatusDeleting),
+		Pending: enum.Slice(awstypes.FooStatusAvailable, awstypes.FooStatusDeleting),
 		Target:  []string{},
-		Refresh: statusWidget(conn, id),
+		Refresh: statusFoo(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.Widget); ok {
+	if output, ok := outputRaw.(*awstypes.Foo); ok {
 		return output, err
 	}
 

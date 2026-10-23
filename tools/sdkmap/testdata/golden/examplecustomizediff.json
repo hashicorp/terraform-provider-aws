@@ -6,33 +6,33 @@
     "expr": "resourceCall",
     "location": "internal/service/examplecustomizediff/customize_diff.go:135",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/examplecustomizediff/foo.go:44",
       "sdk_calls": [
-        "examplecustomizediff.CreateThing",
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.CreateFoo",
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "expr": "resourceFooRead",
+      "location": "internal/service/examplecustomizediff/foo.go:65",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "update": {
-      "expr": "resourceThingUpdate",
-      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/examplecustomizediff/foo.go:89",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing",
-        "examplecustomizediff.UpdateThing"
+        "examplecustomizediff.DescribeFoo",
+        "examplecustomizediff.UpdateFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/examplecustomizediff/foo.go:108",
       "sdk_calls": [
-        "examplecustomizediff.DeleteThing"
+        "examplecustomizediff.DeleteFoo"
       ]
     },
     "customize_diff": {
@@ -50,33 +50,33 @@
     "expr": "resourceFactoryReference",
     "location": "internal/service/examplecustomizediff/customize_diff.go:149",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/examplecustomizediff/foo.go:44",
       "sdk_calls": [
-        "examplecustomizediff.CreateThing",
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.CreateFoo",
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "expr": "resourceFooRead",
+      "location": "internal/service/examplecustomizediff/foo.go:65",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "update": {
-      "expr": "resourceThingUpdate",
-      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/examplecustomizediff/foo.go:89",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing",
-        "examplecustomizediff.UpdateThing"
+        "examplecustomizediff.DescribeFoo",
+        "examplecustomizediff.UpdateFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/examplecustomizediff/foo.go:108",
       "sdk_calls": [
-        "examplecustomizediff.DeleteThing"
+        "examplecustomizediff.DeleteFoo"
       ]
     },
     "customize_diff": {
@@ -92,33 +92,33 @@
     "expr": "resourceForceNewIf",
     "location": "internal/service/examplecustomizediff/customize_diff.go:105",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/examplecustomizediff/foo.go:44",
       "sdk_calls": [
-        "examplecustomizediff.CreateThing",
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.CreateFoo",
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "expr": "resourceFooRead",
+      "location": "internal/service/examplecustomizediff/foo.go:65",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "update": {
-      "expr": "resourceThingUpdate",
-      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/examplecustomizediff/foo.go:89",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing",
-        "examplecustomizediff.UpdateThing"
+        "examplecustomizediff.DescribeFoo",
+        "examplecustomizediff.UpdateFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/examplecustomizediff/foo.go:108",
       "sdk_calls": [
-        "examplecustomizediff.DeleteThing"
+        "examplecustomizediff.DeleteFoo"
       ]
     },
     "customize_diff": {
@@ -134,33 +134,33 @@
     "expr": "resourceFunctionLiteral",
     "location": "internal/service/examplecustomizediff/customize_diff.go:85",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/examplecustomizediff/foo.go:44",
       "sdk_calls": [
-        "examplecustomizediff.CreateThing",
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.CreateFoo",
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "expr": "resourceFooRead",
+      "location": "internal/service/examplecustomizediff/foo.go:65",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "update": {
-      "expr": "resourceThingUpdate",
-      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/examplecustomizediff/foo.go:89",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing",
-        "examplecustomizediff.UpdateThing"
+        "examplecustomizediff.DescribeFoo",
+        "examplecustomizediff.UpdateFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/examplecustomizediff/foo.go:108",
       "sdk_calls": [
-        "examplecustomizediff.DeleteThing"
+        "examplecustomizediff.DeleteFoo"
       ]
     },
     "customize_diff": {
@@ -176,33 +176,33 @@
     "expr": "resourceIdentifier",
     "location": "internal/service/examplecustomizediff/customize_diff.go:17",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/examplecustomizediff/foo.go:44",
       "sdk_calls": [
-        "examplecustomizediff.CreateThing",
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.CreateFoo",
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "expr": "resourceFooRead",
+      "location": "internal/service/examplecustomizediff/foo.go:65",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "update": {
-      "expr": "resourceThingUpdate",
-      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/examplecustomizediff/foo.go:89",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing",
-        "examplecustomizediff.UpdateThing"
+        "examplecustomizediff.DescribeFoo",
+        "examplecustomizediff.UpdateFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/examplecustomizediff/foo.go:108",
       "sdk_calls": [
-        "examplecustomizediff.DeleteThing"
+        "examplecustomizediff.DeleteFoo"
       ]
     },
     "customize_diff": {
@@ -218,33 +218,33 @@
     "expr": "resourceNested",
     "location": "internal/service/examplecustomizediff/customize_diff.go:48",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/examplecustomizediff/foo.go:44",
       "sdk_calls": [
-        "examplecustomizediff.CreateThing",
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.CreateFoo",
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "expr": "resourceFooRead",
+      "location": "internal/service/examplecustomizediff/foo.go:65",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "update": {
-      "expr": "resourceThingUpdate",
-      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/examplecustomizediff/foo.go:89",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing",
-        "examplecustomizediff.UpdateThing"
+        "examplecustomizediff.DescribeFoo",
+        "examplecustomizediff.UpdateFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/examplecustomizediff/foo.go:108",
       "sdk_calls": [
-        "examplecustomizediff.DeleteThing"
+        "examplecustomizediff.DeleteFoo"
       ]
     },
     "customize_diff": {
@@ -289,33 +289,33 @@
     "expr": "resourceSequence",
     "location": "internal/service/examplecustomizediff/customize_diff.go:31",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/examplecustomizediff/foo.go:44",
       "sdk_calls": [
-        "examplecustomizediff.CreateThing",
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.CreateFoo",
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "expr": "resourceFooRead",
+      "location": "internal/service/examplecustomizediff/foo.go:65",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "update": {
-      "expr": "resourceThingUpdate",
-      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/examplecustomizediff/foo.go:89",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing",
-        "examplecustomizediff.UpdateThing"
+        "examplecustomizediff.DescribeFoo",
+        "examplecustomizediff.UpdateFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/examplecustomizediff/foo.go:108",
       "sdk_calls": [
-        "examplecustomizediff.DeleteThing"
+        "examplecustomizediff.DeleteFoo"
       ]
     },
     "customize_diff": {
@@ -343,37 +343,37 @@
     "expr": "resourceVariable",
     "location": "internal/service/examplecustomizediff/customize_diff.go:121",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/examplecustomizediff/thing.go:44",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/examplecustomizediff/foo.go:44",
       "sdk_calls": [
-        "examplecustomizediff.CreateThing",
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.CreateFoo",
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/examplecustomizediff/thing.go:65",
+      "expr": "resourceFooRead",
+      "location": "internal/service/examplecustomizediff/foo.go:65",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing"
+        "examplecustomizediff.DescribeFoo"
       ]
     },
     "update": {
-      "expr": "resourceThingUpdate",
-      "location": "internal/service/examplecustomizediff/thing.go:89",
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/examplecustomizediff/foo.go:89",
       "sdk_calls": [
-        "examplecustomizediff.DescribeThing",
-        "examplecustomizediff.UpdateThing"
+        "examplecustomizediff.DescribeFoo",
+        "examplecustomizediff.UpdateFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/examplecustomizediff/thing.go:108",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/examplecustomizediff/foo.go:108",
       "sdk_calls": [
-        "examplecustomizediff.DeleteThing"
+        "examplecustomizediff.DeleteFoo"
       ]
     },
     "customize_diff": {
-      "expr": "thingCustomizeDiff",
+      "expr": "fooCustomizeDiff",
       "location": "internal/service/examplecustomizediff/customize_diff.go:162",
       "sdk_calls": [
         "examplecustomizediff.DescribeParent"

@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func thingSchema() map[string]*schema.Schema {
+func fooSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"name": {
 			Type:     schema.TypeString,
@@ -34,88 +34,88 @@ func thingSchema() map[string]*schema.Schema {
 	}
 }
 
-func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleImportClient(ctx)
 
 	name := d.Get("name").(string)
-	input := exampleimport.CreateThingInput{
+	input := exampleimport.CreateFooInput{
 		Name:     aws.String(name),
 		ParentId: aws.String(d.Get("parent_id").(string)),
 	}
 
-	output, err := conn.CreateThing(ctx, &input)
+	output, err := conn.CreateFoo(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Thing (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Foo (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.ThingId))
+	d.SetId(aws.ToString(output.FooId))
 
-	return append(diags, resourceThingRead(ctx, d, meta)...)
+	return append(diags, resourceFooRead(ctx, d, meta)...)
 }
 
-func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleImportClient(ctx)
 
-	thing, err := findThingByID(ctx, conn, d.Id())
+	foo, err := findFooByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Thing (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Foo (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Foo (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", thing.Name)
-	d.Set("parent_id", thing.ParentId)
+	d.Set("name", foo.Name)
+	d.Set("parent_id", foo.ParentId)
 
 	return diags
 }
 
-func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleImportClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Thing: %s", d.Id())
-	input := exampleimport.DeleteThingInput{
-		ThingId: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Foo: %s", d.Id())
+	input := exampleimport.DeleteFooInput{
+		FooId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteThing(ctx, &input)
+	_, err := conn.DeleteFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Foo (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findThingByID(ctx context.Context, conn *exampleimport.Client, id string) (*awstypes.Thing, error) {
-	input := exampleimport.DescribeThingInput{
-		ThingId: aws.String(id),
+func findFooByID(ctx context.Context, conn *exampleimport.Client, id string) (*awstypes.Foo, error) {
+	input := exampleimport.DescribeFooInput{
+		FooId: aws.String(id),
 	}
 
-	return findThing(ctx, conn, &input)
+	return findFoo(ctx, conn, &input)
 }
 
-func findThingByName(ctx context.Context, conn *exampleimport.Client, name string) (*awstypes.Thing, error) {
-	input := exampleimport.DescribeThingInput{
+func findFooByName(ctx context.Context, conn *exampleimport.Client, name string) (*awstypes.Foo, error) {
+	input := exampleimport.DescribeFooInput{
 		Name: aws.String(name),
 	}
 
-	return findThing(ctx, conn, &input)
+	return findFoo(ctx, conn, &input)
 }
 
-func findThing(ctx context.Context, conn *exampleimport.Client, input *exampleimport.DescribeThingInput) (*awstypes.Thing, error) {
-	output, err := conn.DescribeThing(ctx, input)
+func findFoo(ctx context.Context, conn *exampleimport.Client, input *exampleimport.DescribeFooInput) (*awstypes.Foo, error) {
+	output, err := conn.DescribeFoo(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -127,9 +127,9 @@ func findThing(ctx context.Context, conn *exampleimport.Client, input *exampleim
 		return nil, err
 	}
 
-	if output == nil || output.Thing == nil {
+	if output == nil || output.Foo == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Thing, nil
+	return output.Foo, nil
 }

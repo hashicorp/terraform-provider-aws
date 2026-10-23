@@ -19,13 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_examplestructfield_database", name="Database")
-func resourceDatabase() *schema.Resource {
+// @SDKResource("aws_examplestructfield_foo", name="Foo")
+func resourceFoo() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceDatabaseCreate,
-		ReadWithoutTimeout:   resourceDatabaseRead,
-		UpdateWithoutTimeout: resourceDatabaseUpdate,
-		DeleteWithoutTimeout: resourceDatabaseDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		Schema: map[string]*schema.Schema{
 			"engine_version": {
@@ -46,57 +46,57 @@ func resourceDatabase() *schema.Resource {
 	}
 }
 
-func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := meta.(*conns.AWSClient)
 	conn := c.ExampleStructFieldClient(ctx)
 
 	if v, ok := d.GetOk("parent_id"); ok {
 		if _, err := newParentLookup(c.ExampleCrossServiceClient(ctx)).Find(ctx, v.(string)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Thing (%s): %s", v, err)
+			return sdkdiag.AppendErrorf(diags, "reading Foo (%s): %s", v, err)
 		}
 	}
 
 	name := d.Get("name").(string)
-	input := examplestructfield.CreateDatabaseInput{
+	input := examplestructfield.CreateFooInput{
 		EngineVersion: aws.String(d.Get("engine_version").(string)),
 		Name:          aws.String(name),
 	}
 
-	output, err := conn.CreateDatabase(ctx, &input)
+	output, err := conn.CreateFoo(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Database (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Foo (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.Database.DatabaseId))
+	d.SetId(aws.ToString(output.Foo.FooId))
 
-	return append(diags, resourceDatabaseRead(ctx, d, meta)...)
+	return append(diags, resourceFooRead(ctx, d, meta)...)
 }
 
-func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleStructFieldClient(ctx)
 
-	database, err := findDatabaseByID(ctx, conn, d.Id())
+	foo, err := findFooByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Database (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Foo (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Database (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Foo (%s): %s", d.Id(), err)
 	}
 
-	d.Set("engine_version", database.EngineVersion)
-	d.Set("name", database.Name)
+	d.Set("engine_version", foo.EngineVersion)
+	d.Set("name", foo.Name)
 
 	return diags
 }
 
-func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleStructFieldClient(ctx)
 
@@ -105,51 +105,51 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		defer orchestrator.CleanUp(ctx)
 
 		input := examplestructfield.CreateDeploymentInput{
-			DatabaseId:          aws.String(d.Id()),
+			FooId:               aws.String(d.Id()),
 			TargetEngineVersion: aws.String(d.Get("engine_version").(string)),
 		}
 
 		deployment, err := orchestrator.CreateDeployment(ctx, &input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Database (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Foo (%s): %s", d.Id(), err)
 		}
 
 		if err := orchestrator.Switchover(ctx, aws.ToString(deployment.DeploymentId)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Database (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Foo (%s): %s", d.Id(), err)
 		}
 	}
 
-	return append(diags, resourceDatabaseRead(ctx, d, meta)...)
+	return append(diags, resourceFooRead(ctx, d, meta)...)
 }
 
-func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleStructFieldClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Database: %s", d.Id())
-	input := examplestructfield.DeleteDatabaseInput{
-		DatabaseId: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Foo: %s", d.Id())
+	input := examplestructfield.DeleteFooInput{
+		FooId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteDatabase(ctx, &input)
+	_, err := conn.DeleteFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Database (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Foo (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findDatabaseByID(ctx context.Context, conn *examplestructfield.Client, id string) (*awstypes.Database, error) {
-	input := examplestructfield.DescribeDatabaseInput{
-		DatabaseId: aws.String(id),
+func findFooByID(ctx context.Context, conn *examplestructfield.Client, id string) (*awstypes.Foo, error) {
+	input := examplestructfield.DescribeFooInput{
+		FooId: aws.String(id),
 	}
 
-	output, err := conn.DescribeDatabase(ctx, &input)
+	output, err := conn.DescribeFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -161,9 +161,9 @@ func findDatabaseByID(ctx context.Context, conn *examplestructfield.Client, id s
 		return nil, err
 	}
 
-	if output == nil || output.Database == nil {
+	if output == nil || output.Foo == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Database, nil
+	return output.Foo, nil
 }

@@ -1,38 +1,38 @@
 [
   {
     "service": "exampletagsnohandlers",
-    "resource_type": "aws_exampletagsnohandlers_thing",
+    "resource_type": "aws_exampletagsnohandlers_foo",
     "plugin_type": "SDKv2",
-    "expr": "resourceThing",
-    "location": "internal/service/exampletagsnohandlers/thing.go:25",
+    "expr": "resourceFoo",
+    "location": "internal/service/exampletagsnohandlers/foo.go:25",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/exampletagsnohandlers/thing.go:48",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/exampletagsnohandlers/foo.go:48",
       "sdk_calls": [
-        "exampletagsnohandlers.CreateThing",
-        "exampletagsnohandlers.DescribeThing"
+        "exampletagsnohandlers.CreateFoo",
+        "exampletagsnohandlers.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/exampletagsnohandlers/thing.go:69",
+      "expr": "resourceFooRead",
+      "location": "internal/service/exampletagsnohandlers/foo.go:69",
       "sdk_calls": [
-        "exampletagsnohandlers.DescribeThing"
+        "exampletagsnohandlers.DescribeFoo"
       ]
     },
     "update": {
-      "expr": "resourceThingUpdate",
-      "location": "internal/service/exampletagsnohandlers/thing.go:93",
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/exampletagsnohandlers/foo.go:93",
       "sdk_calls": [
-        "exampletagsnohandlers.DescribeThing",
-        "exampletagsnohandlers.UpdateThing"
+        "exampletagsnohandlers.DescribeFoo",
+        "exampletagsnohandlers.UpdateFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/exampletagsnohandlers/thing.go:111",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/exampletagsnohandlers/foo.go:111",
       "sdk_calls": [
-        "exampletagsnohandlers.DeleteThing"
+        "exampletagsnohandlers.DeleteFoo"
       ]
     },
     "tags": {}

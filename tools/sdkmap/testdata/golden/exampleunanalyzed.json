@@ -1,30 +1,30 @@
 [
   {
     "service": "exampleunanalyzed",
-    "resource_type": "aws_exampleunanalyzed_thing",
+    "resource_type": "aws_exampleunanalyzed_foo",
     "plugin_type": "SDKv2",
-    "expr": "resourceThing",
-    "location": "internal/service/exampleunanalyzed/thing.go:24",
+    "expr": "resourceFoo",
+    "location": "internal/service/exampleunanalyzed/foo.go:24",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/exampleunanalyzed/thing.go:49",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/exampleunanalyzed/foo.go:49",
       "sdk_calls": [
-        "exampleunanalyzed.CreateThing",
-        "exampleunanalyzed.ListThings"
+        "exampleunanalyzed.CreateFoo",
+        "exampleunanalyzed.ListFoos"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/exampleunanalyzed/thing.go:92",
+      "expr": "resourceFooRead",
+      "location": "internal/service/exampleunanalyzed/foo.go:92",
       "sdk_calls": [
-        "exampleunanalyzed.ListThings"
+        "exampleunanalyzed.ListFoos"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/exampleunanalyzed/thing.go:113",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/exampleunanalyzed/foo.go:113",
       "sdk_calls": [
-        "exampleunanalyzed.DeleteThing"
+        "exampleunanalyzed.DeleteFoo"
       ]
     }
   }

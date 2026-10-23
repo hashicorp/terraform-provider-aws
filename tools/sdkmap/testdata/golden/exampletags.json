@@ -1,37 +1,255 @@
 [
   {
     "service": "exampletags",
-    "resource_type": "aws_exampletags_doohickey",
+    "resource_type": "aws_exampletags_bar",
     "plugin_type": "SDKv2",
-    "expr": "resourceDoohickey",
-    "location": "internal/service/exampletags/doohickey.go:25",
+    "expr": "resourceBar",
+    "location": "internal/service/exampletags/bar.go:25",
     "create": {
-      "expr": "resourceDoohickeyCreate",
-      "location": "internal/service/exampletags/doohickey.go:43",
+      "expr": "resourceBarCreate",
+      "location": "internal/service/exampletags/bar.go:43",
       "sdk_calls": [
-        "exampletags.CreateDoohickey",
-        "exampletags.DescribeDoohickey"
+        "exampletags.CreateBar",
+        "exampletags.DescribeBar"
       ]
     },
     "read": {
-      "expr": "resourceDoohickeyRead",
-      "location": "internal/service/exampletags/doohickey.go:62",
+      "expr": "resourceBarRead",
+      "location": "internal/service/exampletags/bar.go:62",
       "sdk_calls": [
-        "exampletags.DescribeDoohickey"
+        "exampletags.DescribeBar"
       ]
     },
     "update": {
-      "expr": "resourceDoohickeyUpdate",
-      "location": "internal/service/exampletags/doohickey.go:83",
+      "expr": "resourceBarUpdate",
+      "location": "internal/service/exampletags/bar.go:83",
       "sdk_calls": [
-        "exampletags.DescribeDoohickey"
+        "exampletags.DescribeBar"
       ]
     },
     "delete": {
-      "expr": "resourceDoohickeyDelete",
-      "location": "internal/service/exampletags/doohickey.go:88",
+      "expr": "resourceBarDelete",
+      "location": "internal/service/exampletags/bar.go:88",
       "sdk_calls": [
-        "exampletags.DeleteDoohickey"
+        "exampletags.DeleteBar"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/exampletags/tags.go:22",
+        "sdk_calls": [
+          "exampletags.ListBarTags"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/exampletags/tags.go:58",
+        "sdk_calls": [
+          "exampletags.TagBar",
+          "exampletags.UntagBar"
+        ]
+      }
+    }
+  },
+  {
+    "service": "exampletags",
+    "resource_type": "aws_exampletags_baz",
+    "plugin_type": "SDKv2",
+    "expr": "resourceBaz",
+    "location": "internal/service/exampletags/baz.go:25",
+    "create": {
+      "expr": "resourceBazCreate",
+      "location": "internal/service/exampletags/baz.go:43",
+      "sdk_calls": [
+        "exampletags.CreateBaz",
+        "exampletags.DescribeBaz"
+      ]
+    },
+    "read": {
+      "expr": "resourceBazRead",
+      "location": "internal/service/exampletags/baz.go:62",
+      "sdk_calls": [
+        "exampletags.DescribeBaz"
+      ]
+    },
+    "update": {
+      "expr": "resourceBazUpdate",
+      "location": "internal/service/exampletags/baz.go:83",
+      "sdk_calls": [
+        "exampletags.DescribeBaz"
+      ]
+    },
+    "delete": {
+      "expr": "resourceBazDelete",
+      "location": "internal/service/exampletags/baz.go:88",
+      "sdk_calls": [
+        "exampletags.DeleteBaz"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/exampletags/tags.go:22",
+        "sdk_calls": [
+          "exampletags.ListBarTags"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/exampletags/tags.go:58",
+        "sdk_calls": [
+          "exampletags.TagBar",
+          "exampletags.UntagBar"
+        ]
+      }
+    }
+  },
+  {
+    "service": "exampletags",
+    "resource_type": "aws_exampletags_foo",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFoo",
+    "location": "internal/service/exampletags/foo.go:26",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/exampletags/foo.go:49",
+      "sdk_calls": [
+        "exampletags.CreateFoo",
+        "exampletags.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/exampletags/foo.go:70",
+      "sdk_calls": [
+        "exampletags.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/exampletags/foo.go:92",
+      "sdk_calls": [
+        "exampletags.DescribeFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/exampletags/foo.go:97",
+      "sdk_calls": [
+        "exampletags.DeleteFoo"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/exampletags/tags.go:22",
+        "sdk_calls": [
+          "exampletags.ListFooTags",
+          "exampletagsgen.ListTagsForResource"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/exampletags/tags.go:58",
+        "sdk_calls": [
+          "exampletags.TagFoo",
+          "exampletags.UntagFoo",
+          "exampletagsgen.TagResource",
+          "exampletagsgen.UntagResource"
+        ]
+      }
+    }
+  },
+  {
+    "service": "exampletags",
+    "resource_type": "aws_exampletags_legacy_foo",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFoo",
+    "location": "internal/service/exampletags/foo.go:26",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/exampletags/foo.go:49",
+      "sdk_calls": [
+        "exampletags.CreateFoo",
+        "exampletags.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/exampletags/foo.go:70",
+      "sdk_calls": [
+        "exampletags.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/exampletags/foo.go:92",
+      "sdk_calls": [
+        "exampletags.DescribeFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/exampletags/foo.go:97",
+      "sdk_calls": [
+        "exampletags.DeleteFoo"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/exampletags/tags.go:22",
+        "sdk_calls": [
+          "exampletags.ListFooTags",
+          "exampletagsgen.ListTagsForResource"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/exampletags/tags.go:58",
+        "sdk_calls": [
+          "exampletags.TagFoo",
+          "exampletags.UntagFoo",
+          "exampletagsgen.TagResource",
+          "exampletagsgen.UntagResource"
+        ]
+      }
+    }
+  },
+  {
+    "service": "exampletags",
+    "resource_type": "aws_exampletags_qux",
+    "plugin_type": "SDKv2",
+    "expr": "resourceQux",
+    "location": "internal/service/exampletags/qux.go:25",
+    "create": {
+      "expr": "resourceQuxCreate",
+      "location": "internal/service/exampletags/qux.go:43",
+      "sdk_calls": [
+        "exampletags.CreateQux",
+        "exampletags.DescribeQux"
+      ]
+    },
+    "read": {
+      "expr": "resourceQuxRead",
+      "location": "internal/service/exampletags/qux.go:62",
+      "sdk_calls": [
+        "exampletags.DescribeQux"
+      ]
+    },
+    "update": {
+      "expr": "resourceQuxUpdate",
+      "location": "internal/service/exampletags/qux.go:83",
+      "sdk_calls": [
+        "exampletags.DescribeQux"
+      ]
+    },
+    "delete": {
+      "expr": "resourceQuxDelete",
+      "location": "internal/service/exampletags/qux.go:88",
+      "sdk_calls": [
+        "exampletags.DeleteQux"
       ]
     },
     "tags": {
@@ -51,224 +269,6 @@
   },
   {
     "service": "exampletags",
-    "resource_type": "aws_exampletags_gadget",
-    "plugin_type": "SDKv2",
-    "expr": "resourceGadget",
-    "location": "internal/service/exampletags/gadget.go:25",
-    "create": {
-      "expr": "resourceGadgetCreate",
-      "location": "internal/service/exampletags/gadget.go:43",
-      "sdk_calls": [
-        "exampletags.CreateGadget",
-        "exampletags.DescribeGadget"
-      ]
-    },
-    "read": {
-      "expr": "resourceGadgetRead",
-      "location": "internal/service/exampletags/gadget.go:62",
-      "sdk_calls": [
-        "exampletags.DescribeGadget"
-      ]
-    },
-    "update": {
-      "expr": "resourceGadgetUpdate",
-      "location": "internal/service/exampletags/gadget.go:83",
-      "sdk_calls": [
-        "exampletags.DescribeGadget"
-      ]
-    },
-    "delete": {
-      "expr": "resourceGadgetDelete",
-      "location": "internal/service/exampletags/gadget.go:88",
-      "sdk_calls": [
-        "exampletags.DeleteGadget"
-      ]
-    },
-    "tags": {
-      "list": {
-        "expr": "(*servicePackage).ListTags",
-        "location": "internal/service/exampletags/tags.go:22",
-        "sdk_calls": [
-          "exampletags.ListGadgetTags"
-        ]
-      },
-      "update": {
-        "expr": "(*servicePackage).UpdateTags",
-        "location": "internal/service/exampletags/tags.go:58",
-        "sdk_calls": [
-          "exampletags.TagGadget",
-          "exampletags.UntagGadget"
-        ]
-      }
-    }
-  },
-  {
-    "service": "exampletags",
-    "resource_type": "aws_exampletags_gizmo",
-    "plugin_type": "SDKv2",
-    "expr": "resourceGizmo",
-    "location": "internal/service/exampletags/gizmo.go:25",
-    "create": {
-      "expr": "resourceGizmoCreate",
-      "location": "internal/service/exampletags/gizmo.go:43",
-      "sdk_calls": [
-        "exampletags.CreateGizmo",
-        "exampletags.DescribeGizmo"
-      ]
-    },
-    "read": {
-      "expr": "resourceGizmoRead",
-      "location": "internal/service/exampletags/gizmo.go:62",
-      "sdk_calls": [
-        "exampletags.DescribeGizmo"
-      ]
-    },
-    "update": {
-      "expr": "resourceGizmoUpdate",
-      "location": "internal/service/exampletags/gizmo.go:83",
-      "sdk_calls": [
-        "exampletags.DescribeGizmo"
-      ]
-    },
-    "delete": {
-      "expr": "resourceGizmoDelete",
-      "location": "internal/service/exampletags/gizmo.go:88",
-      "sdk_calls": [
-        "exampletags.DeleteGizmo"
-      ]
-    },
-    "tags": {
-      "list": {
-        "expr": "(*servicePackage).ListTags",
-        "location": "internal/service/exampletags/tags.go:22",
-        "sdk_calls": [
-          "exampletags.ListGadgetTags"
-        ]
-      },
-      "update": {
-        "expr": "(*servicePackage).UpdateTags",
-        "location": "internal/service/exampletags/tags.go:58",
-        "sdk_calls": [
-          "exampletags.TagGadget",
-          "exampletags.UntagGadget"
-        ]
-      }
-    }
-  },
-  {
-    "service": "exampletags",
-    "resource_type": "aws_exampletags_legacy_widget",
-    "plugin_type": "SDKv2",
-    "expr": "resourceWidget",
-    "location": "internal/service/exampletags/widget.go:26",
-    "create": {
-      "expr": "resourceWidgetCreate",
-      "location": "internal/service/exampletags/widget.go:49",
-      "sdk_calls": [
-        "exampletags.CreateWidget",
-        "exampletags.DescribeWidget"
-      ]
-    },
-    "read": {
-      "expr": "resourceWidgetRead",
-      "location": "internal/service/exampletags/widget.go:70",
-      "sdk_calls": [
-        "exampletags.DescribeWidget"
-      ]
-    },
-    "update": {
-      "expr": "resourceWidgetUpdate",
-      "location": "internal/service/exampletags/widget.go:92",
-      "sdk_calls": [
-        "exampletags.DescribeWidget"
-      ]
-    },
-    "delete": {
-      "expr": "resourceWidgetDelete",
-      "location": "internal/service/exampletags/widget.go:97",
-      "sdk_calls": [
-        "exampletags.DeleteWidget"
-      ]
-    },
-    "tags": {
-      "list": {
-        "expr": "(*servicePackage).ListTags",
-        "location": "internal/service/exampletags/tags.go:22",
-        "sdk_calls": [
-          "exampletags.ListWidgetTags",
-          "exampletagsgen.ListTagsForResource"
-        ]
-      },
-      "update": {
-        "expr": "(*servicePackage).UpdateTags",
-        "location": "internal/service/exampletags/tags.go:58",
-        "sdk_calls": [
-          "exampletags.TagWidget",
-          "exampletags.UntagWidget",
-          "exampletagsgen.TagResource",
-          "exampletagsgen.UntagResource"
-        ]
-      }
-    }
-  },
-  {
-    "service": "exampletags",
-    "resource_type": "aws_exampletags_widget",
-    "plugin_type": "SDKv2",
-    "expr": "resourceWidget",
-    "location": "internal/service/exampletags/widget.go:26",
-    "create": {
-      "expr": "resourceWidgetCreate",
-      "location": "internal/service/exampletags/widget.go:49",
-      "sdk_calls": [
-        "exampletags.CreateWidget",
-        "exampletags.DescribeWidget"
-      ]
-    },
-    "read": {
-      "expr": "resourceWidgetRead",
-      "location": "internal/service/exampletags/widget.go:70",
-      "sdk_calls": [
-        "exampletags.DescribeWidget"
-      ]
-    },
-    "update": {
-      "expr": "resourceWidgetUpdate",
-      "location": "internal/service/exampletags/widget.go:92",
-      "sdk_calls": [
-        "exampletags.DescribeWidget"
-      ]
-    },
-    "delete": {
-      "expr": "resourceWidgetDelete",
-      "location": "internal/service/exampletags/widget.go:97",
-      "sdk_calls": [
-        "exampletags.DeleteWidget"
-      ]
-    },
-    "tags": {
-      "list": {
-        "expr": "(*servicePackage).ListTags",
-        "location": "internal/service/exampletags/tags.go:22",
-        "sdk_calls": [
-          "exampletags.ListWidgetTags",
-          "exampletagsgen.ListTagsForResource"
-        ]
-      },
-      "update": {
-        "expr": "(*servicePackage).UpdateTags",
-        "location": "internal/service/exampletags/tags.go:58",
-        "sdk_calls": [
-          "exampletags.TagWidget",
-          "exampletags.UntagWidget",
-          "exampletagsgen.TagResource",
-          "exampletagsgen.UntagResource"
-        ]
-      }
-    }
-  },
-  {
-    "service": "exampletags",
     "resource_type": "aws_exampletags_without_identifier",
     "plugin_type": "SDKv2",
     "expr": "resourceWithoutIdentifier",
@@ -277,22 +277,22 @@
       "expr": "resourceWithoutIdentifierCreate",
       "location": "internal/service/exampletags/without_identifier.go:36",
       "sdk_calls": [
-        "exampletags.CreateSprocket",
-        "exampletags.GetSprocket"
+        "exampletags.CreateQux",
+        "exampletags.GetQux"
       ]
     },
     "read": {
       "expr": "resourceWithoutIdentifierRead",
       "location": "internal/service/exampletags/without_identifier.go:55",
       "sdk_calls": [
-        "exampletags.GetSprocket"
+        "exampletags.GetQux"
       ]
     },
     "delete": {
       "expr": "resourceWithoutIdentifierDelete",
       "location": "internal/service/exampletags/without_identifier.go:80",
       "sdk_calls": [
-        "exampletags.DeleteSprocket"
+        "exampletags.DeleteQux"
       ]
     }
   }

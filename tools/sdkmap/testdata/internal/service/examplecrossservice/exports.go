@@ -5,5 +5,5 @@ package examplecrossservice
 
 // Exports for use in other packages.
 var (
-	FindThingByID = findThingByID
+	FindFooByID = findFooByID
 )

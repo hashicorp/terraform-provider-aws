@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_examplecrossservice_thing", name="Thing")
-func resourceThing() *schema.Resource {
+// @SDKResource("aws_examplecrossservice_foo", name="Foo")
+func resourceFoo() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -40,74 +40,74 @@ func resourceThing() *schema.Resource {
 	}
 }
 
-func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleCrossServiceClient(ctx)
 
 	name := d.Get("name").(string)
-	input := examplecrossservice.CreateThingInput{
+	input := examplecrossservice.CreateFooInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.CreateThing(ctx, &input)
+	output, err := conn.CreateFoo(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Thing (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Foo (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.ThingId))
+	d.SetId(aws.ToString(output.FooId))
 
-	return append(diags, resourceThingRead(ctx, d, meta)...)
+	return append(diags, resourceFooRead(ctx, d, meta)...)
 }
 
-func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleCrossServiceClient(ctx)
 
-	thing, err := findThingByID(ctx, conn, d.Id())
+	foo, err := findFooByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Thing (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Foo (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Foo (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", thing.Name)
+	d.Set("name", foo.Name)
 
 	return diags
 }
 
-func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleCrossServiceClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Thing: %s", d.Id())
-	input := examplecrossservice.DeleteThingInput{
-		ThingId: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Foo: %s", d.Id())
+	input := examplecrossservice.DeleteFooInput{
+		FooId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteThing(ctx, &input)
+	_, err := conn.DeleteFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Foo (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findThingByID(ctx context.Context, conn *examplecrossservice.Client, id string) (*awstypes.Thing, error) {
-	input := examplecrossservice.DescribeThingInput{
-		ThingId: aws.String(id),
+func findFooByID(ctx context.Context, conn *examplecrossservice.Client, id string) (*awstypes.Foo, error) {
+	input := examplecrossservice.DescribeFooInput{
+		FooId: aws.String(id),
 	}
 
-	output, err := conn.DescribeThing(ctx, &input)
+	output, err := conn.DescribeFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -119,9 +119,9 @@ func findThingByID(ctx context.Context, conn *examplecrossservice.Client, id str
 		return nil, err
 	}
 
-	if output == nil || output.Thing == nil {
+	if output == nil || output.Foo == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Thing, nil
+	return output.Foo, nil
 }
