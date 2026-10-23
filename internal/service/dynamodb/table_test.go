@@ -8204,7 +8204,7 @@ func TestAccDynamoDBTable_Replica_disassociationProtection(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Set on create for one replica; the other uses the default (enabled).
-				Config: testAccTableConfig_replicaDisassociationProtection(rName, "false", ""),
+				Config: testAccTableConfig_replicaDisassociationProtection(rName, acctest.CtFalse, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
