@@ -866,7 +866,11 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definition (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceJobDefinitionFlatten(ctx, jobDefinition, d)...)
+	if err := resourceJobDefinitionFlatten(ctx, meta.(*conns.AWSClient), jobDefinition, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definition (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1729,20 +1733,19 @@ func flattenEKSVolumes(apiObjects []awstypes.EksVolume) []any {
 	return tfList
 }
 
-func resourceJobDefinitionFlatten(ctx context.Context, jobDefinition *awstypes.JobDefinition, d *schema.ResourceData) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceJobDefinitionFlatten(ctx context.Context, _ *conns.AWSClient, jobDefinition *awstypes.JobDefinition, d *schema.ResourceData) error {
 	arn, revision := aws.ToString(jobDefinition.JobDefinitionArn), aws.ToInt32(jobDefinition.Revision)
 	d.Set(names.AttrARN, arn)
 	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
 	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 
 	d.Set("container_properties", containerProperties)
 	ecsProperties, err := flattenECSProperties(jobDefinition.EcsProperties)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 	d.Set("ecs_properties", ecsProperties)
 
@@ -1750,7 +1753,7 @@ func resourceJobDefinitionFlatten(ctx context.Context, jobDefinition *awstypes.J
 	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
 	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 	d.Set("node_properties", nodeProperties)
 	d.Set(names.AttrParameters, jobDefinition.Parameters)
@@ -1772,5 +1775,5 @@ func resourceJobDefinitionFlatten(ctx context.Context, jobDefinition *awstypes.J
 
 	setTagsOut(ctx, jobDefinition.Tags)
 
-	return diags
+	return nil
 }
