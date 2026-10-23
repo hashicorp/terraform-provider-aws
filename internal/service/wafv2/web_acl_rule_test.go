@@ -9,9 +9,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -374,6 +377,38 @@ func TestAccWAFV2WebACLRule_sizeConstraintStatement(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_rateBasedStatementScopeDownAndNotStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_rateBasedStatementScopeDownAndNotStatement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.limit", "2000"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.aggregate_key_type", "IP"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.scope_down_statement.0.and_statement.0.statement.0.not_statement.0.statement.0.byte_match_statement.0.search_string", acctest.CtBasic),
+					resource.TestCheckResourceAttrPair(resourceName, "statement.0.rate_based_statement.0.scope_down_statement.0.and_statement.0.statement.1.not_statement.0.statement.0.ip_set_reference_statement.0.arn", "aws_wafv2_ip_set.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
 			},
 		},
 	})
@@ -773,6 +808,186 @@ func TestAccWAFV2WebACLRule_migrateInlineToSeparateResource(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccWAFV2WebACLRule_logicalStatementNesting(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_logicalStatementNesting(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.not_statement.0.statement.0.not_statement.0.statement.0.geo_match_statement.0.country_codes.0", "US"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.or_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.or_statement.0.statement.1.and_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.2.not_statement.0.statement.0.and_statement.0.statement.#", "2"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_invalidLogicalStatementNesting(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_rateBased, testAccWebACLRuleStatement_geoMatch)),
+				ExpectError: regexache.MustCompile(`Blocks of type "rate_based_statement" are not expected here`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_managedRuleGroup, testAccWebACLRuleStatement_geoMatch)),
+				ExpectError: regexache.MustCompile(`Blocks of type "managed_rule_group_statement" are not expected here`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_ruleGroupReference)),
+				ExpectError: regexache.MustCompile(`Blocks of type "rule_group_reference_statement" are not expected here`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_rateBased), testAccWebACLRuleStatement_geoMatch)),
+				ExpectError: regexache.MustCompile(`Blocks of type "rate_based_statement" are not expected here`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch)),
+				ExpectError: regexache.MustCompile(`Blocks of type "and_statement" are not expected here`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch)),
+				ExpectError: regexache.MustCompile(`Blocks of type "or_statement" are not expected here`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch)),
+				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch)),
+				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch))),
+				ExpectError: regexache.MustCompile(`Blocks of type "and_statement" are not expected here`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch))),
+				ExpectError: regexache.MustCompile(`Blocks of type "or_statement" are not expected here`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch))),
+				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch))),
+				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch)))),
+				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch)))),
+				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+			},
+		},
+	})
+}
+
+// State written before and_statement, or_statement and not_statement were narrowed to the
+// statement types AWS WAF accepts in them still holds the removed blocks as empty lists.
+func TestWebACLRuleUpgradeResourceState_logicalStatementNesting(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	const typeName = "aws_wafv2_web_acl_rule"
+
+	server, err := acctest.ProtoV5ProviderFactories[acctest.ProviderName]()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	schemaResp, err := server.GetProviderSchema(ctx, &tfprotov5.GetProviderSchemaRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	schema, ok := schemaResp.ResourceSchemas[typeName]
+	if !ok {
+		t.Fatalf("no schema for %s", typeName)
+	}
+	stateType := schema.ValueType()
+
+	// The fixture holds blocks that the current schema no longer has.
+	if _, err := tftypes.ValueFromJSONWithOpts([]byte(testAccWebACLRuleStateJSON_logicalStatementNesting), stateType, tftypes.ValueFromJSONOpts{}); err == nil {
+		t.Fatal("expected the fixture to contain attributes that are no longer in the schema")
+	}
+
+	resp, err := server.UpgradeResourceState(ctx, &tfprotov5.UpgradeResourceStateRequest{
+		TypeName: typeName,
+		Version:  schema.Version,
+		RawState: &tfprotov5.RawState{JSON: []byte(testAccWebACLRuleStateJSON_logicalStatementNesting)},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range resp.Diagnostics {
+		if d.Severity == tfprotov5.DiagnosticSeverityError {
+			t.Fatalf("UpgradeResourceState: %s: %s", d.Summary, d.Detail)
+		}
+	}
+
+	state, err := resp.UpgradedState.Unmarshal(stateType)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for p, want := range map[*tftypes.AttributePath]string{
+		tftypes.NewAttributePath().WithAttributeName("statement").WithElementKeyInt(0).
+			WithAttributeName("and_statement").WithElementKeyInt(0).
+			WithAttributeName("statement").WithElementKeyInt(0).
+			WithAttributeName("not_statement").WithElementKeyInt(0).
+			WithAttributeName("statement").WithElementKeyInt(0).
+			WithAttributeName("not_statement").WithElementKeyInt(0).
+			WithAttributeName("statement").WithElementKeyInt(0).
+			WithAttributeName("geo_match_statement").WithElementKeyInt(0).
+			WithAttributeName("country_codes").WithElementKeyInt(0): "US",
+		tftypes.NewAttributePath().WithAttributeName("statement").WithElementKeyInt(0).
+			WithAttributeName("and_statement").WithElementKeyInt(0).
+			WithAttributeName("statement").WithElementKeyInt(1).
+			WithAttributeName("label_match_statement").WithElementKeyInt(0).
+			WithAttributeName(names.AttrKey): "test:label",
+	} {
+		v, _, err := tftypes.WalkAttributePath(state, p)
+		if err != nil {
+			t.Fatalf("%s: %s", p, err)
+		}
+		var got string
+		if err := v.(tftypes.Value).As(&got); err != nil {
+			t.Fatalf("%s: %s", p, err)
+		}
+		if got != want {
+			t.Errorf("%s = %q, want %q", p, got, want)
+		}
+	}
 }
 
 func testAccCheckWebACLRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
@@ -2308,6 +2523,99 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName)
 }
 
+func testAccWebACLRuleConfig_rateBasedStatementScopeDownAndNotStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_ip_set" "test" {
+  name               = %[1]q
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.2.3.4/32"]
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {
+      custom_response {
+        response_code = 429
+      }
+    }
+  }
+
+  statement {
+    rate_based_statement {
+      limit                 = 2000
+      evaluation_window_sec = 300
+      aggregate_key_type    = "IP"
+
+      scope_down_statement {
+        and_statement {
+          statement {
+            not_statement {
+              statement {
+                byte_match_statement {
+                  search_string         = "basic"
+                  positional_constraint = "STARTS_WITH"
+
+                  field_to_match {
+                    single_header {
+                      name = "authorization"
+                    }
+                  }
+
+                  text_transformation {
+                    priority = 0
+                    type     = "LOWERCASE"
+                  }
+                }
+              }
+            }
+          }
+          statement {
+            not_statement {
+              statement {
+                ip_set_reference_statement {
+                  arn = aws_wafv2_ip_set.test.arn
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
 func testAccWebACLRuleMigrationConfig_separate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -2352,3 +2660,217 @@ resource "aws_wafv2_web_acl_rule" "test" {
 }
 `, rName)
 }
+
+func testAccWebACLRuleConfig_logicalStatementNesting(rName string) string {
+	return acctest.ConfigCompose(testAccWebACLRuleConfig_webACLOnly(rName), fmt.Sprintf(`
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    and_statement {
+      statement {
+        not_statement {
+          statement {
+            not_statement {
+              statement {
+                geo_match_statement {
+                  country_codes = ["US"]
+                }
+              }
+            }
+          }
+        }
+      }
+
+      statement {
+        or_statement {
+          statement {
+            geo_match_statement {
+              country_codes = ["CA"]
+            }
+          }
+
+          statement {
+            and_statement {
+              statement {
+                geo_match_statement {
+                  country_codes = ["MX"]
+                }
+              }
+
+              statement {
+                label_match_statement {
+                  scope = "LABEL"
+                  key   = "test:label"
+                }
+              }
+            }
+          }
+        }
+      }
+
+      statement {
+        not_statement {
+          statement {
+            and_statement {
+              statement {
+                geo_match_statement {
+                  country_codes = ["GB"]
+                }
+              }
+
+              statement {
+                label_match_statement {
+                  scope = "NAMESPACE"
+                  key   = "test:"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName))
+}
+
+// testAccWebACLRuleConfig_statement returns a rule with the given body inside its statement block.
+func testAccWebACLRuleConfig_statement(rName, statement string) string {
+	return acctest.ConfigCompose(testAccWebACLRuleConfig_webACLOnly(rName), fmt.Sprintf(`
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    %[2]s
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, statement))
+}
+
+const (
+	testAccWebACLRuleStatement_geoMatch = `geo_match_statement {
+  country_codes = ["US"]
+}`
+	testAccWebACLRuleStatement_labelMatch = `label_match_statement {
+  scope = "LABEL"
+  key   = "test:label"
+}`
+	testAccWebACLRuleStatement_rateBased = `rate_based_statement {
+  limit              = 1000
+  aggregate_key_type = "IP"
+}`
+	testAccWebACLRuleStatement_managedRuleGroup = `managed_rule_group_statement {
+  name        = "AWSManagedRulesCommonRuleSet"
+  vendor_name = "AWS"
+}`
+	testAccWebACLRuleStatement_ruleGroupReference = `rule_group_reference_statement {
+  arn = aws_wafv2_web_acl.test.arn
+}`
+)
+
+func testAccWebACLRuleStatement_and(statements ...string) string {
+	return fmt.Sprintf("and_statement {\n%s\n}", testAccWebACLRuleStatements(statements))
+}
+
+func testAccWebACLRuleStatement_or(statements ...string) string {
+	return fmt.Sprintf("or_statement {\n%s\n}", testAccWebACLRuleStatements(statements))
+}
+
+func testAccWebACLRuleStatement_not(statement string) string {
+	return fmt.Sprintf("not_statement {\n%s\n}", testAccWebACLRuleStatements([]string{statement}))
+}
+
+func testAccWebACLRuleStatement_rateBasedScopeDown(statement string) string {
+	return fmt.Sprintf(`rate_based_statement {
+  limit              = 1000
+  aggregate_key_type = "IP"
+
+  scope_down_statement {
+%s
+  }
+}`, statement)
+}
+
+func testAccWebACLRuleStatements(statements []string) string {
+	var b strings.Builder
+	for _, s := range statements {
+		fmt.Fprintf(&b, "statement {\n%s\n}\n", s)
+	}
+	return b.String()
+}
+
+// testAccWebACLRuleStateJSON_logicalStatementNesting is the state of a rule with nested logical
+// statements as written by the schema that allowed every statement type at every level.
+const testAccWebACLRuleStateJSON_logicalStatementNesting = `{
+  "name": "test",
+  "priority": 1,
+  "statement": [{
+    "and_statement": [{
+      "statement": [
+        {
+          "and_statement": [],
+          "managed_rule_group_statement": [],
+          "not_statement": [{
+            "statement": [{
+              "and_statement": [],
+              "managed_rule_group_statement": [],
+              "not_statement": [{
+                "statement": [{
+                  "geo_match_statement": [{"country_codes": ["US"], "forwarded_ip_config": []}],
+                  "managed_rule_group_statement": [],
+                  "rate_based_statement": [],
+                  "rule_group_reference_statement": []
+                }]
+              }],
+              "or_statement": [],
+              "rate_based_statement": [],
+              "rule_group_reference_statement": []
+            }]
+          }],
+          "or_statement": [],
+          "rate_based_statement": [],
+          "rule_group_reference_statement": []
+        },
+        {
+          "and_statement": [],
+          "label_match_statement": [{"key": "test:label", "scope": "LABEL"}],
+          "managed_rule_group_statement": [],
+          "not_statement": [],
+          "or_statement": [],
+          "rate_based_statement": [],
+          "rule_group_reference_statement": []
+        }
+      ]
+    }],
+    "managed_rule_group_statement": [],
+    "not_statement": [],
+    "or_statement": [],
+    "rate_based_statement": [],
+    "rule_group_reference_statement": []
+  }]
+}`
