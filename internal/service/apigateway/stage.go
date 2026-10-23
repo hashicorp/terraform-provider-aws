@@ -81,6 +81,10 @@ func resourceStage() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"arn_with_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"cache_cluster_enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -263,6 +267,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
 	d.Set(names.AttrARN, stageARN(ctx, c, apiID, stageName))
+	d.Set("arn_with_account_id", stageARNWithAccountID(ctx, c, apiID, stageName))
 	if stage.CacheClusterStatus == types.CacheClusterStatusDeleteInProgress {
 		d.Set("cache_cluster_enabled", false)
 		d.Set("cache_cluster_size", d.Get("cache_cluster_size"))
@@ -664,6 +669,12 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 
 func stageARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
 	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/restapis/%s/stages/%s", apiID, stageName))
+}
+
+// stageARNWithAccountID returns the stage ARN including the account ID.
+// CloudWatch Logs delivery sources require this form, while API Gateway APIs (e.g. tagging) require the form without it.
+func stageARNWithAccountID(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
+	return c.RegionalARN(ctx, "apigateway", fmt.Sprintf("/restapis/%s/stages/%s", apiID, stageName))
 }
 
 func stageInvokeARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {

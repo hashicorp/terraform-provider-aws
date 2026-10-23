@@ -135,6 +135,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN
+* `arn_with_account_id` - ARN including the AWS account ID, e.g., `arn:aws:apigateway:eu-west-2:123456789012:/restapis/z4675bid1j/stages/prod`. Use this as the `resource_arn` of an [`aws_cloudwatch_log_delivery_source`](/docs/providers/aws/r/cloudwatch_log_delivery_source.html).
 * `execution_arn` - Execution ARN to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn` when allowing API Gateway to invoke a Lambda function, e.g., `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j/prod`
 * `id` - ID of the stage
 * `invoke_url` - URL to invoke the API pointing to the stage, e.g., `https://z4675bid1j.execute-api.eu-west-2.amazonaws.com/prod`
