@@ -7,6 +7,7 @@ package s3
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -226,30 +227,86 @@ func (r *bucketMetadataConfigurationResource) Create(ctx context.Context, reques
 		return
 	}
 
-	_, err := conn.CreateBucketMetadataConfiguration(ctx, &input)
+	recovered := false
+	for {
+		// A previous apply can leave a FAILED configuration that is not in state.
+		// Directory buckets fail Create with MethodNotAllowed; do not Get them first.
+		if !isDirectoryBucket(bucket) {
+			existing, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
+			if err != nil && !retry.NotFound(err) {
+				response.Diagnostics.AddError(fmt.Sprintf("reading S3 Bucket Metadata Configuration (%s)", bucket), err.Error())
 
-	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusMethodNotAllowed) {
-		err = errDirectoryBucket(err)
-	}
+				return
+			}
 
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket Metadata Configuration (%s)", bucket), err.Error())
+			if metadataConfigurationResultFailed(existing) {
+				if recovered {
+					response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket Metadata Configuration (%s)", bucket), metadataConfigurationFailedError(existing).Error())
 
-		return
-	}
+					return
+				}
 
-	if _, err := waitBucketMetadataJournalTableConfigurationCreated(ctx, conn, bucket, expectedBucketOwner, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for S3 Bucket Metadata journal table configuration (%s) create", bucket), err.Error())
+				if err := deleteBucketMetadataConfiguration(ctx, conn, bucket, expectedBucketOwner); err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Bucket Metadata Configuration (%s)", bucket), err.Error())
 
-		return
-	}
+					return
+				}
 
-	if input.MetadataConfiguration.InventoryTableConfiguration.ConfigurationState == awstypes.InventoryConfigurationStateEnabled {
-		if _, err := waitBucketMetadataInventoryTableConfigurationCreated(ctx, conn, bucket, expectedBucketOwner, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for S3 Bucket Metadata inventory table configuration (%s) create", bucket), err.Error())
+				recovered = true
+				continue
+			}
+		}
+
+		_, err := conn.CreateBucketMetadataConfiguration(ctx, &input)
+
+		if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusMethodNotAllowed) {
+			err = errDirectoryBucket(err)
+		}
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket Metadata Configuration (%s)", bucket), err.Error())
 
 			return
 		}
+
+		timeout := r.CreateTimeout(ctx, data.Timeouts)
+		if _, err := waitBucketMetadataJournalTableConfigurationCreated(ctx, conn, bucket, expectedBucketOwner, timeout); err != nil {
+			if !metadataTableFailed(err) || recovered {
+				response.Diagnostics.AddError(fmt.Sprintf("waiting for S3 Bucket Metadata journal table configuration (%s) create", bucket), err.Error())
+
+				return
+			}
+
+			if err := deleteBucketMetadataConfiguration(ctx, conn, bucket, expectedBucketOwner); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Bucket Metadata Configuration (%s)", bucket), err.Error())
+
+				return
+			}
+
+			recovered = true
+			continue
+		}
+
+		if input.MetadataConfiguration.InventoryTableConfiguration.ConfigurationState == awstypes.InventoryConfigurationStateEnabled {
+			if _, err := waitBucketMetadataInventoryTableConfigurationCreated(ctx, conn, bucket, expectedBucketOwner, timeout); err != nil {
+				if !metadataTableFailed(err) || recovered {
+					response.Diagnostics.AddError(fmt.Sprintf("waiting for S3 Bucket Metadata inventory table configuration (%s) create", bucket), err.Error())
+
+					return
+				}
+
+				if err := deleteBucketMetadataConfiguration(ctx, conn, bucket, expectedBucketOwner); err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Bucket Metadata Configuration (%s)", bucket), err.Error())
+
+					return
+				}
+
+				recovered = true
+				continue
+			}
+		}
+
+		break
 	}
 
 	// Set values for unknowns.
@@ -426,6 +483,79 @@ func (r *bucketMetadataConfigurationResource) Update(ctx context.Context, reques
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, new)...)
+}
+
+func metadataConfigurationResultFailed(mcr *awstypes.MetadataConfigurationResult) bool {
+	if mcr == nil {
+		return false
+	}
+
+	if journal := mcr.JournalTableConfigurationResult; journal != nil && aws.ToString(journal.TableStatus) == journalTableConfigurationStatusFailed {
+		return true
+	}
+
+	if inventory := mcr.InventoryTableConfigurationResult; inventory != nil && aws.ToString(inventory.TableStatus) == inventoryTableConfigurationStatusFailed {
+		return true
+	}
+
+	return false
+}
+
+func metadataConfigurationFailedError(mcr *awstypes.MetadataConfigurationResult) error {
+	if mcr != nil {
+		if journal := mcr.JournalTableConfigurationResult; journal != nil && aws.ToString(journal.TableStatus) == journalTableConfigurationStatusFailed {
+			message := fmt.Sprintf("unexpected state '%s', wanted target '%s'", journalTableConfigurationStatusFailed, journalTableConfigurationStatusActive)
+			if journal.Error != nil {
+				message += fmt.Sprintf(". last error: %s: %s", aws.ToString(journal.Error.ErrorCode), aws.ToString(journal.Error.ErrorMessage))
+			}
+			return errors.New(message)
+		}
+
+		if inventory := mcr.InventoryTableConfigurationResult; inventory != nil && aws.ToString(inventory.TableStatus) == inventoryTableConfigurationStatusFailed {
+			message := fmt.Sprintf("unexpected state '%s', wanted target '%s, %s'", inventoryTableConfigurationStatusFailed, inventoryTableConfigurationStatusActive, inventoryTableConfigurationStatusBackfilling)
+			if inventory.Error != nil {
+				message += fmt.Sprintf(". last error: %s: %s", aws.ToString(inventory.Error.ErrorCode), aws.ToString(inventory.Error.ErrorMessage))
+			}
+			return errors.New(message)
+		}
+	}
+
+	return fmt.Errorf("unexpected state '%s'", journalTableConfigurationStatusFailed)
+}
+
+func metadataTableFailed(err error) bool {
+	var unexpected *retry.UnexpectedStateError
+	if errors.As(err, &unexpected) {
+		return unexpected.State == journalTableConfigurationStatusFailed || unexpected.State == inventoryTableConfigurationStatusFailed
+	}
+
+	return false
+}
+
+func deleteBucketMetadataConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) error {
+	input := s3.DeleteBucketMetadataConfigurationInput{
+		Bucket: aws.String(bucket),
+	}
+	if expectedBucketOwner != "" {
+		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+	}
+
+	_, err := conn.DeleteBucketMetadataConfiguration(ctx, &input)
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeMetadataConfigurationNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("deleting S3 Bucket Metadata Configuration (%s): %w", bucket, err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
+		return findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
+	})
+	if err != nil {
+		return fmt.Errorf("waiting for S3 Bucket Metadata Configuration (%s) delete: %w", bucket, err)
+	}
+
+	return nil
 }
 
 func (r *bucketMetadataConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
