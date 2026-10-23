@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpc_block_public_access_options: Fix `unexpected state 'default-state'` waiter error during initial enablement in a region
+```
