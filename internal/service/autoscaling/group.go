@@ -1372,12 +1372,14 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceGroupFlatten(ctx, meta.(*conns.AWSClient), g, d)...)
+	if err := resourceGroupFlatten(ctx, meta.(*conns.AWSClient), g, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, g *awstypes.AutoScalingGroup, d *schema.ResourceData) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, g *awstypes.AutoScalingGroup, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, g.AutoScalingGroupARN)
 	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
 	d.Set("availability_zone_distribution", []any{flattenAvailabilityZoneDistribution(g.AvailabilityZoneDistribution)})
@@ -1398,15 +1400,15 @@ func resourceGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, g *aw
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
 	if err := d.Set("instance_lifecycle_policy", flattenInstanceLifecyclePolicy(g.InstanceLifecyclePolicy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting instance_lifecycle_policy: %s", err)
+		return fmt.Errorf("setting instance_lifecycle_policy: %w", err)
 	}
 	if err := d.Set("instance_maintenance_policy", flattenInstanceMaintenancePolicy(g.InstanceMaintenancePolicy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting instance_maintenance_policy: %s", err)
+		return fmt.Errorf("setting instance_maintenance_policy: %w", err)
 	}
 	d.Set("launch_configuration", g.LaunchConfigurationName)
 	if g.LaunchTemplate != nil {
 		if err := d.Set(names.AttrLaunchTemplate, []any{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
+			return fmt.Errorf("setting launch_template: %w", err)
 		}
 	} else {
 		d.Set(names.AttrLaunchTemplate, nil)
@@ -1417,7 +1419,7 @@ func resourceGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, g *aw
 	d.Set("min_size", g.MinSize)
 	if g.MixedInstancesPolicy != nil {
 		if err := d.Set("mixed_instances_policy", []any{flattenMixedInstancesPolicy(g.MixedInstancesPolicy)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting mixed_instances_policy: %s", err)
+			return fmt.Errorf("setting mixed_instances_policy: %w", err)
 		}
 	} else {
 		d.Set("mixed_instances_policy", nil)
@@ -1430,7 +1432,7 @@ func resourceGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, g *aw
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
 	d.Set("suspended_processes", flattenSuspendedProcesses(g.SuspendedProcesses))
 	if err := d.Set("traffic_source", flattenTrafficSourceIdentifiers(g.TrafficSources)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting traffic_source: %s", err)
+		return fmt.Errorf("setting traffic_source: %w", err)
 	}
 	d.Set("target_group_arns", g.TargetGroupARNs)
 	// If no termination polices are explicitly configured and the upstream state
@@ -1448,7 +1450,7 @@ func resourceGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, g *aw
 	}
 	if g.WarmPoolConfiguration != nil {
 		if err := d.Set("warm_pool", []any{flattenWarmPoolConfiguration(g.WarmPoolConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting warm_pool: %s", err)
+			return fmt.Errorf("setting warm_pool: %w", err)
 		}
 	} else {
 		d.Set("warm_pool", nil)
@@ -1457,10 +1459,10 @@ func resourceGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, g *aw
 
 	ignoreTagsConfig := awsClient.IgnoreTagsConfig(ctx)
 	if err := d.Set("tag", listOfMap(keyValueTags(ctx, g.Tags, d.Id(), tagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
+		return fmt.Errorf("setting tag: %w", err)
 	}
 
-	return diags
+	return nil
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
