@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
-// ListTags lists the tags of a widget, gadget, or gizmo, and sets them in Context.
+// ListTags lists the tags of a foo, bar, or baz, and sets them in Context.
 // It is called by the transparent tagging interceptor.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
 	var (
@@ -28,15 +28,15 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	conn := c.ExampleTagsClient(ctx)
 
 	switch resourceType {
-	case "Widget":
-		// Attempt the cross-service tagging API first, fall back to ListWidgetTags.
+	case "Foo":
+		// Attempt the cross-service tagging API first, fall back to ListFooTags.
 		tags, err = tfexampletagsgen.ListTags(ctx, c.ExampleTagsGenClient(ctx), identifier)
 		if errs.Contains(err, "is not authorized to perform: exampletagsgen:ListTagsForResource") {
-			tags, err = widgetListTags(ctx, conn, identifier)
+			tags, err = fooListTags(ctx, conn, identifier)
 		}
 
-	case "Gadget", "Gizmo":
-		tags, err = gadgetListTags(ctx, conn, identifier)
+	case "Bar", "Baz":
+		tags, err = barListTags(ctx, conn, identifier)
 
 	default:
 		tags, err = listTags(ctx, conn, identifier)
@@ -53,7 +53,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	return nil
 }
 
-// UpdateTags updates the tags of a widget, gadget, or gizmo.
+// UpdateTags updates the tags of a foo, bar, or baz.
 // It is called by the transparent tagging interceptor.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
 	return updateTags(ctx, meta.(*conns.AWSClient), identifier, resourceType, oldTags, newTags)
@@ -63,27 +63,27 @@ func updateTags(ctx context.Context, c *conns.AWSClient, identifier, resourceTyp
 	conn := c.ExampleTagsClient(ctx)
 
 	switch resourceType {
-	case "Widget":
-		// Attempt the cross-service tagging API first, fall back to Tag/UntagWidget.
+	case "Foo":
+		// Attempt the cross-service tagging API first, fall back to Tag/UntagFoo.
 		err := tfexampletagsgen.UpdateTags(ctx, c.ExampleTagsGenClient(ctx), identifier, oldTags, newTags)
 		if errs.Contains(err, "is not authorized to perform: exampletagsgen:TagResource") {
-			return widgetUpdateTags(ctx, conn, identifier, oldTags, newTags)
+			return fooUpdateTags(ctx, conn, identifier, oldTags, newTags)
 		}
 		return err
 
-	case "Gadget", "Gizmo":
-		return gadgetUpdateTags(ctx, conn, identifier, oldTags, newTags)
+	case "Bar", "Baz":
+		return barUpdateTags(ctx, conn, identifier, oldTags, newTags)
 	}
 
 	return fmt.Errorf("unsupported resource type: %s", resourceType)
 }
 
-func widgetListTags(ctx context.Context, conn *exampletags.Client, identifier string) (tftags.KeyValueTags, error) {
-	input := exampletags.ListWidgetTagsInput{
-		WidgetArn: aws.String(identifier),
+func fooListTags(ctx context.Context, conn *exampletags.Client, identifier string) (tftags.KeyValueTags, error) {
+	input := exampletags.ListFooTagsInput{
+		FooArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListWidgetTags(ctx, &input)
+	output, err := conn.ListFooTags(ctx, &input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -92,27 +92,27 @@ func widgetListTags(ctx context.Context, conn *exampletags.Client, identifier st
 	return keyValueTags(ctx, output.Tags), nil
 }
 
-func widgetUpdateTags(ctx context.Context, conn *exampletags.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func fooUpdateTags(ctx context.Context, conn *exampletags.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags, newTags := tftags.New(ctx, oldTagsMap), tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := exampletags.UntagWidgetInput{
-			TagKeys:   removedTags.Keys(),
-			WidgetArn: aws.String(identifier),
+		input := exampletags.UntagFooInput{
+			TagKeys: removedTags.Keys(),
+			FooArn:  aws.String(identifier),
 		}
 
-		if _, err := conn.UntagWidget(ctx, &input); err != nil {
+		if _, err := conn.UntagFoo(ctx, &input); err != nil {
 			return err
 		}
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := exampletags.TagWidgetInput{
-			Tags:      svcTags(updatedTags),
-			WidgetArn: aws.String(identifier),
+		input := exampletags.TagFooInput{
+			Tags:   svcTags(updatedTags),
+			FooArn: aws.String(identifier),
 		}
 
-		if _, err := conn.TagWidget(ctx, &input); err != nil {
+		if _, err := conn.TagFoo(ctx, &input); err != nil {
 			return err
 		}
 	}
@@ -120,12 +120,12 @@ func widgetUpdateTags(ctx context.Context, conn *exampletags.Client, identifier 
 	return nil
 }
 
-func gadgetListTags(ctx context.Context, conn *exampletags.Client, identifier string) (tftags.KeyValueTags, error) {
-	input := exampletags.ListGadgetTagsInput{
-		GadgetArn: aws.String(identifier),
+func barListTags(ctx context.Context, conn *exampletags.Client, identifier string) (tftags.KeyValueTags, error) {
+	input := exampletags.ListBarTagsInput{
+		BarArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListGadgetTags(ctx, &input)
+	output, err := conn.ListBarTags(ctx, &input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -150,27 +150,27 @@ func listTags(ctx context.Context, conn *exampletags.Client, identifier string) 
 	return keyValueTags(ctx, output.Tags), nil
 }
 
-func gadgetUpdateTags(ctx context.Context, conn *exampletags.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func barUpdateTags(ctx context.Context, conn *exampletags.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags, newTags := tftags.New(ctx, oldTagsMap), tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := exampletags.UntagGadgetInput{
-			GadgetArn: aws.String(identifier),
-			TagKeys:   removedTags.Keys(),
+		input := exampletags.UntagBarInput{
+			BarArn:  aws.String(identifier),
+			TagKeys: removedTags.Keys(),
 		}
 
-		if _, err := conn.UntagGadget(ctx, &input); err != nil {
+		if _, err := conn.UntagBar(ctx, &input); err != nil {
 			return err
 		}
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := exampletags.TagGadgetInput{
-			GadgetArn: aws.String(identifier),
-			Tags:      svcTags(updatedTags),
+		input := exampletags.TagBarInput{
+			BarArn: aws.String(identifier),
+			Tags:   svcTags(updatedTags),
 		}
 
-		if _, err := conn.TagGadget(ctx, &input); err != nil {
+		if _, err := conn.TagBar(ctx, &input); err != nil {
 			return err
 		}
 	}

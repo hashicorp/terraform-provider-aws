@@ -41,17 +41,17 @@ func resourceIncludedCreate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).ExampleBuildConstraintsClient(ctx)
 
 	name := d.Get("name").(string)
-	input := examplebuildconstraints.CreateThingInput{
+	input := examplebuildconstraints.CreateFooInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.CreateThing(ctx, &input)
+	output, err := conn.CreateFoo(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Thing (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Foo (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.ThingId))
+	d.SetId(aws.ToString(output.FooId))
 
 	return append(diags, resourceIncludedRead(ctx, d, meta)...)
 }
@@ -60,20 +60,20 @@ func resourceIncludedRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleBuildConstraintsClient(ctx)
 
-	input := examplebuildconstraints.GetThingInput{
-		ThingId: aws.String(d.Id()),
+	input := examplebuildconstraints.GetFooInput{
+		FooId: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetThing(ctx, &input)
+	output, err := conn.GetFoo(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		log.Printf("[WARN] Thing (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Foo (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Foo (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", output.Name)
@@ -85,18 +85,18 @@ func resourceIncludedDelete(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleBuildConstraintsClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Thing: %s", d.Id())
-	input := examplebuildconstraints.DeleteThingInput{
-		ThingId: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Foo: %s", d.Id())
+	input := examplebuildconstraints.DeleteFooInput{
+		FooId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteThing(ctx, &input)
+	_, err := conn.DeleteFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Foo (%s): %s", d.Id(), err)
 	}
 
 	return diags

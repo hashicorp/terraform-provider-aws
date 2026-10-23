@@ -19,13 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_examplestructfield_rule", name="Rule")
-func resourceRule() *schema.Resource {
+// @SDKResource("aws_examplestructfield_bar", name="Bar")
+func resourceBar() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceRuleCreate,
-		ReadWithoutTimeout:   resourceRuleRead,
-		UpdateWithoutTimeout: resourceRuleUpdate,
-		DeleteWithoutTimeout: resourceRuleDelete,
+		CreateWithoutTimeout: resourceBarCreate,
+		ReadWithoutTimeout:   resourceBarRead,
+		UpdateWithoutTimeout: resourceBarUpdate,
+		DeleteWithoutTimeout: resourceBarDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -41,84 +41,84 @@ func resourceRule() *schema.Resource {
 	}
 }
 
-func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceBarCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleStructFieldClient(ctx)
 
 	name := d.Get("name").(string)
 	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
-		input := examplestructfield.CreateRuleInput{
+		input := examplestructfield.CreateBarInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
 		}
 
-		return conn.CreateRule(ctx, &input)
+		return conn.CreateBar(ctx, &input)
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Rule (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Bar (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.(*examplestructfield.CreateRuleOutput).Rule.RuleId))
+	d.SetId(aws.ToString(output.(*examplestructfield.CreateBarOutput).Bar.BarId))
 
-	return append(diags, resourceRuleRead(ctx, d, meta)...)
+	return append(diags, resourceBarRead(ctx, d, meta)...)
 }
 
-func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceBarRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleStructFieldClient(ctx)
 
-	rule, err := findRuleByID(ctx, conn, d.Id())
+	bar, err := findBarByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Rule (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Bar (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Bar (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", rule.Name)
-	d.Set("predicate", rule.Predicate)
+	d.Set("name", bar.Name)
+	d.Set("predicate", bar.Predicate)
 
 	return diags
 }
 
-func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceBarUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleStructFieldClient(ctx)
 
 	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
-		input := examplestructfield.UpdateRuleInput{
+		input := examplestructfield.UpdateBarInput{
 			ChangeToken: token,
 			Predicate:   aws.String(d.Get("predicate").(string)),
-			RuleId:      aws.String(d.Id()),
+			BarId:       aws.String(d.Id()),
 		}
 
-		return conn.UpdateRule(ctx, &input)
+		return conn.UpdateBar(ctx, &input)
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Bar (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceRuleRead(ctx, d, meta)...)
+	return append(diags, resourceBarRead(ctx, d, meta)...)
 }
 
-func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceBarDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleStructFieldClient(ctx)
 
-	log.Printf("[INFO] Deleting Rule: %s", d.Id())
+	log.Printf("[INFO] Deleting Bar: %s", d.Id())
 	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
-		input := examplestructfield.DeleteRuleInput{
+		input := examplestructfield.DeleteBarInput{
 			ChangeToken: token,
-			RuleId:      aws.String(d.Id()),
+			BarId:       aws.String(d.Id()),
 		}
 
-		return conn.DeleteRule(ctx, &input)
+		return conn.DeleteBar(ctx, &input)
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -126,18 +126,18 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Bar (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findRuleByID(ctx context.Context, conn *examplestructfield.Client, id string) (*awstypes.Rule, error) {
-	input := examplestructfield.GetRuleInput{
-		RuleId: aws.String(id),
+func findBarByID(ctx context.Context, conn *examplestructfield.Client, id string) (*awstypes.Bar, error) {
+	input := examplestructfield.GetBarInput{
+		BarId: aws.String(id),
 	}
 
-	output, err := conn.GetRule(ctx, &input)
+	output, err := conn.GetBar(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -149,9 +149,9 @@ func findRuleByID(ctx context.Context, conn *examplestructfield.Client, id strin
 		return nil, err
 	}
 
-	if output == nil || output.Rule == nil {
+	if output == nil || output.Bar == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Rule, nil
+	return output.Bar, nil
 }

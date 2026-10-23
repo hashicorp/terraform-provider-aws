@@ -22,7 +22,7 @@ import (
 // @SDKResource("aws_examplefuncrefs_method_value", name="Method Value")
 func resourceMethodValue() *schema.Resource {
 	h := &attributeHandler{
-		attributeName: awstypes.ThingAttributeNamePolicy,
+		attributeName: awstypes.FooAttributeNamePolicy,
 		schemaKey:     "policy",
 	}
 
@@ -41,7 +41,7 @@ func resourceMethodValue() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"thing_id": {
+			"foo_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,7 +51,7 @@ func resourceMethodValue() *schema.Resource {
 }
 
 type attributeHandler struct {
-	attributeName awstypes.ThingAttributeName
+	attributeName awstypes.FooAttributeName
 	schemaKey     string
 }
 
@@ -59,20 +59,20 @@ func (h *attributeHandler) Upsert(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleFuncRefsClient(ctx)
 
-	thingID := d.Get("thing_id").(string)
-	input := examplefuncrefs.SetThingAttributeInput{
+	fooID := d.Get("foo_id").(string)
+	input := examplefuncrefs.SetFooAttributeInput{
 		AttributeName:  h.attributeName,
 		AttributeValue: aws.String(d.Get(h.schemaKey).(string)),
-		ThingId:        aws.String(thingID),
+		FooId:          aws.String(fooID),
 	}
 
-	_, err := conn.SetThingAttribute(ctx, &input)
+	_, err := conn.SetFooAttribute(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting Thing (%s) attribute (%s): %s", thingID, h.attributeName, err)
+		return sdkdiag.AppendErrorf(diags, "setting Foo (%s) attribute (%s): %s", fooID, h.attributeName, err)
 	}
 
-	d.SetId(thingID)
+	d.SetId(fooID)
 
 	return append(diags, h.Read(ctx, d, meta)...)
 }
@@ -81,20 +81,20 @@ func (h *attributeHandler) Read(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleFuncRefsClient(ctx)
 
-	value, err := findThingAttributeByTwoPartKey(ctx, conn, d.Id(), h.attributeName)
+	value, err := findFooAttributeByTwoPartKey(ctx, conn, d.Id(), h.attributeName)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Thing (%s) attribute (%s) not found, removing from state", d.Id(), h.attributeName)
+		log.Printf("[WARN] Foo (%s) attribute (%s) not found, removing from state", d.Id(), h.attributeName)
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Thing (%s) attribute (%s): %s", d.Id(), h.attributeName, err)
+		return sdkdiag.AppendErrorf(diags, "reading Foo (%s) attribute (%s): %s", d.Id(), h.attributeName, err)
 	}
 
 	d.Set(h.schemaKey, value)
-	d.Set("thing_id", d.Id())
+	d.Set("foo_id", d.Id())
 
 	return diags
 }
@@ -103,31 +103,31 @@ func (h *attributeHandler) Delete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleFuncRefsClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Thing (%s) attribute (%s)", d.Id(), h.attributeName)
-	input := examplefuncrefs.DeleteThingAttributeInput{
+	log.Printf("[DEBUG] Deleting Foo (%s) attribute (%s)", d.Id(), h.attributeName)
+	input := examplefuncrefs.DeleteFooAttributeInput{
 		AttributeName: h.attributeName,
-		ThingId:       aws.String(d.Id()),
+		FooId:         aws.String(d.Id()),
 	}
-	_, err := conn.DeleteThingAttribute(ctx, &input)
+	_, err := conn.DeleteFooAttribute(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Thing (%s) attribute (%s): %s", d.Id(), h.attributeName, err)
+		return sdkdiag.AppendErrorf(diags, "deleting Foo (%s) attribute (%s): %s", d.Id(), h.attributeName, err)
 	}
 
 	return diags
 }
 
-func findThingAttributeByTwoPartKey(ctx context.Context, conn *examplefuncrefs.Client, thingID string, attributeName awstypes.ThingAttributeName) (string, error) {
-	input := examplefuncrefs.GetThingAttributeInput{
+func findFooAttributeByTwoPartKey(ctx context.Context, conn *examplefuncrefs.Client, fooID string, attributeName awstypes.FooAttributeName) (string, error) {
+	input := examplefuncrefs.GetFooAttributeInput{
 		AttributeName: attributeName,
-		ThingId:       aws.String(thingID),
+		FooId:         aws.String(fooID),
 	}
 
-	output, err := conn.GetThingAttribute(ctx, &input)
+	output, err := conn.GetFooAttribute(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return "", &retry.NotFoundError{

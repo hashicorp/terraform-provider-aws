@@ -16,41 +16,41 @@ import (
 // @SDKResource("aws_examplecustomizediff_identifier", name="Identifier")
 func resourceIdentifier() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		UpdateWithoutTimeout: resourceThingUpdate,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		CustomizeDiff: customizeDiffChecksum,
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
 // @SDKResource("aws_examplecustomizediff_sequence", name="Sequence")
 func resourceSequence() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		UpdateWithoutTimeout: resourceThingUpdate,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		CustomizeDiff: customdiff.Sequence(
 			customizeDiffChecksum,
 			validateSize,
 		),
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
 // @SDKResource("aws_examplecustomizediff_nested", name="Nested")
 func resourceNested() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		UpdateWithoutTimeout: resourceThingUpdate,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		CustomizeDiff: customdiff.All(
 			customdiff.Sequence(
@@ -77,17 +77,17 @@ func resourceNested() *schema.Resource {
 			},
 		),
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
 // @SDKResource("aws_examplecustomizediff_function_literal", name="Function Literal")
 func resourceFunctionLiteral() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		UpdateWithoutTimeout: resourceThingUpdate,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 			if d.HasChange("content") && d.Get("size").(int) == 0 {
@@ -97,69 +97,69 @@ func resourceFunctionLiteral() *schema.Resource {
 			return nil
 		},
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
 // @SDKResource("aws_examplecustomizediff_force_new_if", name="Force New If")
 func resourceForceNewIf() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		UpdateWithoutTimeout: resourceThingUpdate,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		CustomizeDiff: customdiff.ForceNewIf("parent_id", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
 			return d.HasChange("size")
 		}),
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
 // @SDKResource("aws_examplecustomizediff_variable", name="Variable")
 func resourceVariable() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		UpdateWithoutTimeout: resourceThingUpdate,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
-		CustomizeDiff: thingCustomizeDiff,
+		CustomizeDiff: fooCustomizeDiff,
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
 // @SDKResource("aws_examplecustomizediff_call", name="Call")
 func resourceCall() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		UpdateWithoutTimeout: resourceThingUpdate,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		CustomizeDiff: customizeDiffValidateQuota("size"),
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
 // @SDKResource("aws_examplecustomizediff_factory_reference", name="Factory Reference")
 func resourceFactoryReference() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		UpdateWithoutTimeout: resourceThingUpdate,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		CustomizeDiff: customizeDiffComputedOnUpdate,
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
-var thingCustomizeDiff = customdiff.All(
+var fooCustomizeDiff = customdiff.All(
 	customizeDiffChecksum,
 	validateParentExists,
 )
@@ -216,14 +216,14 @@ func customizeDiffValidateQuota(key string) schema.CustomizeDiffFunc {
 }
 
 func customizeDiffComputedOnUpdate(_ context.Context, d *schema.ResourceDiff, meta any) error {
-	if d.Id() != "" && thingNeedsUpdate(d) {
+	if d.Id() != "" && fooNeedsUpdate(d) {
 		return d.SetNewComputed("checksum")
 	}
 
 	return nil
 }
 
-func thingNeedsUpdate(d *schema.ResourceDiff) bool {
+func fooNeedsUpdate(d *schema.ResourceDiff) bool {
 	for k, attr := range resourceFactoryReference().SchemaMap() {
 		if attr.ForceNew || (attr.Computed && !attr.Optional) {
 			continue

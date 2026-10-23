@@ -24,7 +24,7 @@ func resourceNoop() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"default_thing_mode": {
+				"default_foo_mode": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -38,7 +38,7 @@ func resourceNoopUpsert(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).ExampleFuncRefsClient(ctx)
 
 	input := examplefuncrefs.SetAccountSettingsInput{
-		DefaultThingMode: awstypes.ThingMode(d.Get("default_thing_mode").(string)),
+		DefaultFooMode: awstypes.FooMode(d.Get("default_foo_mode").(string)),
 	}
 
 	_, err := conn.SetAccountSettings(ctx, &input)
@@ -64,7 +64,7 @@ func resourceNoopRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading account settings: %s", err)
 	}
 
-	d.Set("default_thing_mode", output.DefaultThingMode)
+	d.Set("default_foo_mode", output.DefaultFooMode)
 
 	return diags
 }
