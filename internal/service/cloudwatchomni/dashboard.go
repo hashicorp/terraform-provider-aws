@@ -6,7 +6,6 @@ package cloudwatchomni
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -247,17 +247,24 @@ func (r *dashboardResource) flatten(ctx context.Context, dashboard *awstypes.Omn
 	return fwflex.Flatten(ctx, dashboard, data)
 }
 
+var (
+	_ inttypes.ImportIDParser = dashboardImportID{}
+)
+
 type dashboardImportID struct{}
 
 func (dashboardImportID) Parse(id string) (string, map[string]any, error) {
-	spaceID, dashboardID, found := strings.Cut(id, intflex.ResourceIdSeparator)
-	if !found {
-		return "", nil, fmt.Errorf("id %q should be in the format <space-id>%s<dashboard-id>", id, intflex.ResourceIdSeparator)
+	const (
+		importIDPartCount = 2
+	)
+	parts, err := intflex.ExpandResourceId(id, importIDPartCount, false)
+	if err != nil {
+		return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected space_id%[2]sdashboard_id: %w", id, intflex.ResourceIdSeparator, err)
 	}
 
 	result := map[string]any{
-		"dashboard_id": dashboardID,
-		"space_id":     spaceID,
+		"dashboard_id": parts[1],
+		"space_id":     parts[0],
 	}
 
 	return id, result, nil
