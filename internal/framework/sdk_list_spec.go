@@ -27,15 +27,17 @@ type RegionQuery struct {
 }
 
 // SDKListSpec declares a list resource over an SDKv2 resource whose paginated
-// list call returns whole objects.
+// list call returns whole objects. Query is the resource's list configuration
+// model, decoded before listing starts.
 //
-// Query is the resource's list configuration model, decoded from the
-// configuration before listing starts.
-//
-// The projections (ID, DisplayName) take only what they need, so most
-// conversions carry no unused parameters. A projection needing anything
-// ambient should have Items put it on Item, as s3control's multi-region access
-// point does with the account ID.
+// Every field is vocabulary every list resource can reach for, so the bar for
+// a new one is high. First try the existing fields: build the input in Items,
+// set extra attributes in Prepare, or carry ambient values on Item (as
+// s3control's multi-region access point does with the account ID). A new field
+// needs two resources that can't be written any other way, and it lands with
+// them. Fields that can't work together should fail in NewSDKListResource, not
+// at list time. Callbacks get only what they use. See
+// docs/design-decisions/declarative-resource-modeling-principles.md.
 type SDKListSpec[Item, Query any] struct {
 	// ConfigSchema declares the list configuration that Query decodes from.
 	// Leave it nil for resources that take no list configuration.

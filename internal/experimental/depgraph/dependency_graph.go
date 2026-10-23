@@ -232,9 +232,9 @@ func depthFirstSearch(edges map[string][]string) func(s string) ([]string, error
 
 				nodeEdges := edges[node]
 
-				for i := len(nodeEdges) - 1; i >= 0; i-- {
+				for _, nodeEdge := range slices.Backward(nodeEdges) {
 					todo.Push(&todoValue{
-						node: nodeEdges[i],
+						node: nodeEdge,
 					})
 				}
 
