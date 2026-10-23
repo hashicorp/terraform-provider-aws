@@ -43,6 +43,7 @@ func testAccTrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", acctest.CtFalse),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
+					resource.TestCheckResourceAttr(resourceName, "recursive_logging", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_name", ""),
@@ -477,6 +478,41 @@ func testAccTrail_globalServiceEvents(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTrail_recursiveLogging(t *testing.T) {
+	ctx := acctest.Context(t)
+	var trail types.Trail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudtrail.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudTrailConfig_recursiveLogging(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, t, resourceName, &trail),
+					resource.TestCheckResourceAttr(resourceName, "recursive_logging", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCloudTrailConfig_recursiveLogging(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, t, resourceName, &trail),
+					resource.TestCheckResourceAttr(resourceName, "recursive_logging", acctest.CtTrue),
+				),
 			},
 		},
 	})
@@ -1354,6 +1390,19 @@ resource "aws_cloudtrail" "test" {
   include_global_service_events = false
 }
 `, rName))
+}
+
+func testAccCloudTrailConfig_recursiveLogging(rName string, recursiveLogging bool) string {
+	return acctest.ConfigCompose(testAccCloudTrailConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
+  name              = %[1]q
+  s3_bucket_name    = aws_s3_bucket.test.bucket
+  recursive_logging = %[2]t
+}
+`, rName, recursiveLogging))
 }
 
 func testAccCloudTrailConfig_tags1(rName, tagKey1, tagValue1 string) string {
