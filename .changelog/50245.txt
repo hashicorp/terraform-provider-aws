@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_batch_compute_environment: Add `ecs_settings` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_batch_compute_environment: Add `ecs_settings` attribute
+```

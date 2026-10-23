@@ -185,11 +185,42 @@ resource "aws_batch_compute_environment" "sample" {
 }
 ```
 
+### Enabling Container Insights
+
+```terraform
+resource "aws_batch_compute_environment" "sample" {
+  name = "sample"
+
+  compute_resources {
+    max_vcpus = 16
+
+    security_group_ids = [
+      aws_security_group.sample.id
+    ]
+
+    subnets = [
+      aws_subnet.sample.id
+    ]
+
+    type = "FARGATE"
+  }
+
+  ecs_settings {
+    container_insights = "ENHANCED"
+  }
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `compute_resources` - (Optional) Details of the compute resources managed by the compute environment. This parameter is required for managed compute environments. See details below.
+* `ecs_settings` - (Optional) Amazon ECS settings for the compute environment, which control CloudWatch Container Insights collection. Only supported for Amazon ECS-based compute environments (managed EC2, managed Fargate, and unmanaged). See details below.
 * `eks_configuration` - (Optional) Details for the Amazon EKS cluster that supports the compute environment. See details below.
 * `name` - (Optional, Forces new resource) Name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `name`.
@@ -235,6 +266,12 @@ This resource supports the following arguments:
 * `launch_template_id` - (Optional) ID of the launch template. You must specify either the launch template ID or launch template name in the request, but not both.
 * `launch_template_name` - (Optional) Name of the launch template.
 * `version` - (Optional) Version number of the launch template. Default: The default version of the launch template.
+
+### `ecs_settings` Block
+
+`ecs_settings` supports the following:
+
+* `container_insights` - (Required) CloudWatch Container Insights mode for the compute environment. Valid values are `ENABLED`, `ENHANCED`, and `DISABLED`. When `ecs_settings` is omitted, AWS Batch does not pass a Container Insights configuration to the underlying Amazon ECS cluster and the Amazon ECS account-level default applies. Once a value has been set it cannot be reverted to that unset default: removing the `ecs_settings` block leaves the current setting in place, and `DISABLED` must be set to explicitly turn Container Insights off. The compute environment's service role requires the `ecs:UpdateCluster` permission, which is included in the `AWSBatchServiceRole` managed policy and the AWS Batch service-linked role; without it the compute environment transitions to the `INVALID` state. See [AWS Batch CloudWatch Container Insights](https://docs.aws.amazon.com/batch/latest/userguide/cloudwatch-container-insights.html).
 
 ### `eks_configuration` Block
 

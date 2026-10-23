@@ -542,6 +542,98 @@ func TestAccBatchComputeEnvironment_updatePolicyUpdate(t *testing.T) {
 	})
 }
 
+func TestAccBatchComputeEnvironment_ecsSettingsCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_ecsSettings(rName, "ENABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "ecs_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_settings.0.container_insights", "ENABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccComputeEnvironmentConfig_ecsSettings(rName, "ENHANCED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "ecs_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_settings.0.container_insights", "ENHANCED"),
+				),
+			},
+			{
+				Config: testAccComputeEnvironmentConfig_ecsSettings(rName, "DISABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "ecs_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_settings.0.container_insights", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBatchComputeEnvironment_ecsSettingsUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_fargate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "ecs_settings.#", "0"),
+				),
+			},
+			{
+				Config: testAccComputeEnvironmentConfig_ecsSettings(rName, "ENHANCED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "ecs_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_settings.0.container_insights", "ENHANCED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Removing the block keeps the last setting; the API cannot revert to unset.
+				Config: testAccComputeEnvironmentConfig_fargate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "ecs_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_settings.0.container_insights", "ENHANCED"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBatchComputeEnvironment_CreateEC2DesiredVCPUsEC2KeyPairImageID_computeResourcesTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ce awstypes.ComputeEnvironmentDetail
@@ -2696,6 +2788,33 @@ resource "aws_batch_compute_environment" "test" {
   type = "MANAGED"
 }
 `, rName))
+}
+
+func testAccComputeEnvironmentConfig_ecsSettings(rName, containerInsights string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  compute_resources {
+    max_vcpus = 16
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "FARGATE"
+  }
+
+  ecs_settings {
+    container_insights = %[2]q
+  }
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName, containerInsights))
 }
 
 func testAccComputeEnvironmentConfig_ec2DesiredVCPUsEC2KeyPairImageIDAndResourcesTags(rName, publicKey string) string {
