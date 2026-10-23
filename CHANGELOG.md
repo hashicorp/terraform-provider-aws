@@ -5,6 +5,11 @@ NOTES:
 * provider: Update the minimum Go version required to build the provider to 1.27.3. Go 1.27 requires macOS 13 Ventura or later ([#50436](https://github.com/hashicorp/terraform-provider-aws/issues/50436))
 * resource/aws_dx_connection_confirmation: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#50602](https://github.com/hashicorp/terraform-provider-aws/issues/50602))
 
+FEATURES:
+
+* **New List Resource:** `aws_cloudwatchomni_dashboard` ([#50482](https://github.com/hashicorp/terraform-provider-aws/issues/50482))
+* **New Resource:** `aws_cloudwatchomni_dashboard` ([#50482](https://github.com/hashicorp/terraform-provider-aws/issues/50482))
+
 ENHANCEMENTS:
 
 * resource/aws_dx_connection: Add configurable `update` timeout. Defaults to the previously hard-coded value of `10m`. ([#50602](https://github.com/hashicorp/terraform-provider-aws/issues/50602))
