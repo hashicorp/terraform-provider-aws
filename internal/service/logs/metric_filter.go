@@ -170,7 +170,7 @@ func resourceMetricFilterRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceMetricFilterFlatten(ctx, mf, d); err != nil {
+	if err := resourceMetricFilterFlatten(ctx, meta.(*conns.AWSClient), mf, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -206,7 +206,7 @@ func resourceMetricFilterDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceMetricFilterFlatten(_ context.Context, mf *awstypes.MetricFilter, d *schema.ResourceData) error {
+func resourceMetricFilterFlatten(_ context.Context, _ *conns.AWSClient, mf *awstypes.MetricFilter, d *schema.ResourceData) error {
 	d.Set("apply_on_transformed_logs", mf.ApplyOnTransformedLogs)
 	d.Set(names.AttrLogGroupName, mf.LogGroupName)
 	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {

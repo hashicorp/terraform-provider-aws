@@ -171,7 +171,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
 	}
 
-	resourceGroupFlatten(ctx, d, *lg)
+	if err := resourceGroupFlatten(ctx, meta.(*conns.AWSClient), lg, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
+	}
 
 	return diags
 }
@@ -310,7 +312,7 @@ func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 	return tfslices.CollectAndConcatWithError(listLogGroupPages(ctx, conn, input), optFns...)
 }
 
-func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
+func resourceGroupFlatten(_ context.Context, _ *conns.AWSClient, lg *awstypes.LogGroup, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
 	d.Set("deletion_protection_enabled", lg.DeletionProtectionEnabled)
 	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
@@ -320,6 +322,8 @@ func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes
 	d.Set("retention_in_days", lg.RetentionInDays)
 	// Support in-place update of non-refreshable attribute.
 	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
+
+	return nil
 }
 
 func listLogGroupPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.LogGroup, error] {

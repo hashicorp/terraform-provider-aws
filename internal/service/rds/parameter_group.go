@@ -158,14 +158,16 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceParameterGroupFlatten(ctx, conn, dbParameterGroup, d); err != nil {
+	if err := resourceParameterGroupFlatten(ctx, meta.(*conns.AWSClient), dbParameterGroup, d); err != nil {
 		return sdkdiag.AppendErrorf(diags, "flattening RDS DB Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceParameterGroupFlatten(ctx context.Context, conn *rds.Client, dbParameterGroup *types.DBParameterGroup, d *schema.ResourceData) error {
+func resourceParameterGroupFlatten(ctx context.Context, c *conns.AWSClient, dbParameterGroup *types.DBParameterGroup, d *schema.ResourceData) error {
+	conn := c.RDSClient(ctx)
+
 	d.Set(names.AttrARN, dbParameterGroup.DBParameterGroupArn)
 	d.Set(names.AttrDescription, dbParameterGroup.Description)
 	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
