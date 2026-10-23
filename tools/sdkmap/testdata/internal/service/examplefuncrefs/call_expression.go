@@ -36,7 +36,7 @@ func resourceCallExpression() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"thing_id": {
+			"foo_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,20 +50,20 @@ func resourceCallExpressionPut(condition awstypes.ExistCondition) func(context.C
 		var diags diag.Diagnostics
 		conn := meta.(*conns.AWSClient).ExampleFuncRefsClient(ctx)
 
-		thingID := d.Get("thing_id").(string)
-		input := examplefuncrefs.PutThingConfigurationInput{
+		fooID := d.Get("foo_id").(string)
+		input := examplefuncrefs.PutFooConfigurationInput{
 			Configuration:  aws.String(d.Get("configuration").(string)),
 			ExistCondition: condition,
-			ThingId:        aws.String(thingID),
+			FooId:          aws.String(fooID),
 		}
 
-		_, err := conn.PutThingConfiguration(ctx, &input)
+		_, err := conn.PutFooConfiguration(ctx, &input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "putting Thing (%s) configuration: %s", thingID, err)
+			return sdkdiag.AppendErrorf(diags, "putting Foo (%s) configuration: %s", fooID, err)
 		}
 
-		d.SetId(thingID)
+		d.SetId(fooID)
 
 		return append(diags, resourceCallExpressionRead(ctx, d, meta)...)
 	}
@@ -73,20 +73,20 @@ func resourceCallExpressionRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleFuncRefsClient(ctx)
 
-	configuration, err := findThingConfigurationByID(ctx, conn, d.Id())
+	configuration, err := findFooConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Thing (%s) configuration not found, removing from state", d.Id())
+		log.Printf("[WARN] Foo (%s) configuration not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Thing (%s) configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Foo (%s) configuration: %s", d.Id(), err)
 	}
 
 	d.Set("configuration", configuration)
-	d.Set("thing_id", d.Id())
+	d.Set("foo_id", d.Id())
 
 	return diags
 }
@@ -95,29 +95,29 @@ func resourceCallExpressionDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleFuncRefsClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Thing (%s) configuration", d.Id())
-	input := examplefuncrefs.DeleteThingConfigurationInput{
-		ThingId: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Foo (%s) configuration", d.Id())
+	input := examplefuncrefs.DeleteFooConfigurationInput{
+		FooId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteThingConfiguration(ctx, &input)
+	_, err := conn.DeleteFooConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Thing (%s) configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Foo (%s) configuration: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findThingConfigurationByID(ctx context.Context, conn *examplefuncrefs.Client, thingID string) (string, error) {
-	input := examplefuncrefs.GetThingConfigurationInput{
-		ThingId: aws.String(thingID),
+func findFooConfigurationByID(ctx context.Context, conn *examplefuncrefs.Client, fooID string) (string, error) {
+	input := examplefuncrefs.GetFooConfigurationInput{
+		FooId: aws.String(fooID),
 	}
 
-	output, err := conn.GetThingConfiguration(ctx, &input)
+	output, err := conn.GetFooConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return "", &retry.NotFoundError{

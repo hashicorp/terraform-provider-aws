@@ -20,14 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_exampletags_gizmo", name="Gizmo")
-// @Tags(identifierAttribute="arn", resourceType="Gizmo")
-func resourceGizmo() *schema.Resource {
+// @SDKResource("aws_exampletags_baz", name="Baz")
+// @Tags(identifierAttribute="arn", resourceType="Baz")
+func resourceBaz() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceGizmoCreate,
-		ReadWithoutTimeout:   resourceGizmoRead,
-		UpdateWithoutTimeout: resourceGizmoUpdate,
-		DeleteWithoutTimeout: resourceGizmoDelete,
+		CreateWithoutTimeout: resourceBazCreate,
+		ReadWithoutTimeout:   resourceBazRead,
+		UpdateWithoutTimeout: resourceBazUpdate,
+		DeleteWithoutTimeout: resourceBazDelete,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -40,78 +40,78 @@ func resourceGizmo() *schema.Resource {
 	}
 }
 
-func resourceGizmoCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceBazCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsClient(ctx)
 
-	input := exampletags.CreateGizmoInput{
+	input := exampletags.CreateBazInput{
 		Tags: getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateGizmo(ctx, &input)
+	output, err := conn.CreateBaz(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Gizmo: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Baz: %s", err)
 	}
 
-	d.SetId(aws.ToString(output.GizmoId))
+	d.SetId(aws.ToString(output.BazId))
 
-	return append(diags, resourceGizmoRead(ctx, d, meta)...)
+	return append(diags, resourceBazRead(ctx, d, meta)...)
 }
 
-func resourceGizmoRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceBazRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsClient(ctx)
 
-	gizmo, err := findGizmoByID(ctx, conn, d.Id())
+	baz, err := findBazByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Gizmo (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Baz (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Gizmo (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Baz (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", gizmo.GizmoArn)
+	d.Set("arn", baz.BazArn)
 
 	return diags
 }
 
-func resourceGizmoUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceBazUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
-	return resourceGizmoRead(ctx, d, meta)
+	return resourceBazRead(ctx, d, meta)
 }
 
-func resourceGizmoDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceBazDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Gizmo: %s", d.Id())
-	input := exampletags.DeleteGizmoInput{
-		GizmoId: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Baz: %s", d.Id())
+	input := exampletags.DeleteBazInput{
+		BazId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteGizmo(ctx, &input)
+	_, err := conn.DeleteBaz(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Gizmo (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Baz (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findGizmoByID(ctx context.Context, conn *exampletags.Client, id string) (*awstypes.Gizmo, error) {
-	input := exampletags.DescribeGizmoInput{
-		GizmoId: aws.String(id),
+func findBazByID(ctx context.Context, conn *exampletags.Client, id string) (*awstypes.Baz, error) {
+	input := exampletags.DescribeBazInput{
+		BazId: aws.String(id),
 	}
 
-	output, err := conn.DescribeGizmo(ctx, &input)
+	output, err := conn.DescribeBaz(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -123,9 +123,9 @@ func findGizmoByID(ctx context.Context, conn *exampletags.Client, id string) (*a
 		return nil, err
 	}
 
-	if output == nil || output.Gizmo == nil {
+	if output == nil || output.Baz == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Gizmo, nil
+	return output.Baz, nil
 }

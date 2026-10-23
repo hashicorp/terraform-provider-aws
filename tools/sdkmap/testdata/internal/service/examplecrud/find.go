@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findWidgetByID(ctx context.Context, conn *examplecrud.Client, id string) (*awstypes.Widget, error) {
-	input := examplecrud.DescribeWidgetInput{
-		WidgetId: aws.String(id),
+func findFooByID(ctx context.Context, conn *examplecrud.Client, id string) (*awstypes.Foo, error) {
+	input := examplecrud.DescribeFooInput{
+		FooId: aws.String(id),
 	}
 
-	output, err := conn.DescribeWidget(ctx, &input)
+	output, err := conn.DescribeFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -31,19 +31,19 @@ func findWidgetByID(ctx context.Context, conn *examplecrud.Client, id string) (*
 		return nil, err
 	}
 
-	if output == nil || output.Widget == nil {
+	if output == nil || output.Foo == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Widget, nil
+	return output.Foo, nil
 }
 
-func findGadgetByID(ctx context.Context, conn *examplecrud.Client, id string) (*awstypes.Gadget, error) {
-	input := examplecrud.DescribeGadgetInput{
-		GadgetId: aws.String(id),
+func findBarByID(ctx context.Context, conn *examplecrud.Client, id string) (*awstypes.Bar, error) {
+	input := examplecrud.DescribeBarInput{
+		BarId: aws.String(id),
 	}
 
-	output, err := conn.DescribeGadget(ctx, &input)
+	output, err := conn.DescribeBar(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -55,9 +55,9 @@ func findGadgetByID(ctx context.Context, conn *examplecrud.Client, id string) (*
 		return nil, err
 	}
 
-	if output == nil || output.Gadget == nil {
+	if output == nil || output.Bar == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Gadget, nil
+	return output.Bar, nil
 }

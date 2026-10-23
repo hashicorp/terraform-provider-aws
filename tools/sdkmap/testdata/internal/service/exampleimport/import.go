@@ -15,78 +15,78 @@ import (
 // @SDKResource("aws_exampleimport_passthrough", name="Passthrough")
 func resourcePassthrough() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
 // @SDKResource("aws_exampleimport_function", name="Function")
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceFunctionImport,
 		},
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
 // @SDKResource("aws_exampleimport_function_literal", name="Function Literal")
 func resourceFunctionLiteral() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				conn := meta.(*conns.AWSClient).ExampleImportClient(ctx)
 
-				thing, err := findThingByName(ctx, conn, d.Id())
+				foo, err := findFooByName(ctx, conn, d.Id())
 
 				if err != nil {
 					return nil, err
 				}
 
-				d.SetId(*thing.ThingId)
+				d.SetId(*foo.FooId)
 
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
 // @SDKResource("aws_exampleimport_none", name="None")
 func resourceNone() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		DeleteWithoutTimeout: resourceFooDelete,
 
-		SchemaFunc: thingSchema,
+		SchemaFunc: fooSchema,
 	}
 }
 
 func resourceFunctionImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parentID, thingID, found := strings.Cut(d.Id(), "/")
-	if !found || parentID == "" || thingID == "" {
+	parentID, fooID, found := strings.Cut(d.Id(), "/")
+	if !found || parentID == "" || fooID == "" {
 		return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected PARENT_ID/THING_ID", d.Id())
 	}
 
-	d.SetId(thingID)
+	d.SetId(fooID)
 	d.Set("parent_id", parentID)
 
 	return []*schema.ResourceData{d}, nil

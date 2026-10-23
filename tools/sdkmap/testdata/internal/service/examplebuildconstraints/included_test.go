@@ -25,11 +25,11 @@ func testAccCheckIncludedDestroy(ctx context.Context, t *testing.T) func() error
 	return func() error {
 		conn := acctest.ProviderMeta(ctx, t).ExampleBuildConstraintsClient(ctx)
 
-		input := examplebuildconstraints.ListThingsInput{
+		input := examplebuildconstraints.ListFoosInput{
 			NamePrefix: aws.String(acctest.ResourcePrefix),
 		}
 
-		_, err := conn.ListThings(ctx, &input)
+		_, err := conn.ListFoos(ctx, &input)
 
 		return err
 	}

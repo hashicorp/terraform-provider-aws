@@ -22,16 +22,16 @@ func newParentLookup(conn *examplecrossservice.Client) *parentLookup {
 	}
 }
 
-func (l *parentLookup) Find(ctx context.Context, id string) (*awstypes.Thing, error) {
-	input := examplecrossservice.DescribeThingInput{
-		ThingId: aws.String(id),
+func (l *parentLookup) Find(ctx context.Context, id string) (*awstypes.Foo, error) {
+	input := examplecrossservice.DescribeFooInput{
+		FooId: aws.String(id),
 	}
 
-	output, err := l.conn.DescribeThing(ctx, &input)
+	output, err := l.conn.DescribeFoo(ctx, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return output.Thing, nil
+	return output.Foo, nil
 }
