@@ -18,14 +18,14 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKResource("aws_exampletagsupdateonly_thing", name="Thing")
+// @SDKResource("aws_exampletagsupdateonly_foo", name="Foo")
 // @Tags(identifierAttribute="arn")
-func resourceThing() *schema.Resource {
+func resourceFoo() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		UpdateWithoutTimeout: resourceThingUpdate,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -43,74 +43,74 @@ func resourceThing() *schema.Resource {
 	}
 }
 
-func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsUpdateOnlyClient(ctx)
 
 	name := d.Get("name").(string)
-	input := exampletagsupdateonly.CreateThingInput{
+	input := exampletagsupdateonly.CreateFooInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
 
-	if _, err := conn.CreateThing(ctx, &input); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Thing (%s): %s", name, err)
+	if _, err := conn.CreateFoo(ctx, &input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Foo (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return append(diags, resourceThingRead(ctx, d, meta)...)
+	return append(diags, resourceFooRead(ctx, d, meta)...)
 }
 
-func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsUpdateOnlyClient(ctx)
 
-	input := exampletagsupdateonly.GetThingInput{
+	input := exampletagsupdateonly.GetFooInput{
 		Name: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetThing(ctx, &input)
+	output, err := conn.GetFoo(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		log.Printf("[WARN] Thing (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Foo (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Foo (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Thing.Arn)
-	d.Set("name", output.Thing.Name)
+	d.Set("arn", output.Foo.Arn)
+	d.Set("name", output.Foo.Name)
 
-	setTagsOut(ctx, output.Thing.Tags)
+	setTagsOut(ctx, output.Foo.Tags)
 
 	return diags
 }
 
-func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
-	return resourceThingRead(ctx, d, meta)
+	return resourceFooRead(ctx, d, meta)
 }
 
-func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsUpdateOnlyClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Thing: %s", d.Id())
-	input := exampletagsupdateonly.DeleteThingInput{
+	log.Printf("[DEBUG] Deleting Foo: %s", d.Id())
+	input := exampletagsupdateonly.DeleteFooInput{
 		Name: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteThing(ctx, &input)
+	_, err := conn.DeleteFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Foo (%s): %s", d.Id(), err)
 	}
 
 	return diags

@@ -20,15 +20,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_exampletags_widget", name="Widget")
-// @SDKResource("aws_exampletags_legacy_widget", name="Widget")
-// @Tags(identifierAttribute="arn", resourceType="Widget")
-func resourceWidget() *schema.Resource {
+// @SDKResource("aws_exampletags_foo", name="Foo")
+// @SDKResource("aws_exampletags_legacy_foo", name="Foo")
+// @Tags(identifierAttribute="arn", resourceType="Foo")
+func resourceFoo() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceWidgetCreate,
-		ReadWithoutTimeout:   resourceWidgetRead,
-		UpdateWithoutTimeout: resourceWidgetUpdate,
-		DeleteWithoutTimeout: resourceWidgetDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -46,81 +46,81 @@ func resourceWidget() *schema.Resource {
 	}
 }
 
-func resourceWidgetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsClient(ctx)
 
 	name := d.Get("name").(string)
-	input := exampletags.CreateWidgetInput{
+	input := exampletags.CreateFooInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateWidget(ctx, &input)
+	output, err := conn.CreateFoo(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Widget (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Foo (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.WidgetId))
+	d.SetId(aws.ToString(output.FooId))
 
-	return append(diags, resourceWidgetRead(ctx, d, meta)...)
+	return append(diags, resourceFooRead(ctx, d, meta)...)
 }
 
-func resourceWidgetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsClient(ctx)
 
-	widget, err := findWidgetByID(ctx, conn, d.Id())
+	foo, err := findFooByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Widget (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Foo (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Widget (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Foo (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", widget.WidgetArn)
-	d.Set("name", widget.Name)
+	d.Set("arn", foo.FooArn)
+	d.Set("name", foo.Name)
 
 	return diags
 }
 
-func resourceWidgetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
-	return resourceWidgetRead(ctx, d, meta)
+	return resourceFooRead(ctx, d, meta)
 }
 
-func resourceWidgetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Widget: %s", d.Id())
-	input := exampletags.DeleteWidgetInput{
-		WidgetId: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Foo: %s", d.Id())
+	input := exampletags.DeleteFooInput{
+		FooId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteWidget(ctx, &input)
+	_, err := conn.DeleteFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Widget (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Foo (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findWidgetByID(ctx context.Context, conn *exampletags.Client, id string) (*awstypes.Widget, error) {
-	input := exampletags.DescribeWidgetInput{
-		WidgetId: aws.String(id),
+func findFooByID(ctx context.Context, conn *exampletags.Client, id string) (*awstypes.Foo, error) {
+	input := exampletags.DescribeFooInput{
+		FooId: aws.String(id),
 	}
 
-	output, err := conn.DescribeWidget(ctx, &input)
+	output, err := conn.DescribeFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -132,9 +132,9 @@ func findWidgetByID(ctx context.Context, conn *exampletags.Client, id string) (*
 		return nil, err
 	}
 
-	if output == nil || output.Widget == nil {
+	if output == nil || output.Foo == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Widget, nil
+	return output.Foo, nil
 }

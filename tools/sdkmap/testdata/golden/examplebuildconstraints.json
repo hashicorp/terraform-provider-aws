@@ -9,22 +9,22 @@
       "expr": "resourceIncludedCreate",
       "location": "internal/service/examplebuildconstraints/included.go:39",
       "sdk_calls": [
-        "examplebuildconstraints.CreateThing",
-        "examplebuildconstraints.GetThing"
+        "examplebuildconstraints.CreateFoo",
+        "examplebuildconstraints.GetFoo"
       ]
     },
     "read": {
       "expr": "resourceIncludedRead",
       "location": "internal/service/examplebuildconstraints/included.go:59",
       "sdk_calls": [
-        "examplebuildconstraints.GetThing"
+        "examplebuildconstraints.GetFoo"
       ]
     },
     "delete": {
       "expr": "resourceIncludedDelete",
       "location": "internal/service/examplebuildconstraints/included.go:84",
       "sdk_calls": [
-        "examplebuildconstraints.DeleteThing"
+        "examplebuildconstraints.DeleteFoo"
       ]
     }
   }

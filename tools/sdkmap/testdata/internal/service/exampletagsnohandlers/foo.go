@@ -20,14 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_exampletagsnohandlers_thing", name="Thing")
+// @SDKResource("aws_exampletagsnohandlers_foo", name="Foo")
 // @Tags(identifierAttribute="arn")
-func resourceThing() *schema.Resource {
+func resourceFoo() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThingCreate,
-		ReadWithoutTimeout:   resourceThingRead,
-		UpdateWithoutTimeout: resourceThingUpdate,
-		DeleteWithoutTimeout: resourceThingDelete,
+		CreateWithoutTimeout: resourceFooCreate,
+		ReadWithoutTimeout:   resourceFooRead,
+		UpdateWithoutTimeout: resourceFooUpdate,
+		DeleteWithoutTimeout: resourceFooDelete,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -45,96 +45,96 @@ func resourceThing() *schema.Resource {
 	}
 }
 
-func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsNoHandlersClient(ctx)
 
 	name := d.Get("name").(string)
-	input := exampletagsnohandlers.CreateThingInput{
+	input := exampletagsnohandlers.CreateFooInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateThing(ctx, &input)
+	output, err := conn.CreateFoo(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Thing (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Foo (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.ThingArn))
+	d.SetId(aws.ToString(output.FooArn))
 
-	return append(diags, resourceThingRead(ctx, d, meta)...)
+	return append(diags, resourceFooRead(ctx, d, meta)...)
 }
 
-func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsNoHandlersClient(ctx)
 
-	thing, err := findThingByARN(ctx, conn, d.Id())
+	foo, err := findFooByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
-		log.Printf("[WARN] Thing (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Foo (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Foo (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", thing.ThingArn)
-	d.Set("name", thing.Name)
+	d.Set("arn", foo.FooArn)
+	d.Set("name", foo.Name)
 
-	setTagsOut(ctx, thing.Tags)
+	setTagsOut(ctx, foo.Tags)
 
 	return diags
 }
 
-func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsNoHandlersClient(ctx)
 
-	input := exampletagsnohandlers.UpdateThingInput{
-		Tags:     getTagsIn(ctx),
-		ThingArn: aws.String(d.Id()),
+	input := exampletagsnohandlers.UpdateFooInput{
+		Tags:   getTagsIn(ctx),
+		FooArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.UpdateThing(ctx, &input)
+	_, err := conn.UpdateFoo(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Foo (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceThingRead(ctx, d, meta)...)
+	return append(diags, resourceFooRead(ctx, d, meta)...)
 }
 
-func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFooDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsNoHandlersClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Thing: %s", d.Id())
-	input := exampletagsnohandlers.DeleteThingInput{
-		ThingArn: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Foo: %s", d.Id())
+	input := exampletagsnohandlers.DeleteFooInput{
+		FooArn: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteThing(ctx, &input)
+	_, err := conn.DeleteFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Thing (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Foo (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findThingByARN(ctx context.Context, conn *exampletagsnohandlers.Client, arn string) (*awstypes.Thing, error) {
-	input := exampletagsnohandlers.DescribeThingInput{
-		ThingArn: aws.String(arn),
+func findFooByARN(ctx context.Context, conn *exampletagsnohandlers.Client, arn string) (*awstypes.Foo, error) {
+	input := exampletagsnohandlers.DescribeFooInput{
+		FooArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeThing(ctx, &input)
+	output, err := conn.DescribeFoo(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -146,9 +146,9 @@ func findThingByARN(ctx context.Context, conn *exampletagsnohandlers.Client, arn
 		return nil, err
 	}
 
-	if output == nil || output.Thing == nil {
+	if output == nil || output.Foo == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Thing, nil
+	return output.Foo, nil
 }

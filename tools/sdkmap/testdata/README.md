@@ -3,7 +3,7 @@
 
 # sdkmap test fixture
 
-Miniature provider root for tests using `-root testdata`. Its service mocks use AWS SDK V2 clients matching the directory name; they need not compile and omit irrelevant helpers.
+Miniature provider root for tests using `-root testdata`. Its service mocks use AWS SDK V2 clients matching the directory name; they need not compile and omit irrelevant helpers. Mock resources are named `Foo`, `Bar`, `Baz`, and `Qux`, in that order.
 
 | Path | Fixture |
 | --- | --- |

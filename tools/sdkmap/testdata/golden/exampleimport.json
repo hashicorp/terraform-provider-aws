@@ -6,25 +6,25 @@
     "expr": "resourceFunction",
     "location": "internal/service/exampleimport/import.go:31",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/exampleimport/thing.go:37",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/exampleimport/foo.go:37",
       "sdk_calls": [
-        "exampleimport.CreateThing",
-        "exampleimport.DescribeThing"
+        "exampleimport.CreateFoo",
+        "exampleimport.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/exampleimport/thing.go:58",
+      "expr": "resourceFooRead",
+      "location": "internal/service/exampleimport/foo.go:58",
       "sdk_calls": [
-        "exampleimport.DescribeThing"
+        "exampleimport.DescribeFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/exampleimport/thing.go:80",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/exampleimport/foo.go:80",
       "sdk_calls": [
-        "exampleimport.DeleteThing"
+        "exampleimport.DeleteFoo"
       ]
     },
     "import": {
@@ -40,32 +40,32 @@
     "expr": "resourceFunctionLiteral",
     "location": "internal/service/exampleimport/import.go:46",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/exampleimport/thing.go:37",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/exampleimport/foo.go:37",
       "sdk_calls": [
-        "exampleimport.CreateThing",
-        "exampleimport.DescribeThing"
+        "exampleimport.CreateFoo",
+        "exampleimport.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/exampleimport/thing.go:58",
+      "expr": "resourceFooRead",
+      "location": "internal/service/exampleimport/foo.go:58",
       "sdk_calls": [
-        "exampleimport.DescribeThing"
+        "exampleimport.DescribeFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/exampleimport/thing.go:80",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/exampleimport/foo.go:80",
       "sdk_calls": [
-        "exampleimport.DeleteThing"
+        "exampleimport.DeleteFoo"
       ]
     },
     "import": {
       "expr": "func literal",
       "location": "internal/service/exampleimport/import.go:53",
       "sdk_calls": [
-        "exampleimport.DescribeThing"
+        "exampleimport.DescribeFoo"
       ]
     }
   },
@@ -76,25 +76,25 @@
     "expr": "resourceNone",
     "location": "internal/service/exampleimport/import.go:73",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/exampleimport/thing.go:37",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/exampleimport/foo.go:37",
       "sdk_calls": [
-        "exampleimport.CreateThing",
-        "exampleimport.DescribeThing"
+        "exampleimport.CreateFoo",
+        "exampleimport.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/exampleimport/thing.go:58",
+      "expr": "resourceFooRead",
+      "location": "internal/service/exampleimport/foo.go:58",
       "sdk_calls": [
-        "exampleimport.DescribeThing"
+        "exampleimport.DescribeFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/exampleimport/thing.go:80",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/exampleimport/foo.go:80",
       "sdk_calls": [
-        "exampleimport.DeleteThing"
+        "exampleimport.DeleteFoo"
       ]
     }
   },
@@ -105,25 +105,25 @@
     "expr": "resourcePassthrough",
     "location": "internal/service/exampleimport/import.go:16",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/exampleimport/thing.go:37",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/exampleimport/foo.go:37",
       "sdk_calls": [
-        "exampleimport.CreateThing",
-        "exampleimport.DescribeThing"
+        "exampleimport.CreateFoo",
+        "exampleimport.DescribeFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/exampleimport/thing.go:58",
+      "expr": "resourceFooRead",
+      "location": "internal/service/exampleimport/foo.go:58",
       "sdk_calls": [
-        "exampleimport.DescribeThing"
+        "exampleimport.DescribeFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/exampleimport/thing.go:80",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/exampleimport/foo.go:80",
       "sdk_calls": [
-        "exampleimport.DeleteThing"
+        "exampleimport.DeleteFoo"
       ]
     }
   }

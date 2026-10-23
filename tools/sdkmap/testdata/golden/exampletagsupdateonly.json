@@ -1,37 +1,37 @@
 [
   {
     "service": "exampletagsupdateonly",
-    "resource_type": "aws_exampletagsupdateonly_thing",
+    "resource_type": "aws_exampletagsupdateonly_foo",
     "plugin_type": "SDKv2",
-    "expr": "resourceThing",
-    "location": "internal/service/exampletagsupdateonly/thing.go:23",
+    "expr": "resourceFoo",
+    "location": "internal/service/exampletagsupdateonly/foo.go:23",
     "create": {
-      "expr": "resourceThingCreate",
-      "location": "internal/service/exampletagsupdateonly/thing.go:46",
+      "expr": "resourceFooCreate",
+      "location": "internal/service/exampletagsupdateonly/foo.go:46",
       "sdk_calls": [
-        "exampletagsupdateonly.CreateThing",
-        "exampletagsupdateonly.GetThing"
+        "exampletagsupdateonly.CreateFoo",
+        "exampletagsupdateonly.GetFoo"
       ]
     },
     "read": {
-      "expr": "resourceThingRead",
-      "location": "internal/service/exampletagsupdateonly/thing.go:65",
+      "expr": "resourceFooRead",
+      "location": "internal/service/exampletagsupdateonly/foo.go:65",
       "sdk_calls": [
-        "exampletagsupdateonly.GetThing"
+        "exampletagsupdateonly.GetFoo"
       ]
     },
     "update": {
-      "expr": "resourceThingUpdate",
-      "location": "internal/service/exampletagsupdateonly/thing.go:93",
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/exampletagsupdateonly/foo.go:93",
       "sdk_calls": [
-        "exampletagsupdateonly.GetThing"
+        "exampletagsupdateonly.GetFoo"
       ]
     },
     "delete": {
-      "expr": "resourceThingDelete",
-      "location": "internal/service/exampletagsupdateonly/thing.go:98",
+      "expr": "resourceFooDelete",
+      "location": "internal/service/exampletagsupdateonly/foo.go:98",
       "sdk_calls": [
-        "exampletagsupdateonly.DeleteThing"
+        "exampletagsupdateonly.DeleteFoo"
       ]
     },
     "tags": {

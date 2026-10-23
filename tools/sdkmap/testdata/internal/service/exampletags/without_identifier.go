@@ -37,17 +37,17 @@ func resourceWithoutIdentifierCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsClient(ctx)
 
-	input := exampletags.CreateSprocketInput{
+	input := exampletags.CreateQuxInput{
 		Tags: getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateSprocket(ctx, &input)
+	output, err := conn.CreateQux(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Sprocket: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Qux: %s", err)
 	}
 
-	d.SetId(aws.ToString(output.SprocketId))
+	d.SetId(aws.ToString(output.QuxId))
 
 	return append(diags, resourceWithoutIdentifierRead(ctx, d, meta)...)
 }
@@ -56,20 +56,20 @@ func resourceWithoutIdentifierRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsClient(ctx)
 
-	input := exampletags.GetSprocketInput{
-		SprocketId: aws.String(d.Id()),
+	input := exampletags.GetQuxInput{
+		QuxId: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetSprocket(ctx, &input)
+	output, err := conn.GetQux(ctx, &input)
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		log.Printf("[WARN] Sprocket (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Qux (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Sprocket (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Qux (%s): %s", d.Id(), err)
 	}
 
 	setTagsOut(ctx, output.Tags)
@@ -81,18 +81,18 @@ func resourceWithoutIdentifierDelete(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleTagsClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Sprocket: %s", d.Id())
-	input := exampletags.DeleteSprocketInput{
-		SprocketId: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Qux: %s", d.Id())
+	input := exampletags.DeleteQuxInput{
+		QuxId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteSprocket(ctx, &input)
+	_, err := conn.DeleteQux(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Sprocket (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Qux (%s): %s", d.Id(), err)
 	}
 
 	return diags

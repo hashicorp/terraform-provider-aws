@@ -9,30 +9,30 @@
       "expr": "resourceCallExpressionPut(...)",
       "location": "internal/service/examplefuncrefs/call_expression.go:48",
       "sdk_calls": [
-        "examplefuncrefs.GetThingConfiguration",
-        "examplefuncrefs.PutThingConfiguration"
+        "examplefuncrefs.GetFooConfiguration",
+        "examplefuncrefs.PutFooConfiguration"
       ]
     },
     "read": {
       "expr": "resourceCallExpressionRead",
       "location": "internal/service/examplefuncrefs/call_expression.go:72",
       "sdk_calls": [
-        "examplefuncrefs.GetThingConfiguration"
+        "examplefuncrefs.GetFooConfiguration"
       ]
     },
     "update": {
       "expr": "resourceCallExpressionPut(...)",
       "location": "internal/service/examplefuncrefs/call_expression.go:48",
       "sdk_calls": [
-        "examplefuncrefs.GetThingConfiguration",
-        "examplefuncrefs.PutThingConfiguration"
+        "examplefuncrefs.GetFooConfiguration",
+        "examplefuncrefs.PutFooConfiguration"
       ]
     },
     "delete": {
       "expr": "resourceCallExpressionDelete",
       "location": "internal/service/examplefuncrefs/call_expression.go:94",
       "sdk_calls": [
-        "examplefuncrefs.DeleteThingConfiguration"
+        "examplefuncrefs.DeleteFooConfiguration"
       ]
     }
   },
@@ -45,27 +45,27 @@
     "create": {
       "expr": "h.Upsert",
       "sdk_calls": [
-        "examplefuncrefs.GetThingAttribute",
-        "examplefuncrefs.SetThingAttribute"
+        "examplefuncrefs.GetFooAttribute",
+        "examplefuncrefs.SetFooAttribute"
       ]
     },
     "read": {
       "expr": "h.Read",
       "sdk_calls": [
-        "examplefuncrefs.GetThingAttribute"
+        "examplefuncrefs.GetFooAttribute"
       ]
     },
     "update": {
       "expr": "h.Upsert",
       "sdk_calls": [
-        "examplefuncrefs.GetThingAttribute",
-        "examplefuncrefs.SetThingAttribute"
+        "examplefuncrefs.GetFooAttribute",
+        "examplefuncrefs.SetFooAttribute"
       ]
     },
     "delete": {
       "expr": "h.Delete",
       "sdk_calls": [
-        "examplefuncrefs.DeleteThingAttribute"
+        "examplefuncrefs.DeleteFooAttribute"
       ]
     }
   },

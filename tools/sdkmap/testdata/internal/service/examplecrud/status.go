@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusWidget(conn *examplecrud.Client, id string) retry.StateRefreshFunc {
+func statusFoo(conn *examplecrud.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		output, err := findWidgetByID(ctx, conn, id)
+		output, err := findFooByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
