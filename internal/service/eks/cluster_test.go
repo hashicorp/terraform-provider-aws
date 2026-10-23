@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"strings"
 	"testing"
 
@@ -14,6 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/go-cty/cty"
+	tfterraform "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -40,6 +45,232 @@ const (
 	clusterVersionUpgradeForceInitial = clusterVersion130
 	clusterVersionUpgradeForceUpdated = clusterVersion131
 )
+
+func TestExpandCreateAccessConfigRequest(t *testing.T) {
+	t.Parallel()
+
+	accessConfigRawConfig := func(bootstrap cty.Value) cty.Value {
+		return cty.ObjectVal(map[string]cty.Value{
+			"access_config": cty.ListVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+				"authentication_mode":                         cty.StringVal(string(types.AuthenticationModeApi)),
+				"bootstrap_cluster_creator_admin_permissions": bootstrap,
+			})}),
+		})
+	}
+	// Omitted arguments in a nested block read as their zero value.
+	accessConfig := func(bootstrap bool) []any {
+		return []any{map[string]any{
+			"authentication_mode":                         string(types.AuthenticationModeApi),
+			"bootstrap_cluster_creator_admin_permissions": bootstrap,
+		}}
+	}
+
+	testCases := map[string]struct {
+		tfList    []any
+		rawConfig cty.Value
+		want      *types.CreateAccessConfigRequest
+	}{
+		"no access_config": {
+			rawConfig: cty.ObjectVal(map[string]cty.Value{
+				"access_config": cty.NullVal(cty.List(cty.Object(map[string]cty.Type{
+					"authentication_mode":                         cty.String,
+					"bootstrap_cluster_creator_admin_permissions": cty.Bool,
+				}))),
+			}),
+		},
+		"authentication_mode only": {
+			tfList:    accessConfig(false),
+			rawConfig: accessConfigRawConfig(cty.NullVal(cty.Bool)),
+			want: &types.CreateAccessConfigRequest{
+				AuthenticationMode: types.AuthenticationModeApi,
+			},
+		},
+		"explicit true": {
+			tfList:    accessConfig(true),
+			rawConfig: accessConfigRawConfig(cty.True),
+			want: &types.CreateAccessConfigRequest{
+				AuthenticationMode:                      types.AuthenticationModeApi,
+				BootstrapClusterCreatorAdminPermissions: aws.Bool(true),
+			},
+		},
+		"explicit false": {
+			tfList:    accessConfig(false),
+			rawConfig: accessConfigRawConfig(cty.False),
+			want: &types.CreateAccessConfigRequest{
+				AuthenticationMode:                      types.AuthenticationModeApi,
+				BootstrapClusterCreatorAdminPermissions: aws.Bool(false),
+			},
+		},
+		"no raw configuration": {
+			tfList:    accessConfig(false),
+			rawConfig: cty.NilVal,
+			want: &types.CreateAccessConfigRequest{
+				AuthenticationMode:                      types.AuthenticationModeApi,
+				BootstrapClusterCreatorAdminPermissions: aws.Bool(false),
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfeks.ExpandCreateAccessConfigRequest(testCase.tfList, testCase.rawConfig)
+
+			if diff := cmp.Diff(got, testCase.want, cmpopts.IgnoreUnexported(types.CreateAccessConfigRequest{})); diff != "" {
+				t.Errorf("unexpected diff (+want, -got): %s", diff)
+			}
+		})
+	}
+}
+
+// TestClusterAccessConfigBootstrapClusterCreatorAdminPermissionsDiff verifies that omitting
+// access_config.bootstrap_cluster_creator_admin_permissions from configuration never plans a
+// replacement of an existing cluster, while an explicit change of value still does.
+// https://github.com/hashicorp/terraform-provider-aws/issues/38967.
+func TestClusterAccessConfigBootstrapClusterCreatorAdminPermissionsDiff(t *testing.T) {
+	t.Parallel()
+
+	const (
+		accessConfigAttr       = "access_config.#"
+		authenticationModeAttr = "access_config.0.authentication_mode"
+		bootstrapAttr          = "access_config.0.bootstrap_cluster_creator_admin_permissions"
+	)
+
+	// The state values of bootstrap_cluster_creator_admin_permissions are what the provider recorded,
+	// as DescribeCluster doesn't return the value.
+	accessConfigState := func(authenticationMode types.AuthenticationMode, bootstrap string) map[string]string {
+		return map[string]string{
+			accessConfigAttr:       "1",
+			authenticationModeAttr: string(authenticationMode),
+			bootstrapAttr:          bootstrap,
+		}
+	}
+	accessConfig := func(authenticationMode types.AuthenticationMode) []any {
+		return []any{map[string]any{
+			"authentication_mode": string(authenticationMode),
+		}}
+	}
+	accessConfigBootstrap := func(authenticationMode types.AuthenticationMode, bootstrap bool) []any {
+		return []any{map[string]any{
+			"authentication_mode":                         string(authenticationMode),
+			"bootstrap_cluster_creator_admin_permissions": bootstrap,
+		}}
+	}
+
+	testCases := map[string]struct {
+		state           map[string]string
+		accessConfig    []any
+		wantUpdate      bool
+		wantRequiresNew bool
+	}{
+		// Created without access_config: the value is recorded as true.
+		"created without access_config, access_config omitted": {
+			state: accessConfigState(types.AuthenticationModeConfigMap, acctest.CtTrue),
+		},
+		"created without access_config, access_config added": {
+			state:        accessConfigState(types.AuthenticationModeConfigMap, acctest.CtTrue),
+			accessConfig: accessConfig(types.AuthenticationModeApiAndConfigMap),
+			wantUpdate:   true,
+		},
+		// Created with access_config but without the argument: the value is recorded as true,
+		// or as false by earlier provider versions.
+		"created with authentication_mode only, authentication_mode changed": {
+			state:        accessConfigState(types.AuthenticationModeConfigMap, acctest.CtTrue),
+			accessConfig: accessConfig(types.AuthenticationModeApiAndConfigMap),
+			wantUpdate:   true,
+		},
+		"created with authentication_mode only by earlier provider version, authentication_mode changed": {
+			state:        accessConfigState(types.AuthenticationModeConfigMap, acctest.CtFalse),
+			accessConfig: accessConfig(types.AuthenticationModeApiAndConfigMap),
+			wantUpdate:   true,
+		},
+		// Imported: the value is recorded as true.
+		"imported, access_config omitted": {
+			state: accessConfigState(types.AuthenticationModeApiAndConfigMap, acctest.CtTrue),
+		},
+		"imported, authentication_mode only": {
+			state:        accessConfigState(types.AuthenticationModeApiAndConfigMap, acctest.CtTrue),
+			accessConfig: accessConfig(types.AuthenticationModeApiAndConfigMap),
+		},
+		// State without access_config.
+		"no access_config in state, access_config omitted": {
+			state: map[string]string{accessConfigAttr: "0"},
+		},
+		"no access_config in state, access_config added": {
+			state:        map[string]string{accessConfigAttr: "0"},
+			accessConfig: accessConfig(types.AuthenticationModeApiAndConfigMap),
+			wantUpdate:   true,
+		},
+		"explicit true unchanged": {
+			state:        accessConfigState(types.AuthenticationModeConfigMap, acctest.CtTrue),
+			accessConfig: accessConfigBootstrap(types.AuthenticationModeConfigMap, true),
+		},
+		"explicit false removed": {
+			state:        accessConfigState(types.AuthenticationModeConfigMap, acctest.CtFalse),
+			accessConfig: accessConfig(types.AuthenticationModeConfigMap),
+		},
+		"explicit true to false": {
+			state:           accessConfigState(types.AuthenticationModeConfigMap, acctest.CtTrue),
+			accessConfig:    accessConfigBootstrap(types.AuthenticationModeConfigMap, false),
+			wantRequiresNew: true,
+		},
+		"explicit false to true": {
+			state:           accessConfigState(types.AuthenticationModeConfigMap, acctest.CtFalse),
+			accessConfig:    accessConfigBootstrap(types.AuthenticationModeConfigMap, true),
+			wantRequiresNew: true,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			state := &tfterraform.InstanceState{
+				ID: "test",
+				Attributes: map[string]string{
+					names.AttrID:                    "test",
+					names.AttrName:                  "test",
+					"bootstrap_self_managed_addons": acctest.CtTrue,
+				},
+			}
+			maps.Copy(state.Attributes, testCase.state)
+			config := map[string]any{
+				names.AttrName:                  "test",
+				"bootstrap_self_managed_addons": true,
+			}
+			if testCase.accessConfig != nil {
+				config["access_config"] = testCase.accessConfig
+			}
+
+			diff, err := tfeks.ResourceCluster().Diff(t.Context(), state, tfterraform.NewResourceConfigRaw(config), nil)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			if got, want := diff.RequiresNew(), testCase.wantRequiresNew; got != want {
+				t.Errorf("RequiresNew = %t, want %t (diff: %v)", got, want, diff)
+			}
+			// A diff that requires a new resource includes all attributes.
+			if testCase.wantRequiresNew {
+				return
+			}
+			// The minimal state leaves other Computed attributes to be planned.
+			var gotUpdate bool
+			if diff != nil {
+				for k := range diff.Attributes {
+					gotUpdate = gotUpdate || strings.HasPrefix(k, "access_config.")
+				}
+				if v := diff.Attributes[bootstrapAttr]; v != nil {
+					t.Errorf("unexpected %s diff: %#v", bootstrapAttr, v)
+				}
+			}
+			if got, want := gotUpdate, testCase.wantUpdate; got != want {
+				t.Errorf("access_config update = %t, want %t (diff: %v)", got, want, diff)
+			}
+		})
+	}
+}
 
 func TestAccEKSCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -233,6 +464,149 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
 				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/38967.
+func TestAccEKSCluster_AccessConfig_addAuthenticationModeNoReplace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 types.Cluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeConfigMap)),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_accessConfigAuthenticationModeOnly(rName, types.AuthenticationModeApiAndConfigMap),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeApiAndConfigMap)),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/38967.
+func TestAccEKSCluster_AccessConfig_updateAuthenticationModeNoReplace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 types.Cluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_accessConfigAuthenticationModeOnly(rName, types.AuthenticationModeConfigMap),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeConfigMap)),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_accessConfigAuthenticationModeOnly(rName, types.AuthenticationModeApiAndConfigMap),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeApiAndConfigMap)),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/38967.
+func TestAccEKSCluster_AccessConfig_bootstrapClusterCreatorAdminPermissions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_accessConfigBootstrapClusterCreatorAdminPermissions(rName, types.AuthenticationModeApi, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("access_config").AtSliceIndex(0).AtMapKey("bootstrap_cluster_creator_admin_permissions"), knownvalue.Bool(false)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Not returned by DescribeCluster.
+				ImportStateVerifyIgnore: []string{"access_config.0.bootstrap_cluster_creator_admin_permissions", "bootstrap_self_managed_addons"},
+			},
+			{
+				Config: testAccClusterConfig_accessConfigAuthenticationModeOnly(rName, types.AuthenticationModeApi),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("access_config").AtSliceIndex(0).AtMapKey("bootstrap_cluster_creator_admin_permissions"), knownvalue.Bool(false)),
+				},
+			},
+			{
+				Config: testAccClusterConfig_accessConfigBootstrapClusterCreatorAdminPermissions(rName, types.AuthenticationModeApi, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("access_config").AtSliceIndex(0).AtMapKey("bootstrap_cluster_creator_admin_permissions"), knownvalue.Bool(true)),
+				},
 			},
 		},
 	})
@@ -2177,6 +2551,45 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
 }
 `, rName, authenticationMode))
+}
+
+func testAccClusterConfig_accessConfigAuthenticationModeOnly(rName string, authenticationMode types.AuthenticationMode) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  access_config {
+    authentication_mode = %[2]q
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+`, rName, authenticationMode))
+}
+
+func testAccClusterConfig_accessConfigBootstrapClusterCreatorAdminPermissions(rName string, authenticationMode types.AuthenticationMode, bootstrapClusterCreatorAdminPermissions bool) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  access_config {
+    authentication_mode                         = %[2]q
+    bootstrap_cluster_creator_admin_permissions = %[3]t
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+`, rName, authenticationMode, bootstrapClusterCreatorAdminPermissions))
 }
 
 func testAccClusterConfig_bootstrapSelfManagedAddons(rName string, bootstrapSelfManagedAddons bool) string {
