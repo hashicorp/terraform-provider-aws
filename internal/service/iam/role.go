@@ -313,9 +313,8 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): waiting for valid ARN: %s", d.Id(), err)
 	}
 
-	diags = append(diags, resourceRoleFlatten(ctx, role, d)...)
-	if diags.HasError() {
-		return diags
+	if err := resourceRoleFlatten(ctx, meta.(*conns.AWSClient), role, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", d.Id(), err)
 	}
 
 	// `inline_policy` is deprecated, so it's not included in resourceRoleFlatten.
@@ -740,9 +739,7 @@ func listNonServiceLinkedRoles(ctx context.Context, conn *iam.Client, input *iam
 	}
 }
 
-func resourceRoleFlatten(ctx context.Context, role *awstypes.Role, d *schema.ResourceData) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceRoleFlatten(ctx context.Context, _ *conns.AWSClient, role *awstypes.Role, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, role.Arn)
 	d.Set("create_date", role.CreateDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, role.Description)
@@ -759,19 +756,19 @@ func resourceRoleFlatten(ctx context.Context, role *awstypes.Role, d *schema.Res
 
 	assumeRolePolicy, err := url.QueryUnescape(aws.ToString(role.AssumeRolePolicyDocument))
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 
 	policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 
 	d.Set("assume_role_policy", policyToSet)
 
 	setTagsOut(ctx, role.Tags)
 
-	return diags
+	return nil
 }
 
 func findRoleAttachedPolicies(ctx context.Context, conn *iam.Client, roleName string) ([]string, error) {
