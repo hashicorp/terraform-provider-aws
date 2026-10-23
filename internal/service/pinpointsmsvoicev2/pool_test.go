@@ -470,7 +470,7 @@ func TestAccPinpointSMSVoiceV2Pool_OptOutListName(t *testing.T) {
 				Config: testAccPoolConfig_OptOutListName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPoolExists(ctx, t, resourceName, &pool),
-					testAccCheckOptOutListExists(ctx, t, optOutListResourceName, &optOutList),
+					testAccCheckOptoutListExists(ctx, t, optOutListResourceName, &optOutList),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("opt_out_list_name"), optOutListResourceName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
