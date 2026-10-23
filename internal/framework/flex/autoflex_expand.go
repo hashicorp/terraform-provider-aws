@@ -163,19 +163,19 @@ func expandConvert(ctx context.Context, expander *autoExpander, sourcePath path.
 
 	tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 
-	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+	if fromExpander, ok := reflect.TypeAssert[Expander](valFrom); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
 		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
 		return diags
 	}
 
-	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
+	if fromTypedExpander, ok := reflect.TypeAssert[TypedExpander](valFrom); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
 		diags.Append(expandTypedExpander(ctx, fromTypedExpander, vTo)...)
 		return diags
 	}
 
-	vFrom, ok := valFrom.Interface().(attr.Value)
+	vFrom, ok := reflect.TypeAssert[attr.Value](valFrom)
 	if !ok {
 		tflog.SubsystemError(ctx, subsystemName, "Source does not implement attr.Value")
 		diags.Append(diagExpandingSourceDoesNotImplementAttrValue(reflect.TypeOf(valFrom.Interface())))
@@ -1338,13 +1338,13 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 		return diags
 	}
 
-	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+	if fromExpander, ok := reflect.TypeAssert[Expander](valFrom); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
 		diags.Append(expandExpander(ctx, fromExpander, valTo)...)
 		return diags
 	}
 
-	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
+	if fromTypedExpander, ok := reflect.TypeAssert[TypedExpander](valFrom); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
 		diags.Append(expandTypedExpander(ctx, fromTypedExpander, valTo)...)
 		return diags
@@ -1483,7 +1483,7 @@ func mapBlockKey(ctx context.Context, from any) (reflect.Value, diag.Diagnostics
 		if field.Name == mapBlockKeyFieldName {
 			fieldVal := valFrom.FieldByIndex(field.Index)
 
-			if v, ok := fieldVal.Interface().(basetypes.StringValuable); ok {
+			if v, ok := reflect.TypeAssert[basetypes.StringValuable](fieldVal); ok {
 				v, d := v.ToStringValue(ctx)
 				diags.Append(d...)
 				if d.HasError() {
@@ -2022,7 +2022,7 @@ func expandRule2XMLWrapper(ctx context.Context, expander *autoExpander, nestedOb
 	}
 
 	// Convert items collection to Items slice using existing logic
-	if itemsAttr, ok := itemsSourceField.Interface().(attr.Value); ok {
+	if itemsAttr, ok := reflect.TypeAssert[attr.Value](itemsSourceField); ok {
 		if collectionValue, ok := itemsAttr.(valueWithElementsAs); ok {
 			diags.Append(expandConvertCollectionToXMLWrapperFields(ctx, expander, collectionValue, itemsField, quantityField)...)
 			if diags.HasError() {
@@ -2216,7 +2216,7 @@ func expandIsXMLWrapperCollapseTarget(_ *autoExpander, structType reflect.Type) 
 func expandConvertCollectionToItemsQuantity(ctx context.Context, expander *autoExpander, sourceFieldVal reflect.Value, itemsField, quantityField reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
+	sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal)
 	if !ok {
 		tflog.SubsystemError(ctx, subsystemName, "Source field is not an attr.Value")
 		return diags
@@ -2333,7 +2333,7 @@ func expandConvertCollectionToXMLWrapperFields(ctx context.Context, _ *autoExpan
 // expandShouldConvertToXMLWrapper determines if a source field should be converted to XML wrapper format
 func expandShouldConvertToXMLWrapper(_ *autoExpander, sourceFieldVal, targetFieldVal reflect.Value) bool {
 	// Check if source is a collection (Set/List) and target is XML wrapper struct
-	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
+	sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal)
 	if !ok {
 		return false
 	}
@@ -2358,7 +2358,7 @@ func expandShouldConvertToXMLWrapper(_ *autoExpander, sourceFieldVal, targetFiel
 func expandConvertToXMLWrapper(ctx context.Context, expander *autoExpander, sourceFieldVal reflect.Value, targetFieldVal reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
+	sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal)
 	if !ok {
 		tflog.SubsystemError(ctx, subsystemName, "Source field is not an attr.Value", map[string]any{
 			logAttrKeySourceTypeLiteral: sourceFieldVal.Type().String(),
@@ -2414,7 +2414,7 @@ func expandBuildGenericXMLWrapperCollapse(ctx context.Context, expander *autoExp
 		for sourceField := range typeFrom.Fields() {
 			sourceFieldVal := valFrom.FieldByName(sourceField.Name)
 
-			if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
+			if sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal); ok {
 				switch sourceValue.(type) {
 				case basetypes.SetValuable, basetypes.ListValuable:
 					hasCollectionFields = true
@@ -2431,7 +2431,7 @@ func expandBuildGenericXMLWrapperCollapse(ctx context.Context, expander *autoExp
 			shouldCreateZeroValue := false
 			for sourceField := range typeFrom.Fields() {
 				sourceFieldVal := valFrom.FieldByName(sourceField.Name)
-				if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
+				if sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal); ok {
 					switch sourceValue.(type) {
 					case basetypes.SetValuable, basetypes.ListValuable:
 						_, sourceFieldOpts := autoflexTags(sourceField)
@@ -2450,7 +2450,7 @@ func expandBuildGenericXMLWrapperCollapse(ctx context.Context, expander *autoExp
 				// Mark all collection fields as processed
 				for sourceField := range typeFrom.Fields() {
 					sourceFieldVal := valFrom.FieldByName(sourceField.Name)
-					if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
+					if sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal); ok {
 						switch sourceValue.(type) {
 						case basetypes.SetValuable, basetypes.ListValuable:
 							processedFields[sourceField.Name] = true
@@ -2495,7 +2495,7 @@ func expandBuildGenericXMLWrapperCollapse(ctx context.Context, expander *autoExp
 		sourceFieldVal := valFrom.FieldByName(mainSourceFieldName)
 
 		// Check if source is a NestedObjectCollectionValue (Rule 2 pattern)
-		if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
+		if sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal); ok {
 			if !sourceValue.IsNull() && !sourceValue.IsUnknown() {
 				if nestedObjCollection, ok := sourceValue.(fwtypes.NestedObjectCollectionValue); ok {
 					// This is Rule 2: single nested object with items + additional fields
@@ -2574,7 +2574,7 @@ func expandBuildGenericXMLWrapperCollapse(ctx context.Context, expander *autoExp
 
 		if itemsField.IsValid() && quantityField.IsValid() {
 			// Check if the source field is actually usable (not null/unknown)
-			if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
+			if sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal); ok {
 				if !sourceValue.IsNull() && !sourceValue.IsUnknown() {
 					// Convert the collection to wrapper slice and Quantity
 					diags.Append(expandConvertCollectionToItemsQuantity(ctx, expander, sourceFieldVal, itemsField, quantityField)...)
