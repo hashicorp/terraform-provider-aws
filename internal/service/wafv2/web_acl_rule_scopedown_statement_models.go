@@ -110,15 +110,11 @@ type webACLRuleScopeDownOrStatementLevel1Model struct {
 	Statements fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel1ChildModel] `tfsdk:"statement"`
 }
 
-// Type aliases so the rest of the code (flattenScopeDownStatement, Expand, etc.) keeps working unchanged.
-type webACLRuleScopeDownAndStatementModel = webACLRuleScopeDownAndStatementLevel1Model
-type webACLRuleScopeDownNotStatementModel = webACLRuleScopeDownNotStatementLevel1Model
-type webACLRuleScopeDownOrStatementModel = webACLRuleScopeDownOrStatementLevel1Model
-
-type webACLRuleScopeDownStatementModel struct {
-	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementModel]             `tfsdk:"and_statement"`
-	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementModel]             `tfsdk:"not_statement"`
-	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementModel]              `tfsdk:"or_statement"`
+// webACLRuleScopeDownStatementLevel2Model contains leaf statements plus and/not/or at level 1.
+type webACLRuleScopeDownStatementLevel2Model struct {
+	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel1Model]       `tfsdk:"and_statement"`
+	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel1Model]       `tfsdk:"not_statement"`
+	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel1Model]        `tfsdk:"or_statement"`
 	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
 	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
 	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
@@ -130,6 +126,46 @@ type webACLRuleScopeDownStatementModel struct {
 	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
 	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 }
+
+// webACLRuleScopeDownAndStatementLevel2ChildModel contains leaf statements plus not/or at level 1.
+// AWS WAF doesn't accept an AND statement directly inside an AND statement.
+type webACLRuleScopeDownAndStatementLevel2ChildModel struct {
+	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel1Model]       `tfsdk:"not_statement"`
+	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel1Model]        `tfsdk:"or_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
+	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+}
+
+// webACLRuleScopeDownOrStatementLevel2ChildModel contains leaf statements plus and/not at level 1.
+// AWS WAF doesn't accept an OR statement directly inside an OR statement.
+type webACLRuleScopeDownOrStatementLevel2ChildModel struct {
+	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel1Model]       `tfsdk:"and_statement"`
+	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel1Model]       `tfsdk:"not_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
+	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+}
+
+// Type aliases for the top-level statement model (used by the resource).
+type webACLRuleScopeDownStatementModel = webACLRuleScopeDownStatementLevel2Model
+type webACLRuleScopeDownAndStatementModel = webACLRuleScopeDownAndStatementLevel1Model
+type webACLRuleScopeDownNotStatementModel = webACLRuleScopeDownNotStatementLevel1Model
+type webACLRuleScopeDownOrStatementModel = webACLRuleScopeDownOrStatementLevel1Model
 
 // Schema block functions for each level.
 
@@ -153,73 +189,86 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
 
 // Level-based scope_down blocks — mirrors web_acl_rule_statement_models_gen.go.
 // Level 0 blocks: leaf statements only (no and/not/or).
-// Level 1 blocks: leaf + and/not/or at level 0. As in AWS WAF, AND can't directly contain AND and
-// OR can't directly contain OR, so AND and OR each get their own level-1 statement block.
+// Level 1 blocks: leaf + and/not/or at level 0.
+//   AND can't directly contain AND and OR can't directly contain OR, so AND and OR each get their own level-1 statement block.
 // scopeDownStatementBlock (used in scope_down_statement) references and/not/or at level 1.
-// No var/var cycles since each level only refers to the level below.
 
-// scopeDownStatementBlockLevel0Multiple: at least two level-0 statements, used by AND/OR at level 0.
-var scopeDownStatementBlockLevel0Multiple = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+// scopeDownStatementLevel0MultipleBlock: at least two level-0 statements, used by AND/OR at level 0.
+var scopeDownStatementLevel0MultipleBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	blocks := scopeDownLeafStatementBlocks(ctx)
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtLeast(2),
 		},
 		NestedObject: schema.NestedBlockObject{
-			Blocks: scopeDownLeafStatementBlocks(ctx),
+			Blocks: blocks,
 		},
 		Description: "Nested leaf statements for logical operations within scope_down_statement.",
 	}
 })
 
-// scopeDownStatementBlockLevel0Single: exactly one level-0 statement, used by NOT at level 0.
-var scopeDownStatementBlockLevel0Single = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+func scopeDownAndStatementLevel0ChildBlock(ctx context.Context) schema.Block {
+	return scopeDownStatementLevel0MultipleBlock(ctx)
+}
+
+func scopeDownOrStatementLevel0ChildBlock(ctx context.Context) schema.Block {
+	return scopeDownStatementLevel0MultipleBlock(ctx)
+}
+
+// scopeDownNotStatementLevel0ChildBlock: exactly one level-0 statement, used by NOT at level 0.
+var scopeDownNotStatementLevel0ChildBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	blocks := scopeDownLeafStatementBlocks(ctx)
+
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
 		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
 			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtMost(1),
 		},
 		NestedObject: schema.NestedBlockObject{
-			Blocks: scopeDownLeafStatementBlocks(ctx),
+			Blocks: blocks,
 		},
 		Description: "Nested leaf statement for NOT operation within scope_down_statement.",
 	}
 })
 
+// scopeDownAndStatementLevel0Block: AND at level 0, wrapping multiple level-0 statements.
 var scopeDownAndStatementLevel0Block = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownAndStatementLevel0Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": scopeDownStatementBlockLevel0Multiple(ctx),
+				"statement": scopeDownAndStatementLevel0ChildBlock(ctx),
 			},
 		},
 		Description: "Logical AND statement.",
 	}
 })
 
+// scopeDownNotStatementLevel0Block: NOT at level 0, wrapping a single level-0 statement.
 var scopeDownNotStatementLevel0Block = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownNotStatementLevel0Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": scopeDownStatementBlockLevel0Single(ctx),
+				"statement": scopeDownNotStatementLevel0ChildBlock(ctx),
 			},
 		},
 		Description: "Logical NOT statement.",
 	}
 })
 
+// scopeDownOrStatementLevel0Block: OR at level 0, wrapping multiple level-0 statements.
 var scopeDownOrStatementLevel0Block = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownOrStatementLevel0Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": scopeDownStatementBlockLevel0Multiple(ctx),
+				"statement": scopeDownOrStatementLevel0ChildBlock(ctx),
 			},
 		},
 		Description: "Logical OR statement.",
@@ -231,6 +280,7 @@ var scopeDownAndStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context
 	blocks := scopeDownLeafStatementBlocks(ctx)
 	blocks["not_statement"] = scopeDownNotStatementLevel0Block(ctx)
 	blocks["or_statement"] = scopeDownOrStatementLevel0Block(ctx)
+
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownAndStatementLevel1ChildModel](ctx),
 		Validators: []validator.List{
@@ -248,6 +298,7 @@ var scopeDownOrStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context.
 	blocks := scopeDownLeafStatementBlocks(ctx)
 	blocks["and_statement"] = scopeDownAndStatementLevel0Block(ctx)
 	blocks["not_statement"] = scopeDownNotStatementLevel0Block(ctx)
+
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownOrStatementLevel1ChildModel](ctx),
 		Validators: []validator.List{
@@ -260,17 +311,18 @@ var scopeDownOrStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context.
 	}
 })
 
-// scopeDownStatementBlockLevel1Single: exactly one level-1 statement, used by NOT at level 1.
-var scopeDownStatementBlockLevel1Single = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+// scopeDownNotStatementLevel1ChildBlock: exactly one level-1 statement, used by NOT at level 1.
+var scopeDownNotStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := scopeDownLeafStatementBlocks(ctx)
 	blocks["and_statement"] = scopeDownAndStatementLevel0Block(ctx)
 	blocks["not_statement"] = scopeDownNotStatementLevel0Block(ctx)
 	blocks["or_statement"] = scopeDownOrStatementLevel0Block(ctx)
+
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel1Model](ctx),
 		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
 			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtMost(1),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: blocks,
@@ -279,8 +331,7 @@ var scopeDownStatementBlockLevel1Single = tfsync.OnceValueCtx(func(ctx context.C
 	}
 })
 
-// scopeDownAndStatementLevel1Block: AND at level 1, wrapping level-1 statements other than AND.
-// Type alias: webACLRuleScopeDownAndStatementModel = webACLRuleScopeDownAndStatementLevel1Model.
+// scopeDownAndStatementLevel1Block: AND at level 1, wrapping multiple level-1 statements.
 var scopeDownAndStatementLevel1Block = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownAndStatementLevel1Model](ctx),
@@ -295,22 +346,20 @@ var scopeDownAndStatementLevel1Block = tfsync.OnceValueCtx(func(ctx context.Cont
 })
 
 // scopeDownNotStatementLevel1Block: NOT at level 1, wrapping a single level-1 statement.
-// Type alias: webACLRuleScopeDownNotStatementModel = webACLRuleScopeDownNotStatementLevel1Model.
 var scopeDownNotStatementLevel1Block = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownNotStatementLevel1Model](ctx),
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"statement": scopeDownStatementBlockLevel1Single(ctx),
+				"statement": scopeDownNotStatementLevel1ChildBlock(ctx),
 			},
 		},
 		Description: "Logical NOT statement.",
 	}
 })
 
-// scopeDownOrStatementLevel1Block: OR at level 1, wrapping level-1 statements other than OR.
-// Type alias: webACLRuleScopeDownOrStatementModel = webACLRuleScopeDownOrStatementLevel1Model.
+// scopeDownOrStatementLevel1Block: OR at level 1, wrapping multiple level-1 statements.
 var scopeDownOrStatementLevel1Block = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownOrStatementLevel1Model](ctx),
@@ -324,8 +373,7 @@ var scopeDownOrStatementLevel1Block = tfsync.OnceValueCtx(func(ctx context.Conte
 	}
 })
 
-// scopeDownStatementBlock adds logical statements (and/or/not) to the leaf statement blocks.
-// Uses scope-down-specific models to avoid type cycles with managed_rule_group and rate_based.
+// scopeDownStatementBlock returns the top-level scopedown statement block schema.
 var scopeDownStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := scopeDownLeafStatementBlocks(ctx)
 	blocks["and_statement"] = scopeDownAndStatementLevel1Block(ctx)
@@ -333,8 +381,11 @@ var scopeDownStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 	blocks["or_statement"] = scopeDownOrStatementLevel1Block(ctx)
 
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementModel](ctx),
-		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel2Model](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtMost(1),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: blocks,
 		},
