@@ -141,7 +141,7 @@ func (r *environmentBlueprintResource) Schema(ctx context.Context, request resou
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customParameterModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"default_value": schema.StringAttribute{
+						names.AttrDefaultValue: schema.StringAttribute{
 							Optional: true,
 						},
 						names.AttrDescription: schema.StringAttribute{
