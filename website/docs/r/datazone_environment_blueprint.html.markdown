@@ -83,13 +83,13 @@ The following arguments are optional:
 
 ### `user_parameters` Block
 
-* `field_type` - (Required) Field type of the parameter.
-* `key_name` - (Required) Key name of the parameter.
 * `default_value` - (Optional) Default value of the parameter.
 * `description` - (Optional) Description of the parameter.
+* `field_type` - (Required) Field type of the parameter.
 * `is_editable` - (Optional) Whether the parameter is editable.
 * `is_optional` - (Optional) Whether the parameter is optional.
 * `is_update_supported` - (Optional) Whether the parameter value can be updated after creation.
+* `key_name` - (Required) Key name of the parameter.
 
 ## Attribute Reference
 
