@@ -107,6 +107,7 @@ func resourceFirewallPolicy() *schema.Resource {
 									},
 								},
 							},
+							"route53_resolved_ip_validation": route53ResolvedIPValidationSchema(),
 							"stateful_default_actions": {
 								Type:     schema.TypeSet,
 								Optional: true,
@@ -242,6 +243,54 @@ func resourceFirewallPolicy() *schema.Resource {
 				return forceNewIfNotRuleOrderDefault("firewall_policy.0.stateful_engine_options.0.rule_order", d)
 			},
 		),
+	}
+}
+
+func route53ResolvedIPValidationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Route53ResolvedIPValidationAction](),
+				},
+				"bypass_destination_validation_ip_range": route53ResolvedIPValidationAddressSchema(),
+				"dns_expiry_exception_policy": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DNSExpiryExceptionPolicy](),
+				},
+				"dns_firewall_rule_group_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^rslvr-frg-[0-9a-f]+$`), "must be a Route 53 Resolver DNS Firewall rule group ID"),
+				},
+				"source_ip_range": route53ResolvedIPValidationAddressSchema(),
+			},
+		},
+	}
+}
+
+func route53ResolvedIPValidationAddressSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"address_definition": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.Any(
+						verify.ValidIPv4CIDRNetworkAddress,
+						verify.ValidIPv6CIDRNetworkAddress,
+					),
+				},
+			},
+		},
 	}
 }
 
@@ -439,6 +488,33 @@ func expandPolicyVariables(tfMap map[string]any) *awstypes.PolicyVariables {
 	return apiObject
 }
 
+func expandRoute53ResolvedIPValidation(tfList []any) *awstypes.Route53ResolvedIPValidation {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.Route53ResolvedIPValidation{}
+
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
+		apiObject.Action = awstypes.Route53ResolvedIPValidationAction(v)
+	}
+	if v, ok := tfMap["bypass_destination_validation_ip_range"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.BypassDestinationValidationIPRanges = expandAddresses(v.List())
+	}
+	if v, ok := tfMap["dns_expiry_exception_policy"].(string); ok && v != "" {
+		apiObject.DNSExpiryExceptionPolicy = awstypes.DNSExpiryExceptionPolicy(v)
+	}
+	if v, ok := tfMap["dns_firewall_rule_group_id"].(string); ok && v != "" {
+		apiObject.DNSFirewallRuleGroupId = aws.String(v)
+	}
+	if v, ok := tfMap["source_ip_range"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SourceIPRanges = expandAddresses(v.List())
+	}
+
+	return apiObject
+}
+
 func expandStatefulEngineOptions(tfList []any) *awstypes.StatefulEngineOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -575,6 +651,10 @@ func expandFirewallPolicy(tfList []any) *awstypes.FirewallPolicy {
 		apiObject.PolicyVariables = expandPolicyVariables(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := tfMap["route53_resolved_ip_validation"].([]any); ok && len(v) > 0 {
+		apiObject.Route53ResolvedIPValidation = expandRoute53ResolvedIPValidation(v)
+	}
+
 	if v, ok := tfMap["stateful_default_actions"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.StatefulDefaultActions = flex.ExpandStringValueSet(v)
 	}
@@ -616,6 +696,9 @@ func flattenFirewallPolicy(apiObject *awstypes.FirewallPolicy) []any {
 	if apiObject.PolicyVariables != nil {
 		tfMap["policy_variables"] = flattenPolicyVariables(apiObject.PolicyVariables)
 	}
+	if apiObject.Route53ResolvedIPValidation != nil {
+		tfMap["route53_resolved_ip_validation"] = flattenRoute53ResolvedIPValidation(apiObject.Route53ResolvedIPValidation)
+	}
 	if apiObject.StatefulDefaultActions != nil {
 		tfMap["stateful_default_actions"] = apiObject.StatefulDefaultActions
 	}
@@ -651,6 +734,27 @@ func flattenPolicyVariables(apiObject *awstypes.PolicyVariables) []any {
 
 	tfMap := map[string]any{
 		"rule_variables": flattenIPSets(apiObject.RuleVariables),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenRoute53ResolvedIPValidation(apiObject *awstypes.Route53ResolvedIPValidation) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrAction:              apiObject.Action,
+		"dns_expiry_exception_policy": apiObject.DNSExpiryExceptionPolicy,
+		"dns_firewall_rule_group_id":  aws.ToString(apiObject.DNSFirewallRuleGroupId),
+	}
+
+	if apiObject.BypassDestinationValidationIPRanges != nil {
+		tfMap["bypass_destination_validation_ip_range"] = flattenAddresses(apiObject.BypassDestinationValidationIPRanges)
+	}
+	if apiObject.SourceIPRanges != nil {
+		tfMap["source_ip_range"] = flattenAddresses(apiObject.SourceIPRanges)
 	}
 
 	return []any{tfMap}

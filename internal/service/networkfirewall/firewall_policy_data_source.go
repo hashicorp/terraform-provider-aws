@@ -83,6 +83,7 @@ func dataSourceFirewallPolicy() *schema.Resource {
 									},
 								},
 							},
+							"route53_resolved_ip_validation": sdkv2.ComputedOnlyFromSchema(route53ResolvedIPValidationSchema()),
 							"stateful_default_actions": {
 								Type:     schema.TypeSet,
 								Computed: true,

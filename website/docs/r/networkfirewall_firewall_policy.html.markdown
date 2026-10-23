@@ -138,6 +138,36 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
+### Policy with Route 53 Resolved IP Validation
+
+```terraform
+resource "aws_route53_resolver_firewall_rule_group" "example" {
+  name = "example"
+}
+
+resource "aws_route53_resolver_firewall_rule_group_association" "example" {
+  name                   = "example"
+  firewall_rule_group_id = aws_route53_resolver_firewall_rule_group.example.id
+  priority               = 101
+  vpc_id                 = aws_vpc.example.id
+}
+
+resource "aws_networkfirewall_firewall_policy" "example" {
+  name = "example"
+
+  firewall_policy {
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+
+    route53_resolved_ip_validation {
+      action                      = "DROP"
+      dns_expiry_exception_policy = "CONTINUE"
+      dns_firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.example.id
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -163,6 +193,8 @@ The `firewall_policy` block supports the following arguments:
 * `enable_tls_session_holding` - (Optional) Boolean indicating whether to prevent TCP and TLS packets from reaching destination servers until TLS Inspection has evaluated Server Name Indication (SNI) rules. If `true`, `tls_inspection_configuration_arn` is required. Default value: `false`.
 
 * `policy_variables` - (Optional). Contains variables that you can use to override default Suricata settings in your firewall policy. See [Rule Variables](#rule-variables) for details.
+
+* `route53_resolved_ip_validation` - (Optional) A configuration block that validates that a connection's destination IP address was resolved through the VPC's Route 53 Resolver. See [Route 53 Resolved IP Validation](#route-53-resolved-ip-validation) below for details.
 
 * `stateful_default_actions` - (Optional) Set of actions to take on a packet if it does not match any stateful rules in the policy. This can only be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. Value values: `aws:drop_strict`, `aws:drop_established`, `aws:drop_established_app_layer`, `aws:alert_strict`, `aws:alert_established, `aws:alert_established_app_layer`. For more information, see [Strict evaluation order](https://docs.aws.amazon.com/network-firewall/latest/developerguide/suricata-rule-evaluation-order.html#suricata-strict-rule-evaluation-order.html) in the AWS Network Firewall Developer Guide.
 
@@ -195,6 +227,26 @@ The `rule_variables` block supports the following arguments:
 The `ip_set` block supports the following argument:
 
 * `definition` - (Required) Set of IPv4 or IPv6 addresses in CIDR notation to use for the Suricata `HOME_NET` variable.
+
+### Route 53 Resolved IP Validation
+
+The `route53_resolved_ip_validation` block supports the following arguments:
+
+* `action` - (Required) Action to take on a connection whose destination IP address was not resolved through the Route 53 Resolver. Valid values: `ALERT`, `DROP`, `REJECT`. `ALERT` requires logging to be enabled on the firewall.
+
+* `bypass_destination_validation_ip_range` - (Optional) Set of configuration blocks describing destination IP address ranges that are exempt from the policy-level check. See [Address Definition](#address-definition) below for details.
+
+* `dns_expiry_exception_policy` - (Required) Action to take when the DNS resolution recorded for a destination IP address has expired from the resolved IP cache. Valid values: `CONTINUE`, `DROP`, `REJECT`.
+
+* `dns_firewall_rule_group_id` - (Required) ID of the Route 53 Resolver DNS Firewall rule group whose associated VPCs' DNS resolutions are used for validation. Associate this rule group with the VPCs that send traffic to the firewall.
+
+* `source_ip_range` - (Optional) Set of configuration blocks describing client source IP address ranges whose connections are validated. If not specified, validation applies to the CIDR ranges of the firewall's VPC. See [Address Definition](#address-definition) below for details.
+
+### Address Definition
+
+The `bypass_destination_validation_ip_range` and `source_ip_range` blocks support the following argument:
+
+* `address_definition` - (Required) An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4 and IPv6.
 
 ### Stateful Engine Options
 
