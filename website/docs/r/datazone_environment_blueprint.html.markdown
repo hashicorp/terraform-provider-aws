@@ -64,27 +64,27 @@ The following arguments are required:
 
 * `domain_identifier` - (Required) Identifier of the domain in which the blueprint is created. Changing this forces a new resource to be created.
 * `name` - (Required) Name of the blueprint. Changing this forces a new resource to be created.
-* `provisioning_properties` - (Required) Provisioning properties of the blueprint. See [`provisioning_properties`](#provisioning_properties) below.
+* `provisioning_properties` - (Required) Provisioning properties of the blueprint. See [`provisioning_properties`](#provisioning_properties-block) below.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `blueprint_category` - (Optional) Category of the blueprint. The only valid value is `TOOLING`.
 * `description` - (Optional) Description of the blueprint.
-* `user_parameters` - (Optional) User parameters of the blueprint. See [`user_parameters`](#user_parameters) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `user_parameters` - (Optional) User parameters of the blueprint. See [`user_parameters`](#user_parameters-block) below.
 
-### provisioning_properties
+### `provisioning_properties` Block
 
-* `cloud_formation` - (Required) CloudFormation provisioning properties. See [`cloud_formation`](#cloud_formation) below.
+* `cloud_formation` - (Required) CloudFormation provisioning properties. See [`cloud_formation`](#cloud_formation-block) below.
 
-### cloud_formation
+### `cloud_formation` Block
 
 * `template_url` - (Required) URL of the CloudFormation template used to provision the blueprint. The template must be stored in an S3 bucket in the same account as the domain, and the domain's execution role must be able to read it (for example via the `SageMakerStudioDomainExecutionRolePolicy` managed policy).
 
-### user_parameters
+### `user_parameters` Block
 
-* `key_name` - (Required) Key name of the parameter.
 * `field_type` - (Required) Field type of the parameter.
+* `key_name` - (Required) Key name of the parameter.
 * `default_value` - (Optional) Default value of the parameter.
 * `description` - (Optional) Description of the parameter.
 * `is_editable` - (Optional) Whether the parameter is editable.
@@ -95,9 +95,9 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the blueprint.
 * `created_at` - Timestamp of when the blueprint was created.
 * `glossary_terms` - Glossary terms attached to the blueprint.
+* `id` - ID of the blueprint.
 * `provider_name` - Provider of the blueprint.
 * `updated_at` - Timestamp of when the blueprint was last updated.
 
