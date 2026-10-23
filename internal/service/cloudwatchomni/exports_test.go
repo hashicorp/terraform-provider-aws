@@ -7,12 +7,14 @@ package cloudwatchomni
 var (
 	ResourceAccessGrant   = newAccessGrantResource
 	ResourceAccessProfile = newAccessProfileResource
+	ResourceDashboard     = newDashboardResource
 	ResourceDomain        = newDomainResource
 	ResourceSpace         = newSpaceResource
 	ResourceView          = newViewResource
 
 	FindAccessGrantByID           = findAccessGrantByID
 	FindAccessProfileByTwoPartKey = findAccessProfileByTwoPartKey
+	FindDashboardByTwoPartKey     = findDashboardByTwoPartKey
 	FindDomainByID                = findDomainByID
 	FindSpaceByID                 = findSpaceByID
 	FindViewByName                = findViewByName
