@@ -5148,26 +5148,28 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.AlternateRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNThirdRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.ThirdRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNThirdRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNThirdRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.ThirdRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNThirdRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 					})),
 				},
@@ -5195,26 +5197,28 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.AlternateRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNThirdRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.ThirdRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNThirdRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNThirdRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.ThirdRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNThirdRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 					})),
 				},
@@ -5265,15 +5269,16 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.AlternateRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 					})),
 					streamLabelExpectChangeWhenRecreated.AddStateValue(resourceName, tfjsonpath.New("replica").AtSliceIndex(0).AtMapKey("stream_label")),
@@ -5312,15 +5317,16 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.AlternateRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 					})),
 					streamLabelExpectChangeWhenRecreated.AddStateValue(resourceName, tfjsonpath.New("replica").AtSliceIndex(0).AtMapKey("stream_label")),
@@ -8171,6 +8177,78 @@ func TestAccDynamoDBTable_Replica_deletionProtection(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.0.deletion_protection_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "replica.1.deletion_protection_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_Replica_disassociationProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Set on create for one replica; the other uses the default (enabled).
+				Config: testAccTableConfig_replicaDisassociationProtection(rName, "false", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.AlternateRegion(),
+						"disassociation_protection_enabled": acctest.CtFalse,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.ThirdRegion(),
+						"disassociation_protection_enabled": acctest.CtTrue,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_replicaDisassociationProtection(rName, acctest.CtTrue, acctest.CtFalse),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.AlternateRegion(),
+						"disassociation_protection_enabled": acctest.CtTrue,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.ThirdRegion(),
+						"disassociation_protection_enabled": acctest.CtFalse,
+					}),
+				),
+			},
+			{
+				// Removing the argument restores the default (enabled).
+				Config: testAccTableConfig_replicaDisassociationProtection(rName, "", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.AlternateRegion(),
+						"disassociation_protection_enabled": acctest.CtTrue,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.ThirdRegion(),
+						"disassociation_protection_enabled": acctest.CtTrue,
+					}),
 				),
 			},
 		},
@@ -12901,6 +12979,47 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, deletionProtection))
+}
+
+// testAccTableConfig_replicaDisassociationProtection sets disassociation_protection_enabled on
+// the alternate-region and third-region replicas. An empty value omits the argument.
+func testAccTableConfig_replicaDisassociationProtection(rName, alternate, third string) string {
+	argument := func(v string) string {
+		if v == "" {
+			return ""
+		}
+		return fmt.Sprintf("disassociation_protection_enabled = %s", v)
+	}
+
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+  replica {
+    region_name = data.aws_region.alternate.name
+    %[2]s
+  }
+  replica {
+    region_name = data.aws_region.third.name
+    %[3]s
+  }
+}
+`, rName, argument(alternate), argument(third)))
 }
 
 func testAccTableConfig_lsi(rName, lsiName string) string {

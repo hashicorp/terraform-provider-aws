@@ -69,6 +69,11 @@ func resourceTableReplica() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				"disassociation_protection_enabled": { // direct to replica
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
 				// global_secondary_index read capacity override can be set but not return by aws atm either through main/replica nor directly
 				"global_table_arn": {
 					Type:         schema.TypeString,
@@ -294,6 +299,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 
 	d.Set(names.AttrARN, table.TableArn)
 	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
+	d.Set("disassociation_protection_enabled", table.DisassociationProtectionEnabled)
 
 	if table.SSEDescription != nil && table.SSEDescription.KMSMasterKeyArn != nil {
 		d.Set(names.AttrKMSKeyARN, table.SSEDescription.KMSMasterKeyArn)
@@ -416,6 +422,31 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), delay, optFn); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
+		}
+	}
+
+	// * disassociation_protection_enabled
+	// DynamoDB enables disassociation protection on every new replica, so on create the value
+	// is sent only when it is set in configuration. DynamoDB rejects a request that changes it
+	// together with any other setting, so it is sent in its own request.
+	updateDisassociationProtection := d.HasChange("disassociation_protection_enabled")
+	if v := d.GetRawConfig().GetAttr("disassociation_protection_enabled"); d.IsNewResource() && v.IsKnown() && !v.IsNull() {
+		updateDisassociationProtection = true
+	}
+
+	if updateDisassociationProtection {
+		log.Printf("[DEBUG] Updating DynamoDB Table Replica disassociation protection: %v", d.Get("disassociation_protection_enabled").(bool))
+
+		input := dynamodb.UpdateTableInput{
+			TableName:                       aws.String(tableName),
+			DisassociationProtectionEnabled: aws.Bool(d.Get("disassociation_protection_enabled").(bool)),
+		}
+		if _, err := conn.UpdateTable(ctx, &input); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
+		}
+
+		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), replicaPropagationDelay, optFn); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
 		}
 	}

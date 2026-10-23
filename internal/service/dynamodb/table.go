@@ -429,6 +429,11 @@ func resourceTable() *schema.Resource {
 								Optional: true,
 								Computed: true,
 							},
+							"disassociation_protection_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
 							names.AttrKMSKeyARN: {
 								Type:         schema.TypeString,
 								Optional:     true,
@@ -1831,6 +1836,13 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 					return fmt.Errorf("updating replica (%s) deletion protection: %w", tfMap["region_name"].(string), err)
 				}
 			}
+
+			// DynamoDB enables disassociation protection on every new replica.
+			if v, ok := tfMap["disassociation_protection_enabled"].(bool); ok && !v {
+				if err = updateReplicaDisassociationProtection(ctx, conn, tableName, tfMap["region_name"].(string), v, timeout); err != nil {
+					return fmt.Errorf("updating replica (%s) disassociation protection: %w", tfMap["region_name"].(string), err)
+				}
+			}
 		}
 	}
 	return nil
@@ -1957,6 +1969,26 @@ func updateReplicaDeletionProtection(ctx context.Context, conn *dynamodb.Client,
 	return nil
 }
 
+func updateReplicaDisassociationProtection(ctx context.Context, conn *dynamodb.Client, tableName, region string, enabled bool, timeout time.Duration) error {
+	log.Printf("[DEBUG] Updating DynamoDB disassociation protection to %v (%s)", enabled, region)
+	input := dynamodb.UpdateTableInput{
+		TableName:                       aws.String(tableName),
+		DisassociationProtectionEnabled: aws.Bool(enabled),
+	}
+
+	optFn := func(o *dynamodb.Options) { o.Region = region }
+	_, err := conn.UpdateTable(ctx, &input, optFn)
+	if err != nil {
+		return fmt.Errorf("updating disassociation protection: %w", err)
+	}
+
+	if _, err := waitReplicaActive(ctx, conn, tableName, region, timeout, replicaPropagationDelay); err != nil {
+		return fmt.Errorf("waiting for disassociation protection update: %w", err)
+	}
+
+	return nil
+}
+
 func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.ResourceData) error {
 	oRaw, nRaw := d.GetChange("replica")
 	o := oRaw.(*schema.Set)
@@ -2029,6 +2061,13 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 					toRemove = append(toRemove, mr)
 					toAdd = append(toAdd, ma)
 					break
+				}
+			}
+
+			// disassociation protection must be the only change in its UpdateTable request
+			if ma["disassociation_protection_enabled"].(bool) != mr["disassociation_protection_enabled"].(bool) {
+				if err := updateReplicaDisassociationProtection(ctx, conn, d.Id(), ma["region_name"].(string), ma["disassociation_protection_enabled"].(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("updating replica (%s) disassociation protection: %w", ma["region_name"].(string), err)
 				}
 			}
 
@@ -2615,6 +2654,9 @@ func enrichReplicas(ctx context.Context, conn *dynamodb.Client, arn, tableName s
 		}
 
 		tfMap["deletion_protection_enabled"] = aws.ToBool(table.DeletionProtectionEnabled)
+		// DynamoDB enables disassociation protection on every replica; an omitted value is
+		// read as that default so that the replica keeps the same set hash.
+		tfMap["disassociation_protection_enabled"] = table.DisassociationProtectionEnabled == nil || aws.ToBool(table.DisassociationProtectionEnabled)
 		if table.SSEDescription != nil {
 			tfMap[names.AttrKMSKeyARN] = aws.ToString(table.SSEDescription.KMSMasterKeyArn)
 		}

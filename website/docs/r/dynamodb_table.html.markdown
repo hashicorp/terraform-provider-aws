@@ -448,6 +448,7 @@ The following arguments are optional:
   **Note:** Changing this value will recreate the replica.
 * `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
 * `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the replica. Default is `false`.
+* `disassociation_protection_enabled` - (Optional) Whether disassociation protection is enabled (true) or disabled (false) on the replica. Defaults to `true`, which matches the DynamoDB default for every replica. Disassociation protection is independent of deletion protection. See [Disassociating a global table replica](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables-disassociate.html).
 * `propagate_tags` - (Optional) Whether to propagate the global table's tags to a replica.
   Default is `false`.
   Changes to tags only move in one direction: from global (source) to replica.
