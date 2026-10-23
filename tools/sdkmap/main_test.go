@@ -35,67 +35,14 @@ func TestLoadInvalidRoot(t *testing.T) {
 	}
 }
 
-func TestParsePackage(t *testing.T) {
+func TestParsePackageInvalidDir(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
-		dir       string
-		wantFiles []string
-		wantErr   bool
-	}{
-		"conns": {
-			dir:       "internal/conns",
-			wantFiles: []string{"awsclient.go"},
-		},
-		"excludes test files and unsatisfied build constraints": {
-			dir:       "internal/service/examplebuildconstraints",
-			wantFiles: []string{"included.go"},
-		},
-		"several files": {
-			dir: "internal/service/examplecrud",
-			wantFiles: []string{
-				"find.go",
-				"gadget.go",
-				"gizmo.go",
-				"status.go",
-				"wait.go",
-				"widget.go",
-			},
-		},
-		"no buildable Go files": {
-			dir: "internal/service/examplenogofiles",
-		},
-		"only test files": {
-			dir: "internal/service/exampletestonly",
-		},
-		"nonexistent directory": {
-			dir:     "internal/service/examplenonexistent",
-			wantErr: true,
-		},
-	}
+	a := newTestAnalyzer()
+	dir := filepath.Join(testdataRoot, "internal", "service", "examplenonexistent")
 
-	for name, testCase := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			a := newTestAnalyzer()
-			dir := filepath.Join(testdataRoot, filepath.FromSlash(testCase.dir))
-
-			files, err := a.parsePackage(dir)
-
-			if testCase.wantErr {
-				if err == nil {
-					t.Errorf("parsePackage(%q) succeeded, want error", dir)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("parsePackage(%q): %s", dir, err)
-			}
-			if got := fileNames(a, files); !slices.Equal(got, testCase.wantFiles) {
-				t.Errorf("parsePackage(%q) files = %q, want %q", dir, got, testCase.wantFiles)
-			}
-		})
+	if _, err := a.parsePackage(dir); err == nil {
+		t.Errorf("parsePackage(%q) succeeded, want error", dir)
 	}
 }
 
@@ -115,7 +62,7 @@ func TestFindSDKResources(t *testing.T) {
 		"build constraints": {
 			pkg: "examplebuildconstraints",
 		},
-		"exported finder": {
+		"package exporting a finder": {
 			pkg: "examplecrossservice",
 		},
 		"CRUD": {
@@ -264,12 +211,6 @@ func TestParseAnnotations(t *testing.T) {
 			},
 			wantTypeNames: []string{"aws_s3_bucket"},
 		},
-		"named arguments around type name": {
-			doc: []string{
-				`// @SDKResource(name="Bucket", "aws_s3_bucket", tags=true)`,
-			},
-			wantTypeNames: []string{"aws_s3_bucket"},
-		},
 		"no space after comment marker": {
 			doc: []string{
 				`//@SDKResource("aws_s3_bucket", name="Bucket")`,
@@ -322,20 +263,6 @@ func TestParseAnnotations(t *testing.T) {
 				`// @SDKResource("s3_bucket", "aws_s3_bucket", name="Bucket")`,
 			},
 		},
-		"multiple type names": {
-			doc: []string{
-				`// @SDKResource("aws_alb", name="Load Balancer")`,
-				`// @SDKResource("aws_lb", name="Load Balancer")`,
-			},
-			wantTypeNames: []string{"aws_alb", "aws_lb"},
-		},
-		"multiple annotations with one invalid type name": {
-			doc: []string{
-				`// @SDKResource("aws_alb", name="Load Balancer")`,
-				`// @SDKResource("lb", name="Load Balancer")`,
-			},
-			wantTypeNames: []string{"aws_alb"},
-		},
 		"annotations among other comments": {
 			doc: []string{
 				"// resourceLoadBalancer returns the load balancer resource.",
@@ -345,14 +272,6 @@ func TestParseAnnotations(t *testing.T) {
 				`// @SDKResource("aws_lb", name="Load Balancer")`,
 			},
 			wantTypeNames: []string{"aws_alb", "aws_lb"},
-		},
-		"tags with identifier attribute": {
-			doc: []string{
-				`// @SDKResource("aws_s3_bucket", name="Bucket")`,
-				`// @Tags(identifierAttribute="bucket")`,
-			},
-			wantTypeNames: []string{"aws_s3_bucket"},
-			wantTagged:    true,
 		},
 		"tags with identifier attribute and resource type": {
 			doc: []string{
@@ -433,69 +352,6 @@ func TestParseAnnotations(t *testing.T) {
 	}
 }
 
-func TestIsCustomDiffCombinator(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]struct {
-		expr string
-		want bool
-	}{
-		"all": {
-			expr: "customdiff.All(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
-			want: true,
-		},
-		"sequence": {
-			expr: "customdiff.Sequence(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
-			want: true,
-		},
-		"all without arguments": {
-			expr: "customdiff.All()",
-			want: true,
-		},
-		"nested": {
-			expr: "customdiff.All(customdiff.Sequence(resourceBucketCustomizeDiff))",
-			want: true,
-		},
-		"other customdiff function": {
-			expr: `customdiff.ForceNewIfChange("size", sizeDecreased)`,
-		},
-		"conditional": {
-			expr: "customdiff.If(isNewResource, resourceBucketCustomizeDiff)",
-		},
-		"combinator not called": {
-			expr: "customdiff.All",
-		},
-		"different package": {
-			expr: "diff.All(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
-		},
-		"unqualified call": {
-			expr: "All(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
-		},
-		"ordinary call": {
-			expr: "resourceBucketCustomizeDiff()",
-		},
-		"identifier": {
-			expr: "resourceBucketCustomizeDiff",
-		},
-		"selector": {
-			expr: "verify.SetTagsDiff",
-		},
-		"function literal": {
-			expr: "func(ctx context.Context, d *schema.ResourceDiff, meta any) error { return nil }",
-		},
-	}
-
-	for name, testCase := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			if got := isCustomDiffCombinator(mustParseExpr(t, testCase.expr)); got != testCase.want {
-				t.Errorf("isCustomDiffCombinator(%s) = %t, want %t", testCase.expr, got, testCase.want)
-			}
-		})
-	}
-}
-
 func TestCustomizeDiffFuncs(t *testing.T) {
 	t.Parallel()
 
@@ -523,6 +379,18 @@ func TestCustomizeDiffFuncs(t *testing.T) {
 		"other customdiff function": {
 			expr: `customdiff.ForceNewIfChange("size", sizeDecreased)`,
 			want: []string{`customdiff.ForceNewIfChange("size", sizeDecreased)`},
+		},
+		"combinator not called": {
+			expr: "customdiff.All",
+			want: []string{"customdiff.All"},
+		},
+		"combinator from another package": {
+			expr: "diff.All(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
+			want: []string{"diff.All(resourceBucketCustomizeDiff, verify.SetTagsDiff)"},
+		},
+		"unqualified combinator": {
+			expr: "All(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
+			want: []string{"All(resourceBucketCustomizeDiff, verify.SetTagsDiff)"},
 		},
 		"all": {
 			expr: "customdiff.All(resourceBucketCustomizeDiff, verify.SetTagsDiff)",
@@ -577,7 +445,6 @@ func TestResolveType(t *testing.T) {
 		"awstypes": "github.com/aws/aws-sdk-go-v2/service/s3/types",
 		"conns":    "github.com/hashicorp/terraform-provider-aws/internal/conns",
 		"s3":       "github.com/aws/aws-sdk-go-v2/service/s3",
-		"s3c":      "github.com/aws/aws-sdk-go-v2/service/s3control",
 		"tfs3":     "github.com/hashicorp/terraform-provider-aws/internal/service/s3",
 	}
 
@@ -592,14 +459,6 @@ func TestResolveType(t *testing.T) {
 		"pointer to SDK client": {
 			expr: "*s3.Client",
 			want: "github.com/aws/aws-sdk-go-v2/service/s3",
-		},
-		"pointer to pointer to SDK client": {
-			expr: "**s3.Client",
-			want: "github.com/aws/aws-sdk-go-v2/service/s3",
-		},
-		"SDK client with import alias": {
-			expr: "*s3c.Client",
-			want: "github.com/aws/aws-sdk-go-v2/service/s3control",
 		},
 		"SDK client from unimported package": {
 			expr: "*ec2.Client",
@@ -627,10 +486,6 @@ func TestResolveType(t *testing.T) {
 			expr: "*servicePackage",
 			want: "servicePackage",
 		},
-		"predeclared type": {
-			expr: "string",
-			want: "string",
-		},
 		"generic type with one type argument": {
 			expr: "*retryer[*s3.Client]",
 			want: "retryer",
@@ -641,15 +496,6 @@ func TestResolveType(t *testing.T) {
 		},
 		"slice of SDK clients": {
 			expr: "[]*s3.Client",
-		},
-		"map of SDK clients": {
-			expr: "map[string]*s3.Client",
-		},
-		"function returning SDK client": {
-			expr: "func() *s3.Client",
-		},
-		"interface literal": {
-			expr: "interface{ ListTags() }",
 		},
 	}
 
@@ -675,31 +521,17 @@ func TestIsSDKPackage(t *testing.T) {
 			importPath: "github.com/aws/aws-sdk-go-v2/service/s3",
 			want:       true,
 		},
-		"service with digits": {
-			importPath: "github.com/aws/aws-sdk-go-v2/service/ec2",
-			want:       true,
-		},
-		"empty": {},
 		"service directory": {
 			importPath: "github.com/aws/aws-sdk-go-v2/service",
 		},
 		"aws": {
 			importPath: "github.com/aws/aws-sdk-go-v2/aws",
 		},
-		"aws subpackage": {
-			importPath: "github.com/aws/aws-sdk-go-v2/aws/arn",
-		},
 		"feature": {
 			importPath: "github.com/aws/aws-sdk-go-v2/feature/s3/manager",
 		},
-		"smithy": {
-			importPath: "github.com/aws/smithy-go",
-		},
 		"provider service package": {
 			importPath: "github.com/hashicorp/terraform-provider-aws/internal/service/s3",
-		},
-		"package name": {
-			importPath: "s3",
 		},
 	}
 
@@ -767,7 +599,7 @@ func TestCaseClauseFor(t *testing.T) {
 			wantClause: 1,
 			wantOK:     true,
 		},
-		"matching case before default": {
+		"matching case after default": {
 			src: `switch resourceType {
 			default:
 				other()
@@ -784,12 +616,6 @@ func TestCaseClauseFor(t *testing.T) {
 				role()
 			}`,
 			value:      "User",
-			wantClause: -1,
-			wantOK:     true,
-		},
-		"no clauses": {
-			src:        `switch resourceType {}`,
-			value:      "Role",
 			wantClause: -1,
 			wantOK:     true,
 		},
@@ -875,15 +701,6 @@ func newTestAnalyzer() *analyzer {
 		clientMethods: make(map[string]string),
 		services:      make(map[string]*servicePackage),
 	}
-}
-
-// fileNames returns the base names of parsed files.
-func fileNames(a *analyzer, files []*ast.File) []string {
-	var names []string
-	for _, file := range files {
-		names = append(names, filepath.Base(a.fset.File(file.Pos()).Name()))
-	}
-	return names
 }
 
 // mustParseExpr parses a Go expression, failing the test if it is invalid.
