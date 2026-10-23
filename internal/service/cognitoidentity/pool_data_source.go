@@ -91,7 +91,7 @@ func dataSourcePool() *schema.Resource {
 						Type: schema.TypeString,
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}

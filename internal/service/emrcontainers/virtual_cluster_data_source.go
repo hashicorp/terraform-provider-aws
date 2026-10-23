@@ -77,7 +77,7 @@ func dataSourceVirtualCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"virtual_cluster_id": {
 					Type:     schema.TypeString,
 					Required: true,

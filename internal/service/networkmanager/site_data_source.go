@@ -59,7 +59,7 @@ func dataSourceSite() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}
