@@ -80,13 +80,13 @@ type resource struct {
 // funcRef is a reference to a function from a resource's schema.Resource, or to a service package
 // method.
 type funcRef struct {
-	// Expr is the reference as written, e.g. "resourceObjectCreate" or "verify.SetTagsDiff".
+	// Expr is the reference as written, e.g. "resourceObjectCreate" or "schema.NoopContext".
 	Expr string `json:"expr"`
 
 	// Location is where the function is defined, as "<file>:<line>" relative to the repository
 	// root: a package-level declaration (for a call, the called function's declaration), or else
 	// the function literal or call expression itself. It is empty if the function is not declared
-	// in the package, e.g. verify.SetTagsDiff or a method value.
+	// in the package, e.g. schema.NoopContext or a method value such as h.Upsert.
 	Location string `json:"location,omitempty"`
 
 	// SDKCalls is the sorted set of AWS SDK client methods reachable from the function, e.g.
@@ -479,18 +479,31 @@ func (a *analyzer) addFuncRefs(pkg *servicePackage, r *resource, lit *ast.Compos
 	}
 }
 
-// funcRefs returns the resource's function references that are set, including its tag methods.
+// ownFuncRefs returns the references to the resource's own functions that are set: CRUD,
+// CustomizeDiff, and import, but not the tags interceptor's methods.
+func (r *resource) ownFuncRefs() []*funcRef {
+	return nonNilFuncRefs(r.Create, r.Read, r.Update, r.Delete, r.CustomizeDiff, r.Import)
+}
+
+// funcRefs returns the resource's function references that are set, including the tags
+// interceptor's methods.
 func (r *resource) funcRefs() []*funcRef {
-	refs := []*funcRef{r.Create, r.Read, r.Update, r.Delete, r.CustomizeDiff, r.Import}
+	refs := r.ownFuncRefs()
 	if r.Tags != nil {
-		refs = append(refs, r.Tags.List, r.Tags.Update)
+		refs = append(refs, nonNilFuncRefs(r.Tags.List, r.Tags.Update)...)
 	}
+	return refs
+}
+
+// nonNilFuncRefs returns refs without the nil ones.
+func nonNilFuncRefs(refs ...*funcRef) []*funcRef {
 	return slices.DeleteFunc(refs, func(ref *funcRef) bool { return ref == nil })
 }
 
-// hasSDKCalls reports whether any of a resource's functions calls an AWS SDK client method.
+// hasSDKCalls reports whether any of a resource's own functions calls an AWS SDK client method.
+// Calls made by the tags interceptor's methods don't count.
 func (r *resource) hasSDKCalls() bool {
-	return slices.ContainsFunc(r.funcRefs(), (*funcRef).hasSDKCalls)
+	return slices.ContainsFunc(r.ownFuncRefs(), (*funcRef).hasSDKCalls)
 }
 
 // hasSDKCalls reports whether the function calls an AWS SDK client method.
@@ -498,7 +511,8 @@ func (ref *funcRef) hasSDKCalls() bool {
 	return len(ref.SDKCalls) > 0
 }
 
-// logWarnings logs the warnings for each of a resource's functions.
+// logWarnings logs the warnings for each of a resource's functions, including the tags
+// interceptor's methods.
 func (r *resource) logWarnings() {
 	for _, ref := range r.funcRefs() {
 		for _, warning := range ref.warnings {
@@ -529,7 +543,7 @@ func customizeDiffFuncs(expr ast.Expr) []ast.Expr {
 
 func (a *analyzer) newFuncRef(pkg *servicePackage, expr ast.Expr, varTypes map[string]string) *funcRef {
 	ref := &funcRef{Expr: types.ExprString(expr)}
-	ref.SDKCalls, ref.warnings = a.findSDKCalls(pkg, expr, varTypes)
+	ref.SDKCalls, ref.warnings = a.newCallFinder().find(pkg, expr, varTypes)
 
 	switch e := expr.(type) {
 	case *ast.Ident:
@@ -613,21 +627,17 @@ func (a *analyzer) newCallFinder() *callFinder {
 	}
 }
 
-// findSDKCalls returns the sorted set of AWS SDK client methods reachable from node, e.g. a
-// declaration or a function reference from a resource's schema.Resource, and the sorted warnings
-// about AWS SDK clients passed to functions that aren't analyzed. varTypes holds the types of
-// variables in scope at node, e.g. from factoryVarTypes, and may be nil.
-func (a *analyzer) findSDKCalls(pkg *servicePackage, node ast.Node, varTypes map[string]string) (calls, warnings []string) {
-	return a.newCallFinder().find(pkg, node, varTypes)
-}
-
-// find is findSDKCalls, using f.
+// find returns the sorted set of AWS SDK client methods reachable from node, e.g. a declaration or
+// a function reference from a resource's schema.Resource, and the sorted warnings about AWS SDK
+// clients passed to functions that aren't analyzed. varTypes holds the types of variables in scope
+// at node, e.g. from factoryVarTypes, and may be nil.
 func (f *callFinder) find(pkg *servicePackage, node ast.Node, varTypes map[string]string) (calls, warnings []string) {
 	v := f.newVisitor(pkg, node)
 	maps.Copy(v.varTypes, varTypes)
 	f.visited[node] = true
 	ast.Walk(v, node)
 
+	// calls is non-nil, so that no calls are written as [] rather than null.
 	calls = slices.AppendSeq(make([]string, 0, len(f.calls)), maps.Keys(f.calls))
 	slices.Sort(calls)
 	return calls, slices.Sorted(maps.Keys(f.warnings))
@@ -674,14 +684,16 @@ func (f *callFinder) newVisitor(pkg *servicePackage, node ast.Node) *declVisitor
 // and methods in pkg called on a value whose type is known.
 //
 // Types are tracked syntactically, as strings: an AWS SDK client by its package's import path
-// (e.g. "github.com/aws/aws-sdk-go-v2/service/s3"), and any other type by its unqualified name.
+// (e.g. "github.com/aws/aws-sdk-go-v2/service/s3"), and a type written without a package qualifier
+// by its name. Any other type is unknown ("").
 type declVisitor struct {
 	finder  *callFinder
 	pkg     *servicePackage
 	imports map[string]string
 
-	// varTypes maps variable names to their types, where known.
-	// Scoping is ignored: names are shared by all nested function literals.
+	// varTypes maps variable names to their types, where known. Scoping is ignored: a name has one
+	// type across the whole declaration, including nested blocks and function literals, and a later
+	// assignment replaces an earlier one, except as described for setVarType.
 	varTypes map[string]string
 }
 
@@ -699,30 +711,7 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 		v.setDeclaredTypes(n)
 
 	case *ast.CallExpr:
-		sel, ok := n.Fun.(*ast.SelectorExpr)
-		if !ok {
-			break
-		}
-		if typ := v.typeOf(sel.X); isSDKPackage(typ) {
-			if sel.Sel.Name != "Options" {
-				v.finder.calls[path.Base(typ)+"."+sel.Sel.Name] = true
-			}
-		} else if x, ok := sel.X.(*ast.Ident); ok && v.imports[x.Name] != "" {
-			importPath := v.imports[x.Name]
-			if m := paginatorRegexp.FindStringSubmatch(sel.Sel.Name); m != nil && isSDKPackage(importPath) {
-				// A paginator calls its operation, e.g. s3.NewListObjectsV2Paginator calls
-				// ListObjectsV2.
-				v.finder.calls[path.Base(importPath)+"."+m[1]] = true
-			} else if _, ok := v.finder.services[importPath]; !ok {
-				// Functions outside the service packages aren't analyzed, so the operations they
-				// call on a client passed to them, e.g. an SDK waiter's, aren't found.
-				for _, arg := range n.Args {
-					if typ := v.typeOf(arg); isSDKPackage(typ) {
-						v.finder.warnings[fmt.Sprintf("%s client passed to unanalyzed function %s", path.Base(typ), types.ExprString(sel))] = true
-					}
-				}
-			}
-		}
+		v.recordCall(n)
 
 	case *ast.SelectorExpr:
 		if x, ok := n.X.(*ast.Ident); ok {
@@ -741,8 +730,9 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 		return nil
 
 	case *ast.KeyValueExpr:
-		// A struct literal key names a field, not a package-level declaration, so only the value is
-		// walked.
+		// An identifier key is taken to be a struct literal's field name, not a package-level
+		// declaration, so only the value is walked. In a map literal, it may be a constant, which
+		// calls nothing.
 		if _, ok := n.Key.(*ast.Ident); ok {
 			ast.Walk(v, n.Value)
 			return nil
@@ -768,6 +758,50 @@ func (v *declVisitor) Visit(node ast.Node) ast.Visitor {
 	}
 
 	return v
+}
+
+// recordCall records the AWS SDK client method that call calls, if any: directly, or through an SDK
+// paginator. It records a warning if call passes an AWS SDK client to a function that isn't
+// analyzed.
+func (v *declVisitor) recordCall(call *ast.CallExpr) {
+	sel, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return
+	}
+
+	if typ := v.typeOf(sel.X); isSDKPackage(typ) {
+		// Options returns the client's configuration; it isn't an operation.
+		if sel.Sel.Name != "Options" {
+			v.finder.calls[path.Base(typ)+"."+sel.Sel.Name] = true
+		}
+		return
+	}
+
+	x, ok := sel.X.(*ast.Ident)
+	if !ok {
+		return
+	}
+	importPath, ok := v.imports[x.Name]
+	if !ok {
+		return
+	}
+
+	// A paginator calls its operation, e.g. s3.NewListObjectsV2Paginator calls ListObjectsV2.
+	if m := paginatorRegexp.FindStringSubmatch(sel.Sel.Name); m != nil && isSDKPackage(importPath) {
+		v.finder.calls[path.Base(importPath)+"."+m[1]] = true
+		return
+	}
+
+	// Functions outside the service packages aren't analyzed, so the operations they call on a
+	// client passed to them, e.g. an SDK waiter's, aren't found.
+	if _, ok := v.finder.services[importPath]; ok {
+		return
+	}
+	for _, arg := range call.Args {
+		if typ := v.typeOf(arg); isSDKPackage(typ) {
+			v.finder.warnings[fmt.Sprintf("%s client passed to unanalyzed function %s", path.Base(typ), types.ExprString(sel))] = true
+		}
+	}
 }
 
 // caseClauseFor returns the clause that switch s runs when its tag is value, or nil if none does.
