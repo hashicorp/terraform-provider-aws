@@ -60,7 +60,7 @@ func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "confirming Direct Connect Connection (%s): %s", connectionID, err)
 	}
 
-	if _, err := waitConnectionConfirmed(ctx, conn, connectionID, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitConnectionConfirmed(ctx, conn, connectionID, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Connection (%s) confirm: %s", connectionID, err)
 	}
 
@@ -92,7 +92,7 @@ func resourceConnectionConfirmationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func waitConnectionConfirmed(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
+func waitConnectionConfirmed(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateRequested),
 		Target:  enum.Slice(awstypes.ConnectionStateAvailable),
@@ -100,11 +100,6 @@ func waitConnectionConfirmed(ctx context.Context, conn *directconnect.Client, id
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Connection); ok {
-		return output, err
-	}
-
-	return nil, err
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
 }
