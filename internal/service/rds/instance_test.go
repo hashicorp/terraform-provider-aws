@@ -7055,6 +7055,80 @@ func TestAccRDSInstance_BlueGreenDeployment_passwordBypassesBlueGreen(t *testing
 	})
 }
 
+func TestAccRDSInstance_BlueGreenDeployment_updateApplyImmediatelyOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_applyImmediately(rName, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_applyImmediately(rName, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_updateApplyImmediatelyOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_applyImmediately(rName, false, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_applyImmediately(rName, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckDBInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -14667,6 +14741,31 @@ resource "aws_db_instance" "test" {
   }
 }
 `, rName, password))
+}
+
+func testAccInstanceConfig_applyImmediately(rName string, blueGreen, applyImmediately bool) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  apply_immediately       = %[3]t
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+
+  blue_green_update {
+    enabled = %[2]t
+  }
+}
+`, rName, blueGreen, applyImmediately))
 }
 
 func testAccInstanceConfig_engineVersion(rName string, update bool) string {
