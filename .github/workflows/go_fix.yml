@@ -12,6 +12,7 @@ on:
     paths:
       - "**/*.go"
       - .github/workflows/go_fix.yml
+      - GNUmakefile
       - go.mod
 
 ## NOTE: !!!
