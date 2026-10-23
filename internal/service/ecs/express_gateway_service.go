@@ -79,6 +79,14 @@ func (r *expressGatewayServiceResource) Schema(ctx context.Context, req resource
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"cpu_architecture": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ExpressCpuArchitecture](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"current_deployment": schema.StringAttribute{
 				Computed:           true,
 				DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
@@ -739,6 +747,7 @@ type expressGatewayServiceResourceModel struct {
 	framework.WithRegionModel
 	Cluster               types.String                                                                    `tfsdk:"cluster"`
 	CPU                   types.String                                                                    `tfsdk:"cpu"`
+	CPUArchitecture       fwtypes.StringEnum[awstypes.ExpressCpuArchitecture]                             `tfsdk:"cpu_architecture"`
 	CurrentDeployment     types.String                                                                    `tfsdk:"current_deployment"`
 	ExecutionRoleARN      fwtypes.ARN                                                                     `tfsdk:"execution_role_arn"`
 	HealthCheckPath       types.String                                                                    `tfsdk:"health_check_path"`
