@@ -42,6 +42,7 @@ import (
 // @ImportIDHandler("environmentBlueprintImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetEnvironmentBlueprintOutput")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(preCheck="testAccPreCheck")
 // @Testing(importStateIdAttributes="domain_identifier;id", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newEnvironmentBlueprintResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &environmentBlueprintResource{}
@@ -77,10 +78,6 @@ func (r *environmentBlueprintResource) Schema(ctx context.Context, request resou
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"domain_identifier": schema.StringAttribute{
 				Required: true,
@@ -257,6 +254,20 @@ func (r *environmentBlueprintResource) Update(ctx context.Context, request resou
 
 	conn := r.Meta().DataZoneClient(ctx)
 
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !diff.HasChanges() {
+		// Only non-resource fields (e.g. timeouts) changed; avoid an
+		// unnecessary API call that would require update permission and
+		// mutate updated_at.
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
+		return
+	}
+
 	var input datazone.UpdateEnvironmentBlueprintInput
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if response.Diagnostics.HasError() {
@@ -264,6 +275,16 @@ func (r *environmentBlueprintResource) Update(ctx context.Context, request resou
 	}
 	// Update addresses the blueprint by its ID, not its name.
 	input.Identifier = state.ID.ValueStringPointer()
+
+	// AutoFlex omits a null string / null list from the request, so the API
+	// keeps the previous value. When the user removes a configured
+	// description or user_parameters block, send the cleared value explicitly.
+	if plan.Description.IsNull() {
+		input.Description = aws.String("")
+	}
+	if plan.UserParameters.IsNull() && !state.UserParameters.IsNull() {
+		input.UserParameters = []awstypes.CustomParameter{}
+	}
 
 	output, err := conn.UpdateEnvironmentBlueprint(ctx, &input)
 	if err != nil {
@@ -316,7 +337,7 @@ func (r *environmentBlueprintResource) Delete(ctx context.Context, request resou
 
 	_, err := conn.DeleteEnvironmentBlueprint(ctx, &input)
 
-	if isResourceMissing(err) {
+	if isResourceNotFound(err) {
 		return
 	}
 
@@ -333,7 +354,7 @@ func findEnvironmentBlueprintByTwoPartKey(ctx context.Context, conn *datazone.Cl
 	}
 	output, err := conn.GetEnvironmentBlueprint(ctx, &input)
 
-	if isResourceMissing(err) {
+	if isResourceNotFound(err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}

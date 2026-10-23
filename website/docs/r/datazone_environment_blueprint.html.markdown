@@ -27,7 +27,7 @@ resource "aws_datazone_environment_blueprint" "example" {
 
   provisioning_properties {
     cloud_formation {
-      template_url = "https://${aws_s3_object.tooling.bucket}.s3.amazonaws.com/${aws_s3_object.tooling.key}"
+      template_url = "https://${aws_s3_bucket.tooling.bucket_regional_domain_name}/${aws_s3_object.tooling.key}"
     }
   }
 }
@@ -43,7 +43,7 @@ resource "aws_datazone_environment_blueprint" "example" {
 
   provisioning_properties {
     cloud_formation {
-      template_url = "https://${aws_s3_object.tooling.bucket}.s3.amazonaws.com/${aws_s3_object.tooling.key}"
+      template_url = "https://${aws_s3_bucket.tooling.bucket_regional_domain_name}/${aws_s3_object.tooling.key}"
     }
   }
 
@@ -101,7 +101,37 @@ This resource exports the following attributes in addition to the arguments abov
 * `provider_name` - Provider of the blueprint.
 * `updated_at` - Timestamp of when the blueprint was last updated.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `2m`)
+
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datazone_environment_blueprint.example
+  identity = {
+    domain_identifier = "dzd_54nakfrb46xfaa"
+    id                = "4qd7g9diohnoob"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_identifier` - (String) Identifier of the domain in which the blueprint is created.
+* `id` - (String) ID of the blueprint.
+
+#### Optional
+
+* `account_id` - (String) AWS Account where this resource is managed.
+* `region` - (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Environment Blueprint using the `domain_identifier` and `id` separated by a `,`. For example:
 

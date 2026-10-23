@@ -8,7 +8,7 @@ resource "aws_datazone_environment_blueprint" "test" {
 
   provisioning_properties {
     cloud_formation {
-      template_url = "https://${aws_s3_object.template.bucket}.s3.amazonaws.com/${aws_s3_object.template.key}"
+      template_url = "https://${aws_s3_bucket.template.bucket_regional_domain_name}/${aws_s3_object.template.key}"
     }
   }
 
