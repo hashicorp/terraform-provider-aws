@@ -77,6 +77,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAccountDataRetentionResource,
+			TypeName: "aws_bedrock_account_data_retention",
+			Name:     "Account Data Retention",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newCustomModelResource,
 			TypeName: "aws_bedrock_custom_model",
 			Name:     "Custom Model",
