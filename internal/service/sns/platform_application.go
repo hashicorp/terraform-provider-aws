@@ -202,9 +202,11 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 	if d.HasChanges("apple_platform_bundle_id", "apple_platform_team_id", "platform_credential", "platform_principal") {
 		// If APNS platform was configured with token-based authentication then the only way to update them
 		// is to update all 4 attributes as they must be specified together in the request.
-		if d.HasChanges("apple_platform_team_id", "apple_platform_bundle_id") {
-			attributes[platformApplicationAttributeNameApplePlatformTeamID] = d.Get("apple_platform_team_id").(string)
-			attributes[platformApplicationAttributeNameApplePlatformBundleID] = d.Get("apple_platform_bundle_id").(string)
+		if v, ok := d.GetOk("apple_platform_team_id"); ok {
+			attributes[platformApplicationAttributeNameApplePlatformTeamID] = v.(string)
+		}
+		if v, ok := d.GetOk("apple_platform_bundle_id"); ok {
+			attributes[platformApplicationAttributeNameApplePlatformBundleID] = v.(string)
 		}
 
 		// Prior to version 3.0.0 of the Terraform AWS Provider, the platform_credential and platform_principal
