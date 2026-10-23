@@ -524,8 +524,7 @@ func metadataConfigurationFailedError(mcr *awstypes.MetadataConfigurationResult)
 }
 
 func metadataTableFailed(err error) bool {
-	var unexpected *retry.UnexpectedStateError
-	if errors.As(err, &unexpected) {
+	if unexpected, ok := errors.AsType[*retry.UnexpectedStateError](err); ok {
 		return unexpected.State == journalTableConfigurationStatusFailed || unexpected.State == inventoryTableConfigurationStatusFailed
 	}
 
