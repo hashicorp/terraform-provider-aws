@@ -1,0 +1,92 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Go Fix Check
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+    paths:
+      - "**/*.go"
+      - .github/workflows/go_fix.yml
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
+permissions:
+  contents: read # required for checkout
+
+jobs:
+  go_fix:
+    name: go fix (shard ${{ matrix.shard }})
+    runs-on: custom-ubuntu-22.04-xl
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+        total-shards: [4]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      # See also: https://github.com/actions/setup-go/issues/54
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - name: go fix shard ${{ matrix.shard }}
+        run: make go-fix-check-shard GO_VER=go SHARD=${{ matrix.shard }} TOTAL_SHARDS=${{ matrix.total-shards }}
+      # TEMPORARY: The go fix bundled with the current Go release lacks some
+      # analyzers available in the standalone modernize command. This step runs
+      # only the ones go fix is still missing. Once `go tool fix help` lists all
+      # of EXTRA_ANALYZERS, the step skips itself; remove it at that point.
+      - name: modernize shard ${{ matrix.shard }} (analyzers missing from go fix)
+        if: ${{ !cancelled() }}
+        env:
+          EXTRA_ANALYZERS: importcomment reflecttypeassert slicesclip
+          MODERNIZE_VERSION: v0.52.0
+          SHARD: ${{ matrix.shard }}
+          TOTAL_SHARDS: ${{ matrix.total-shards }}
+        run: |
+          available=$(go tool fix help | awk '/^Registered analyzers:/{f=1;next} /^By default/{f=0} f && NF{print $1}')
+          flags=()
+          for a in $EXTRA_ANALYZERS; do
+            grep -qx "$a" <<<"$available" || flags+=("-$a")
+          done
+          if [ ${#flags[@]} -eq 0 ]; then
+            echo "::notice::go fix now includes all of: $EXTRA_ANALYZERS. Remove this step from .github/workflows/go_fix.yml."
+            exit 0
+          fi
+          # Same round-robin partition as `make go-fix-check-shard`.
+          # Run go list on its own so a failure fails the step (errexit doesn't
+          # see failures inside pipes or process substitutions).
+          all_pkgs=$(go list ./...)
+          pkgs=()
+          while IFS= read -r pkg; do pkgs+=("$pkg"); done < <(sort <<<"$all_pkgs" | awk -v s="$SHARD" -v t="$TOTAL_SHARDS" '(NR-1)%t==s')
+          echo "Running modernize ${flags[*]} on ${#pkgs[@]} packages..."
+          modernize="golang.org/x/tools/go/analysis/passes/modernize/cmd/modernize@${MODERNIZE_VERSION}"
+          go run "$modernize" "${flags[@]}" "${pkgs[@]}" || {
+            echo "::error::To fix, run: go run $modernize -fix ${flags[*]} ./..."
+            exit 1
+          }

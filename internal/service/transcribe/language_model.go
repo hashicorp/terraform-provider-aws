@@ -7,10 +7,8 @@ package transcribe
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -131,9 +129,8 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 			return conn.CreateLanguageModel(ctx, in)
 		},
 		func(err error) (bool, error) {
-			var bre *types.BadRequestException
-			if errors.As(err, &bre) {
-				return strings.Contains(bre.ErrorMessage(), "Make sure that you have read permission"), err
+			if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Make sure that you have read permission") {
+				return true, err
 			}
 			return false, err
 		},
