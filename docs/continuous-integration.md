@@ -396,12 +396,6 @@ In CI, the check is split across parallel jobs using round-robin sharding by pac
 make go-fix-check-shard SHARD=0 TOTAL_SHARDS=4
 ```
 
-In CI, the check is split across parallel jobs using round-robin sharding by package. To reproduce a specific shard locally, use the `go-fix-check-shard` target:
-
-```console
-make go-fix-check-shard SHARD=0 TOTAL_SHARDS=4
-```
-
 Use the `fix` target to automatically apply fixes to all packages, or limit it to a service package with `PKG`:
 
 ```console
@@ -410,6 +404,8 @@ make fix PKG=ec2
 ```
 
 The legacy `modern-check`, `modern-fix`, and `modern-fix-core` targets are aliases for `fix-check`, `fix`, and `fix-core`.
+
+Temporarily, CI also runs the standalone [`modernize`](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/modernize) command for analyzers that the current Go release's `go fix` doesn't include yet (`importcomment`, `reflecttypeassert`, `slicesclip`). The step only runs analyzers that `go tool fix help` doesn't list, and it skips itself once `go fix` includes all of them. If it fails, the error message shows the command to apply the fixes.
 
 ### PR Target Check
 
