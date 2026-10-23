@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -874,6 +875,100 @@ func TestAccWAFV2WebACLRule_logicalStatementNesting(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_scopeDownStatementNesting(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[string]struct {
+		statement  string
+		stateCheck knownvalue.Check
+	}{
+		"and": {
+			statement:  testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch),
+			stateCheck: scopeDownAndCheck(scopeDownGeoMatchCheck(), scopeDownLabelMatchCheck()),
+		},
+		"or": {
+			statement:  testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch),
+			stateCheck: scopeDownOrCheck(scopeDownGeoMatchCheck(), scopeDownLabelMatchCheck()),
+		},
+		"not": {
+			statement:  testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_geoMatch),
+			stateCheck: scopeDownNotCheck(scopeDownGeoMatchCheck()),
+		},
+		"and_or": {
+			statement: testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch),
+			stateCheck: scopeDownAndCheck(
+				scopeDownOrCheck(scopeDownGeoMatchCheck(), scopeDownLabelMatchCheck()),
+				scopeDownGeoMatchCheck(),
+			),
+		},
+		"or_and": {
+			statement: testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch),
+			stateCheck: scopeDownOrCheck(
+				scopeDownAndCheck(scopeDownGeoMatchCheck(), scopeDownLabelMatchCheck()),
+				scopeDownGeoMatchCheck(),
+			),
+		},
+		"or_not": {
+			statement: testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_geoMatch), testAccWebACLRuleStatement_labelMatch),
+			stateCheck: scopeDownOrCheck(
+				scopeDownNotCheck(scopeDownGeoMatchCheck()),
+				scopeDownLabelMatchCheck(),
+			),
+		},
+		"not_and": {
+			statement: testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch)),
+			stateCheck: scopeDownNotCheck(
+				scopeDownAndCheck(scopeDownGeoMatchCheck(), scopeDownLabelMatchCheck()),
+			),
+		},
+		"not_or": {
+			statement: testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch)),
+			stateCheck: scopeDownNotCheck(
+				scopeDownOrCheck(scopeDownGeoMatchCheck(), scopeDownLabelMatchCheck()),
+			),
+		},
+		"not_not": {
+			statement: testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_geoMatch)),
+			stateCheck: scopeDownNotCheck(
+				scopeDownNotCheck(scopeDownGeoMatchCheck()),
+			),
+		},
+	}
+
+	for name, tc := range testcases { //nolint:paralleltest // false positive
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+			resourceName := "aws_wafv2_web_acl_rule.test"
+
+			acctest.ParallelTest(ctx, t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+				Steps: []resource.TestStep{
+					{
+						Config: testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(tc.statement)),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckWebACLRuleExists(ctx, t, resourceName),
+						),
+						ConfigStateChecks: []statecheck.StateCheck{
+							scopeDownStateCheck(resourceName, tc.stateCheck),
+						},
+					},
+					{
+						ResourceName:                         resourceName,
+						ImportState:                          true,
+						ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+						ImportStateVerify:                    true,
+						ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+					},
+				},
+			})
+		})
+	}
+}
+
 func TestAccWAFV2WebACLRule_invalidLogicalStatementNesting(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -916,10 +1011,12 @@ func TestAccWAFV2WebACLRule_invalidLogicalStatementNesting(t *testing.T) {
 				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch)),
 				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
 			},
+			// Nested AND -> AND
 			{
 				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch))),
 				ExpectError: regexache.MustCompile(`Blocks of type "and_statement" are not expected here`),
 			},
+			// Nested OR -> OR
 			{
 				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch))),
 				ExpectError: regexache.MustCompile(`Blocks of type "or_statement" are not expected here`),
@@ -1135,6 +1232,75 @@ func testAccCheckWebACLRuleExists(ctx context.Context, t *testing.T, n string) r
 
 		return fmt.Errorf("WAFv2 Web ACL Rule %s not found in Web ACL", ruleName)
 	}
+}
+
+// scopeDownStateCheck wraps a scope_down_statement body check in the
+// statement[0].rate_based_statement[0].scope_down_statement[0] path used by these tests.
+func scopeDownStateCheck(resourceName string, body knownvalue.Check) statecheck.StateCheck {
+	return statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("statement"), knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectPartial(map[string]knownvalue.Check{
+			"rate_based_statement": knownvalue.ListExact([]knownvalue.Check{
+				knownvalue.ObjectPartial(map[string]knownvalue.Check{
+					"scope_down_statement": knownvalue.ListExact([]knownvalue.Check{body}),
+				}),
+			}),
+		}),
+	}))
+}
+
+// scopeDownGeoMatchCheck matches the testAccWebACLRuleStatement_geoMatch leaf (country_codes = ["US"]).
+func scopeDownGeoMatchCheck() knownvalue.Check {
+	return knownvalue.ObjectPartial(map[string]knownvalue.Check{
+		"geo_match_statement": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectPartial(map[string]knownvalue.Check{
+				"country_codes": knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("US")}),
+			}),
+		}),
+	})
+}
+
+// scopeDownLabelMatchCheck matches the testAccWebACLRuleStatement_labelMatch leaf (key = "test:label").
+func scopeDownLabelMatchCheck() knownvalue.Check {
+	return knownvalue.ObjectPartial(map[string]knownvalue.Check{
+		"label_match_statement": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectPartial(map[string]knownvalue.Check{
+				names.AttrKey: knownvalue.StringExact("test:label"),
+			}),
+		}),
+	})
+}
+
+// scopeDownAndCheck matches an and_statement wrapping the given child statements.
+func scopeDownAndCheck(statements ...knownvalue.Check) knownvalue.Check {
+	return knownvalue.ObjectPartial(map[string]knownvalue.Check{
+		"and_statement": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectPartial(map[string]knownvalue.Check{
+				"statement": knownvalue.ListExact(statements),
+			}),
+		}),
+	})
+}
+
+// scopeDownOrCheck matches an or_statement wrapping the given child statements.
+func scopeDownOrCheck(statements ...knownvalue.Check) knownvalue.Check {
+	return knownvalue.ObjectPartial(map[string]knownvalue.Check{
+		"or_statement": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectPartial(map[string]knownvalue.Check{
+				"statement": knownvalue.ListExact(statements),
+			}),
+		}),
+	})
+}
+
+// scopeDownNotCheck matches a not_statement wrapping the given single child statement.
+func scopeDownNotCheck(statement knownvalue.Check) knownvalue.Check {
+	return knownvalue.ObjectPartial(map[string]knownvalue.Check{
+		"not_statement": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectPartial(map[string]knownvalue.Check{
+				"statement": knownvalue.ListExact([]knownvalue.Check{statement}),
+			}),
+		}),
+	})
 }
 
 func parseWebACLARNForTest(arnStr string) (id, name, scope string, err error) {
