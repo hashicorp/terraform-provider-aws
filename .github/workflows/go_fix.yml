@@ -79,8 +79,11 @@ jobs:
             exit 0
           fi
           # Same round-robin partition as `make go-fix-check-shard`.
+          # Run go list on its own so a failure fails the step (errexit doesn't
+          # see failures inside pipes or process substitutions).
+          all_pkgs=$(go list ./...)
           pkgs=()
-          while IFS= read -r pkg; do pkgs+=("$pkg"); done < <(go list ./... | sort | awk -v s="$SHARD" -v t="$TOTAL_SHARDS" '(NR-1)%t==s')
+          while IFS= read -r pkg; do pkgs+=("$pkg"); done < <(sort <<<"$all_pkgs" | awk -v s="$SHARD" -v t="$TOTAL_SHARDS" '(NR-1)%t==s')
           echo "Running modernize ${flags[*]} on ${#pkgs[@]} packages..."
           modernize="golang.org/x/tools/go/analysis/passes/modernize/cmd/modernize@${MODERNIZE_VERSION}"
           go run "$modernize" "${flags[@]}" "${pkgs[@]}" || {

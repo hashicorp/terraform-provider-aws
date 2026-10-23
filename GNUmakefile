@@ -455,7 +455,8 @@ go-fix-check-shard: prereq-go ## [CI] Go Fix Check / go fix for a specific shard
 		exit 1; \
 	fi
 	@echo "make: Checking go fix for shard $(SHARD) of $(TOTAL_SHARDS)..."
-	@packages=$$($(GO_VER) list ./... | sort); \
+	@packages=$$($(GO_VER) list ./...) || { echo "make: go list failed"; exit 1; }; \
+	packages=$$(echo "$$packages" | sort); \
 	count=0; \
 	shard_packages=""; \
 	for pkg in $$packages; do \
