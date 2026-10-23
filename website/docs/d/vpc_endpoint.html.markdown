@@ -39,7 +39,7 @@ The arguments of this data source act as filters for querying the available VPC 
 * `service_region` - (Optional) AWS region of the VPC Endpoint Service. Applicable for endpoints of type `Interface`.
 * `state` - (Optional) State of the specific VPC Endpoint to retrieve.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the specific VPC Endpoint to retrieve.
-* `vpc_endpoint_type` - (Optional) VPC Endpoint type. Valid values are `Interface`, `Gateway`, `GatewayLoadBalancer`, `Resource`, and `ServiceNetwork`.
+* `vpc_endpoint_type` - (Optional) VPC Endpoint type. Valid values are `Interface`, `Gateway`, `GatewayLoadBalancer`, `Resource`, `ServiceNetwork`, and `Tunnel`.
 * `vpc_id` - (Optional) ID of the VPC in which the specific VPC Endpoint is used.
 
 ### `filter` Block
