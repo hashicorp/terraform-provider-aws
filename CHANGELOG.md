@@ -1,5 +1,9 @@
 ## 6.71.0 (Unreleased)
 
+NOTES:
+
+* provider: Update the minimum Go version required to build the provider to 1.27.3. Go 1.27 requires macOS 13 Ventura or later ([#50436](https://github.com/hashicorp/terraform-provider-aws/issues/50436))
+
 ## 6.70.0 (October 21, 2026)
 
 BREAKING CHANGES:
