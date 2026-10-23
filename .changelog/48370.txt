@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_api_gateway_rest_api: Allow ip_address_type of ipv4 for PRIVATE endpoint type in regions where dualstack is not supported
+```
