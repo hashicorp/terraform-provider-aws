@@ -1315,7 +1315,9 @@ func resourceInstanceRead(ctx context.Context, rd *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
 	}
 
-	diags = append(diags, resourceInstanceFlatten(ctx, c, instance, rd)...)
+	if err := resourceInstanceFlatten(ctx, c, instance, rd); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
+	}
 
 	return diags
 }
@@ -3204,16 +3206,14 @@ func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 	return false
 }
 
-func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, instance *awstypes.Instance, rd *schema.ResourceData) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, instance *awstypes.Instance, rd *schema.ResourceData) error {
 	conn := client.EC2Client(ctx)
 
 	instanceType := string(instance.InstanceType)
 	instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Type (%s): %s", instanceType, err)
+		return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 	}
 
 	rd.Set("instance_state", instance.State.Name)
@@ -3231,7 +3231,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 	}
 
 	if err := rd.Set("cpu_options", flattenCPUOptions(instance.CpuOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting cpu_options: %s", err)
+		return fmt.Errorf("setting cpu_options: %w", err)
 	}
 
 	if v := instance.HibernationOptions; v != nil {
@@ -3239,24 +3239,24 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 	}
 
 	if err := rd.Set("enclave_options", flattenEnclaveOptions(instance.EnclaveOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting enclave_options: %s", err)
+		return fmt.Errorf("setting enclave_options: %w", err)
 	}
 
 	if instance.MaintenanceOptions != nil {
 		if err := rd.Set("maintenance_options", []any{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting maintenance_options: %s", err)
+			return fmt.Errorf("setting maintenance_options: %w", err)
 		}
 	} else {
 		rd.Set("maintenance_options", nil)
 	}
 
 	if err := rd.Set("metadata_options", flattenInstanceMetadataOptions(instance.MetadataOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting metadata_options: %s", err)
+		return fmt.Errorf("setting metadata_options: %w", err)
 	}
 
 	if instance.PrivateDnsNameOptions != nil {
 		if err := rd.Set("private_dns_name_options", []any{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting private_dns_name_options: %s", err)
+			return fmt.Errorf("setting private_dns_name_options: %w", err)
 		}
 	} else {
 		rd.Set("private_dns_name_options", nil)
@@ -3275,7 +3275,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		name, err := instanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting iam_instance_profile: %s", err)
+			return fmt.Errorf("setting iam_instance_profile: %w", err)
 		}
 
 		rd.Set("iam_instance_profile", name)
@@ -3287,11 +3287,11 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		launchTemplate, err := flattenInstanceLaunchTemplate(ctx, conn, rd.Id(), rd.Get("launch_template.0.version").(string))
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s) launch template: %s", rd.Id(), err)
+			return fmt.Errorf("reading EC2 Instance (%s) launch template: %w", rd.Id(), err)
 		}
 
 		if err := rd.Set(names.AttrLaunchTemplate, launchTemplate); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
+			return fmt.Errorf("setting launch_template: %w", err)
 		}
 	}
 
@@ -3335,7 +3335,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 			networkInterfaces = append(networkInterfaces, ni)
 		}
 		if err := rd.Set("network_interface", networkInterfaces); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting network_interfaces: %v", err)
+			return fmt.Errorf("setting network_interfaces: %w", err)
 		}
 
 		// Set primary network interface details
@@ -3347,7 +3347,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 				names.AttrDeleteOnTermination: aws.ToBool(primaryNetworkInterface.Attachment.DeleteOnTermination),
 			}
 			if err := rd.Set("primary_network_interface", []any{pni}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting primary_network_interface for AWS Instance (%s): %s", rd.Id(), err)
+				return fmt.Errorf("setting primary_network_interface for AWS Instance (%s): %w", rd.Id(), err)
 			}
 
 			rd.Set("primary_network_interface_id", primaryNetworkInterface.NetworkInterfaceId)
@@ -3373,7 +3373,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 
 			if len(primaryNetworkInterface.Ipv6Addresses) > 0 {
 				if err := rd.Set("enable_primary_ipv6", primaryNetworkInterface.Ipv6Addresses[0].IsPrimaryIpv6); err != nil {
-					return sdkdiag.AppendErrorf(diags, "setting enable_primary_ipv6: %s", err)
+					return fmt.Errorf("setting enable_primary_ipv6: %w", err)
 				}
 			}
 		}
@@ -3385,12 +3385,12 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 	}
 
 	if err := rd.Set("secondary_private_ips", secondaryPrivateIPs); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting private_ips for AWS Instance (%s): %s", rd.Id(), err)
+		return fmt.Errorf("setting private_ips for AWS Instance (%s): %w", rd.Id(), err)
 	}
 
 	if len(instance.SecondaryInterfaces) > 0 {
 		if err := rd.Set("secondary_network_interface", flattenSecondaryNetworkInterfaces(instance.SecondaryInterfaces)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting secondary_network_interface for AWS Instance (%s): %s", rd.Id(), err)
+			return fmt.Errorf("setting secondary_network_interface for AWS Instance (%s): %w", rd.Id(), err)
 		}
 	}
 
@@ -3412,7 +3412,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 	if _, ok := rd.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(rd) {
 		volumeTags, err := readVolumeTags(ctx, conn, rd.Id())
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
+			return fmt.Errorf("reading EC2 Instance (%s): %w", rd.Id(), err)
 		}
 
 		defaultTagsConfig := client.DefaultTagsConfig(ctx)
@@ -3420,21 +3420,21 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		tags := keyValueTags(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		if err := rd.Set("volume_tags", tags.ResolveDuplicates(ctx, defaultTagsConfig, ignoreTagsConfig, rd, "volume_tags", nil).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting volume_tags: %s", err)
+			return fmt.Errorf("setting volume_tags: %w", err)
 		}
 	}
 
 	if err := readSecurityGroups(ctx, rd, instance, conn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
+		return fmt.Errorf("reading EC2 Instance (%s): %w", rd.Id(), err)
 	}
 
 	// Retrieve instance shutdown behavior
 	if err := readInstanceShutdownBehavior(ctx, rd, conn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
+		return fmt.Errorf("reading EC2 Instance (%s): %w", rd.Id(), err)
 	}
 
 	if err := readBlockDevices(ctx, rd, client, instance, false); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
+		return fmt.Errorf("reading EC2 Instance (%s): %w", rd.Id(), err)
 	}
 
 	if _, ok := rd.GetOk("ephemeral_block_device"); !ok {
@@ -3453,7 +3453,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		}
 		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil && !errs.IsUnsupportedOperationInPartitionError(client.Partition(ctx), err) {
-			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiStop, err)
+			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameDisableApiStop, err)
 		}
 		if !errs.IsUnsupportedOperationInPartitionError(client.Partition(ctx), err) {
 			rd.Set("disable_api_stop", attr.DisableApiStop.Value)
@@ -3470,7 +3470,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 			output, err := conn.DescribeInstanceAttribute(ctx, &input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiTermination, err)
+				return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameDisableApiTermination, err)
 			}
 
 			rd.Set("disable_api_termination", output.DisableApiTermination.Value)
@@ -3483,7 +3483,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		}
 		attr, err := conn.DescribeInstanceAttribute(ctx, &input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameUserData, err)
+			return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameUserData, err)
 		}
 		if attr.UserData != nil && attr.UserData.Value != nil {
 			// Since user_data and user_data_base64 conflict with each other,
@@ -3496,7 +3496,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 			} else {
 				data, err := inttypes.Base64Decode(aws.ToString(attr.UserData.Value))
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "decoding user_data: %s", err)
+					return fmt.Errorf("decoding user_data: %w", err)
 				}
 				rd.Set("user_data", string(data))
 			}
@@ -3515,12 +3515,12 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s) credit specification: %s", rd.Id(), err)
+			return fmt.Errorf("reading EC2 Instance (%s) credit specification: %w", rd.Id(), err)
 		}
 
 		if instanceCreditSpecification != nil {
 			if err := rd.Set("credit_specification", []any{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting credit_specification: %s", err)
+				return fmt.Errorf("setting credit_specification: %w", err)
 			}
 		} else {
 			rd.Set("credit_specification", nil)
@@ -3530,7 +3530,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 	if rd.Get("get_password_data").(bool) {
 		passwordData, err := getInstancePasswordData(ctx, aws.ToString(instance.InstanceId), conn, rd.Timeout(schema.TimeoutRead))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", rd.Id(), err)
+			return fmt.Errorf("reading EC2 Instance (%s): %w", rd.Id(), err)
 		}
 		rd.Set("password_data", passwordData)
 	} else {
@@ -3540,7 +3540,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 
 	if instance.CapacityReservationSpecification != nil {
 		if err := rd.Set("capacity_reservation_specification", []any{flattenCapacityReservationSpecificationResponse(instance.CapacityReservationSpecification)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting capacity_reservation_specification: %s", err)
+			return fmt.Errorf("setting capacity_reservation_specification: %w", err)
 		}
 	} else {
 		rd.Set("capacity_reservation_specification", nil)
@@ -3557,7 +3557,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		apiObject, err := findSpotInstanceRequest(ctx, conn, &input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", spotInstanceRequestID, err)
+			return fmt.Errorf("reading EC2 Spot Instance Request (%s): %w", spotInstanceRequestID, err)
 		}
 
 		tfMap := map[string]any{
@@ -3577,7 +3577,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 			"market_type":  awstypes.MarketTypeSpot,
 			"spot_options": []any{tfMap},
 		}}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
+			return fmt.Errorf("setting instance_market_options: %w", err)
 		}
 	} else if instance.InstanceLifecycle == awstypes.InstanceLifecycleTypeCapacityBlock {
 		rd.Set("instance_lifecycle", instance.InstanceLifecycle)
@@ -3587,7 +3587,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 			"market_type":  awstypes.MarketTypeCapacityBlock,
 			"spot_options": nil,
 		}}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
+			return fmt.Errorf("setting instance_market_options: %w", err)
 		}
 	} else {
 		rd.Set("instance_lifecycle", nil)
@@ -3595,7 +3595,7 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 		rd.Set("spot_instance_request_id", nil)
 	}
 
-	return diags
+	return nil
 }
 
 func expandInstanceMetadataOptions(l []any) *awstypes.InstanceMetadataOptionsRequest {

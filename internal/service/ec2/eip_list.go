@@ -11,69 +11,29 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_eip")
 func newEIPResourceAsListResource() inttypes.ListResourceForSDK {
-	l := eipListResource{}
-	l.SetResourceSchema(resourceEIP())
+	return framework.NewSDKListResource(resourceEIP(), framework.SDKListSpec[awstypes.Address, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.Address, error], diag.Diagnostics) {
+			var input ec2.DescribeAddressesInput
 
-	return &l
-}
-
-var _ list.ListResource = &eipListResource{}
-
-type eipListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *eipListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := l.Meta().EC2Client(ctx)
-
-	tflog.Info(ctx, "Listing resources")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		for item, err := range listEIPs(ctx, conn, &ec2.DescribeAddressesInput{}) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			id := aws.ToString(item.AllocationId)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
-
-			result := request.NewListResult(ctx)
-
-			setTagsOut(ctx, item.Tags)
-
-			rd := l.ResourceData()
-			rd.SetId(id)
-
-			if request.IncludeResource {
-				resourceEIPFlatten(ctx, l.Meta(), &item, rd)
-			}
-
-			result.DisplayName = id
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			return listEIPs(ctx, c.EC2Client(ctx), &input), nil
+		},
+		ID: func(a awstypes.Address, _ framework.RegionQuery) string {
+			return aws.ToString(a.AllocationId)
+		},
+		Prepare: func(ctx context.Context, a awstypes.Address, _ framework.RegionQuery, _ *schema.ResourceData) {
+			setTagsOut(ctx, a.Tags)
+		},
+		Flatten: resourceEIPFlatten,
+	})
 }
 
 func listEIPs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAddressesInput) iter.Seq2[awstypes.Address, error] {

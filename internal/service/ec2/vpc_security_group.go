@@ -284,12 +284,14 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", d.Id(), err)
 	}
 
-	return resourceSecurityGroupFlatten(ctx, c, d, sg)
+	if err := resourceSecurityGroupFlatten(ctx, c, sg, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceSecurityGroupFlatten(ctx context.Context, c *conns.AWSClient, d *schema.ResourceData, sg *awstypes.SecurityGroup) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceSecurityGroupFlatten(ctx context.Context, c *conns.AWSClient, sg *awstypes.SecurityGroup, d *schema.ResourceData) error {
 	remoteIngressRules := securityGroupIPPermGather(d.Id(), sg.IpPermissions, sg.OwnerId)
 	remoteEgressRules := securityGroupIPPermGather(d.Id(), sg.IpPermissionsEgress, sg.OwnerId)
 
@@ -308,16 +310,16 @@ func resourceSecurityGroupFlatten(ctx context.Context, c *conns.AWSClient, d *sc
 	d.Set(names.AttrVPCID, sg.VpcId)
 
 	if err := d.Set("ingress", ingressRules); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ingress: %s", err)
+		return fmt.Errorf("setting ingress: %w", err)
 	}
 
 	if err := d.Set("egress", egressRules); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting egress: %s", err)
+		return fmt.Errorf("setting egress: %w", err)
 	}
 
 	setTagsOut(ctx, sg.Tags)
 
-	return diags
+	return nil
 }
 func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics

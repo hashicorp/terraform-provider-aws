@@ -138,7 +138,9 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Key Pair (%s): %s", d.Id(), err)
 	}
 
-	resourceKeyPairFlatten(ctx, c, keyPair, d)
+	if err := resourceKeyPairFlatten(ctx, c, keyPair, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Key Pair (%s): %s", d.Id(), err)
+	}
 
 	return diags
 }
@@ -189,7 +191,7 @@ func keyPairARN(ctx context.Context, c *conns.AWSClient, keyName string) string 
 	return c.RegionalARN(ctx, names.EC2, "key-pair/"+keyName)
 }
 
-func resourceKeyPairFlatten(ctx context.Context, c *conns.AWSClient, keyPair *awstypes.KeyPairInfo, d *schema.ResourceData) {
+func resourceKeyPairFlatten(ctx context.Context, c *conns.AWSClient, keyPair *awstypes.KeyPairInfo, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, keyPairARN(ctx, c, d.Id()))
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("key_name", keyPair.KeyName)
@@ -198,4 +200,6 @@ func resourceKeyPairFlatten(ctx context.Context, c *conns.AWSClient, keyPair *aw
 	d.Set("key_type", keyPair.KeyType)
 
 	setTagsOut(ctx, keyPair.Tags)
+
+	return nil
 }
