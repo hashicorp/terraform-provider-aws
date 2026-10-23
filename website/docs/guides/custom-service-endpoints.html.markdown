@@ -321,6 +321,7 @@ provider "aws" {
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|
+|Security Agent|`securityagent`|`AWS_ENDPOINT_URL_SECURITYAGENT`|`securityagent`|
 |Security Hub|`securityhub`|`AWS_ENDPOINT_URL_SECURITYHUB`|`securityhub`|
 |Security Incident Response|`securityir`|`AWS_ENDPOINT_URL_SECURITY_IR`|`security_ir`|
 |Security Lake|`securitylake`|`AWS_ENDPOINT_URL_SECURITYLAKE`|`securitylake`|

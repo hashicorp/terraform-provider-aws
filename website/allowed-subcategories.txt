@@ -249,6 +249,7 @@ SWF (Simple Workflow)
 SageMaker AI
 Savings Plans
 Secrets Manager
+Security Agent
 Security Hub
 Security Incident Response
 Security Lake

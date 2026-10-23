@@ -330,6 +330,7 @@ variable "service_labels" {
     "scheduler",
     "schemas",
     "secretsmanager",
+    "securityagent",
     "securityhub",
     "securityir",
     "securitylake",
