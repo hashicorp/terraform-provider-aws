@@ -7,7 +7,12 @@ package kinesisanalyticsv2
 var (
 	ResourceApplication         = resourceApplication
 	ResourceApplicationSnapshot = resourceApplicationSnapshot
+	ResourceSnapshot            = newSnapshotResource
+	ResourceSnapshotImport      = newSnapshotImportResource
 
 	FindApplicationDetailByName     = findApplicationDetailByName
+	FindEnhancedSnapshotByName      = findEnhancedSnapshotByName
 	FindSnapshotDetailsByTwoPartKey = findSnapshotDetailsByTwoPartKey
+
+	RuntimeSupportsEnhancedSnapshots = runtimeSupportsEnhancedSnapshots
 )
