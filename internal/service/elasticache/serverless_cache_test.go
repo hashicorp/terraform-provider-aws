@@ -7,7 +7,9 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -107,6 +109,47 @@ func TestAccElastiCacheServerlessCache_basicValkey(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheServerlessCache_createTimeoutTaints(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_serverless_cache.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccServerlessCacheConfig_createTimeout(rName),
+				ExpectError: regexache.MustCompile(`waiting for ElastiCache Serverless Cache \(.+\) create`),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
+					if _, err := tfelasticache.WaitServerlessCacheAvailable(ctx, conn, rName, 40*time.Minute); err != nil {
+						t.Fatalf("waiting for ElastiCache Serverless Cache (%s) create: %s", rName, err)
+					}
+				},
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1124,6 +1167,19 @@ func testAccServerlessCacheConfig_basicValkey(rName string) string {
 resource "aws_elasticache_serverless_cache" "test" {
   engine = "valkey"
   name   = %[1]q
+}
+`, rName)
+}
+
+func testAccServerlessCacheConfig_createTimeout(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  engine = "valkey"
+  name   = %[1]q
+
+  timeouts {
+    create = "5s"
+  }
 }
 `, rName)
 }
