@@ -787,9 +787,9 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
-	if region != endpoints.UsEast1RegionID {
+	if locationConstraint := BucketLocationConstraint(region, c.S3OriginalRegion(ctx)); locationConstraint != "" {
 		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
-			LocationConstraint: types.BucketLocationConstraint(region),
+			LocationConstraint: locationConstraint,
 		}
 	}
 
@@ -860,6 +860,31 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return append(diags, resourceBucketUpdate(ctx, d, meta)...)
+}
+
+// BucketLocationConstraint returns the LocationConstraint value to send in a
+// CreateBucket request, or an empty value when none should be sent.
+//
+// region is the effective SDK region. originalRegion is the non-standard region
+// preserved for S3-compatible storage (Ceph, MinIO, etc.) and is empty for
+// native AWS. For S3-compatible storage the configured region is substituted
+// with a compliant dummy value (us-east-1) during SDK initialization, so the
+// original region is preferred here to avoid sending an empty
+// CreateBucketConfiguration. Any non-standard string (e.g. ":region-ha-premium"
+// or "ceph-objectstore-region1:region-ha-premium") is passed through verbatim.
+//
+// As on native AWS, us-east-1 must not send a LocationConstraint, so an empty
+// value is returned in that case.
+// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
+func BucketLocationConstraint(region, originalRegion string) types.BucketLocationConstraint {
+	locationConstraint := region
+	if originalRegion != "" {
+		locationConstraint = originalRegion
+	}
+	if locationConstraint == endpoints.UsEast1RegionID {
+		return ""
+	}
+	return types.BucketLocationConstraint(locationConstraint)
 }
 
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
