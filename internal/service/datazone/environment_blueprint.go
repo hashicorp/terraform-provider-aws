@@ -294,8 +294,10 @@ func (r *environmentBlueprintResource) Update(ctx context.Context, request resou
 
 	// UpdateEnvironmentBlueprint is read-after-write eventually consistent: an
 	// immediate GetEnvironmentBlueprint can still return the pre-update values.
-	// Wait until a fresh read reflects this update (matched on UpdatedAt) so the
-	// next refresh/plan does not observe stale data.
+	// Wait until a fresh read reflects this update so the next refresh/plan
+	// does not observe stale data. UpdatedAt has one-second precision, so a
+	// stale read in the same second also passes the time check; the
+	// description must match the update response too.
 	if output.UpdatedAt != nil {
 		const consistencyTimeout = 2 * time.Minute
 		if _, err := tfresource.RetryUntilEqual(ctx, consistencyTimeout, true, func(ctx context.Context) (bool, error) {
@@ -303,7 +305,8 @@ func (r *environmentBlueprintResource) Update(ctx context.Context, request resou
 			if err != nil {
 				return false, err
 			}
-			return fresh.UpdatedAt != nil && !fresh.UpdatedAt.Before(*output.UpdatedAt), nil
+			return fresh.UpdatedAt != nil && !fresh.UpdatedAt.Before(*output.UpdatedAt) &&
+				aws.ToString(fresh.Description) == aws.ToString(output.Description), nil
 		}); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ID.ValueString())
 			return
