@@ -5,6 +5,7 @@ package wafv2
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/YakDriver/regexache"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -286,10 +288,18 @@ var byteMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"search_string": schema.StringAttribute{
-					Required:    true,
+					Optional:    true,
 					Description: "String value to search for within the request.",
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 200),
+						stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("search_string_base64")),
+					},
+				},
+				"search_string_base64": schema.StringAttribute{
+					Optional:    true,
+					Description: "Base64-encoded value to search for within the request, for values that are not valid UTF-8 such as an MD5 or SHA256 digest.",
+					Validators: []validator.String{
+						searchStringBase64Validator{},
 					},
 				},
 				"positional_constraint": schema.StringAttribute{
@@ -1261,3 +1271,23 @@ var rateBasedStatementCustomKeysBlock = tfsync.OnceValueCtx(func(ctx context.Con
 })
 
 // andStatementBlock and related functions are generated in web_acl_rule_statement_models_gen.go
+
+type searchStringBase64Validator struct{}
+
+func (v searchStringBase64Validator) Description(context.Context) string {
+	return "value must be base64-encoded and decode to between 1 and 200 bytes"
+}
+
+func (v searchStringBase64Validator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (v searchStringBase64Validator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	if b, err := inttypes.Base64Decode(req.ConfigValue.ValueString()); err != nil || len(b) < 1 || len(b) > 200 {
+		resp.Diagnostics.AddAttributeError(req.Path, "Invalid Attribute Value", fmt.Sprintf("Attribute %s %s, got: %s", req.Path, v.Description(ctx), req.ConfigValue.ValueString()))
+	}
+}

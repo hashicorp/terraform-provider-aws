@@ -1,0 +1,31 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `search_string_base64` argument to `byte_match_statement` rule statements, for values that are not valid UTF-8 such as the digests that the `MD5` and `SHA256` text transformations produce
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add `search_string_base64` argument to `byte_match_statement` rule statements, for values that are not valid UTF-8 such as the digests that the `MD5` and `SHA256` text transformations produce
+```
+
+```release-note:enhancement
+resource/aws_wafv2_web_acl_rule: Add `search_string_base64` argument to `byte_match_statement` blocks, for values that are not valid UTF-8 such as the digests that the `MD5` and `SHA256` text transformations produce
+```
+
+```release-note:bug
+resource/aws_wafv2_web_acl: Fix `byte_match_statement` search strings that are not valid UTF-8 being rewritten with U+FFFD replacement characters on the next update
+```
+
+```release-note:bug
+resource/aws_wafv2_rule_group: Fix `byte_match_statement` search strings that are not valid UTF-8 being rewritten with U+FFFD replacement characters on the next update
+```
+
+```release-note:bug
+resource/aws_wafv2_web_acl_rule: Fix `byte_match_statement` search strings that are not valid UTF-8 being rewritten with U+FFFD replacement characters on the next update
+```
+
+```release-note:bug
+resource/aws_wafv2_web_acl: Fix perpetual diff for a rule with `field_to_match.uri_fragment` that omits `fallback_behavior` and a `custom_response` that omits `custom_response_body_key`
+```
+
+```release-note:bug
+resource/aws_wafv2_rule_group: Fix perpetual diff for a rule with `field_to_match.uri_fragment` that omits `fallback_behavior` and a `custom_response` that omits `custom_response_body_key`
+```
