@@ -8,6 +8,7 @@ package events
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -173,21 +174,58 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateEndpoint(ctx, &input)
-	}, errCodeValidationException, "cannot be assumed by principal")
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating EventBridge Global Endpoint (%s): %s", name, err)
-	}
-
-	d.SetId(name)
-
 	const (
 		timeout = 2 * time.Minute
 	)
-	if _, err := waitEndpointCreated(ctx, conn, d.Id(), timeout); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Global Endpoint (%s) create: %s", d.Id(), err)
+	// EventBridge checks the role's permissions after CreateEndpoint returns.
+	// If they have not propagated yet the endpoint goes to CREATE_FAILED, and
+	// the only way to retry is to delete the endpoint and create it again.
+	iamPropagationStopTime := time.Now().Add(propagationTimeout)
+	var recreate bool
+	_, err := tfresource.RetryWhen(ctx, propagationTimeout+timeout,
+		func(ctx context.Context) (any, error) {
+			recreate = false
+
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+				return conn.CreateEndpoint(ctx, &input)
+			}, errCodeValidationException, "cannot be assumed by principal")
+
+			if err != nil {
+				return nil, err
+			}
+
+			d.SetId(name)
+
+			_, err = waitEndpointCreated(ctx, conn, name, timeout)
+
+			if err != nil && time.Now().Before(iamPropagationStopTime) && errs.Contains(err, "does not grant EventBridge the") {
+				deleteInput := eventbridge.DeleteEndpointInput{
+					Name: aws.String(name),
+				}
+				if _, err := conn.DeleteEndpoint(ctx, &deleteInput); err != nil {
+					return nil, fmt.Errorf("deleting after failed create: %w", err)
+				}
+
+				if _, err := waitEndpointDeleted(ctx, conn, name, timeout); err != nil {
+					return nil, fmt.Errorf("waiting for delete after failed create: %w", err)
+				}
+
+				recreate = true
+			}
+
+			if err != nil {
+				return nil, fmt.Errorf("waiting for create: %w", err)
+			}
+
+			return nil, nil
+		},
+		func(err error) (bool, error) {
+			return recreate, err
+		},
+	)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge Global Endpoint (%s): %s", name, err)
 	}
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
@@ -355,7 +393,9 @@ func statusEndpointState(conn *eventbridge.Client, name string) retry.StateRefre
 
 func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.EndpointStateCreating),
+		// Right after an endpoint is deleted and one with the same name is created,
+		// DescribeEndpoint can still return the deleted endpoint's DELETING state.
+		Pending: enum.Slice(types.EndpointStateCreating, types.EndpointStateDeleting),
 		Target:  enum.Slice(types.EndpointStateActive),
 		Refresh: statusEndpointState(conn, name),
 		Timeout: timeout,
