@@ -67,6 +67,30 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
+### Policy with Route 53 Resolved IP Validation
+
+```terraform
+resource "aws_route53_resolver_firewall_rule_group" "example" {
+  name = "example"
+}
+
+resource "aws_networkfirewall_firewall_policy" "example" {
+  name = "example"
+
+  firewall_policy {
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+
+    route53_resolved_ip_validation {
+      action                      = "DROP"
+      dns_expiry_exception_policy = "CONTINUE"
+      dns_firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.example.id
+      source_ip_ranges            = ["10.0.0.0/16"]
+    }
+  }
+}
+```
+
 ### Policy with a Custom Action for Stateless Inspection
 
 ```terraform
@@ -164,6 +188,8 @@ The `firewall_policy` block supports the following arguments:
 
 * `policy_variables` - (Optional). Contains variables that you can use to override default Suricata settings in your firewall policy. See [Rule Variables](#rule-variables) for details.
 
+* `route53_resolved_ip_validation` - (Optional) Resolved IP validation settings, which check that a connection's destination IP address was returned by the Route 53 Resolver in a VPC associated with a DNS Firewall rule group. See [Route 53 Resolved IP Validation](#route-53-resolved-ip-validation) below for details.
+
 * `stateful_default_actions` - (Optional) Set of actions to take on a packet if it does not match any stateful rules in the policy. This can only be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. Value values: `aws:drop_strict`, `aws:drop_established`, `aws:drop_established_app_layer`, `aws:alert_strict`, `aws:alert_established, `aws:alert_established_app_layer`. For more information, see [Strict evaluation order](https://docs.aws.amazon.com/network-firewall/latest/developerguide/suricata-rule-evaluation-order.html#suricata-strict-rule-evaluation-order.html) in the AWS Network Firewall Developer Guide.
 
 * `stateful_engine_options` - (Optional) A configuration block that defines options on how the policy handles stateful rules. See [Stateful Engine Options](#stateful-engine-options) below for details.
@@ -195,6 +221,20 @@ The `rule_variables` block supports the following arguments:
 The `ip_set` block supports the following argument:
 
 * `definition` - (Required) Set of IPv4 or IPv6 addresses in CIDR notation to use for the Suricata `HOME_NET` variable.
+
+### Route 53 Resolved IP Validation
+
+The `route53_resolved_ip_validation` block supports the following arguments. For more information, see [Route 53 resolved IP validation](https://docs.aws.amazon.com/network-firewall/latest/developerguide/route53-resolved-ip-validation-policy-setting.html) in the AWS Network Firewall Developer Guide.
+
+* `action` - (Required) Action to take on connections that fail validation. Allowed values are: `ALERT`, `DROP`, and `REJECT`. `ALERT` requires firewall logging. `REJECT` sends a TCP reset; Network Firewall drops non-TCP traffic.
+* `dns_expiry_exception_policy` - (Required) Action to take when the recorded DNS resolution has expired from the resolved IP cache but traffic continues. Allowed values are: `CONTINUE`, `DROP`, and `REJECT`. `CONTINUE` treats the expired resolution as valid.
+* `dns_firewall_rule_group_id` - (Required) ID of the Route 53 Resolver DNS Firewall rule group, such as `aws_route53_resolver_firewall_rule_group.example.id`. DNS responses from the Route 53 Resolver in VPCs associated with this rule group are used for validation. Changing this value swaps the managed association asynchronously; the provider waits for the policy to return to `ACTIVE`.
+* `bypass_destination_validation_ip_ranges` - (Optional) Set of destination IPv4 or IPv6 CIDR blocks that are exempt from the policy-level check. Use `/32` or `/128` for a single address. Valid number of entries is between `1` and `100`. Doesn't affect rules that use the `AWS_ROUTE_53_RESOLVED_DOMAIN` target type.
+* `source_ip_ranges` - (Optional) Set of client source IPv4 or IPv6 CIDR blocks whose connections are validated. Use `/32` or `/128` for a single address. Valid number of entries is between `1` and `100`. If omitted, validation applies to the CIDR ranges of the firewall's VPC and of any additional VPCs attached to the firewall.
+
+~> **Note:** An empty list can't be set for `source_ip_ranges` or `bypass_destination_validation_ip_ranges`. The AWS API treats an empty `source_ip_ranges` list as "validate no source addresses", which this resource doesn't support. Omit the argument instead.
+
+-> **Note:** Removing the `route53_resolved_ip_validation` block turns off resolved IP validation and removes the managed DNS Firewall rule group association.
 
 ### Stateful Engine Options
 
