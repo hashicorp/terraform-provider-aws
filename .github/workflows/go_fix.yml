@@ -12,6 +12,7 @@ on:
     paths:
       - "**/*.go"
       - .github/workflows/go_fix.yml
+      - go.mod
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
