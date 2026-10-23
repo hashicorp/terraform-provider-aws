@@ -38,7 +38,9 @@
       "list": {
         "expr": "(*servicePackage).ListTags",
         "location": "internal/service/exampletags/tags.go:22",
-        "sdk_calls": []
+        "sdk_calls": [
+          "exampletags.ListTagsForResource"
+        ]
       },
       "update": {
         "expr": "(*servicePackage).UpdateTags",
