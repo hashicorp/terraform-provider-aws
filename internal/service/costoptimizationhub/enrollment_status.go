@@ -141,21 +141,19 @@ func (r *enrollmentStatusResource) Read(ctx context.Context, request resource.Re
 
 	// Set attributes for import.
 	// A gratuitous call to Autoflex since status is in out.Items[0].Status.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	// IncludeMemberAccounts is ignored here as it is often nil, and flattening it would overwrite state with null.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNamesAppend("IncludeMemberAccounts"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	data.Status = fwflex.StringValueToFramework(ctx, out.Items[0].Status)
 
-	// out includes the IncludeMemberAccounts field ATM but it is always nil. Thus, we cannot update state
-	// and drift detection is not possible. (However, we can still update if the configuration changes.)
-	// If drift detection becomes possible, we can uncomment the following code:
-
-	// data.IncludeMemberAccounts = types.BoolValue(false)
-	// if out.IncludeMemberAccounts != nil {
-	// 	data.IncludeMemberAccounts = fwflex.BoolToFramework(ctx, out.IncludeMemberAccounts)
-	// }
+	// When IncludeMemberAccounts is nil, keep the prior state value so that the plan converges after apply.
+	// Drift detection is only possible when the API returns a value.
+	if out.IncludeMemberAccounts != nil {
+		data.IncludeMemberAccounts = fwflex.BoolToFramework(ctx, out.IncludeMemberAccounts)
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
