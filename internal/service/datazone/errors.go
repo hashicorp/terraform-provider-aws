@@ -17,11 +17,3 @@ func isResourceMissing(err error) bool {
 	// AccessDeniedException: User is not permitted to perform operation: GetDomain
 	return errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err)
 }
-
-// isResourceNotFound reports only a genuine not-found response. Unlike
-// isResourceMissing it does NOT treat AccessDeniedException as absence, so an
-// authorization failure is propagated to the caller instead of silently
-// removing a still-existing resource from state.
-func isResourceNotFound(err error) bool {
-	return errs.IsA[*awstypes.ResourceNotFoundException](err)
-}

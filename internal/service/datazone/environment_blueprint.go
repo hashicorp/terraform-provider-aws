@@ -337,7 +337,7 @@ func (r *environmentBlueprintResource) Delete(ctx context.Context, request resou
 
 	_, err := conn.DeleteEnvironmentBlueprint(ctx, &input)
 
-	if isResourceNotFound(err) {
+	if isResourceMissing(err) {
 		return
 	}
 
@@ -354,7 +354,7 @@ func findEnvironmentBlueprintByTwoPartKey(ctx context.Context, conn *datazone.Cl
 	}
 	output, err := conn.GetEnvironmentBlueprint(ctx, &input)
 
-	if isResourceNotFound(err) {
+	if isResourceMissing(err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
