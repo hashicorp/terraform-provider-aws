@@ -70,7 +70,10 @@ func (r *subscriptionResource) Schema(ctx context.Context, req resource.SchemaRe
 				CustomType: fwtypes.StringEnumType[awstypes.ApprovalMode](),
 				Optional:   true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// AWS does not return the approval mode, so it is absent from imported state.
+					stringplanmodifier.RequiresReplaceIf(func(_ context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+						resp.RequiresReplace = !req.StateValue.IsNull()
+					}, "Replace when a known approval mode changes", "Replace when a known approval mode changes"),
 				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
