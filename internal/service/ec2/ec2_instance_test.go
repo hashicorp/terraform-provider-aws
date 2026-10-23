@@ -1266,6 +1266,78 @@ func TestAccEC2Instance_placementPartitionNumber(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_placementGroupUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2, v3, v4 awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_placementGroupUpdate(rName, "null", "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_placementGroupUpdate(rName, "aws_placement_group.test.name", "1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "placement_group_id", "aws_placement_group.test", "placement_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "placement_partition_number", "1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_placementGroupUpdate(rName, "aws_placement_group.test.name", "2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v3),
+					testAccCheckInstanceNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+					resource.TestCheckResourceAttr(resourceName, "placement_partition_number", "2"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_placementGroupUpdate(rName, `""`, "2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v4),
+					testAccCheckInstanceNotRecreated(&v3, &v4),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+					resource.TestCheckResourceAttr(resourceName, "placement_partition_number", "2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "user_data"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
@@ -7147,6 +7219,49 @@ func TestAccEC2Instance_spot_instanceMarketOptions(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_spot_placementGroupUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_spot_placementGroupUpdate(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringExact(awstypes.InstanceLifecycleTypeSpot)),
+				},
+			},
+			{
+				// Spot Instances can't always be stopped, so a placement change replaces the instance.
+				Config: testAccInstanceConfig_spot_placementGroupUpdate(rName, "aws_placement_group.test.name"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_lifecycle"), tfknownvalue.StringExact(awstypes.InstanceLifecycleTypeSpot)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceNotRecreated(before, after *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.InstanceId), aws.ToString(after.InstanceId); before != after {
@@ -8390,6 +8505,35 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceConfig_placementGroupUpdate(rName, placementGroup, partitionNumber string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name            = %[1]q
+  strategy        = "partition"
+  partition_count = 4
+}
+
+# Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type               = "c5.large"
+  subnet_id                   = aws_subnet.test.id
+  associate_public_ip_address = true
+  placement_group             = %[2]s
+  placement_partition_number  = %[3]s
+
+  depends_on = [aws_placement_group.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, placementGroup, partitionNumber))
 }
 
 func testAccInstanceConfig_ipv6Error(rName string) string {
@@ -11367,6 +11511,36 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceConfig_spot_placementGroupUpdate(rName, placementGroup string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t4g.nano"),
+		fmt.Sprintf(`
+# Spread placement groups support burstable instance types; cluster placement groups don't.
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "spread"
+}
+
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
+
+  instance_market_options {
+    market_type = "spot"
+  }
+
+  instance_type   = data.aws_ec2_instance_type_offering.available.instance_type
+  placement_group = %[2]s
+
+  depends_on = [aws_placement_group.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, placementGroup))
 }
 
 func testAccInstanceConfig_secondaryNetworkInterface_multiple(rName, instanceType string) string {

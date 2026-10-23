@@ -153,9 +153,9 @@ func resourceInstance() *schema.Resource {
 			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				// Set public_dns and public_ip to newly computed if the instance will be stopped and started
 				// as part of Update and there is already a public_ip value in state.
-				if diff.Id() != "" && diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") {
+				if diff.Id() != "" && (diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") || instancePlacementHasChanges(diff)) {
 					// user_data is stored in state as a hash.
-					if diff.HasChange("user_data") && !diff.HasChange(names.AttrInstanceType) {
+					if diff.HasChange("user_data") && !diff.HasChange(names.AttrInstanceType) && !instancePlacementHasChanges(diff) {
 						if o, n := diff.GetChange("user_data"); n.(string) == o.(string) {
 							return nil
 						}
@@ -230,7 +230,36 @@ func resourceInstance() *schema.Resource {
 				// Force new only for explicit user changes to ipv6_addresses
 				return true
 			}),
+			customdiff.ComputedIf("placement_group", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.Id() != "" && instancePlacementHasChange(diff, "placement_group_id") && diff.GetRawConfig().GetAttr("placement_group").IsNull()
+			}),
+			customdiff.ComputedIf("placement_group_id", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.Id() != "" && instancePlacementHasChange(diff, "placement_group") && diff.GetRawConfig().GetAttr("placement_group_id").IsNull()
+			}),
+			customdiff.ComputedIf("placement_partition_number", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.Id() != "" && (instancePlacementHasChange(diff, "placement_group") || instancePlacementHasChange(diff, "placement_group_id")) && diff.GetRawConfig().GetAttr("placement_partition_number").IsNull()
+			}),
+			// Updating placement requires stopping the instance, which isn't supported for all Spot Instances.
+			customdiff.ForceNewIf("placement_group", isSpotInstancePlacementChange("placement_group")),
+			customdiff.ForceNewIf("placement_group_id", isSpotInstancePlacementChange("placement_group_id")),
+			customdiff.ForceNewIf("placement_partition_number", isSpotInstancePlacementChange("placement_partition_number")),
 		),
+	}
+}
+
+// instancePlacementHasChange reports whether the planned diff changes a placement attribute.
+// Unlike HasChange, it ignores an explicit empty string, which the SDK treats as unset for Optional+Computed attributes.
+func instancePlacementHasChange(diff *schema.ResourceDiff, key string) bool {
+	return len(diff.GetChangedKeysPrefix(key)) > 0
+}
+
+func instancePlacementHasChanges(diff *schema.ResourceDiff) bool {
+	return instancePlacementHasChange(diff, "placement_group") || instancePlacementHasChange(diff, "placement_group_id") || instancePlacementHasChange(diff, "placement_partition_number")
+}
+
+func isSpotInstancePlacementChange(key string) customdiff.ResourceConditionFunc {
+	return func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+		return diff.Id() != "" && instancePlacementHasChange(diff, key) && diff.Get("instance_lifecycle").(string) == string(awstypes.InstanceLifecycleSpot)
 	}
 }
 
@@ -788,21 +817,18 @@ func resourceInstanceSchema() map[string]*schema.Schema {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
-			ForceNew:      true,
 			ConflictsWith: []string{"host_resource_group_arn", "placement_group_id"},
 		},
 		"placement_group_id": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
-			ForceNew:      true,
 			ConflictsWith: []string{"host_resource_group_arn", "placement_group"},
 		},
 		"placement_partition_number": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Computed: true,
-			ForceNew: true,
 		},
 		"primary_network_interface_id": {
 			Type:     schema.TypeString,
@@ -1683,6 +1709,35 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, "UserData (base64)"); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) user data base64: %s", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChanges("placement_group", "placement_group_id", "placement_partition_number") && !d.IsNewResource() {
+		input := ec2.ModifyInstancePlacementInput{
+			InstanceId: aws.String(d.Id()),
+		}
+
+		rawConfig := d.GetRawConfig()
+		if v := rawConfig.GetAttr("placement_group"); v.IsKnown() && !v.IsNull() {
+			input.GroupName = aws.String(d.Get("placement_group").(string))
+		}
+		if v := rawConfig.GetAttr("placement_group_id"); v.IsKnown() && !v.IsNull() {
+			input.GroupId = aws.String(d.Get("placement_group_id").(string))
+		}
+		if v := rawConfig.GetAttr("placement_partition_number"); v.IsKnown() && !v.IsNull() {
+			input.PartitionNumber = aws.Int32(int32(d.Get("placement_partition_number").(int)))
+		}
+
+		if err := stopInstance(ctx, conn, d.Id(), false, instanceStopTimeout); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		if _, err := conn.ModifyInstancePlacement(ctx, &input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) placement: %s", d.Id(), err)
+		}
+
+		if err := startInstance(ctx, conn, d.Id(), true, instanceStartTimeout); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
