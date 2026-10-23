@@ -15,6 +15,7 @@ var (
 	ResourceGateway                  = newGatewayResource
 	ResourceGatewayRule              = newGatewayRuleResource
 	ResourceGatewayTarget            = newGatewayTargetResource
+	ResourceGatewayWAFConfiguration  = newGatewayWAFConfigurationResource
 	ResourceMemory                   = newMemoryResource
 	ResourceResourcePolicy           = newResourcePolicyResource
 	ResourceMemoryStrategy           = newResourceMemoryStrategy
