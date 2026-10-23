@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -29,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -104,15 +102,13 @@ func resourceRuleGroup() *schema.Resource {
 					),
 				},
 				"rules_json": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					ConflictsWith:    []string{names.AttrRule},
-					ValidateFunc:     validation.StringIsJSON,
-					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-					StateFunc: func(v any) string {
-						json, _ := structure.NormalizeJsonString(v)
-						return json
-					},
+					Type:                  schema.TypeString,
+					Optional:              true,
+					ConflictsWith:         []string{names.AttrRule},
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      rulesJSONDiffSuppressFunc(expandRuleGroupRulesJSON),
+					DiffSuppressOnRefresh: true,
+					StateFunc:             rulesJSONStateFunc(expandRuleGroupRulesJSON),
 				},
 				names.AttrRule: {
 					Type:          schema.TypeSet,
@@ -253,7 +249,11 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 		}
 	} else {
-		d.Set("rules_json", d.Get("rules_json"))
+		rulesJSON, err := ruleGroupRulesJSONToSet(d.Get("rules_json").(string), ruleGroup.Rules)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting rules_json: %s", err)
+		}
+		d.Set("rules_json", rulesJSON)
 		d.Set(names.AttrRule, nil)
 	}
 	if err := d.Set("visibility_config", flattenVisibilityConfig(ruleGroup.VisibilityConfig)); err != nil {
