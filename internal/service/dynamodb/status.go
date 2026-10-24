@@ -158,6 +158,52 @@ func statusAllGSI(conn *dynamodb.Client, tableName string) retry.StateRefreshFun
 	}
 }
 
+func statusVectorIndex(conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findVectorIndexByTwoPartKey(ctx, conn, tableName, indexName)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.IndexStatus), nil
+	}
+}
+
+func statusAllVectorIndexes(conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		for _, v := range output.VectorIndexes {
+			if v.IndexStatus != awstypes.IndexStatusActive {
+				return output, string(v.IndexStatus), nil
+			}
+		}
+
+		return output, string(awstypes.IndexStatusActive), nil
+	}
+}
+
 func statusGSIWarmThroughput(conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
