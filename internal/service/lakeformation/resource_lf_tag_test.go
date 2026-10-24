@@ -163,6 +163,68 @@ func testAccResourceLFTag_disappears(t *testing.T) {
 	})
 }
 
+func testAccResourceLFTag_tableDisappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourcelftag lakeformation.GetResourceLFTagsOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_resource_lf_tag.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceLFTagDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceLFTagConfig_table(rName, []string{names.AttrValue}, names.AttrValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceLFTagExists(ctx, t, resourceName, &resourcelftag),
+					func(s *terraform.State) error {
+						conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
+						output, err := conn.RemoveLFTagsFromResource(ctx, &lakeformation.RemoveLFTagsFromResourceInput{
+							Resource: &awstypes.Resource{
+								Table: &awstypes.TableResource{
+									DatabaseName: aws.String(rName),
+									Name:         aws.String(rName),
+								},
+							},
+							LFTags: []awstypes.LFTagPair{{
+								TagKey:    aws.String(rName),
+								TagValues: []string{names.AttrValue},
+							}},
+						})
+						if err != nil {
+							return err
+						}
+						if len(output.Failures) > 0 {
+							return fmt.Errorf("removing LF-Tag assignment: %v", output.Failures)
+						}
+						return nil
+					},
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_glue_catalog_table.test", plancheck.ResourceActionNoop),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccResourceLFTagConfig_table(rName, []string{names.AttrValue}, names.AttrValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceLFTagExists(ctx, t, resourceName, &resourcelftag),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.key", rName),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", names.AttrValue),
+				),
+			},
+		},
+	})
+}
+
 func lfTagsDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
 	var lfdata tflakeformation.ResourceLFTagResourceModel
 	var lt tflakeformation.LFTag

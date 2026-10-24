@@ -104,6 +104,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			acctest.CtBasic:      testAccResourceLFTag_basic,
 			acctest.CtDisappears: testAccResourceLFTag_disappears,
 			"table":              testAccResourceLFTag_table,
+			"tableDisappears":    testAccResourceLFTag_tableDisappears,
 			"tableWithColumns":   testAccResourceLFTag_tableWithColumns,
 		},
 		"ResourceLFTags": {
