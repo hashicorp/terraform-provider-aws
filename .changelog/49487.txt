@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_ec2_application_status_check
+```
+
+```release-note:new-list-resource
+aws_ec2_application_status_check
+```
