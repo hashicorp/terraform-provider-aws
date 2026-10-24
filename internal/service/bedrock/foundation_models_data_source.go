@@ -102,13 +102,14 @@ type foundationModelsDataSourceModel struct {
 }
 
 type foundationModelSummaryModel struct {
-	CustomizationsSupported    fwtypes.SetOfString `tfsdk:"customizations_supported"`
-	InferenceTypesSupported    fwtypes.SetOfString `tfsdk:"inference_types_supported"`
-	InputModalities            fwtypes.SetOfString `tfsdk:"input_modalities"`
-	ModelARN                   fwtypes.ARN         `tfsdk:"model_arn"`
-	ModelID                    types.String        `tfsdk:"model_id"`
-	ModelName                  types.String        `tfsdk:"model_name"`
-	OutputModalities           fwtypes.SetOfString `tfsdk:"output_modalities"`
-	ProviderName               types.String        `tfsdk:"provider_name"`
-	ResponseStreamingSupported types.Bool          `tfsdk:"response_streaming_supported"`
+	CustomizationsSupported    fwtypes.SetOfString                                            `tfsdk:"customizations_supported"`
+	InferenceTypesSupported    fwtypes.SetOfString                                            `tfsdk:"inference_types_supported"`
+	InputModalities            fwtypes.SetOfString                                            `tfsdk:"input_modalities"`
+	ModelARN                   fwtypes.ARN                                                    `tfsdk:"model_arn"`
+	ModelID                    types.String                                                   `tfsdk:"model_id"`
+	ModelLifecycle             fwtypes.ListNestedObjectValueOf[foundationModelLifecycleModel] `tfsdk:"model_lifecycle"`
+	ModelName                  types.String                                                   `tfsdk:"model_name"`
+	OutputModalities           fwtypes.SetOfString                                            `tfsdk:"output_modalities"`
+	ProviderName               types.String                                                   `tfsdk:"provider_name"`
+	ResponseStreamingSupported types.Bool                                                     `tfsdk:"response_streaming_supported"`
 }
