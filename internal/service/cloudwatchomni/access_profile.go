@@ -365,9 +365,9 @@ type accessProfileImportID struct{}
 
 func (accessProfileImportID) Parse(id string) (string, map[string]any, error) {
 	const (
-		accessProfileImportIDPartCount = 2
+		importIDPartCount = 2
 	)
-	parts, err := intflex.ExpandResourceId(id, accessProfileImportIDPartCount, false)
+	parts, err := intflex.ExpandResourceId(id, importIDPartCount, false)
 	if err != nil {
 		return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected space_id%[2]sprofile_id: %w", id, intflex.ResourceIdSeparator, err)
 	}

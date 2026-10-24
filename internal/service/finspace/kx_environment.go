@@ -522,8 +522,7 @@ func findKxEnvironmentByID(ctx context.Context, conn *finspace.Client, id string
 	}
 	out, err := conn.GetKxEnvironment(ctx, in)
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

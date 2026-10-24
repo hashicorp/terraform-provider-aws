@@ -10,17 +10,190 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfarcregionswitch "github.com/hashicorp/terraform-provider-aws/internal/service/arcregionswitch"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// StepModel and ParallelStepModel duplicate the ExecutionBlockConfiguration
+// union switch, so a member added to one can be missed in the other.
+// Acceptance coverage exercises direct steps only, leaving the parallel path to
+// these tests.
+func TestStepModelsExpandRDSSwitchoverReadReplicaConfig(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	config := tfarcregionswitch.RDSSwitchoverReadReplicaConfigModel{
+		CrossAccountRole: types.StringValue("arn:aws:iam::123456789012:role/test"),
+		DBInstanceARNMap: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+			"us-east-1": types.StringValue("arn:aws:rds:us-east-1:123456789012:db:primary"),
+			"us-west-2": types.StringValue("arn:aws:rds:us-west-2:123456789012:db:secondary"),
+		}),
+		ExternalID:     types.StringValue("external-id"),
+		TimeoutMinutes: types.Int32Value(30),
+		Ungraceful: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfarcregionswitch.RDSSwitchoverUngracefulModel{
+			Ungraceful: fwtypes.StringEnumValue(awstypes.RdsUngracefulBehaviorPromoteReadReplica),
+		}),
+	}
+
+	want := awstypes.RdsSwitchoverReadReplicaConfiguration{
+		CrossAccountRole: aws.String("arn:aws:iam::123456789012:role/test"),
+		DbInstanceArnMap: map[string]string{
+			"us-east-1": "arn:aws:rds:us-east-1:123456789012:db:primary",
+			"us-west-2": "arn:aws:rds:us-west-2:123456789012:db:secondary",
+		},
+		ExternalId:     aws.String("external-id"),
+		TimeoutMinutes: aws.Int32(30),
+		Ungraceful: &awstypes.RdsUngraceful{
+			Ungraceful: awstypes.RdsUngracefulBehaviorPromoteReadReplica,
+		},
+	}
+
+	configValue := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &config)
+
+	testCases := map[string]flex.Expander{
+		"parallel step": tfarcregionswitch.ParallelStepModel{
+			Name:                           types.StringValue("test"),
+			ExecutionBlockType:             fwtypes.StringEnumValue(awstypes.ExecutionBlockTypeRdsSwitchoverReadReplica),
+			RdsSwitchoverReadReplicaConfig: configValue,
+		},
+		"step": tfarcregionswitch.StepModel{
+			Name:                           types.StringValue("test"),
+			ExecutionBlockType:             fwtypes.StringEnumValue(awstypes.ExecutionBlockTypeRdsSwitchoverReadReplica),
+			RdsSwitchoverReadReplicaConfig: configValue,
+		},
+	}
+
+	for name, expander := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			output, diags := expander.Expand(ctx)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %s", diags)
+			}
+
+			step, ok := output.(*awstypes.Step)
+			if !ok {
+				t.Fatalf("Expand returned %T, want *awstypes.Step", output)
+			}
+
+			member, ok := step.ExecutionBlockConfiguration.(*awstypes.ExecutionBlockConfigurationMemberRdsSwitchoverReadReplicaConfig)
+			if !ok {
+				t.Fatalf("ExecutionBlockConfiguration is %T, want %T", step.ExecutionBlockConfiguration,
+					&awstypes.ExecutionBlockConfigurationMemberRdsSwitchoverReadReplicaConfig{})
+			}
+
+			if diff := cmp.Diff(member.Value, want, cmpopts.IgnoreUnexported(
+				awstypes.RdsSwitchoverReadReplicaConfiguration{},
+				awstypes.RdsUngraceful{},
+			)); diff != "" {
+				t.Errorf("unexpected diff (-got, +want): %s", diff)
+			}
+		})
+	}
+}
+
+func TestStepModelsFlattenRDSSwitchoverReadReplicaConfig(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	step := awstypes.Step{
+		Name:               aws.String("test"),
+		ExecutionBlockType: awstypes.ExecutionBlockTypeRdsSwitchoverReadReplica,
+		ExecutionBlockConfiguration: &awstypes.ExecutionBlockConfigurationMemberRdsSwitchoverReadReplicaConfig{
+			Value: awstypes.RdsSwitchoverReadReplicaConfiguration{
+				DbInstanceArnMap: map[string]string{
+					"us-east-1": "arn:aws:rds:us-east-1:123456789012:db:primary",
+				},
+				TimeoutMinutes: aws.Int32(30),
+				Ungraceful: &awstypes.RdsUngraceful{
+					Ungraceful: awstypes.RdsUngracefulBehaviorPromoteReadReplica,
+				},
+			},
+		},
+	}
+
+	type flattenTarget struct {
+		flattener flex.Flattener
+		config    func() fwtypes.ListNestedObjectValueOf[tfarcregionswitch.RDSSwitchoverReadReplicaConfigModel]
+	}
+
+	testCases := map[string]func() flattenTarget{
+		"parallel step": func() flattenTarget {
+			var model tfarcregionswitch.ParallelStepModel
+			return flattenTarget{
+				flattener: &model,
+				config: func() fwtypes.ListNestedObjectValueOf[tfarcregionswitch.RDSSwitchoverReadReplicaConfigModel] {
+					return model.RdsSwitchoverReadReplicaConfig
+				},
+			}
+		},
+		"step": func() flattenTarget {
+			var model tfarcregionswitch.StepModel
+			return flattenTarget{
+				flattener: &model,
+				config: func() fwtypes.ListNestedObjectValueOf[tfarcregionswitch.RDSSwitchoverReadReplicaConfigModel] {
+					return model.RdsSwitchoverReadReplicaConfig
+				},
+			}
+		},
+	}
+
+	for name, newTarget := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			target := newTarget()
+
+			if diags := target.flattener.Flatten(ctx, step); diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %s", diags)
+			}
+
+			config, diags := target.config().ToPtr(ctx)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %s", diags)
+			}
+			if config == nil {
+				t.Fatal("rds_switchover_read_replica_config is null after Flatten")
+			}
+
+			if got, want := config.TimeoutMinutes, types.Int32Value(30); !got.Equal(want) {
+				t.Errorf("timeout_minutes = %s, want %s", got, want)
+			}
+			if config.DBInstanceARNMap.IsNull() {
+				t.Error("db_instance_arn_map is null after Flatten")
+			}
+
+			ungraceful, diags := config.Ungraceful.ToPtr(ctx)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %s", diags)
+			}
+			if ungraceful == nil {
+				t.Fatal("ungraceful is null after Flatten")
+			}
+			if got, want := ungraceful.Ungraceful.ValueEnum(), awstypes.RdsUngracefulBehaviorPromoteReadReplica; got != want {
+				t.Errorf("ungraceful.ungraceful = %q, want %q", got, want)
+			}
+		})
+	}
+}
 
 func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -610,6 +783,19 @@ func TestAccARCRegionSwitchPlan_complex_active_passive(t *testing.T) {
 						names.AttrExternalID: "rds-promote-replica-external-id",
 						"timeout_minutes":    "45",
 					}),
+
+					// RdsSwitchoverReadReplica execution block
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": "RdsSwitchoverReadReplica",
+						names.AttrName:         "rds-switchover-read-replica-step",
+					}),
+
+					// RdsSwitchoverReadReplica config
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.rds_switchover_read_replica_config.*", map[string]string{
+						"cross_account_role": "arn:aws:iam::123456789012:role/RdsSwitchoverRole",
+						names.AttrExternalID: "rds-switchover-external-id",
+						"timeout_minutes":    "30",
+					}),
 				),
 			},
 			{
@@ -797,6 +983,55 @@ func TestAccARCRegionSwitchPlan_rdsPromoteReadReplica(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.rds_promote_read_replica_config.*", map[string]string{
 						"timeout_minutes": "45",
 					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
+func TestAccARCRegionSwitchPlan_rdsSwitchoverReadReplica(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_rdsSwitchoverReadReplica(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+
+					// Verify RdsSwitchoverReadReplica execution block
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.execution_block_type", "RdsSwitchoverReadReplica"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.name", "rds-switchover-read-replica-step"),
+
+					// Verify config values
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.rds_switchover_read_replica_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.rds_switchover_read_replica_config.0.timeout_minutes", "30"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.rds_switchover_read_replica_config.0.db_instance_arn_map.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.rds_switchover_read_replica_config.0.db_instance_arn_map."+acctest.Region(), "arn:aws:rds:"+acctest.Region()+":123456789012:db:test-db-secondary"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.rds_switchover_read_replica_config.0.ungraceful.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.rds_switchover_read_replica_config.0.ungraceful.0.ungraceful", "promoteReadReplica"),
 				),
 			},
 			{
@@ -1916,6 +2151,27 @@ resource "aws_arcregionswitch_plan" "test" {
       }
     }
 
+    # RDS Switchover Read Replica step
+    step {
+      name                 = "rds-switchover-read-replica-step"
+      execution_block_type = "RdsSwitchoverReadReplica"
+      description          = "RDS Switchover Read Replica step"
+
+      rds_switchover_read_replica_config {
+        db_instance_arn_map = {
+          %[2]q = "arn:aws:rds:%[2]s:123456789012:db:test-switchover-primary"
+          %[3]q = "arn:aws:rds:%[3]s:123456789012:db:test-switchover-secondary"
+        }
+        timeout_minutes    = 30
+        cross_account_role = "arn:aws:iam::123456789012:role/RdsSwitchoverRole"
+        external_id        = "rds-switchover-external-id"
+
+        ungraceful {
+          ungraceful = "promoteReadReplica"
+        }
+      }
+    }
+
     # Route53HealthCheck step
     step {
       name                 = "route53-health-check-step-activate"
@@ -2236,7 +2492,7 @@ func testAccPlanConfig_update(rName, description string, rto int) string {
 	alarms := fmt.Sprintf(`
   associated_alarms {
     map_block_key       = "test-alarm-1"
-    alarm_type          = "applicationHealth"
+    alarm_type          = "trigger"
     resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-1"
   }`, acctest.Region())
 
@@ -2244,7 +2500,7 @@ func testAccPlanConfig_update(rName, description string, rto int) string {
 		alarms += fmt.Sprintf(`
   associated_alarms {
     map_block_key       = "test-alarm-2"
-    alarm_type          = "applicationHealth"
+    alarm_type          = "trigger"
     resource_identifier = "arn:aws:cloudwatch:%s:123456789012:alarm:test-alarm-2"
   }`, acctest.Region())
 	}
@@ -2605,6 +2861,57 @@ resource "aws_arcregionswitch_plan" "test" {
           %[3]q = "arn:aws:rds:%[3]s:123456789012:db:test-db-secondary"
         }
         timeout_minutes = 45
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region())
+}
+
+func testAccPlanConfig_rdsSwitchoverReadReplica(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[2]q, %[3]q]
+  primary_region    = %[2]q
+
+  workflow {
+    workflow_target_action = "activate"
+
+    step {
+      name                 = "rds-switchover-read-replica-step"
+      execution_block_type = "RdsSwitchoverReadReplica"
+      description          = "RDS Switchover Read Replica step"
+
+      rds_switchover_read_replica_config {
+        db_instance_arn_map = {
+          %[2]q = "arn:aws:rds:%[2]s:123456789012:db:test-db-primary"
+          %[3]q = "arn:aws:rds:%[3]s:123456789012:db:test-db-secondary"
+        }
+        timeout_minutes = 30
+
+        ungraceful {
+          ungraceful = "promoteReadReplica"
+        }
       }
     }
   }
