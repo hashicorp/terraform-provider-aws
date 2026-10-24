@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cognito_user_pool: Add `lambda_config.inbound_federation` configuration block
+```
