@@ -12,9 +12,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
@@ -207,6 +209,99 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
+			},
+		},
+	})
+}
+
+func TestAccSNSPlatformApplication_GCM_writeOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
+	resourceName := "aws_sns_platform_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SNSServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlatformApplicationConfig_gcmWriteOnly(rName, apiKey, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlatformApplicationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
+					resource.TestCheckNoResourceAttr(resourceName, "platform_credential"),
+					resource.TestCheckNoResourceAttr(resourceName, "platform_credential"),
+					// New platform_credential_wo attribute shouldn't end up in state as it's write-only:
+					resource.TestCheckNoResourceAttr(resourceName, "platform_credential_wo"),
+					resource.TestCheckResourceAttr(resourceName, "platform_credential_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccPlatformApplicationConfig_gcmWriteOnly(rName, apiKey, 2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlatformApplicationExists(ctx, t, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "platform_credential_wo"),
+					resource.TestCheckResourceAttr(resourceName, "platform_credential_wo_version", "2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"platform_credential_wo_version"},
+			},
+		},
+	})
+}
+
+func TestAccSNSPlatformApplication_GCM_migrateToWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
+	resourceName := "aws_sns_platform_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SNSServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlatformApplicationConfig_gcmBasic(rName, apiKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlatformApplicationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
+				),
+			},
+			{
+				Config: testAccPlatformApplicationConfig_gcmWriteOnly(rName, apiKey, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlatformApplicationExists(ctx, t, resourceName),
+					// We've migrated to the write-only variant, so the original platform_credential attribute should be cleared from state:
+					resource.TestCheckResourceAttr(resourceName, "platform_credential", ""),
+					// New platform_credential_wo attribute shouldn't end up in state as it's write-only:
+					resource.TestCheckNoResourceAttr(resourceName, "platform_credential_wo"),
+					resource.TestCheckResourceAttr(resourceName, "platform_credential_wo_version", "1"),
+				),
 			},
 		},
 	})
@@ -511,6 +606,17 @@ resource "aws_sns_platform_application" "test" {
   platform_credential = %[2]q
 }
 `, rName, credentials)
+}
+
+func testAccPlatformApplicationConfig_gcmWriteOnly(rName, credentials string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_sns_platform_application" "test" {
+  name                           = %[1]q
+  platform                       = "GCM"
+  platform_credential_wo         = %[2]q
+  platform_credential_wo_version = %[3]d
+}
+`, rName, credentials, version)
 }
 
 func testAccPlatformApplicationConfig_gcmAllAttributesBase(rName string) string {
