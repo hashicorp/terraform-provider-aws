@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lakeformation_resource_lf_tag: Fix crash during refresh when an LF-Tag assignment has been removed outside Terraform
+```
