@@ -281,6 +281,7 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 		// Save plan's env/secret ordering before flattening (API may reorder).
 		planEnv, planSecrets := preservePlanContainerOrdering(ctx, plan.PrimaryContainer)
 		planNetworkConfiguration := plan.NetworkConfiguration
+		planScalingTarget := plan.ScalingTarget
 
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
 		if resp.Diagnostics.HasError() {
@@ -289,6 +290,7 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 
 		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
 		restorePlanNetworkConfigurationSecurityGroups(ctx, &plan.NetworkConfiguration, planNetworkConfiguration)
+		restorePlanScalingTarget(ctx, &plan.ScalingTarget, planScalingTarget)
 	}
 	normalizeIngressPathEndpoints(ctx, &plan.IngressPaths)
 
@@ -331,6 +333,7 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 	if len(out.ActiveConfigurations) > 0 {
 		// Save state's env/secret ordering before flattening (API may reorder).
 		stateEnv, stateSecrets := preservePlanContainerOrdering(ctx, state.PrimaryContainer)
+		stateScalingTarget := state.ScalingTarget
 
 		// Sort alphabetically as canonical ordering (used as default during import).
 		orderExpressGatewayContainerEnvironmentVariables(&out.ActiveConfigurations[0])
@@ -344,6 +347,7 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 
 		// Restore state ordering if env vars are unchanged (no-op during import).
 		restoreContainerOrderingIfUnchanged(ctx, &state.PrimaryContainer, stateEnv, stateSecrets)
+		restorePlanScalingTarget(ctx, &state.ScalingTarget, stateScalingTarget)
 	}
 	normalizeIngressPathEndpoints(ctx, &state.IngressPaths)
 
@@ -450,6 +454,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 		// Save plan's env/secret ordering before flattening (API may reorder).
 		planEnv, planSecrets := preservePlanContainerOrdering(ctx, plan.PrimaryContainer)
 		planNetworkConfiguration := plan.NetworkConfiguration
+		planScalingTarget := plan.ScalingTarget
 
 		orderExpressGatewayContainerEnvironmentVariables(&waitOut.ActiveConfigurations[0])
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
@@ -459,6 +464,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 
 		restorePlanContainerOrdering(ctx, &plan.PrimaryContainer, planEnv, planSecrets)
 		restorePlanNetworkConfigurationSecurityGroups(ctx, &plan.NetworkConfiguration, planNetworkConfiguration)
+		restorePlanScalingTarget(ctx, &plan.ScalingTarget, planScalingTarget)
 	}
 	normalizeIngressPathEndpoints(ctx, &plan.IngressPaths)
 
@@ -985,6 +991,37 @@ func normalizeIngressPathEndpoints(ctx context.Context, ingressPaths *fwtypes.Li
 	}
 
 	*ingressPaths = updated
+}
+
+func restorePlanScalingTarget(
+	ctx context.Context,
+	scalingTarget *fwtypes.ListNestedObjectValueOf[expressGatewayScalingTargetModel],
+	planScalingTarget fwtypes.ListNestedObjectValueOf[expressGatewayScalingTargetModel],
+) {
+	planTarget, diags := planScalingTarget.ToPtr(ctx)
+	if diags.HasError() || planTarget == nil {
+		return
+	}
+
+	currentTarget, diags := scalingTarget.ToPtr(ctx)
+	if diags.HasError() || currentTarget == nil {
+		return
+	}
+
+	if planTarget.AutoScalingMetric.IsNull() || planTarget.AutoScalingMetric.IsUnknown() {
+		currentTarget.AutoScalingMetric = planTarget.AutoScalingMetric
+	}
+
+	if planTarget.AutoScalingTargetValue.IsNull() || planTarget.AutoScalingTargetValue.IsUnknown() {
+		currentTarget.AutoScalingTargetValue = planTarget.AutoScalingTargetValue
+	}
+
+	updated, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, currentTarget)
+	if diags.HasError() {
+		return
+	}
+
+	*scalingTarget = updated
 }
 
 // envListsEquivalent returns true if two environment variable lists contain the same
