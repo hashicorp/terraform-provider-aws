@@ -118,11 +118,41 @@ func resourceDirectory() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"idc_application_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"idc_instance_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
 				"ip_group_ids": {
 					Type:     schema.TypeSet,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					Computed: true,
 					Optional: true,
+				},
+				"microsoft_entra_config": {
+					Type:     schema.TypeList,
+					ForceNew: true,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"application_config_secret_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"tenant_id": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+						},
+					},
 				},
 				"registration_code": {
 					Type:     schema.TypeString,
@@ -383,12 +413,23 @@ func resourceDirectory() *schema.Resource {
 					}
 				}
 			case types.WorkspaceTypePersonal:
-				if v := config.GetAttr("directory_id"); v.IsKnown() && (v.IsNull() || v.AsString() == "") {
-					return fmt.Errorf("`directory_id` must be set when `workspace_type` is set to `%[1]s`", workspaceType)
-				}
-				for _, name := range []string{"workspace_directory_description", "workspace_directory_name"} {
-					if v := config.GetAttr(name); v.IsKnown() && !v.IsNull() && v.AsString() != "" {
-						return fmt.Errorf("`%[1]s` cannot be set when `workspace_type` is set to `%[2]s`", name, workspaceType)
+				if v := config.GetAttr("microsoft_entra_config"); v.IsWhollyKnown() && (v.IsNull() || v.LengthInt() == 0) {
+					if v := config.GetAttr("directory_id"); v.IsKnown() && (v.IsNull() || v.AsString() == "") {
+						return fmt.Errorf("`directory_id` must be set when `workspace_type` is set to `%[1]s` and `microsoft_entra_config` is not set", workspaceType)
+					}
+					for _, name := range []string{"workspace_directory_description", "workspace_directory_name"} {
+						if v := config.GetAttr(name); v.IsKnown() && !v.IsNull() && v.AsString() != "" {
+							return fmt.Errorf("`%[1]s` cannot be set when `workspace_type` is set to `%[2]s` and `microsoft_entra_config` is not set", name, workspaceType)
+						}
+					}
+				} else {
+					if v := config.GetAttr("directory_id"); v.IsKnown() && !v.IsNull() && v.AsString() != "" {
+						return fmt.Errorf("`directory_id` cannot be set when `workspace_type` is set to `%[1]s` and `microsoft_entra_config` is set", workspaceType)
+					}
+					for _, name := range []string{"workspace_directory_description", "workspace_directory_name"} {
+						if v := config.GetAttr(name); v.IsKnown() && (v.IsNull() || v.AsString() == "") {
+							return fmt.Errorf("`%[1]s` must be set when `workspace_type` is set to `%[2]s` and `microsoft_entra_config` is set", name, workspaceType)
+						}
 					}
 				}
 			}
@@ -426,7 +467,15 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.WorkspaceDirectoryDescription = aws.String(d.Get("workspace_directory_description").(string))
 		input.WorkspaceDirectoryName = aws.String(d.Get("workspace_directory_name").(string))
 	case types.WorkspaceTypePersonal:
-		input.DirectoryId = aws.String(directoryID)
+		input.IdcInstanceArn = aws.String(d.Get("idc_instance_arn").(string))
+		if v, ok := d.GetOk("microsoft_entra_config"); ok && len(v.([]any)) > 0 {
+			input.MicrosoftEntraConfig = expandMicrosoftEntraConfig(v.([]any))
+			input.UserIdentityType = types.UserIdentityType(d.Get("user_identity_type").(string))
+			input.WorkspaceDirectoryDescription = aws.String(d.Get("workspace_directory_description").(string))
+			input.WorkspaceDirectoryName = aws.String(d.Get("workspace_directory_name").(string))
+		} else {
+			input.DirectoryId = aws.String(directoryID)
+		}
 		input.EnableSelfService = aws.Bool(false)
 	}
 
@@ -444,7 +493,11 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	switch workspaceType {
 	case types.WorkspaceTypePersonal:
-		d.SetId(directoryID)
+		if v, ok := d.GetOk("microsoft_entra_config"); ok && len(v.([]any)) > 0 {
+			d.SetId(aws.ToString(output.(*workspaces.RegisterWorkspaceDirectoryOutput).DirectoryId))
+		} else {
+			d.SetId(directoryID)
+		}
 	case types.WorkspaceTypePools:
 		d.SetId(aws.ToString(output.(*workspaces.RegisterWorkspaceDirectoryOutput).DirectoryId))
 	}
@@ -563,7 +616,15 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("directory_type", directory.DirectoryType)
 	d.Set("dns_ip_addresses", directory.DnsIpAddresses)
 	d.Set("iam_role_id", directory.IamRoleId)
+	d.Set("idc_application_arn", directory.IDCConfig.ApplicationArn)
+	d.Set("idc_instance_arn", directory.IDCConfig.InstanceArn)
+	if err := d.Set("microsoft_entra_config", flattenMicrosoftEntraConfig(directory.MicrosoftEntraConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting microsoft_entra_config: %s", err)
+	}
 	d.Set("ip_group_ids", directory.IpGroupIds)
+	if err := d.Set("microsoft_entra_config", flattenMicrosoftEntraConfig(directory.MicrosoftEntraConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting microsoft_entra_config: %s", err)
+	}
 	d.Set("registration_code", directory.RegistrationCode)
 	if err := d.Set("self_service_permissions", flattenSelfservicePermissions(directory.SelfservicePermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)
@@ -984,6 +1045,25 @@ func expandCertificateBasedAuthProperties(tfList []any) *types.CertificateBasedA
 	return apiObject
 }
 
+func expandMicrosoftEntraConfig(tfList []any) *types.MicrosoftEntraConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &types.MicrosoftEntraConfig{}
+
+	if tfMap["application_config_secret_arn"].(string) != "" {
+		apiObject.ApplicationConfigSecretArn = aws.String(tfMap["application_config_secret_arn"].(string))
+	}
+
+	if tfMap["tenant_id"].(string) != "" {
+		apiObject.TenantId = aws.String(tfMap["tenant_id"].(string))
+	}
+
+	return apiObject
+}
+
 func expandSAMLProperties(tfList []any) *types.SamlProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -1156,6 +1236,19 @@ func flattenActiveDirectoryConfig(apiObject *types.ActiveDirectoryConfig) []any 
 		map[string]any{
 			names.AttrDomainName:         aws.ToString(apiObject.DomainName),
 			"service_account_secret_arn": aws.ToString(apiObject.ServiceAccountSecretArn),
+		},
+	}
+}
+
+func flattenMicrosoftEntraConfig(apiObject *types.MicrosoftEntraConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	return []any{
+		map[string]any{
+			"application_config_secret_arn": aws.ToString(apiObject.ApplicationConfigSecretArn),
+			"tenant_id":                     aws.ToString(apiObject.TenantId),
 		},
 	}
 }

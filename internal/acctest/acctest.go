@@ -41,6 +41,8 @@ import (
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	workspacestypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
@@ -1495,6 +1497,22 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 
 	if err != nil && !errs.IsAErrorMessageContains[*dstypes.InvalidParameterException](err, "VpcSettings must be specified") {
 		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func PreCheckWorkSpacesBYOLEnabled(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
+
+	input := &workspaces.DescribeAccountInput{}
+	output, err := conn.DescribeAccount(ctx, input)
+	if err != nil {
+		t.Fatalf("error describing WorkSpaces account configuration: %s", err)
+	}
+
+	if output.DedicatedTenancySupport != workspacestypes.DedicatedTenancySupportResultEnumEnabled {
+		t.Skip("skipping test; WorkSpaces BYOL (dedicated tenancy) is not enabled in this AWS account")
 	}
 }
 
