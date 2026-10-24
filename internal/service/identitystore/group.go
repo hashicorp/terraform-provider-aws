@@ -33,6 +33,7 @@ func resourceGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceGroupRead,
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
+		CustomizeDiff:        resourceGroupCustomizeDiff,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -78,6 +79,10 @@ func resourceGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
+				},
+				"revision": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
 			}
 		},
@@ -140,8 +145,18 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 	d.Set("group_id", out.GroupId)
 	d.Set("identity_store_id", out.IdentityStoreId)
+	d.Set("revision", out.Revision)
 
 	return diags
+}
+
+// Identity Store revisions change whenever the resource is updated.
+func resourceGroupCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.Id() == "" || !d.HasChanges(names.AttrDescription, names.AttrDisplayName) {
+		return nil
+	}
+
+	return d.SetNewComputed("revision")
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -156,6 +171,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	input := &identitystore.UpdateGroupInput{
 		GroupId:         aws.String(groupID),
 		IdentityStoreId: aws.String(identityStoreID),
+		Revision:        identityStoreRevisionFromState(d),
 	}
 
 	if d.HasChange(names.AttrDescription) {
@@ -175,6 +191,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	_, err = conn.UpdateGroup(ctx, input)
 
 	if err != nil {
+		d.Partial(true)
 		return sdkdiag.AppendErrorf(diags, "updating IdentityStore Group (%s): %s", d.Id(), err)
 	}
 
@@ -194,6 +211,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	_, err = conn.DeleteGroup(ctx, &identitystore.DeleteGroupInput{
 		GroupId:         aws.String(groupID),
 		IdentityStoreId: aws.String(identityStoreID),
+		Revision:        identityStoreRevisionFromState(d),
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -205,6 +223,16 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
+}
+
+func identityStoreRevisionFromState(d *schema.ResourceData) *string {
+	revision, _ := d.GetChange("revision")
+
+	if revision, ok := revision.(string); ok && revision != "" {
+		return aws.String(revision)
+	}
+
+	return nil
 }
 
 const groupResourceIDSeparator = "/"
