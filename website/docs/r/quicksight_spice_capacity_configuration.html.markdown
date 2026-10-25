@@ -37,7 +37,7 @@ resource "aws_quicksight_spice_capacity_configuration" "example" {
 This resource supports the following arguments:
 
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
-* `purchase_mode` - (Optional) Determines how SPICE capacity can be purchased. Valid values are `MANUAL` (SPICE capacity can only be purchased manually) and `AUTO_PURCHASE` (extra SPICE capacity is automatically purchased on your behalf as needed; SPICE capacity can also still be purchased manually). Defaults to `MANUAL`.
+* `purchase_mode` - (Optional) How SPICE capacity can be purchased. Valid values are `MANUAL` (SPICE capacity can only be purchased manually) and `AUTO_PURCHASE` (extra SPICE capacity is automatically purchased on your behalf as needed; SPICE capacity can also still be purchased manually). Defaults to `MANUAL`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
