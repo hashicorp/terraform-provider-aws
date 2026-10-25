@@ -76,7 +76,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cover_entire_organization` - (Optional) Whether to cover all existing and future accounts in the AWS Organization. Default value: `false`.
-* `opt_in_feature` - (Optional) Opt-in features to enable or disable. At most 2 are allowed. See [`opt_in_feature` Block](#opt_in_feature-block) below.
+* `opt_in_feature` - (Optional) Opt-in features to enable or disable. At most 2 are allowed. Only the features configured here are tracked, and removing a block does not change the feature. See [`opt_in_feature` Block](#opt_in_feature-block) below.
 * `organizational_units` - (Optional) Set of AWS Organizations organizational unit IDs covered by the membership.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -95,7 +95,7 @@ The `incident_response_team` block supports:
 The `opt_in_feature` block supports:
 
 * `feature_name` - (Required) Name of the feature. Allowed value is: `Triage`.
-* `is_enabled` - (Required) Whether to enable the feature.
+* `is_enabled` - (Required) Whether to enable the feature. `Triage` is enabled by default and cannot be disabled.
 
 ## Attribute Reference
 

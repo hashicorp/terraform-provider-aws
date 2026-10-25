@@ -343,7 +343,7 @@ func (r *membershipResource) Delete(ctx context.Context, request resource.Delete
 		MembershipId: aws.String(id),
 	}
 	_, err := conn.CancelMembership(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.SecurityIncidentResponseNotActiveException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.SecurityIncidentResponseNotActiveException](err) || errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Membership is not active") {
 		return
 	}
 	if err != nil {
@@ -360,10 +360,21 @@ func (r *membershipResource) Delete(ctx context.Context, request resource.Delete
 func (r *membershipResource) flatten(ctx context.Context, membership *securityir.GetMembershipOutput, data *membershipResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	configuredOptInFeatures := data.OptInFeatures
+
 	diags.Append(fwflex.Flatten(ctx, membership, data, fwflex.WithFieldNamePrefix("Membership"), fwflex.WithIgnoredFieldNamesAppend("Region"))...)
 	if diags.HasError() {
 		return diags
 	}
+
+	// Some opt-in features (for example, Triage) are enabled by default and cannot be disabled,
+	// so only the features declared in configuration are tracked.
+	optInFeatures, d := filterOptInFeatures(ctx, data.OptInFeatures, configuredOptInFeatures)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	data.OptInFeatures = optInFeatures
 
 	// Account coverage is returned in a nested structure that has no counterpart in the schema.
 	var coverEntireOrganization bool
@@ -376,6 +387,30 @@ func (r *membershipResource) flatten(ctx context.Context, membership *securityir
 	data.OrganizationalUnits = fwflex.FlattenFrameworkStringValueSetOfString(ctx, ous)
 
 	return diags
+}
+
+// filterOptInFeatures returns the features in actual whose names appear in configured.
+func filterOptInFeatures(ctx context.Context, actual, configured fwtypes.SetNestedObjectValueOf[optInFeatureModel]) (fwtypes.SetNestedObjectValueOf[optInFeatureModel], diag.Diagnostics) {
+	if configured.IsNull() || configured.IsUnknown() {
+		return fwtypes.NewSetNestedObjectValueOfNull[optInFeatureModel](ctx), nil
+	}
+
+	var diags diag.Diagnostics
+	wanted, d := configured.ToSlice(ctx)
+	diags.Append(d...)
+	features, d := actual.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return fwtypes.NewSetNestedObjectValueOfNull[optInFeatureModel](ctx), diags
+	}
+
+	features = slices.DeleteFunc(features, func(f *optInFeatureModel) bool {
+		return !slices.ContainsFunc(wanted, func(w *optInFeatureModel) bool {
+			return w.FeatureName.Equal(f.FeatureName)
+		})
+	})
+
+	return fwtypes.NewSetNestedObjectValueOfSlice(ctx, features, nil)
 }
 
 // updateMembershipOrganizationalUnits changes the OUs covered by a membership from oldOUs to newOUs,

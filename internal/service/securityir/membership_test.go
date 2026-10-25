@@ -255,26 +255,17 @@ func testAccMembership_optInFeature(t *testing.T) {
 		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMembershipConfig_optInFeature(rName, email1, email2, true),
+				Config: testAccMembershipConfig_basic(rName, email1, email2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("opt_in_feature"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"feature_name": tfknownvalue.StringExact(awstypes.OptInFeatureNameTriage),
-							"is_enabled":   knownvalue.Bool(true),
-						}),
-					})),
+					// Triage is enabled by default but is not tracked unless configured.
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("opt_in_feature"), knownvalue.SetSizeExact(0)),
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccMembershipConfig_optInFeature(rName, email1, email2, false),
+				Config: testAccMembershipConfig_optInFeature(rName, email1, email2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
@@ -287,9 +278,29 @@ func testAccMembership_optInFeature(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("opt_in_feature"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"feature_name": tfknownvalue.StringExact(awstypes.OptInFeatureNameTriage),
-							"is_enabled":   knownvalue.Bool(false),
+							"is_enabled":   knownvalue.Bool(true),
 						}),
 					})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"opt_in_feature"},
+			},
+			{
+				Config: testAccMembershipConfig_basic(rName, email1, email2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("opt_in_feature"), knownvalue.SetSizeExact(0)),
 				},
 			},
 		},
@@ -503,7 +514,7 @@ resource "aws_securityir_membership" "test" {
 `, rName, email1, email3, email4)
 }
 
-func testAccMembershipConfig_optInFeature(rName, email1, email2 string, enabled bool) string {
+func testAccMembershipConfig_optInFeature(rName, email1, email2 string) string {
 	return fmt.Sprintf(`
 resource "aws_securityir_membership" "test" {
   membership_name = %[1]q
@@ -522,10 +533,10 @@ resource "aws_securityir_membership" "test" {
 
   opt_in_feature {
     feature_name = "Triage"
-    is_enabled   = %[4]t
+    is_enabled   = true
   }
 }
-`, rName, email1, email2, enabled)
+`, rName, email1, email2)
 }
 
 func testAccMembershipConfig_coverEntireOrganization(rName, email1, email2 string, cover bool) string {
