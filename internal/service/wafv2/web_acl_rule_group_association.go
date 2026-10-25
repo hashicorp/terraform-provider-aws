@@ -14,7 +14,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
@@ -1129,25 +1128,7 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 	webACL.WebACL.Rules = append(webACL.WebACL.Rules, newRule)
 
 	// Update the Web ACL
-	updateInput := &wafv2.UpdateWebACLInput{
-		Id:                   aws.String(webACLID),
-		Name:                 aws.String(webACLName),
-		Scope:                awstypes.Scope(webACLScope),
-		DefaultAction:        webACL.WebACL.DefaultAction,
-		Rules:                webACL.WebACL.Rules,
-		VisibilityConfig:     webACL.WebACL.VisibilityConfig,
-		LockToken:            webACL.LockToken,
-		AssociationConfig:    webACL.WebACL.AssociationConfig,
-		CaptchaConfig:        webACL.WebACL.CaptchaConfig,
-		ChallengeConfig:      webACL.WebACL.ChallengeConfig,
-		CustomResponseBodies: webACL.WebACL.CustomResponseBodies,
-		TokenDomains:         webACL.WebACL.TokenDomains,
-	}
-
-	// Only set description if it's not empty
-	if webACL.WebACL.Description != nil && aws.ToString(webACL.WebACL.Description) != "" {
-		updateInput.Description = webACL.WebACL.Description
-	}
+	updateInput := newUpdateWebACLInput(webACL, webACLID, webACLName, webACLScope, webACL.WebACL.Rules)
 
 	const timeout = 5 * time.Minute
 	_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
@@ -1535,25 +1516,7 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 	}
 
 	// Update the Web ACL with the modified rule
-	updateInput := &wafv2.UpdateWebACLInput{
-		Id:                   aws.String(webACLID),
-		Name:                 aws.String(webACLName),
-		Scope:                awstypes.Scope(webACLScope),
-		DefaultAction:        webACL.WebACL.DefaultAction,
-		Rules:                webACL.WebACL.Rules,
-		VisibilityConfig:     webACL.WebACL.VisibilityConfig,
-		LockToken:            webACL.LockToken,
-		AssociationConfig:    webACL.WebACL.AssociationConfig,
-		CaptchaConfig:        webACL.WebACL.CaptchaConfig,
-		ChallengeConfig:      webACL.WebACL.ChallengeConfig,
-		CustomResponseBodies: webACL.WebACL.CustomResponseBodies,
-		TokenDomains:         webACL.WebACL.TokenDomains,
-	}
-
-	// Only set description if it's not empty
-	if webACL.WebACL.Description != nil && aws.ToString(webACL.WebACL.Description) != "" {
-		updateInput.Description = webACL.WebACL.Description
-	}
+	updateInput := newUpdateWebACLInput(webACL, webACLID, webACLName, webACLScope, webACL.WebACL.Rules)
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, updateTimeout, func(ctx context.Context) (any, error) {
@@ -1630,25 +1593,7 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 	}
 
 	// Update the Web ACL without the rule
-	updateInput := &wafv2.UpdateWebACLInput{
-		Id:                   aws.String(webACLID),
-		Name:                 aws.String(webACLName),
-		Scope:                awstypes.Scope(webACLScope),
-		DefaultAction:        webACL.WebACL.DefaultAction,
-		Rules:                updatedRules,
-		VisibilityConfig:     webACL.WebACL.VisibilityConfig,
-		LockToken:            webACL.LockToken,
-		AssociationConfig:    webACL.WebACL.AssociationConfig,
-		CaptchaConfig:        webACL.WebACL.CaptchaConfig,
-		ChallengeConfig:      webACL.WebACL.ChallengeConfig,
-		CustomResponseBodies: webACL.WebACL.CustomResponseBodies,
-		TokenDomains:         webACL.WebACL.TokenDomains,
-	}
-
-	// Only set description if it's not empty
-	if webACL.WebACL.Description != nil && aws.ToString(webACL.WebACL.Description) != "" {
-		updateInput.Description = webACL.WebACL.Description
-	}
+	updateInput := newUpdateWebACLInput(webACL, webACLID, webACLName, webACLScope, updatedRules)
 
 	const timeout = 5 * time.Minute
 	_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {

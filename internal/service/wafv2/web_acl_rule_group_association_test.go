@@ -560,6 +560,45 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_basic(t *testing.T)
 	})
 }
 
+func TestAccWAFV2WebACLRuleGroupAssociation_dataProtectionConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webACL wafv2.GetWebACLOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+	webACLResourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Create.
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_dataProtectionConfig(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, t, resourceName, &webACL),
+					testAccCheckWebACLHasDataProtectionConfig(ctx, t, webACLResourceName),
+				),
+			},
+			// Update. Neither `priority` nor `override_action` forces replacement, so
+			// changing the priority exercises the update path.
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_dataProtectionConfig(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, t, resourceName, &webACL),
+					testAccCheckWebACLHasDataProtectionConfig(ctx, t, webACLResourceName),
+				),
+			},
+			// Delete. The association leaves the configuration while the Web ACL stays behind.
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_dataProtectionConfigWebACLOnly(rName),
+				Check:  testAccCheckWebACLHasDataProtectionConfig(ctx, t, webACLResourceName),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_withVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webACL wafv2.GetWebACLOutput
@@ -2489,4 +2528,55 @@ resource "aws_wafv2_web_acl_rule_group_association" "test3" {
   override_action = "none"
 }
 `, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_dataProtectionConfigWebACLOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  data_protection_config {
+    data_protection {
+      action = "HASH"
+
+      field {
+        field_type = "SINGLE_HEADER"
+        field_keys = ["authorization"]
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_dataProtectionConfig(rName string, priority int) string {
+	return acctest.ConfigCompose(testAccWebACLRuleGroupAssociationConfig_dataProtectionConfigWebACLOnly(rName), fmt.Sprintf(`
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = %[1]d
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesCommonRuleSet"
+    vendor_name = "AWS"
+  }
+
+  override_action = "none"
+}
+`, priority))
 }
