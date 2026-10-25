@@ -50,16 +50,22 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).SecurityIRClient(ctx)
 
 	var input securityir.ListMembershipsInput
-	output, err := conn.ListMemberships(ctx, &input)
+	var items []awstypes.ListMembershipItem
+	pages := securityir.NewListMembershipsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
+		if acctest.PreCheckSkipError(err) {
+			t.Skipf("skipping acceptance testing: %s", err)
+		}
+		if err != nil {
+			t.Fatalf("unexpected PreCheck error: %s", err)
+		}
+
+		items = append(items, page.Items...)
 	}
 
-	for _, v := range output.Items {
+	for _, v := range items {
 		if v.MembershipStatus != awstypes.MembershipStatusActive {
 			continue
 		}

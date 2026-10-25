@@ -63,6 +63,11 @@ func newMembershipResource(_ context.Context) (resource.ResourceWithConfigure, e
 // UpdateMembership accepts at most this many OUs in each of the add and remove lists.
 const organizationalUnitsUpdateBatchSize = 5
 
+const (
+	membershipAccountsConfigurationStatusPending = "Pending"
+	membershipAccountsConfigurationStatusUpdated = "Updated"
+)
+
 type membershipResource struct {
 	framework.ResourceWithModel[membershipResourceModel]
 	framework.WithImportByIdentity
@@ -120,6 +125,7 @@ func (r *membershipResource) Schema(ctx context.Context, request resource.Schema
 				ElementType: types.StringType,
 				Optional:    true,
 				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
 					setvalidator.ValueStringsAre(
 						stringvalidator.RegexMatches(regexache.MustCompile(`^ou-[0-9a-z]{4,32}-[a-z0-9]{8,32}$`), "must be a valid organizational unit ID"),
 					),
@@ -217,6 +223,14 @@ func (r *membershipResource) Create(ctx context.Context, request resource.Create
 	id := aws.ToString(output.MembershipId)
 	data.ID = types.StringValue(id)
 
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	membership, err := waitMembershipCreated(ctx, conn, id, createTimeout)
+	if err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID)
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
+		return
+	}
+
 	// CreateMembership does not accept organizational units; they can only be added by UpdateMembership.
 	if ous := fwflex.ExpandFrameworkStringValueSet(ctx, data.OrganizationalUnits); len(ous) > 0 {
 		if err := updateMembershipOrganizationalUnits(ctx, conn, id, nil, ous); err != nil {
@@ -224,13 +238,13 @@ func (r *membershipResource) Create(ctx context.Context, request resource.Create
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 			return
 		}
-	}
 
-	membership, err := waitMembershipCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
-	if err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID)
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
-		return
+		membership, err = waitMembershipAccountsConfigurationUpdated(ctx, conn, id, data.CoverEntireOrganization.ValueBool(), ous, createTimeout)
+		if err != nil {
+			response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
+			return
+		}
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, membership, &data))
@@ -239,6 +253,30 @@ func (r *membershipResource) Create(ctx context.Context, request resource.Create
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+}
+
+func (r *membershipResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data membershipResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	features, d := data.OptInFeatures.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	for _, v := range features {
+		if v.FeatureName.ValueEnum() == awstypes.OptInFeatureNameTriage && !v.IsEnabled.IsUnknown() && !v.IsEnabled.ValueBool() {
+			response.Diagnostics.AddAttributeError(
+				path.Root("opt_in_feature"),
+				"Invalid Attribute Value",
+				"The Triage opt-in feature cannot be disabled; is_enabled must be true.",
+			)
+		}
+	}
 }
 
 func (r *membershipResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -304,17 +342,27 @@ func (r *membershipResource) Update(ctx context.Context, request resource.Update
 			return
 		}
 
-		if !plan.OrganizationalUnits.Equal(state.OrganizationalUnits) {
+		newOUs := fwflex.ExpandFrameworkStringValueSet(ctx, plan.OrganizationalUnits)
+		ousChanged := !plan.OrganizationalUnits.Equal(state.OrganizationalUnits)
+		if ousChanged {
 			oldOUs := fwflex.ExpandFrameworkStringValueSet(ctx, state.OrganizationalUnits)
-			newOUs := fwflex.ExpandFrameworkStringValueSet(ctx, plan.OrganizationalUnits)
 			if err := updateMembershipOrganizationalUnits(ctx, conn, id, oldOUs, newOUs); err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
+				return
+			}
+		}
+
+		// Account coverage changes are applied asynchronously.
+		if ousChanged || !plan.CoverEntireOrganization.Equal(state.CoverEntireOrganization) {
+			if _, err := waitMembershipAccountsConfigurationUpdated(ctx, conn, id, plan.CoverEntireOrganization.ValueBool(), newOUs, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
 				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 				return
 			}
 		}
 	}
 
-	// number_of_accounts_covered is unknown in the plan after any change, so always refresh.
+	// UpdateMembership returns no membership details, and number_of_accounts_covered is unknown
+	// in the plan after any change, so always refresh.
 	membership, err := findMembershipByID(ctx, conn, id)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
@@ -411,6 +459,48 @@ func filterOptInFeatures(ctx context.Context, actual, configured fwtypes.SetNest
 	})
 
 	return fwtypes.NewSetNestedObjectValueOfSlice(ctx, features, nil)
+}
+
+func statusMembershipAccountsConfiguration(conn *securityir.Client, id string, coverEntireOrganization bool, ous []string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findMembershipByID(ctx, conn, id)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		var gotCover bool
+		var gotOUs []string
+		if v := output.MembershipAccountsConfigurations; v != nil {
+			gotCover = aws.ToBool(v.CoverEntireOrganization)
+			gotOUs = v.OrganizationalUnits
+		}
+
+		if gotCover != coverEntireOrganization || len(gotOUs) != len(ous) || slices.ContainsFunc(ous, func(v string) bool { return !slices.Contains(gotOUs, v) }) {
+			return output, membershipAccountsConfigurationStatusPending, nil
+		}
+
+		return output, membershipAccountsConfigurationStatusUpdated, nil
+	}
+}
+
+func waitMembershipAccountsConfigurationUpdated(ctx context.Context, conn *securityir.Client, id string, coverEntireOrganization bool, ous []string, timeout time.Duration) (*securityir.GetMembershipOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{membershipAccountsConfigurationStatusPending},
+		Target:                    []string{membershipAccountsConfigurationStatusUpdated},
+		Refresh:                   statusMembershipAccountsConfiguration(conn, id, coverEntireOrganization, ous),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*securityir.GetMembershipOutput); ok {
+		return output, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
 }
 
 // updateMembershipOrganizationalUnits changes the OUs covered by a membership from oldOUs to newOUs,

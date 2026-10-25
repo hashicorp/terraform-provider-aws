@@ -265,7 +265,11 @@ func testAccMembership_optInFeature(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccMembershipConfig_optInFeature(rName, email1, email2),
+				Config:      testAccMembershipConfig_optInFeature(rName, email1, email2, false),
+				ExpectError: regexache.MustCompile(`The Triage opt-in feature cannot be disabled`),
+			},
+			{
+				Config: testAccMembershipConfig_optInFeature(rName, email1, email2, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
@@ -284,9 +288,10 @@ func testAccMembership_optInFeature(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Only configured opt-in features are tracked, and there is no configuration on import.
 				ImportStateVerifyIgnore: []string{"opt_in_feature"},
 			},
 			{
@@ -380,6 +385,17 @@ func testAccMembership_organizationalUnits(t *testing.T) {
 	domain := acctest.RandomDomainName(t)
 	email1, email2 := acctest.RandomEmailAddress(domain), acctest.RandomEmailAddress(domain)
 
+	ou := func(i int) string {
+		return fmt.Sprintf("aws_organizations_organizational_unit.test[%d].id", i)
+	}
+	ouChecks := func(is ...int) resource.TestCheckFunc {
+		var fs []resource.TestCheckFunc
+		for _, i := range is {
+			fs = append(fs, resource.TestCheckTypeSetElemAttrPair(resourceName, "organizational_units.*", fmt.Sprintf("aws_organizations_organizational_unit.test.%d", i), names.AttrID))
+		}
+		return resource.ComposeAggregateTestCheckFunc(fs...)
+	}
+
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -391,9 +407,10 @@ func testAccMembership_organizationalUnits(t *testing.T) {
 		CheckDestroy:             testAccCheckMembershipDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMembershipConfig_organizationalUnits(rName, email1, email2, "aws_organizations_organizational_unit.test[0].id"),
+				Config: testAccMembershipConfig_organizationalUnits(rName, email1, email2, ou(0)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMembershipExists(ctx, t, resourceName, &v),
+					ouChecks(0),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("organizational_units"), knownvalue.SetSizeExact(1)),
@@ -405,7 +422,38 @@ func testAccMembership_organizationalUnits(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMembershipConfig_organizationalUnits(rName, email1, email2, "aws_organizations_organizational_unit.test[1].id", "aws_organizations_organizational_unit.test[2].id"),
+				Config: testAccMembershipConfig_organizationalUnits(rName, email1, email2, ou(1), ou(2)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
+					ouChecks(1, 2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("organizational_units"), knownvalue.SetSizeExact(2)),
+				},
+			},
+			{
+				// Adding more OUs than UpdateMembership accepts in one call.
+				Config: testAccMembershipConfig_organizationalUnits(rName, email1, email2, ou(0), ou(1), ou(2), ou(3), ou(4), ou(5), ou(6)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
+					ouChecks(0, 1, 2, 3, 4, 5, 6),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("organizational_units"), knownvalue.SetSizeExact(7)),
+				},
+			},
+			{
+				Config: testAccMembershipConfig_organizationalUnits(rName, email1, email2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
@@ -415,7 +463,7 @@ func testAccMembership_organizationalUnits(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("organizational_units"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("organizational_units"), knownvalue.Null()),
 				},
 			},
 		},
@@ -514,7 +562,7 @@ resource "aws_securityir_membership" "test" {
 `, rName, email1, email3, email4)
 }
 
-func testAccMembershipConfig_optInFeature(rName, email1, email2 string) string {
+func testAccMembershipConfig_optInFeature(rName, email1, email2 string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_securityir_membership" "test" {
   membership_name = %[1]q
@@ -533,10 +581,10 @@ resource "aws_securityir_membership" "test" {
 
   opt_in_feature {
     feature_name = "Triage"
-    is_enabled   = true
+    is_enabled   = %[4]t
   }
 }
-`, rName, email1, email2)
+`, rName, email1, email2, enabled)
 }
 
 func testAccMembershipConfig_coverEntireOrganization(rName, email1, email2 string, cover bool) string {
@@ -561,19 +609,24 @@ resource "aws_securityir_membership" "test" {
 }
 
 func testAccMembershipConfig_organizationalUnits(rName, email1, email2 string, ous ...string) string {
+	var organizationalUnits string
+	if len(ous) > 0 {
+		organizationalUnits = fmt.Sprintf("organizational_units = [%s]", strings.Join(ous, ", "))
+	}
+
 	return fmt.Sprintf(`
 data "aws_organizations_organization" "current" {}
 
 resource "aws_organizations_organizational_unit" "test" {
-  count = 3
+  count = 7
 
   name      = "%[1]s-${count.index}"
   parent_id = data.aws_organizations_organization.current.roots[0].id
 }
 
 resource "aws_securityir_membership" "test" {
-  membership_name      = %[1]q
-  organizational_units = [%[4]s]
+  membership_name = %[1]q
+  %[4]s
 
   incident_response_team {
     name      = "Responder One"
@@ -587,5 +640,5 @@ resource "aws_securityir_membership" "test" {
     email     = %[3]q
   }
 }
-`, rName, email1, email2, strings.Join(ous, ", "))
+`, rName, email1, email2, organizationalUnits)
 }

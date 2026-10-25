@@ -77,7 +77,7 @@ The following arguments are optional:
 
 * `cover_entire_organization` - (Optional) Whether to cover all existing and future accounts in the AWS Organization. Default value: `false`.
 * `opt_in_feature` - (Optional) Opt-in features to enable or disable. At most 2 are allowed. Only the features configured here are tracked, and removing a block does not change the feature. See [`opt_in_feature` Block](#opt_in_feature-block) below.
-* `organizational_units` - (Optional) Set of AWS Organizations organizational unit IDs covered by the membership.
+* `organizational_units` - (Optional) Set of AWS Organizations organizational unit IDs covered by the membership. Each ID must match `ou-[0-9a-z]{4,32}-[a-z0-9]{8,32}`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -85,7 +85,7 @@ The following arguments are optional:
 
 The `incident_response_team` block supports:
 
-* `communication_preferences` - (Optional) Set of notification types the team member receives. See [`CommunicationType`](https://docs.aws.amazon.com/security-ir/latest/APIReference/API_IncidentResponder.html) for allowed values, such as `Case Created` and `Case Closed`.
+* `communication_preferences` - (Optional) Set of notification types the team member receives. Allowed values are: `Case Created`, `Case Updated`, `Case Acknowledged`, `Case Closed`, `Case Updated To Service Managed`, `Case Status Updated`, `Case Pending Customer Action Reminder`, `Case Attachment Url Uploaded`, `Case Comment Added`, `Case Comment Updated`, `Membership Created`, `Membership Updated`, `Membership Cancelled`, `Register Delegated Administrator`, `Deregister Delegated Administrator`, `Disable AWS Service Access`.
 * `email` - (Required) Email address of the team member. Must be between 6 and 254 characters.
 * `job_title` - (Required) Job title of the team member. Must be between 1 and 50 characters.
 * `name` - (Required) Name of the team member. Must be between 3 and 50 characters.
@@ -95,7 +95,7 @@ The `incident_response_team` block supports:
 The `opt_in_feature` block supports:
 
 * `feature_name` - (Required) Name of the feature. Allowed value is: `Triage`.
-* `is_enabled` - (Required) Whether to enable the feature. `Triage` is enabled by default and cannot be disabled.
+* `is_enabled` - (Required) Whether to enable the feature. `Triage` is enabled by default and cannot be disabled, so this must be `true` for `Triage`.
 
 ## Attribute Reference
 
@@ -103,7 +103,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `account_id` - ID of the AWS account that owns the membership.
 * `arn` - ARN of the membership.
-* `customer_type` - Type of customer, either `Standalone` or `Organization`.
+* `customer_type` - Type of customer.
 * `id` - ID of the membership.
 * `membership_activation_timestamp` - Date and time the membership was activated, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `membership_status` - Status of the membership.
