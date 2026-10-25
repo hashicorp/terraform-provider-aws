@@ -91,6 +91,10 @@ func resourceKeyPair() *schema.Resource {
 							return ""
 						}
 					},
+					DiffSuppressFunc: func(_k, oldValue, newValue string, _d *schema.ResourceData) bool {
+						// Ignore differences that don't change the actual key, such as differences in the comment
+						return openSSHPublicKeysEqual(oldValue, newValue)
+					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -168,7 +172,7 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-// OpenSSHPublicKeysEqual returns whether or not two OpenSSH public key format strings represent the same key.
+// openSSHPublicKeysEqual returns whether or not two OpenSSH public key format strings represent the same key.
 // Any key comment is ignored when comparing values.
 func openSSHPublicKeysEqual(v1, v2 string) bool {
 	key1, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v1))
@@ -196,6 +200,7 @@ func resourceKeyPairFlatten(ctx context.Context, c *conns.AWSClient, keyPair *aw
 	d.Set("key_name_prefix", create.NamePrefixFromName(aws.ToString(keyPair.KeyName)))
 	d.Set("key_pair_id", keyPair.KeyPairId)
 	d.Set("key_type", keyPair.KeyType)
+	d.Set(names.AttrPublicKey, keyPair.PublicKey)
 
 	setTagsOut(ctx, keyPair.Tags)
 }
