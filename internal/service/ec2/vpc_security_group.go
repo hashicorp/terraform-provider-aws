@@ -299,6 +299,13 @@ func resourceSecurityGroupFlatten(ctx context.Context, c *conns.AWSClient, d *sc
 	ingressRules := matchRules("ingress", localIngressRules, remoteIngressRules)
 	egressRules := matchRules("egress", localEgressRules, remoteEgressRules)
 
+	// Normalize empty rule descriptions to nil so that state stores null,
+	// matching config where the user omits description. Without this,
+	// state stores "" while config has null, causing every inline rule
+	// to show as removed+re-added when any single rule changes.
+	normalizeRuleDescriptions(ingressRules)
+	normalizeRuleDescriptions(egressRules)
+
 	ownerID := aws.ToString(sg.OwnerId)
 	d.Set(names.AttrARN, securityGroupARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrDescription, sg.Description)
@@ -732,6 +739,24 @@ func securityGroupIPPermGather(groupId string, permissions []awstypes.IpPermissi
 	}
 
 	return rules
+}
+
+// normalizeRuleDescriptions ensures that rules with an empty string description
+// have the key removed entirely. This prevents diff noise when state stores
+// description as "" but the user's config omits description (which Terraform
+// represents as null). Without this normalization, every inline rule appears as
+// removed+re-added whenever any single rule in the set changes.
+func normalizeRuleDescriptions(rules []map[string]any) {
+	for _, rule := range rules {
+		if desc, ok := rule[names.AttrDescription]; ok {
+			if desc == nil {
+				continue
+			}
+			if desc.(string) == "" {
+				delete(rule, names.AttrDescription)
+			}
+		}
+	}
 }
 
 func updateSecurityGroupRules(ctx context.Context, conn *ec2.Client, d *schema.ResourceData, ruleType string, group *awstypes.SecurityGroup) error {
