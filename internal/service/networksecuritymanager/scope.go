@@ -47,7 +47,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(serialize=true)
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networksecuritymanager;networksecuritymanager;networksecuritymanager.GetScopeOutput")
 // @Testing(identityRegionOverrideTest=false)

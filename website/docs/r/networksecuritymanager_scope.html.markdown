@@ -3,12 +3,12 @@ subcategory: "Network Security Manager"
 layout: "aws"
 page_title: "AWS: aws_networksecuritymanager_scope"
 description: |-
-  Terraform resource for managing an AWS Network Security Manager Scope.
+  Manages an AWS Network Security Manager Scope.
 ---
 
 # Resource: aws_networksecuritymanager_scope
 
-Terraform resource for managing an AWS Network Security Manager Scope. A scope selects the accounts and the resources that a deployment applies policies to; the scope itself deploys nothing. See [Scopes](https://docs.aws.amazon.com/network-security-manager/latest/devguide/concepts.html) in the AWS Network Security Manager Developer Guide.
+Manages an AWS Network Security Manager Scope. A scope selects the accounts and the resources that a deployment applies policies to; the scope itself deploys nothing. See [Scopes](https://docs.aws.amazon.com/network-security-manager/latest/devguide/concepts.html) in the AWS Network Security Manager Developer Guide.
 
 A scope selects resources per resource type with one `resource_scope` block per type. Each block either includes every resource of the type (`include_all = true`), or includes or excludes the resources named by explicit ARNs and/or matched by a logical expression over tag criteria and, for Application Load Balancers, load balancer configuration criteria. An expression is a single `criteria`, or a single `and`, `or` or `not` operator over criteria: the API does not accept an operator nested under another operator.
 

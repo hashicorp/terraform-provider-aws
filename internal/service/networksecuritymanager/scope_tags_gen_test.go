@@ -20,43 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccNetworkSecurityManagerScope_tagsSerial(t *testing.T) {
-	t.Helper()
-
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:                             testAccNetworkSecurityManagerScope_tags,
-		"null":                                      testAccNetworkSecurityManagerScope_Tags_null,
-		"EmptyMap":                                  testAccNetworkSecurityManagerScope_Tags_emptyMap,
-		"AddOnUpdate":                               testAccNetworkSecurityManagerScope_Tags_addOnUpdate,
-		"EmptyTag_OnCreate":                         testAccNetworkSecurityManagerScope_Tags_EmptyTag_onCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccNetworkSecurityManagerScope_Tags_EmptyTag_OnUpdate_add,
-		"EmptyTag_OnUpdate_Replace":                 testAccNetworkSecurityManagerScope_Tags_EmptyTag_OnUpdate_replace,
-		"DefaultTags_providerOnly":                  testAccNetworkSecurityManagerScope_Tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccNetworkSecurityManagerScope_Tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccNetworkSecurityManagerScope_Tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccNetworkSecurityManagerScope_Tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccNetworkSecurityManagerScope_Tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccNetworkSecurityManagerScope_Tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccNetworkSecurityManagerScope_Tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccNetworkSecurityManagerScope_Tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccNetworkSecurityManagerScope_Tags_ComputedTag_onCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccNetworkSecurityManagerScope_Tags_ComputedTag_OnUpdate_add,
-		"ComputedTag_OnUpdate_Replace":              testAccNetworkSecurityManagerScope_Tags_ComputedTag_OnUpdate_replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccNetworkSecurityManagerScope_Tags_IgnoreTags_Overlap_defaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccNetworkSecurityManagerScope_Tags_IgnoreTags_Overlap_resourceTag,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
-func testAccNetworkSecurityManagerScope_tags(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -246,14 +217,14 @@ func testAccNetworkSecurityManagerScope_tags(t *testing.T) {
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_null(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -317,14 +288,14 @@ func testAccNetworkSecurityManagerScope_Tags_null(t *testing.T) {
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_emptyMap(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -376,14 +347,14 @@ func testAccNetworkSecurityManagerScope_Tags_emptyMap(t *testing.T) {
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_addOnUpdate(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -465,14 +436,14 @@ func testAccNetworkSecurityManagerScope_Tags_addOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_EmptyTag_onCreate(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -566,14 +537,14 @@ func testAccNetworkSecurityManagerScope_Tags_EmptyTag_onCreate(t *testing.T) {
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -716,14 +687,14 @@ func testAccNetworkSecurityManagerScope_Tags_EmptyTag_OnUpdate_add(t *testing.T)
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -815,14 +786,14 @@ func testAccNetworkSecurityManagerScope_Tags_EmptyTag_OnUpdate_replace(t *testin
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1011,14 +982,14 @@ func testAccNetworkSecurityManagerScope_Tags_DefaultTags_providerOnly(t *testing
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1184,14 +1155,14 @@ func testAccNetworkSecurityManagerScope_Tags_DefaultTags_nonOverlapping(t *testi
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1373,14 +1344,14 @@ func testAccNetworkSecurityManagerScope_Tags_DefaultTags_overlapping(t *testing.
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1472,14 +1443,14 @@ func testAccNetworkSecurityManagerScope_Tags_DefaultTags_updateToProviderOnly(t 
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1570,14 +1541,14 @@ func testAccNetworkSecurityManagerScope_Tags_DefaultTags_updateToResourceOnly(t 
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1645,14 +1616,14 @@ func testAccNetworkSecurityManagerScope_Tags_DefaultTags_emptyResourceTag(t *tes
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1712,14 +1683,14 @@ func testAccNetworkSecurityManagerScope_Tags_DefaultTags_emptyProviderOnlyTag(t 
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1790,14 +1761,14 @@ func testAccNetworkSecurityManagerScope_Tags_DefaultTags_nullOverlappingResource
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1870,14 +1841,14 @@ func testAccNetworkSecurityManagerScope_Tags_DefaultTags_nullNonOverlappingResou
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_ComputedTag_onCreate(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1934,14 +1905,14 @@ func testAccNetworkSecurityManagerScope_Tags_ComputedTag_onCreate(t *testing.T) 
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -2040,14 +2011,14 @@ func testAccNetworkSecurityManagerScope_Tags_ComputedTag_OnUpdate_add(t *testing
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -2136,14 +2107,14 @@ func testAccNetworkSecurityManagerScope_Tags_ComputedTag_OnUpdate_replace(t *tes
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -2305,14 +2276,14 @@ func testAccNetworkSecurityManagerScope_Tags_IgnoreTags_Overlap_defaultTag(t *te
 	})
 }
 
-func testAccNetworkSecurityManagerScope_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networksecuritymanager.GetScopeOutput
 	resourceName := "aws_networksecuritymanager_scope.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},

@@ -34,13 +34,13 @@ const (
 	scopeResourceTypeEIP   = "AWS::EC2::EIP"
 )
 
-func testAccScope_basic(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_scope.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -103,13 +103,13 @@ func testAccScope_basic(t *testing.T) {
 	})
 }
 
-func testAccScope_disappears(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_scope.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -140,13 +140,13 @@ func testAccScope_disappears(t *testing.T) {
 
 // Every optional argument set on creation; the scope is created as a draft
 // and selects every distribution in the account.
-func testAccScope_full(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_scope.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -193,13 +193,13 @@ func testAccScope_full(t *testing.T) {
 // Every regional resource type, alone and combined. The global type
 // (CloudFront) is covered by the other tests; it cannot share a scope with a
 // regional type.
-func testAccScope_resourceTypes(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_resourceTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_scope.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -279,7 +279,7 @@ func testAccScope_resourceTypes(t *testing.T) {
 
 // include_all, include and exclude on one resource type, and every
 // transition between them.
-func testAccScope_selection(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_selection(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -310,7 +310,7 @@ func testAccScope_selection(t *testing.T) {
       }
 `, rName)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -424,14 +424,14 @@ func testAccScope_selection(t *testing.T) {
 
 // Explicit ARNs of resources created by the test: an Application Load
 // Balancer in a regional scope and a CloudFront distribution in a global one.
-func testAccScope_explicitARNs(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_explicitARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	albScopeName := "aws_networksecuritymanager_scope.alb"
 	cfdScopeName := "aws_networksecuritymanager_scope.cfd"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -506,7 +506,7 @@ func testAccScope_explicitARNs(t *testing.T) {
 
 // Every expression shape the API accepts: a single criteria, and, or and not
 // operators, the operand limit, and tag maps of every size.
-func testAccScope_expressions(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_expressions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -524,7 +524,7 @@ func testAccScope_expressions(t *testing.T) {
 `, i, rName)
 	}
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -704,14 +704,14 @@ func testAccScope_expressions(t *testing.T) {
 }
 
 // Every ip_address_type and scheme, alone, combined and empty.
-func testAccScope_albConfig(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_albConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_scope.test"
 	prefix := "scope_configuration.0.resource_scope.0.include.0.expression.0.criteria.0.alb_config.0."
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -817,13 +817,13 @@ func testAccScope_albConfig(t *testing.T) {
 	})
 }
 
-func testAccScope_publish(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_publish(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_scope.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -924,13 +924,13 @@ func testAccScope_publish(t *testing.T) {
 	})
 }
 
-func testAccScope_description(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_scope.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -987,13 +987,13 @@ func testAccScope_description(t *testing.T) {
 // The update token is read back before every write, so a change made outside
 // Terraform does not fail the next update, and a draft saved outside
 // Terraform is published back.
-func testAccScope_updateToken(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_updateToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_scope.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1050,14 +1050,14 @@ func testAccScope_updateToken(t *testing.T) {
 
 // A new name, a change between global and regional resource types, and an
 // added account filter all replace the scope.
-func testAccScope_replace(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_scope.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1131,13 +1131,13 @@ func testAccScope_replace(t *testing.T) {
 	})
 }
 
-func testAccScope_recreate(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_recreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_scope.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1169,7 +1169,7 @@ func testAccScope_recreate(t *testing.T) {
 	})
 }
 
-func testAccScope_validation(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_validation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1188,7 +1188,7 @@ func testAccScope_validation(t *testing.T) {
 		arns = append(arns, fmt.Sprintf(`"arn:%s:cloudfront::123456789012:distribution/E%013d"`, acctest.Partition(), i))
 	}
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1837,14 +1837,14 @@ resource "aws_networksecuritymanager_scope" "test" {
 // Every account_filter member and every transition between them. Needs the
 // account to be an onboarded Network Security Manager administrator of an
 // AWS Organizations organization; skipped otherwise.
-func testAccScope_accountFilter(t *testing.T) {
+func TestAccNetworkSecurityManagerScope_accountFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetScopeOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_scope.test"
 	prefix := "scope_configuration.0.account_filter.0."
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
