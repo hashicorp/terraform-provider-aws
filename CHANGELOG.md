@@ -7,13 +7,16 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_observabilityadmin_dataset_integration` ([#50529](https://github.com/hashicorp/terraform-provider-aws/issues/50529))
 * **New List Resource:** `aws_cloudwatchomni_dashboard` ([#50482](https://github.com/hashicorp/terraform-provider-aws/issues/50482))
 * **New Resource:** `aws_cloudwatchomni_dashboard` ([#50482](https://github.com/hashicorp/terraform-provider-aws/issues/50482))
+* **New Resource:** `aws_observabilityadmin_dataset_integration` ([#50529](https://github.com/hashicorp/terraform-provider-aws/issues/50529))
 
 ENHANCEMENTS:
 
 * resource/aws_dx_connection: Add configurable `update` timeout. Defaults to the previously hard-coded value of `10m`. ([#50602](https://github.com/hashicorp/terraform-provider-aws/issues/50602))
 * resource/aws_dx_connection_confirmation: Add configurable `create` timeout. Defaults to the previously hard-coded value of `10m`. ([#50602](https://github.com/hashicorp/terraform-provider-aws/issues/50602))
+* resource/aws_vpclattice_resource_configuration: Add `resource_configuration_definition.cidr_resource` configuration block to support `CIDR` type resource configurations ([#50533](https://github.com/hashicorp/terraform-provider-aws/issues/50533))
 
 ## 6.70.0 (October 21, 2026)
 
