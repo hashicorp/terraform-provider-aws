@@ -523,7 +523,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 			return sdkdiag.AppendErrorf(diags, "deleting failed EKS Node Group (%s) before retry: %s", d.Id(), deleteErr)
 		}
 
-		if _, deleteErr := waitNodegroupDeleted(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate)); deleteErr != nil {
+		if deleteErr := waitNodegroupDeleted(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate)); deleteErr != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for failed EKS Node Group (%s) delete before retry: %s", d.Id(), deleteErr)
 		}
 	}
@@ -696,7 +696,7 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "deleting EKS Node Group (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitNodegroupDeleted(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitNodegroupDeleted(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EKS Node Group (%s) delete: %s", d.Id(), err)
 	}
 
@@ -856,7 +856,7 @@ func waitNodegroupCreated(ctx context.Context, conn *eks.Client, clusterName, no
 	return nil, err
 }
 
-func waitNodegroupDeleted(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string, timeout time.Duration) (*types.Nodegroup, error) {
+func waitNodegroupDeleted(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.NodegroupStatusActive, types.NodegroupStatusDeleting),
 		Target:  []string{},
@@ -871,10 +871,10 @@ func waitNodegroupDeleted(ctx context.Context, conn *eks.Client, clusterName, no
 			retry.SetLastError(err, issuesError(health.Issues))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName, id string, timeout time.Duration) (*types.Update, error) { //nolint:unparam
