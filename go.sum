@@ -455,8 +455,8 @@ github.com/aws/aws-sdk-go-v2/service/pricing v1.51.0 h1:9LPnotQ9Puz+1aVQydhPgvX9
 github.com/aws/aws-sdk-go-v2/service/pricing v1.51.0/go.mod h1:Xql1mNTfKm9lkTfpba8f64+DPSoQQliIwNxUmx9WD+4=
 github.com/aws/aws-sdk-go-v2/service/pricingplanmanager v1.5.6 h1:qQrQtt1k0GGp9s6S5jY5nFMiSfzIlJwbHb178w93+wI=
 github.com/aws/aws-sdk-go-v2/service/pricingplanmanager v1.5.6/go.mod h1:tIyFDmdmN39ausNx3/Ahls3CcfloSSRdGCOB9fqWgFA=
-github.com/aws/aws-sdk-go-v2/service/qbusiness v1.42.4 h1:3I7xnFcoz42xWR4/1c9XuwAciN3XJL6CKzFlPK6owo4=
-github.com/aws/aws-sdk-go-v2/service/qbusiness v1.42.4/go.mod h1:bdbSZSLyPdLv7Yv3j32jCl7k+FOAp3WXwne9W+XO7d4=
+github.com/aws/aws-sdk-go-v2/service/qbusiness v1.42.6 h1:xHeadZciyl3EYcKCVqb+wuNFLBWBGto5IUov2NNZGqE=
+github.com/aws/aws-sdk-go-v2/service/qbusiness v1.42.6/go.mod h1:W7ciCQzUb+QYkzmfH5rvJsnksgmxVPJAy8xWUBGZSKA=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2 h1:tSctQisNHgXnDmyoOdLXkSQmHYo5yPQuvYK+4c4QiNI=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2/go.mod h1:m6bmXbLs5XiGnTLcgKn9eNk5+GCO5e/wHQsIuN7d1Tw=
 github.com/aws/aws-sdk-go-v2/service/quicksight v1.137.2 h1:8PWCj/x5FlvInlZbCJywE+WWT/ZqULPmfoJnMRu0dXg=
