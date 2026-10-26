@@ -28,7 +28,7 @@ var (
 	_ JSONFlexer = jsonFlex{}
 )
 
-func NewJSONFlex(schema typeAtTerraformPather, tfToCfnNameMap map[string]string) jsonFlex {
+func NewJSONFlexer(schema typeAtTerraformPather, tfToCfnNameMap map[string]string) jsonFlex {
 	cfnToTfNameMap := make(map[string]string)
 	for k, v := range tfToCfnNameMap {
 		cfnToTfNameMap[v] = k
@@ -233,15 +233,6 @@ func (j jsonFlex) fromRaw(ctx context.Context, path *tftypes.AttributePath, v an
 			return tftypes.NewValue(typ, nil), nil
 		}
 
-		if typ.Is(tftypes.String) {
-			// Value is JSON string.
-			val, err := tfjson.EncodeToString(v)
-			if err != nil {
-				return inttypes.Zero[tftypes.Value](), err
-			}
-			return tftypes.NewValue(typ, val), nil
-		}
-
 		var vals []tftypes.Value
 		for idx, v := range v {
 			if typ.Is(tftypes.Set{}) {
@@ -260,15 +251,6 @@ func (j jsonFlex) fromRaw(ctx context.Context, path *tftypes.AttributePath, v an
 		return tftypes.NewValue(typ, vals), nil
 
 	case map[string]any:
-		if typ.Is(tftypes.String) {
-			// Value is JSON string.
-			val, err := tfjson.EncodeToString(v)
-			if err != nil {
-				return inttypes.Zero[tftypes.Value](), err
-			}
-			return tftypes.NewValue(typ, val), nil
-		}
-
 		isObject := typ.Is(tftypes.Object{})
 		vals := make(map[string]tftypes.Value)
 		for key, v := range v {
