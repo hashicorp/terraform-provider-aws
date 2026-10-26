@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_mq_broker: Add `storage_size` argument
+```
+
+```release-note:enhancement
+data-source/aws_mq_broker: Add `storage_size` attribute
+```

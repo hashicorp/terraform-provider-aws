@@ -348,6 +348,11 @@ func resourceBroker() *schema.Resource {
 						},
 					},
 				},
+				"storage_size": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
 				names.AttrStorageType: {
 					Type:             schema.TypeString,
 					Optional:         true,
@@ -475,6 +480,9 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
+	if v, ok := d.GetOk("storage_size"); ok {
+		input.StorageSize = aws.Int32(int32(v.(int)))
+	}
 	if v, ok := d.GetOk(names.AttrStorageType); ok {
 		input.StorageType = types.BrokerStorageType(v.(string))
 	}
@@ -594,6 +602,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	} else {
 		d.Set("shared_resources", nil)
 	}
+	d.Set("storage_size", output.StorageSize)
 	d.Set(names.AttrStorageType, output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 	// AWS does not return user information for RabbitMQ brokers after creation.
@@ -682,6 +691,21 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) host instance type: %s", d.Id(), err)
+		}
+
+		requiresReboot = true
+	}
+
+	if d.HasChange("storage_size") {
+		input := mq.UpdateBrokerInput{
+			BrokerId:    aws.String(d.Id()),
+			StorageSize: aws.Int32(int32(d.Get("storage_size").(int))),
+		}
+
+		_, err := conn.UpdateBroker(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) storage size: %s", d.Id(), err)
 		}
 
 		requiresReboot = true

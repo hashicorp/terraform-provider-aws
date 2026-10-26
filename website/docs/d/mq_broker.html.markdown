@@ -54,6 +54,7 @@ This data source exports the following attributes in addition to the arguments a
 * `resource_share_arns` - Set of AWS RAM resource share ARNs that grant the broker access to shared resources for private networking. Only populated for `engine_type` of `RabbitMQ`.
 * `security_groups` - List of security group IDs assigned to the broker.
 * `shared_resources` - List of resources shared with the broker. See [`shared_resources` Block](#shared_resources-block) below. Only populated for `engine_type` of `RabbitMQ`.
+* `storage_size` - Storage size of the broker, in GB. Only populated when the broker has a custom storage size that differs from the instance type default.
 * `storage_type` - Storage type of the broker.
 * `subnet_ids` - List of subnet IDs in which to launch the broker.
 * `tags` - Map of tags assigned to the broker.

@@ -2243,6 +2243,61 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 	})
 }
 
+func TestAccMQBroker_RabbitMQ_storageSize(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbitClusterStorageSize(rName, testAccRabbitMQVersionNormalized4_2, testAccAutoMinorVersionUpgrade, 20),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "CLUSTER_MULTI_AZ"),
+					resource.TestCheckResourceAttr(resourceName, "storage_size", "20"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+			},
+			{
+				Config: testAccBrokerConfig_rabbitClusterStorageSize(rName, testAccRabbitMQVersionNormalized4_2, testAccAutoMinorVersionUpgrade, 25),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, t, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "storage_size", "25"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccMQBroker_RabbitMQ_resourceShareARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3450,6 +3505,36 @@ data "aws_vpc" "default" {
   default = true
 }
 `, rName, version, autoMinorVersionUpgrade, testAccRabbitMQHostInstanceType2)
+}
+
+func testAccBrokerConfig_rabbitClusterStorageSize(rName, version, autoMinorVersionUpgrade string, storageSize int) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name                = %[1]q
+  apply_immediately          = true
+  engine_type                = "RabbitMQ"
+  engine_version             = %[2]q
+  host_instance_type         = %[4]q
+  security_groups            = [aws_security_group.test.id]
+  storage_type               = "ebs"
+  storage_size               = %[5]d
+  deployment_mode            = "CLUSTER_MULTI_AZ"
+  auto_minor_version_upgrade = %[3]s
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName, version, autoMinorVersionUpgrade, testAccRabbitMQHostInstanceType2, storageSize)
 }
 
 func testAccBrokerConfig_rabbitResourceShareARNs(rName string) string {
