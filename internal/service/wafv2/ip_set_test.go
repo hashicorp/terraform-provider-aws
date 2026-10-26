@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
-	"github.com/hashicorp/go-cty/cty"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -104,23 +103,45 @@ func TestIPSetAddressesSDKDiff(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			values := make([]cty.Value, 0, len(tt.new)+1)
+			values := make([]any, 0, len(tt.new)+1)
 			for _, v := range tt.new {
-				values = append(values, cty.StringVal(v))
+				values = append(values, v)
 			}
 			if tt.unknown {
-				values = append(values, cty.UnknownVal(cty.String))
+				values = append(values, "")
 			}
-			planned := cty.SetValEmpty(cty.String)
-			if len(values) > 0 {
-				planned = cty.SetVal(values)
+			r := tfwafv2.ResourceIPSet()
+			oldAddresses := make([]any, len(tt.old))
+			for i, address := range tt.old {
+				oldAddresses[i] = address
 			}
-			r, state, config := ipSetDiffFixture(t, tt.old, planned)
+			data := schema.TestResourceDataRaw(t, r.SchemaMap(), map[string]any{
+				"addresses":          oldAddresses,
+				"name":               "test",
+				"scope":              "REGIONAL",
+				"ip_address_version": "IPV6",
+			})
+			data.SetId("test-id")
+			state := data.State()
+			config := terraformsdk.NewResourceConfigRaw(map[string]any{
+				"addresses":          values,
+				"name":               "test",
+				"scope":              "REGIONAL",
+				"ip_address_version": "IPV6",
+			})
+			if tt.unknown {
+				config.ComputedKeys = []string{fmt.Sprintf("addresses.%d", len(tt.new))}
+			}
 			diff, err := r.SimpleDiff(t.Context(), state, config, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
-			changes := ipSetAddressDiffCount(diff)
+			changes := 0
+			for key, attr := range diff.Attributes {
+				if strings.HasPrefix(key, "addresses.") && (attr.Old != attr.New || attr.NewComputed || attr.NewRemoved) {
+					changes++
+				}
+			}
 			if tt.changes == -1 {
 				if changes == 0 {
 					t.Fatal("unknown address was suppressed")
@@ -130,46 +151,6 @@ func TestIPSetAddressesSDKDiff(t *testing.T) {
 			}
 		})
 	}
-}
-
-func ipSetDiffFixture(tb testing.TB, old []string, planned cty.Value) (*schema.Resource, *terraformsdk.InstanceState, *terraformsdk.ResourceConfig) {
-	tb.Helper()
-	r := tfwafv2.ResourceIPSet()
-	data := r.Data(nil)
-	for key, value := range map[string]any{
-		"addresses":          old,
-		"name":               "test",
-		"scope":              "REGIONAL",
-		"ip_address_version": "IPV6",
-	} {
-		if err := data.Set(key, value); err != nil {
-			tb.Fatal(err)
-		}
-	}
-	data.SetId("test-id")
-	typ := r.CoreConfigSchema().ImpliedType()
-	state := data.State()
-	attrs := make(map[string]cty.Value)
-	for key, ty := range typ.AttributeTypes() {
-		attrs[key] = cty.NullVal(ty)
-	}
-	attrs["addresses"] = planned
-	attrs["name"] = cty.StringVal("test")
-	attrs["scope"] = cty.StringVal("REGIONAL")
-	attrs["ip_address_version"] = cty.StringVal("IPV6")
-	state.RawPlan = cty.ObjectVal(attrs)
-	config := terraformsdk.NewResourceConfigShimmed(state.RawPlan, r.CoreConfigSchema())
-	return r, state, config
-}
-
-func ipSetAddressDiffCount(diff *terraformsdk.InstanceDiff) int {
-	count := 0
-	for key, attr := range diff.Attributes {
-		if strings.HasPrefix(key, "addresses.") && (attr.Old != attr.New || attr.NewComputed || attr.NewRemoved) {
-			count++
-		}
-	}
-	return count
 }
 
 func TestAccWAFV2IPSet_basic(t *testing.T) {
