@@ -77,7 +77,9 @@ Each block argument must have two entries in the documentation:
 1. The initial entry, with a link to the subsection describing the block's arguments. e.g. `` `ip_rule` - (Optional) IP rules. See [`ip_rule` Block](#ip_rule-block) below. ``.
 1. A subsection, added after all top-level arguments. If the resource has multiple blocks, these subsections should be ordered alphabetically.
 
-Within the subsection, arguments follow the ordering rules above. Additionally any Computed attributes are listed alphabetically after any Optional arguments.
+Within the subsection, arguments follow the ordering rules above.
+
+If the block also has read-only (computed-only) attributes, document them inline in the block's subsection with the `(Read-Only)` label, in alphabetical order with the arguments. This keeps everything about a block in one place. Read-only attributes at the top level, and blocks with no configurable arguments, belong in [Attribute Reference](#attributes) instead.
 
 For example:
 
@@ -92,8 +94,8 @@ For example:
 The `ip_rule` block supports:
 
 * `ip_range` - (Required) IP range of the rule.
-* `description` - (Optional) Description of the rule.
-* `status` - (Computed) Status of the rule.
+* `priority` - (Optional) Priority of the rule.
+* `status` - (Read-Only) Status of the rule.
 ```
 
 ### Attributes

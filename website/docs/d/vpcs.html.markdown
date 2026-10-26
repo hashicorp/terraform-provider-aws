@@ -8,13 +8,13 @@ description: |-
 
 # Data Source: aws_vpcs
 
-This resource can be useful for getting back a list of VPC Ids for a region.
+This resource can be useful for getting back a list of VPC IDs for a region.
 
-The following example retrieves a list of VPC Ids with a custom tag of `service` set to a value of "production".
+The following example retrieves a list of VPC IDs with a custom tag of `service` set to a value of "production".
 
 ## Example Usage
 
-The following shows outputting all VPC Ids.
+The following shows outputting all VPC IDs.
 
 ```terraform
 data "aws_vpcs" "foo" {
@@ -72,7 +72,7 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `ids` - List of all the VPC Ids found.
+* `ids` - List of all the VPC IDs found.
 
 ## Timeouts
 

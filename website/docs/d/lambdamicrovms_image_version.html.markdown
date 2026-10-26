@@ -40,37 +40,37 @@ This data source exports the following attributes in addition to the arguments a
 * `base_image_arn` - ARN of the base MicroVM image used.
 * `base_image_version` - Version of the base MicroVM image used.
 * `build_role_arn` - ARN of the IAM role used to build the image version.
-* `code_artifact` - Code artifact for this version. See [`code_artifact`](#code_artifact) below.
-* `cpu_configuration` - List of supported CPU configurations. See [`cpu_configuration`](#cpu_configuration) below.
+* `code_artifact` - Code artifact for this version. See [`code_artifact`](#code_artifact-block) below.
+* `cpu_configuration` - List of supported CPU configurations. See [`cpu_configuration`](#cpu_configuration-block) below.
 * `created_at` - Timestamp when the version was created.
 * `description` - Description of the version.
 * `egress_network_connectors` - List of egress network connectors available to the MicroVM at runtime.
 * `environment_variables` - Environment variables set in the MicroVM runtime environment.
-* `hooks` - Lifecycle hook configuration. See [`hooks`](#hooks) below.
+* `hooks` - Lifecycle hook configuration. See [`hooks`](#hooks-block) below.
 * `image_arn` - ARN of the MicroVM image.
-* `logging` - Logging configuration for this version. See [`logging`](#logging) below.
-* `resources` - Resource requirements for the MicroVM. See [`resources`](#resources) below.
+* `logging` - Logging configuration for this version. See [`logging`](#logging-block) below.
+* `resources` - Resource requirements for the MicroVM. See [`resources`](#resources-block) below.
 * `state` - Current state of the version.
 * `state_reason` - Reason for the current state.
 * `status` - Availability status of the version. `ACTIVE` versions can launch new MicroVMs; `INACTIVE` versions cannot.
 * `tags` - Map of tags assigned to the version.
 * `updated_at` - Timestamp when the version was last updated.
 
-### `code_artifact`
+### `code_artifact` Block
 
 * `uri` - URI of the code artifact.
 
-### `cpu_configuration`
+### `cpu_configuration` Block
 
 * `architecture` - CPU architecture.
 
-### `hooks`
+### `hooks` Block
 
-* `microvm_hooks` - Lifecycle hooks for MicroVM events. See [`microvm_hooks`](#microvm_hooks) below.
-* `microvm_image_hooks` - Hooks for MicroVM image build events. See [`microvm_image_hooks`](#microvm_image_hooks) below.
+* `microvm_hooks` - Lifecycle hooks for MicroVM events. See [`microvm_hooks`](#microvm_hooks-block) below.
+* `microvm_image_hooks` - Hooks for MicroVM image build events. See [`microvm_image_hooks`](#microvm_image_hooks-block) below.
 * `port` - Port number on which the hooks listener runs.
 
-### `microvm_hooks`
+### `microvm_hooks` Block
 
 * `resume` - Whether the resume hook is `ENABLED` or `DISABLED`.
 * `resume_timeout_in_seconds` - Maximum time in seconds for the resume hook to complete.
@@ -81,23 +81,23 @@ This data source exports the following attributes in addition to the arguments a
 * `terminate` - Whether the terminate hook is `ENABLED` or `DISABLED`.
 * `terminate_timeout_in_seconds` - Maximum time in seconds for the terminate hook to complete.
 
-### `microvm_image_hooks`
+### `microvm_image_hooks` Block
 
 * `ready` - Whether the ready hook is `ENABLED` or `DISABLED`.
 * `ready_timeout_in_seconds` - Maximum time in seconds for the ready hook to complete.
 * `validate` - Whether the validate hook is `ENABLED` or `DISABLED`.
 * `validate_timeout_in_seconds` - Maximum time in seconds for the validate hook to complete.
 
-### `logging`
+### `logging` Block
 
-* `cloudwatch` - CloudWatch Logs configuration. See [`cloudwatch`](#cloudwatch) below.
+* `cloudwatch` - CloudWatch Logs configuration. See [`cloudwatch`](#cloudwatch-block) below.
 * `disabled` - Present when logging is disabled.
 
-### `cloudwatch`
+### `cloudwatch` Block
 
 * `log_group` - Name of the CloudWatch Logs log group.
 * `log_stream` - Name of the CloudWatch Logs log stream.
 
-### `resources`
+### `resources` Block
 
 * `minimum_memory_in_mib` - Minimum amount of memory in MiB allocated to the MicroVM.

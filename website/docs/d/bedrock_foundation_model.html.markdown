@@ -3,22 +3,22 @@ subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_foundation_model"
 description: |-
-  Terraform data source for managing an AWS Bedrock Foundation Model.
+  Provides details about an AWS Bedrock Foundation Model.
 ---
 
 # Data Source: aws_bedrock_foundation_model
 
-Terraform data source for managing an AWS Bedrock Foundation Model.
+Provides details about an AWS Bedrock Foundation Model.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_bedrock_foundation_models" "test" {}
+data "aws_bedrock_foundation_models" "example" {}
 
-data "aws_bedrock_foundation_model" "test" {
-  model_id = data.aws_bedrock_foundation_models.test.model_summaries[0].model_id
+data "aws_bedrock_foundation_model" "example" {
+  model_id = data.aws_bedrock_foundation_models.example.model_summaries[0].model_id
 }
 ```
 

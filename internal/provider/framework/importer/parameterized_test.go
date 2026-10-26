@@ -1308,7 +1308,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 			}
 			if tc.useImportIDCreator {
 				importSpec.ImportID = testImportIDCreator{
-					testImportID: testImportID{t: t},
+					t: t,
 				}
 			}
 
@@ -1760,7 +1760,7 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 			}
 			if tc.useImportIDCreator {
 				importSpec.ImportID = testImportIDCreator{
-					testImportID: testImportID{t: t},
+					t: t,
 				}
 			}
 

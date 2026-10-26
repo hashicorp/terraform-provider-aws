@@ -53,7 +53,7 @@ resource "aws_verifiedaccess_endpoint" "example" {
 }
 ```
 
-### Cidr Example
+### CIDR Example
 
 ```terraform
 resource "aws_verifiedaccess_endpoint" "example" {

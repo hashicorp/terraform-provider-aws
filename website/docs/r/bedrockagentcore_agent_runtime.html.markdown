@@ -161,7 +161,7 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 
 The following arguments are required:
 
-* `agent_runtime_artifact` - (Required) Container artifact configuration. See [`agent_runtime_artifact`](#agent_runtime_artifact-block) below.
+* `agent_runtime_artifact` - (Required) Artifact configuration for the agent runtime, either a container image or code stored in Amazon S3. See [`agent_runtime_artifact`](#agent_runtime_artifact-block) below.
 * `agent_runtime_name` - (Required) Name of the agent runtime.
 * `network_configuration` - (Required) Network configuration for the agent runtime. See [`network_configuration`](#network_configuration-block) below.
 * `role_arn` - (Required) ARN of the IAM role that the agent runtime assumes to access AWS services.
@@ -192,7 +192,7 @@ The `code_configuration` block supports the following:
 
 * `code` - (Required) Configuration block for the source code location and configuration details. See [`code`](#code-block) below.
 * `entry_point` - (Required) Array specifying the entry point for code execution, indicating the function or method to invoke when the code runs. The array must contain 1 or 2 elements. Examples: `["main.py"]`, `["opentelemetry-instrument", "main.py"]`.
-* `runtime` - (Required) Runtime environment used to execute the code. Valid values: `PYTHON_3_10`, `PYTHON_3_11`, `PYTHON_3_12`, `PYTHON_3_13`.
+* `runtime` - (Required) Runtime environment used to execute the code. Valid values: `PYTHON_3_10`, `PYTHON_3_11`, `PYTHON_3_12`, `PYTHON_3_13`, `PYTHON_3_14`, `NODE_22`.
 
 ### `code` Block
 
@@ -218,7 +218,7 @@ The `container_configuration` block supports the following:
 
 The `authorizer_configuration` block supports the following:
 
-* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer-block) below.
+* `custom_jwt_authorizer` - (Required) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer-block) below.
 
 ### `custom_jwt_authorizer` Block
 

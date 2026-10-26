@@ -58,7 +58,7 @@ resource "aws_ecs_task_definition" "service" {
 }
 ```
 
-### With AppMesh Proxy
+### With App Mesh Proxy
 
 ```terraform
 resource "aws_ecs_task_definition" "service" {
@@ -223,7 +223,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `cpu` - (Optional) Number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
+* `cpu` - (Optional) Number of CPU units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `enable_fault_injection` - (Optional) Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Default is `false`.
 * `ephemeral_storage` - (Optional) Amount of ephemeral storage to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate. See [Ephemeral Storage](#ephemeral_storage-block).
 * `execution_role_arn` - (Optional) ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
@@ -251,7 +251,7 @@ The following arguments are optional:
 * `configure_at_launch` - (Optional) Whether the volume should be configured at launch time. This is used to create Amazon EBS volumes for standalone tasks or tasks created as part of a service. Each task definition revision may only have one volume configured at launch in the volume configuration.
 * `docker_volume_configuration` - (Optional) Configuration block to configure a [docker volume](#docker_volume_configuration-block). Detailed below.
 * `efs_volume_configuration` - (Optional) Configuration block for an [EFS volume](#efs_volume_configuration-block). Detailed below.
-* `fsx_windows_file_server_volume_configuration` - (Optional) Configuration block for an [FSX Windows File Server volume](#fsx_windows_file_server_volume_configuration-block). Detailed below.
+* `fsx_windows_file_server_volume_configuration` - (Optional) Configuration block for an [FSx Windows File Server volume](#fsx_windows_file_server_volume_configuration-block). Detailed below.
 * `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume` parameter of container definition in the `mountPoints` section.
 * `s3files_volume_configuration` - (Optional) Configuration block for an [S3 Files volume](#s3files_volume_configuration-block). Detailed below.
@@ -278,7 +278,7 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 
 ### `runtime_platform` Block
 
-* `cpu_architecture` - (Optional) Must be set to either `X86_64` or `ARM64`; see [cpu architecture](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform)
+* `cpu_architecture` - (Optional) Must be set to either `X86_64` or `ARM64`; see [CPU architecture](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform)
 * `operating_system_family` - (Optional) If the `requires_compatibilities` is `FARGATE` this field is required; must be set to a valid option from the [operating system family in the runtime platform](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform) setting
 
 #### `efs_volume_configuration.authorization_config` Block
@@ -288,7 +288,7 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 
 ### `fsx_windows_file_server_volume_configuration` Block
 
-For more information, see [Specifying an FSX Windows File Server volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/tutorial-wfsx-volumes.html)
+For more information, see [Specifying an FSx Windows File Server volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/tutorial-wfsx-volumes.html)
 
 * `authorization_config` - (Required) Configuration block for [authorization](#fsx_windows_file_server_volume_configurationauthorization_config-block) for the Amazon FSx for Windows File Server file system detailed below.
 * `file_system_id` - (Required) Amazon FSx for Windows File Server file system ID to use.

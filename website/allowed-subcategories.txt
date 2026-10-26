@@ -250,6 +250,7 @@ SageMaker AI
 Savings Plans
 Secrets Manager
 Security Hub
+Security Incident Response
 Security Lake
 Serverless Application Repository
 Service Catalog

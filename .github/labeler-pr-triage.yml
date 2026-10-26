@@ -519,6 +519,7 @@ service/cloudwatch:
               - 'website/**/cloudwatch_composite_*'
               - 'website/**/cloudwatch_contributor_*'
               - 'website/**/cloudwatch_otel_*'
+              - 'website/**/cloudwatch_resource_metrics_*'
 service/cloudwatchomni:
   - any:
       - changed-files:
@@ -2156,6 +2157,12 @@ service/securityhub:
           - any-glob-to-any-file:
               - 'internal/service/securityhub/**/*'
               - 'website/**/securityhub_*'
+service/securityir:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/securityir/**/*'
+              - 'website/**/securityir_*'
 service/securitylake:
   - any:
       - changed-files:

@@ -89,8 +89,8 @@ This data source exports the following attributes in addition to the arguments a
 * `log_destination_type` - The log destination type.
 * `log_exports` - Collection of exported log types. Log types include the connection log, user log and user activity log.
 * `tags` - Tags associated to the cluster
-* `vpc_id` - VPC Id associated with the cluster
-* `vpc_security_group_ids` - The VPC security group Ids associated with the cluster
+* `vpc_id` - VPC ID associated with the cluster
+* `vpc_security_group_ids` - The VPC security group IDs associated with the cluster
 
 Cluster nodes (for `cluster_nodes`) support the following attributes:
 

@@ -355,8 +355,8 @@ A `variable` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Codepipeline ID.
-* `arn` - Codepipeline ARN.
+* `id` - CodePipeline ID.
+* `arn` - CodePipeline ARN.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `trigger_all` - A list of all triggers present on the pipeline, including default triggers added by AWS for `V2` pipelines which omit an explicit `trigger` definition.
 

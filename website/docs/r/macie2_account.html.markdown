@@ -23,22 +23,22 @@ resource "aws_macie2_account" "test" {
 
 This resource supports the following arguments:
 
+* `finding_publishing_frequency` - (Optional) How often to publish updates to policy findings for the account. This includes publishing updates to AWS Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events). Valid values are `FIFTEEN_MINUTES`, `ONE_HOUR` or `SIX_HOURS`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `finding_publishing_frequency` -  (Optional) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to AWS Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events). Valid values are `FIFTEEN_MINUTES`, `ONE_HOUR` or `SIX_HOURS`.
-* `status` - (Optional) Specifies the status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `ENABLED`. Valid values are `ENABLED` or `PAUSED`.
+* `status` - (Optional) Status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `ENABLED`. Valid values are `ENABLED` or `PAUSED`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The unique identifier (ID) of the macie account.
+* `created_at` - Date and time, in UTC and extended RFC 3339 format, when the Amazon Macie account was created.
+* `id` - Unique identifier (ID) of the Macie account.
 * `service_role` - ARN of the service-linked role that allows Macie to monitor and analyze data in AWS resources for the account.
-* `created_at` - The date and time, in UTC and extended RFC 3339 format, when the Amazon Macie account was created.
-* `updated_at` - The date and time, in UTC and extended RFC 3339 format, of the most recent change to the status of the Macie account.
+* `updated_at` - Date and time, in UTC and extended RFC 3339 format, of the most recent change to the status of the Macie account.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_account` using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_account` using the ID. For example:
 
 ```terraform
 import {
@@ -47,7 +47,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_macie2_account` using the id. For example:
+Using `terraform import`, import `aws_macie2_account` using the ID. For example:
 
 ```console
 % terraform import aws_macie2_account.example abcd1

@@ -46,12 +46,12 @@ resource "aws_s3_object" "MyIPSet" {
 
 This resource supports the following arguments:
 
+* `activate` - (Required) Whether to start using the uploaded IPSet.
+* `detector_id` - (Required) Detector ID of the GuardDuty.
+* `format` - (Required) Format of the file that contains the IPSet. Valid values: `TXT` | `STIX` | `OTX_CSV` | `ALIEN_VAULT` | `PROOF_POINT` | `FIRE_EYE`
+* `location` - (Required) URI of the file that contains the IPSet.
+* `name` - (Required) Friendly name to identify the IPSet.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `activate` - (Required) Specifies whether GuardDuty is to start using the uploaded IPSet.
-* `detector_id` - (Required) The detector ID of the GuardDuty.
-* `format` - (Required) The format of the file that contains the IPSet. Valid values: `TXT` | `STIX` | `OTX_CSV` | `ALIEN_VAULT` | `PROOF_POINT` | `FIRE_EYE`
-* `location` - (Required) The URI of the file that contains the IPSet.
-* `name` - (Required) The friendly name to identify the IPSet.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the GuardDuty IPSet.
 * `ip_set_id` - ID of the GuardDuty IPSet.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

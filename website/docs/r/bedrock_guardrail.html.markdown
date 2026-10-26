@@ -3,12 +3,12 @@ subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_guardrail"
 description: |-
-  Terraform resource for managing an Amazon Bedrock Guardrail.
+  Manages an Amazon Bedrock Guardrail.
 ---
 
 # Resource: aws_bedrock_guardrail
 
-Terraform resource for managing an Amazon Bedrock Guardrail.
+Manages an Amazon Bedrock Guardrail.
 
 ## Example Usage
 
@@ -28,7 +28,7 @@ resource "aws_bedrock_guardrail" "example" {
       type            = "HATE"
     }
     tier_config {
-      tier_name = "STANDARD"
+      tier_name = "CLASSIC"
     }
   }
 
@@ -89,7 +89,7 @@ The following arguments are optional:
 
 * `content_policy_config` - (Optional) Content policy config for a guardrail. See [`content_policy_config` Block](#content_policy_config-block) for more information.
 * `contextual_grounding_policy_config` - (Optional) Contextual grounding policy config for a guardrail. See [`contextual_grounding_policy_config` Block](#contextual_grounding_policy_config-block) for more information.
-* `cross_region_config` - (Optional) Configuration block to enable cross-region routing for bedrock guardrails. See [`cross_region_config` Block](#cross_region_config-block) for more information. Note see [available regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region.html) here.
+* `cross_region_config` - (Optional) Configuration block to enable cross-region routing for bedrock guardrails. See [`cross_region_config` Block](#cross_region_config-block) for more information. See [available Regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region-support.html).
 * `description` - (Optional) Description of the guardrail or its version.
 * `kms_key_arn` - (Optional) KMS key with which the guardrail was encrypted at rest.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -110,11 +110,11 @@ The `content_policy_config` configuration block supports the following arguments
 The `filters_config` configuration block supports the following arguments:
 
 * `input_action` - (Optional) Action to take when harmful content is detected. Valid values: `BLOCK`, `NONE`.
-* `input_enabled` - (Optional) Toggles guardrail evaluation on input.
+* `input_enabled` - (Optional) Whether to enable guardrail evaluation on input.
 * `input_modalities` - (Optional) List of selected input modalities. Valid values: `IMAGE`, `TEXT`.
 * `input_strength` - (Required) Strength for filters. Valid values: `NONE`, `LOW`, `MEDIUM`, `HIGH`.
 * `output_action` - (Optional) Action to take when harmful content is detected. Valid values: `BLOCK`, `NONE`.
-* `output_enabled` - (Optional) Toggles guardrail evaluation on output.
+* `output_enabled` - (Optional) Whether to enable guardrail evaluation on output.
 * `output_modalities` - (Optional) List of selected output modalities. Valid values: `IMAGE`, `TEXT`.
 * `output_strength` - (Required) Strength for filters. Valid values: `NONE`, `LOW`, `MEDIUM`, `HIGH`.
 * `type` - (Required) Type of filter in content policy. Valid values: `SEXUAL`, `VIOLENCE`, `HATE`, `INSULTS`, `MISCONDUCT`, `PROMPT_ATTACK`.
@@ -123,7 +123,7 @@ The `filters_config` configuration block supports the following arguments:
 
 The `tier_config` configuration block supports the following arguments:
 
-* `tier_name` - (Required) Name of the content policy tier. Valid values include STANDARD or CLASSIC.
+* `tier_name` - (Required) Name of the content policy tier. Valid values: `CLASSIC`, `STANDARD`. `STANDARD` requires `cross_region_config`.
 
 ### `contextual_grounding_policy_config` Block
 
@@ -186,7 +186,7 @@ The `topic_policy_config` configuration block supports the following arguments:
 
 The `tier_config` configuration block supports the following arguments:
 
-* `tier_name` - (Required) Name of the topic policy tier. Valid values include STANDARD or CLASSIC.
+* `tier_name` - (Required) Name of the topic policy tier. Valid values: `CLASSIC`, `STANDARD`. `STANDARD` requires `cross_region_config`.
 
 ### `topics_config` Block
 
@@ -228,11 +228,12 @@ The `words_config` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `created_at` - Unix epoch timestamp in seconds for when the Guardrail was created.
+* `created_at` - Date and time the Guardrail was created, in RFC3339 format.
 * `guardrail_arn` - ARN of the Guardrail.
 * `guardrail_id` - ID of the Guardrail.
-* `status` - Status of the Bedrock Guardrail. One of `READY`, `FAILED`.
-* `updated_at` - Date and time that the Guardrail list was last updated.
+* `status` - Status of the Bedrock Guardrail.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `updated_at` - Date and time that the Guardrail was last updated, in RFC3339 format.
 * `version` - Version of the Guardrail.
 
 ## Timeouts
@@ -254,7 +255,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Amazon Bedrock Guardrail using using a comma-delimited string of `guardrail_id` and `version`. For example:
+Using `terraform import`, import Amazon Bedrock Guardrail using a comma-delimited string of `guardrail_id` and `version`. For example:
 
 ```console
 % terraform import aws_bedrock_guardrail.example guardrail-id-12345678,DRAFT

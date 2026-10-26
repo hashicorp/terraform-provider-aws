@@ -3,11 +3,11 @@ subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_agent_knowledge_base_association"
 description: |-
-  Terraform resource for managing an AWS Agents for Amazon Bedrock Agent Knowledge Base Association.
+  Manages an AWS Agents for Amazon Bedrock Agent Knowledge Base Association.
 ---
 # Resource: aws_bedrockagent_agent_knowledge_base_association
 
-Terraform resource for managing an AWS Agents for Amazon Bedrock Agent Knowledge Base Association.
+Manages an AWS Agents for Amazon Bedrock Agent Knowledge Base Association.
 
 ## Example Usage
 
@@ -33,7 +33,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `agent_version` - (Optional, Forces new resource) Version of the agent with which you want to associate the knowledge base. Valid values: `DRAFT`.
+* `agent_version` - (Optional, Forces new resource) Version of the agent with which you want to associate the knowledge base. Valid values: `DRAFT`. Defaults to `DRAFT`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference

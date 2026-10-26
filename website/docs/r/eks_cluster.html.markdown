@@ -481,14 +481,14 @@ The `resource` configuration block supports the following arguments:
 
 ### vpc_config Arguments
 
-* `cluster_security_group_id` - (Computed) Cluster security group that is created by Amazon EKS for the cluster. Managed node groups use this security group for control-plane-to-data-plane communication.
+* `cluster_security_group_id` - (Read-Only) Cluster security group that is created by Amazon EKS for the cluster. Managed node groups use this security group for control-plane-to-data-plane communication.
 * `control_plane_egress_mode` - (Optional, Computed) Egress mode for the EKS control plane. Valid values are `AWS_MANAGED` and `CUSTOMER_ROUTED`. Defaults to `AWS_MANAGED`. Changing from `CUSTOMER_ROUTED` back to `AWS_MANAGED` forces a new resource.
 * `endpoint_private_access` - (Optional) Whether the Amazon EKS private API server endpoint is enabled. Default is `false`.
 * `endpoint_public_access` - (Optional) Whether the Amazon EKS public API server endpoint is enabled. Default is `true`.
 * `public_access_cidrs` - (Optional) List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with `0.0.0.0/0`. Terraform will only perform drift detection of its value when present in a configuration.
 * `security_group_ids` - (Optional) List of security group IDs for the cross-account elastic network interfaces that Amazon EKS creates to use to allow communication between your worker nodes and the Kubernetes control plane.
 * `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones. Amazon EKS creates cross-account elastic network interfaces in these subnets to allow communication between your worker nodes and the Kubernetes control plane.
-* `vpc_id` - (Computed) ID of the VPC associated with your cluster.
+* `vpc_id` - (Read-Only) ID of the VPC associated with your cluster.
 
 ### kubernetes_network_config
 
@@ -503,7 +503,7 @@ The `kubernetes_network_config` configuration block supports the following argum
 
     * Between /24 and /12.
 
-* `service_ipv6_cidr` - (Computed) The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specify `ipv6` for `ip_family` when you create the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
+* `service_ipv6_cidr` - (Read-Only) The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specify `ipv6` for `ip_family` when you create the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
 * `ip_family` - (Optional) The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`. You can only specify an IP family when you create a cluster, changing this value will force a new cluster to be created.
 
 #### elastic_load_balancing
@@ -587,7 +587,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `oidc` - Nested block containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
 
-### oidc
+### OIDC
 
 * `issuer` - Issuer URL for the OpenID Connect identity provider.
 
