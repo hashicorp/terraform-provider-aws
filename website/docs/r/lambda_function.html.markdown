@@ -722,6 +722,8 @@ The following arguments are optional:
 * `kms_key_arn` - (Optional) ARN of the KMS customer managed key used to encrypt the durable function's execution state (input, output, and error payloads). If not specified, the execution state is encrypted with an AWS managed key. Changing this value forces a new resource to be created. Note that the top-level `kms_key_arn` argument is not used for durable function state encryption.
 * `retention_period` - (Optional) Number of days to retain the function's execution state. Valid value between 1 and 90. If not specified, the function's execution state is not retained. Defaults to 14.
 
+~> **NOTE:** When `kms_key_arn` is set, the KMS key policy must grant the Lambda service (`lambda.amazonaws.com`) permission to use the key (`kms:Decrypt`, `kms:GenerateDataKey`, and `kms:DescribeKey`); otherwise function creation fails with a KMS `AccessDeniedException`. The key must be a symmetric encryption key in the same region as the function. Because the encryption key is set at creation time and cannot be changed in place, modifying `kms_key_arn` forces the function to be replaced.
+
 ### `environment` Block
 
 * `variables` - (Optional) Map of environment variables available to your Lambda function during execution.

@@ -5298,9 +5298,40 @@ func testAccFunctionConfig_durableConfigKMSKey(rName string, executionTimeout, r
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "lambda-durable-kms"
+    Statement = [
+      {
+        Sid    = "EnableIAMUserPermissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowLambdaDurableService"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
 }
 
 resource "aws_lambda_function" "test" {
