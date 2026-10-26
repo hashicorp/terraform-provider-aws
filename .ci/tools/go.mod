@@ -15,7 +15,7 @@ require (
 	// rhysd/actionlint if it starts releasing again; otherwise re-evaluate it and the other forks
 	// around mid-2027.
 	github.com/katbyte/actionlint v1.7.13
-	github.com/katbyte/tctest v1.3.4
+	github.com/katbyte/tctest v1.3.5
 	github.com/katbyte/terrafmt v1.0.1
 	github.com/pavius/impi v0.0.3
 	github.com/terraform-linters/tflint v0.65.0
