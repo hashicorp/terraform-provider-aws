@@ -117,16 +117,16 @@ func TestIPSetAddressesSDKDiff(t *testing.T) {
 			}
 			data := schema.TestResourceDataRaw(t, r.SchemaMap(), map[string]any{
 				"addresses":          oldAddresses,
-				"name":               "test",
-				"scope":              "REGIONAL",
+				names.AttrName:       "test",
+				names.AttrScope:      "REGIONAL",
 				"ip_address_version": "IPV6",
 			})
 			data.SetId("test-id")
 			state := data.State()
 			config := terraformsdk.NewResourceConfigRaw(map[string]any{
 				"addresses":          values,
-				"name":               "test",
-				"scope":              "REGIONAL",
+				names.AttrName:       "test",
+				names.AttrScope:      "REGIONAL",
 				"ip_address_version": "IPV6",
 			})
 			if tt.unknown {
