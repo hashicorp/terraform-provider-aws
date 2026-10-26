@@ -487,16 +487,45 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.WarmPoolConfig = expandWarmPoolConfig(v.([]any)[0].(map[string]any))
 	}
 
-	_, err := conn.CreateNodegroup(ctx, &input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating EKS Node Group (%s): %s", groupID, err)
-	}
+	const maxCreateAttempts = 3
 
 	d.SetId(groupID)
 
-	if _, err := waitNodegroupCreated(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for EKS Node Group (%s) create: %s", d.Id(), err)
+	for attempt := 1; attempt <= maxCreateAttempts; attempt++ {
+		// Generate a new idempotency token for each attempt.
+		input.ClientRequestToken = aws.String(create.UniqueId(ctx))
+
+		_, err := conn.CreateNodegroup(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating EKS Node Group (%s): %s", groupID, err)
+		}
+
+		nodeGroup, err := waitNodegroupCreated(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate))
+
+		if err == nil {
+			break
+		}
+
+		// If the node group creation failed due to a transient issue (e.g. IAM
+		// throttling during instance-profile creation), delete the failed node
+		// group and retry.  Non-retryable failures are returned immediately.
+		if !isNodegroupCreateFailureRetryable(nodeGroup) || attempt == maxCreateAttempts {
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Node Group (%s) create: %s", d.Id(), err)
+		}
+
+		log.Printf("[WARN] EKS Node Group (%s) creation failed with retryable error (attempt %d/%d), deleting and retrying: %s", d.Id(), attempt, maxCreateAttempts, err)
+
+		if _, deleteErr := conn.DeleteNodegroup(ctx, &eks.DeleteNodegroupInput{
+			ClusterName:   aws.String(clusterName),
+			NodegroupName: aws.String(nodeGroupName),
+		}); deleteErr != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting failed EKS Node Group (%s) before retry: %s", d.Id(), deleteErr)
+		}
+
+		if _, deleteErr := waitNodegroupDeleted(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate)); deleteErr != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for failed EKS Node Group (%s) delete before retry: %s", d.Id(), deleteErr)
+		}
 	}
 
 	return append(diags, resourceNodeGroupRead(ctx, d, meta)...)
@@ -867,6 +896,24 @@ func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.Client, cluste
 	}
 
 	return nil, err
+}
+
+// isNodegroupCreateFailureRetryable returns true when a CREATE_FAILED node
+// group failed for a transient reason that is likely to succeed on retry.
+func isNodegroupCreateFailureRetryable(nodeGroup *types.Nodegroup) bool {
+	if nodeGroup == nil || nodeGroup.Status != types.NodegroupStatusCreateFailed || nodeGroup.Health == nil {
+		return false
+	}
+
+	for _, issue := range nodeGroup.Health.Issues {
+		switch issue.Code {
+		case types.NodegroupIssueCodeIamThrottling,
+			types.NodegroupIssueCodeEc2SubnetInvalidConfiguration:
+			return true
+		}
+	}
+
+	return false
 }
 
 func issueError(apiObject types.Issue) error {
