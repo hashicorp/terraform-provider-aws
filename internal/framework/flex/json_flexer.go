@@ -8,34 +8,42 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-type TypeAtPather interface {
-	TypeAtPath(context.Context, *tftypes.AttributePath) (tftypes.Type, error)
+type typeAtTerraformPather interface {
+	TypeAtTerraformPath(context.Context, *tftypes.AttributePath) (attr.Type, error)
 }
 
 type JSONFlexer interface {
-	Expand(context.Context, TypeAtPather, tftypes.Value) (string, error)
-	Flatten(context.Context, TypeAtPather, string) (tftypes.Value, error)
+	Expand(context.Context, tftypes.Value) (string, error)
+	Flatten(context.Context, string) (tftypes.Value, error)
 }
 
 var (
 	_ JSONFlexer = jsonFlex{}
 )
 
-func NewJSONFlex(tfToJSONNameMap map[string]string) JSONFlexer {
-	jsonToTFNameMap := make(map[string]string)
-	for k, v := range tfToJSONNameMap {
-		jsonToTFNameMap[v] = k
+func NewJSONFlex(schema typeAtTerraformPather, tfToCfnNameMap map[string]string) jsonFlex {
+	cfnToTfNameMap := make(map[string]string)
+	for k, v := range tfToCfnNameMap {
+		cfnToTfNameMap[v] = k
 	}
 
 	return jsonFlex{
-		tfToJSONNameMap: tfToJSONNameMap,
-		jsonToTFNameMap: jsonToTFNameMap,
+		cfnToTfNameMap: cfnToTfNameMap,
+		tfToCfnNameMap: tfToCfnNameMap,
+		typeAtPath: func(ctx context.Context, path *tftypes.AttributePath) (tftypes.Type, error) {
+			t, err := schema.TypeAtTerraformPath(ctx, path)
+			if err != nil {
+				return nil, err
+			}
+			return t.TerraformType(ctx), nil
+		},
 	}
 }
 
@@ -43,40 +51,52 @@ func NewJSONFlex(tfToJSONNameMap map[string]string) JSONFlexer {
 // The initial use case is for the Cloud Control API.
 // Cribbed from terraform-provider-awscc/internal/generic/translate.go@v1.107.0.
 type jsonFlex struct {
-	tfToJSONNameMap map[string]string
-	jsonToTFNameMap map[string]string
+	cfnToTfNameMap map[string]string
+	tfToCfnNameMap map[string]string
+	typeAtPath     func(context.Context, *tftypes.AttributePath) (tftypes.Type, error)
 }
 
 // Expand converts a Terraform value into its JSON representation.
-func (j jsonFlex) Expand(ctx context.Context, typeAtPather TypeAtPather, val tftypes.Value) (string, error) {
-	v, err := j.toRaw(ctx, typeAtPather, nil, val)
+func (j jsonFlex) Expand(ctx context.Context, val tftypes.Value) (string, error) {
+	v, err := j.toRawMap(ctx, val)
 	if err != nil {
 		return "", err
 	}
-	if v, ok := v.(map[string]any); ok {
-		return tfjson.EncodeToString(v)
-	}
-	return "", fmt.Errorf("unexpected raw type: %T", v)
+	return tfjson.EncodeToString(v)
 }
 
 // Flatten converts a JSON representation into its Terraform value.
-func (j jsonFlex) Flatten(ctx context.Context, typeAtPather TypeAtPather, s string) (tftypes.Value, error) {
+func (j jsonFlex) Flatten(ctx context.Context, s string) (tftypes.Value, error) {
 	var v any
 	if err := tfjson.DecodeFromString(s, &v); err != nil {
 		return inttypes.Zero[tftypes.Value](), err
 	}
 	if v, ok := v.(map[string]any); ok {
-		return j.fromRaw(ctx, typeAtPather, nil, v)
+		return j.fromRawMap(ctx, v)
 	}
 	return inttypes.Zero[tftypes.Value](), fmt.Errorf("unexpected raw type: %T", v)
 }
 
-func (j jsonFlex) toRaw(ctx context.Context, typeAtPather TypeAtPather, path *tftypes.AttributePath, val tftypes.Value) (any, error) {
-	if val.IsNull() || !val.IsKnown() {
+func (j jsonFlex) toRawMap(ctx context.Context, val tftypes.Value) (map[string]any, error) {
+	switch v, err := j.toRaw(ctx, nil, val); {
+	case err != nil:
+		return nil, err
+	case v == nil:
 		return make(map[string]any), nil
+	default:
+		if v, ok := v.(map[string]any); ok {
+			return v, nil
+		}
+		return nil, fmt.Errorf("unexpected raw type: %T", v)
+	}
+}
+
+func (j jsonFlex) toRaw(ctx context.Context, path *tftypes.AttributePath, val tftypes.Value) (any, error) {
+	if val.IsNull() || !val.IsKnown() {
+		return nil, nil
 	}
 
-	switch typ, err := typeAtPather.TypeAtPath(ctx, path); {
+	switch typ, err := j.typeAtPath(ctx, path); {
 	case err != nil:
 		return nil, err
 
@@ -121,7 +141,7 @@ func (j jsonFlex) toRaw(ctx context.Context, typeAtPather TypeAtPather, path *tf
 			} else {
 				path = path.WithElementKeyInt(idx)
 			}
-			v, err := j.toRaw(ctx, typeAtPather, path, val)
+			v, err := j.toRaw(ctx, path, val)
 			if err != nil {
 				return nil, err
 			}
@@ -152,13 +172,13 @@ func (j jsonFlex) toRaw(ctx context.Context, typeAtPather TypeAtPather, path *tf
 			var propertyName string
 			if typ.Is(tftypes.Object{}) {
 				var ok bool
-				propertyName, ok = j.tfToJSONNameMap[name]
+				propertyName, ok = j.tfToCfnNameMap[name]
 				if !ok {
 					return nil, fmt.Errorf("attribute name mapping not found: %s", name)
 				}
 			}
 
-			v, err := j.toRaw(ctx, typeAtPather, path, val)
+			v, err := j.toRaw(ctx, path, val)
 			if err != nil {
 				return nil, err
 			}
@@ -182,8 +202,12 @@ func (j jsonFlex) toRaw(ctx context.Context, typeAtPather TypeAtPather, path *tf
 	}
 }
 
-func (j jsonFlex) fromRaw(ctx context.Context, typeAtPather TypeAtPather, path *tftypes.AttributePath, v any) (tftypes.Value, error) {
-	typ, err := typeAtPather.TypeAtPath(ctx, path)
+func (j jsonFlex) fromRawMap(ctx context.Context, v map[string]any) (tftypes.Value, error) {
+	return j.fromRaw(ctx, nil, v)
+}
+
+func (j jsonFlex) fromRaw(ctx context.Context, path *tftypes.AttributePath, v any) (tftypes.Value, error) {
+	typ, err := j.typeAtPath(ctx, path)
 	if err != nil {
 		return inttypes.Zero[tftypes.Value](), err
 	}
@@ -226,7 +250,7 @@ func (j jsonFlex) fromRaw(ctx context.Context, typeAtPather TypeAtPather, path *
 			} else {
 				path = path.WithElementKeyInt(idx)
 			}
-			val, err := j.fromRaw(ctx, typeAtPather, path, v)
+			val, err := j.fromRaw(ctx, path, v)
 			if err != nil {
 				return inttypes.Zero[tftypes.Value](), err
 			}
@@ -251,7 +275,7 @@ func (j jsonFlex) fromRaw(ctx context.Context, typeAtPather TypeAtPather, path *
 			var attributeName string
 			if isObject {
 				var ok bool
-				attributeName, ok = j.jsonToTFNameMap[key]
+				attributeName, ok = j.cfnToTfNameMap[key]
 				if !ok {
 					tflog.Info(ctx, "attribute name mapping not found", map[string]any{
 						"key": key,
@@ -263,7 +287,7 @@ func (j jsonFlex) fromRaw(ctx context.Context, typeAtPather TypeAtPather, path *
 				path = path.WithElementKeyString(key)
 			}
 
-			val, err := j.fromRaw(ctx, typeAtPather, path, v)
+			val, err := j.fromRaw(ctx, path, v)
 			if err != nil {
 				if isObject {
 					tflog.Info(ctx, "not found in Terraform schema", map[string]any{
