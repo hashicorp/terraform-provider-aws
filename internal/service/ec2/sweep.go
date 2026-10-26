@@ -1322,7 +1322,9 @@ func sweepNetworkInterfaces(region string) error {
 	input := ec2.DescribeNetworkInterfacesInput{}
 	var sweepResources []sweep.Sweepable
 
-	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, &input)
+	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, &input, func(o *ec2.DescribeNetworkInterfacesPaginatorOptions) {
+		o.Limit = 1000
+	})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

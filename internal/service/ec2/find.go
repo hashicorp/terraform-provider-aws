@@ -2464,7 +2464,12 @@ func findNetworkInterfacePermissionByID(ctx context.Context, conn *ec2.Client, i
 func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) ([]awstypes.NetworkInterface, error) {
 	var output []awstypes.NetworkInterface
 
-	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, input)
+	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, input, func(o *ec2.DescribeNetworkInterfacesPaginatorOptions) {
+		// MaxResults cannot be combined with NetworkInterfaceIds.
+		if o.Limit == 0 && len(input.NetworkInterfaceIds) == 0 {
+			o.Limit = 1000
+		}
+	})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
