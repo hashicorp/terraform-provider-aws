@@ -37,6 +37,7 @@ func resourceDetectorFeature() *schema.Resource {
 			return map[string]*schema.Schema{
 				"additional_configuration": {
 					Optional: true,
+					Computed: true,
 					Type:     schema.TypeSet,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -84,8 +85,9 @@ func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, met
 		Status: awstypes.FeatureStatus(d.Get(names.AttrStatus).(string)),
 	}
 
-	if v, ok := d.GetOk("additional_configuration"); ok && v.(*schema.Set).Len() > 0 {
-		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.(*schema.Set).List())
+	// Retrieve the value set in the config directly so that Computed values returned by AWS aren't sent back.
+	if v := d.GetRawConfig().GetAttr("additional_configuration"); v.IsKnown() && !v.IsNull() && v.LengthInt() > 0 {
+		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(d.Get("additional_configuration").(*schema.Set).List())
 	}
 
 	input := &guardduty.UpdateDetectorInput{

@@ -138,15 +138,15 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.FileSystemId = aws.String(v.(string))
 	}
 
-	filter := tfslices.PredicateTrue[*awstypes.FileSystemDescription]()
+	filter := tfslices.PredicateTrue[awstypes.FileSystemDescription]()
 
 	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
-		filter = func(v *awstypes.FileSystemDescription) bool {
+		filter = func(v awstypes.FileSystemDescription) bool {
 			return keyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
 		}
 	}
 
-	fs, err := findFileSystem(ctx, conn, input, filter)
+	fs, err := findFileSystem(ctx, conn, input, tfslices.WithFilter(filter))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS File System", err))

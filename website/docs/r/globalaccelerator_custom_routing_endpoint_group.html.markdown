@@ -32,27 +32,27 @@ resource "aws_globalaccelerator_custom_routing_endpoint_group" "example" {
 
 This resource supports the following arguments:
 
-* `listener_arn` - (Required) The Amazon Resource Name (ARN) of the custom routing listener.
-* `destination_configuration` - (Required) The port ranges and protocols for all endpoints in a custom routing endpoint group to accept client traffic on. Fields documented below.
-* `endpoint_configuration` - (Optional) The list of endpoint objects. Fields documented below.
-* `endpoint_group_region` (Optional) - The name of the AWS Region where the custom routing endpoint group is located.
+* `destination_configuration` - (Required) Port ranges and protocols for all endpoints in a custom routing endpoint group to accept client traffic on. See [`destination_configuration`](#destination_configuration-block) below.
+* `endpoint_configuration` - (Optional) Endpoint objects. See [`endpoint_configuration`](#endpoint_configuration-block) below.
+* `endpoint_group_region` - (Optional) AWS Region where the custom routing endpoint group is located.
+* `listener_arn` - (Required) ARN of the custom routing listener.
 
-`destination_configuration` supports the following arguments:
+### `destination_configuration` Block
 
-* `from_port` - (Required) The first port, inclusive, in the range of ports for the endpoint group that is associated with a custom routing accelerator.
-* `protocols` - (Required) The protocol for the endpoint group that is associated with a custom routing accelerator. The protocol can be either `"TCP"` or `"UDP"`.
-* `to_port` - (Required) The last port, inclusive, in the range of ports for the endpoint group that is associated with a custom routing accelerator.
+* `from_port` - (Required) First port, inclusive, in the range of ports for the endpoint group that is associated with a custom routing accelerator.
+* `protocols` - (Required) Protocol for the endpoint group that is associated with a custom routing accelerator. The protocol can be either `"TCP"` or `"UDP"`.
+* `to_port` - (Required) Last port, inclusive, in the range of ports for the endpoint group that is associated with a custom routing accelerator.
 
-`endpoint_configuration` supports the following arguments:
+### `endpoint_configuration` Block
 
-* `endpoint_id` - (Optional) An ID for the endpoint. For custom routing accelerators, this is the virtual private cloud (VPC) subnet ID.
+* `endpoint_id` - (Optional) ID for the endpoint. For custom routing accelerators, this is the VPC subnet ID.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) of the custom routing endpoint group.
-* `arn` - The Amazon Resource Name (ARN) of the custom routing endpoint group.
+* `arn` - ARN of the custom routing endpoint group.
+* `id` - ARN of the custom routing endpoint group.
 
 ## Timeouts
 
@@ -82,7 +82,7 @@ resource "aws_globalaccelerator_custom_routing_endpoint_group" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator custom routing endpoint group.
+- `arn` (String) ARN of the Global Accelerator custom routing endpoint group.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator custom routing endpoint groups using the `id`. For example:
 

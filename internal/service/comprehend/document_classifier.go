@@ -377,8 +377,7 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 	}
 	_, err := conn.StopTrainingDocumentClassifier(ctx, &input)
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return diags
 		}
 
@@ -386,8 +385,7 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if _, err := waitDocumentClassifierStopped(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return diags
 		}
 
@@ -414,8 +412,7 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 			}
 			_, err = conn.DeleteDocumentClassifier(ctx, &input)
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if !errors.As(err, &nfe) {
+				if !errs.IsA[*types.ResourceNotFoundException](err) {
 					return fmt.Errorf("deleting version (%s): %w", aws.ToString(v.VersionName), err)
 				}
 			}
@@ -504,11 +501,9 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 		out, err = conn.CreateDocumentClassifier(ctx, in)
 
 		if err != nil {
-			var tmre *types.TooManyRequestsException
-			var qee ratelimit.QuotaExceededError // This is not a typo: the ratelimit.QuotaExceededError is returned as a struct, not a pointer
-			if errors.As(err, &tmre) {
+			if errs.IsA[*types.TooManyRequestsException](err) {
 				return tfresource.RetryableError(err)
-			} else if errors.As(err, &qee) {
+			} else if errs.IsA[ratelimit.QuotaExceededError](err) { // This is not a typo: the ratelimit.QuotaExceededError is returned as a struct, not a pointer
 				// Unable to get a rate limit token
 				return tfresource.RetryableError(err)
 			} else {

@@ -25,7 +25,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -81,7 +81,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -135,7 +135,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -183,7 +183,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -219,7 +219,7 @@ func TestAccBedrockAgentCoreHarness_tags(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -231,7 +231,7 @@ func TestAccBedrockAgentCoreHarness_Tags_null(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -288,7 +288,7 @@ func TestAccBedrockAgentCoreHarness_Tags_null(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -300,7 +300,7 @@ func TestAccBedrockAgentCoreHarness_Tags_emptyMap(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -345,7 +345,7 @@ func TestAccBedrockAgentCoreHarness_Tags_emptyMap(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -357,7 +357,7 @@ func TestAccBedrockAgentCoreHarness_Tags_addOnUpdate(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -434,7 +434,7 @@ func TestAccBedrockAgentCoreHarness_Tags_addOnUpdate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -446,7 +446,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_onCreate(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -502,7 +502,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_onCreate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -538,7 +538,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_onCreate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -550,7 +550,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -643,7 +643,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -691,7 +691,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -703,7 +703,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_OnUpdate_replace(t *testing.T)
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -790,7 +790,7 @@ func TestAccBedrockAgentCoreHarness_Tags_EmptyTag_OnUpdate_replace(t *testing.T)
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -802,7 +802,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_providerOnly(t *testing.T) 
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -857,7 +857,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_providerOnly(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -909,7 +909,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_providerOnly(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -957,7 +957,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_providerOnly(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -995,7 +995,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_providerOnly(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1007,7 +1007,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nonOverlapping(t *testing.T
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1072,7 +1072,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nonOverlapping(t *testing.T
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -1136,7 +1136,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nonOverlapping(t *testing.T
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -1174,7 +1174,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nonOverlapping(t *testing.T
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1186,7 +1186,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_overlapping(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1249,7 +1249,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -1313,7 +1313,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 			{
@@ -1369,7 +1369,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1381,7 +1381,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_updateToProviderOnly(t *tes
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1468,7 +1468,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_updateToProviderOnly(t *tes
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1480,7 +1480,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_updateToResourceOnly(t *tes
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1566,7 +1566,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_updateToResourceOnly(t *tes
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1578,7 +1578,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_emptyResourceTag(t *testing
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1641,7 +1641,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_emptyResourceTag(t *testing
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1653,7 +1653,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_emptyProviderOnlyTag(t *tes
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1708,7 +1708,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_emptyProviderOnlyTag(t *tes
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1720,7 +1720,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nullOverlappingResourceTag(
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1784,7 +1784,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nullOverlappingResourceTag(
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1796,7 +1796,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nullNonOverlappingResourceT
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1862,7 +1862,7 @@ func TestAccBedrockAgentCoreHarness_Tags_DefaultTags_nullNonOverlappingResourceT
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
 					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1874,7 +1874,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_onCreate(t *testing.T) {
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1926,7 +1926,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_onCreate(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -1938,7 +1938,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_OnUpdate_add(t *testing.T) 
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2032,7 +2032,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_OnUpdate_add(t *testing.T) 
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -2044,7 +2044,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_OnUpdate_replace(t *testing
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2128,7 +2128,7 @@ func TestAccBedrockAgentCoreHarness_Tags_ComputedTag_OnUpdate_replace(t *testing
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "harness_id",
 				ImportStateVerifyIgnore: []string{
-					"memory",
+					names.AttrEnvironment, "memory",
 				},
 			},
 		},
@@ -2140,7 +2140,7 @@ func TestAccBedrockAgentCoreHarness_Tags_IgnoreTags_Overlap_defaultTag(t *testin
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2306,7 +2306,7 @@ func TestAccBedrockAgentCoreHarness_Tags_IgnoreTags_Overlap_resourceTag(t *testi
 
 	var v awstypes.Harness
 	resourceName := "aws_bedrockagentcore_harness.test"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

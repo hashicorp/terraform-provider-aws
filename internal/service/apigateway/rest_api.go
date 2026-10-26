@@ -836,10 +836,15 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		})
 	}
 
-	// Only re-apply policy after OpenAPI import when policy was configured
-	// explicitly. For Optional+Computed policy, GetOk can be true for a
-	// value that was read from the prior API state.
-	if v, ok := d.GetOk(names.AttrPolicy); ok && resourceRestAPIAttrConfigured(d, names.AttrPolicy) {
+	// Re-apply policy after OpenAPI import when:
+	// (a) policy was explicitly configured on this resource, or
+	// (b) PutRestApi wiped an existing policy — AWS clears the resource policy
+	//     on PutRestApi overwrite when x-amazon-apigateway-policy is absent from
+	//     the body, including policies set by aws_api_gateway_rest_api_policy.
+	// Checking output.Policy prevents re-applying stale state when the body
+	// itself already defines x-amazon-apigateway-policy (that result lands in
+	// output.Policy, making it non-empty).
+	if v, ok := d.GetOk(names.AttrPolicy); ok && (resourceRestAPIAttrConfigured(d, names.AttrPolicy) || aws.ToString(output.Policy) == "") {
 		if equivalent, err := awspolicy.PoliciesAreEquivalent(v.(string), aws.ToString(output.Policy)); err != nil || !equivalent {
 			policy, _ := structure.NormalizeJsonString(v.(string)) // validation covers error
 

@@ -97,13 +97,13 @@ resource "aws_bedrockagentcore_gateway_rule" "restricted" {
 
 The following arguments are required:
 
-* `action` - (Required) One or two [`action`](#action) blocks defining what happens when the rule's conditions match. See [Action](#action) below.
+* `action` - (Required) One or two [`action`](#action-block) blocks defining what happens when the rule's conditions match. See [Action](#action-block) below.
 * `gateway_identifier` - (Required, Forces new resource) Identifier of the gateway to attach the rule to.
 * `priority` - (Required) Priority of the rule, between 1 and 1000000. Rules are evaluated in ascending order of priority.
 
 The following arguments are optional:
 
-* `condition` - (Optional) Up to two [`condition`](#condition) blocks that must all be satisfied for the rule's actions to apply. See [Condition](#condition) below.
+* `condition` - (Optional) Up to two [`condition`](#condition-block) blocks that must all be satisfied for the rule's actions to apply. See [Condition](#condition-block) below.
 * `description` - (Optional) Description of the rule. Between 1 and 256 characters.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
@@ -111,8 +111,8 @@ The following arguments are optional:
 
 Exactly one of `configuration_bundle` or `route_to_target` must be set on each `action` block.
 
-* `configuration_bundle` - (Optional) Apply a configuration bundle when the rule's conditions match. See [configuration_bundle](#configuration_bundle) below.
-* `route_to_target` - (Optional) Route requests to a gateway target when the rule's conditions match. See [route_to_target](#route_to_target) below.
+* `configuration_bundle` - (Optional) Apply a configuration bundle when the rule's conditions match. See [configuration_bundle](#actionconfiguration_bundle-block) below.
+* `route_to_target` - (Optional) Route requests to a gateway target when the rule's conditions match. See [route_to_target](#actionroute_to_target-block) below.
 
 ### `action.configuration_bundle` Block
 

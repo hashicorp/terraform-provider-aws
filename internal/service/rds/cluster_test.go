@@ -550,6 +550,24 @@ func TestAccRDSCluster_availabilityZones(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_availabilityZonesExceedMax(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterConfig_availabilityZonesExceedMax(rName),
+				ExpectError: regexache.MustCompile(`Attribute availability_zones supports 3 item maximum`),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_availabilityZones_caCertificateIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster types.DBCluster
@@ -596,6 +614,50 @@ func TestAccRDSCluster_storageTypeIo1(t *testing.T) {
 					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "io1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_publiclyAccessible(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_publiclyAccessible(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPubliclyAccessible), knownvalue.Bool(true)),
+				},
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				Config: testAccClusterConfig_publiclyAccessible(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPubliclyAccessible), knownvalue.Bool(false)),
+				},
 			},
 		},
 	})
@@ -4100,6 +4162,41 @@ func TestAccRDSCluster_engineVersion_outOfBand(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_warningEventCategories(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_warningEventCategories(rName, `["failure"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "warning_event_categories.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "failure"),
+				),
+			},
+			{
+				// Confirm an update (not just create) with the argument set
+				// also applies cleanly and does not error.
+				Config: testAccClusterConfig_warningEventCategories(rName, `["failure", "maintenance"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "warning_event_categories.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "failure"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "maintenance"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
@@ -4660,6 +4757,20 @@ resource "aws_rds_cluster" "test" {
 `, rName, tfrds.ClusterEngineAuroraMySQL))
 }
 
+func testAccClusterConfig_availabilityZonesExceedMax(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  apply_immediately   = true
+  availability_zones  = ["test-az-1", "test-az-2", "test-az-3", "test-az-4"]
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
 func testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_clusterSubnetGroup(rName), fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
@@ -4720,6 +4831,52 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot       = true
 }
 `, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, sType))
+}
+
+func testAccClusterConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsEnableDNSHostnames(rName, 3),
+		fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[3]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[3]q
+  }
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = "gp3"
+  supports_iops              = true
+  supports_clusters          = true
+}
+
+resource "aws_rds_cluster" "test" {
+  apply_immediately         = true
+  cluster_identifier        = %[3]q
+  db_cluster_instance_class = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
+  storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
+  allocated_storage         = 400
+  iops                      = 12000
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
+  publicly_accessible       = %[4]t
+  skip_final_snapshot       = true
+
+  depends_on = [aws_internet_gateway.test]
+}
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, publiclyAccessible))
 }
 
 func testAccClusterConfig_storageChange(rName string, sType string) string {
@@ -7623,4 +7780,19 @@ resource "aws_rds_cluster_instance" "test" {
 
 
 `, rName, parameter, tfrds.ClusterEngineAuroraMySQL, engineVersion)
+}
+
+func testAccClusterConfig_warningEventCategories(rName, categories string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "test"
+  engine              = %[2]q
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
+
+  warning_event_categories = %[3]s
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL, categories)
 }

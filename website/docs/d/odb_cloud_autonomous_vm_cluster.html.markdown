@@ -33,14 +33,14 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) for the Exadata infrastructure.
+* `arn` - ARN for the Exadata infrastructure.
 * `autonomous_data_storage_percentage` - Percentage of data storage currently in use for Autonomous Databases in the Autonomous VM cluster.
 * `autonomous_data_storage_size_in_tbs` - Data storage size allocated for Autonomous Databases in the Autonomous VM cluster, in TB.
 * `available_autonomous_data_storage_size_in_tbs` - Available data storage space for Autonomous Databases in the Autonomous VM cluster, in TB.
 * `available_container_databases` - Number of Autonomous CDBs that you can create with the currently available storage.
 * `available_cpus` - Number of CPU cores available for allocation to Autonomous Databases.
 * `cloud_exadata_infrastructure_arn` - Cloud exadata infrastructure ARN associated with this cloud autonomous VM cluster.
-* `cloud_exadata_infrastructure_id` - Cloud exadata infrastructure id associated with this cloud autonomous VM cluster.
+* `cloud_exadata_infrastructure_id` - Cloud exadata infrastructure ID associated with this cloud autonomous VM cluster.
 * `compute_model` - Compute model of the Autonomous VM cluster: ECPU or OCPU.
 * `cpu_core_count` - Total number of CPU cores in the Autonomous VM cluster.
 * `cpu_core_count_per_node` - Number of CPU cores enabled per node in the Autonomous VM cluster.

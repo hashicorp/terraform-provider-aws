@@ -100,7 +100,7 @@ This data source exports the following attributes in addition to the arguments a
 * `object_lock_mode` - Object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) currently in place for this object.
 * `object_lock_retain_until_date` - Date and time when this object's object lock will expire.
 * `server_side_encryption` - If the object is stored using server-side encryption (KMS or Amazon S3-managed encryption key), this field includes the chosen encryption and algorithm used.
-* `sse_kms_key_id` - If present, specifies the ID of the Key Management Service (KMS) master encryption key that was used for the object.
+* `sse_kms_key_id` - If present, specifies the ID of the KMS master encryption key that was used for the object.
 * `storage_class` - [Storage class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) information of the object. Available for all objects except for `Standard` storage class objects.
 * `tags`  - Map of tags assigned to the object.
 * `version_id` - Latest version ID of the object returned.

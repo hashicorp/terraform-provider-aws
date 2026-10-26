@@ -75,8 +75,8 @@ resource "aws_prometheus_anomaly_detector" "example" {
 The following arguments are required:
 
 * `alias` - (Required) Name of the anomaly detector.
-* `configuration` - (Required) Configuration block for the anomaly detector algorithm. See [`configuration`](#configuration) below.
-* `missing_data_action` - (Required) Configuration block for the action to take when data is missing. See [`missing_data_action`](#missing_data_action) below.
+* `configuration` - (Required) Configuration block for the anomaly detector algorithm. See [`configuration`](#configuration-block) below.
+* `missing_data_action` - (Required) Configuration block for the action to take when data is missing. See [`missing_data_action`](#missing_data_action-block) below.
 * `workspace_id` - (Required) ID of the AMP workspace in which to create the anomaly detector.
 
 The following arguments are optional:
@@ -88,12 +88,12 @@ The following arguments are optional:
 
 ### `configuration` Block
 
-* `random_cut_forest` - (Required) Configuration block for the Random Cut Forest anomaly detection algorithm. See [`random_cut_forest`](#random_cut_forest) below.
+* `random_cut_forest` - (Required) Configuration block for the Random Cut Forest anomaly detection algorithm. See [`random_cut_forest`](#random_cut_forest-block) below.
 
 #### `random_cut_forest` Block
 
-* `ignore_near_expected_from_above` - (Optional) Configuration block for suppressing anomalies when the observed value is slightly above the expected value. See [`ignore_near_expected_from_above`](#ignore_near_expected_from_above-and-ignore_near_expected_from_below) below.
-* `ignore_near_expected_from_below` - (Optional) Configuration block for suppressing anomalies when the observed value is slightly below the expected value. See [`ignore_near_expected_from_below`](#ignore_near_expected_from_above-and-ignore_near_expected_from_below) below.
+* `ignore_near_expected_from_above` - (Optional) Configuration block for suppressing anomalies when the observed value is slightly above the expected value. See [`ignore_near_expected_from_above`](#ignore_near_expected_from_above-block-and-ignore_near_expected_from_below-block) below.
+* `ignore_near_expected_from_below` - (Optional) Configuration block for suppressing anomalies when the observed value is slightly below the expected value. See [`ignore_near_expected_from_below`](#ignore_near_expected_from_above-block-and-ignore_near_expected_from_below-block) below.
 * `query` - (Required) PromQL query used to select the time series for anomaly detection.
 * `sample_size` - (Optional, Computed) Number of data points used to train the model. Must be at least `256`.
 * `shingle_size` - (Optional, Computed) Number of consecutive data points that form a single input to the model. Must be at least `2`.

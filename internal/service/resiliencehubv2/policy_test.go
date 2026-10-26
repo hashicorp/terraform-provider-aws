@@ -69,6 +69,7 @@ func TestAccResilienceHubV2Policy_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("multi_az"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("multi_region"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sharing_enabled"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
@@ -239,6 +240,98 @@ func TestAccResilienceHubV2Policy_description(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("")),
+				},
+			},
+		},
+	})
+}
+
+// TestAccResilienceHubV2Policy_sharingEnabled requires an AWS Organizations
+// management account or a Resilience Hub delegated administrator account. The
+// service rejects CreatePolicy/UpdatePolicy with sharing enabled from any other
+// account, so the test is gated with PreCheckOrganizationManagementAccount and
+// skips when that condition is not met.
+func TestAccResilienceHubV2Policy_sharingEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// Sharing can only be enabled by an organization's management account or a delegated administrator.
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/sharing_enabled/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:   config.StringVariable(rName),
+					"sharing_enabled": config.BoolVariable(true),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sharing_enabled"), knownvalue.Bool(true)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/sharing_enabled/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:   config.StringVariable(rName),
+					"sharing_enabled": config.BoolVariable(true),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/sharing_enabled/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:   config.StringVariable(rName),
+					"sharing_enabled": config.BoolVariable(false),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sharing_enabled"), knownvalue.Bool(false)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/sharing_enabled/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:   config.StringVariable(rName),
+					"sharing_enabled": config.BoolVariable(true),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sharing_enabled"), knownvalue.Bool(true)),
 				},
 			},
 		},

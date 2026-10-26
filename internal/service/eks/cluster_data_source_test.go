@@ -283,6 +283,7 @@ func TestAccEKSClusterDataSource_kubeControllerManagerConfig(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "kube_controller_manager_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "kube_controller_manager_config.0.horizontal_pod_autoscaler_controller_config.0.horizontal_pod_autoscaler_sync_period", dataSourceResourceName, "kube_controller_manager_config.0.horizontal_pod_autoscaler_controller_config.0.horizontal_pod_autoscaler_sync_period"),
+					resource.TestCheckResourceAttrPair(resourceName, "kube_controller_manager_config.0.pod_gc_controller_config.0.terminated_pod_gc_threshold", dataSourceResourceName, "kube_controller_manager_config.0.pod_gc_controller_config.0.terminated_pod_gc_threshold"),
 				),
 			},
 		},
@@ -338,7 +339,7 @@ data "aws_eks_cluster" "test" {
 }
 
 func testAccClusterDataSourceConfig_kubeControllerManagerConfig(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_kubeControllerManagerConfig(rName, "10s"), `
+	return acctest.ConfigCompose(testAccClusterConfig_kubeControllerManagerConfig(rName, "10s", 12500), `
 data "aws_eks_cluster" "test" {
   name = aws_eks_cluster.test.name
 }

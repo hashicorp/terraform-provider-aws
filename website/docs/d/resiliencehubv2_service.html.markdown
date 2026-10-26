@@ -14,7 +14,7 @@ Terraform data source for reading an AWS Resilience Hub V2 Service.
 
 ### Basic Usage
 
-```hcl
+```terraform
 data "aws_resiliencehubv2_service" "example" {
   arn = "arn:aws:resiliencehub:us-west-2:123456789012:service/example-service:abc123"
 }
@@ -31,6 +31,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `associated_system` - Systems associated with the service. See [`associated_system` Block](#associated_system-block) below.
 * `description` - Description of the service.
 * `kms_key_id` - KMS key ARN.
 * `name` - Name of the service.
@@ -38,6 +39,13 @@ This data source exports the following attributes in addition to the arguments a
 * `policy_arn` - ARN of the associated resilience policy.
 * `regions` - List of AWS regions where the service operates.
 * `tags` - Map of tags assigned to the resource.
+
+### `associated_system` Block
+
+The `associated_system` block supports:
+
+* `system_arn` - ARN of the associated system.
+* `user_journey_ids` - List of user journey identifiers that associate the system with the service.
 
 ### `permission_model` Block
 

@@ -86,7 +86,7 @@ A `start_time` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the Hours of Operation.
+* `arn` - ARN of the Hours of Operation.
 * `hours_of_operation_id` - The identifier for the hours of operation.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Hours of Operation separated by a colon (`:`).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

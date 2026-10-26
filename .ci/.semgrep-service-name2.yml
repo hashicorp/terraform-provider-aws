@@ -705,7 +705,7 @@ rules:
   - id: lambdamicrovms-in-func-name
     languages:
       - go
-    message: Do not use "LambdaMicrovms" in func name inside lambdamicrovms package
+    message: Do not use "LambdaMicroVMs" in func name inside lambdamicrovms package
     paths:
       include:
         - "/internal/service/lambdamicrovms"
@@ -716,14 +716,14 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(?i)LambdaMicrovms"
+            - pattern-regex: "(?i)LambdaMicroVMs"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: lambdamicrovms-in-test-name
     languages:
       - go
-    message: Include "LambdaMicrovms" in test name
+    message: Include "LambdaMicroVMs" in test name
     paths:
       include:
         - "/internal/service/lambdamicrovms/*_test.go"
@@ -732,13 +732,13 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-not-regex: "^TestAccLambdaMicrovms"
+            - pattern-not-regex: "^TestAccLambdaMicroVMs"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
   - id: lambdamicrovms-in-const-name
     languages:
       - go
-    message: Do not use "LambdaMicrovms" in const name inside lambdamicrovms package
+    message: Do not use "LambdaMicroVMs" in const name inside lambdamicrovms package
     paths:
       include:
         - "/internal/service/lambdamicrovms"
@@ -747,12 +747,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(?i)LambdaMicrovms"
+            - pattern-regex: "(?i)LambdaMicroVMs"
     severity: WARNING
   - id: lambdamicrovms-in-var-name
     languages:
       - go
-    message: Do not use "LambdaMicrovms" in var name inside lambdamicrovms package
+    message: Do not use "LambdaMicroVMs" in var name inside lambdamicrovms package
     paths:
       include:
         - "/internal/service/lambdamicrovms"
@@ -761,7 +761,68 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(?i)LambdaMicrovms"
+            - pattern-regex: "(?i)LambdaMicroVMs"
+    severity: WARNING
+  - id: lambdaweb-in-func-name
+    languages:
+      - go
+    message: Do not use "LambdaWeb" in func name inside lambdaweb package
+    paths:
+      include:
+        - "/internal/service/lambdaweb"
+      exclude:
+        - "/internal/service/lambdaweb/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)LambdaWeb"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: lambdaweb-in-test-name
+    languages:
+      - go
+    message: Include "LambdaWeb" in test name
+    paths:
+      include:
+        - "/internal/service/lambdaweb/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccLambdaWeb"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: lambdaweb-in-const-name
+    languages:
+      - go
+    message: Do not use "LambdaWeb" in const name inside lambdaweb package
+    paths:
+      include:
+        - "/internal/service/lambdaweb"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)LambdaWeb"
+    severity: WARNING
+  - id: lambdaweb-in-var-name
+    languages:
+      - go
+    message: Do not use "LambdaWeb" in var name inside lambdaweb package
+    paths:
+      include:
+        - "/internal/service/lambdaweb"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)LambdaWeb"
     severity: WARNING
   - id: launchwizard-in-func-name
     languages:
@@ -2915,6 +2976,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)NetworkMonitor"
     severity: WARNING
+  - id: networksecuritymanager-in-func-name
+    languages:
+      - go
+    message: Do not use "NetworkSecurityManager" in func name inside networksecuritymanager package
+    paths:
+      include:
+        - "/internal/service/networksecuritymanager"
+      exclude:
+        - "/internal/service/networksecuritymanager/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NetworkSecurityManager"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: networksecuritymanager-in-test-name
+    languages:
+      - go
+    message: Include "NetworkSecurityManager" in test name
+    paths:
+      include:
+        - "/internal/service/networksecuritymanager/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccNetworkSecurityManager"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: networksecuritymanager-in-const-name
+    languages:
+      - go
+    message: Do not use "NetworkSecurityManager" in const name inside networksecuritymanager package
+    paths:
+      include:
+        - "/internal/service/networksecuritymanager"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NetworkSecurityManager"
+    severity: WARNING
+  - id: networksecuritymanager-in-var-name
+    languages:
+      - go
+    message: Do not use "NetworkSecurityManager" in var name inside networksecuritymanager package
+    paths:
+      include:
+        - "/internal/service/networksecuritymanager"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NetworkSecurityManager"
+    severity: WARNING
   - id: notifications-in-func-name
     languages:
       - go
@@ -4108,6 +4230,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Pricing"
     severity: WARNING
+  - id: pricingplanmanager-in-func-name
+    languages:
+      - go
+    message: Do not use "PricingPlanManager" in func name inside pricingplanmanager package
+    paths:
+      include:
+        - "/internal/service/pricingplanmanager"
+      exclude:
+        - "/internal/service/pricingplanmanager/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)PricingPlanManager"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: pricingplanmanager-in-test-name
+    languages:
+      - go
+    message: Include "PricingPlanManager" in test name
+    paths:
+      include:
+        - "/internal/service/pricingplanmanager/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccPricingPlanManager"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: pricingplanmanager-in-const-name
+    languages:
+      - go
+    message: Do not use "PricingPlanManager" in const name inside pricingplanmanager package
+    paths:
+      include:
+        - "/internal/service/pricingplanmanager"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)PricingPlanManager"
+    severity: WARNING
+  - id: pricingplanmanager-in-var-name
+    languages:
+      - go
+    message: Do not use "PricingPlanManager" in var name inside pricingplanmanager package
+    paths:
+      include:
+        - "/internal/service/pricingplanmanager"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)PricingPlanManager"
+    severity: WARNING
   - id: prometheus-in-func-name
     languages:
       - go
@@ -4647,64 +4830,4 @@ rules:
             - pattern-regex: "(?i)rdsdataservice"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: rdsdataservice-in-const-name
-    languages:
-      - go
-    message: Do not use "rdsdataservice" in const name inside rdsdata package
-    paths:
-      include:
-        - "/internal/service/rdsdata"
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)rdsdataservice"
-    severity: WARNING
-  - id: rdsdataservice-in-var-name
-    languages:
-      - go
-    message: Do not use "rdsdataservice" in var name inside rdsdata package
-    paths:
-      include:
-        - "/internal/service/rdsdata"
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)rdsdataservice"
-    severity: WARNING
-  - id: recyclebin-in-func-name
-    languages:
-      - go
-    message: Do not use "recyclebin" in func name inside rbin package
-    paths:
-      include:
-        - "/internal/service/rbin"
-      exclude:
-        - "/internal/service/rbin/list_pages_gen.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)recyclebin"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: recyclebin-in-const-name
-    languages:
-      - go
-    message: Do not use "recyclebin" in const name inside rbin package
-    paths:
-      include:
-        - "/internal/service/rbin"
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)recyclebin"
     severity: WARNING

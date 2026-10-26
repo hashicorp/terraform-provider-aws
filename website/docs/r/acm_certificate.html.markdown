@@ -157,8 +157,8 @@ This resource supports the following arguments:
     * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
 * Importing an existing certificate
     * `private_key` - (Optional) Certificate's PEM-formatted private key. Conflicts with `private_key_wo`.
-    * `private_key_wo` - (Optional, Write-Only) Certificate's PEM-formatted private key. Conflicts with `private_key`. Must be used together with `private_key_wo_version`.
-    * `private_key_wo_version` - (Optional) Used together with `private_key_wo` to trigger an update. Increment this value when an update to `private_key_wo` is required.
+    * `private_key_wo` - (Optional, Write-Only) Certificate's PEM-formatted private key. Conflicts with `private_key`. If set, requires `private_key_wo_version` to be set.
+    * `private_key_wo_version` - (Optional) Required when `private_key_wo` is set. Changing this value triggers an update to `private_key_wo`.
     * `certificate_body` - (Required) Certificate's PEM-formatted public key
     * `certificate_chain` - (Optional) Certificate's PEM-formatted chain
 * Creating a private CA issued certificate
@@ -176,7 +176,7 @@ This resource supports the following arguments:
 
 Supported nested arguments for the `options` configuration block:
 
-* `certificate_transparency_logging_preference` - (Optional) Whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
+* `certificate_transparency_logging_preference` - (Optional) Whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details. This argument applies to Amazon-issued and private CA certificates. It **conflicts with** `private_key` / `private_key_wo`, so it cannot be set on [imported certificates](#existing-certificate-body-import). Imported certificates are not managed by ACM issuance, so ACM does not control their certificate transparency logging.
 * `export` - (Optional) Whether the certificate can be exported. Valid values are `ENABLED` or `DISABLED` (default). **Note** Issuing an exportable certificate is subject to additional charges. See [AWS Certificate Manager pricing](https://aws.amazon.com/certificate-manager/pricing/) for more details.
 
 ### validation_option Configuration Block

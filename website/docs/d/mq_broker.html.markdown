@@ -66,7 +66,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `encryption_options` Block
 
-* `kms_key_id` - Amazon Resource Name (ARN) of Key Management Service (KMS) Customer Master Key (CMK) to use for encryption at rest.
+* `kms_key_id` - ARN of KMS Customer Master Key (CMK) to use for encryption at rest.
 * `use_aws_owned_key` - Whether to enable an AWS-owned KMS CMK that is not in your account.
 
 ### `instances` Block

@@ -158,7 +158,7 @@ resource "aws_codepipeline_webhook" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the CodePipeline webhook.
+- `arn` (String) ARN of the CodePipeline webhook.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodePipeline Webhooks using their ARN. For example:
 

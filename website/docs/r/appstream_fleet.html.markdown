@@ -87,10 +87,10 @@ Exactly one of `desired_instances` or `desired_sessions` must be set, based on t
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the appstream fleet.
+* `arn` - ARN of the AppStream fleet.
 * `compute_capacity` - Capacity status for a fleet.
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the fleet was created.
-* `id` - Unique identifier (ID) of the appstream fleet.
+* `id` - Unique identifier (ID) of the AppStream fleet.
 * `state` - State of the fleet. Can be `STARTING`, `RUNNING`, `STOPPING` or `STOPPED`
 
 ### `compute_capacity` Block
@@ -101,7 +101,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_fleet` using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_fleet` using the ID. For example:
 
 ```terraform
 import {
@@ -110,7 +110,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_appstream_fleet` using the id. For example:
+Using `terraform import`, import `aws_appstream_fleet` using the ID. For example:
 
 ```console
 % terraform import aws_appstream_fleet.example fleetNameExample

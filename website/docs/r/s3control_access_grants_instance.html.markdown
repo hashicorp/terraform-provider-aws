@@ -40,7 +40,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `access_grants_instance_arn` - Amazon Resource Name (ARN) of the S3 Access Grants instance.
+* `access_grants_instance_arn` - ARN of the S3 Access Grants instance.
 * `access_grants_instance_id` - Unique ID of the S3 Access Grants instance.
 * `identity_center_application_arn` - ARN of the AWS IAM Identity Center instance application; a subresource of the original Identity Center instance.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

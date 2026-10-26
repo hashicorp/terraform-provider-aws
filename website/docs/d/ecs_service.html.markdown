@@ -119,9 +119,18 @@ The `linear_configuration` block exports the following attributes:
 The `lifecycle_hook` block exports the following attributes:
 
 * `hook_details` - Additional details for the hook
-* `hook_target_arn` - ARN of the Lambda function to invoke
+* `hook_target_arn` - ARN of the Lambda function to invoke (empty for `PAUSE` hooks)
 * `lifecycle_stages` - Deployment stages when hook is invoked
-* `role_arn` - ARN of the IAM role for invoking the hook
+* `role_arn` - ARN of the IAM role for invoking the hook (empty for `PAUSE` hooks)
+* `target_type` - Type of hook target (`AWS_LAMBDA` or `PAUSE`)
+* `timeout_configuration` - Timeout configuration for `PAUSE` hooks. See [`timeout_configuration` Block](#timeout_configuration-block) for details.
+
+### `timeout_configuration` Block
+
+The `timeout_configuration` block exports the following attributes:
+
+* `action` - Action ECS takes when the pause hook times out (`CONTINUE` or `ROLLBACK`)
+* `timeout_in_minutes` - Time until ECS executes the timeout action
 
 ### `deployment_controller` Block
 

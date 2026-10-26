@@ -236,7 +236,7 @@ The `action` block supports the following blocks:
 
 ### `replace_recipient` Block
 
-* `replace_with` - (Required) Replacement envelope recipient addresses.
+* `replace_with` - (Optional) Replacement envelope recipient addresses.
 
 ### `send` Block
 

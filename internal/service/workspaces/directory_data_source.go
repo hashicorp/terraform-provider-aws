@@ -161,6 +161,35 @@ func dataSourceDirectory() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"access_endpoint_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"access_endpoints": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"access_endpoint_type": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrVPCEndpointID: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
+										"internet_fallback_protocols": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
 							"device_type_android": {
 								Type:     schema.TypeString,
 								Computed: true,

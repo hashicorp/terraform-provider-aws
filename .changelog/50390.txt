@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudwatch_otel_enrichment: Add `include_filter` and `exclude_filter` arguments
+```

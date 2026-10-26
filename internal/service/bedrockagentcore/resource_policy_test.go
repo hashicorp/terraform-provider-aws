@@ -25,6 +25,7 @@ import (
 // underscore (`_`).
 //
 // Use this when the resource names do not allow dashes.
+// See `validResourceName`.
 func randomWithPrefixAndUnderscore(t *testing.T) string {
 	return strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 }
@@ -36,7 +37,7 @@ func TestAccBedrockAgentCoreResourcePolicy_basic(t *testing.T) {
 	}
 
 	rName := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -49,7 +50,7 @@ func TestAccBedrockAgentCoreResourcePolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_runtime(rName, rImageUri),
+				Config: testAccResourcePolicyConfig_runtime(rName, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
@@ -74,7 +75,7 @@ func TestAccBedrockAgentCoreResourcePolicy_disappears(t *testing.T) {
 	}
 
 	rName := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -87,7 +88,7 @@ func TestAccBedrockAgentCoreResourcePolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_runtime(rName, rImageUri),
+				Config: testAccResourcePolicyConfig_runtime(rName, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceResourcePolicy, resourceName),
@@ -113,7 +114,7 @@ func TestAccBedrockAgentCoreResourcePolicy_Policy_endpoint(t *testing.T) {
 	}
 
 	rName := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_resource_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -126,7 +127,7 @@ func TestAccBedrockAgentCoreResourcePolicy_Policy_endpoint(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_endpoint(rName, rImageUri),
+				Config: testAccResourcePolicyConfig_endpoint(rName, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
@@ -223,8 +224,8 @@ func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, name st
 	}
 }
 
-func testAccResourcePolicyConfig_runtime(rName string, rImageUri string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_basic(rName, rImageUri), `
+func testAccResourcePolicyConfig_runtime(rName, rBucketName string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_codeConfiguration(rName, rBucketName), `
 data "aws_iam_policy_document" "resource_policy" {
   statement {
     effect = "Allow"
@@ -247,8 +248,8 @@ resource "aws_bedrockagentcore_resource_policy" "test" {
 }`)
 }
 
-func testAccResourcePolicyConfig_endpoint(rName string, rImageUri string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeEndpointConfig_basic(rName, rImageUri), `
+func testAccResourcePolicyConfig_endpoint(rName, rBucketName string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeEndpointConfig_basic(rName, rBucketName), `
 data "aws_iam_policy_document" "resource_policy" {
   statement {
     effect = "Allow"

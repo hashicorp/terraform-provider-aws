@@ -569,6 +569,32 @@ if err != nil {
 		}
 	}
 
+	if attr, ok := args.Keyword["sshKeyPair"]; ok {
+		if _, err := common.ParseBoolAttr("sshKeyPair", attr); err != nil {
+			return err
+		} else {
+			goVarName := "publicKey"
+			tfVarName := "public_key"
+			stuff.GoImports = append(stuff.GoImports,
+				common.GoImport{
+					Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
+					Alias: "sdkacctest",
+				},
+			)
+			stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
+				Code: fmt.Sprintf(`%s, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+if err != nil {
+	t.Fatalf("error generating random SSH key: %%s", err)
+}
+`, goVarName),
+			})
+			stuff.AdditionalTfVars_[tfVarName] = TFVar{
+				GoVarName: goVarName,
+				Type:      TFVarTypeString,
+			}
+		}
+	}
+
 	if attr, ok := args.Keyword["tlsEcdsaPublicKeyPem"]; ok {
 		if _, err := common.ParseBoolAttr("tlsEcdsaPublicKeyPem", attr); err != nil {
 			return err

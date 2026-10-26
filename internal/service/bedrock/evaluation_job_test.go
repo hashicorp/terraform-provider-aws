@@ -31,7 +31,7 @@ import (
 // Bedrock does not support permanently deleting it. The resource will still
 // appear in a "Stopped" state after the Terraform resource is destroyed.
 
-func TestAccBedrockEvaluationJob_basic(t *testing.T) {
+func testAccEvaluationJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -40,7 +40,7 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_evaluation_job.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -93,7 +93,7 @@ func TestAccBedrockEvaluationJob_basic(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_optional(t *testing.T) {
+func testAccEvaluationJob_optional(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -102,7 +102,7 @@ func TestAccBedrockEvaluationJob_optional(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_evaluation_job.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -151,7 +151,7 @@ func TestAccBedrockEvaluationJob_optional(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_skipDestroy(t *testing.T) {
+func testAccEvaluationJob_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -161,7 +161,7 @@ func TestAccBedrockEvaluationJob_skipDestroy(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_evaluation_job.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)

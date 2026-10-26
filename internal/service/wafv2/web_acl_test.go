@@ -1783,10 +1783,10 @@ func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 						"statement.0.geo_match_statement.0.country_codes.0":       "US",
 						"statement.0.geo_match_statement.0.country_codes.1":       "CA",
 						"statement.0.geo_match_statement.0.forwarded_ip_config.#": "0",
-						"visibility_config.#":                                     "1",
-						"visibility_config.0.cloudwatch_metrics_enabled":          acctest.CtFalse,
-						"visibility_config.0.metric_name":                         "friendly-rule-metric-name",
-						"visibility_config.0.sampled_requests_enabled":            acctest.CtFalse,
+						"visibility_config.#":                            "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
+						"visibility_config.0.metric_name":                "friendly-rule-metric-name",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
@@ -3948,6 +3948,47 @@ func TestAccWAFV2WebACL_RateBased_ASNMatchStatement(t *testing.T) {
 						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.0.forwarded_ip_config.0.header_name":       "x-forwarded-for",
 					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_monetize(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_monetize(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.currency_mode", "TEST"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.chain", "BASE_SEPOLIA"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.prices.0.amount", "0.001"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.prices.0.currency", "USDC"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.0.price_multiplier", "5"),
 				),
 			},
 			{
@@ -7953,6 +7994,74 @@ resource "aws_wafv2_web_acl" "test" {
   tags = {
     Tag1 = "Value1"
     Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_monetize(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  monetization_config {
+    currency_mode = "TEST"
+
+    crypto_config {
+      payment_network {
+        chain          = "BASE_SEPOLIA"
+        wallet_address = "0xAf7e757119d123ea29714493A1725724EfCFCc7B"
+
+        prices {
+          amount   = "0.001"
+          currency = "USDC"
+        }
+      }
+    }
+  }
+
+  rule {
+    name     = "monetize-api"
+    priority = 1
+
+    statement {
+      byte_match_statement {
+        search_string         = "/api"
+        positional_constraint = "STARTS_WITH"
+
+        field_to_match {
+          uri_path {}
+        }
+
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    action {
+      monetize {
+        price_multiplier = "5"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "monetize-api"
+      sampled_requests_enabled   = false
+    }
   }
 
   visibility_config {

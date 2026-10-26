@@ -68,7 +68,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the control.
+* `arn` - ARN of the control.
 * `control_mapping_sources.source_id` - Unique identifier for the source.
 * `id` - Unique identifier for the control.
 * `type` - Type of control, such as a custom control or a standard control.

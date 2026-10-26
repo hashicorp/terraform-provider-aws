@@ -34,6 +34,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		// aws_xray_trace_segment_destination not correctly configured:
 		"X-Ray Delivery Destination is supported with CloudWatch",
 		"log groups do not exist",
+		"Connector integration web-search is not available",
 	)
 }
 
@@ -451,6 +452,8 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
       sampling_percentage = 10.0
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, executionStatus))
 }
@@ -491,6 +494,8 @@ resource "aws_bedrockagentcore_online_evaluation_config" "test" {
       session_timeout_minutes = 20
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
 }

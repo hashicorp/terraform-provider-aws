@@ -38,18 +38,20 @@ The following arguments are required:
 * `index_id` - (Required, Forces New Resource) Identifier of the index for a block list.
 * `name` - (Required) Name for the block list.
 * `role_arn` - (Required) IAM (Identity and Access Management) role used to access the block list text file in S3.
-* `source_s3_path` - (Required) S3 path where your block list text file is located. See details below.
+* `source_s3_path` - (Required) S3 path where your block list text file is located. See [`source_s3_path` Block](#source_s3_path-block) for details.
+
+The following arguments are optional:
+
+* `description` - (Optional) Description for a block list.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block), tags with matching keys will overwrite those defined at the provider-level.
+
+### `source_s3_path` Block
 
 The `source_s3_path` configuration block supports the following arguments:
 
 * `bucket` - (Required) Name of the S3 bucket that contains the file.
 * `key` - (Required) Name of the file.
-
-The following arguments are optional:
-
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional) Description for a block list.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block), tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -57,6 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the block list.
 * `query_suggestions_block_list_id` - Unique identifier of the block list.
+* `status` - Current status of the block list.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider's [default_tags configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

@@ -95,7 +95,7 @@ This data source exports the following attributes in addition to the arguments a
 * `engine_version` - OpenSearch version for the domain.
 * `encryption_at_rest` - Domain encryption at rest related options.
     * `enabled` - Whether encryption at rest is enabled in the domain.
-    * `kms_key_id` - KMS key id used to encrypt data at rest.
+    * `kms_key_id` - KMS key ID used to encrypt data at rest.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `endpoint_v2` - V2 domain-specific endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
 * `identity_center_options` - Configuration for enabling and managing IAM Identity Center integration within a domain.

@@ -66,6 +66,8 @@ This data source exports the following attributes in addition to the arguments a
 * `kube_controller_manager_config` - Configuration for the Kubernetes controller manager.
     * `horizontal_pod_autoscaler_controller_config` - Configuration for the horizontal pod autoscaler controller.
         * `horizontal_pod_autoscaler_sync_period` - The interval between each sync of the horizontal pod autoscaler.
+    * `pod_gc_controller_config` - Configuration for the pod garbage collection controller.
+        * `terminated_pod_gc_threshold` - The number of terminated pods that can exist before the pod garbage collector starts deleting them.
 * `kube_scheduler_config` - Configuration for the Kubernetes scheduler.
     * `node_resources_fit` - Configuration for the NodeResourcesFit scheduler plugin.
         * `scoring_strategy` - The scoring strategy used to rank nodes during scheduling.

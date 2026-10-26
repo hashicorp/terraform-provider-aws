@@ -8,7 +8,6 @@ package apigateway_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -251,7 +250,5 @@ func TestAccAPIGatewayDomainNameDataSource_Tags_IgnoreTags_Overlap_resourceTag(t
 }
 
 func expectFullDomainNameDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfapigateway.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrARN,
-	}), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfapigateway.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsAttribute(names.AttrARN), knownValue)
 }

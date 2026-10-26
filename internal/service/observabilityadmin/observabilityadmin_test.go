@@ -13,6 +13,18 @@ func TestAccObservabilityAdmin_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"DatasetIntegration": {
+			acctest.CtBasic:      testAccDatasetIntegration_basic,
+			acctest.CtDisappears: testAccDatasetIntegration_disappears,
+			"roleARN":            testAccDatasetIntegration_roleARN,
+			"tags":               testAccObservabilityAdminDatasetIntegration_tagsSerial,
+			"Identity":           testAccObservabilityAdminDatasetIntegration_identitySerial,
+		},
+		"DatasetIntegrationDataSource": {
+			acctest.CtBasic: testAccDatasetIntegrationDataSource_basic,
+			"notFound":      testAccDatasetIntegrationDataSource_notFound,
+			"tags":          testAccObservabilityAdminDatasetIntegrationDataSource_tagsSerial,
+		},
 		"S3TableIntegration": {
 			acctest.CtBasic:      testAccS3TableIntegration_basic,
 			acctest.CtDisappears: testAccS3TableIntegration_disappears,
@@ -26,14 +38,16 @@ func TestAccObservabilityAdmin_serial(t *testing.T) {
 			"Identity":           testAccObservabilityAdminTelemetryEnrichment_identitySerial,
 		},
 		"TelemetryEvaluation": {
-			acctest.CtBasic:      testAccTelemetryEvaluation_basic,
-			acctest.CtDisappears: testAccTelemetryEvaluation_disappears,
-			"Identity":           testAccObservabilityAdminTelemetryEvaluation_identitySerial,
+			acctest.CtBasic:                testAccTelemetryEvaluation_basic,
+			acctest.CtDisappears:           testAccTelemetryEvaluation_disappears,
+			"allRegionsAndRegionsConflict": testAccTelemetryEvaluation_allRegionsAndRegionsConflict,
+			"Identity":                     testAccObservabilityAdminTelemetryEvaluation_identitySerial,
 		},
 		"TelemetryEvaluationForOrganization": {
-			acctest.CtBasic:      testAccTelemetryEvaluationForOrganization_basic,
-			acctest.CtDisappears: testAccTelemetryEvaluationForOrganization_disappears,
-			"Identity":           testAccObservabilityAdminTelemetryEvaluationForOrganization_identitySerial,
+			acctest.CtBasic:                testAccTelemetryEvaluationForOrganization_basic,
+			acctest.CtDisappears:           testAccTelemetryEvaluationForOrganization_disappears,
+			"allRegionsAndRegionsConflict": testAccTelemetryEvaluationForOrganization_allRegionsAndRegionsConflict,
+			"Identity":                     testAccObservabilityAdminTelemetryEvaluationForOrganization_identitySerial,
 		},
 		"TelemetryRule": {
 			acctest.CtBasic:       testAccTelemetryRule_basic,

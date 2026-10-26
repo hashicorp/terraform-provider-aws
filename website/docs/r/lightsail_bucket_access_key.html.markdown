@@ -36,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `access_key_id` - Access key ID.
 * `created_at` - Date and time when the access key was created.
-* `id` - Combination of attributes separated by a `,` to create a unique id: `bucket_name`,`access_key_id`.
+* `id` - Combination of attributes separated by a `,` to create a unique ID: `bucket_name`,`access_key_id`.
 * `secret_access_key` - Secret access key used to sign requests. This attribute is not available for imported resources. Note that this will be written to the state file.
 * `status` - Status of the access key.
 

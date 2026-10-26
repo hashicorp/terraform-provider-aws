@@ -23,9 +23,9 @@ data "aws_vpclattice_listener" "example" {
 
 This data source supports the following arguments:
 
-* `listener_identifier` - (Required) ID or Amazon Resource Name (ARN) of the listener
+* `listener_identifier` - (Required) ID or ARN of the listener
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `service_identifier` - (Required) ID or Amazon Resource Name (ARN) of the service network
+* `service_identifier` - (Required) ID or ARN of the service network
 
 ## Attribute Reference
 

@@ -31,7 +31,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `anycast_ip_list_id` - ID of the anycast IP list associated with this connection group, if any.
 
-* `arn` - ARN (Amazon Resource Name) for the connection group.
+* `arn` - ARN for the connection group.
 
 * `status` - Current status of the connection group. `Deployed` if the
     connection group's information is fully propagated throughout the Amazon

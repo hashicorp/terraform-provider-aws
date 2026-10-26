@@ -19,6 +19,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccTransitGatewayRoute_identity(t *testing.T, semaphore tfsync.Semaphore) {
+	testAccTransitGatewayTransitGatewayRoute_identitySerial(t, semaphore)
+}
+
 func testAccTransitGatewayRoute_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayRoute

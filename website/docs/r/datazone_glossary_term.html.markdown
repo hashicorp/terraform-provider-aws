@@ -101,14 +101,14 @@ The following arguments are optional:
 * `short_description` - (Optional) Short description of entry.
 * `status` - (Optional) If glossary term is ENABLED or DISABLED.
 * `term_relations` - (Optional) Object classifying the term relations through the following attributes:
-    * `classifies` - (Optional) String array that calssifies the term relations.
+    * `classifies` - (Optional) String array that classifies the term relations.
     * `is_as` - (Optional) The isA property of the term relations.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Id of the glossary term.
+* `id` - ID of the glossary term.
 * `created_at` - Time of glossary term creation.
 * `created_by` - Creator of glossary term.
 

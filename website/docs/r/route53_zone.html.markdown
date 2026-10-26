@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_route53_zone
 
-Manages a Route53 Hosted Zone. For managing Domain Name System Security Extensions (DNSSEC), see the [`aws_route53_key_signing_key`](route53_key_signing_key.html) and [`aws_route53_hosted_zone_dnssec`](route53_hosted_zone_dnssec.html) resources.
+Manages a Route53 Hosted Zone. For managing DNS Security Extensions (DNSSEC), see the [`aws_route53_key_signing_key`](route53_key_signing_key.html) and [`aws_route53_hosted_zone_dnssec`](route53_hosted_zone_dnssec.html) resources.
 
 ## Example Usage
 
@@ -93,7 +93,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the zone. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc` - (Optional) Configuration block(s) specifying VPC(s) to associate with a private hosted zone. Conflicts with the `delegation_set_id` argument in this resource and any [`aws_route53_zone_association` resource](/docs/providers/aws/r/route53_zone_association.html) specifying the same zone ID. Detailed below.
 
-### vpc Argument Reference
+### `vpc` Argument Reference
 
 * `vpc_id` - (Required) ID of the VPC to associate.
 * `vpc_region` - (Optional) Region of the VPC to associate. Defaults to AWS provider region.
@@ -102,7 +102,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the Hosted Zone.
+* `arn` - ARN of the Hosted Zone.
 * `zone_id` - The Hosted Zone ID. This can be referenced by zone records.
 * `name_servers` - A list of name servers in associated (or default) delegation set.
   Find more about delegation sets in [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/actions-on-reusable-delegation-sets.html).

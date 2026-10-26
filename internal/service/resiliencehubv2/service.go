@@ -98,6 +98,27 @@ func (r *serviceResource) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]fwschema.Block{
+			"associated_system": fwschema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[associatedSystemModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(0, 20),
+				},
+				NestedObject: fwschema.NestedBlockObject{
+					Attributes: map[string]fwschema.Attribute{
+						"system_arn": fwschema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
+						},
+						"user_journey_ids": fwschema.SetAttribute{
+							CustomType: fwtypes.SetOfStringType,
+							Optional:   true,
+							Validators: []validator.Set{
+								setvalidator.SizeBetween(1, 20),
+							},
+						},
+					},
+				},
+			},
 			"permission_model": fwschema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -226,6 +247,13 @@ func (r *serviceResource) Update(ctx context.Context, req resource.UpdateRequest
 			return
 		}
 
+		// UpdateService treats an omitted AssociatedSystems as "no change", leaving the
+		// existing associations in place. Removing the last associated_system block
+		// therefore requires sending an explicitly empty list.
+		if input.AssociatedSystems == nil && state.AssociatedSystems.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			input.AssociatedSystems = []awstypes.AssociatedSystem{}
+		}
+
 		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateService(ctx, &input)
 		}, "Ensure the role exists and its trust policy allows access")
@@ -313,6 +341,7 @@ func findService(ctx context.Context, conn *resiliencehubv2.Client, input *resil
 
 type serviceResourceModel struct {
 	framework.WithRegionModel
+	AssociatedSystems   fwtypes.SetNestedObjectValueOf[associatedSystemModel] `tfsdk:"associated_system"`
 	DependencyDiscovery fwtypes.StringEnum[awstypes.DependencyDiscoveryInput] `tfsdk:"dependency_discovery" autoflex:",noflatten"`
 	Description         types.String                                          `tfsdk:"description"`
 	KMSKeyID            fwtypes.ARN                                           `tfsdk:"kms_key_id"`
@@ -323,6 +352,11 @@ type serviceResourceModel struct {
 	ServiceARN          types.String                                          `tfsdk:"arn"`
 	Tags                tftags.Map                                            `tfsdk:"tags"`
 	TagsAll             tftags.Map                                            `tfsdk:"tags_all"`
+}
+
+type associatedSystemModel struct {
+	SystemARN      fwtypes.ARN         `tfsdk:"system_arn"`
+	UserJourneyIDs fwtypes.SetOfString `tfsdk:"user_journey_ids"`
 }
 
 type permissionModelModel struct {

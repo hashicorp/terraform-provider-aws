@@ -234,11 +234,7 @@ func unprocessedScramSecretsError(apiObjects []types.UnprocessedScramSecret, ign
 			continue
 		}
 
-		err := unprocessedScramSecretError(&apiObject)
-
-		if err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.SecretArn), err))
-		}
+		errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.SecretArn), unprocessedScramSecretError(&apiObject)))
 	}
 
 	return errors.Join(errs...)

@@ -94,6 +94,7 @@ func testExpandField[T any](t *testing.T, valueHandler fieldValueHandler[T]) {
 			t.Parallel()
 			for name, tc := range tc {
 				t.Run(name, func(t *testing.T) {
+					t.Parallel()
 					cases := autoFlexTestCases{}
 					for name, tc := range tc {
 						cases[name] = autoFlexTestCase{

@@ -139,7 +139,7 @@ This resource supports the following arguments:
 
   Note that you can't specify targets for a target group using both instance IDs and IP addresses.
 
-  If the target type is `ip`, specify IP addresses from the subnets of the virtual private cloud (VPC) for the target group, the RFC 1918 range (10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16), and the RFC 6598 range (100.64.0.0/10). You can't specify publicly routable IP addresses.
+  If the target type is `ip`, specify IP addresses from the subnets of the VPC for the target group, the RFC 1918 range (10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16), and the RFC 6598 range (100.64.0.0/10). You can't specify publicly routable IP addresses.
 
   Network Load Balancers do not support the `lambda` target type.
 
@@ -255,7 +255,7 @@ resource "aws_lb_target_group" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the target group.
+- `arn` (String) ARN of the target group.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Target Groups using their ARN. For example:
 

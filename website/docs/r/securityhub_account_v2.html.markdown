@@ -67,7 +67,7 @@ resource "aws_securityhub_account_v2" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Security Hub V2 resource.
+- `arn` (String) ARN of the Security Hub V2 resource.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub V2 accounts using `arn`. For example:
 

@@ -37,14 +37,6 @@ type associationListResource struct {
 func (l *associationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().SSMClient(ctx)
 
-	var query listAssociationModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Resources", map[string]any{})
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -97,10 +89,6 @@ func (l *associationListResource) List(ctx context.Context, request list.ListReq
 			}
 		}
 	}
-}
-
-type listAssociationModel struct {
-	framework.WithRegionModel
 }
 
 func listAssociations(ctx context.Context, conn *ssm.Client, input *ssm.ListAssociationsInput) iter.Seq2[awstypes.Association, error] {

@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Recovery Control Config Control Panel using the control panel arn. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Recovery Control Config Control Panel using the control panel ARN. For example:
 
 ```terraform
 import {
@@ -51,7 +51,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Route53 Recovery Control Config Control Panel using the control panel arn. For example:
+Using `terraform import`, import Route53 Recovery Control Config Control Panel using the control panel ARN. For example:
 
 ```console
 % terraform import aws_route53recoverycontrolconfig_control_panel.mypanel arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8

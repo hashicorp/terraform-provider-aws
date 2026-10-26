@@ -77,7 +77,7 @@ resource "aws_sns_topic_data_protection_policy" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the SNS topic.
+- `arn` (String) ARN of the SNS topic.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS Data Protection Topic Policy using the topic ARN. For example:
 

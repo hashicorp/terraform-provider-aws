@@ -41,7 +41,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) identifier of the KX Scaling Group.
+* `arn` - ARN identifier of the KX Scaling Group.
 * `clusters` - List of Managed kdb clusters that are currently active in the given scaling group.
 * `created_timestamp` - Timestamp at which the scaling group was created in FinSpace. The value is determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000.
 * `last_modified_timestamp` - Last timestamp at which the scaling group was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
