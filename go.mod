@@ -283,7 +283,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.66.6
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.86.1
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.86.2
 	github.com/aws/aws-sdk-go-v2/service/uxc v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.33.5
