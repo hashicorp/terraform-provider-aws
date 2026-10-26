@@ -29,15 +29,6 @@ type listResourceJobQueue struct {
 }
 
 func (r *listResourceJobQueue) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query jobQueueListModel
-
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	awsClient := r.Meta()
 	conn := awsClient.BatchClient(ctx)
 
@@ -74,10 +65,6 @@ func (r *listResourceJobQueue) List(ctx context.Context, request list.ListReques
 			}
 		}
 	}
-}
-
-type jobQueueListModel struct {
-	framework.WithRegionModel
 }
 
 // DescribeJobQueues is an "All-Or-Some" call.

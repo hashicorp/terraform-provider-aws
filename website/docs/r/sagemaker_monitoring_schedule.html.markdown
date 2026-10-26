@@ -86,11 +86,11 @@ This resource supports the following arguments:
 * `csv` - (Optional) CSV dataset used in the monitoring job. Fields are documented below.
 * `json` - (Optional) JSON dataset used in the monitoring job. Fields are documented below.
 
-### csv
+### `csv`
 
 * `header` - (Optional) Indicates if the CSV data has a header.
 
-### json
+### `json`
 
 * `line` - (Optional) Indicates if the file should be read as a JSON object per line.
 
@@ -157,7 +157,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this monitoring schedule.
+* `arn` - ARN assigned by AWS to this monitoring schedule.
 * `name` - The name of the monitoring schedule.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

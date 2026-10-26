@@ -31,7 +31,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `accounts` - List of child accounts, which have the following attributes:
-    * `arn` - The Amazon Resource Name (ARN) of the account.
+    * `arn` - The ARN of the account.
     * `email` - The email address associated with the AWS account.
     * `id` - The unique identifier (ID) of the account.
     * `joined_method` - Method by which the account joined the organization.

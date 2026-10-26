@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -31,7 +31,9 @@ import (
 
 // @SDKResource("aws_medialive_input", name="Input")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputOutput")
+// @Testing(preIdentityVersion="v6.60.0")
 func resourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
@@ -39,142 +41,140 @@ func resourceInput() *schema.Resource {
 		UpdateWithoutTimeout: resourceInputUpdate,
 		DeleteWithoutTimeout: resourceInputDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attached_channels": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"destinations": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"stream_name": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attached_channels": {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"destinations": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"stream_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"input_class": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"input_devices": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Required: true,
+				"input_class": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"input_devices": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"input_partner_ids": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"input_security_groups": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"input_source_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"media_connect_flows": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"flow_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+				"input_partner_ids": {
+					Type:     schema.TypeList,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Computed: true,
+				},
+				"input_security_groups": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"input_source_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"media_connect_flows": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"flow_arn": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrRoleARN: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
-			},
-			"sources": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"password_param": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrURL: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrUsername: {
-							Type:     schema.TypeString,
-							Required: true,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrRoleARN: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+				},
+				"sources": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"password_param": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrURL: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrUsername: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.InputType](),
-			},
-			"vpc": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 2,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.InputType](),
+				},
+				"vpc": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 2,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -231,9 +231,8 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return conn.CreateInput(ctx, in)
 		},
 		func(err error) (bool, error) {
-			var bre *types.BadRequestException
-			if errors.As(err, &bre) {
-				return strings.Contains(bre.ErrorMessage(), "Please make sure the role exists and medialive.amazonaws.com is a trusted service"), err
+			if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Please make sure the role exists and medialive.amazonaws.com is a trusted service") {
+				return true, err
 			}
 			return false, err
 		},
@@ -328,9 +327,8 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				return conn.UpdateInput(ctx, in)
 			},
 			func(err error) (bool, error) {
-				var bre *types.BadRequestException
-				if errors.As(err, &bre) {
-					return strings.Contains(bre.ErrorMessage(), "The first input attached to a channel cannot be a dynamic input"), err
+				if errs.IsAErrorMessageContains[*types.BadRequestException](err, "The first input attached to a channel cannot be a dynamic input") {
+					return true, err
 				}
 				return false, err
 			},
@@ -362,8 +360,7 @@ func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	})
 
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return diags
 		}
 
@@ -452,8 +449,7 @@ func findInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	}
 	out, err := conn.DescribeInput(ctx, in)
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

@@ -39,20 +39,49 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Contributor Managed Insight Rule.
+* `rule_name` - Name of the Contributor Insights rule that contains data for the specified AWS resource.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Contributor Managed Insight Rule using the `resource_arn`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_cloudwatch_contributor_managed_insight_rule.example
-  id = "contributor_managed_insight_rule-id-12345678"
+  identity = {
+    resource_arn  = "arn:aws:ec2:us-east-1:123456789012:vpc-endpoint-service/vpce-svc-0123456789abcdef0"
+    template_name = "VpcEndpointService-BytesByEndpointId-v1"
+  }
+}
+
+resource "aws_cloudwatch_contributor_managed_insight_rule" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import CloudWatch Contributor Managed Insight Rule using the `resource_arn`. For example:
+### Identity Schema
+
+#### Required
+
+* `resource_arn` (String) ARN of the resource.
+* `template_name` (String) Name of the template.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Contributor Managed Insight Rules using `resource_arn` and `template_name` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_contributor_managed_insight_rule.example
+  id = "arn:aws:ec2:us-east-1:123456789012:vpc-endpoint-service/vpce-svc-0123456789abcdef0,VpcEndpointService-BytesByEndpointId-v1"
+}
+```
+
+Using `terraform import`, import Contributor Managed Insight Rules using `resource_arn` and `template_name` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_cloudwatch_contributor_managed_insight_rule.example contributor_managed_insight_rule-id-12345678
+% terraform import aws_cloudwatch_contributor_managed_insight_rule.example arn:aws:ec2:us-east-1:123456789012:vpc-endpoint-service/vpce-svc-0123456789abcdef0,VpcEndpointService-BytesByEndpointId-v1
 ```

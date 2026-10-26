@@ -34,16 +34,18 @@ func resourceConfigurationRecorderStatus() *schema.Resource {
 		UpdateWithoutTimeout: resourceConfigurationRecorderStatusPut,
 		DeleteWithoutTimeout: resourceConfigurationRecorderStatusDelete,
 
-		Schema: map[string]*schema.Schema{
-			"is_enabled": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"is_enabled": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

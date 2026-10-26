@@ -37,37 +37,39 @@ func resourceConnection() *schema.Resource {
 		UpdateWithoutTimeout: resourceConnectionUpdate,
 		DeleteWithoutTimeout: resourceConnectionDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connection_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"host_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"provider_type"},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"provider_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.ProviderType](),
-				ConflictsWith:    []string{"host_arn"},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connection_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"host_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{"provider_type"},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"provider_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ProviderType](),
+					ConflictsWith:    []string{"host_arn"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

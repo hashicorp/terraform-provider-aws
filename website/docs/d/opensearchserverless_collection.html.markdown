@@ -34,7 +34,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the collection.
+* `arn` - ARN of the collection.
 * `collection_endpoint` - Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.
 * `created_date` - Date the Collection was created.
 * `dashboard_endpoint` - Collection-specific endpoint used to access OpenSearch Dashboards.

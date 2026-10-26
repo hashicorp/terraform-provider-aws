@@ -1,3 +1,0 @@
-```release-note:new-data-source
-aws_connect_quick_connect
-```

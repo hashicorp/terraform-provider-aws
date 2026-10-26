@@ -91,6 +91,14 @@ func TestAccVPCIPv6CIDRBlockAssociation_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCIPv6CIDRBlockAssociation(), resource1Name),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resource1Name, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resource1Name, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

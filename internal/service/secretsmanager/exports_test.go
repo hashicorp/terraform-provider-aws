@@ -19,4 +19,8 @@ var (
 
 	ValidSecretName       = validSecretName
 	ValidSecretNamePrefix = validSecretNamePrefix
+
+	SecretVersionForceNewCustomDiffInner = secretVersionForceNewCustomDiffInner
+	IsKMSKeyUnavailable                  = isKMSKeyUnavailable
+	IsSecretVersionSuperseded            = isSecretVersionSuperseded
 )

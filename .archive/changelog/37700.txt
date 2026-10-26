@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_lb: Add support for IPv6-only Application Load Balancers
-```

@@ -17,6 +17,7 @@ func TestAccConfigService_serial(t *testing.T) {
 		"AggregateAuthorization": {
 			acctest.CtBasic:      testAccConfigServiceAggregateAuthorization_basic,
 			"deprecatedRegion":   testAccConfigServiceAggregateAuthorization_deprecatedRegion,
+			"regionMigration":    testAccConfigServiceAggregateAuthorization_regionMigration,
 			acctest.CtDisappears: testAccConfigServiceAggregateAuthorization_disappears,
 			"tags":               testAccConfigServiceAggregateAuthorization_tagsSerial,
 		},
@@ -132,6 +133,10 @@ func TestAccConfigService_serial(t *testing.T) {
 			"ListBasic":           testAccRemediationConfiguration_List_basic,
 			"ListIncludeResource": testAccRemediationConfiguration_List_includeResource,
 			"ListRegionOverride":  testAccRemediationConfiguration_List_regionOverride,
+		},
+		"ConfigurationAggregator": {
+			"organization": testAccConfigurationAggregator_organization,
+			"switch":       testAccConfigurationAggregator_switch,
 		},
 		"RetentionConfiguration": {
 			acctest.CtBasic:      testAccRetentionConfiguration_basic,

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_appstream_stack: Fix `redirect_url` max character length
-```

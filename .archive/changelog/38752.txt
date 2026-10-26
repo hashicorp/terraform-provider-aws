@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_quicksight_account_subscription: Fix panic when read returns nil account info
-```

@@ -100,6 +100,7 @@ const (
 	topicAttributeNameLambdaFailureFeedbackRoleARN         = "LambdaFailureFeedbackRoleArn"
 	topicAttributeNameLambdaSuccessFeedbackRoleARN         = "LambdaSuccessFeedbackRoleArn"
 	topicAttributeNameLambdaSuccessFeedbackSampleRate      = "LambdaSuccessFeedbackSampleRate"
+	topicAttributeNameMaximumMessageSize                   = "MaximumMessageSize"
 	topicAttributeNameOwner                                = "Owner"
 	topicAttributeNamePolicy                               = "Policy"
 	topicAttributeNameSignatureVersion                     = "SignatureVersion"

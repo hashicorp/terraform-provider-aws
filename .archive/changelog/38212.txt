@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_iam_server_certificate: Add configurable `delete` timeout
-```

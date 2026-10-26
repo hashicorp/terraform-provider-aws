@@ -1,0 +1,35 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_cloudfront_function" "test" {
+  name    = var.rName
+  runtime = "cloudfront-js-1.0"
+  code    = <<-EOT
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+
+  tags = var.resource_tags
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
+}

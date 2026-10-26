@@ -39,22 +39,24 @@ func resourceIdentityPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"identity": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, dashes, and underscores"),
-				),
-			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"identity": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, dashes, and underscores"),
+					),
+				},
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+			}
 		},
 	}
 }
@@ -71,13 +73,13 @@ func resourceIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	identity := d.Get("identity").(string)
 	policyName := d.Get(names.AttrName).(string)
 	id := identityPolicyCreateResourceID(identity, policyName)
-	input := &ses.PutIdentityPolicyInput{
+	input := ses.PutIdentityPolicyInput{
 		Identity:   aws.String(identity),
 		Policy:     aws.String(policy),
 		PolicyName: aws.String(policyName),
 	}
 
-	_, err = conn.PutIdentityPolicy(ctx, input)
+	_, err = conn.PutIdentityPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SES Identity Policy (%s): %s", id, err)
@@ -136,13 +138,13 @@ func resourceIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &ses.PutIdentityPolicyInput{
+	input := ses.PutIdentityPolicyInput{
 		Identity:   aws.String(identity),
 		Policy:     aws.String(policy),
 		PolicyName: aws.String(policyName),
 	}
 
-	_, err = conn.PutIdentityPolicy(ctx, input)
+	_, err = conn.PutIdentityPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SES Identity Policy (%s): %s", d.Id(), err)
@@ -161,10 +163,11 @@ func resourceIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting SES Identity Policy: %s", d.Id())
-	_, err = conn.DeleteIdentityPolicy(ctx, &ses.DeleteIdentityPolicyInput{
+	input := ses.DeleteIdentityPolicyInput{
 		Identity:   aws.String(identity),
 		PolicyName: aws.String(policyName),
-	})
+	}
+	_, err = conn.DeleteIdentityPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SES Identity Policy (%s): %s", d.Id(), err)
@@ -193,11 +196,11 @@ func identityPolicyParseResourceID(id string) (string, string, error) {
 }
 
 func findIdentityPolicyByTwoPartKey(ctx context.Context, conn *ses.Client, identity, policyName string) (string, error) {
-	input := &ses.GetIdentityPoliciesInput{
+	input := ses.GetIdentityPoliciesInput{
 		Identity:    aws.String(identity),
 		PolicyNames: []string{policyName},
 	}
-	output, err := findIdentityPolicies(ctx, conn, input)
+	output, err := findIdentityPolicies(ctx, conn, &input)
 
 	if err != nil {
 		return "", err

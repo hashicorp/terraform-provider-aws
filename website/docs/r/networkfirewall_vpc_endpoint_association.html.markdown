@@ -36,7 +36,7 @@ resource "aws_networkfirewall_vpc_endpoint_association" "example" {
 This resource supports the following arguments:
 
 * `description` (Optional) - A description of the VPC endpoint association.
-* `firewall_arn` (Required) - The Amazon Resource Name (ARN) that identifies the firewall.
+* `firewall_arn` (Required) - The ARN that identifies the firewall.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subnet_mapping` (Required) - The ID for a subnet that's used in an association with a firewall. See [Subnet Mapping](#subnet-mapping) below for details.
 * `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

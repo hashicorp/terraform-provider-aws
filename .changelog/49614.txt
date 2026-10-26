@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_log_resource_policy: Fixes error when importing by identity when using resource-scope
+```

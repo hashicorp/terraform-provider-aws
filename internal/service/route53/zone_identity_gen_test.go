@@ -29,7 +29,7 @@ func TestAccRoute53Zone_Identity_basic(t *testing.T) {
 	var v route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -122,7 +122,7 @@ func TestAccRoute53Zone_Identity_ExistingResource_basic(t *testing.T) {
 	var v route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -182,7 +182,7 @@ func TestAccRoute53Zone_Identity_ExistingResource_noRefreshNoChange(t *testing.T
 	var v route53.GetHostedZoneOutput
 	resourceName := "aws_route53_zone.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

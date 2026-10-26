@@ -139,14 +139,6 @@ The `value` block supports the following arguments:
 * `long_value` - (Optional) If this feature uses the long variation type, this field contains the long value of this variation. Minimum value of `-9007199254740991`. Maximum value of `9007199254740991`.
 * `string_value` - (Optional) If this feature uses the string variation type, this field contains the string value of this variation. Minimum length of `0`. Maximum length of `512`.
 
-## Timeouts
-
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
-
-* `create` - (Default `2m`)
-* `delete` - (Default `2m`)
-* `update` - (Default `2m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -166,6 +158,14 @@ The `evaluation_rules` block supports the following attributes:
 
 * `name` - The name of the experiment or launch.
 * `type` - This value is `aws.evidently.splits` if this is an evaluation rule for a launch, and it is `aws.evidently.onlineab` if this is an evaluation rule for an experiment.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `2m`)
+* `delete` - (Default `2m`)
+* `update` - (Default `2m`)
 
 ## Import
 

@@ -76,6 +76,35 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route53_zone_association.example
+  identity = {
+    zone_id    = "Z123456ABCDEFG"
+    vpc_id     = "vpc-12345678"
+    vpc_region = "us-east-1"
+  }
+}
+
+resource "aws_route53_zone_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `zone_id` (String) The ID of the private hosted zone that you want to associate a VPC with.
+* `vpc_id` (String) The VPC to associate with the private hosted zone.
+
+#### Optional
+
+* `vpc_region` (String) The VPC's region. Defaults to the region of the AWS provider.
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route 53 Hosted Zone Associations using the Hosted Zone ID and VPC ID, separated by a colon (`:`). For example:
 
 The VPC is in the same region where you have configured the Terraform AWS Provider:

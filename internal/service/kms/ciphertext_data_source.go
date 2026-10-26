@@ -24,25 +24,27 @@ func dataSourceCiphertext() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCiphertextRead,
 
-		Schema: map[string]*schema.Schema{
-			"ciphertext_blob": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"context": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrKeyID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"plaintext": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"ciphertext_blob": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"context": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrKeyID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"plaintext": {
+					Type:      schema.TypeString,
+					Required:  true,
+					Sensitive: true,
+				},
+			}
 		},
 	}
 }

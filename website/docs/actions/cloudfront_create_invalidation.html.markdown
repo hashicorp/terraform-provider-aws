@@ -127,7 +127,7 @@ action "aws_cloudfront_create_invalidation" "env_specific" {
 
 This action supports the following arguments:
 
+* `caller_reference` - (Optional) Unique identifier for the invalidation request. If not provided, one will be generated automatically. Maximum length of 128 characters.
 * `distribution_id` - (Required) ID of the CloudFront distribution to invalidate cache for. Must be a valid CloudFront distribution ID (e.g., E1GHKQ2EXAMPLE).
 * `paths` - (Required) List of file paths or patterns to invalidate. Use `/*` to invalidate all files. Supports specific files (`/index.html`), directory wildcards (`/images/*`), or all files (`/*`). Maximum of 3000 paths per invalidation request. Note: The first 1,000 invalidation paths per month are free, additional paths are charged per path.
-* `caller_reference` - (Optional) Unique identifier for the invalidation request. If not provided, one will be generated automatically. Maximum length of 128 characters.
 * `timeout` - (Optional) Timeout in seconds to wait for the invalidation to complete. Defaults to 900 seconds (15 minutes). Must be between 60 and 3600 seconds. Invalidation requests typically take 5-15 minutes to process.

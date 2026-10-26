@@ -20,7 +20,7 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_shared_directory_accepter.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
+	domainName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

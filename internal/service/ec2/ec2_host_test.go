@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -38,7 +39,7 @@ func TestAccEC2Host_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "host_recovery", "off"),
 					resource.TestCheckResourceAttr(resourceName, "instance_family", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "c8g.large"),
-					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOutpostARN, ""),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -70,6 +71,14 @@ func TestAccEC2Host_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceHost(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -209,7 +218,7 @@ func TestAccEC2Host_outpost(t *testing.T) {
 				Config: testAccHostConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostExists(ctx, t, resourceName, &host),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOutpostARN, outpostDataSourceName, names.AttrARN),
 				),
 			},
 			{

@@ -12,8 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/accountaccess"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/agentregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
@@ -41,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockruntime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
@@ -58,6 +61,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchomni"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecatalyst"
@@ -88,8 +92,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/directoryservicedata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
@@ -113,6 +119,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/eventbridgev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evs"
@@ -135,6 +142,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/interconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/invoicing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
@@ -151,6 +159,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdacore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdaweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/launchwizard"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
@@ -160,6 +171,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/m2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mailmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
@@ -180,6 +192,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkflowmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmonitor"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/networksecuritymanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/oam"
@@ -198,6 +211,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/polly"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pricingplanmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -210,6 +224,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehub"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehubv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
@@ -233,6 +248,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/securityir"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
@@ -280,8 +296,10 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 	v := []conns.ServicePackage{
 		accessanalyzer.ServicePackage(ctx),
 		account.ServicePackage(ctx),
+		accountaccess.ServicePackage(ctx),
 		acm.ServicePackage(ctx),
 		acmpca.ServicePackage(ctx),
+		agentregistry.ServicePackage(ctx),
 		amp.ServicePackage(ctx),
 		amplify.ServicePackage(ctx),
 		apigateway.ServicePackage(ctx),
@@ -309,6 +327,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		bedrock.ServicePackage(ctx),
 		bedrockagent.ServicePackage(ctx),
 		bedrockagentcore.ServicePackage(ctx),
+		bedrockruntime.ServicePackage(ctx),
 		billing.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
 		ce.ServicePackage(ctx),
@@ -326,6 +345,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		cloudsearch.ServicePackage(ctx),
 		cloudtrail.ServicePackage(ctx),
 		cloudwatch.ServicePackage(ctx),
+		cloudwatchomni.ServicePackage(ctx),
 		codeartifact.ServicePackage(ctx),
 		codebuild.ServicePackage(ctx),
 		codecatalyst.ServicePackage(ctx),
@@ -356,8 +376,10 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		deploy.ServicePackage(ctx),
 		detective.ServicePackage(ctx),
 		devicefarm.ServicePackage(ctx),
+		devopsagent.ServicePackage(ctx),
 		devopsguru.ServicePackage(ctx),
 		directconnect.ServicePackage(ctx),
+		directoryservicedata.ServicePackage(ctx),
 		dlm.ServicePackage(ctx),
 		dms.ServicePackage(ctx),
 		docdb.ServicePackage(ctx),
@@ -381,6 +403,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		emr.ServicePackage(ctx),
 		emrcontainers.ServicePackage(ctx),
 		emrserverless.ServicePackage(ctx),
+		eventbridgev2.ServicePackage(ctx),
 		events.ServicePackage(ctx),
 		evidently.ServicePackage(ctx),
 		evs.ServicePackage(ctx),
@@ -403,6 +426,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		imagebuilder.ServicePackage(ctx),
 		inspector.ServicePackage(ctx),
 		inspector2.ServicePackage(ctx),
+		interconnect.ServicePackage(ctx),
 		internetmonitor.ServicePackage(ctx),
 		invoicing.ServicePackage(ctx),
 		iot.ServicePackage(ctx),
@@ -419,6 +443,9 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		kms.ServicePackage(ctx),
 		lakeformation.ServicePackage(ctx),
 		lambda.ServicePackage(ctx),
+		lambdacore.ServicePackage(ctx),
+		lambdamicrovms.ServicePackage(ctx),
+		lambdaweb.ServicePackage(ctx),
 		launchwizard.ServicePackage(ctx),
 		lexmodels.ServicePackage(ctx),
 		lexv2models.ServicePackage(ctx),
@@ -428,6 +455,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		logs.ServicePackage(ctx),
 		m2.ServicePackage(ctx),
 		macie2.ServicePackage(ctx),
+		mailmanager.ServicePackage(ctx),
 		mediaconnect.ServicePackage(ctx),
 		mediaconvert.ServicePackage(ctx),
 		medialive.ServicePackage(ctx),
@@ -448,6 +476,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		networkflowmonitor.ServicePackage(ctx),
 		networkmanager.ServicePackage(ctx),
 		networkmonitor.ServicePackage(ctx),
+		networksecuritymanager.ServicePackage(ctx),
 		notifications.ServicePackage(ctx),
 		notificationscontacts.ServicePackage(ctx),
 		oam.ServicePackage(ctx),
@@ -466,6 +495,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		pipes.ServicePackage(ctx),
 		polly.ServicePackage(ctx),
 		pricing.ServicePackage(ctx),
+		pricingplanmanager.ServicePackage(ctx),
 		qbusiness.ServicePackage(ctx),
 		qldb.ServicePackage(ctx),
 		quicksight.ServicePackage(ctx),
@@ -478,6 +508,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		redshiftserverless.ServicePackage(ctx),
 		rekognition.ServicePackage(ctx),
 		resiliencehub.ServicePackage(ctx),
+		resiliencehubv2.ServicePackage(ctx),
 		resourceexplorer2.ServicePackage(ctx),
 		resourcegroups.ServicePackage(ctx),
 		resourcegroupstaggingapi.ServicePackage(ctx),
@@ -501,6 +532,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		schemas.ServicePackage(ctx),
 		secretsmanager.ServicePackage(ctx),
 		securityhub.ServicePackage(ctx),
+		securityir.ServicePackage(ctx),
 		securitylake.ServicePackage(ctx),
 		serverlessrepo.ServicePackage(ctx),
 		servicecatalog.ServicePackage(ctx),

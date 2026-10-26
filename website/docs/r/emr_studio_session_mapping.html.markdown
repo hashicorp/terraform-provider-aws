@@ -29,14 +29,14 @@ This resource supports the following arguments:
 * `identity_id`- (Optional) The globally unique identifier (GUID) of the user or group from the Amazon Web Services SSO Identity Store.
 * `identity_name` - (Optional) The name of the user or group from the Amazon Web Services SSO Identity Store.
 * `identity_type` - (Required) Specifies whether the identity to map to the Amazon EMR Studio is a `USER` or a `GROUP`.
-* `session_policy_arn` - (Required) The Amazon Resource Name (ARN) for the session policy that will be applied to the user or group. You should specify the ARN for the session policy that you want to apply, not the ARN of your user role.
+* `session_policy_arn` - (Required) ARN for the session policy that will be applied to the user or group. You should specify the ARN for the session policy that you want to apply, not the ARN of your user role.
 * `studio_id` - (Required) The ID of the Amazon EMR Studio to which the user or group will be mapped.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id`- The id of the Elastic MapReduce Studio Session Mapping.
+* `id`- The ID of the Elastic MapReduce Studio Session Mapping.
 
 ## Import
 

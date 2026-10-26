@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_amplify_app: Allow `repository` to be updated in-place
-```

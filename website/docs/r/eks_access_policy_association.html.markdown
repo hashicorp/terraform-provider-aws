@@ -1,7 +1,7 @@
 ---
 subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
-page_title: "AWS: aws_eks_access_policy_associattion"
+page_title: "AWS: aws_eks_access_policy_association"
 description: |-
   Access Entry Policy Association for an EKS Cluster.
 ---
@@ -60,7 +60,6 @@ The `associated_access_policy` block has the following attributes.
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `20m`)
-* `update` - (Default `20m`)
 * `delete` - (Default `40m`)
 
 ## Import

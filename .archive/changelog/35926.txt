@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Add `token_bucket_rate_limiter_capacity` parameter
-```

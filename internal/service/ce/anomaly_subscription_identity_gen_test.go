@@ -28,7 +28,7 @@ func TestAccCEAnomalySubscription_Identity_basic(t *testing.T) {
 	var v awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	email_address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -117,7 +117,7 @@ func TestAccCEAnomalySubscription_Identity_ExistingResource_basic(t *testing.T) 
 	var v awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	email_address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -201,7 +201,7 @@ func TestAccCEAnomalySubscription_Identity_ExistingResource_noRefreshNoChange(t 
 	var v awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	email_address := acctest.RandomEmailAddress(domain)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

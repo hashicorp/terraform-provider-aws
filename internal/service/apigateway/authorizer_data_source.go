@@ -20,52 +20,54 @@ func dataSourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizerRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authorizer_credentials": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"authorizer_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"authorizer_result_ttl_in_seconds": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"authorizer_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity_source": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity_validation_expression": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"provider_arns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authorizer_credentials": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"authorizer_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"authorizer_result_ttl_in_seconds": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"authorizer_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_source": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_validation_expression": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"provider_arns": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -76,7 +78,7 @@ func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := c.APIGatewayClient(ctx)
 
 	authorizerID := d.Get("authorizer_id").(string)
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	authorizer, err := findAuthorizerByTwoPartKey(ctx, conn, authorizerID, apiID)
 
 	if err != nil {

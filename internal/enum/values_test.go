@@ -26,3 +26,9 @@ func TestValues(t *testing.T) {
 		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 	}
 }
+
+func BenchmarkValues(b *testing.B) {
+	for b.Loop() {
+		Values[types.AclPermission]()
+	}
+}

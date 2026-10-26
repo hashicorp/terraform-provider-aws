@@ -25,7 +25,7 @@ func TestAccAPIGatewayDomainName_tags(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -229,7 +229,7 @@ func TestAccAPIGatewayDomainName_Tags_null(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -308,7 +308,7 @@ func TestAccAPIGatewayDomainName_Tags_emptyMap(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -383,7 +383,7 @@ func TestAccAPIGatewayDomainName_Tags_addOnUpdate(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -476,7 +476,7 @@ func TestAccAPIGatewayDomainName_Tags_EmptyTag_onCreate(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -579,7 +579,7 @@ func TestAccAPIGatewayDomainName_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -732,7 +732,7 @@ func TestAccAPIGatewayDomainName_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -833,7 +833,7 @@ func TestAccAPIGatewayDomainName_Tags_DefaultTags_providerOnly(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1036,7 +1036,7 @@ func TestAccAPIGatewayDomainName_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1214,7 +1214,7 @@ func TestAccAPIGatewayDomainName_Tags_DefaultTags_overlapping(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1408,7 +1408,7 @@ func TestAccAPIGatewayDomainName_Tags_DefaultTags_updateToProviderOnly(t *testin
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1510,7 +1510,7 @@ func TestAccAPIGatewayDomainName_Tags_DefaultTags_updateToResourceOnly(t *testin
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1611,7 +1611,7 @@ func TestAccAPIGatewayDomainName_Tags_DefaultTags_emptyResourceTag(t *testing.T)
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1686,7 +1686,7 @@ func TestAccAPIGatewayDomainName_Tags_DefaultTags_emptyProviderOnlyTag(t *testin
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1753,7 +1753,7 @@ func TestAccAPIGatewayDomainName_Tags_DefaultTags_nullOverlappingResourceTag(t *
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1825,7 +1825,7 @@ func TestAccAPIGatewayDomainName_Tags_DefaultTags_nullNonOverlappingResourceTag(
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1897,7 +1897,7 @@ func TestAccAPIGatewayDomainName_Tags_ComputedTag_onCreate(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -1962,7 +1962,7 @@ func TestAccAPIGatewayDomainName_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -2071,7 +2071,7 @@ func TestAccAPIGatewayDomainName_Tags_ComputedTag_OnUpdate_replace(t *testing.T)
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -2170,7 +2170,7 @@ func TestAccAPIGatewayDomainName_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
@@ -2344,7 +2344,7 @@ func TestAccAPIGatewayDomainName_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 
 	var v apigateway.GetDomainNameOutput
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := acctest.RandomSubdomain()
+	rName := acctest.RandomSubdomain(t)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 

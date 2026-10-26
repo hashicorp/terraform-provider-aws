@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_glue_job: Add `execution_class` argument
-```

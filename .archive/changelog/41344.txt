@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_detective_member: No longer fails with unexpected status when adding Organization member accounts.
-```

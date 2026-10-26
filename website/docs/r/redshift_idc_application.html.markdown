@@ -55,7 +55,7 @@ A `service_integration` block supports the following:
 
 A `lake_formation` block supports the following:
 
-* `lake_formation_query` - (Optional) Lake formation scope.
+* `lake_formation_query` - (Optional) Lake Formation scope.
 
 #### lake_formation_query
 

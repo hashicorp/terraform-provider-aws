@@ -39,7 +39,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier for the preferences resource. Since preferences are for the entire account, this will be the 12-digit account id.
+* `id` - Unique identifier for the preferences resource. Since preferences are for the entire account, this will be the 12-digit account ID.
 
 ## Import
 

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_fsx_lustre_file_system: Add missing values to `per_unit_storage_throughput` validation
-```

@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_backup_plan: Add `rule` attribute
-```

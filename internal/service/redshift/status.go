@@ -158,3 +158,19 @@ func statusSnapshotScheduleAssociation(conn *redshift.Client, clusterIdentifier,
 		return output, string(output.ScheduleAssociationState), nil
 	}
 }
+
+func statusInternalDataShare(conn *redshift.Client, namespaceID, accountID, region, partition string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findInternalDataShareByNamespaceID(ctx, conn, namespaceID, accountID, region, partition)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, "AVAILABLE", nil
+	}
+}

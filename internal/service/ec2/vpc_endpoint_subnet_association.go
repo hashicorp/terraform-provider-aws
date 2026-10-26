@@ -36,17 +36,19 @@ func resourceVPCEndpointSubnetAssociation() *schema.Resource {
 			StateContext: resourceVPCEndpointSubnetAssociationImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrVPCEndpointID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrVPCEndpointID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{

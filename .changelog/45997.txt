@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_eks_cluster: Fix `kubernetes_network_config` argument name in EKS Auto Mode validation error message
-```

@@ -24,57 +24,59 @@ func dataSourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceComputeEnvironmentRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
 
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ecs_cluster_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrServiceRole: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatusReason: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"update_policy": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"job_execution_timeout_minutes": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"terminate_jobs_on_update": {
-							Type:     schema.TypeBool,
-							Computed: true,
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ecs_cluster_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrServiceRole: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatusReason: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"update_policy": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"job_execution_timeout_minutes": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"terminate_jobs_on_update": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

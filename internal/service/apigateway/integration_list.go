@@ -37,7 +37,7 @@ type integrationListResource struct {
 func (l *integrationListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"rest_api_id": listschema.StringAttribute{
+			attrRestAPIID: listschema.StringAttribute{
 				Required:    true,
 				Description: "ID of the associated REST API.",
 			},
@@ -64,7 +64,7 @@ func (l *integrationListResource) List(ctx context.Context, request list.ListReq
 	resourceID := query.ResourceID.ValueString()
 
 	tflog.Info(ctx, "Listing API Gateway Integrations", map[string]any{
-		logging.ResourceAttributeKey("rest_api_id"):        restAPIID,
+		logging.ResourceAttributeKey(attrRestAPIID):        restAPIID,
 		logging.ResourceAttributeKey(names.AttrResourceID): resourceID,
 	})
 
@@ -90,7 +90,7 @@ func (l *integrationListResource) List(ctx context.Context, request list.ListReq
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(resourceIntegrationIDAttr(restAPIID, resourceID, httpMethod))
-			rd.Set("rest_api_id", restAPIID)
+			rd.Set(attrRestAPIID, restAPIID)
 			rd.Set(names.AttrResourceID, resourceID)
 			rd.Set("http_method", httpMethod)
 

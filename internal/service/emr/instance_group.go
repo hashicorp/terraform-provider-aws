@@ -54,96 +54,98 @@ func resourceInstanceGroup() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"autoscaling_policy": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-			},
-			"bid_price": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"configurations_json": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"autoscaling_policy": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+					DiffSuppressOnRefresh: true,
 				},
-			},
-			"ebs_config": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrSize: {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validEBSVolumeType(),
-						},
-						"volumes_per_instance": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: true,
-							Default:  1,
-						},
+				"bid_price": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"cluster_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"configurations_json": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+					DiffSuppressOnRefresh: true,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
 					},
 				},
-				Set: resourceClusterEBSHashConfig,
-			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrInstanceCount: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"running_instance_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"ebs_config": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrSize: {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validEBSVolumeType(),
+							},
+							"volumes_per_instance": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ForceNew: true,
+								Default:  1,
+							},
+						},
+					},
+					Set: resourceClusterEBSHashConfig,
+				},
+				"ebs_optimized": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrInstanceCount: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"running_instance_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

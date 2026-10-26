@@ -8,7 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -22,11 +25,10 @@ func RegisterSweepers() {
 }
 
 func sweepAgents(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := &bedrockagent.ListAgentsInput{}
 	conn := client.BedrockAgentClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	pages := bedrockagent.NewListAgentsPaginator(conn, input)
+	pages := bedrockagent.NewListAgentsPaginator(conn, &bedrockagent.ListAgentsInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -44,14 +46,21 @@ func sweepAgents(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 }
 
 func sweepDataSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := &bedrockagent.ListKnowledgeBasesInput{}
 	conn := client.BedrockAgentClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	pages := bedrockagent.NewListKnowledgeBasesPaginator(conn, input)
+	pages := bedrockagent.NewListKnowledgeBasesPaginator(conn, &bedrockagent.ListKnowledgeBasesInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		// The BedRock Agent API returns an InternalServerException in unsupported regions
+		if errs.IsA[*types.InternalServerException](err) {
+			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+				"skip_reason": "Unsupported region",
+				"error":       err.Error(),
+			})
+			return sweepResources, nil
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -81,14 +90,21 @@ func sweepDataSources(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 }
 
 func sweepKnowledgeBases(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := &bedrockagent.ListKnowledgeBasesInput{}
 	conn := client.BedrockAgentClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	pages := bedrockagent.NewListKnowledgeBasesPaginator(conn, input)
+	pages := bedrockagent.NewListKnowledgeBasesPaginator(conn, &bedrockagent.ListKnowledgeBasesInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		// The BedRock Agent API returns an InternalServerException in unsupported regions
+		if errs.IsA[*types.InternalServerException](err) {
+			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+				"skip_reason": "Unsupported region",
+				"error":       err.Error(),
+			})
+			return sweepResources, nil
+		}
 		if err != nil {
 			return nil, err
 		}

@@ -47,169 +47,171 @@ func resourceVerifiedAccessTrustProvider() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"device_options": {
-				Type:     schema.TypeList,
-				ForceNew: true,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"tenant_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"device_options": {
+					Type:     schema.TypeList,
+					ForceNew: true,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"tenant_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"device_trust_provider_type": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DeviceTrustProviderType](),
-			},
-			"native_application_oidc_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authorization_endpoint": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-						names.AttrClientID: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-						},
-						names.AttrClientSecret: {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
-						},
-						names.AttrIssuer: {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-						"public_signing_key_endpoint": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-						names.AttrScope: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"token_endpoint": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-						"user_info_endpoint": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
+				"device_trust_provider_type": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DeviceTrustProviderType](),
+				},
+				"native_application_oidc_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authorization_endpoint": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+							names.AttrClientID: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Optional: true,
+							},
+							names.AttrClientSecret: {
+								Type:      schema.TypeString,
+								Required:  true,
+								Sensitive: true,
+							},
+							names.AttrIssuer: {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+							"public_signing_key_endpoint": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+							names.AttrScope: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"token_endpoint": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+							"user_info_endpoint": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
 						},
 					},
 				},
-			},
-			"oidc_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authorization_endpoint": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-						names.AttrClientID: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-						},
-						names.AttrClientSecret: {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
-						},
-						names.AttrIssuer: {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-						names.AttrScope: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"token_endpoint": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-						"user_info_endpoint": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-					},
-				},
-			},
-			"policy_reference_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"sse_specification": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"customer_managed_key_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+				"oidc_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authorization_endpoint": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+							names.AttrClientID: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Optional: true,
+							},
+							names.AttrClientSecret: {
+								Type:      schema.TypeString,
+								Required:  true,
+								Sensitive: true,
+							},
+							names.AttrIssuer: {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+							names.AttrScope: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"token_endpoint": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+							"user_info_endpoint": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
 						},
 					},
 				},
-			},
-			"trust_provider_type": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TrustProviderType](),
-			},
-			"user_trust_provider_type": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.UserTrustProviderType](),
-			},
+				"policy_reference_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"sse_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"customer_managed_key_enabled": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"trust_provider_type": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TrustProviderType](),
+				},
+				"user_trust_provider_type": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UserTrustProviderType](),
+				},
+			}
 		},
 	}
 }

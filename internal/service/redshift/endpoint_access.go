@@ -36,86 +36,88 @@ func resourceEndpointAccess() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAddress: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"endpoint_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 30),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-				),
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrResourceOwner: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-			"subnet_group_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"vpc_endpoint": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"network_interface": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAvailabilityZone: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrNetworkInterfaceID: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"private_ip_address": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrSubnetID: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAddress: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"endpoint_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 30),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					),
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrResourceOwner: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+					Computed: true,
+				},
+				"subnet_group_name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"vpc_endpoint": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"network_interface": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAvailabilityZone: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrNetworkInterfaceID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"private_ip_address": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrSubnetID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrVPCEndpointID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVPCID: {
-							Type:     schema.TypeString,
-							Computed: true,
+							names.AttrVPCEndpointID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVPCID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

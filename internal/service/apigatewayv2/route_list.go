@@ -115,19 +115,21 @@ type listRouteModel struct {
 
 func listRoutes(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetRoutesInput) iter.Seq2[awstypes.Route, error] {
 	return func(yield func(awstypes.Route, error) bool) {
+		var stopped bool
 		err := getRoutesPages(ctx, conn, input, func(page *apigatewayv2.GetRoutesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 			for _, item := range page.Items {
 				if !yield(item, nil) {
+					stopped = true
 					return false
 				}
 			}
 			return !lastPage
 		})
-		if err != nil {
-			yield(awstypes.Route{}, fmt.Errorf("listing API Gateway V2 Route resources: %w", err))
+		if !stopped && err != nil {
+			yield(inttypes.Zero[awstypes.Route](), fmt.Errorf("listing API Gateway V2 Routes: %w", err))
 		}
 	}
 }

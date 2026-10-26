@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -29,8 +30,10 @@ import (
 
 // @SDKResource("aws_medialive_multiplex", name="Multiplex")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeMultiplexOutput", importIgnore="start_multiplex")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeMultiplexOutput", importIgnore="start_multiplex", plannableImportAction="NoOp")
 // @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.60.0")
 func resourceMultiplex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMultiplexCreate,
@@ -38,69 +41,67 @@ func resourceMultiplex() *schema.Resource {
 		UpdateWithoutTimeout: resourceMultiplexUpdate,
 		DeleteWithoutTimeout: resourceMultiplexDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 2,
-				MaxItems: 2,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"multiplex_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"transport_stream_bitrate": {
-							Type:             schema.TypeInt,
-							Required:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000000, 100000000)),
-						},
-						"transport_stream_reserved_bitrate": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"transport_stream_id": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"maximum_video_buffer_delay_milliseconds": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000, 3000)),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MinItems: 2,
+					MaxItems: 2,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"multiplex_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"transport_stream_bitrate": {
+								Type:             schema.TypeInt,
+								Required:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000000, 100000000)),
+							},
+							"transport_stream_reserved_bitrate": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"transport_stream_id": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"maximum_video_buffer_delay_milliseconds": {
+								Type:             schema.TypeInt,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000, 3000)),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"start_multiplex": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"start_multiplex": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -256,8 +257,7 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta a
 	})
 
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return diags
 		}
 
@@ -378,8 +378,7 @@ func findMultiplexByID(ctx context.Context, conn *medialive.Client, id string) (
 	}
 	out, err := conn.DescribeMultiplex(ctx, in)
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

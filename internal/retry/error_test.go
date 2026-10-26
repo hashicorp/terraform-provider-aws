@@ -95,8 +95,9 @@ func TestTimedOut(t *testing.T) {
 			Expected: true,
 		},
 		{
-			Name: "timeout error non-nil last error",
-			Err:  &retry.TimeoutError{LastError: errors.New("test")},
+			Name:     "timeout error non-nil last error",
+			Err:      &retry.TimeoutError{LastError: errors.New("test")},
+			Expected: true,
 		},
 		{
 			Name: "SDK timeout error non-nil last error",

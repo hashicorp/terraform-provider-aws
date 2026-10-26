@@ -60,7 +60,7 @@ func structFieldsInner_(typ reflect.Type, parentIndex []int, yield func(reflect.
 }
 
 func exportedFields(fields iter.Seq[reflect.StructField]) iter.Seq[reflect.StructField] {
-	return tfiter.Filtered(fields, func(field reflect.StructField) bool {
+	return tfiter.Filter(fields, func(field reflect.StructField) bool {
 		return field.IsExported() || field.Anonymous
 	})
 }
@@ -77,7 +77,7 @@ func ExportedStructFields(typ reflect.Type) iter.Seq[reflect.StructField] {
 // Tag options (e.g. ",omitempty") are stripped before comparison.
 func FieldByTag(v any, tagKey, tagValue string) (reflect.StructField, bool) {
 	t := reflect.TypeOf(v)
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 	if t.Kind() != reflect.Struct {

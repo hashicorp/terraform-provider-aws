@@ -52,6 +52,8 @@ var (
 	ResourceKeyPair                                       = resourceKeyPair
 	ResourceLaunchTemplate                                = resourceLaunchTemplate
 	ResourceLocalGatewayRoute                             = resourceLocalGatewayRoute
+	ResourceLocalGatewayRouteTable                        = newLocalGatewayRouteTableResource
+	ResourceLocalGatewayRouteTableVIFGroupAssociation     = newLocalGatewayRouteTableVirtualInterfaceGroupAssociationResource
 	ResourceLocalGatewayRouteTableVPCAssociation          = resourceLocalGatewayRouteTableVPCAssociation
 	ResourceMainRouteTableAssociation                     = resourceMainRouteTableAssociation
 	ResourceManagedPrefixList                             = resourceManagedPrefixList
@@ -102,6 +104,7 @@ var (
 	ResourceTransitGatewayMeteringPolicyEntry             = newTransitGatewayMeteringPolicyEntryResource
 	ResourceTransitGatewayPolicyTable                     = resourceTransitGatewayPolicyTable
 	ResourceTransitGatewayPolicyTableAssociation          = resourceTransitGatewayPolicyTableAssociation
+	ResourceTransitGatewayPolicyTableEntry                = newTransitGatewayPolicyTableEntryResource
 	ResourceTransitGatewayPrefixListReference             = resourceTransitGatewayPrefixListReference
 	ResourceTransitGatewayRoute                           = resourceTransitGatewayRoute
 	ResourceTransitGatewayRouteTable                      = resourceTransitGatewayRouteTable
@@ -143,6 +146,7 @@ var (
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
 	CheckMostRecentAndMissingFilters                            = checkMostRecentAndMissingFilters
+	CreateTags                                                  = createTags
 	CustomFiltersSchema                                         = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                    = customerGatewayConfigurationToTunnelInfo
 	DefaultIPv6CIDRBlockAssociation                             = defaultIPv6CIDRBlockAssociation
@@ -189,6 +193,8 @@ var (
 	FindKeyPairByName                                           = findKeyPairByName
 	FindLaunchTemplateByID                                      = findLaunchTemplateByID
 	FindLocalGatewayRouteByTwoPartKey                           = findLocalGatewayRouteByTwoPartKey
+	FindLocalGatewayRouteTableByID                              = findLocalGatewayRouteTableByID
+	FindLocalGatewayRouteTableVIFGroupAssociationByID           = findLocalGatewayRouteTableVIFGroupAssociationByID
 	FindLocalGatewayRouteTableVPCAssociationByID                = findLocalGatewayRouteTableVPCAssociationByID
 	FindMainRouteTableAssociationByID                           = findMainRouteTableAssociationByID
 	FindManagedPrefixListByID                                   = findManagedPrefixListByID
@@ -250,6 +256,7 @@ var (
 	FindTransitGatewayMeteringPolicyEntryByTwoPartKey           = findTransitGatewayMeteringPolicyEntryByTwoPartKey
 	FindTransitGatewayPolicyTableAssociationByTwoPartKey        = findTransitGatewayPolicyTableAssociationByTwoPartKey
 	FindTransitGatewayPolicyTableByID                           = findTransitGatewayPolicyTableByID
+	FindTransitGatewayPolicyTableEntryByTwoPartKey              = findTransitGatewayPolicyTableEntryByTwoPartKey
 	FindTransitGatewayPrefixListReferenceByTwoPartKey           = findTransitGatewayPrefixListReferenceByTwoPartKey
 	FindTransitGatewayRouteTableAssociationByTwoPartKey         = findTransitGatewayRouteTableAssociationByTwoPartKey
 	FindTransitGatewayRouteTableByID                            = findTransitGatewayRouteTableByID
@@ -284,6 +291,7 @@ var (
 	FindVolumeAttachmentInstanceByID                            = findVolumeAttachmentInstanceByID
 	FlattenNetworkInterfacePrivateIPAddresses                   = flattenNetworkInterfacePrivateIPAddresses
 	FlattenSecurityGroups                                       = flattenSecurityGroups
+	FlattenTransitGatewayPeeringAttachmentOptions               = flattenTransitGatewayPeeringAttachmentOptions
 	FlowLogStateUpgradeV0                                       = flowLogStateUpgradeV0
 	IPAMServicePrincipal                                        = ipamServicePrincipal
 	InstanceMigrateState                                        = instanceMigrateState

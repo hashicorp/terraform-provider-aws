@@ -42,17 +42,15 @@ output "id" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `key_pair_id` - (Optional) Key Pair ID.
-* `key_name` - (Optional) Key Pair name.
+The arguments of this data source act as filters for querying the available Key Pairs. The given filters must match exactly one Key Pair whose data will be exported as attributes.
+
+* `filter` - (Optional) Custom filter block as described below.
 * `include_public_key` - (Optional) Whether to include the public key material in the response.
-* `filter` -  (Optional) Custom filter block as described below.
+* `key_name` - (Optional) Key Pair name.
+* `key_pair_id` - (Optional) Key Pair ID.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-The arguments of this data source act as filters for querying the available
-Key Pairs. The given filters must match exactly one Key Pair
-whose data will be exported as attributes.
-
-### filter Configuration Block
+### `filter` Block
 
 The `filter` configuration block supports the following arguments:
 
@@ -63,10 +61,10 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the Key Pair.
 * `arn` - ARN of the Key Pair.
 * `create_time` - Timestamp for when the key pair was created in ISO 8601 format.
 * `fingerprint` - SHA-1 digest of the DER encoded private key.
+* `id` - ID of the Key Pair.
 * `key_type` - Type of key pair.
 * `public_key` - Public key material.
 * `tags` - Any tags assigned to the Key Pair.

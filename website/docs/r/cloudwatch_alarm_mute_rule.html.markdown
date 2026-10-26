@@ -30,7 +30,7 @@ resource "aws_cloudwatch_alarm_mute_rule" "example" {
 ### With Start/Expire Dates Option
 
 ```terraform
-resource "aws_cloudwatch_alarm" "example" {
+resource "aws_cloudwatch_metric_alarm" "example" {
   alarm_name          = "example"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
@@ -56,7 +56,7 @@ resource "aws_cloudwatch_alarm_mute_rule" "example" {
   }
 
   mute_targets {
-    alarm_names = [aws_cloudwatch_alarm.example.alarm_name]
+    alarm_names = [aws_cloudwatch_metric_alarm.example.alarm_name]
   }
 
   tags = {

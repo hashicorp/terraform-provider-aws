@@ -50,30 +50,42 @@ resource "aws_s3control_bucket_lifecycle_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `bucket` - (Required) ARN of the bucket.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `bucket` - (Required) Amazon Resource Name (ARN) of the bucket.
-* `rule` - (Required) Configuration block(s) containing lifecycle rules for the bucket.
-    * `abort_incomplete_multipart_upload` - (Optional) Configuration block containing settings for abort incomplete multipart upload.
-        * `days_after_initiation` - (Required) Number of days after which Amazon S3 aborts an incomplete multipart upload.
-    * `expiration` - (Optional) Configuration block containing settings for expiration of objects.
-        * `date` - (Optional) Date the object is to be deleted. Should be in `YYYY-MM-DD` date format, e.g., `2020-09-30`.
-        * `days` - (Optional) Number of days before the object is to be deleted.
-        * `expired_object_delete_marker` - (Optional) Enable to remove a delete marker with no noncurrent versions. Cannot be specified with `date` or `days`.
-    * `filter` - (Optional) Configuration block containing settings for filtering.
-        * `prefix` - (Optional) Object prefix for rule filtering.
-        * `tags` - (Optional) Key-value map of object tags for rule filtering.
-    * `id` - (Required) Unique identifier for the rule.
-    * `status` - (Optional) Status of the rule. Valid values: `Enabled` and `Disabled`. Defaults to `Enabled`.
+* `rule` - (Required) Configuration block(s) containing lifecycle rules for the bucket. See [`rule`](#rule-block) below.
+
+### `rule` Block
+
+* `abort_incomplete_multipart_upload` - (Optional) Configuration block containing settings for abort incomplete multipart upload. See [`abort_incomplete_multipart_upload`](#abort_incomplete_multipart_upload-block) below.
+* `expiration` - (Optional) Configuration block containing settings for expiration of objects. See [`expiration`](#expiration-block) below.
+* `filter` - (Optional) Configuration block containing settings for filtering. See [`filter`](#filter-block) below.
+* `id` - (Required) Unique identifier for the rule.
+* `status` - (Optional) Status of the rule. Valid values: `Enabled` and `Disabled`. Defaults to `Enabled`.
+
+### `abort_incomplete_multipart_upload` Block
+
+* `days_after_initiation` - (Required) Number of days after which Amazon S3 aborts an incomplete multipart upload.
+
+### `expiration` Block
+
+* `date` - (Optional) Date the object is to be deleted. Should be in `YYYY-MM-DD` date format, e.g., `2020-09-30`.
+* `days` - (Optional) Number of days before the object is to be deleted.
+* `expired_object_delete_marker` - (Optional) Enable to remove a delete marker with no noncurrent versions. Cannot be specified with `date` or `days`.
+
+### `filter` Block
+
+* `prefix` - (Optional) Object prefix for rule filtering.
+* `tags` - (Optional) Key-value map of object tags for rule filtering.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the bucket.
+* `id` - ARN of the bucket.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Control Bucket Lifecycle Configurations using the Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Control Bucket Lifecycle Configurations using the ARN. For example:
 
 ```terraform
 import {
@@ -82,7 +94,7 @@ import {
 }
 ```
 
-Using `terraform import`, import S3 Control Bucket Lifecycle Configurations using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import S3 Control Bucket Lifecycle Configurations using the ARN. For example:
 
 ```console
 % terraform import aws_s3control_bucket_lifecycle_configuration.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example

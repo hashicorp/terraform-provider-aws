@@ -65,7 +65,9 @@ func dataSourceHostedZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneRead,
 
-		Schema: map[string]*schema.Schema{},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{}
+		},
 	}
 }
 

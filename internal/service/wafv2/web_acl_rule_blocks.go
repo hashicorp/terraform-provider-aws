@@ -5,6 +5,7 @@ package wafv2
 
 import (
 	"context"
+	"slices"
 	"sync"
 
 	"github.com/YakDriver/regexache"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -181,8 +183,17 @@ var excludedRuleBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Blo
 })
 
 var managedRuleGroupStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return newManagedRuleGroupStatementBlock(ctx, fwtypes.NewListNestedObjectTypeOf[webACLRuleManagedRuleGroupStatementModel](ctx), scopeDownStatementBlock(ctx))
+})
+
+// nestedManagedRuleGroupStatementBlock is managed_rule_group_statement inside a logical statement.
+var nestedManagedRuleGroupStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return notValidInLogicalStatement(newManagedRuleGroupStatementBlock(ctx, fwtypes.NewListNestedObjectTypeOf[webACLRuleNestedManagedRuleGroupStatementModel](ctx), scopeDownLeafStatementBlock(ctx)))
+})
+
+func newManagedRuleGroupStatementBlock(ctx context.Context, customType basetypes.ListTypable, scopeDown schema.Block) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleManagedRuleGroupStatementModel](ctx),
+		CustomType: customType,
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -212,12 +223,12 @@ var managedRuleGroupStatementBlock = tfsync.OnceValueCtx(func(ctx context.Contex
 			Blocks: map[string]schema.Block{
 				"managed_rule_group_configs": managedRuleGroupConfigsBlock(ctx),
 				"rule_action_override":       ruleActionOverrideBlock(ctx),
-				"scope_down_statement":       scopeDownStatementBlock(ctx),
+				"scope_down_statement":       scopeDown,
 			},
 		},
 		Description: "Managed rule group statement.",
 	}
-})
+}
 
 var regexPatternSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
@@ -234,8 +245,8 @@ var regexPatternSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx contex
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"field_to_match":      fieldToMatchBlock(ctx),
-				"text_transformation": textTransformationBlock(ctx),
+				"field_to_match":       fieldToMatchBlock(ctx),
+				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
 		Description: "Rule statement used to search web request components for matches with regular expressions from a RegexPatternSet.",
@@ -243,8 +254,22 @@ var regexPatternSetReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx contex
 })
 
 var rateBasedStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return newRateBasedStatementBlock(ctx, fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementModel](ctx), scopeDownStatementBlock(ctx))
+})
+
+// nestedRateBasedStatementBlock is rate_based_statement inside a logical statement.
+var nestedRateBasedStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return notValidInLogicalStatement(newRateBasedStatementBlock(ctx, fwtypes.NewListNestedObjectTypeOf[webACLRuleNestedRateBasedStatementModel](ctx), scopeDownLeafStatementBlock(ctx)))
+})
+
+// nestedRuleGroupReferenceStatementBlock is rule_group_reference_statement inside a logical statement.
+var nestedRuleGroupReferenceStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return notValidInLogicalStatement(ruleGroupReferenceStatementBlock(ctx))
+})
+
+func newRateBasedStatementBlock(ctx context.Context, customType basetypes.ListTypable, scopeDown schema.Block) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementModel](ctx),
+		CustomType: customType,
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -272,10 +297,30 @@ var rateBasedStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 			Blocks: map[string]schema.Block{
 				"custom_keys":          rateBasedStatementCustomKeysBlock(ctx),
 				"forwarded_ip_config":  forwardedIPConfigBlock(ctx),
-				"scope_down_statement": scopeDownStatementBlock(ctx),
+				"scope_down_statement": scopeDown,
 			},
 		},
 		Description: "Rate-based statement.",
+	}
+}
+
+// notValidInLogicalStatement keeps a statement block that AWS WAF does not accept at this position,
+// so that configurations which never populate it stay valid, and rejects it when populated.
+func notValidInLogicalStatement(b schema.Block) schema.Block {
+	lb := b.(schema.ListNestedBlock)
+	lb.Validators = append(slices.Clone(lb.Validators), listvalidator.SizeAtMost(0))
+	return lb
+}
+
+// scopeDownLeafStatementBlock is scope_down_statement with leaf statements only.
+var scopeDownLeafStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: scopeDownLeafStatementBlocks(ctx),
+		},
+		Description: "Scope down statement for managed rule groups.",
 	}
 })
 
@@ -299,8 +344,8 @@ var byteMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"field_to_match":      fieldToMatchBlock(ctx),
-				"text_transformation": textTransformationBlock(ctx),
+				"field_to_match":       fieldToMatchBlock(ctx),
+				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
 		Description: "Byte match statement.",
@@ -322,8 +367,8 @@ var sqliMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"field_to_match":      fieldToMatchBlock(ctx),
-				"text_transformation": textTransformationBlock(ctx),
+				"field_to_match":       fieldToMatchBlock(ctx),
+				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
 		Description: "SQL injection match statement.",
@@ -336,8 +381,8 @@ var xssMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schem
 		Validators: []validator.List{listvalidator.SizeAtMost(1)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"field_to_match":      fieldToMatchBlock(ctx),
-				"text_transformation": textTransformationBlock(ctx),
+				"field_to_match":       fieldToMatchBlock(ctx),
+				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
 		Description: "Cross-site scripting match statement.",
@@ -362,8 +407,8 @@ var sizeConstraintStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context)
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"field_to_match":      fieldToMatchBlock(ctx),
-				"text_transformation": textTransformationBlock(ctx),
+				"field_to_match":       fieldToMatchBlock(ctx),
+				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
 		Description: "Size constraint statement.",
@@ -385,8 +430,8 @@ var regexMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sch
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"field_to_match":      fieldToMatchBlock(ctx),
-				"text_transformation": textTransformationBlock(ctx),
+				"field_to_match":       fieldToMatchBlock(ctx),
+				attrTextTransformation: textTransformationBlock(ctx),
 			},
 		},
 		Description: "Rule statement used to search web request components for a match against a single regular expression.",
@@ -879,28 +924,6 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 	}
 })
 
-var scopeDownStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementModel](ctx),
-		Validators: []validator.List{listvalidator.SizeAtMost(1)},
-		NestedObject: schema.NestedBlockObject{
-			Blocks: map[string]schema.Block{
-				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
-				"geo_match_statement":                   geoMatchStatementBlock(ctx),
-				"byte_match_statement":                  byteMatchStatementBlock(ctx),
-				"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
-				"xss_match_statement":                   xssMatchStatementBlock(ctx),
-				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
-				"regex_match_statement":                 regexMatchStatementBlock(ctx),
-				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
-				"label_match_statement":                 labelMatchStatementBlock(ctx),
-				"asn_match_statement":                   asnMatchStatementBlock(ctx),
-			},
-		},
-		Description: "Scope down statement for managed rule groups.",
-	}
-})
-
 var customRequestHandlingBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleCustomRequestHandlingModel](ctx),
@@ -1189,7 +1212,7 @@ var rateBasedStatementCustomKeysBlock = tfsync.OnceValueCtx(func(ctx context.Con
 							},
 						},
 						Blocks: map[string]schema.Block{
-							"text_transformation": textTransformationBlock(ctx),
+							attrTextTransformation: textTransformationBlock(ctx),
 						},
 					},
 				},
@@ -1204,7 +1227,7 @@ var rateBasedStatementCustomKeysBlock = tfsync.OnceValueCtx(func(ctx context.Con
 							},
 						},
 						Blocks: map[string]schema.Block{
-							"text_transformation": textTransformationBlock(ctx),
+							attrTextTransformation: textTransformationBlock(ctx),
 						},
 					},
 				},
@@ -1233,7 +1256,7 @@ var rateBasedStatementCustomKeysBlock = tfsync.OnceValueCtx(func(ctx context.Con
 							},
 						},
 						Blocks: map[string]schema.Block{
-							"text_transformation": textTransformationBlock(ctx),
+							attrTextTransformation: textTransformationBlock(ctx),
 						},
 					},
 				},
@@ -1242,7 +1265,7 @@ var rateBasedStatementCustomKeysBlock = tfsync.OnceValueCtx(func(ctx context.Con
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Blocks: map[string]schema.Block{
-							"text_transformation": textTransformationBlock(ctx),
+							attrTextTransformation: textTransformationBlock(ctx),
 						},
 					},
 				},
@@ -1251,7 +1274,7 @@ var rateBasedStatementCustomKeysBlock = tfsync.OnceValueCtx(func(ctx context.Con
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Blocks: map[string]schema.Block{
-							"text_transformation": textTransformationBlock(ctx),
+							attrTextTransformation: textTransformationBlock(ctx),
 						},
 					},
 				},

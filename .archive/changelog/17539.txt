@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_transfer_server: Add `security_group_ids` argument to `endpoint_details` configuration block.
-```

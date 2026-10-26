@@ -34,14 +34,6 @@ type listResourceKeyValueStore struct {
 }
 
 func (r *listResourceKeyValueStore) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query listKeyValueStoreModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	awsClient := r.Meta()
 	conn := awsClient.CloudFrontClient(ctx)
 
@@ -92,8 +84,6 @@ func (r *listResourceKeyValueStore) List(ctx context.Context, request list.ListR
 		}
 	}
 }
-
-type listKeyValueStoreModel struct{}
 
 func listKeyValueStores(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListKeyValueStoresInput) iter.Seq2[awstypes.KeyValueStore, error] {
 	return func(yield func(awstypes.KeyValueStore, error) bool) {

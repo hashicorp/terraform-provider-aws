@@ -12,7 +12,7 @@ Provides details about an EC2 Local Gateway.
 
 ## Example Usage
 
-The following example shows how one might accept a local gateway id as a variable.
+The following example shows how one might accept a local gateway ID as a variable.
 
 ```terraform
 variable "local_gateway_id" {}
@@ -28,7 +28,7 @@ This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
-* `id` - (Optional) Id of the specific Local Gateway to retrieve.
+* `id` - (Optional) ID of the specific Local Gateway to retrieve.
 * `state` - (Optional) Current state of the desired Local Gateway.
   Can be either `"pending"` or `"available"`.
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match

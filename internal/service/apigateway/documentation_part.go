@@ -36,55 +36,57 @@ func resourceDocumentationPart() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"documentation_part_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLocation: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"method": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrStatusCode: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"documentation_part_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLocation: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"method": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrPath: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrStatusCode: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrProperties: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				names.AttrProperties: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -93,7 +95,7 @@ func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	apiID := d.Get("rest_api_id").(string)
+	apiID := d.Get(attrRestAPIID).(string)
 	input := apigateway.CreateDocumentationPartInput{
 		Location:   expandDocumentationPartLocation(d.Get(names.AttrLocation).([]any)),
 		Properties: aws.String(d.Get(names.AttrProperties).(string)),
@@ -135,7 +137,7 @@ func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("documentation_part_id", docPart.Id)
 	d.Set(names.AttrLocation, flattenDocumentationPartLocation(docPart.Location))
 	d.Set(names.AttrProperties, docPart.Properties)
-	d.Set("rest_api_id", apiID)
+	d.Set(attrRestAPIID, apiID)
 
 	return diags
 }

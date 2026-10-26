@@ -82,6 +82,14 @@ func TestAccIAMUser_disappears(t *testing.T) {
 					testAccCheckUserExists(ctx, t, resourceName, &user),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUser(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},

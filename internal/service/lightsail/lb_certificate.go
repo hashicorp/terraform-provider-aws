@@ -39,90 +39,92 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
-				// trailing period, no longer requiring a custom StateFunc
-				// to prevent ACM API error
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
-			},
-			"domain_validation_records": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDomainName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"resource_record_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"resource_record_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"resource_record_value": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
+					// trailing period, no longer requiring a custom StateFunc
+					// to prevent ACM API error
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+				},
+				"domain_validation_records": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDomainName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"resource_record_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"resource_record_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"resource_record_value": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
+					Set: domainValidationOptionsHash,
 				},
-				Set: domainValidationOptionsHash,
-			},
-			"lb_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
-				),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
-				),
-			},
-			"subject_alternative_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"lb_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 253),
-						validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+						validation.StringLenBetween(2, 255),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 					),
 				},
-				Set: schema.HashString,
-			},
-			"support_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// Tags are documented in the API, but not supported. API returns:
-			// An error occurred (InvalidInputException) when calling the TagResource operation: The resource type, LoadBalancerTlsCertificate, is not taggable.
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 255),
+						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					),
+				},
+				"subject_alternative_names": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							validation.StringLenBetween(1, 253),
+							validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+						),
+					},
+					Set: schema.HashString,
+				},
+				"support_code": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				// Tags are documented in the API, but not supported. API returns:
+				// An error occurred (InvalidInputException) when calling the TagResource operation: The resource type, LoadBalancerTlsCertificate, is not taggable.
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_globalaccelerator_endpoint_group: Fix bug updating `endpoint_configuration.weight` to `0`
-```
