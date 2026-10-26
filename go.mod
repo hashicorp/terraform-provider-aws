@@ -276,7 +276,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.52.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.51.5
-	github.com/aws/aws-sdk-go-v2/service/swf v1.43.5
+	github.com/aws/aws-sdk-go-v2/service/swf v1.43.6
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.52.4
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.31.0
