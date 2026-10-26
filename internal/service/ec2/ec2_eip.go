@@ -307,7 +307,14 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	log.Printf("[INFO] Deleting EC2 EIP: %s", d.Id())
-	_, err := conn.ReleaseAddress(ctx, &input)
+
+	// Retry on InvalidNetworkInterfaceID.NotFound: after a NAT Gateway is
+	// destroyed, its ENI is deleted asynchronously. ReleaseAddress may fail
+	// with this error until the ENI cleanup completes.
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout,
+		func(ctx context.Context) (any, error) {
+			return conn.ReleaseAddress(ctx, &input)
+		}, errCodeInvalidNetworkInterfaceIDNotFound)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
 		return diags
