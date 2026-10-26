@@ -6,11 +6,15 @@ package wafv2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/go-cty/cty"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,6 +23,154 @@ import (
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestIPSetAddressHash(t *testing.T) {
+	t.Parallel()
+
+	hash := tfwafv2.ResourceIPSet().SchemaMap()["addresses"].Set
+	for _, tt := range []struct {
+		a, b  string
+		equal bool
+	}{
+		{"2001:0DB8:0000:0000:0000:0000:0000:0000/64", "2001:db8::/64", true},
+		{"2001:db8::1/64", "2001:0db8::1/64", true},
+		{"10.0.0.1/24", "10.0.0.0/24", false},
+		{"10.0.0.0/24", "10.0.0.0/25", false},
+		{"2001:db8::/64", "2001:db9::/64", false},
+	} {
+		if got := hash(tt.a) == hash(tt.b); got != tt.equal {
+			t.Errorf("hash equality for %q and %q = %t, want %t", tt.a, tt.b, got, tt.equal)
+		}
+	}
+	if got := hash("invalid"); got != schema.HashString("invalid") {
+		t.Errorf("invalid CIDR hash = %d, want raw string hash", got)
+	}
+}
+
+func TestIPSetAddressesSDKDiff(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		old, new []string
+		unknown  bool
+		changes  int
+	}{
+		"empty": {},
+		"reordered": {
+			old: []string{"10.0.0.0/24", "192.0.2.0/24"},
+			new: []string{"192.0.2.0/24", "10.0.0.0/24"},
+		},
+		"equivalent IPv6": {
+			old: []string{"2001:0DB8:0000:0000:0000:0000:0000:0000/64"},
+			new: []string{"2001:db8::/64"},
+		},
+		"different host bits": {
+			old: []string{"10.0.0.1/24"}, new: []string{"10.0.0.0/24"}, changes: 2,
+		},
+		"different prefix": {
+			old: []string{"10.0.0.0/24"}, new: []string{"10.0.0.0/25"}, changes: 2,
+		},
+		"add with equivalent spelling": {
+			old: []string{"2001:0db8::/64"},
+			new: []string{"2001:db8::/64", "2001:db9::/64"}, changes: 2,
+		},
+		"remove with equivalent spelling": {
+			old: []string{"2001:0db8::/64", "2001:db9::/64"},
+			new: []string{"2001:db8::/64"}, changes: 2,
+		},
+		"replace with equivalent spelling": {
+			old: []string{"2001:0db8::/64", "2001:db9::/64"},
+			new: []string{"2001:db8::/64", "2001:dba::/64"}, changes: 2,
+		},
+		"remove all": {
+			old: []string{"10.0.0.0/24"}, changes: 2,
+		},
+		"deduplicate equivalent spellings": {
+			old: []string{"2001:db8::/64"},
+			new: []string{"2001:db8::/64", "2001:0DB8::/64"},
+		},
+		"do not hide a new address behind duplicate spellings": {
+			old: []string{"2001:db8::/64", "2001:0DB8::/64"},
+			new: []string{"2001:db8::/64", "2001:db9::/64"}, changes: 2,
+		},
+		"invalid new": {
+			old: []string{"10.0.0.0/24"}, new: []string{"invalid"}, changes: 2,
+		},
+		"unknown element": {
+			old: []string{"2001:db8::/64"}, new: []string{"2001:db8::/64"}, unknown: true, changes: -1,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			values := make([]cty.Value, 0, len(tt.new)+1)
+			for _, v := range tt.new {
+				values = append(values, cty.StringVal(v))
+			}
+			if tt.unknown {
+				values = append(values, cty.UnknownVal(cty.String))
+			}
+			planned := cty.SetValEmpty(cty.String)
+			if len(values) > 0 {
+				planned = cty.SetVal(values)
+			}
+			r, state, config := ipSetDiffFixture(t, tt.old, planned)
+			diff, err := r.SimpleDiff(t.Context(), state, config, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			changes := ipSetAddressDiffCount(diff)
+			if tt.changes == -1 {
+				if changes == 0 {
+					t.Fatal("unknown address was suppressed")
+				}
+			} else if changes != tt.changes {
+				t.Errorf("address changes = %d, want %d: %#v", changes, tt.changes, diff.Attributes)
+			}
+		})
+	}
+}
+
+func ipSetDiffFixture(tb testing.TB, old []string, planned cty.Value) (*schema.Resource, *terraformsdk.InstanceState, *terraformsdk.ResourceConfig) {
+	tb.Helper()
+	r := tfwafv2.ResourceIPSet()
+	data := r.Data(nil)
+	for key, value := range map[string]any{
+		"addresses":          old,
+		"name":               "test",
+		"scope":              "REGIONAL",
+		"ip_address_version": "IPV6",
+	} {
+		if err := data.Set(key, value); err != nil {
+			tb.Fatal(err)
+		}
+	}
+	data.SetId("test-id")
+	typ := r.CoreConfigSchema().ImpliedType()
+	state := data.State()
+	attrs := make(map[string]cty.Value)
+	for key, ty := range typ.AttributeTypes() {
+		attrs[key] = cty.NullVal(ty)
+	}
+	attrs["addresses"] = planned
+	attrs["name"] = cty.StringVal("test")
+	attrs["scope"] = cty.StringVal("REGIONAL")
+	attrs["ip_address_version"] = cty.StringVal("IPV6")
+	state.RawPlan = cty.ObjectVal(attrs)
+	config := terraformsdk.NewResourceConfigShimmed(state.RawPlan, r.CoreConfigSchema())
+	return r, state, config
+}
+
+func ipSetAddressDiffCount(diff *terraformsdk.InstanceDiff) int {
+	count := 0
+	for key, attr := range diff.Attributes {
+		if strings.HasPrefix(key, "addresses.") && (attr.Old != attr.New || attr.NewComputed || attr.NewRemoved) {
+			count++
+		}
+	}
+	return count
+}
 
 func TestAccWAFV2IPSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
