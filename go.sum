@@ -451,8 +451,8 @@ github.com/aws/aws-sdk-go-v2/service/pipes v1.32.6 h1:aO28lydblvapoMKy2gNyaFKo6T
 github.com/aws/aws-sdk-go-v2/service/pipes v1.32.6/go.mod h1:JLy5w6Hl8kgKfmettdSHAYLXI9MWhEKXwqs5Obz+x8M=
 github.com/aws/aws-sdk-go-v2/service/polly v1.66.1 h1:Y7HC4Eyu6dxTWmTAyKYvq0jwnY/3qoPgeZXv+9VK2BQ=
 github.com/aws/aws-sdk-go-v2/service/polly v1.66.1/go.mod h1:fmu/B65dOv5C9XhBO7Hu/F+8zm3/GQaLz+GWSexpMQg=
-github.com/aws/aws-sdk-go-v2/service/pricing v1.50.0 h1:E8hmZSNs0KEqlBCMB8hg8hDrIc8MI9/S5utg8iwa9Pw=
-github.com/aws/aws-sdk-go-v2/service/pricing v1.50.0/go.mod h1:WM9py9Waai1ar/Lc7/8zF5qEDHRwCJUaZhDSgn3TJ3o=
+github.com/aws/aws-sdk-go-v2/service/pricing v1.51.0 h1:9LPnotQ9Puz+1aVQydhPgvX9aY3S8fDuBawqQlJGw1E=
+github.com/aws/aws-sdk-go-v2/service/pricing v1.51.0/go.mod h1:Xql1mNTfKm9lkTfpba8f64+DPSoQQliIwNxUmx9WD+4=
 github.com/aws/aws-sdk-go-v2/service/pricingplanmanager v1.5.5 h1:Rd07TcDFf3yDEM27bKZ+6ZV4cdPVhQIRR9RzHwDaiZ4=
 github.com/aws/aws-sdk-go-v2/service/pricingplanmanager v1.5.5/go.mod h1:JELEJjYrhr9y4T98TFrAzd0tkkBMYEEUQrMShjq3XSg=
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.42.4 h1:3I7xnFcoz42xWR4/1c9XuwAciN3XJL6CKzFlPK6owo4=
