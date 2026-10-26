@@ -230,7 +230,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/resiliencehubv2 v1.13.2
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.33.5
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.33.6
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.31.4
