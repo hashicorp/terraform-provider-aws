@@ -117,7 +117,7 @@ func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, re
 // waitReplicaDisassociated waits for the replica's table in region to leave its global table.
 func waitReplicaDisassociated(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration) (*awstypes.TableDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(awstypes.TableStatusUpdating), replicaStatusDisassociationPending},
+		Pending:    enum.Slice(awstypes.TableStatusUpdating, replicaStatusDisassociationPending),
 		Target:     []string{replicaStatusDisassociated},
 		Refresh:    statusReplicaDisassociation(conn, tableName, region, replicaDisassociationAcceptWindow),
 		Timeout:    max(replicaUpdateTimeout, timeout),
