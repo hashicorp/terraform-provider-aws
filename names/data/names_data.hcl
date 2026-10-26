@@ -8337,6 +8337,35 @@ service "securityhub" {
   brand                    = "AWS"
 }
 
+service "securityir" {
+  cli_v2_command {
+    aws_cli_v2_command           = "security-ir"
+    aws_cli_v2_command_no_dashes = "securityir"
+  }
+
+  sdk {
+    id            = "Security IR"
+    arn_namespace = "security-ir"
+  }
+
+  names {
+    provider_name_upper = "SecurityIR"
+    human_friendly      = "Security Incident Response"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListMemberships"
+  }
+
+  resource_prefix {
+    correct = "aws_securityir_"
+  }
+
+  provider_package_correct = "securityir"
+  doc_prefix               = ["securityir_"]
+  brand                    = "AWS"
+}
+
 service "securitylake" {
   sdk {
     id            = "SecurityLake"

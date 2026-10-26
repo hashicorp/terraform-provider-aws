@@ -58,6 +58,7 @@ This resource supports the following arguments:
 * `neptune_cluster_parameter_group_name` - (Optional) Cluster parameter group to associate with the cluster.
 * `neptune_instance_parameter_group_name` – (Optional) Name of DB parameter group to apply to all instances in the cluster. When upgrading, AWS does not return this value, so do not reference it in other arguments—either leave it unset, configure each instance directly, or ensure it matches the `engine_version`.
 * `neptune_subnet_group_name` - (Optional) Neptune subnet group to associate with this Neptune instance.
+* `network_type` - (Optional) Network type of the Neptune cluster. Valid values: `IPV4`, `DUAL`. Default: `IPV4`. Specifying `DUAL` enables dual-stack IPv4/IPv6 connectivity. The Neptune DB subnet group associated with the cluster must be backed by IPv6-capable subnets. See the [Neptune dual-stack documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-dualstack-db-cluster.html) for prerequisites.
 * `port` - (Optional) Port on which the Neptune accepts connections. Default is `8182`.
 * `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter. Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
 * `preferred_maintenance_window` - (Optional) Weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30

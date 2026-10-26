@@ -270,7 +270,7 @@ func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3.Client {
 	if c.s3ExpressClient == nil {
 		if s3Client.Options().Region == endpoints.AwsGlobalRegionID {
 			// No global endpoint for S3 Express.
-			c.s3ExpressClient = errs.Must(client[*s3.Client](ctx, c, names.S3, map[string]any{
+			c.s3ExpressClient = errs.Must(c.client[*s3.Client](ctx, names.S3, map[string]any{
 				"s3_us_east_1_regional_endpoint": "regional",
 			}))
 		} else {
@@ -449,8 +449,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 
 // client returns the AWS SDK for Go v2 API client for the specified service.
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
-// This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
-func client[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
+func (c *AWSClient) client[T any](ctx context.Context, servicePackageName string, extra map[string]any) (T, error) {
 	ctx = tflog.SetField(ctx, "tf_aws.service_package", servicePackageName)
 	region := c.Region(ctx)
 

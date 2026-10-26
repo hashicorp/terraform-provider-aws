@@ -322,6 +322,7 @@ provider "aws" {
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|
 |Security Hub|`securityhub`|`AWS_ENDPOINT_URL_SECURITYHUB`|`securityhub`|
+|Security Incident Response|`securityir`|`AWS_ENDPOINT_URL_SECURITY_IR`|`security_ir`|
 |Security Lake|`securitylake`|`AWS_ENDPOINT_URL_SECURITYLAKE`|`securitylake`|
 |Serverless Application Repository|`serverlessrepo`(or `serverlessapprepo` or `serverlessapplicationrepository`)|`AWS_ENDPOINT_URL_SERVERLESSAPPLICATIONREPOSITORY`|`serverlessapplicationrepository`|
 |Service Catalog|`servicecatalog`|`AWS_ENDPOINT_URL_SERVICE_CATALOG`|`service_catalog`|

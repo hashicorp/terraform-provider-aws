@@ -90,7 +90,7 @@ func FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx context.Context, c
 	if err != nil {
 		return nil, err
 	}
-	resourceType := strings.Split(parsedResourceARN.Resource, "/")[0]
+	resourceType, _, _ := strings.Cut(parsedResourceARN.Resource, "/")
 	resourceId := strings.Split(parsedResourceARN.Resource, "/")[1]
 	switch resourceType {
 	case "cloud-vm-cluster":
