@@ -9,13 +9,11 @@ import (
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsagent/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdevopsagent "github.com/hashicorp/terraform-provider-aws/internal/service/devopsagent"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -169,16 +167,6 @@ func testAccCheckAssetDestroy(ctx context.Context, t *testing.T) resource.TestCh
 			_, err := tfdevopsagent.FindAssetByTwoPartKey(ctx, conn, rs.Primary.Attributes["agent_space_id"], assetID)
 			if retry.NotFound(err) {
 				continue
-			}
-			if errs.IsA[*awstypes.AccessDeniedException](err) {
-				// Asset access can be denied after its parent Agent Space has been deleted.
-				_, parentErr := tfdevopsagent.FindAgentSpaceByID(ctx, conn, rs.Primary.Attributes["agent_space_id"])
-				if retry.NotFound(parentErr) {
-					continue
-				}
-				if parentErr != nil {
-					return create.Error(names.DevOpsAgent, create.ErrActionCheckingDestroyed, "Asset", assetID, errors.Join(err, parentErr))
-				}
 			}
 			if err != nil {
 				return create.Error(names.DevOpsAgent, create.ErrActionCheckingDestroyed, "Asset", assetID, err)

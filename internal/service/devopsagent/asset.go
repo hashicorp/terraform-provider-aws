@@ -306,6 +306,12 @@ func findAssetByTwoPartKey(ctx context.Context, conn *devopsagent.Client, agentS
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
 	}
+	// GetAsset returns AccessDeniedException once the parent Agent Space is deleted.
+	if errs.IsA[*awstypes.AccessDeniedException](err) {
+		if _, parentErr := findAgentSpaceByID(ctx, conn, agentSpaceID); retry.NotFound(parentErr) {
+			return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
+		}
+	}
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
