@@ -6,7 +6,6 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -642,12 +641,7 @@ func TestAccSageMakerModel_primaryContainerModelS3DataSourceHubAccessConfig(t *t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.model_data_source.0.s3_data_source.0.hub_access_config.#", "1"),
-					resource.TestCheckResourceAttrWith(resourceName, "primary_container.0.model_data_source.0.s3_data_source.0.hub_access_config.0.hub_content_arn", func(v string) error {
-						if !strings.Contains(v, ":hub-content/"+rName+"/ModelReference/"+rName+"/") {
-							return fmt.Errorf("unexpected hub_content_arn: %s", v)
-						}
-						return nil
-					}),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_container.0.model_data_source.0.s3_data_source.0.hub_access_config.0.hub_content_arn", "aws_sagemaker_hub_content_reference.test", "versioned_hub_content_arn"),
 				),
 			},
 			{
@@ -1399,7 +1393,7 @@ resource "aws_sagemaker_model" "test" {
         s3_uri           = format("s3://jumpstart-private-cache-prod-%%s/meta-textgeneration/meta-textgeneration-llama-2-13b-f/artifacts/inference-prepack/v1.1.0/", data.aws_region.current.region)
 
         hub_access_config {
-          hub_content_arn = "${aws_sagemaker_hub_content_reference.test.hub_content_arn}/${aws_sagemaker_hub_content_reference.test.hub_content_version}"
+          hub_content_arn = aws_sagemaker_hub_content_reference.test.versioned_hub_content_arn
         }
 
         model_access_config {

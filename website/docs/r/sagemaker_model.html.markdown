@@ -101,7 +101,7 @@ The `primary_container` and `container` block both support:
 
 #### Hub Access Config
 
-* `hub_content_arn` - (Required) Versioned ARN of the private hub content to deploy. For an [`aws_sagemaker_hub_content_reference`](sagemaker_hub_content_reference.html), use `"${aws_sagemaker_hub_content_reference.example.hub_content_arn}/${aws_sagemaker_hub_content_reference.example.hub_content_version}"`. `s3_uri` must match the hub content's hosting artifact URI.
+* `hub_content_arn` - (Required) Versioned ARN of the private hub content to deploy, such as the `versioned_hub_content_arn` of an [`aws_sagemaker_hub_content_reference`](sagemaker_hub_content_reference.html). `s3_uri` must match the hub content's hosting artifact URI.
 
 #### Model Access Config
 
