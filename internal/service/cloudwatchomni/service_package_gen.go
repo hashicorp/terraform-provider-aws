@@ -53,6 +53,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newDashboardResource,
+			TypeName: "aws_cloudwatchomni_dashboard",
+			Name:     "Dashboard",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("dashboard_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      dashboardImportID{},
+			},
+		},
+		{
 			Factory:  newDomainResource,
 			TypeName: "aws_cloudwatchomni_domain",
 			Name:     "Domain",
@@ -104,6 +119,17 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("space_id", true),
 				inttypes.StringIdentityAttribute("profile_id", true),
+			}),
+		},
+		{
+			Factory:  newDashboardResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_dashboard",
+			Name:     "Dashboard",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("dashboard_id", true),
 			}),
 		},
 		{

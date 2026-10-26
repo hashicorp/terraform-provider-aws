@@ -358,7 +358,20 @@ examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
 		--disable-rule=terraform_typed_variables
 
+fix: prereq-go ## Apply go fix (all packages, or scoped to a service with PKG/K)
+	@echo "make: Applying go fix..."
+	@$(GO_VER) fix $(TEST)
+
+fix-check: prereq-go ## [CI] Go Fix Check / go fix (all packages, or scoped to a service with PKG/K)
+	@echo "make: Checking go fix..."
+	@$(GO_VER) fix -diff $(TEST)
+
 fix-constants: semgrep-fix-constants fmt ## Use Semgrep to fix constants
+
+fix-core: prereq-go ## Apply go fix in core directories (non-internal/service)
+	@echo "make: Applying go fix in core directories..."
+	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/'); \
+	$(GO_VER) fix $$core_pkgs
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
@@ -435,6 +448,30 @@ go-build: ## [CI] Provider Checks / go-build
 	echo "make: Provider Checks / go-build ($$os_arch)..." ; \
 	go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
 
+go-fix-check-shard: prereq-go ## [CI] Go Fix Check / go fix for a specific shard (SHARD=0 TOTAL_SHARDS=4)
+	@if [ -z "$(SHARD)" ] || [ -z "$(TOTAL_SHARDS)" ]; then \
+		echo "Error: SHARD and TOTAL_SHARDS must be set"; \
+		echo "Example: make go-fix-check-shard SHARD=0 TOTAL_SHARDS=4"; \
+		exit 1; \
+	fi
+	@echo "make: Checking go fix for shard $(SHARD) of $(TOTAL_SHARDS)..."
+	@packages=$$($(GO_VER) list ./...) || { echo "make: go list failed"; exit 1; }; \
+	packages=$$(echo "$$packages" | sort); \
+	count=0; \
+	shard_packages=""; \
+	for pkg in $$packages; do \
+		if [ $$((count % $(TOTAL_SHARDS))) -eq $(SHARD) ]; then \
+			shard_packages="$$shard_packages $$pkg"; \
+		fi; \
+		count=$$((count + 1)); \
+	done; \
+	if [ -z "$$shard_packages" ]; then \
+		echo "No packages assigned to shard $(SHARD)"; \
+		exit 0; \
+	fi; \
+	echo "Checking $$(echo $$shard_packages | wc -w | xargs) packages..."; \
+	$(GO_VER) fix -diff $$shard_packages
+
 golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 golangci-lint4 golangci-lint5 ## [CI] All golangci-lint Checks
 
 golangci-lint1: ## [CI] golangci-lint Checks / 1 of 5
@@ -486,18 +523,11 @@ makefile-lint: prereq-go ## [CI] Makefile Linting / alignment check
 
 misspell: changelog-misspell docs-misspell website-misspell ## [CI] Run all CI misspell checks
 
-modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
-	@echo "make: Checking for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -test $(TEST)
+modern-check: fix-check ## Legacy alias to fix-check
 
-modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
-	@echo "make: Fixing checks for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $(TEST)
+modern-fix: fix ## Legacy alias to fix
 
-modern-fix-core: prereq-go ## Fix checks for modern Go code in core directories
-	@echo "make: Fixing checks for modern Go code in core directories..."
-	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/'); \
-	$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $$core_pkgs
+modern-fix-core: fix-core ## Legacy alias to fix-core
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
@@ -551,13 +581,13 @@ quick-fix-core-heading: ## [internal] Just a heading for quick-fix-core
 	@echo "make: Quick fixes for core (non-service) directories..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core modern-fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
+quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
 
 quick-fix-heading: ## [internal] Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports modern-fix semgrep-fix terraform-fmt website-terrafmt-fix ## Some quick fixes
+quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports fix semgrep-fix terraform-fmt website-terrafmt-fix ## Some quick fixes
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
@@ -1325,7 +1355,10 @@ yamllint: ## [CI] YAML Linting / yamllint
 	docs-markdown-lint \
 	docs-misspell \
 	examples-tflint \
+	fix \
+	fix-check \
 	fix-constants \
+	fix-core \
 	fix-imports \
 	fix-imports-core \
 	fmt \
@@ -1338,6 +1371,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	generate-changelog \
 	gh-workflow-lint \
 	go-build \
+	go-fix-check-shard \
 	golangci-lint \
 	golangci-lint1 \
 	golangci-lint2 \

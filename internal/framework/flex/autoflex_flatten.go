@@ -149,7 +149,7 @@ func flattenConvert(ctx context.Context, flattener *autoFlattener, sourcePath pa
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(vFrom)))
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetType, fullTypeName(valueType(vTo)))
 
-	valTo, ok := vTo.Interface().(attr.Value)
+	valTo, ok := reflect.TypeAssert[attr.Value](vTo)
 	if !ok {
 		// Check for `nil` (i.e. Kind == Invalid) here, because we allow primitive types to be `nil`
 		if vFrom.Kind() == reflect.Invalid {
@@ -562,7 +562,7 @@ func flattenTime(ctx context.Context, _ *autoFlattener, vFrom reflect.Value, isN
 	}
 
 	// time.Time --> timetypes.RFC3339
-	if from, ok := vFrom.Interface().(time.Time); ok {
+	if from, ok := reflect.TypeAssert[time.Time](vFrom); ok {
 		vTo.Set(reflect.ValueOf(timetypes.NewRFC3339TimeValue(from)))
 		return diags
 	}
@@ -575,7 +575,7 @@ func flattenTime(ctx context.Context, _ *autoFlattener, vFrom reflect.Value, isN
 		}
 
 		// *time.Time --> timetypes.RFC3339
-		if from, ok := vFrom.Elem().Interface().(time.Time); ok {
+		if from, ok := reflect.TypeAssert[time.Time](vFrom.Elem()); ok {
 			vTo.Set(reflect.ValueOf(timetypes.NewRFC3339TimeValue(from)))
 			return diags
 		}
@@ -691,7 +691,7 @@ func flattenStruct_(ctx context.Context, flattener *autoFlattener, sourcePath pa
 		return diags
 	}
 
-	iTo, ok := vTo.Interface().(attr.Value)
+	iTo, ok := reflect.TypeAssert[attr.Value](vTo)
 	if !ok {
 		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
 		return diags
@@ -1620,7 +1620,7 @@ func isZero(v any) bool {
 	for field := range tfreflect.ExportedStructFields(val.Type()) {
 		fieldVal := val.FieldByIndex(field.Index)
 
-		fieldTo, ok := fieldVal.Interface().(attr.Value)
+		fieldTo, ok := reflect.TypeAssert[attr.Value](fieldVal)
 		if !ok {
 			continue // Skip non-attr.Type fields.
 		}
@@ -2238,7 +2238,7 @@ func flattenXMLWrapperRule1(ctx context.Context, flattener *autoFlattener, sourc
 					}
 
 					// The converted value should implement attr.Value
-					if attrVal, ok := targetValue.Interface().(attr.Value); ok {
+					if attrVal, ok := reflect.TypeAssert[attr.Value](targetValue); ok {
 						elements[i] = attrVal
 					} else {
 						diags.Append(DiagFlatteningIncompatibleTypes(item.Type(), reflect.TypeOf(targetValue.Interface())))
@@ -2327,7 +2327,7 @@ func handleXMLWrapperRule1(ctx context.Context, sourcePath path.Path, valFrom, v
 				logAttrKeyWrapperField:    wrapperField,
 			})
 
-			attrVal, ok := toFieldVal.Interface().(attr.Value)
+			attrVal, ok := reflect.TypeAssert[attr.Value](toFieldVal)
 			if !ok {
 				tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
 				diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(toFieldVal.Interface())))
@@ -2439,7 +2439,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 					logAttrKeyWrapperField:    wrapperField,
 				})
 
-				valTo, ok := toFieldVal.Interface().(attr.Value)
+				valTo, ok := reflect.TypeAssert[attr.Value](toFieldVal)
 				if !ok {
 					tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
 					diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(toFieldVal.Interface())))
@@ -2461,7 +2461,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 					logAttrKeyWrapperField:    wrapperField,
 				})
 
-				valTo, ok := toFieldVal.Interface().(attr.Value)
+				valTo, ok := reflect.TypeAssert[attr.Value](toFieldVal)
 				if !ok {
 					tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
 					diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(toFieldVal.Interface())))
@@ -2483,7 +2483,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 					logAttrKeyWrapperField:    wrapperField, // TODO: rename to wrapperFieldName
 				})
 
-				valTo, ok := toFieldVal.Interface().(attr.Value)
+				valTo, ok := reflect.TypeAssert[attr.Value](toFieldVal)
 				if !ok {
 					tflog.SubsystemError(ctx, subsystemName, "Target field does not implement attr.Value")
 					diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(toFieldVal.Interface())))
@@ -2531,7 +2531,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		if fromFieldVal.Kind() == reflect.Pointer {
 			if toOpts.XMLWrapperField() != "" && !fromFieldVal.IsNil() && potentialXMLWrapperStruct(fromFieldVal.Type().Elem()) {
 				// Check if target is a collection type (Set, List, or NestedObjectCollection)
-				if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+				if valTo, ok := reflect.TypeAssert[attr.Value](toFieldVal); ok {
 					targetType := valTo.Type(ctx)
 					switch tt := targetType.(type) {
 					case basetypes.SetTypable, basetypes.ListTypable, fwtypes.NestedObjectCollectionType:
@@ -2578,7 +2578,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 				}
 			} else if toOpts.XMLWrapperField() != "" && fromFieldVal.IsNil() && potentialXMLWrapperStruct(fromFieldVal.Type().Elem()) {
 				// Handle nil pointer to XML wrapper struct - should result in null collection
-				if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+				if valTo, ok := reflect.TypeAssert[attr.Value](toFieldVal); ok {
 					switch tTo := valTo.Type(ctx).(type) {
 					case basetypes.SetTypable:
 						tflog.SubsystemTrace(ctx, subsystemName, "Auto-converting nil pointer to XML wrapper struct to null set", map[string]any{
@@ -2621,7 +2621,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			}
 		} else if toOpts.XMLWrapperField() != "" && potentialXMLWrapperStruct(fromFieldVal.Type()) {
 			// Handle direct XML wrapper struct (non-pointer)
-			if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+			if valTo, ok := reflect.TypeAssert[attr.Value](toFieldVal); ok {
 				switch valTo.Type(ctx).(type) {
 				case basetypes.SetTypable, basetypes.ListTypable:
 					wrapperField := toOpts.XMLWrapperField()
@@ -2644,7 +2644,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		// Only apply if target field has xmlwrapper tag
 		fromFieldVal2 := valFrom.FieldByIndex(fromField.Index)
 		if toFieldOpts.XMLWrapperField() != "" && fromFieldVal2.Kind() == reflect.Pointer && !fromFieldVal2.IsNil() && potentialXMLWrapperStruct(fromFieldVal2.Type().Elem()) {
-			if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+			if valTo, ok := reflect.TypeAssert[attr.Value](toFieldVal); ok {
 				if nestedObjType, ok := valTo.Type(ctx).(fwtypes.NestedObjectCollectionType); ok {
 					sourceStructType := fromFieldVal2.Type().Elem()
 
@@ -2753,8 +2753,8 @@ func setMapBlockKey(ctx context.Context, to any, key reflect.Value) diag.Diagnos
 			continue
 		}
 
-		fieldVal := valTo.FieldByIndex(field.Index)           // vTo
-		fieldAttrVal, ok := fieldVal.Interface().(attr.Value) // valTo
+		fieldVal := valTo.FieldByIndex(field.Index)                  // vTo
+		fieldAttrVal, ok := reflect.TypeAssert[attr.Value](fieldVal) // valTo
 		if !ok {
 			tflog.SubsystemError(ctx, subsystemName, "Target does not implement attr.Value")
 			diags.Append(diagFlatteningTargetDoesNotImplementAttrValue(reflect.TypeOf(fieldVal.Interface())))
@@ -2847,7 +2847,7 @@ func flattenPrePopulate(ctx context.Context, toVal reflect.Value) diag.Diagnosti
 			)
 		}
 
-		fieldTo, ok := fieldVal.Interface().(attr.Value)
+		fieldTo, ok := reflect.TypeAssert[attr.Value](fieldVal)
 		if !ok {
 			continue // Skip non-attr.Type fields.
 		}
@@ -2987,7 +2987,7 @@ func handleDirectXMLWrapperStruct(ctx context.Context, sourcePath path.Path, sou
 			})
 
 			// Get the target field as attr.Value for XML wrapper flattening
-			if toAttr, ok := toFieldVal.Interface().(attr.Value); ok {
+			if toAttr, ok := reflect.TypeAssert[attr.Value](toFieldVal); ok {
 				tflog.SubsystemTrace(ctx, subsystemName, "Calling xmlWrapperFlatten", map[string]any{
 					logAttrKeySourceFieldname: toOpts.XMLWrapperField(),
 					logAttrKeyTargetFieldname: toFieldName,
@@ -3066,7 +3066,7 @@ func flattenHandleXMLWrapperCollapse(ctx context.Context, flattener *autoFlatten
 
 		if targetFieldVal := valTo.FieldByIndex(targetField.Index); targetFieldVal.CanSet() {
 			// Check if target field is a NestedObjectCollection that can accept this wrapper
-			if targetAttr, ok := targetFieldVal.Interface().(attr.Value); ok {
+			if targetAttr, ok := reflect.TypeAssert[attr.Value](targetFieldVal); ok {
 				if _, isNestedObjCollection := targetAttr.Type(ctx).(fwtypes.NestedObjectCollectionType); isNestedObjCollection {
 					// Skip split - let normal field matching handle this as a direct wrapper-to-wrapper mapping
 					tflog.SubsystemTrace(ctx, subsystemName, "Skipping XML wrapper split - direct field match found", map[string]any{
@@ -3159,7 +3159,7 @@ func flattenHandleXMLWrapperSplit(ctx context.Context, flattener *autoFlattener,
 	if isNil {
 		toFieldVal := valTo.FieldByIndex(targetField.Index)
 		if toFieldVal.CanSet() {
-			if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+			if valTo, ok := reflect.TypeAssert[attr.Value](toFieldVal); ok {
 				switch tTo := valTo.Type(ctx).(type) {
 				case basetypes.SetTypable, basetypes.ListTypable:
 					tflog.SubsystemTrace(ctx, subsystemName, "Setting target collection field to null", map[string]any{
@@ -3287,8 +3287,8 @@ func flattenHandleXMLWrapperSplit(ctx context.Context, flattener *autoFlattener,
 // flattenFindMainTargetFieldForSplit determines which target field should receive the Items/Quantity from the source
 func flattenFindMainTargetFieldForSplit(ctx context.Context, flattener *autoFlattener, sourcePath path.Path, typeTo reflect.Type) string {
 	sourcePathStr := sourcePath.String()
-	if lastDot := strings.LastIndex(sourcePathStr, "."); lastDot >= 0 {
-		sourceFieldName := sourcePathStr[lastDot+1:]
+	if _, after, ok := strings.CutLast(sourcePathStr, "."); ok {
+		sourceFieldName := after
 
 		// Use fuzzy field finder for proper singular/plural and case matching
 		dummySourceType := reflect.StructOf([]reflect.StructField{{Name: sourceFieldName, Type: reflect.TypeFor[string](), PkgPath: ""}})
@@ -3312,7 +3312,7 @@ func flattenConvertXMLWrapperFieldToCollection(ctx context.Context, flattener *a
 		})
 
 		// Use existing XML wrapper flatten logic
-		if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+		if valTo, ok := reflect.TypeAssert[attr.Value](toFieldVal); ok {
 			diags.Append(flattenXMLWrapper(ctx, flattener, sourcePath, sourceFieldName, sourceFieldVal, targetPath, valTo.Type(ctx), toFieldVal, opts)...)
 			if diags.HasError() {
 				return diags
@@ -3325,7 +3325,7 @@ func flattenConvertXMLWrapperFieldToCollection(ctx context.Context, flattener *a
 		})
 
 		// Use existing XML wrapper flatten logic
-		if valTo, ok := toFieldVal.Interface().(attr.Value); ok {
+		if valTo, ok := reflect.TypeAssert[attr.Value](toFieldVal); ok {
 			diags.Append(flattenXMLWrapper(ctx, flattener, sourcePath, sourceFieldName, sourceFieldVal.Elem(), targetPath, valTo.Type(ctx), toFieldVal, opts)...)
 			if diags.HasError() {
 				return diags
@@ -3372,7 +3372,7 @@ func flattenCreateTargetValue(ctx context.Context, flattener *autoFlattener, sou
 				return nil, diags
 			}
 
-			if attrVal, ok := targetVal.Interface().(attr.Value); ok {
+			if attrVal, ok := reflect.TypeAssert[attr.Value](targetVal); ok {
 				return attrVal, diags
 			}
 		}
@@ -3487,7 +3487,7 @@ func flattenXMLWrapperRule2(ctx context.Context, flattener *autoFlattener, vFrom
 			_, fieldOpts := autoflexTags(targetFieldType)
 			if fieldOpts.XMLWrapperField() == wrapperFieldName {
 				if targetField.CanAddr() {
-					if targetAttr, ok := targetField.Addr().Interface().(attr.Value); ok {
+					if targetAttr, ok := reflect.TypeAssert[attr.Value](targetField.Addr()); ok {
 						diags.Append(autoFlattenConvert(ctx, itemsField.Interface(), targetAttr, flattener)...)
 					}
 				}
@@ -3506,7 +3506,7 @@ func flattenXMLWrapperRule2(ctx context.Context, flattener *autoFlattener, vFrom
 		}
 
 		if targetField := nestedObjValue.FieldByName(fieldName); targetField.IsValid() && targetField.CanAddr() {
-			if targetAttr, ok := targetField.Addr().Interface().(attr.Value); ok {
+			if targetAttr, ok := reflect.TypeAssert[attr.Value](targetField.Addr()); ok {
 				diags.Append(autoFlattenConvert(ctx, sourceField.Interface(), targetAttr, flattener)...)
 			}
 		}

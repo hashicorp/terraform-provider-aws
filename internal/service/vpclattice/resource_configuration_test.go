@@ -6,6 +6,7 @@ package vpclattice_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -324,6 +325,136 @@ func TestAccVPCLatticeResourceConfiguration_domainVerification(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeResourceConfiguration_cidr(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 vpclattice.GetResourceConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_configuration.test"
+	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfigurationConfig_cidr(rName, []string{"10.0.0.0/24", "192.168.0.0/24"}, []string{"53", "443"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceConfigurationTypeCidr)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(types.ProtocolTypeTcpUdp)),
+					resource.TestCheckResourceAttr(resourceName, "port_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "53"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "443"),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", "10.0.0.0/24"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", "192.168.0.0/24"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccResourceConfigurationConfig_cidr(rName, []string{"10.0.0.0/24", "172.16.0.0/16"}, []string{"53", "443", "8080-8090"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceConfigurationTypeCidr)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(types.ProtocolTypeTcpUdp)),
+					resource.TestCheckResourceAttr(resourceName, "port_ranges.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "53"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "443"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "8080-8090"),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", "10.0.0.0/24"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", "172.16.0.0/16"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeResourceConfiguration_cidrIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_configuration.test"
+	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
+	vpcResourceName := "aws_vpc.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfigurationConfig_cidrIPv6(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &resourceconfiguration),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceConfigurationTypeCidr)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(types.ProtocolTypeTcpUdp)),
+					resource.TestCheckResourceAttr(resourceName, "port_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "53"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "443"),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", "10.0.0.0/24"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", vpcResourceName, "ipv6_cidr_block"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeResourceConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
@@ -556,6 +687,63 @@ resource "aws_rds_cluster_instance" "test" {
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = [aws_subnet.test.id, aws_subnet.test2.id]
+}
+`, rName))
+}
+
+func testAccResourceConfigurationConfig_cidr(rName string, cidrRanges, portRanges []string) string {
+	return acctest.ConfigCompose(testAccResourceGatewayConfig_resourceConfigDNSResolution(rName, string(types.ResourceConfigDnsResolutionInVpc)),
+		fmt.Sprintf(`
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  type        = "CIDR"
+  protocol    = "TCP_UDP"
+  port_ranges = ["%[3]s"]
+
+  resource_configuration_definition {
+    cidr_resource {
+      cidr_ranges = ["%[2]s"]
+    }
+  }
+}
+`, rName, strings.Join(cidrRanges, `", "`), strings.Join(portRanges, `", "`)))
+}
+
+// The IPv6 range is the VPC's Amazon-provided block rather than a literal
+// documentation prefix (2001:db8::/32) so the test doesn't depend on whether AWS
+// accepts documentation prefixes. EC2 returns the block in canonical (lowercase,
+// compressed) form, so the post-apply empty plan check also verifies that VPC
+// Lattice returns IPv6 CIDR ranges without reformatting them.
+func testAccResourceConfigurationConfig_cidrIPv6(rName string) string {
+	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_vpclattice_resource_gateway" "test" {
+  name               = %[1]q
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = [aws_subnet.test.id]
+  ip_address_type    = "DUALSTACK"
+
+  resource_config_dns_resolution = "IN_VPC"
+}
+
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  type        = "CIDR"
+  protocol    = "TCP_UDP"
+  port_ranges = ["53", "443"]
+
+  resource_configuration_definition {
+    cidr_resource {
+      cidr_ranges = ["10.0.0.0/24", aws_vpc.test.ipv6_cidr_block]
+    }
+  }
 }
 `, rName))
 }
