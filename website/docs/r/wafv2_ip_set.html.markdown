@@ -45,10 +45,40 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A unique identifier for the IP set.
-* `arn` - The Amazon Resource Name (ARN) of the IP set.
+* `arn` - ARN of the IP set.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_wafv2_ip_set.example
+  identity = {
+    id    = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+    name  = "example"
+    scope = "REGIONAL"
+  }
+}
+
+resource "aws_wafv2_ip_set" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) Unique identifier for the IP set.
+* `name` (String) Name of the IP set.
+* `scope` (String) Whether this is for a global (`CLOUDFRONT`) or regional (`REGIONAL`) application.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 IP Sets using `ID/name/scope`. For example:
 

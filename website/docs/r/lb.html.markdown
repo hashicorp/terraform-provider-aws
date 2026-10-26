@@ -208,7 +208,7 @@ resource "aws_lb" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the load balancer.
+- `arn` (String) ARN of the load balancer.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import LBs using their ARN. For example:
 

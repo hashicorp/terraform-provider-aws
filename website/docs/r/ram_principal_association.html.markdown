@@ -51,15 +51,39 @@ This resource supports the following arguments:
 
 * `principal` - (Required) Principal to associate with the resource share. Possible values are an AWS account ID, an AWS Organizations Organization ARN, or an AWS Organizations Organization Unit ARN.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `resource_share_arn` - (Required) Amazon Resource Name (ARN) of the resource share.
+* `resource_share_arn` - (Required) ARN of the resource share.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the Resource Share and the principal, separated by a comma.
+* `id` - ARN of the Resource Share and the principal, separated by a comma.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ram_principal_association.example
+  identity = {
+    principal          = "111111111111"
+    resource_share_arn = "arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `principal` (String) Principal associated with the resource share.
+* `resource_share_arn` (String) ARN of the resource share.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RAM Principal Associations using their Resource Share ARN and the `principal` separated by a comma. For example:
 

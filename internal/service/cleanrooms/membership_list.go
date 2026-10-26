@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,14 +37,6 @@ type membershipListResource struct {
 func (l *membershipListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().CleanRoomsClient(ctx)
 
-	var query listMembershipModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Clean Rooms Membership")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -58,6 +51,19 @@ func (l *membershipListResource) List(ctx context.Context, request list.ListRequ
 			id := aws.ToString(item.Id)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
 
+			var out *cleanrooms.GetMembershipOutput
+			if request.IncludeResource {
+				var err error
+				out, err = findMembershipByID(ctx, conn, id)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data membershipResourceModel
@@ -65,12 +71,6 @@ func (l *membershipListResource) List(ctx context.Context, request list.ListRequ
 				data.ID = fwflex.StringValueToFramework(ctx, id)
 
 				if request.IncludeResource {
-					out, err := findMembershipByID(ctx, conn, id)
-					if err != nil {
-						result.Diagnostics.Append(fwdiag.NewListResultErrorDiagnostic(err).Diagnostics...)
-						return
-					}
-
 					result.Diagnostics.Append(fwflex.Flatten(ctx, out.Membership, &data, fwflex.WithIgnoredFieldNamesAppend("PaymentConfiguration"))...)
 					if result.Diagnostics.HasError() {
 						return
@@ -90,10 +90,6 @@ func (l *membershipListResource) List(ctx context.Context, request list.ListRequ
 			}
 		}
 	}
-}
-
-type listMembershipModel struct {
-	framework.WithRegionModel
 }
 
 func listMemberships(ctx context.Context, conn *cleanrooms.Client, input *cleanrooms.ListMembershipsInput) iter.Seq2[awstypes.MembershipSummary, error] {

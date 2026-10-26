@@ -162,7 +162,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), knownvalue.NotNull()),
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 		{{ else if eq (len .IdentityAttributes) 1 -}}
-			{{ if eq .PlannableResourceAction "Replace" -}}
+			{{ if and (eq .PlannableResourceAction "Replace") (eq .Implementation "framework") -}}
 				{{ range .IdentityAttributes -}}
 				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }})),
 				{{ end -}}
@@ -216,7 +216,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 			{{ end -}}
 		{{ else if eq (len .IdentityAttributes) 1 -}}
-			{{ if eq .PlannableResourceAction "Replace" -}}
+			{{ if and (eq .PlannableResourceAction "Replace") (eq .Implementation "framework") -}}
 				{{ range .IdentityAttributes -}}
 				plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ or .ResourceAttributeName .Name }})),
 				{{ end -}}

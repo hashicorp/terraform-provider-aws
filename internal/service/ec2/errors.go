@@ -122,6 +122,7 @@ const (
 	errCodeInvalidTransitGatewayMeteringPolicyEntryNotFound           = "InvalidTransitGatewayMeteringPolicyEntry.NotFound"
 	errCodeInvalidTransitGatewayMeteringPolicyIdNotFound              = "InvalidTransitGatewayMeteringPolicyId.NotFound"
 	errCodeInvalidTransitGatewayPolicyTableAssociationNotFound        = "InvalidTransitGatewayPolicyTableAssociation.NotFound"
+	errCodeInvalidTransitGatewayPolicyTableEntryNotFound              = "InvalidTransitGatewayPolicyTableEntry.NotFound"
 	errCodeInvalidTransitGatewayPolicyTableIdNotFound                 = "InvalidTransitGatewayPolicyTableId.NotFound"
 	errCodeInvalidVPCBlockPublicAccessExclusionIdNotFound             = "InvalidVpcBlockPublicAccessExclusionId.NotFound"
 	errCodeInvalidVPCCIDRBlockAssociationIDNotFound                   = "InvalidVpcCidrBlockAssociationID.NotFound"

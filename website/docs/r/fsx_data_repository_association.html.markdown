@@ -86,7 +86,7 @@ The `auto_import_policy` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
 * `association_id` - Identifier of the data repository association.
 * `id` - Identifier of the data repository association, e.g., `dra-12345678`
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

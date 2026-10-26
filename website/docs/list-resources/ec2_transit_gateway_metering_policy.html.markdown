@@ -8,7 +8,7 @@ description: |-
 
 # List Resource: aws_ec2_transit_gateway_metering_policy
 
-Lists EC2 (Elastic Compute Cloud) Transit Gateway Metering Policy resources.
+Lists EC2 Transit Gateway Metering Policy resources.
 
 ## Example Usage
 

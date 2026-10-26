@@ -3,9 +3,6 @@
 
 provider "null" {}
 
-data "aws_region" "current" {
-}
-
 resource "aws_resiliencehubv2_service" "test" {
   name    = var.rName
   regions = [data.aws_region.current.name]
@@ -19,6 +16,9 @@ resource "aws_resiliencehubv2_service" "test" {
   }
 
   depends_on = [aws_iam_role_policy_attachment.service_AWSResilienceHubV2AssessmentExecutionPolicy]
+}
+
+data "aws_region" "current" {
 }
 
 data "aws_partition" "current" {}

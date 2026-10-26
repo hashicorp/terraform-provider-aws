@@ -32,9 +32,9 @@ This data source exports the following attributes in addition to the arguments a
 
 * `cloud_exadata_infrastructures` - List of Cloud Exadata Infrastructures. Returns basic information about the Cloud Exadata Infrastructures.
 
-### cloud_exadata_infrastructures
+### `cloud_exadata_infrastructures` Block
 
-* `arn` - Amazon Resource Name (ARN) for the Exadata infrastructure.
+* `arn` - ARN for the Exadata infrastructure.
 * `display_name` - Display name of the Exadata infrastructure.
 * `id` - Unique identifier of the Exadata infrastructure.
 * `oci_resource_anchor_name` - Name of the OCI resource anchor for the Exadata infrastructure.

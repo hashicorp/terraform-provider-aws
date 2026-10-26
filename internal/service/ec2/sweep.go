@@ -229,6 +229,8 @@ func RegisterSweepers() {
 		"aws_appstream_image_builder",
 		"aws_autoscaling_group",
 		"aws_batch_compute_environment",
+		"aws_bedrockagentcore_agent_runtime",
+		"aws_bedrockagentcore_harness",
 		"aws_elastic_beanstalk_environment",
 		"aws_cloud9_environment_ec2",
 		"aws_cloudhsm_v2_cluster",
@@ -256,6 +258,7 @@ func RegisterSweepers() {
 		"aws_grafana_workspace",
 		"aws_iot_topic_rule_destination",
 		"aws_lambda_function",
+		"aws_lambdacore_network_connector",
 		"aws_lb",
 		"aws_memorydb_subnet_group",
 		"aws_mq_broker",
@@ -1319,7 +1322,9 @@ func sweepNetworkInterfaces(region string) error {
 	input := ec2.DescribeNetworkInterfacesInput{}
 	var sweepResources []sweep.Sweepable
 
-	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, &input)
+	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, &input, func(o *ec2.DescribeNetworkInterfacesPaginatorOptions) {
+		o.Limit = 1000
+	})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

@@ -88,7 +88,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
-### Example Usage Invocation Http Parameters
+### Example Usage Invocation HTTP Parameters
 
 ```terraform
 resource "aws_cloudwatch_event_connection" "test" {
@@ -241,14 +241,14 @@ This resource supports the following arguments:
 * `authorization_type` - (Required) Type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
 * `auth_parameters` - (Required) Parameters used for authorization. A maximum of 1 are allowed. Documented below.
 * `invocation_connectivity_parameters` - (Optional) Parameters to use for invoking a private API. Documented below.
-* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt this connection. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt this connection. The identifier can be the key ARN, KeyId, key alias, or key alias ARN.
 
 `auth_parameters` support the following:
 
 * `api_key` - (Optional) Parameters used for API_KEY authorization. An API key to include in the header for each authentication request. A maximum of 1 are allowed. Conflicts with `basic` and `oauth`. Documented below.
 * `basic` - (Optional) Parameters used for BASIC authorization. A maximum of 1 are allowed. Conflicts with `api_key` and `oauth`. Documented below.
 * `connectivity_parameters` - (Optional) Parameters used for `oauth` with private API. Documented below.
-* `invocation_http_parameters` - (Optional) Invocation Http Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation Http Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
+* `invocation_http_parameters` - (Optional) Invocation HTTP Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation HTTP Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
 * `oauth` - (Optional) Parameters used for OAUTH_CLIENT_CREDENTIALS authorization. A maximum of 1 are allowed. Conflicts with `basic` and `api_key`. Documented below.
 
 `api_key` support the following:
@@ -268,7 +268,7 @@ This resource supports the following arguments:
 * `client_parameters` - (Required) Contains the client parameters for OAuth authorization. Contains the following two parameters.
     * `client_id` - (Required) The client ID for the credentials to use for authorization. Created and stored in AWS Secrets Manager.
     * `client_secret` - (Required) The client secret for the credentials to use for authorization. Created and stored in AWS Secrets Manager.
-* `oauth_http_parameters` - (Required) OAuth Http Parameters are additional credentials used to sign the request to the authorization endpoint to exchange the OAuth Client information for an access token. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
+* `oauth_http_parameters` - (Required) OAuth HTTP Parameters are additional credentials used to sign the request to the authorization endpoint to exchange the OAuth Client information for an access token. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
 
 `invocation_http_parameters` and `oauth_http_parameters` support the following:
 
@@ -303,8 +303,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the connection.
-* `secret_arn` - The Amazon Resource Name (ARN) of the secret created from the authorization parameters specified for the connection.
+* `arn` - ARN of the connection.
+* `secret_arn` - ARN of the secret created from the authorization parameters specified for the connection.
 
 ## Import
 

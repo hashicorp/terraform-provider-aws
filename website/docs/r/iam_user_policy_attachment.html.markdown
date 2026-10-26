@@ -71,7 +71,7 @@ resource "aws_iam_user_policy_attachment" "example" {
 
 * `account_id` (String) AWS Account where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM user policy attachments using the user name and policy arn separated by `/`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM user policy attachments using the user name and policy ARN separated by `/`. For example:
 
 ```terraform
 import {
@@ -80,7 +80,7 @@ import {
 }
 ```
 
-Using `terraform import`, import IAM user policy attachments using the user name and policy arn separated by `/`. For example:
+Using `terraform import`, import IAM user policy attachments using the user name and policy ARN separated by `/`. For example:
 
 ```console
 % terraform import aws_iam_user_policy_attachment.example test-user/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy

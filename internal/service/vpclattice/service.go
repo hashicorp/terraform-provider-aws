@@ -88,6 +88,12 @@ func resourceService() *schema.Resource {
 						},
 					},
 				},
+				"idle_timeout_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(60, 600),
+				},
 				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -129,6 +135,10 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if v, ok := d.GetOk("custom_domain_name"); ok {
 		in.CustomDomainName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("idle_timeout_seconds"); ok {
+		in.IdleTimeoutSeconds = aws.Int32(int32(v.(int)))
 	}
 
 	out, err := conn.CreateService(ctx, in)
@@ -173,6 +183,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	} else {
 		d.Set("dns_entry", nil)
 	}
+	d.Set("idle_timeout_seconds", out.IdleTimeoutSeconds)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrStatus, out.Status)
 
@@ -194,6 +205,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChanges(names.AttrCertificateARN) {
 			in.CertificateArn = aws.String(d.Get(names.AttrCertificateARN).(string))
+		}
+
+		if d.HasChanges("idle_timeout_seconds") {
+			in.IdleTimeoutSeconds = aws.Int32(int32(d.Get("idle_timeout_seconds").(int)))
 		}
 
 		_, err := conn.UpdateService(ctx, in)

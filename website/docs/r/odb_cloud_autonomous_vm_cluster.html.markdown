@@ -26,7 +26,7 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_minimum_parameters" {
   total_container_databases             = 1
   cpu_core_count_per_node               = 40
   license_model                         = "LICENSE_INCLUDED"
-  # ids of db server. refer your exa infra. This is a manadatory fileld. Refer your cloud exadata infrastructure for db server id
+  # ids of db server. refer your exa infra. This is a manadatory field. Refer your cloud exadata infrastructure for db server id
   db_servers                 = ["<my_db_server_id>"]
   scan_listener_port_tls     = 8561
   scan_listener_port_non_tls = 1024
@@ -83,7 +83,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cloud_exadata_infrastructure_arn` - (Optional) Exadata infrastructure ARN. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
-* `cloud_exadata_infrastructure_id` - (Optional) Exadata infrastructure id. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
+* `cloud_exadata_infrastructure_id` - (Optional) Exadata infrastructure ID. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
 * `description` - (Optional) Description of the Autonomous VM cluster.
 * `is_mtls_enabled_vm_cluster` - (Optional) Whether mutual TLS (mTLS) authentication is enabled for the Autonomous VM cluster. Changing this will force terraform to create new resource.
 * `license_model` - (Optional) License model for the Autonomous VM cluster. Valid values are LICENSE_INCLUDED or BRING_YOUR_OWN_LICENSE. Changing this will force terraform to create new resource.
@@ -95,18 +95,26 @@ The following arguments are optional:
 
 ### `maintenance_window` Block
 
-* `days_of_week` - (Optional) Days of the week when maintenance can be performed. Changing this will force terraform to create new resource.
+* `days_of_week` - (Optional) Days of the week when maintenance can be performed. Changing this will force terraform to create new resource. See [`days_of_week` Block](#days_of_week-block) below.
 * `hours_of_day` - (Optional) Hours of the day when maintenance can be performed. Changing this will force terraform to create new resource.
 * `lead_time_in_weeks` - (Optional) Lead time in weeks before the maintenance window. Changing this will force terraform to create new resource.
-* `months` - (Optional) Months when maintenance can be performed. Changing this will force terraform to create new resource.
+* `months` - (Optional) Months when maintenance can be performed. Changing this will force terraform to create new resource. See [`months` Block](#months-block) below.
 * `preference` - (Required) Preference for the maintenance window scheduling. Changing this will force terraform to create new resource.
 * `weeks_of_month` - (Optional) Whether to skip release updates during maintenance. Changing this will force terraform to create new resource.
+
+#### `days_of_week` Block
+
+* `name` - (Required) Name of the day of the week. Valid values are `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`, and `SUNDAY`.
+
+#### `months` Block
+
+* `name` - (Required) Name of the month. Valid values are `JANUARY`, `FEBRUARY`, `MARCH`, `APRIL`, `MAY`, `JUNE`, `JULY`, `AUGUST`, `SEPTEMBER`, `OCTOBER`, `NOVEMBER`, and `DECEMBER`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) for the Exadata infrastructure.
+* `arn` - ARN for the Exadata infrastructure.
 * `autonomous_data_storage_percentage` - Progress of the current operation on the Autonomous VM cluster, as a percentage.
 * `available_autonomous_data_storage_size_in_tbs` - Available data storage space for Autonomous Databases in the Autonomous VM cluster, in TB.
 * `available_container_databases` - Number of Autonomous CDBs that you can create with the currently available storage.

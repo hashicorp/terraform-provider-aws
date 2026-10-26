@@ -67,7 +67,7 @@ This resource supports the following arguments:
 * `capacity_provider_arns` - (Required) Set of capacity provider ARNs to use for the daemon.
 * `cluster_arn` - (Optional, Forces new resource) ARN of the ECS cluster where the daemon will run.
 * `daemon_task_definition_arn` - (Required) ARN of the daemon task definition to use for the daemon. Drift is not detected on this attribute because the API may report a stale revision while a deployment is in progress.
-* `deployment_configuration` - (Optional) Configuration for daemon deployments. See [Deployment Configuration](#deployment-configuration) below.
+* `deployment_configuration` - (Optional) Configuration for daemon deployments. See [Deployment Configuration](#deployment_configuration-block) below.
 * `enable_ecs_managed_tags` - (Optional, Write-only) Whether to enable Amazon ECS managed tags for the tasks within the daemon.
 * `enable_execute_command` - (Optional, Write-only) Whether to enable Amazon ECS Exec for the tasks within the daemon.
 * `name` - (Required, Forces new resource) Name of the daemon.
@@ -81,7 +81,7 @@ This resource supports the following arguments:
 
 The `deployment_configuration` block supports:
 
-* `alarms` - (Optional) Alarm configuration for deployment monitoring. See [Alarms](#alarms) below.
+* `alarms` - (Optional) Alarm configuration for deployment monitoring. See [Alarms](#alarms-block) below.
 * `bake_time_in_minutes` - (Optional) Time in minutes to wait before considering a deployment successful. Valid values are between 0 and 1440. Defaults to `0`.
 * `drain_percent` - (Optional) Percentage of tasks to drain during deployment. Valid values are between 0.0 and 100.0.
 

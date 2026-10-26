@@ -31,9 +31,9 @@ func newBucketVersioningResourceAsListResource() inttypes.ListResourceForSDK {
 	)
 }
 
-var _ bucketPropertyListHandlerSDK = bucketVersioningListHandler{}
+var _ bucketPropertyListHandler = bucketVersioningListHandler{}
 
-func newBucketVersioningListHandler(lister listResourceSDK) bucketPropertyListHandlerSDK {
+func newBucketVersioningListHandler(lister listResourceSDK) bucketPropertyListHandler {
 	return bucketVersioningListHandler{
 		baseBucketPropertyListHandlerSDK: newBaseBucketPropertyListHandlerSDK(lister),
 	}

@@ -154,6 +154,13 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
+				"network_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
+				},
 				names.AttrOwnerID: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -461,6 +468,11 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		inputB.KmsKeyId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("network_type"); ok {
+		inputC.NetworkType = awstypes.NetworkType(v.(string))
+		inputB.NetworkType = awstypes.NetworkType(v.(string))
+	}
+
 	if v, ok := d.GetOk("preferred_subnet_id"); ok {
 		inputC.OpenZFSConfiguration.PreferredSubnetId = aws.String(v.(string))
 		inputB.OpenZFSConfiguration.PreferredSubnetId = aws.String(v.(string))
@@ -556,6 +568,7 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("endpoint_ip_address_range", openZFSConfig.EndpointIpAddressRange)
 	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
 	d.Set("network_interface_ids", filesystem.NetworkInterfaceIds)
+	d.Set("network_type", filesystem.NetworkType)
 	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("preferred_subnet_id", openZFSConfig.PreferredSubnetId)
 	if err := d.Set("read_cache_configuration", flattenOpenZFSReadCacheConfiguration(openZFSConfig.ReadCacheConfiguration)); err != nil {

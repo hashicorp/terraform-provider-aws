@@ -126,13 +126,11 @@ func TestParseObjectARN_GeneralPurposeBucket(t *testing.T) {
 	t.Parallel()
 
 	expectedObjectARN := tfs3.ObjectARN{
-		ARN: arn.ARN{
-			Partition: "test-partition",
-			Service:   "s3",
-			Resource:  "test-bucket/test-key",
-		},
-		Bucket: "test-bucket",
-		Key:    "test-key",
+		Partition: "test-partition",
+		Service:   "s3",
+		Resource:  "test-bucket/test-key",
+		Bucket:    "test-bucket",
+		Key:       "test-key",
 	}
 
 	oARN, _ := tfs3.NewObjectARN("test-partition", "test-bucket", "test-key")
@@ -149,13 +147,11 @@ func TestParseObjectARN_GeneralPurposeBucket_AccessPointBucketName(t *testing.T)
 	t.Parallel()
 
 	expectedObjectARN := tfs3.ObjectARN{
-		ARN: arn.ARN{
-			Partition: "test-partition",
-			Service:   "s3",
-			Resource:  "accesspoint/test-key",
-		},
-		Bucket: "accesspoint",
-		Key:    "test-key",
+		Partition: "test-partition",
+		Service:   "s3",
+		Resource:  "accesspoint/test-key",
+		Bucket:    "accesspoint",
+		Key:       "test-key",
 	}
 
 	oARN, _ := tfs3.NewObjectARN("test-partition", "accesspoint", "test-key")
@@ -172,15 +168,13 @@ func TestParseObjectARN_AccessPoint(t *testing.T) {
 	t.Parallel()
 
 	expectedObjectARN := tfs3.ObjectARN{
-		ARN: arn.ARN{
-			Partition: "test-partition",
-			Service:   "s3",
-			Region:    "us-west-2", //lintignore:AWSAT003
-			AccountID: acctest.Ct12Digit,
-			Resource:  "accesspoint/test-accesspoint/test-key",
-		},
-		Bucket: "arn:test-partition:s3:us-west-2:123456789012:accesspoint/test-accesspoint", //lintignore:AWSAT003
-		Key:    "test-key",
+		Partition: "test-partition",
+		Service:   "s3",
+		Region:    "us-west-2", //lintignore:AWSAT003
+		AccountID: acctest.Ct12Digit,
+		Resource:  "accesspoint/test-accesspoint/test-key",
+		Bucket:    "arn:test-partition:s3:us-west-2:123456789012:accesspoint/test-accesspoint", //lintignore:AWSAT003
+		Key:       "test-key",
 	}
 
 	apARN := arn.ARN{
@@ -205,14 +199,12 @@ func TestParseObjectARN_MultiRegionAccessPoint(t *testing.T) {
 	t.Parallel()
 
 	expectedObjectARN := tfs3.ObjectARN{
-		ARN: arn.ARN{
-			Partition: "test-partition",
-			Service:   "s3",
-			AccountID: acctest.Ct12Digit,
-			Resource:  "accesspoint/test-multi-region-accesspoint/test-key",
-		},
-		Bucket: "arn:test-partition:s3::123456789012:accesspoint/test-multi-region-accesspoint",
-		Key:    "test-key",
+		Partition: "test-partition",
+		Service:   "s3",
+		AccountID: acctest.Ct12Digit,
+		Resource:  "accesspoint/test-multi-region-accesspoint/test-key",
+		Bucket:    "arn:test-partition:s3::123456789012:accesspoint/test-multi-region-accesspoint",
+		Key:       "test-key",
 	}
 
 	mrapARN := arn.ARN{
@@ -236,14 +228,12 @@ func TestParseObjectARN_ObjectLambdaAccessPoint(t *testing.T) {
 	t.Parallel()
 
 	expectedObjectARN := tfs3.ObjectARN{
-		ARN: arn.ARN{
-			Partition: "test-partition",
-			Service:   "s3-object-lambda",
-			AccountID: acctest.Ct12Digit,
-			Resource:  "accesspoint/test-object-lambda-accesspoint/test-key",
-		},
-		Bucket: "arn:test-partition:s3-object-lambda::123456789012:accesspoint/test-object-lambda-accesspoint",
-		Key:    "test-key",
+		Partition: "test-partition",
+		Service:   "s3-object-lambda",
+		AccountID: acctest.Ct12Digit,
+		Resource:  "accesspoint/test-object-lambda-accesspoint/test-key",
+		Bucket:    "arn:test-partition:s3-object-lambda::123456789012:accesspoint/test-object-lambda-accesspoint",
+		Key:       "test-key",
 	}
 
 	olapARN := arn.ARN{

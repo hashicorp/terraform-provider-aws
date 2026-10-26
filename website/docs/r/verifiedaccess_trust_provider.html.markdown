@@ -24,25 +24,56 @@ resource "aws_verifiedaccess_trust_provider" "example" {
 
 The following arguments are required:
 
-* `policy_reference_name` - (Required) The identifier to be used when working with policy rules.
-* `trust_provider_type` - (Required) The type of trust provider can be either user or device-based.
+* `policy_reference_name` - (Required) Identifier to be used when working with policy rules.
+* `trust_provider_type` - (Required) Type of trust provider can be either user or device-based.
 
 The following arguments are optional:
 
+* `description` - (Optional) Description for the AWS Verified Access trust provider.
+* `device_options` - (Optional) Block of options for device identity based trust providers. [See below](#device_options-block).
+* `device_trust_provider_type` - (Optional) Type of device-based trust provider.
+* `native_application_oidc_options` - (Optional) OpenID Connect details for a Native Application OIDC, user-identity based trust provider. [See below](#native_application_oidc_options-block).
+* `oidc_options` - (Optional) OpenID Connect details for an oidc-type, user-identity based trust provider. [See below](#oidc_options-block).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional) A description for the AWS Verified Access trust provider.
-* `device_options` - (Optional) A block of options for device identity based trust providers.
-* `device_trust_provider_type` (Optional) The type of device-based trust provider.
-* `native_application_oidc_options` - (Optional) The OpenID Connect details for an Native Application OIDC, user-identity based trust provider.
-* `oidc_options` - (Optional) The OpenID Connect details for an oidc-type, user-identity based trust provider.
+* `sse_specification` - (Optional) Block of options in use for server side encryption. [See below](#sse_specification-block).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `user_trust_provider_type` - (Optional) The type of user-based trust provider.
+* `user_trust_provider_type` - (Optional) Type of user-based trust provider.
+
+### `device_options` Block
+
+* `tenant_id` - (Optional) ID of the tenant application with the device-identity provider.
+
+### `native_application_oidc_options` Block
+
+* `authorization_endpoint` - (Optional) OIDC authorization endpoint.
+* `client_id` - (Optional) OAuth 2.0 client identifier.
+* `client_secret` - (Required) OAuth 2.0 client secret.
+* `issuer` - (Optional) OIDC issuer identifier of the IdP.
+* `public_signing_key_endpoint` - (Optional) OIDC public signing key endpoint.
+* `scope` - (Optional) OpenID Connect (OIDC) scope specified.
+* `token_endpoint` - (Optional) OIDC token endpoint.
+* `user_info_endpoint` - (Optional) OIDC user info endpoint.
+
+### `oidc_options` Block
+
+* `authorization_endpoint` - (Optional) OIDC authorization endpoint.
+* `client_id` - (Optional) OAuth 2.0 client identifier.
+* `client_secret` - (Required) OAuth 2.0 client secret.
+* `issuer` - (Optional) OIDC issuer identifier of the IdP.
+* `scope` - (Optional) OpenID Connect (OIDC) scope specified.
+* `token_endpoint` - (Optional) OIDC token endpoint.
+* `user_info_endpoint` - (Optional) OIDC user info endpoint.
+
+### `sse_specification` Block
+
+* `customer_managed_key_enabled` - (Optional) Whether a customer managed key is in use.
+* `kms_key_arn` - (Optional) ARN of the KMS key.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the AWS Verified Access trust provider.
+* `id` - ID of the AWS Verified Access trust provider.
 
 ## Timeouts
 

@@ -34,28 +34,20 @@ jobs:
     runs-on: custom-ubuntu-22.04-large
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: ./.github/actions/tools_cache
         with:
-          go-version-file: go.mod
-          cache: false
-      - id: golangci-lint-version
-        working-directory: .ci/tools
-        run: >-
-          echo "version=$(
-            go list -m all |
-            grep github.com/golangci/golangci-lint |
-            awk '{print $2}'
-          )" >> $GITHUB_OUTPUT
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
-        with:
-          version: "${{ steps.golangci-lint-version.outputs.version }}"
-          args: --config .ci/.golangci.yml
+          tools: github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+      - run: make golangci-lint1
   golangci-lintb:
     name: 2 of 5
     needs: [golangci-linta]
     runs-on: custom-ubuntu-22.04-xl
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/tools_cache
+        with:
+          tools: github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+      - run: make golangci-lint2
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
@@ -85,6 +77,11 @@ jobs:
     runs-on: custom-ubuntu-22.04-xl
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/tools_cache
+        with:
+          tools: github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+      - run: make golangci-lint3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
@@ -112,6 +109,11 @@ jobs:
     needs: [golangci-linta]
     runs-on: custom-ubuntu-22.04-xl
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/tools_cache
+        with:
+          tools: github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+      - run: make golangci-lint4
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
@@ -141,25 +143,7 @@ jobs:
     runs-on: custom-ubuntu-22.04-xl
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: ./.github/actions/tools_cache
         with:
-          go-version-file: go.mod
-          cache: false
-      - id: golangci-lint-version
-        working-directory: .ci/tools
-        run: >-
-          echo "version=$(
-            go list -m all |
-            grep github.com/golangci/golangci-lint |
-            awk '{print $2}'
-          )" >> $GITHUB_OUTPUT
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
-        with:
-          version: "${{ steps.golangci-lint-version.outputs.version }}"
-          args: --config .ci/.golangci5.yml
-        env:
-          # Trigger garbage collection more frequently to reduce the likelihood
-          # of OOM errors. Higher values mean it runs faster but more likely to OOM, exit 137.
-          # ref: https://golangci-lint.run/product/performance/
-          GOGC: "120" # 100 is the default value
+          tools: github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+      - run: make golangci-lint5

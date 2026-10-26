@@ -8,8 +8,8 @@ description: |-
 
 # Data Source: aws_api_gateway_resource
 
-Use this data source to get the id of a Resource in API Gateway.
-To fetch the Resource, you must provide the REST API id as well as the full path.  
+Use this data source to get the ID of a Resource in API Gateway.
+To fetch the Resource, you must provide the REST API ID as well as the full path.  
 
 ## Example Usage
 
@@ -30,7 +30,7 @@ This data source supports the following arguments:
 
 * `path` - (Required) Full path of the resource.  If no path is found, an error will be returned.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `rest_api_id` - (Required) REST API id that owns the resource. If no REST API is found, an error will be returned.
+* `rest_api_id` - (Required) REST API ID that owns the resource. If no REST API is found, an error will be returned.
 
 ## Attribute Reference
 

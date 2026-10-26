@@ -3,12 +3,12 @@ subcategory: "Oracle Database@AWS"
 layout: "AWS: aws_odb_db_server"
 page_title: "AWS: aws_odb_db_server"
 description: |-
-  Terraform data source for managing db server linked to exadata infrastructure of Oracle Database@AWS.
+  Terraform data source for managing DB server linked to exadata infrastructure of Oracle Database@AWS.
 ---
 
 # Data Source: aws_odb_db_server
 
-Terraform data source for manging db server linked to exadata infrastructure of Oracle Database@AWS.
+Terraform data source for managing DB server linked to exadata infrastructure of Oracle Database@AWS.
 
 You can find out more about Oracle Database@AWS from [User Guide](https://docs.aws.amazon.com/odb/latest/UserGuide/what-is-odb.html).
 
@@ -28,7 +28,7 @@ data "aws_odb_db_server" "example" {
 The following arguments are required:
 
 * `cloud_exadata_infrastructure_id` - (Required) Unique identifier of the cloud vm cluster.
-* `id` - (Required) Unique identifier of db node associated with vm cluster.
+* `id` - (Required) Unique identifier of DB node associated with vm cluster.
 
 The following arguments are optional:
 
@@ -57,3 +57,10 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the database server.
 * `status_reason` - Additional information about the current status of the database server.
 * `vm_cluster_ids` - OCID of the VM clusters that are associated with the database server.
+
+### `db_server_patching_details` Block
+
+* `estimated_patch_duration` - Estimated time, in minutes, that it takes to patch the database server.
+* `patching_status` - Status of the patching operation.
+* `time_patching_ended` - Date and time when the patching operation ended.
+* `time_patching_started` - Date and time when the patching operation started.

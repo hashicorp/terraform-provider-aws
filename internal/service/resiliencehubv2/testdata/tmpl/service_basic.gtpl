@@ -1,7 +1,3 @@
-data "aws_region" "current" {
-{{- template "region" }}
-}
-
 resource "aws_resiliencehubv2_service" "test" {
 {{- template "region" }}
   name    = var.rName
@@ -14,6 +10,10 @@ resource "aws_resiliencehubv2_service" "test" {
 {{- template "tags" . }}
 
   depends_on = [aws_iam_role_policy_attachment.service_AWSResilienceHubV2AssessmentExecutionPolicy]
+}
+
+data "aws_region" "current" {
+{{- template "region" }}
 }
 
 data "aws_partition" "current" {}

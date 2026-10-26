@@ -7,8 +7,10 @@ package sweep_test
 
 import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/accountaccess"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/agentregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
@@ -44,6 +46,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchomni"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
@@ -62,7 +65,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/directoryservicedata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
@@ -100,7 +105,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
@@ -113,6 +117,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdacore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
@@ -133,6 +139,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
@@ -140,6 +148,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pricingplanmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -201,8 +210,10 @@ import (
 
 func registerSweepers() {
 	accessanalyzer.RegisterSweepers()
+	accountaccess.RegisterSweepers()
 	acm.RegisterSweepers()
 	acmpca.RegisterSweepers()
+	agentregistry.RegisterSweepers()
 	amp.RegisterSweepers()
 	amplify.RegisterSweepers()
 	apigateway.RegisterSweepers()
@@ -238,6 +249,7 @@ func registerSweepers() {
 	cloudhsmv2.RegisterSweepers()
 	cloudtrail.RegisterSweepers()
 	cloudwatch.RegisterSweepers()
+	cloudwatchomni.RegisterSweepers()
 	codeartifact.RegisterSweepers()
 	codebuild.RegisterSweepers()
 	codegurureviewer.RegisterSweepers()
@@ -256,7 +268,9 @@ func registerSweepers() {
 	dax.RegisterSweepers()
 	deploy.RegisterSweepers()
 	devicefarm.RegisterSweepers()
+	devopsagent.RegisterSweepers()
 	directconnect.RegisterSweepers()
+	directoryservicedata.RegisterSweepers()
 	dlm.RegisterSweepers()
 	dms.RegisterSweepers()
 	docdb.RegisterSweepers()
@@ -294,7 +308,6 @@ func registerSweepers() {
 	guardduty.RegisterSweepers()
 	iam.RegisterSweepers()
 	imagebuilder.RegisterSweepers()
-	inspector.RegisterSweepers()
 	internetmonitor.RegisterSweepers()
 	iot.RegisterSweepers()
 	kafka.RegisterSweepers()
@@ -307,6 +320,8 @@ func registerSweepers() {
 	kms.RegisterSweepers()
 	lakeformation.RegisterSweepers()
 	lambda.RegisterSweepers()
+	lambdacore.RegisterSweepers()
+	lambdamicrovms.RegisterSweepers()
 	lexmodels.RegisterSweepers()
 	lexv2models.RegisterSweepers()
 	licensemanager.RegisterSweepers()
@@ -327,6 +342,8 @@ func registerSweepers() {
 	networkmanager.RegisterSweepers()
 	notifications.RegisterSweepers()
 	notificationscontacts.RegisterSweepers()
+	observabilityadmin.RegisterSweepers()
+	odb.RegisterSweepers()
 	opensearch.RegisterSweepers()
 	opensearchserverless.RegisterSweepers()
 	organizations.RegisterSweepers()
@@ -334,6 +351,7 @@ func registerSweepers() {
 	pinpoint.RegisterSweepers()
 	pinpointsmsvoicev2.RegisterSweepers()
 	pipes.RegisterSweepers()
+	pricingplanmanager.RegisterSweepers()
 	qbusiness.RegisterSweepers()
 	qldb.RegisterSweepers()
 	quicksight.RegisterSweepers()

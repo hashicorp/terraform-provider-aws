@@ -59,6 +59,7 @@ func TestAccResilienceHubV2Service_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkServiceARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system"), knownvalue.SetSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dependency_discovery"), tfknownvalue.StringExact(awstypes.DependencyDiscoveryInputDisabled)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyID), knownvalue.Null()),
@@ -271,6 +272,160 @@ func TestAccResilienceHubV2Service_policyARN(t *testing.T) {
 	})
 }
 
+func TestAccResilienceHubV2Service_associatedSystem(t *testing.T) {
+	ctx := acctest.Context(t)
+	var svc awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/associated_system/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:           config.StringVariable(rName),
+					"associated_system_count": config.IntegerVariable(1),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &svc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system").AtSliceIndex(0).AtMapKey("system_arn"), checkSystemARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system").AtSliceIndex(0).AtMapKey("user_journey_ids"), knownvalue.Null()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/associated_system/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:           config.StringVariable(rName),
+					"associated_system_count": config.IntegerVariable(2),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &svc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system"), knownvalue.SetSizeExact(2)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/associated_system/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:           config.StringVariable(rName),
+					"associated_system_count": config.IntegerVariable(0),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &svc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system"), knownvalue.SetSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2Service_associatedSystemUserJourneyIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var svc awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/associated_system.user_journey_ids/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"user_journey_count": config.IntegerVariable(1),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &svc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system").AtSliceIndex(0).AtMapKey("system_arn"), checkSystemARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system").AtSliceIndex(0).AtMapKey("user_journey_ids"), knownvalue.SetSizeExact(1)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/associated_system.user_journey_ids/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"user_journey_count": config.IntegerVariable(2),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &svc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system").AtSliceIndex(0).AtMapKey("system_arn"), checkSystemARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system").AtSliceIndex(0).AtMapKey("user_journey_ids"), knownvalue.SetSizeExact(2)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Service/associated_system.user_journey_ids/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"user_journey_count": config.IntegerVariable(0),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &svc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system").AtSliceIndex(0).AtMapKey("system_arn"), checkSystemARN),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("associated_system").AtSliceIndex(0).AtMapKey("user_journey_ids"), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
 func TestAccResilienceHubV2Service_regions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var svc awstypes.Service
@@ -291,7 +446,7 @@ func TestAccResilienceHubV2Service_regions(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Service/regions/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"regions":       config.SetVariable(acctest.ListOfStringVariables(acctest.Region(), acctest.AlternateRegion())...),
+					"regions":       acctest.SetOfStringsVariable(acctest.Region(), acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &svc),
@@ -312,7 +467,7 @@ func TestAccResilienceHubV2Service_regions(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Service/regions/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"regions":       config.SetVariable(acctest.ListOfStringVariables(acctest.Region(), acctest.AlternateRegion(), acctest.ThirdRegion())...),
+					"regions":       acctest.SetOfStringsVariable(acctest.Region(), acctest.AlternateRegion(), acctest.ThirdRegion()),
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &svc),
@@ -419,7 +574,7 @@ func testAccCheckServiceExists(ctx context.Context, t *testing.T, n string, v *a
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Service not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).ResilienceHubV2Client(ctx)

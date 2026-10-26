@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_wafregional_rule
 
-`aws_wafregional_rule` Retrieves a WAF Regional Rule Resource Id.
+`aws_wafregional_rule` Retrieves a WAF Regional Rule Resource ID.
 
 ## Example Usage
 

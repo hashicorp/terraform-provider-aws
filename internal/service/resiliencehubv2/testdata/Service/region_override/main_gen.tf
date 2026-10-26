@@ -1,11 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-data "aws_region" "current" {
-  region = var.region
-
-}
-
 resource "aws_resiliencehubv2_service" "test" {
   region = var.region
 
@@ -17,6 +12,11 @@ resource "aws_resiliencehubv2_service" "test" {
   }
 
   depends_on = [aws_iam_role_policy_attachment.service_AWSResilienceHubV2AssessmentExecutionPolicy]
+}
+
+data "aws_region" "current" {
+  region = var.region
+
 }
 
 data "aws_partition" "current" {}

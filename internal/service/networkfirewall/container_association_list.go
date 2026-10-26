@@ -37,14 +37,6 @@ type containerAssociationListResource struct {
 func (l *containerAssociationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().NetworkFirewallClient(ctx)
 
-	var query listContainerAssociationModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -63,7 +55,7 @@ func (l *containerAssociationListResource) List(ctx context.Context, request lis
 			if request.IncludeResource {
 				out, err = findContainerAssociationByARN(ctx, conn, arn)
 				if retry.NotFound(err) {
-					return
+					continue
 				}
 				if err != nil {
 					yield(fwdiag.NewListResultErrorDiagnostic(err))
@@ -98,10 +90,6 @@ func (l *containerAssociationListResource) List(ctx context.Context, request lis
 			}
 		}
 	}
-}
-
-type listContainerAssociationModel struct {
-	framework.WithRegionModel
 }
 
 func listContainerAssociations(ctx context.Context, conn *networkfirewall.Client, input *networkfirewall.ListContainerAssociationsInput, optFns ...func(*networkfirewall.Options)) iter.Seq2[awstypes.ContainerAssociationSummary, error] {

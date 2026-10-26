@@ -43,6 +43,7 @@ resource "aws_finspace_kx_dataview" "example" {
 
 The following arguments are required:
 
+* `auto_update` - (Required) Whether to apply all the future additions and corrections automatically to the dataview when you ingest new changesets. Defaults to `false`.
 * `az_mode` - (Required) Number of availability zones you want to assign per cluster. Valid values are `SINGLE` (assigns one availability zone per cluster) and `MULTI` (assigns all the availability zones per cluster).
 * `database_name` - (Required) Name of the database where you want to create a dataview.
 * `environment_id` - (Required) Unique identifier for the KX environment.
@@ -50,7 +51,6 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `auto_update` - (Optional) Whether to apply all the future additions and corrections automatically to the dataview when you ingest new changesets. Defaults to `false`.
 * `availability_zone_id` - (Optional) Identifier of the availability zones. If attaching a volume, the volume must be in the same availability zone as the dataview that you are attaching to.
 * `changeset_id` - (Optional) Unique identifier of the changeset of the database that you want to use to ingest data.
 * `description` - (Optional) Description for the dataview.
@@ -69,7 +69,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) identifier of the KX dataview.
+* `arn` - ARN identifier of the KX dataview.
 * `created_timestamp` - Timestamp at which the dataview was created in FinSpace. Value determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000.
 * `id` - Comma-delimited string joining environment ID, database name and dataview name.
 * `last_modified_timestamp` - Last time that the dataview was updated in FinSpace. The value is determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000.

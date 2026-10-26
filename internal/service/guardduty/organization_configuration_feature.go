@@ -37,6 +37,7 @@ func resourceOrganizationConfigurationFeature() *schema.Resource {
 			return map[string]*schema.Schema{
 				"additional_configuration": {
 					Optional: true,
+					Computed: true,
 					ForceNew: true,
 					Type:     schema.TypeList,
 					Elem: &schema.Resource{
@@ -99,8 +100,9 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 		Name:       awstypes.OrgFeature(name),
 	}
 
-	if v, ok := d.GetOk("additional_configuration"); ok && len(v.([]any)) > 0 {
-		feature.AdditionalConfiguration = expandOrganizationAdditionalConfigurations(v.([]any))
+	// Retrieve the value set in the config directly so that Computed values returned by AWS aren't sent back.
+	if v := d.GetRawConfig().GetAttr("additional_configuration"); v.IsKnown() && !v.IsNull() && v.LengthInt() > 0 {
+		feature.AdditionalConfiguration = expandOrganizationAdditionalConfigurations(d.Get("additional_configuration").([]any))
 	}
 
 	input := &guardduty.UpdateOrganizationConfigurationInput{

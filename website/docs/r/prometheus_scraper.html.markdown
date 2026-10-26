@@ -197,7 +197,7 @@ EOT
 
 ### Use default EKS scraper configuration
 
-You can use the data source `aws_prometheus_scraper_configuration` to use a
+You can use the data source `aws_prometheus_default_scraper_configuration` to use a
 service managed scrape configuration.
 
 ```terraform
@@ -211,7 +211,7 @@ resource "aws_prometheus_scraper" "example" {
     }
   }
 
-  scrape_configuration = data.aws_prometheus_scraper_configuration.example.configuration
+  scrape_configuration = data.aws_prometheus_default_scraper_configuration.example.configuration
 
   source {
     eks {
@@ -374,8 +374,8 @@ The `opensearch` configuration block supports the following arguments:
 
 The `role_configuration` configuration block supports the following arguments:
 
-* `source_role_arn` - (Required) ARN of the source role configuration. Must be an IAM role ARN.
-* `target_role_arn` - (Required) ARN of the target role configuration. Must be an IAM role ARN.
+* `source_role_arn` - (Optional) ARN of the source role configuration. Must be an IAM role ARN.
+* `target_role_arn` - (Optional) ARN of the target role configuration. Must be an IAM role ARN.
 
 ## Attribute Reference
 

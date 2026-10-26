@@ -39,7 +39,7 @@ This resource supports the following arguments:
 
 The `trace_configuration` block supports the following argument:
 
-* `vendor` - (Required) Implementation provider chosen for tracing App Runner services. Valid values: `AWSXRAY`.
+* `vendor` - (Optional) Implementation provider chosen for tracing App Runner services. Valid values: `AWSXRAY`.
 
 ## Attribute Reference
 
@@ -72,7 +72,7 @@ resource "aws_apprunner_observability_configuration" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the App Runner observability configuration.
+- `arn` (String) ARN of the App Runner observability configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner Observability Configuration using the `arn`. For example:
 

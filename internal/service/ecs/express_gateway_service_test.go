@@ -251,6 +251,68 @@ func TestAccECSExpressGatewayService_update(t *testing.T) {
 	})
 }
 
+func TestAccECSExpressGatewayService_cpuArchitecture(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_cpuArchitecture(rName, string(awstypes.ExpressCpuArchitectureArm64)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_architecture"), tfknownvalue.StringExact(awstypes.ExpressCpuArchitectureArm64)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: "service_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_steady_state",
+					"current_deployment",
+				},
+			},
+			{
+				Config: testAccExpressGatewayServiceConfig_cpuArchitecture(rName, string(awstypes.ExpressCpuArchitectureX8664)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_architecture"), tfknownvalue.StringExact(awstypes.ExpressCpuArchitectureX8664)),
+				},
+			},
+		},
+	})
+}
+
 func TestAccECSExpressGatewayService_waitForSteadyState(t *testing.T) {
 	acctest.Skip(t, "Times out when running with full suite")
 	ctx := acctest.Context(t)
@@ -834,6 +896,25 @@ resource "aws_ecs_express_gateway_service" "test" {
   ]
 }
 `, rName, waitForSteadyStateConfig))
+}
+
+func testAccExpressGatewayServiceConfig_cpuArchitecture(rName, cpuArchitecture string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
+resource "aws_ecs_express_gateway_service" "test" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+  cpu_architecture        = %[2]q
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
+}
+`, rName, cpuArchitecture))
 }
 
 func testAccExpressGatewayServiceConfig_tags1(rName, tagKey1, tagValue1 string) string {

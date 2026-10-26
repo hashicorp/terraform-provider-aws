@@ -46,7 +46,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique ID of the appstream User Stack association.
+* `id` - Unique ID of the AppStream User Stack association.
 
 ## Import
 

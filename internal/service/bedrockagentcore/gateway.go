@@ -48,7 +48,9 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_gateway", name="Gateway")
 // @Tags(identifierAttribute="gateway_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetGatewayOutput")
+// @Testing(importStateIdAttribute="gateway_id")
+// @Testing(preCheck="testAccPreCheckGateways")
 func newGatewayResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &gatewayResource{}
 
@@ -128,7 +130,7 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 			"workload_identity_details": framework.ResourceComputedListOfObjectsAttribute[workloadIdentityDetailsModel](ctx, listplanmodifier.UseStateForUnknown()),
 		},
 		Blocks: map[string]schema.Block{
-			"authorizer_configuration": authorizerConfigurationSchema(ctx),
+			"authorizer_configuration": authorizerConfigurationBlock(ctx),
 			"interceptor_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[gatewayInterceptorConfigurationModel](ctx),
 				Validators: []validator.List{

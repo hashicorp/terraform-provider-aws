@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -31,17 +31,15 @@ import (
 
 // @SDKResource("aws_medialive_input", name="Input")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputOutput")
+// @Testing(preIdentityVersion="v6.60.0")
 func resourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
 		ReadWithoutTimeout:   resourceInputRead,
 		UpdateWithoutTimeout: resourceInputUpdate,
 		DeleteWithoutTimeout: resourceInputDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -233,9 +231,8 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return conn.CreateInput(ctx, in)
 		},
 		func(err error) (bool, error) {
-			var bre *types.BadRequestException
-			if errors.As(err, &bre) {
-				return strings.Contains(bre.ErrorMessage(), "Please make sure the role exists and medialive.amazonaws.com is a trusted service"), err
+			if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Please make sure the role exists and medialive.amazonaws.com is a trusted service") {
+				return true, err
 			}
 			return false, err
 		},
@@ -330,9 +327,8 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				return conn.UpdateInput(ctx, in)
 			},
 			func(err error) (bool, error) {
-				var bre *types.BadRequestException
-				if errors.As(err, &bre) {
-					return strings.Contains(bre.ErrorMessage(), "The first input attached to a channel cannot be a dynamic input"), err
+				if errs.IsAErrorMessageContains[*types.BadRequestException](err, "The first input attached to a channel cannot be a dynamic input") {
+					return true, err
 				}
 				return false, err
 			},
@@ -364,8 +360,7 @@ func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	})
 
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return diags
 		}
 
@@ -454,8 +449,7 @@ func findInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	}
 	out, err := conn.DescribeInput(ctx, in)
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

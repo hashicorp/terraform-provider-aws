@@ -146,7 +146,7 @@ resource "aws_cloudtrail_event_data_store" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the CloudTrail event data store.
+- `arn` (String) ARN of the CloudTrail event data store.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import event data stores using their `arn`. For example:
 

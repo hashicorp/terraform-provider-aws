@@ -109,14 +109,14 @@ action "aws_transcribe_start_transcription_job" "batch_process" {
 
 This action supports the following arguments:
 
-* `transcription_job_name` - (Required) Unique name for the transcription job within your AWS account. Must be 1-200 characters and contain only alphanumeric characters, hyphens, periods, and underscores.
-* `media_file_uri` - (Required) S3 location of the media file to transcribe (e.g., `s3://bucket-name/file.mp3`). The file must be accessible to Amazon Transcribe.
-* `language_code` - (Optional) Language code for the language used in the input media file. Required if `identify_language` and `identify_multiple_languages` are both false. Valid values can be found in the [Amazon Transcribe supported languages documentation](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html).
 * `identify_language` - (Optional) Enable automatic language identification for single-language media files. Cannot be used with `identify_multiple_languages`. Default: `false`.
 * `identify_multiple_languages` - (Optional) Enable automatic language identification for multi-language media files. Cannot be used with `identify_language`. Default: `false`.
+* `language_code` - (Optional) Language code for the language used in the input media file. Required if `identify_language` and `identify_multiple_languages` are both false. Valid values can be found in the [Amazon Transcribe supported languages documentation](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html).
+* `media_file_uri` - (Required) S3 location of the media file to transcribe (e.g., `s3://bucket-name/file.mp3`). The file must be accessible to Amazon Transcribe.
 * `media_format` - (Optional) Format of the input media file. If not specified, Amazon Transcribe will attempt to determine the format automatically. Valid values: `mp3`, `mp4`, `wav`, `flac`, `ogg`, `amr`, `webm`, `m4a`.
 * `media_sample_rate_hertz` - (Optional) Sample rate of the input media file in Hertz. If not specified, Amazon Transcribe will attempt to determine the sample rate automatically. Valid range: 8000-48000.
 * `output_bucket_name` - (Optional) Name of the S3 bucket where you want your transcription output stored. If not specified, output is stored in a service-managed bucket.
 * `output_key` - (Optional) S3 object key for your transcription output. If not specified, a default key is generated.
 * `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `timeout` - (Optional) Maximum time in seconds to wait for the transcription job to start. Must be between 60 and 3600 seconds. Default: `300`.
+* `transcription_job_name` - (Required) Unique name for the transcription job within your AWS account. Must be 1-200 characters and contain only alphanumeric characters, hyphens, periods, and underscores.

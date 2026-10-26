@@ -86,7 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 A level block supports the following additional attributes:
 
-* `arn` -  The Amazon Resource Name (ARN) of the hierarchy level.
+* `arn` -  The ARN of the hierarchy level.
 * `id` -  The identifier of the hierarchy level.
 
 ## Import
