@@ -183,7 +183,7 @@ Exactly one of the following must be specified:
 
 ### `self_managed_lattice_resource` Block
 
-* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration, specified as a resource configuration ID or ARN.
+* `resource_configuration_identifier` - (Optional) Identifier of the VPC Lattice resource configuration, specified as a resource configuration ID or ARN.
 
 ### `private_endpoint_override` Block
 

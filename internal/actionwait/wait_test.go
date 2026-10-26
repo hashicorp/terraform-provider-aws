@@ -69,10 +69,9 @@ func TestWaitForStatus_SuccessImmediate(t *testing.T) {
 func TestWaitForStatus_SuccessAfterTransitions(t *testing.T) {
 	t.Parallel()
 	ctx := makeCtx(t)
-	var calls int32
+	var calls atomic.Int32
 	fr, err := WaitForStatus(ctx, func(context.Context) (FetchResult[string], error) {
-		c := atomic.AddInt32(&calls, 1)
-		switch c {
+		switch c := calls.Add(1); c {
 		case 1, 2:
 			return FetchResult[string]{Status: "IN_PROGRESS", Value: "step"}, nil
 		default:

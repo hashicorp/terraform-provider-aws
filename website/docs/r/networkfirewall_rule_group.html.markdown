@@ -379,7 +379,7 @@ The `port_sets` block supports the following arguments:
 
 ### Port Set
 
-The `port_set` configuration block suppports the following argument:
+The `port_set` configuration block supports the following argument:
 
 * `definition` - (Required) Set of port ranges.
 

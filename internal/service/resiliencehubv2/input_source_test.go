@@ -10,6 +10,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -371,14 +372,130 @@ func TestAccResilienceHubV2InputSource_eks(t *testing.T) {
 						"cfn_stack_arn":      knownvalue.Null(),
 						"design_file_s3_url": knownvalue.Null(),
 						"eks": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"cluster_arn": knownvalue.NotNull(),
-							"namespaces":  knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact("default")}),
+							"cluster_arn":    knownvalue.NotNull(),
+							"label_selector": knownvalue.ListSizeExact(0),
+							"namespaces":     knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact("default")}),
 						})}),
 						"resource_tag":      knownvalue.ListSizeExact(0),
 						"tf_state_file_url": knownvalue.Null(),
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_arn"), knownvalue.NotNull()),
 				},
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2InputSource_eksLabelSelector(t *testing.T) {
+	ctx := acctest.Context(t)
+	var is awstypes.InputSourceSummary
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehubv2_input_source.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInputSourceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/InputSource/eks_label_selector/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInputSourceExists(ctx, t, resourceName, &is),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input_source_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"cfn_stack_arn":      knownvalue.Null(),
+						"design_file_s3_url": knownvalue.Null(),
+						"eks": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"cluster_arn": knownvalue.NotNull(),
+							"label_selector": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"match_expressions": knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										names.AttrKey:    knownvalue.StringExact("app"),
+										"operator":       knownvalue.StringExact("EXISTS"),
+										names.AttrValues: knownvalue.Null(),
+									}),
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										names.AttrKey:    knownvalue.StringExact("deprecated"),
+										"operator":       knownvalue.StringExact("DOES_NOT_EXIST"),
+										names.AttrValues: knownvalue.Null(),
+									}),
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										names.AttrKey: knownvalue.StringExact("team"),
+										"operator":    knownvalue.StringExact("IN"),
+										names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+											knownvalue.StringExact("finance"),
+											knownvalue.StringExact("platform"),
+										}),
+									}),
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										names.AttrKey: knownvalue.StringExact("tier"),
+										"operator":    knownvalue.StringExact("NOT_IN"),
+										names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+											knownvalue.StringExact("frontend"),
+										}),
+									}),
+								}),
+								"match_labels": knownvalue.MapExact(map[string]knownvalue.Check{
+									"app": knownvalue.StringExact("payments"),
+								}),
+							})}),
+							"namespaces": knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact("default")}),
+						})}),
+						"resource_tag":      knownvalue.ListSizeExact(0),
+						"tf_state_file_url": knownvalue.Null(),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_arn"), knownvalue.NotNull()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/InputSource/eks_label_selector/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    testAccCheckInputSourceImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "input_source_id",
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubV2InputSource_eksLabelSelectorEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubV2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInputSourceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/InputSource/eks_label_selector_empty/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				// Schema validation fails during plan, so nothing is created.
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
 			},
 		},
 	})

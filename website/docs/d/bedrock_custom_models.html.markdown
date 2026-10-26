@@ -3,17 +3,17 @@ subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_custom_models"
 description: |-
-  Returns a list of Amazon Bedrock custom models.
+  Provides details about Amazon Bedrock custom models.
 ---
 
 # Data Source: aws_bedrock_custom_models
 
-Returns a list of Amazon Bedrock custom models.
+Provides details about Amazon Bedrock custom models.
 
 ## Example Usage
 
 ```terraform
-data "aws_bedrock_custom_models" "test" {}
+data "aws_bedrock_custom_models" "example" {}
 ```
 
 ## Argument Reference

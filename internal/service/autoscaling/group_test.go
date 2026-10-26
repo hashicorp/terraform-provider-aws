@@ -16,6 +16,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elasticloadbalancingv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -54,6 +56,56 @@ func testAccGroupImportStep(n string) resource.TestStep {
 			"wait_for_capacity_timeout",
 			"wait_for_elb_capacity",
 		},
+	}
+}
+
+func TestExpandCapacityReservationSpecification(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		testName string
+		input    map[string]any
+		want     *awstypes.CapacityReservationSpecification
+	}{
+		{
+			testName: "nil",
+			input:    nil,
+			want:     nil,
+		},
+		{
+			testName: "empty",
+			input:    map[string]any{},
+			want:     &awstypes.CapacityReservationSpecification{},
+		},
+		{
+			testName: "empty capacity_reservation_target with nil element",
+			input: map[string]any{
+				"capacity_reservation_target": []any{nil},
+			},
+			want: &awstypes.CapacityReservationSpecification{},
+		},
+		{
+			testName: "empty capacity_reservation_target with preference",
+			input: map[string]any{
+				"capacity_reservation_preference": "default",
+				"capacity_reservation_target":     []any{nil},
+			},
+			want: &awstypes.CapacityReservationSpecification{
+				CapacityReservationPreference: awstypes.CapacityReservationPreferenceDefault,
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfautoscaling.ExpandCapacityReservationSpecification(testCase.input)
+
+			if diff := cmp.Diff(testCase.want, got, cmpopts.IgnoreUnexported(awstypes.CapacityReservationSpecification{})); diff != "" {
+				t.Errorf("unexpected diff (-want +got): %s", diff)
+			}
+		})
 	}
 }
 

@@ -75,6 +75,7 @@ const (
 	DevOpsGuruEndpointID                   = "devops-guru"
 	DirectConnectEndpointID                = "directconnect"
 	DLMEndpointID                          = "dlm"
+	DSEndpointID                           = "ds"
 	DSQLEndpointID                         = "dsql"
 	ECREndpointID                          = "api.ecr"
 	ECSEndpointID                          = "ecs"

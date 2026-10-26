@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_waf_ipset
 
-`aws_waf_ipset` Retrieves a WAF IP Set Resource Id.
+`aws_waf_ipset` Retrieves a WAF IP Set Resource ID.
 
 ## Example Usage
 

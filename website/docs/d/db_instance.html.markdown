@@ -46,7 +46,7 @@ This data source exports the following attributes in addition to the arguments a
 * `db_name` - Name of the initial database of this instance that was provided at create time, if one was specified when the DB instance was created. This same name is returned for the life of the DB instance.
 * `db_parameter_groups` - Provides the list of DB parameter groups applied to this DB instance.
 * `db_subnet_group` - Name of the subnet group associated with the DB instance.
-* `enabled_cloudwatch_logs_exports` - List of log types to export to cloudwatch.
+* `enabled_cloudwatch_logs_exports` - List of log types to export to CloudWatch.
 * `endpoint` - Connection endpoint in `address:port` format.
 * `engine` - Provides the name of the database engine to be used for this DB instance.
 * `engine_version` - Database engine version.

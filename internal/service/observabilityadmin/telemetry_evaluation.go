@@ -12,15 +12,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -52,10 +57,25 @@ type telemetryEvaluationResource struct {
 func (r *telemetryEvaluationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"all_regions": schema.BoolAttribute{
+				Optional: true,
+				Validators: []validator.Bool{
+					boolvalidator.ConflictsWith(path.MatchRoot("regions")),
+				},
+			},
 			"failure_reason": schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
+			"regions": schema.SetAttribute{
+				ElementType: types.StringType,
+				CustomType:  fwtypes.SetOfStringType,
+				Optional:    true,
+				Validators: []validator.Set{
+					setvalidator.ConflictsWith(path.MatchRoot("all_regions")),
+					setvalidator.ValueStringsAre(fwvalidators.AWSRegion()),
+				},
+			},
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
@@ -79,6 +99,11 @@ func (r *telemetryEvaluationResource) Create(ctx context.Context, req resource.C
 	conn := r.Meta().ObservabilityAdminClient(ctx)
 
 	var input observabilityadmin.StartTelemetryEvaluationInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, data, &input))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	const (
 		timeout = 1 * time.Minute
 	)
@@ -247,8 +272,10 @@ func waitTelemetryEvaluationStopped(ctx context.Context, conn *observabilityadmi
 
 type telemetryEvaluationResourceModel struct {
 	framework.WithRegionModel
-	FailureReason types.String   `tfsdk:"failure_reason"`
-	ID            types.String   `tfsdk:"id"`
-	Status        types.String   `tfsdk:"status"`
-	Timeouts      timeouts.Value `tfsdk:"timeouts"`
+	AllRegions    types.Bool          `tfsdk:"all_regions"`
+	FailureReason types.String        `tfsdk:"failure_reason"`
+	ID            types.String        `tfsdk:"id"`
+	Regions       fwtypes.SetOfString `tfsdk:"regions"`
+	Status        types.String        `tfsdk:"status"`
+	Timeouts      timeouts.Value      `tfsdk:"timeouts"`
 }

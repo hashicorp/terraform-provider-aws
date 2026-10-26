@@ -349,7 +349,7 @@ docs-markdown-lint: ## [CI] Documentation Checks / markdown-lint
 
 docs-misspell: ## [CI] Documentation Checks / misspell
 	@echo "make: Documentation Checks / misspell..."
-	@misspell -error -source text docs/
+	@misspell -error -source text docs/*.md docs/*/*.md
 
 examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	@echo "make: Examples Checks / tflint..."
@@ -358,7 +358,20 @@ examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
 		--disable-rule=terraform_typed_variables
 
+fix: prereq-go ## Apply go fix (all packages, or scoped to a service with PKG/K)
+	@echo "make: Applying go fix..."
+	@$(GO_VER) fix $(TEST)
+
+fix-check: prereq-go ## [CI] Go Fix Check / go fix (all packages, or scoped to a service with PKG/K)
+	@echo "make: Checking go fix..."
+	@$(GO_VER) fix -diff $(TEST)
+
 fix-constants: semgrep-fix-constants fmt ## Use Semgrep to fix constants
+
+fix-core: prereq-go ## Apply go fix in core directories (non-internal/service)
+	@echo "make: Applying go fix in core directories..."
+	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/'); \
+	$(GO_VER) fix $$core_pkgs
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
@@ -435,9 +448,29 @@ go-build: ## [CI] Provider Checks / go-build
 	echo "make: Provider Checks / go-build ($$os_arch)..." ; \
 	go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
 
-go-misspell: ## [CI] Provider Checks / misspell
-	@echo "make: Provider Checks / misspell..."
-	@misspell -error -source auto -i "littel,ceasar,ect" internal/
+go-fix-check-shard: prereq-go ## [CI] Go Fix Check / go fix for a specific shard (SHARD=0 TOTAL_SHARDS=4)
+	@if [ -z "$(SHARD)" ] || [ -z "$(TOTAL_SHARDS)" ]; then \
+		echo "Error: SHARD and TOTAL_SHARDS must be set"; \
+		echo "Example: make go-fix-check-shard SHARD=0 TOTAL_SHARDS=4"; \
+		exit 1; \
+	fi
+	@echo "make: Checking go fix for shard $(SHARD) of $(TOTAL_SHARDS)..."
+	@packages=$$($(GO_VER) list ./...) || { echo "make: go list failed"; exit 1; }; \
+	packages=$$(echo "$$packages" | sort); \
+	count=0; \
+	shard_packages=""; \
+	for pkg in $$packages; do \
+		if [ $$((count % $(TOTAL_SHARDS))) -eq $(SHARD) ]; then \
+			shard_packages="$$shard_packages $$pkg"; \
+		fi; \
+		count=$$((count + 1)); \
+	done; \
+	if [ -z "$$shard_packages" ]; then \
+		echo "No packages assigned to shard $(SHARD)"; \
+		exit 0; \
+	fi; \
+	echo "Checking $$(echo $$shard_packages | wc -w | xargs) packages..."; \
+	$(GO_VER) fix -diff $$shard_packages
 
 golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 golangci-lint4 golangci-lint5 ## [CI] All golangci-lint Checks
 
@@ -488,20 +521,13 @@ makefile-lint: prereq-go ## [CI] Makefile Linting / alignment check
 	@echo "make: Makefile Linting / alignment check..."
 	@cd tools/makelign && $(GO_VER) run . -strict ../..
 
-misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
+misspell: changelog-misspell docs-misspell website-misspell ## [CI] Run all CI misspell checks
 
-modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
-	@echo "make: Checking for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -test $(TEST)
+modern-check: fix-check ## Legacy alias to fix-check
 
-modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
-	@echo "make: Fixing checks for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $(TEST)
+modern-fix: fix ## Legacy alias to fix
 
-modern-fix-core: prereq-go ## Fix checks for modern Go code in core directories
-	@echo "make: Fixing checks for modern Go code in core directories..."
-	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/'); \
-	$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $$core_pkgs
+modern-fix-core: fix-core ## Legacy alias to fix-core
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
@@ -555,13 +581,13 @@ quick-fix-core-heading: ## [internal] Just a heading for quick-fix-core
 	@echo "make: Quick fixes for core (non-service) directories..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core modern-fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
+quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
 
 quick-fix-heading: ## [internal] Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports modern-fix semgrep-fix terraform-fmt website-terrafmt-fix ## Some quick fixes
+quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports fix semgrep-fix terraform-fmt website-terrafmt-fix ## Some quick fixes
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
@@ -903,7 +929,7 @@ skaff-check-compile: ## [CI] Skaff Checks / Compile skaff
 	@cd skaff ; \
 	go build
 
-smoke: sane ## Smoke tests (alias of sane)
+smoke: smoke-core-services smoke-identity smoke-logging ## Run smoke tests
 
 smoke-core-services: prereq-go ## Run core-service smoke tests
 	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
@@ -990,11 +1016,10 @@ test: prereq-go ## Run unit tests (auto-detects environment and scope)
 	fi
 
 test-single-service: ## [internal] test single service
-	@# macOS: use temp cache to avoid CrowdStrike scanning
+	@# macOS: use a temporary work directory to avoid CrowdStrike scanning.
 	@if [ "$$(uname)" = "Darwin" ]; then \
-		build_dir="/tmp/terraform-$(or $(PKG),$(K))-$$$$"; \
-		mkdir -p "$$build_dir/cache"; \
-		export GOCACHE="$$build_dir/cache"; \
+		build_dir="$${TMPDIR:-/tmp}/terraform-$(or $(PKG),$(K))-$$$$"; \
+		mkdir -p "$$build_dir"; \
 		export GOTMPDIR="$$build_dir"; \
 	fi; \
 	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 8); \
@@ -1011,12 +1036,11 @@ test-single-service: ## [internal] test single service
 	if [ "$$(uname)" = "Darwin" ] && [ -n "$$build_dir" ]; then rm -rf "$$build_dir"; fi
 
 test-full: ## [internal] test full codebase
-	@# macOS: use temp cache to avoid CrowdStrike scanning
+	@# macOS: use a temporary work directory to avoid CrowdStrike scanning.
 	@if [ "$$(uname)" = "Darwin" ]; then \
-		build_dir="/tmp/terraform-aws-build-$$$$"; \
-		mkdir -p "$$build_dir/cache" "$$build_dir/tmp"; \
-		export GOCACHE="$$build_dir/cache"; \
-		export GOTMPDIR="$$build_dir/tmp"; \
+		build_dir="$${TMPDIR:-/tmp}/terraform-aws-build-$$$$"; \
+		mkdir -p "$$build_dir"; \
+		export GOTMPDIR="$$build_dir"; \
 	fi; \
 	cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
 	test_p=$${TEST_P:-$$cores}; \
@@ -1140,14 +1164,14 @@ tflint-init: ## Initialize tflint
 tools: prereq-go ## Install tools
 	@echo "make: Installing tools..."
 	cd .ci/providerlint && $(GO_VER) install .
-	cd .ci/tools && $(GO_VER) install github.com/YakDriver/swissshepherd
-	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
-	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/copyplop
+	cd .ci/tools && $(GO_VER) install github.com/YakDriver/swissshepherd
+	cd .ci/tools && $(GO_VER) install github.com/golangci/misspell/cmd/misspell
+	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/tools && $(GO_VER) install github.com/katbyte/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
-	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
 	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
@@ -1238,7 +1262,7 @@ website-markdown-lint: ## [CI] Website Checks / markdown-lint
 
 website-misspell: ## [CI] Website Checks / misspell
 	@echo "make: Website Checks / misspell..."
-	@misspell -error -source text website/
+	@misspell -error -source text website/docs/*.html.markdown website/docs/*/*.html.markdown
 
 website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
@@ -1331,7 +1355,10 @@ yamllint: ## [CI] YAML Linting / yamllint
 	docs-markdown-lint \
 	docs-misspell \
 	examples-tflint \
+	fix \
+	fix-check \
 	fix-constants \
+	fix-core \
 	fix-imports \
 	fix-imports-core \
 	fmt \
@@ -1344,7 +1371,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	generate-changelog \
 	gh-workflow-lint \
 	go-build \
-	go-misspell \
+	go-fix-check-shard \
 	golangci-lint \
 	golangci-lint1 \
 	golangci-lint2 \
@@ -1391,7 +1418,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	smoke-core-services \
 	smoke-identity \
 	smoke-logging \
-	$(SMOKE_LOGGING_TARGETS) \
 	sweep \
 	sweeper \
 	sweeper-check \

@@ -8,23 +8,6 @@ resource "aws_bedrockagentcore_resource_policy" "test" {
   policy       = data.aws_iam_policy_document.resource_policy[count.index].json
 }
 
-resource "aws_bedrockagentcore_agent_runtime" "test" {
-  count = var.resource_count
-
-  agent_runtime_name = "${var.rName}_${count.index}"
-  role_arn           = aws_iam_role.test.arn
-
-  agent_runtime_artifact {
-    container_configuration {
-      container_uri = var.AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI
-    }
-  }
-
-  network_configuration {
-    network_mode = "PUBLIC"
-  }
-}
-
 data "aws_iam_policy_document" "resource_policy" {
   count = var.resource_count
 
@@ -43,7 +26,33 @@ data "aws_iam_policy_document" "resource_policy" {
   }
 }
 
-data "aws_iam_policy_document" "test_assume" {
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  count = var.resource_count
+
+  agent_runtime_name = "${var.rName}_${count.index}"
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    code_configuration {
+      entry_point = ["main.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  depends_on = [aws_iam_role_policy.bucket]
+}
+
+data "aws_iam_policy_document" "assume_role" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -54,26 +63,33 @@ data "aws_iam_policy_document" "test_assume" {
   }
 }
 
-data "aws_iam_policy_document" "test" {
-  statement {
-    actions = [
-      "ecr:GetAuthorizationToken",
-      "ecr:BatchGetImage",
-      "ecr:GetDownloadUrlForLayer"
-    ]
-    effect    = "Allow"
-    resources = ["*"]
-  }
-}
-
 resource "aws_iam_role" "test" {
   name               = var.rName
-  assume_role_policy = data.aws_iam_policy_document.test_assume.json
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
-resource "aws_iam_role_policy" "test" {
-  role   = aws_iam_role.test.id
-  policy = data.aws_iam_policy_document.test.json
+resource "aws_iam_role_policy" "bucket" {
+  name = var.rName
+  role = aws_iam_role.test.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+      Resource = "${aws_s3_bucket.test.arn}/*"
+    }]
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = replace(var.rName, "_", "-")
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "agent-runtime-codezip.zip"
+  source = "${path.module}/test-fixtures/agent-runtime-codezip.zip"
 }
 
 variable "rName" {
@@ -86,9 +102,4 @@ variable "resource_count" {
   description = "Number of resources to create"
   type        = number
   nullable    = false
-}
-
-variable "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI" {
-  type     = string
-  nullable = false
 }

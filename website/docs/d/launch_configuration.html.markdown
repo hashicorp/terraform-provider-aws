@@ -40,7 +40,7 @@ This data source exports the following attributes in addition to the arguments a
     * `http_endpoint` - State of the metadata service: `enabled`, `disabled`.
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
-* `security_groups` - List of associated Security Group IDS.
+* `security_groups` - List of associated Security Group IDs.
 * `associate_public_ip_address` - Whether a Public IP address is associated with the instance.
 * `user_data` - User Data of the instance.
 * `enable_monitoring` - Whether Detailed Monitoring is Enabled.

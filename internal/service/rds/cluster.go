@@ -108,6 +108,7 @@ func resourceCluster() *schema.Resource {
 				},
 				names.AttrAvailabilityZones: {
 					Type:     schema.TypeSet,
+					MaxItems: 3,
 					Optional: true,
 					ForceNew: true,
 					Computed: true,
@@ -454,6 +455,13 @@ func resourceCluster() *schema.Resource {
 						return strings.ToLower(val.(string))
 					},
 					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+				},
+				names.AttrPubliclyAccessible: {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"s3_import"},
 				},
 				"reader_endpoint": {
 					Type:     schema.TypeString,
@@ -881,6 +889,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.Port = aws.Int32(int32(v.(int)))
 		}
 
+		if v := d.GetRawConfig().GetAttr(names.AttrPubliclyAccessible); v.IsKnown() && !v.IsNull() {
+			input.PubliclyAccessible = aws.Bool(v.True())
+		}
+
 		if v, ok := d.GetOk("preferred_backup_window"); ok {
 			modifyDbClusterInput.PreferredBackupWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
@@ -1148,6 +1160,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.Port = aws.Int32(int32(v.(int)))
 		}
 
+		if v := d.GetRawConfig().GetAttr(names.AttrPubliclyAccessible); v.IsKnown() && !v.IsNull() {
+			input.PubliclyAccessible = aws.Bool(v.True())
+		}
+
 		if v, ok := d.GetOk("preferred_backup_window"); ok {
 			modifyDbClusterInput.PreferredBackupWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
@@ -1386,6 +1402,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
+		}
+
+		if v := d.GetRawConfig().GetAttr(names.AttrPubliclyAccessible); v.IsKnown() && !v.IsNull() {
+			input.PubliclyAccessible = aws.Bool(v.True())
 		}
 
 		if v, ok := d.GetOk("preferred_backup_window"); ok {
@@ -2442,6 +2462,7 @@ func resourceClusterFlatten(ctx context.Context, conn *rds.Client, dbc *types.DB
 	d.Set("performance_insights_retention_period", dbc.PerformanceInsightsRetentionPeriod)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
+	d.Set(names.AttrPubliclyAccessible, dbc.PubliclyAccessible)
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)

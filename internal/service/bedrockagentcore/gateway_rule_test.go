@@ -30,7 +30,7 @@ func TestAccBedrockAgentCoreGatewayRule_basic(t *testing.T) {
 	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := rName
 	resourceName := "aws_bedrockagentcore_gateway_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -43,7 +43,7 @@ func TestAccBedrockAgentCoreGatewayRule_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_identifier"),
@@ -72,7 +72,7 @@ func TestAccBedrockAgentCoreGatewayRule_disappears(t *testing.T) {
 	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := rName
 	resourceName := "aws_bedrockagentcore_gateway_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -85,7 +85,7 @@ func TestAccBedrockAgentCoreGatewayRule_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceGatewayRule, resourceName),
@@ -106,7 +106,7 @@ func TestAccBedrockAgentCoreGatewayRule_update(t *testing.T) {
 	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := rName
 	resourceName := "aws_bedrockagentcore_gateway_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -119,7 +119,7 @@ func TestAccBedrockAgentCoreGatewayRule_update(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
@@ -128,7 +128,7 @@ func TestAccBedrockAgentCoreGatewayRule_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGatewayRuleConfig_conditions(rName, rNameRuntime, rImageUri, 200, "updated rule description"),
+				Config: testAccGatewayRuleConfig_conditions(rName, rNameRuntime, rBucketName, 200, "updated rule description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "200"),
@@ -149,7 +149,7 @@ func TestAccBedrockAgentCoreGatewayRule_update(t *testing.T) {
 				// the API never clears description and the attribute is
 				// Optional+Computed, the prior value is retained rather than
 				// producing "inconsistent result after apply".
-				Config: testAccGatewayRuleConfig_conditionsNoDescription(rName, rNameRuntime, rImageUri, 300),
+				Config: testAccGatewayRuleConfig_conditionsNoDescription(rName, rNameRuntime, rBucketName, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "300"),
@@ -167,7 +167,7 @@ func TestAccBedrockAgentCoreGatewayRule_update(t *testing.T) {
 				// explicit empty conditions list so the server actually clears it,
 				// rather than PATCH-retaining it and producing "inconsistent result
 				// after apply".
-				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
@@ -188,7 +188,7 @@ func TestAccBedrockAgentCoreGatewayRule_matchPrincipals(t *testing.T) {
 	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := rName
 	resourceName := "aws_bedrockagentcore_gateway_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -201,7 +201,7 @@ func TestAccBedrockAgentCoreGatewayRule_matchPrincipals(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayRuleConfig_matchPrincipals(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_matchPrincipals(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCondition+".#", "1"),
@@ -221,7 +221,7 @@ func TestAccBedrockAgentCoreGatewayRule_weightedRoute(t *testing.T) {
 	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := rName
 	resourceName := "aws_bedrockagentcore_gateway_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -234,7 +234,7 @@ func TestAccBedrockAgentCoreGatewayRule_weightedRoute(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayRuleConfig_weightedRoute(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_weightedRoute(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction+".#", "1"),
@@ -253,7 +253,7 @@ func TestAccBedrockAgentCoreGatewayRule_weightedRouteMetadataClear(t *testing.T)
 	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := rName
 	resourceName := "aws_bedrockagentcore_gateway_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -266,7 +266,7 @@ func TestAccBedrockAgentCoreGatewayRule_weightedRouteMetadataClear(t *testing.T)
 		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayRuleConfig_weightedRouteWithMeta(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_weightedRouteWithMeta(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, "action.0.route_to_target.0.weighted_route.0.traffic_split.1.description", "canary variant"),
@@ -279,7 +279,7 @@ func TestAccBedrockAgentCoreGatewayRule_weightedRouteMetadataClear(t *testing.T)
 				// nil as "leave unchanged"), the read-back would contradict the planned
 				// null and error "inconsistent result after apply". This step proves the
 				// set->unset clear behavior for the nested optional fields.
-				Config: testAccGatewayRuleConfig_weightedRoute(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_weightedRoute(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 				),
@@ -302,7 +302,7 @@ func TestAccBedrockAgentCoreGatewayRule_matchPaths(t *testing.T) {
 	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := rName
 	resourceName := "aws_bedrockagentcore_gateway_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -315,7 +315,7 @@ func TestAccBedrockAgentCoreGatewayRule_matchPaths(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayRuleConfig_matchPaths(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_matchPaths(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCondition+".#", "1"),
@@ -356,7 +356,7 @@ func TestAccBedrockAgentCoreGatewayRule_actionUpdate(t *testing.T) {
 	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := rName
 	resourceName := "aws_bedrockagentcore_gateway_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -369,7 +369,7 @@ func TestAccBedrockAgentCoreGatewayRule_actionUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_basic(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, "action.0.route_to_target.0.static_route.#", "1"),
@@ -377,7 +377,7 @@ func TestAccBedrockAgentCoreGatewayRule_actionUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGatewayRuleConfig_weightedRoute(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_weightedRoute(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, "action.0.route_to_target.0.static_route.#", "0"),
@@ -417,7 +417,7 @@ func TestAccBedrockAgentCoreGatewayRule_matchPrincipalsMulti(t *testing.T) {
 	var gatewayRule bedrockagentcorecontrol.GetGatewayRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameRuntime := randomWithPrefixAndUnderscore(t)
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+	rBucketName := rName
 	resourceName := "aws_bedrockagentcore_gateway_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -430,7 +430,7 @@ func TestAccBedrockAgentCoreGatewayRule_matchPrincipalsMulti(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayRuleConfig_matchPrincipalsMulti(rName, rNameRuntime, rImageUri),
+				Config: testAccGatewayRuleConfig_matchPrincipalsMulti(rName, rNameRuntime, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayRuleExists(ctx, t, resourceName, &gatewayRule),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.match_principals.0.any_of.#", "2"),
@@ -497,8 +497,8 @@ func testAccCheckGatewayRuleExists(ctx context.Context, t *testing.T, n string, 
 // testAccGatewayRuleConfig_base provisions an HTTP-protocol agent_runtime, gateway,
 // and a gateway_target pointed at that runtime so route_to_target actions can
 // reference it by name. `routeToTarget` requires HTTP-protocol targets, not MCP.
-func testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rImageUri, "HTTP"), fmt.Sprintf(`
+func testAccGatewayRuleConfig_base(rName, rNameRuntime, rBucketName string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_protocolConfiguration(rNameRuntime, rBucketName, "HTTP"), fmt.Sprintf(`
 data "aws_iam_policy_document" "gateway_assume" {
   statement {
     effect  = "Allow"
@@ -547,8 +547,8 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName))
 }
 
-func testAccGatewayRuleConfig_basic(rName, rNameRuntime, rImageUri string) string {
-	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), `
+func testAccGatewayRuleConfig_basic(rName, rNameRuntime, rBucketName string) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rBucketName), `
 resource "aws_bedrockagentcore_gateway_rule" "test" {
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
   priority           = 100
@@ -564,8 +564,8 @@ resource "aws_bedrockagentcore_gateway_rule" "test" {
 `)
 }
 
-func testAccGatewayRuleConfig_conditions(rName, rNameRuntime, rImageUri string, priority int, description string) string {
-	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), fmt.Sprintf(`
+func testAccGatewayRuleConfig_conditions(rName, rNameRuntime, rBucketName string, priority int, description string) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rBucketName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -599,8 +599,8 @@ resource "aws_bedrockagentcore_gateway_rule" "test" {
 // testAccGatewayRuleConfig_conditionsNoDescription omits the description argument
 // entirely to prove it is retained (not cleared, not an error) on update — the
 // UpdateGatewayRule API treats a nil description as "leave unchanged".
-func testAccGatewayRuleConfig_conditionsNoDescription(rName, rNameRuntime, rImageUri string, priority int) string {
-	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), fmt.Sprintf(`
+func testAccGatewayRuleConfig_conditionsNoDescription(rName, rNameRuntime, rBucketName string, priority int) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rBucketName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -630,8 +630,8 @@ resource "aws_bedrockagentcore_gateway_rule" "test" {
 `, priority))
 }
 
-func testAccGatewayRuleConfig_matchPrincipals(rName, rNameRuntime, rImageUri string) string {
-	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), `
+func testAccGatewayRuleConfig_matchPrincipals(rName, rNameRuntime, rBucketName string) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rBucketName), `
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -661,8 +661,8 @@ resource "aws_bedrockagentcore_gateway_rule" "test" {
 `)
 }
 
-func testAccGatewayRuleConfig_weightedRoute(rName, rNameRuntime, rImageUri string) string {
-	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), fmt.Sprintf(`
+func testAccGatewayRuleConfig_weightedRoute(rName, rNameRuntime, rBucketName string) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rBucketName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test2" {
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
   name               = "%[1]sb"
@@ -706,8 +706,8 @@ resource "aws_bedrockagentcore_gateway_rule" "test" {
 
 // testAccGatewayRuleConfig_matchPaths pairs a static_route action with a
 // match_paths condition — the only test that exercises the match_paths union arm.
-func testAccGatewayRuleConfig_matchPaths(rName, rNameRuntime, rImageUri string) string {
-	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), `
+func testAccGatewayRuleConfig_matchPaths(rName, rNameRuntime, rBucketName string) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rBucketName), `
 resource "aws_bedrockagentcore_gateway_rule" "test" {
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
   priority           = 100
@@ -732,8 +732,8 @@ resource "aws_bedrockagentcore_gateway_rule" "test" {
 // testAccGatewayRuleConfig_matchPrincipalsMulti has two distinct iam_principal
 // entries under match_principals.any_of so the custom slice Expand/Flatten
 // round-trip is exercised with >1 element.
-func testAccGatewayRuleConfig_matchPrincipalsMulti(rName, rNameRuntime, rImageUri string) string {
-	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), `
+func testAccGatewayRuleConfig_matchPrincipalsMulti(rName, rNameRuntime, rBucketName string) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rBucketName), `
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -769,8 +769,8 @@ resource "aws_bedrockagentcore_gateway_rule" "test" {
 `)
 }
 
-func testAccGatewayRuleConfig_weightedRouteWithMeta(rName, rNameRuntime, rImageUri string) string {
-	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rImageUri), fmt.Sprintf(`
+func testAccGatewayRuleConfig_weightedRouteWithMeta(rName, rNameRuntime, rBucketName string) string {
+	return acctest.ConfigCompose(testAccGatewayRuleConfig_base(rName, rNameRuntime, rBucketName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_gateway_target" "test2" {
   gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
   name               = "%[1]sb"

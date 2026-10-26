@@ -23,8 +23,11 @@ For more details, see the [Amazon Kinesis Analytics Documentation](https://docs.
 
 ```terraform
 resource "aws_kinesis_stream" "test_stream" {
-  name        = "terraform-kinesis-test"
-  shard_count = 1
+  name = "terraform-kinesis-test"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 
 resource "aws_kinesis_analytics_application" "test_application" {
@@ -76,8 +79,11 @@ resource "aws_cloudwatch_log_stream" "example" {
 }
 
 resource "aws_kinesis_stream" "example" {
-  name        = "example-kinesis-stream"
-  shard_count = 1
+  name = "example-kinesis-stream"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "example" {

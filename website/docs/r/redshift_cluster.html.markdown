@@ -119,7 +119,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `preferred_maintenance_window` - The backup window
 * `endpoint` - The connection endpoint
 * `encrypted` - Whether the data in the cluster is encrypted
-* `vpc_security_group_ids` - The VPC security group Ids associated with the cluster
+* `vpc_security_group_ids` - The VPC security group IDs associated with the cluster
 * `dns_name` - The DNS name of the cluster
 * `master_password_secret_arn` - ARN of the cluster admin credentials secret
 * `port` - The Port the cluster responds on

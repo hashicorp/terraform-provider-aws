@@ -109,7 +109,7 @@ The following arguments are optional:
 * `no_device` - (Optional) Set to `true` to remove a mapping from the parent image.
 * `virtual_name` - (Optional) Virtual device name. For example, `ephemeral0`. Instance store volumes are numbered starting from 0.
 
-#### ebs
+#### `ebs`
 
 The following arguments are optional:
 

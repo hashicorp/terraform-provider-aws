@@ -18,8 +18,11 @@ For more details, see the [Amazon Kinesis Stream Consumer Documentation](https:/
 
 ```terraform
 resource "aws_kinesis_stream" "example" {
-  name        = "example-stream"
-  shard_count = 1
+  name = "example-stream"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 
 resource "aws_kinesis_stream_consumer" "example" {

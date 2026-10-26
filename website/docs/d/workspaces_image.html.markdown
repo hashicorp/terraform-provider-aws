@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_workspaces_image
 
-Use this data source to get information about a Workspaces image.
+Use this data source to get information about a WorkSpaces image.
 
 ## Example Usage
 

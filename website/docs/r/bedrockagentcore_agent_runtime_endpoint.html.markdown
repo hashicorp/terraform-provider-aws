@@ -16,7 +16,7 @@ Manages an AWS Bedrock AgentCore Agent Runtime Endpoint. Agent Runtime Endpoints
 
 ```terraform
 resource "aws_bedrockagentcore_agent_runtime_endpoint" "example" {
-  name             = "example-endpoint"
+  name             = "example_endpoint"
   agent_runtime_id = aws_bedrockagentcore_agent_runtime.example.agent_runtime_id
   description      = "Endpoint for agent runtime communication"
 }
@@ -59,12 +59,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_bedrockagentcore_agent_runtime_endpoint.example
-  id = "AGENTRUNTIME1234567890,example-endpoint"
+  id = "AGENTRUNTIME1234567890,example_endpoint"
 }
 ```
 
 Using `terraform import`, import Bedrock AgentCore Agent Runtime Endpoint using the `agent_runtime_id` and `name` separated by a comma. For example:
 
 ```console
-% terraform import aws_bedrockagentcore_agent_runtime_endpoint.example AGENTRUNTIME1234567890,example-endpoint
+% terraform import aws_bedrockagentcore_agent_runtime_endpoint.example AGENTRUNTIME1234567890,example_endpoint
 ```

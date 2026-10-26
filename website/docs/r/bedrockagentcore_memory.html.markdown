@@ -55,7 +55,6 @@ resource "aws_bedrockagentcore_memory" "example" {
   event_expiry_duration     = 60
   encryption_key_arn        = aws_kms_key.example.arn
   memory_execution_role_arn = aws_iam_role.example.arn
-  client_token              = "unique-client-token"
 }
 ```
 
@@ -93,7 +92,7 @@ The `stream_delivery_resources` configuration block supports the following argum
 
 The `resource` configuration block supports the following arguments:
 
-* `kinesis` - (Optional) Kinesis Data Stream configuration. See [`kinesis` Block](#kinesis-block) below.
+* `kinesis` - (Required) Kinesis Data Stream configuration. See [`kinesis` Block](#kinesis-block) below.
 
 ### `kinesis` Block
 
@@ -150,7 +149,7 @@ resource "aws_bedrockagentcore_memory" "example" {
 
 #### Optional
 
-* `account_id` (String) Account ID where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import memories using `id`. For example:

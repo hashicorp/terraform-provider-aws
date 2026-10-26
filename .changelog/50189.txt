@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_apprunner_custom_domain_association: Add validation to prevent trailing dot on `domain_name`
+```
+
+```release-note:enhancement
+resource/aws_apprunner_custom_domain_association: Add validation to require `enable_www_subdomain` to be `false` for wildcard domain
+```

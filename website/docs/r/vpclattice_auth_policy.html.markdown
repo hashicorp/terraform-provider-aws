@@ -49,6 +49,7 @@ This resource supports the following arguments:
 * `policy` - (Required) Auth policy. The policy string in JSON must not contain newlines or blank lines.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_identifier` - (Required) ID or ARN of the service network or service for which the policy is created.
+* `state` - (Optional) State of the auth policy. The auth policy is only active when the auth type is set to `AWS_IAM`. If you provide a policy, then authentication and authorization decisions are made based on this policy and the client's IAM policy. If the Auth type is `NONE`, then, any auth policy you provide will remain inactive.
 
 ## Attribute Reference
 
@@ -56,7 +57,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - ID or ARN of the service network or service for which the policy is created.
 * `policy` - Auth policy. The policy string in JSON must not contain newlines or blank lines.
-* `state` - State of the auth policy. The auth policy is only active when the auth type is set to `AWS_IAM`. If you provide a policy, then authentication and authorization decisions are made based on this policy and the client's IAM policy. If the Auth type is `NONE`, then, any auth policy you provide will remain inactive.
 
 ## Timeouts
 

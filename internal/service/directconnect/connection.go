@@ -257,6 +257,10 @@ func resourceConnection() *schema.Resource {
 				},
 			}
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
@@ -354,7 +358,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Connection (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitConnectionConfirmed(ctx, conn, d.Id()); err != nil {
+		if err := waitConnectionConfirmed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Connection (%s) update: %s", d.Id(), err)
 		}
 	}

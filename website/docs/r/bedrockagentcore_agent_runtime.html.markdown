@@ -161,7 +161,7 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 
 The following arguments are required:
 
-* `agent_runtime_artifact` - (Required) Container artifact configuration. See [`agent_runtime_artifact`](#agent_runtime_artifact-block) below.
+* `agent_runtime_artifact` - (Required) Artifact configuration for the agent runtime, either a container image or code stored in Amazon S3. See [`agent_runtime_artifact`](#agent_runtime_artifact-block) below.
 * `agent_runtime_name` - (Required) Name of the agent runtime.
 * `network_configuration` - (Required) Network configuration for the agent runtime. See [`network_configuration`](#network_configuration-block) below.
 * `role_arn` - (Required) ARN of the IAM role that the agent runtime assumes to access AWS services.
@@ -173,6 +173,7 @@ The following arguments are optional:
 * `environment_variables` - (Optional) Map of environment variables to pass to the container.
 * `filesystem_configuration` - (Optional) List of filesystems to mount into the agent runtime. Up to 5 entries are supported. Each entry is one of session storage, Amazon S3 Files access point, or Amazon EFS access point. See [`filesystem_configuration`](#filesystem_configuration-block) below.
 * `lifecycle_configuration` - (Optional) Runtime session and resource lifecycle configuration for the agent runtime. See [`lifecycle_configuration`](#lifecycle_configuration-block) below.
+* `platform_version` - (Optional) Platform version that controls how the agent runtime starts your agent. Valid values: `V1`, `V2`. When omitted, a new agent runtime uses `V1` and an existing agent runtime keeps its current platform version. `V2` restores each instance from a prepared snapshot, which keeps cold starts consistent regardless of image size. On `V2`, creates and updates take minutes rather than seconds, `environment_variables` has a smaller total size limit, and availability is limited to a subset of Regions. See [Platform versions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html#runtime-platform-versions) for details.
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `request_header_configuration` - (Optional) Configuration for HTTP request headers that will be passed through to the runtime. See [`request_header_configuration`](#request_header_configuration-block) below.
@@ -191,7 +192,7 @@ The `code_configuration` block supports the following:
 
 * `code` - (Required) Configuration block for the source code location and configuration details. See [`code`](#code-block) below.
 * `entry_point` - (Required) Array specifying the entry point for code execution, indicating the function or method to invoke when the code runs. The array must contain 1 or 2 elements. Examples: `["main.py"]`, `["opentelemetry-instrument", "main.py"]`.
-* `runtime` - (Required) Runtime environment used to execute the code. Valid values: `PYTHON_3_10`, `PYTHON_3_11`, `PYTHON_3_12`, `PYTHON_3_13`.
+* `runtime` - (Required) Runtime environment used to execute the code. Valid values: `PYTHON_3_10`, `PYTHON_3_11`, `PYTHON_3_12`, `PYTHON_3_13`, `PYTHON_3_14`, `NODE_22`.
 
 ### `code` Block
 
@@ -217,7 +218,7 @@ The `container_configuration` block supports the following:
 
 The `authorizer_configuration` block supports the following:
 
-* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer-block) below.
+* `custom_jwt_authorizer` - (Required) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer-block) below.
 
 ### `custom_jwt_authorizer` Block
 
@@ -264,7 +265,7 @@ Exactly one of the following must be specified:
 
 ### `self_managed_lattice_resource` Block
 
-* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration.
+* `resource_configuration_identifier` - (Optional) Identifier of the VPC Lattice resource configuration.
 
 ### `custom_claim` Block
 

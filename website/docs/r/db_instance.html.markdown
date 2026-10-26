@@ -174,7 +174,7 @@ data "aws_rds_orderable_db_instance" "example" {
   preferred_instance_classes = ["db.t3.small", "db.r6i.large", "db.m6i.large"]
 }
 
-# The RDS Db2 instance resource requires licensing information. Create a new parameter group using the default paramater group as a source, and set license information.
+# The RDS Db2 instance resource requires licensing information. Create a new parameter group using the default parameter group as a source, and set license information.
 resource "aws_db_parameter_group" "example" {
   name   = "db-db2-params"
   family = data.aws_rds_engine_version.default.parameter_group_family
@@ -325,7 +325,7 @@ This resource supports the following arguments:
 * `custom_iam_instance_profile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `customer_owned_ip_enabled` - (Optional) Whether to enable a customer-owned IP address (CoIP) for an RDS on Outposts DB instance. See [CoIP for RDS on Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html#rds-on-outposts.coip) for more information.
 * `database_insights_mode` - (Optional) Mode of Database Insights that is enabled for the instance. Valid values: `standard`, `advanced` .
-* `db_name` - (Optional) Name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
+* `db_name` - (Optional) Name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle DB name, it needs to be in all upper case. Cannot be specified for a replica.
 * `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will be created in the VPC associated with the DB subnet group. If unspecified, will be created in the `default` Subnet Group. When working with read replicas created in the same region, defaults to the Subnet Group Name of the source DB. When working with read replicas created in a different region, defaults to the `default` Subnet Group. See [DBSubnetGroupName in API action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html) for additional read replica constraints.
 * `dedicated_log_volume` - (Optional, boolean) Use a dedicated log volume (DLV) for the DB instance. Requires Provisioned IOPS. See the [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PIOPS.StorageTypes.html#USER_PIOPS.dlv) for more details.
 * `delete_automated_backups` - (Optional) Whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
@@ -360,7 +360,7 @@ This resource supports the following arguments:
 * `option_group_name` - (Optional) Name of the DB option group to associate.
 * `parameter_group_name` - (Optional) Name of the DB parameter group to associate.
 * `password` - (Optional, required unless `manage_master_user_password` is set to true, `snapshot_identifier`, `replicate_source_db`, or `password_wo` is provided) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Cannot be set if `manage_master_user_password` is set to `true`.
-* `password_wo` - (Optional, Write-Only, required unless `manage_master_user_password` is set to true, `snapshot_identifier`, `replicate_source_db`, or `password` is provided) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Cannot be set if `manage_master_user_password` is set to `true`. If set, requires `password_wo_version` to be set.
+* `password_wo` - (Optional, Write-Only, required unless `manage_master_user_password` is set to true, `snapshot_identifier`, `replicate_source_db`, or `password` is provided) Password for the master DB user. Note that this may show up in logs. Cannot be set if `manage_master_user_password` is set to `true`. If set, requires `password_wo_version` to be set.
 * `password_wo_version` - (Optional) Required when `password_wo` is set. Changing this value triggers an update to `password_wo`.
 * `performance_insights_enabled` - (Optional) Whether Performance Insights are enabled. Defaults to false.
 * `performance_insights_kms_key_id` - (Optional) ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true. Once KMS key is set, it can never be changed.
@@ -403,7 +403,7 @@ The `s3_import` block supports the following arguments:
 * `bucket_name` - (Required) Bucket name where your backup is stored.
 * `bucket_prefix` - (Optional) Can be blank, but is the path to your backup.
 * `ingestion_role` - (Required) Role applied to load the data.
-* `source_engine` - (Required, as of Feb 2018 only 'mysql' supported) Source engine for the backup.
+* `source_engine` - (Required, as of Feb 2018 only `mysql` supported) Source engine for the backup.
 * `source_engine_version` - (Required, as of Feb 2018 only '5.6' supported) Version of the source engine used to make the backup.
 
 ### `blue_green_update` Block
@@ -438,7 +438,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - RDS DBI resource ID.
 * `instance_class` - RDS instance class.
 * `latest_restorable_time` - Latest time, in UTC [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), to which a database can be restored with point-in-time restore.
-* `listener_endpoint` - Listener connection endpoint for SQL Server Always On. See [Endpoint](#endpoint) below.
+* `listener_endpoint` - Listener connection endpoint for SQL Server Always On. See [`listener_endpoint` Block](#listener_endpoint-block) below.
 * `maintenance_window` - Instance maintenance window.
 * `master_user_secret` - Block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. See [`master_user_secret` Block](#master_user_secret-block) below.
 * `multi_az` - If the RDS instance is multi AZ enabled.
@@ -451,7 +451,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `upgrade_rollout_order` - Order in which the instances are upgraded (`first`, `second`, `last`). See [the AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Maintenance.AMVU.UpgradeRollout.html) for details.
 * `username` - Master username for the database.
 
-### Endpoint
+### `listener_endpoint` Block
 
 * `address` - DNS address of the DB instance.
 * `hosted_zone_id` - ID that Amazon Route 53 assigns when you create a hosted zone.

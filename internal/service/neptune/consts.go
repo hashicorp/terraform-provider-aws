@@ -22,6 +22,18 @@ func engine_Values() []string {
 }
 
 const (
+	networkTypeDual = "DUAL"
+	networkTypeIPv4 = "IPV4"
+)
+
+func networkType_Values() []string {
+	return []string{
+		networkTypeDual,
+		networkTypeIPv4,
+	}
+}
+
+const (
 	storageTypeStandard = "standard"
 	storageTypeIopt1    = "iopt1"
 )

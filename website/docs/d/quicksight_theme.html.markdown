@@ -24,11 +24,11 @@ data "aws_quicksight_theme" "example" {
 
 The following arguments are required:
 
-* `theme_id` - Identifier of the theme.
+* `theme_id` - (Required) Identifier of the theme.
 
 The following arguments are optional:
 
-* `aws_account_id` - AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
+* `aws_account_id` - (Optional) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
@@ -36,71 +36,71 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the theme.
-* `base_theme_id` - The ID of the theme that a custom theme will inherit from. All themes inherit from one of the starting themes defined by Amazon QuickSight.
-* `configuration` - The theme configuration, which contains the theme display properties. See [configuration](#configuration).
-* `created_time` - The time that the theme was created.
-* `id` - A comma-delimited string joining AWS account ID and theme ID.
-* `last_updated_time` - The time that the theme was last updated.
+* `base_theme_id` - ID of the theme that a custom theme will inherit from. All themes inherit from one of the starting themes defined by Amazon QuickSight.
+* `configuration` - Theme configuration, which contains the theme display properties. See [configuration](#configuration-block).
+* `created_time` - Time that the theme was created.
+* `id` - Comma-delimited string joining AWS account ID and theme ID.
+* `last_updated_time` - Time that the theme was last updated.
 * `name` - Display name of the theme.
-* `permissions` - A set of resource permissions on the theme. See [permissions](#permissions).
-* `status` - The theme creation status.
-* `tags` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-* `version_description` - A description of the current theme version being created/updated.
-* `version_number` - The version number of the theme version.
+* `permissions` - Set of resource permissions on the theme. See [permissions](#permissions-block).
+* `status` - Theme creation status.
+* `tags` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `version_description` - Description of the current theme version being created/updated.
+* `version_number` - Version number of the theme version.
 
-### permissions
+### `permissions` Block
 
 * `actions` - List of IAM actions to grant or revoke permissions on.
 * `principal` - ARN of the principal. See the [ResourcePermission documentation](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ResourcePermission.html) for the applicable ARN values.
 
-### configuration
+### `configuration` Block
 
-* `data_color_palette` - Color properties that apply to chart data colors. See [data_color_palette](#data_color_palette).
-* `sheet` - Display options related to sheets. See [sheet](#sheet).
-* `typography` - Determines the typography options. See [typography](#typography).
-* `ui_color_palette` - Color properties that apply to the UI and to charts, excluding the colors that apply to data. See [ui_color_palette](#ui_color_palette).
+* `data_color_palette` - Color properties that apply to chart data colors. See [data_color_palette](#data_color_palette-block).
+* `sheet` - Display options related to sheets. See [sheet](#sheet-block).
+* `typography` - Typography options. See [typography](#typography-block).
+* `ui_color_palette` - Color properties that apply to the UI and to charts, excluding the colors that apply to data. See [ui_color_palette](#ui_color_palette-block).
 
-### data_color_palette
+### `data_color_palette` Block
 
 * `colors` - List of hexadecimal codes for the colors. Minimum of 8 items and maximum of 20 items.
-* `empty_fill_color` - The hexadecimal code of a color that applies to charts where a lack of data is highlighted.
-* `min_max_gradient` - The minimum and maximum hexadecimal codes that describe a color gradient. List of exactly 2 items.
+* `empty_fill_color` - Hexadecimal code of a color that applies to charts where a lack of data is highlighted.
+* `min_max_gradient` - Minimum and maximum hexadecimal codes that describe a color gradient. List of exactly 2 items.
 
-### sheet
+### `sheet` Block
 
-* `tile` - The display options for tiles. See [tile](#tile).
-* `tile_layout` - The layout options for tiles. See [tile_layout](#tile_layout).
+* `tile` - Display options for tiles. See [tile](#tile-block).
+* `tile_layout` - Layout options for tiles. See [tile_layout](#tile_layout-block).
 
-### tile
+### `tile` Block
 
-* `border` - The border around a tile. See [border](#border).
+* `border` - Border around a tile. See [border](#border-block).
 
-### border
+### `border` Block
 
-* `show` - The option to enable display of borders for visuals.
+* `show` - Option to enable display of borders for visuals.
 
-### tile_layout
+### `tile_layout` Block
 
-* `gutter` - The gutter settings that apply between tiles. See [gutter](#gutter).
-* `margin` - The margin settings that apply around the outside edge of sheets. See [margin](#margin).
+* `gutter` - Gutter settings that apply between tiles. See [gutter](#gutter-block).
+* `margin` - Margin settings that apply around the outside edge of sheets. See [margin](#margin-block).
 
-### gutter
+### `gutter` Block
 
-* `show` - This Boolean value controls whether to display a gutter space between sheet tiles.
+* `show` - Whether to display a gutter space between sheet tiles.
 
-### margin
+### `margin` Block
 
-* `show` - This Boolean value controls whether to display sheet margins.
+* `show` - Whether to display sheet margins.
 
-### typography
+### `typography` Block
 
-* `font_families` - Determines the list of font families. Maximum number of 5 items. See [font_families](#font_families).
+* `font_families` - List of font families. Maximum number of 5 items. See [font_families](#font_families-block).
 
-### font_families
+### `font_families` Block
 
 * `font_family` - Font family name.
 
-### ui_color_palette
+### `ui_color_palette` Block
 
 * `accent` - Color (hexadecimal) that applies to selected states and buttons.
 * `accent_foreground` - Color (hexadecimal) that applies to any text or other elements that appear over the accent color.

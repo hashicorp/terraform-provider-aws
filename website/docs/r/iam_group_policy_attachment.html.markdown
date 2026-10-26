@@ -72,7 +72,7 @@ resource "aws_iam_group_policy_attachment" "example" {
 
 * `account_id` (String) AWS Account where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM group policy attachments using the group name and policy arn separated by `/`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM group policy attachments using the group name and policy ARN separated by `/`. For example:
 
 ```terraform
 import {
@@ -81,7 +81,7 @@ import {
 }
 ```
 
-Using `terraform import`, import IAM group policy attachments using the group name and policy arn separated by `/`. For example:
+Using `terraform import`, import IAM group policy attachments using the group name and policy ARN separated by `/`. For example:
 
 ```console
 % terraform import aws_iam_group_policy_attachment.test-attach test-group/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy

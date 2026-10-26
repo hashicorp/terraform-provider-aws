@@ -83,7 +83,7 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 ### `container_overrides` Block
 
 * `command` - (Optional) Command to send to the container that overrides the default command from the Docker image or the task definition.
-* `cpu` - (Optional) Number of cpu units reserved for the container, instead of the default value from the task definition.
+* `cpu` - (Optional) Number of CPU units reserved for the container, instead of the default value from the task definition.
 * `environment` - (Optional) Environment variables to send to the container. You can add new environment variables, which are added to the container at launch, or you can override the existing environment variables from the Docker image or the task definition. See below.
 * `memory` - (Optional) Hard limit (in MiB) of memory to present to the container, instead of the default value from the task definition. If your container attempts to exceed the memory specified here, the container is killed.
 * `memory_reservation` - (Optional) Soft limit (in MiB) of memory to reserve for the container, instead of the default value from the task definition.

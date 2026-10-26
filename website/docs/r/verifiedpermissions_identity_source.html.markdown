@@ -77,58 +77,60 @@ resource "aws_verifiedpermissions_identity_source" "example" {
 
 This resource supports the following arguments:
 
+* `configuration` - (Required) Details required to communicate with the identity provider (IdP) associated with this identity source. See [Configuration](#configuration-block) below.
+* `policy_store_id` - (Required) ID of the policy store in which you want to store this identity source.
+* `principal_entity_type` - (Optional) Namespace and data type of the principals generated for identities authenticated by the new identity source.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `policy_store_id` - (Required) Specifies the ID of the policy store in which you want to store this identity source.
-* `configuration`- (Required) Specifies the details required to communicate with the identity provider (IdP) associated with this identity source. See [Configuration](#configuration) below.
-* `principal_entity_type`- (Optional) Specifies the namespace and data type of the principals generated for identities authenticated by the new identity source.
 
-### Configuration
+### `configuration` Block
 
-* `cognito_user_pool_configuration` - (Required) Specifies the configuration details of an Amazon Cognito user pool that Verified Permissions can use as a source of authenticated identities as entities. See [Cognito User Pool Configuration](#cognito-user-pool-configuration) below.
-* `open_id_connect_configuration` - (Required) Specifies the configuration details of an OpenID Connect (OIDC) identity provider, or identity source, that Verified Permissions can use to generate entities from authenticated identities. See [Open ID Connect Configuration](#open-id-connect-configuration) below.
+Exactly one of `cognito_user_pool_configuration` or `open_id_connect_configuration` must be configured. If both are configured, `cognito_user_pool_configuration` takes precedence.
 
-#### Cognito User Pool Configuration
+* `cognito_user_pool_configuration` - (Optional) Configuration details of an Amazon Cognito user pool that Verified Permissions can use as a source of authenticated identities as entities. See [Cognito User Pool Configuration](#cognito_user_pool_configuration-block) below.
+* `open_id_connect_configuration` - (Optional) Configuration details of an OpenID Connect (OIDC) identity provider, or identity source, that Verified Permissions can use to generate entities from authenticated identities. See [Open ID Connect Configuration](#open_id_connect_configuration-block) below.
 
+#### `cognito_user_pool_configuration` Block
+
+* `client_ids` - (Optional) Unique application client IDs that are associated with the specified Amazon Cognito user pool.
+* `group_configuration` - (Optional) Type of entity that a policy store maps to groups from an Amazon Cognito user pool identity source. See [Group Configuration](#configurationcognito_user_pool_configurationgroup_configuration-block) below.
 * `user_pool_arn` - (Required) ARN of the Amazon Cognito user pool that contains the identities to be authorized.
-* `client_ids` - (Optional) The unique application client IDs that are associated with the specified Amazon Cognito user pool.
-* `group_configuration` - (Optional) The type of entity that a policy store maps to groups from an Amazon Cognito user pool identity source. See [Group Configuration](#group-configuration) below.
 
-#### Group Configuration
+#### `configuration.cognito_user_pool_configuration.group_configuration` Block
 
-* `group_entity_type` - (Required) The name of the schema entity type that's mapped to the user pool group. Defaults to `AWS::CognitoGroup`.
+* `group_entity_type` - (Required) Name of the schema entity type that's mapped to the user pool group. Defaults to `AWS::CognitoGroup`.
 
-#### Open ID Connect Configuration
+#### `open_id_connect_configuration` Block
 
-* `issuer` - (Required) The issuer URL of an OIDC identity provider. This URL must have an OIDC discovery endpoint at the path `.well-known/openid-configuration`.
-* `token_selection` - (Required) The token type that you want to process from your OIDC identity provider. Your policy store can process either identity (ID) or access tokens from a given OIDC identity source. See [Token Selection](#token-selection) below.
-* `entity_id_prefix` - (Optional) A descriptive string that you want to prefix to user entities from your OIDC identity provider.
-* `group_configuration` - (Optional) The type of entity that a policy store maps to groups from an Amazon Cognito user pool identity source. See [Group Configuration](#open-id-group-configuration) below.
+* `entity_id_prefix` - (Optional) Descriptive string that you want to prefix to user entities from your OIDC identity provider.
+* `group_configuration` - (Optional) Type of entity that a policy store maps to groups from an Amazon Cognito user pool identity source. See [Group Configuration](#configurationopen_id_connect_configurationgroup_configuration-block) below.
+* `issuer` - (Required) Issuer URL of an OIDC identity provider. This URL must have an OIDC discovery endpoint at the path `.well-known/openid-configuration`.
+* `token_selection` - (Required) Token type that you want to process from your OIDC identity provider. Your policy store can process either identity (ID) or access tokens from a given OIDC identity source. See [Token Selection](#token_selection-block) below.
 
-#### Token Selection
+#### `configuration.open_id_connect_configuration.group_configuration` Block
 
-* `access_token_only` - (Optional) The OIDC configuration for processing access tokens. See [Access Token Only](#access-token-only) below.
-* `identity_token_only` - (Optional) The OIDC configuration for processing identity (ID) tokens. See [Identity Token Only](#identity-token-only) below.
+* `group_claim` - (Required) Token claim that you want Verified Permissions to interpret as group membership. For example, `groups`.
+* `group_entity_type` - (Required) Policy store entity type that you want to map your users' group claim to. For example, `MyCorp::UserGroup`. A group entity type is an entity that can have a user entity type as a member.
 
-#### Access Token Only
+#### `token_selection` Block
 
-* `audiences` - (Optional) The access token aud claim values that you want to accept in your policy store.
-* `principal_id_claim` - (Optional) The claim that determines the principal in OIDC access tokens.
+* `access_token_only` - (Optional) OIDC configuration for processing access tokens. See [Access Token Only](#access_token_only-block) below.
+* `identity_token_only` - (Optional) OIDC configuration for processing identity (ID) tokens. See [Identity Token Only](#identity_token_only-block) below.
 
-#### Identity Token Only
+#### `access_token_only` Block
 
-* `client_ids` - (Optional) The ID token audience, or client ID, claim values that you want to accept in your policy store from an OIDC identity provider.
-* `principal_id_claim` - (Optional) The claim that determines the principal in OIDC identity tokens.
+* `audiences` - (Optional) Access token aud claim values that you want to accept in your policy store.
+* `principal_id_claim` - (Optional) Claim that determines the principal in OIDC access tokens.
 
-#### Open ID Group Configuration
+#### `identity_token_only` Block
 
-* `group_claim` - (Required) The token claim that you want Verified Permissions to interpret as group membership. For example, `groups`.
-* `group_entity_type` - (Required) The policy store entity type that you want to map your users' group claim to. For example, `MyCorp::UserGroup`. A group entity type is an entity that can have a user entity type as a member.
+* `client_ids` - (Optional) ID token audience, or client ID, claim values that you want to accept in your policy store from an OIDC identity provider.
+* `principal_id_claim` - (Optional) Claim that determines the principal in OIDC identity tokens.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `policy_id` - The Policy ID of the policy.
+* `id` - ID of the identity source.
 
 ## Import
 

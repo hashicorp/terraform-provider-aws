@@ -15,6 +15,8 @@ Provides details about AWS Bedrock Foundation Model Agreement Offers.
 ### Basic Usage
 
 ```terraform
+data "aws_bedrock_foundation_models" "example" {}
+
 data "aws_bedrock_foundation_model_agreement_offers" "example" {
   model_id = data.aws_bedrock_foundation_models.example.model_summaries[0].model_id
 }
@@ -24,7 +26,7 @@ data "aws_bedrock_foundation_model_agreement_offers" "example" {
 
 The following arguments are required:
 
-* `model_id` - (Required) Model ID of the foundation model
+* `model_id` - (Required) Model ID of the foundation model.
 
 The following arguments are optional:
 

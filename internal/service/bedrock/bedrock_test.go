@@ -37,6 +37,12 @@ func TestAccBedrock_serial(t *testing.T) {
 			"pluralDataSourceBasic":                 testAccCustomModelsDataSource_basic,
 			"Identity":                              testAccBedrockCustomModel_identitySerial,
 		},
+		"EnforcedGuardrailConfiguration": {
+			acctest.CtBasic:      testAccEnforcedGuardrailConfiguration_basic,
+			acctest.CtDisappears: testAccEnforcedGuardrailConfiguration_disappears,
+			"update":             testAccEnforcedGuardrailConfiguration_update,
+			"Identity":           testAccBedrockEnforcedGuardrailConfiguration_identitySerial,
+		},
 		"ModelInvocationLoggingConfiguration": {
 			acctest.CtBasic:      testAccModelInvocationLoggingConfiguration_basic,
 			acctest.CtDisappears: testAccModelInvocationLoggingConfiguration_disappears,

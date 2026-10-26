@@ -22,6 +22,7 @@ data "aws_ses_email_identity" "example" {
 
 This data source supports the following arguments:
 
+* `email` - (Required) Email identity.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
@@ -29,4 +30,3 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the email identity.
-* `email` - Email identity.

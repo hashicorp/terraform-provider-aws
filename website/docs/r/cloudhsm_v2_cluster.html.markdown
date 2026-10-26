@@ -75,9 +75,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `cluster_id` - The id of the CloudHSM cluster.
+* `cluster_id` - The ID of the CloudHSM cluster.
 * `cluster_state` - The state of the CloudHSM cluster.
-* `vpc_id` - The id of the VPC that the CloudHSM cluster resides in.
+* `vpc_id` - The ID of the VPC that the CloudHSM cluster resides in.
 * `security_group_id` - The ID of the security group associated with the CloudHSM cluster.
 * `cluster_certificates` - The list of cluster certificates.
     * `cluster_certificates.0.cluster_certificate` - The cluster certificate issued (signed) by the issuing certificate authority (CA) of the cluster's owner.

@@ -30,24 +30,24 @@ resource "aws_medialive_input_security_group" "example" {
 
 The following arguments are required:
 
-* `whitelist_rules` - (Required) Whitelist rules. See [Whitelist Rules](#whitelist-rules) for more details.
+* `whitelist_rules` - (Required) Whitelist rules. See [`whitelist_rules` Block](#whitelist_rules-block) for more details.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Whitelist Rules
+### `whitelist_rules` Block
 
-* `cidr` (Required) - The IPv4 CIDR that's whitelisted.
+* `cidr` - (Required) IPv4 CIDR that's whitelisted.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - InputSecurityGroup Id.
 * `arn` - ARN of the InputSecurityGroup.
-* `inputs` - The list of inputs currently using this InputSecurityGroup.
+* `id` - InputSecurityGroup ID.
+* `inputs` - List of inputs currently using this InputSecurityGroup.
 
 ## Timeouts
 

@@ -262,11 +262,7 @@ func failedResourcesError(apiObjects []types.FailedResource) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		err := failedResourceError(apiObject)
-
-		if err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), err))
-		}
+		errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), failedResourceError(apiObject)))
 	}
 
 	return errors.Join(errs...)

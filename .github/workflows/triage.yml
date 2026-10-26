@@ -60,7 +60,7 @@ jobs:
 
       - name: Apply Pull Request Size Labels
         if: github.event_name == 'pull_request_target'
-        uses: codelytv/pr-size-labeler@095a41fca88b8764fd9e008ad269bcdb82bb38b9 # v1.10.4
+        uses: codelytv/pr-size-labeler@19c335e7695ba922de938806dd129f0a9b992644 # v1.12.0
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_label: "size/XS"
@@ -83,7 +83,7 @@ jobs:
           enable-versioned-regex: 0
           include-title: 1
 
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: token
         if: github.event_name == 'issues'
         with:

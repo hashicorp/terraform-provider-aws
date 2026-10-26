@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -139,6 +140,76 @@ func (r *inputSourceResource) Schema(ctx context.Context, req resource.SchemaReq
 											setvalidator.ValueStringsAre(
 												stringvalidator.LengthBetween(1, 63),
 											),
+										},
+									},
+								},
+								Blocks: map[string]fwschema.Block{
+									"label_selector": fwschema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[eksLabelSelectorModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: fwschema.NestedBlockObject{
+											// An all-empty selector is dropped by the service, so the value read back
+											// would not match the configuration.
+											Validators: []validator.Object{
+												tfobjectvalidator.AtLeastOneOfChildren(
+													path.MatchRelative().AtName("match_expressions"),
+													path.MatchRelative().AtName("match_labels"),
+												),
+											},
+											Attributes: map[string]fwschema.Attribute{
+												"match_labels": fwschema.MapAttribute{
+													CustomType: fwtypes.MapOfStringType,
+													Optional:   true,
+													Validators: []validator.Map{
+														mapvalidator.SizeBetween(1, 20),
+														mapvalidator.KeysAre(
+															stringvalidator.LengthBetween(1, 317),
+														),
+														mapvalidator.ValueStringsAre(
+															stringvalidator.LengthAtMost(63),
+														),
+													},
+												},
+											},
+											Blocks: map[string]fwschema.Block{
+												"match_expressions": fwschema.SetNestedBlock{
+													CustomType: fwtypes.NewSetNestedObjectTypeOf[eksLabelSelectorRequirementModel](ctx),
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 20),
+													},
+													NestedObject: fwschema.NestedBlockObject{
+														Attributes: map[string]fwschema.Attribute{
+															names.AttrKey: fwschema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 317),
+																},
+															},
+															"operator": fwschema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.EksLabelSelectorOperator](),
+																Required:   true,
+															},
+															// Required and non-empty for IN and NOT_IN, empty for EXISTS and
+															// DOES_NOT_EXIST. The service enforces that pairing.
+															names.AttrValues: fwschema.SetAttribute{
+																CustomType: fwtypes.SetOfStringType,
+																Optional:   true,
+																Validators: []validator.Set{
+																	setvalidator.SizeAtMost(20),
+																	setvalidator.ValueStringsAre(
+																		stringvalidator.LengthAtMost(63),
+																	),
+																},
+															},
+														},
+													},
+												},
+											},
 										},
 									},
 								},
@@ -483,8 +554,20 @@ func (m resourceConfigurationModel) Expand(ctx context.Context) (any, diag.Diagn
 }
 
 type eksSourceModel struct {
-	ClusterARN fwtypes.ARN         `tfsdk:"cluster_arn"`
-	Namespaces fwtypes.SetOfString `tfsdk:"namespaces"`
+	ClusterARN    fwtypes.ARN                                            `tfsdk:"cluster_arn"`
+	LabelSelector fwtypes.ListNestedObjectValueOf[eksLabelSelectorModel] `tfsdk:"label_selector"`
+	Namespaces    fwtypes.SetOfString                                    `tfsdk:"namespaces"`
+}
+
+type eksLabelSelectorModel struct {
+	MatchExpressions fwtypes.SetNestedObjectValueOf[eksLabelSelectorRequirementModel] `tfsdk:"match_expressions"`
+	MatchLabels      fwtypes.MapOfString                                              `tfsdk:"match_labels"`
+}
+
+type eksLabelSelectorRequirementModel struct {
+	Key      types.String                                          `tfsdk:"key"`
+	Operator fwtypes.StringEnum[awstypes.EksLabelSelectorOperator] `tfsdk:"operator"`
+	Values   fwtypes.SetOfString                                   `tfsdk:"values"`
 }
 
 type resourceTagModel struct {

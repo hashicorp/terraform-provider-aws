@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_waf_rule
 
-`aws_waf_rule` Retrieves a WAF Rule Resource Id.
+`aws_waf_rule` Retrieves a WAF Rule Resource ID.
 
 ## Example Usage
 
