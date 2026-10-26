@@ -18,7 +18,7 @@ Manages an RDS DB Reserved Instance.
 
 ```terraform
 data "aws_rds_reserved_instance_offering" "test" {
-  db_instance_class   = "db.t2.micro"
+  db_instance_class   = "db.t4g.micro"
   duration            = 31536000
   multi_az            = false
   offering_type       = "All Upfront"
