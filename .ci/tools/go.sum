@@ -607,8 +607,8 @@ github.com/karamaru-alpha/copyloopvar v1.2.2 h1:yfNQvP9YaGQR7VaWLYcfZUlRP2eo2vhE
 github.com/karamaru-alpha/copyloopvar v1.2.2/go.mod h1:oY4rGZqZ879JkJMtX3RRkcXRkmUvH0x35ykgaKgsgJY=
 github.com/katbyte/actionlint v1.7.13 h1:YjDq4LG+akkpTpoEAjMkAcvATnmFGMsWn1eYPAJipSA=
 github.com/katbyte/actionlint v1.7.13/go.mod h1:O9CZKCRU7JfJRm5D4uZfL4NhODEh6kpyI+VdWJLmVVQ=
-github.com/katbyte/tctest v1.3.4 h1:34ZsmOst/qejLqcXIYl3ZCmew9MMMWy7ccbqDWq4BxA=
-github.com/katbyte/tctest v1.3.4/go.mod h1:PiIdY+AN8NTlvy8SC1bBfbLX7i8KFD1D7fQesNMKpBM=
+github.com/katbyte/tctest v1.3.5 h1:svDIoxGRDJHOH7rUKFXRAZjxUE/YYW7e6DIK5KR7GI8=
+github.com/katbyte/tctest v1.3.5/go.mod h1:F69WezIPfmXJROyCqKB74GFR6zl+vOPqhRkiGdfqMMA=
 github.com/katbyte/terrafmt v1.0.1 h1:TYLnNtVH8b5yeKt2neSe1bHh7O41kuvgF3pkOeDuzXs=
 github.com/katbyte/terrafmt v1.0.1/go.mod h1:jB60EZRs7vR2yv3eyPTBgO2jiqiujKedlfQE9CWhMxw=
 github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
