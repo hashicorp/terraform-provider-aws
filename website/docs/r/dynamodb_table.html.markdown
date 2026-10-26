@@ -271,6 +271,63 @@ resource "aws_dynamodb_table" "example" {
 }
 ```
 
+### Disassociating a Replica
+
+Removing a `replica` block deletes the replica and its data. To keep the replica's table and data as a single-Region table instead, list its Region in `disassociate_replica_regions`. Disassociation stops replication to and from the replica, and the table keeps its name, ARN, and settings in the same Region. It is supported for global tables that use multi-Region eventual consistency (MREC), and it cannot be undone: a replica cannot be added again in that Region while the single-Region table exists. The identity that runs Terraform needs the `dynamodb:DisassociateTableReplica` permission. See [Disassociating a global table replica](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables-disassociate.html).
+
+DynamoDB enables disassociation protection on every replica, so disassociation takes two applies. First, add the Region to `disassociate_replica_regions` and turn off disassociation protection on the replica, and apply:
+
+```terraform
+resource "aws_dynamodb_table" "example" {
+  name             = "example"
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  disassociate_replica_regions = ["us-east-2"]
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name                       = "us-east-2"
+    disassociation_protection_enabled = false
+  }
+
+  replica {
+    region_name = "us-west-1"
+  }
+}
+```
+
+Then remove the `replica` block and apply. The `us-east-2` table becomes a single-Region table that this resource no longer manages, and the main table and the `us-west-1` replica remain a global table. When the removed replica is the only one, the main table also becomes a single-Region table. To manage the disassociated table with Terraform, import it into an `aws_dynamodb_table` resource configured for its Region.
+
+```terraform
+resource "aws_dynamodb_table" "example" {
+  name             = "example"
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  disassociate_replica_regions = ["us-east-2"]
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = "us-west-1"
+  }
+}
+```
+
+Keep the Region in `disassociate_replica_regions` until the apply that removes the replica succeeds. If that apply fails, for example because the permission is missing, running it again disassociates the replica. Destroying the table also disassociates the replicas in the listed Regions before it deletes the main table. A change that replaces the table without changing its name is rejected at plan time while a listed Region has a replica, because DynamoDB cannot create a replica in a Region that still holds the disassociated table.
+
 ### Replica Tagging
 
 You can manage global table replicas' tags in various ways. This example shows using `replica.*.propagate_tags` for the first replica and the `aws_dynamodb_tag` resource for the other.
@@ -345,6 +402,7 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `billing_mode` - (Optional) Controls how you are charged for read and write throughput and how you manage capacity. The valid values are `PROVISIONED` and `PAY_PER_REQUEST`. Defaults to `PROVISIONED`.
 * `deletion_protection_enabled` - (Optional) Enables deletion protection for table. Defaults to `false`.
+* `disassociate_replica_regions` - (Optional) Set of Regions whose replicas are disassociated instead of deleted when their `replica` block is removed or the table is destroyed. Disassociation keeps the replica's table and data as a single-Region table. A replica in a listed Region must have `disassociation_protection_enabled` set to `false` before it is removed. Cannot include the main table's Region or a Region whose replica uses `consistency_mode` `STRONG`. A destroy reads this value from state, so after an import, a successful `terraform apply` is required before a destroy disassociates the replicas. See [Disassociating a Replica](#disassociating-a-replica).
 * `import_table` - (Optional) Import Amazon S3 data into a new table. See below.
 * `global_secondary_index` - (Optional) Describe a GSI for the table; subject to the normal limits on the number of GSIs, projected attributes, etc. See below.
 * `global_table_witness` - (Optional) Witness Region in a Multi-Region Strong Consistency deployment. **Note** This must be used alongside a single `replica` with `consistency_mode` set to `STRONG`. Other combinations will fail to provision. See below.

@@ -72,6 +72,29 @@ func resourceTable() *schema.Resource {
 			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				return validateTableAttributes(ctx, diff, meta)
 			},
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				// Removed replicas can only be identified once every planned Region is known.
+				if plan := diff.GetRawPlan(); !plan.IsKnown() || plan.IsNull() || !plan.GetAttr("replica").IsWhollyKnown() || !plan.GetAttr("disassociate_replica_regions").IsWhollyKnown() {
+					return nil
+				}
+				o, n := diff.GetChange("replica")
+				regions := flex.ExpandStringValueSet(diff.Get("disassociate_replica_regions").(*schema.Set))
+				return validateReplicaDisassociation(o.(*schema.Set).List(), n.(*schema.Set).List(), regions, meta.(*conns.AWSClient).Region(ctx))
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+				// Replacing the table disassociates the replicas in disassociate_replica_regions,
+				// and DynamoDB cannot then add a replica with the same table name in those
+				// Regions while the single-Region tables exist.
+				if diff.Id() == "" || diff.HasChange(names.AttrName) || !tableReplacementPlanned(diff) {
+					return nil
+				}
+				o, _ := diff.GetChange("disassociate_replica_regions")
+				oldReplicas, _ := diff.GetChange("replica")
+				if regions := replicaRegionsIn(oldReplicas.(*schema.Set).List(), flex.ExpandStringValueSet(o.(*schema.Set))); len(regions) > 0 {
+					return fmt.Errorf("this change replaces the table, which would disassociate the replicas in %v and then fail to recreate them. Remove those Regions from disassociate_replica_regions and apply before making this change", regions)
+				}
+				return nil
+			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
 					o, n := diff.GetChange("server_side_encryption")
@@ -178,6 +201,14 @@ func resourceTable() *schema.Resource {
 				"deletion_protection_enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,
+				},
+				"disassociate_replica_regions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidRegionName,
+					},
 				},
 				"global_secondary_index": {
 					Type:     schema.TypeSet,
@@ -1536,7 +1567,20 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
+	toDisassociate, replicas := partitionReplicaRemovals(d.Get("replica").(*schema.Set).List(), flex.ExpandStringValueSet(d.Get("disassociate_replica_regions").(*schema.Set)))
+	// DynamoDB rejects a disassociation while protection is enabled. Checking every replica
+	// first keeps the destroy from disassociating some replicas and then failing on another.
+	if err := checkReplicasUnprotected(toDisassociate); err != nil {
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTable, d.Id(), err)
+	}
+	for _, tfMap := range toDisassociate {
+		log.Printf("[DEBUG] Disassociating DynamoDB Table replica (%s): %s", tfMap["region_name"].(string), d.Id())
+		if err := disassociateReplica(ctx, conn, d.Id(), tfMap["region_name"].(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTable, d.Id(), err)
+		}
+	}
+
+	if len(replicas) > 0 {
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
 		if err := deleteReplicas(ctx, conn, d.Id(), replicas, expandGlobalTableWitness(d.Get("global_table_witness")), d.Timeout(schema.TimeoutDelete)); err != nil {
 			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
@@ -1568,6 +1612,54 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 }
 
 // custom diff
+
+// validateReplicaDisassociation rejects at plan time the configurations that DynamoDB refuses
+// to disassociate: a replica removed while its disassociation protection is still enabled, a
+// multi-Region strong consistency (MRSC) replica, and the table's own Region.
+func validateReplicaDisassociation(oldReplicas, newReplicas []any, regions []string, tableRegion string) error {
+	disassociate := make(map[string]bool, len(regions))
+	for _, region := range regions {
+		if region == tableRegion {
+			return fmt.Errorf("disassociate_replica_regions cannot include the table's Region (%s)", region)
+		}
+		disassociate[region] = true
+	}
+
+	remaining := make(map[string]bool, len(newReplicas))
+	for _, tfMapRaw := range newReplicas {
+		if tfMap, ok := tfMapRaw.(map[string]any); ok {
+			region, _ := tfMap["region_name"].(string)
+			remaining[region] = true
+		}
+	}
+
+	for _, tfMapRaw := range slices.Concat(oldReplicas, newReplicas) {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		region, _ := tfMap["region_name"].(string)
+		if disassociate[region] && tfMap["consistency_mode"] == string(awstypes.MultiRegionConsistencyStrong) {
+			return fmt.Errorf("replica (%s): disassociation is not supported when consistency_mode is %s", region, awstypes.MultiRegionConsistencyStrong)
+		}
+	}
+
+	for _, tfMapRaw := range oldReplicas {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		region, _ := tfMap["region_name"].(string)
+		protected, _ := tfMap["disassociation_protection_enabled"].(bool)
+		if disassociate[region] && protected && !remaining[region] {
+			return fmt.Errorf("replica (%s) is in disassociate_replica_regions and has disassociation protection enabled. Set disassociation_protection_enabled to false in its replica block and apply before removing the replica, or remove the Region from disassociate_replica_regions to delete the replica", region)
+		}
+	}
+
+	return nil
+}
 
 func isTableOptionDisabled(v any) bool {
 	options := v.([]any)
@@ -1989,6 +2081,168 @@ func updateReplicaDisassociationProtection(ctx context.Context, conn *dynamodb.C
 	return nil
 }
 
+// statusReplicaDisassociation reports these states. DynamoDB has no such statuses.
+const (
+	// The table is ACTIVE and no longer lists other replicas.
+	replicaStatusDisassociated = "DISASSOCIATED"
+	// The table is ACTIVE with other replicas and has not yet reported UPDATING.
+	replicaStatusDisassociationPending = "DISASSOCIATION_PENDING"
+)
+
+func hasOtherReplicas(table *awstypes.TableDescription, region string) bool {
+	for _, v := range table.Replicas {
+		if aws.ToString(v.RegionName) != region {
+			return true
+		}
+	}
+	return false
+}
+
+// tableReplacementPlanned reports whether the diff changes an argument that forces a new table.
+// It mirrors the ForceNew arguments and the ForceNewIfChange functions in resourceTable.
+func tableReplacementPlanned(diff *schema.ResourceDiff) bool {
+	if diff.HasChanges("hash_key", "local_secondary_index", "range_key", "restore_date_time", "restore_to_latest_time") {
+		return true
+	}
+
+	for _, key := range []string{"restore_backup_arn", "restore_source_name", "restore_source_table_arn"} {
+		if o, n := diff.GetChange(key); o.(string) != n.(string) && n.(string) != "" {
+			return true
+		}
+	}
+
+	return false
+}
+
+// checkReplicasUnprotected returns an error naming every replica in tfList whose disassociation
+// protection is enabled in state.
+func checkReplicasUnprotected(tfList []map[string]any) error {
+	var protected []string
+
+	for _, tfMap := range tfList {
+		if v, _ := tfMap["disassociation_protection_enabled"].(bool); v {
+			protected = append(protected, tfMap["region_name"].(string))
+		}
+	}
+
+	if len(protected) == 0 {
+		return nil
+	}
+
+	slices.Sort(protected)
+
+	return fmt.Errorf("the replicas in %v are in disassociate_replica_regions and have disassociation protection enabled. Set disassociation_protection_enabled to false in their replica blocks and apply before destroying the table", protected)
+}
+
+// replicaRegionsIn returns the Regions of replicas in tfList that are also in regions.
+func replicaRegionsIn(tfList []any, regions []string) []string {
+	var result []string
+
+	for _, tfMapRaw := range tfList {
+		if tfMap, ok := tfMapRaw.(map[string]any); ok {
+			if region, _ := tfMap["region_name"].(string); slices.Contains(regions, region) {
+				result = append(result, region)
+			}
+		}
+	}
+
+	slices.Sort(result)
+
+	return result
+}
+
+// partitionReplicaRemovals splits removed replicas into those to disassociate, whose Region
+// is in regions, and those to delete.
+func partitionReplicaRemovals(tfList []any, regions []string) ([]map[string]any, []any) {
+	var disassociate []map[string]any
+	var remove []any
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		if region, _ := tfMap["region_name"].(string); slices.Contains(regions, region) {
+			disassociate = append(disassociate, tfMap)
+		} else {
+			remove = append(remove, tfMap)
+		}
+	}
+
+	return disassociate, remove
+}
+
+// disassociateReplica removes the replica in region from its global table and keeps the
+// replica's table and data as a single-Region table. DynamoDB accepts the request only from
+// the replica's own Region and runs one replica lifecycle operation per global table at a
+// time, so callers disassociate replicas one by one. optFns select the Region of the table
+// that remains in the global table, which reports UPDATING until the replica has left.
+func disassociateReplica(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) error {
+	replicaOptFn := func(o *dynamodb.Options) { o.Region = region }
+
+	// A replica that no longer exists, or is already a single-Region table, has nothing to
+	// disassociate. Waiting for ACTIVE first lets an apply that stopped after DynamoDB
+	// accepted the request complete on retry instead of sending a second request.
+	table, err := waitTableActive(ctx, conn, tableName, timeout, replicaOptFn)
+	if retry.NotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("waiting for replica (%s) before disassociation: %w", region, err)
+	}
+
+	if hasOtherReplicas(table, region) {
+		input := dynamodb.UpdateTableInput{
+			TableName: aws.String(tableName),
+			ReplicaUpdates: []awstypes.ReplicationGroupUpdate{{
+				Disassociate: &awstypes.DisassociateReplicationGroupMemberAction{
+					DisassociationMode: awstypes.DisassociationModeWaitForReplication,
+					RegionName:         aws.String(region),
+				},
+			}},
+		}
+
+		err := tfresource.Retry(ctx, updateTableTimeout, func(ctx context.Context) *tfresource.RetryError {
+			_, err := conn.UpdateTable(ctx, &input, replicaOptFn)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
+					return tfresource.RetryableError(err)
+				}
+				if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
+					return tfresource.RetryableError(err)
+				}
+				// Another replica lifecycle operation, or an update to any table in the global
+				// table, is in progress.
+				if errs.IsA[*awstypes.ResourceInUseException](err) {
+					return tfresource.RetryableError(err)
+				}
+
+				return tfresource.NonRetryableError(err)
+			}
+			return nil
+		})
+
+		if err != nil {
+			return fmt.Errorf("disassociating replica (%s): %w", region, err)
+		}
+
+		if _, err := waitReplicaDisassociated(ctx, conn, tableName, region, timeout); err != nil {
+			return fmt.Errorf("waiting for replica (%s) disassociation: %w", region, err)
+		}
+	}
+
+	if _, err := waitReplicaDeleted(ctx, conn, tableName, region, timeout, optFns...); err != nil {
+		return fmt.Errorf("waiting for replica (%s) to leave global table: %w", region, err)
+	}
+
+	if _, err := waitTableActive(ctx, conn, tableName, timeout, optFns...); err != nil {
+		return fmt.Errorf("waiting for global table after replica (%s) disassociation: %w", region, err)
+	}
+
+	return nil
+}
+
 func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.ResourceData) error {
 	oRaw, nRaw := d.GetChange("replica")
 	o := oRaw.(*schema.Set)
@@ -2050,7 +2304,7 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 
 			// like "ForceNew" for the replica - KMS change
 			if ma[names.AttrKMSKeyARN].(string) != mr[names.AttrKMSKeyARN].(string) {
-				toRemove = append(toRemove, mr)
+				removeFirst = append(removeFirst, mr)
 				toAdd = append(toAdd, ma)
 				break
 			}
@@ -2058,7 +2312,7 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 			// like "ForceNew" for the replica - consistency_mode change
 			if v1, ok1 := ma["consistency_mode"].(string); ok1 {
 				if v2, ok2 := mr["consistency_mode"].(string); ok2 && v1 != v2 {
-					toRemove = append(toRemove, mr)
+					removeFirst = append(removeFirst, mr)
 					toAdd = append(toAdd, ma)
 					break
 				}
@@ -2093,6 +2347,15 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 	}
 
 	globalTableWitnessRegionName := expandGlobalTableWitness(d.Get("global_table_witness"))
+
+	// Disassociations run first so that a rejected or rolled-back disassociation stops the
+	// update before any replica is deleted.
+	toDisassociate, toRemove := partitionReplicaRemovals(toRemove, flex.ExpandStringValueSet(d.Get("disassociate_replica_regions").(*schema.Set)))
+	for _, tfMap := range toDisassociate {
+		if err := disassociateReplica(ctx, conn, d.Id(), tfMap["region_name"].(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("updating replicas, while disassociating: %w", err)
+		}
+	}
 
 	if len(removeFirst) > 0 { // mini ForceNew, recreates replica but doesn't recreate the table
 		if err := deleteReplicas(ctx, conn, d.Id(), removeFirst, globalTableWitnessRegionName, d.Timeout(schema.TimeoutUpdate)); err != nil {

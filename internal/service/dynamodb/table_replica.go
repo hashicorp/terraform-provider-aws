@@ -49,7 +49,21 @@ func resourceTableReplica() *schema.Resource {
 		DeleteWithoutTimeout: resourceTableReplicaDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				// DynamoDB does not store disassociate_on_destroy.
+				rd.Set("disassociate_on_destroy", false)
+
+				return []*schema.ResourceData{rd}, nil
+			},
+		},
+
+		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+			// Replacing the replica disassociates it, and DynamoDB cannot then create a replica
+			// of the same table in this Region while the single-Region table exists.
+			if o, _ := diff.GetChange("disassociate_on_destroy"); diff.Id() != "" && o.(bool) && diff.HasChanges("global_table_arn", names.AttrKMSKeyARN, "table_class_override") {
+				return errors.New("this change replaces the replica, and disassociate_on_destroy is true in state. Set disassociate_on_destroy to false and apply before making this change")
+			}
+			return nil
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -68,6 +82,11 @@ func resourceTableReplica() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Computed: true,
+				},
+				"disassociate_on_destroy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
 				"disassociation_protection_enabled": { // direct to replica
 					Type:     schema.TypeBool,
@@ -468,6 +487,15 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 	// now main table region.
 	optFn := func(o *dynamodb.Options) {
 		o.Region = mainRegion
+	}
+
+	if d.Get("disassociate_on_destroy").(bool) {
+		log.Printf("[DEBUG] Disassociating DynamoDB Table replica: %s", d.Id())
+		if err := disassociateReplica(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutDelete), optFn); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTableReplica, d.Id(), err)
+		}
+
+		return diags
 	}
 
 	input := &dynamodb.UpdateTableInput{

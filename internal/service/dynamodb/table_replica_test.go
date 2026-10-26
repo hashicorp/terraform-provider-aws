@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -476,6 +477,57 @@ func TestAccDynamoDBTableReplica_disassociationProtectionDefault(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTableReplica_disassociateOnDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_dynamodb_table_replica.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckTableReplicaDestroy(ctx, t),
+			testAccCheckDisassociatedTablesDestroy(ctx, t, rName, acctest.Region()),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableReplicaConfig_disassociateOnDestroy(rName, true, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "disassociate_on_destroy", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "disassociation_protection_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"disassociate_on_destroy"},
+			},
+			{
+				// Replacing the replica would disassociate it and then fail to recreate it,
+				// so the plan fails.
+				Config:      testAccTableReplicaConfig_disassociateOnDestroy(rName, true, `table_class_override = "STANDARD_INFREQUENT_ACCESS"`),
+				ExpectError: regexache.MustCompile(`this change replaces the replica, and disassociate_on_destroy is true in state`),
+			},
+			{
+				// Destroying the replica leaves its table as a single-Region table, and the
+				// main table becomes a single-Region table because it has no other replica.
+				Config: testAccTableReplicaConfig_disassociateOnDestroy(rName, false, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableDisassociated(ctx, t, rName, acctest.Region()),
+					testAccCheckTableDisassociated(ctx, t, rName, acctest.AlternateRegion()),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableReplicaDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
@@ -854,4 +906,43 @@ resource "aws_dynamodb_table_replica" "test" {
   %[2]s
 }
 `, rName, argument))
+}
+
+// testAccTableReplicaConfig_disassociateOnDestroy configures a replica with
+// disassociate_on_destroy set when withReplica is true, and only the main table otherwise.
+// extra is added to the replica's arguments.
+func testAccTableReplicaConfig_disassociateOnDestroy(rName string, withReplica bool, extra string) string {
+	replica := ""
+	if withReplica {
+		replica = fmt.Sprintf(`
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn                  = aws_dynamodb_table.test.arn
+  disassociate_on_destroy           = true
+  disassociation_protection_enabled = false
+  %[1]s
+}
+`, extra)
+	}
+
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  provider         = "awsalternate"
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
+  }
+}
+%[2]s`, rName, replica))
 }
