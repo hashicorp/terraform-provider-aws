@@ -2116,6 +2116,11 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client,
 	}
 
 	if _, err := conn.ModifyInstanceAttribute(ctx, input); err != nil {
+		// The instance was stopped above. If modifying the attribute fails,
+		// restart the instance so that a failed apply does not leave it stopped.
+		if startErr := startInstance(ctx, conn, id, true, instanceStartTimeout); startErr != nil {
+			return errors.Join(fmt.Errorf("modifying EC2 Instance (%s) %s attribute: %w", id, attrName, err), startErr)
+		}
 		return fmt.Errorf("modifying EC2 Instance (%s) %s attribute: %w", id, attrName, err)
 	}
 
