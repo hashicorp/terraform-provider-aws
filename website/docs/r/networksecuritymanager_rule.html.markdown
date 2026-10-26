@@ -3,12 +3,12 @@ subcategory: "Network Security Manager"
 layout: "aws"
 page_title: "AWS: aws_networksecuritymanager_rule"
 description: |-
-  Terraform resource for managing an AWS Network Security Manager Rule.
+  Manages an AWS Network Security Manager Rule.
 ---
 
 # Resource: aws_networksecuritymanager_rule
 
-Terraform resource for managing an AWS Network Security Manager Rule. A rule is the smallest unit of network security configuration: either a single AWS WAF web ACL setting (a `CONFIGURATION` rule) or an AWS WAF rule group to evaluate traffic with (an `INSPECTION` rule). Rules are grouped into templates and policies, which a deployment applies to the resources of a scope.
+Manages an AWS Network Security Manager Rule. A rule is the smallest unit of network security configuration: either a single AWS WAF web ACL setting (a `CONFIGURATION` rule) or an AWS WAF rule group to evaluate traffic with (an `INSPECTION` rule). Rules are grouped into templates and policies, which a deployment applies to the resources of a scope.
 
 The rule's `configuration` is a JSON document whose structure depends on the rule type. For a `CONFIGURATION` rule, the document has exactly one root key naming the web ACL setting it contains: `DefaultAction`, `VisibilityConfig`, `CaptchaConfig`, `ChallengeConfig`, `CustomResponseBodies`, `LoggingConfiguration`, `DataProtectionConfig`, `AssociationConfig`, `OnSourceDDoSProtectionConfig` or `TokenDomains`. For an `INSPECTION` rule, the root key is `PreProcessFirewallManagerRuleGroups` or `PostProcessFirewallManagerRuleGroups` and holds a list with exactly one rule group; rule group priority is derived from position and must not be supplied. The nested structures follow the [AWS WAF API](https://docs.aws.amazon.com/waf/latest/APIReference/API_WebACL.html). See [Writing rule configurations](https://docs.aws.amazon.com/network-security-manager/latest/devguide/concepts.html) in the AWS Network Security Manager Developer Guide.
 

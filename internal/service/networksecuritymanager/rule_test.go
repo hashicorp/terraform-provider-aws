@@ -26,13 +26,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccRule_basic(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -82,13 +82,13 @@ func testAccRule_basic(t *testing.T) {
 	})
 }
 
-func testAccRule_disappears(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -119,13 +119,13 @@ func testAccRule_disappears(t *testing.T) {
 
 // Every optional argument set on creation; the rule is created as a draft and
 // destroyed while it exists only as a draft.
-func testAccRule_full(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -168,7 +168,7 @@ func testAccRule_full(t *testing.T) {
 // A CONFIGURATION rule holds a single web ACL setting, named by the root key
 // of the document; the setting is changed in place. Numeric values are
 // returned by the API as strings and must not produce a diff.
-func testAccRule_configurationTypes(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_configurationTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -193,7 +193,7 @@ func testAccRule_configurationTypes(t *testing.T) {
 		}
 	}
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -247,13 +247,13 @@ func testAccRule_configurationTypes(t *testing.T) {
 
 // An INSPECTION rule holds exactly one Firewall Manager rule group, either
 // pre-processing or post-processing.
-func testAccRule_inspection(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_inspection(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -302,7 +302,7 @@ func testAccRule_inspection(t *testing.T) {
 // is_published drives the DRAFT/ACTIVE lifecycle: a draft is published in
 // place, and saving a published rule as a draft creates a draft on top of the
 // published version (has_published_version) that is published again later.
-func testAccRule_publish(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_publish(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -329,7 +329,7 @@ func testAccRule_publish(t *testing.T) {
 		}
 	}
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -376,13 +376,13 @@ func testAccRule_publish(t *testing.T) {
 	})
 }
 
-func testAccRule_description(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -444,13 +444,13 @@ func testAccRule_description(t *testing.T) {
 // A configuration that differs only in whitespace or key order is planned as
 // an in-place update (the string differs) but is not written back: the API is
 // not called and the version does not change, and the following plan is empty.
-func testAccRule_normalization(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_normalization(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -513,13 +513,13 @@ func testAccRule_normalization(t *testing.T) {
 
 // The rule is modified outside Terraform between two applies; the update token
 // is read back, so the second apply succeeds and reverts the change.
-func testAccRule_updateToken(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_updateToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -580,14 +580,14 @@ func testAccRule_updateToken(t *testing.T) {
 }
 
 // name and rule_type cannot be changed in place.
-func testAccRule_replace(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -637,13 +637,13 @@ func testAccRule_replace(t *testing.T) {
 }
 
 // Delete followed by an immediate re-creation under the same name.
-func testAccRule_recreate(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_recreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -680,11 +680,11 @@ func testAccRule_recreate(t *testing.T) {
 }
 
 // Argument validation at plan time, and configuration validation by the API.
-func testAccRule_validation(t *testing.T) {
+func TestAccNetworkSecurityManagerRule_validation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
