@@ -2890,6 +2890,42 @@ func TestAccLambdaFunction_durableConfigForceNew(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_durableConfigKMSKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+	kmsResourceName := "aws_kms_key.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID) // Durable Functions is only available in us-east-2
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_durableConfigKMSKey(rName, 300, 7),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.0.execution_timeout", "300"),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.0.retention_period", "7"),
+					resource.TestCheckResourceAttrPair(resourceName, "durable_config.0.kms_key_arn", kmsResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_resetNonRefreshableAttributesAfterUpdateFailure(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetFunctionOutput
@@ -5256,4 +5292,33 @@ resource "aws_lambda_function" "test" {
   }
 }
 `, rName, descriptionLine, executionTimeout, retentionPeriod))
+}
+
+func testAccFunctionConfig_durableConfigKMSKey(rName string, executionTimeout, retentionPeriod int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs24.x"
+
+  durable_config {
+    kms_key_arn       = aws_kms_key.test.arn
+    execution_timeout = %[2]d
+    retention_period  = %[3]d
+  }
+
+  timeouts {
+    delete = "60m"
+  }
+}
+`, rName, executionTimeout, retentionPeriod))
 }

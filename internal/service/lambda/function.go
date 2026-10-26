@@ -162,6 +162,13 @@ func resourceFunction() *schema.Resource {
 								Required:     true,
 								ValidateFunc: validation.IntBetween(1, 31622400),
 							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 							names.AttrRetentionPeriod: {
 								Type:         schema.TypeInt,
 								Optional:     true,
@@ -1838,10 +1845,16 @@ func expandDurableConfigs(tfList []any) *awstypes.DurableConfig {
 	}
 
 	tfMap := tfList[0].(map[string]any)
-	return &awstypes.DurableConfig{
+	apiObject := &awstypes.DurableConfig{
 		ExecutionTimeout:      aws.Int32(int32(tfMap["execution_timeout"].(int))),
 		RetentionPeriodInDays: aws.Int32(int32(tfMap[names.AttrRetentionPeriod].(int))),
 	}
+
+	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
+		apiObject.KMSKeyArn = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func flattenDurableConfig(apiObject *awstypes.DurableConfig) []any {
@@ -1853,6 +1866,10 @@ func flattenDurableConfig(apiObject *awstypes.DurableConfig) []any {
 
 	if v := apiObject.ExecutionTimeout; v != nil {
 		tfMap["execution_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.KMSKeyArn; v != nil {
+		tfMap[names.AttrKMSKeyARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.RetentionPeriodInDays; v != nil {
