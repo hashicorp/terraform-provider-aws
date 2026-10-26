@@ -62,6 +62,17 @@ func TestAccCloudWatchOmni_serial(t *testing.T) {
 			"List_includeResource": testAccDomain_List_includeResource,
 			"List_regionOverride":  testAccDomain_List_regionOverride,
 		},
+		"OrganizationAccessGrant": {
+			acctest.CtBasic:        testAccOrganizationAccessGrant_basic,
+			acctest.CtDisappears:   testAccOrganizationAccessGrant_disappears,
+			acctest.CtName:         testAccOrganizationAccessGrant_name,
+			"principal":            testAccOrganizationAccessGrant_principal,
+			"tags":                 testAccCloudWatchOmniOrganizationAccessGrant_tagsSerial,
+			"Identity":             testAccCloudWatchOmniOrganizationAccessGrant_identitySerial,
+			"List_basic":           testAccOrganizationAccessGrant_List_basic,
+			"List_includeResource": testAccOrganizationAccessGrant_List_includeResource,
+			"List_regionOverride":  testAccOrganizationAccessGrant_List_regionOverride,
+		},
 		"OrganizationDomain": {
 			acctest.CtBasic:        testAccOrganizationDomain_basic,
 			acctest.CtDisappears:   testAccOrganizationDomain_disappears,
