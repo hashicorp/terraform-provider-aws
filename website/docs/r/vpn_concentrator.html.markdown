@@ -35,8 +35,8 @@ resource "aws_vpn_concentrator" "example" {
 
 The following arguments are required:
 
-* `type` - (Required) Type of VPN concentrator. Valid value: `ipsec.1`.
 * `transit_gateway_id` - (Required) ID of the transit gateway to attach the VPN concentrator to.
+* `type` - (Required) Type of VPN concentrator. Valid value: `ipsec.1`.
 
 The following arguments are optional:
 
@@ -47,9 +47,9 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `vpn_concentrator_id` - ID of the VPN Concentrator.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `transit_gateway_attachment_id` - ID of the transit gateway attachment created for the VPN concentrator.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `vpn_concentrator_id` - ID of the VPN Concentrator.
 
 ## Import
 

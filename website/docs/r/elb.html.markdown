@@ -81,7 +81,7 @@ This resource supports the following arguments:
 * `security_groups` - (Optional) A list of security group IDs to assign to the ELB.
   Only valid if creating an ELB within a VPC
 * `subnets` - (Required for a VPC ELB) A list of subnet IDs to attach to the ELB. When an update to subnets will remove all current subnets, this will force a new resource.
-* `instances` - (Optional) A list of instance ids to place in the ELB pool.
+* `instances` - (Optional) A list of instance IDs to place in the ELB pool.
 * `internal` - (Optional) If true, ELB will be an internal ELB.
 * `listener` - (Required) A list of listener blocks. Listeners documented below.
 * `health_check` - (Optional) A health_check block. Health Check documented below.
@@ -124,13 +124,7 @@ Health Check (`health_check`) supports the following:
 * `interval` - (Required) The interval between checks.
 * `timeout` - (Required) The length of time before the check times out.
 
-## Note on ECDSA Key Algorithm
-
-If the ARN of the `ssl_certificate_id` that is pointed to references a
-certificate that was signed by an ECDSA key, note that ELB only supports the
-P256 and P384 curves.  Using a certificate signed by a key using a different
-curve could produce the error `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` in your
-browser.
+~> **Note:** If the ARN of the `ssl_certificate_id` references a certificate signed by an ECDSA key, ELB only supports the P256 and P384 curves. Using a certificate signed by a different curve could produce `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` in your browser.
 
 ## Attribute Reference
 
@@ -149,6 +143,13 @@ This resource exports the following attributes in addition to the arguments abov
   instances. Only available on ELBs launched in a VPC.
 * `zone_id` - The canonical hosted zone ID of the ELB (to be used in a Route 53 Alias record)
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 

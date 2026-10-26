@@ -36,17 +36,19 @@ func resourceVPCEndpointRouteTableAssociation() *schema.Resource {
 		ReadWithoutTimeout:   resourceVPCEndpointRouteTableAssociationRead,
 		DeleteWithoutTimeout: resourceVPCEndpointRouteTableAssociationDelete,
 
-		Schema: map[string]*schema.Schema{
-			"route_table_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrVPCEndpointID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"route_table_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrVPCEndpointID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

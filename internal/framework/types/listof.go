@@ -30,6 +30,9 @@ var (
 	// ListOfARNType is a custom type used for defining a List of ARNs.
 	ListOfARNType = listTypeOf[ARN]{basetypes.ListType{ElemType: ARNType}, nil}
 
+	// ListOfInt32Type is a custom type used for defining a List of int32s.
+	ListOfInt32Type = listTypeOf[basetypes.Int32Value]{basetypes.ListType{ElemType: basetypes.Int32Type{}}, nil}
+
 	// ListOfInt64Type is a custom type used for defining a List of int64s.
 	ListOfInt64Type = listTypeOf[basetypes.Int64Value]{basetypes.ListType{ElemType: basetypes.Int64Type{}}, nil}
 
@@ -214,4 +217,8 @@ func validateStringEnumSlice[T enum.Valueser[T]](ctx context.Context, path path.
 		}
 	}
 	return diags
+}
+
+func NewListValueOfEmpty[T attr.Value](ctx context.Context) ListValueOf[T] {
+	return NewListValueOfMust[T](ctx, []attr.Value{})
 }

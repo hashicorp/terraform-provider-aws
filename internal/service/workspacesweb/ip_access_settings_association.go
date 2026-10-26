@@ -26,9 +26,6 @@ import (
 )
 
 // @FrameworkResource("aws_workspacesweb_ip_access_settings_association", name="IP Access Settings Association")
-// @Testing(tagsTest=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.IpAccessSettings")
-// @Testing(importStateIdAttribute="ip_access_settings_arn,portal_arn")
 func newIPAccessSettingsAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &ipAccessSettingsAssociationResource{}, nil
 }

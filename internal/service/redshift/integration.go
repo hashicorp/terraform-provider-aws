@@ -178,7 +178,7 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 	}
 
 	// Null vs. empty map handling.
-	if prevAdditionalEncryptionContext.IsNull() && !data.AdditionalEncryptionContext.IsNull() && len(data.AdditionalEncryptionContext.Elements()) == 0 {
+	if prevAdditionalEncryptionContext.IsNull() && !data.AdditionalEncryptionContext.IsNull() && data.AdditionalEncryptionContext.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
 		data.AdditionalEncryptionContext = prevAdditionalEncryptionContext
 	}
 

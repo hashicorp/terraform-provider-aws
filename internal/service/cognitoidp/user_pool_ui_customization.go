@@ -37,42 +37,44 @@ func resourceUserPoolUICustomization() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrClientID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "ALL",
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"css": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"css", "image_file"},
-			},
-			"css_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_file": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"image_file", "css"},
-			},
-			"image_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrUserPoolID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrClientID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "ALL",
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"css": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					AtLeastOneOf: []string{"css", "image_file"},
+				},
+				"css_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_file": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					AtLeastOneOf: []string{"image_file", "css"},
+				},
+				"image_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_modified_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrUserPoolID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

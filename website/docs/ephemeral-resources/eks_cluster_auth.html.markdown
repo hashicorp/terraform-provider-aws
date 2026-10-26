@@ -36,13 +36,13 @@ provider "helm" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+This ephemeral resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the EKS cluster.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
+This ephemeral resource exports the following attributes in addition to the arguments above:
 
 * `token` - Token to use to authenticate with the cluster.

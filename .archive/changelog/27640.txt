@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_vpc_endpoint_service_allowed_principal: Changed id to use ServicePermissionId
-```

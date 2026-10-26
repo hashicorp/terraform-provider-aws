@@ -32,7 +32,7 @@ The following arguments are optional:
 * `base_capacity` - (Optional) The base data warehouse capacity of the workgroup in Redshift Processing Units (RPUs).
 * `price_performance_target` - (Optional) Price-performance scaling for the workgroup. See `Price Performance Target` below.
 * `config_parameter` - (Optional) An array of parameters to set for more control over a serverless database. See `Config Parameter` below.
-* `enhanced_vpc_routing` - (Optional) The value that specifies whether to turn on enhanced virtual private cloud (VPC) routing, which forces Amazon Redshift Serverless to route traffic through your VPC instead of over the internet.
+* `enhanced_vpc_routing` - (Optional) Value that specifies whether to turn on enhanced VPC routing, which forces Amazon Redshift Serverless to route traffic through your VPC instead of over the internet.
 * `max_capacity` - (Optional) The maximum data-warehouse capacity Amazon Redshift Serverless uses to serve queries, specified in Redshift Processing Units (RPUs).
 * `port` - (Optional) The port number on which the cluster accepts incoming connections.
 * `publicly_accessible` - (Optional) A value that specifies whether the workgroup can be accessed from a public network.
@@ -48,14 +48,14 @@ The following arguments are optional:
 
 ### Config Parameter
 
-* `parameter_key` - (Required) The key of the parameter. The options are `auto_mv`, `datestyle`, `enable_case_sensitive_identifier`, `enable_user_activity_logging`, `query_group`, `search_path`, `require_ssl`, `use_fips_ssl`, and [query monitoring metrics](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html#cm-c-wlm-query-monitoring-metrics-serverless) that let you define performance boundaries: `max_query_cpu_time`, `max_query_blocks_read`, `max_scan_row_count`, `max_query_execution_time`, `max_query_queue_time`, `max_query_cpu_usage_percent`, `max_query_temp_blocks_to_disk`, `max_join_row_count` and `max_nested_loop_join_row_count`.
+* `parameter_key` - (Required) The key of the parameter. The options are `auto_mv`, `datestyle`, `enable_case_sensitive_identifier`, `enable_large_string_opt_in`, `enable_user_activity_logging`, `query_group`, `search_path`, `require_ssl`, `use_fips_ssl`, and [query monitoring metrics](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html#cm-c-wlm-query-monitoring-metrics-serverless) that let you define performance boundaries: `max_query_cpu_time`, `max_query_blocks_read`, `max_scan_row_count`, `max_query_execution_time`, `max_query_queue_time`, `max_query_cpu_usage_percent`, `max_query_temp_blocks_to_disk`, `max_join_row_count` and `max_nested_loop_join_row_count`.
 * `parameter_value` - (Required) The value of the parameter to set.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Workgroup.
+* `arn` - ARN of the Redshift Serverless Workgroup.
 * `id` - The Redshift Workgroup Name.
 * `workgroup_id` - The Redshift Workgroup ID.
 * `endpoint` - The endpoint that is created from the workgroup. See `Endpoint` below.
@@ -73,7 +73,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `vpc_id` - The port that Amazon Redshift Serverless listens on.
 * `network_interface` - The network interfaces of the endpoint.. See `Network Interface` below.
 
-##### Network Interface
+#### Network Interface
 
 * `availability_zone` - The availability Zone.
 * `network_interface_id` - The unique identifier of the network interface.

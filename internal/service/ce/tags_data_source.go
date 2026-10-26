@@ -29,69 +29,71 @@ func dataSourceTags() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTagsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrFilter: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem:     expressionElem(tagRootElementSchemaLevel),
-			},
-			"search_string": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  validation.StringLenBetween(1, 1024),
-				ConflictsWith: []string{"sort_by"},
-			},
-			"sort_by": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"search_string"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.Metric](),
-						},
-						"sort_order": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SortOrder](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrFilter: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem:     expressionElem(tagRootElementSchemaLevel),
+				},
+				"search_string": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  validation.StringLenBetween(1, 1024),
+					ConflictsWith: []string{"sort_by"},
+				},
+				"sort_by": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					ConflictsWith: []string{"search_string"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.Metric](),
+							},
+							"sort_order": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SortOrder](),
+							},
 						},
 					},
 				},
-			},
-			"tag_key": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			names.AttrTags: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"tag_key": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
 				},
-			},
-			"time_period": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"end": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 40),
-						},
-						"start": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 40),
+				names.AttrTags: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"time_period": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"end": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 40),
+							},
+							"start": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 40),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

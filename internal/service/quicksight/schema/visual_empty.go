@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -18,7 +19,7 @@ func emptyVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
+				"data_set_identifier": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 				attrVisualID:          idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 			},
@@ -33,7 +34,7 @@ func emptyVisualDataSourceSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"data_set_identifier": stringComputedOnly(),
-				"visual_id":           idDataSourceSchema(),
+				attrVisualID:          idDataSourceSchema(),
 				names.AttrActions:     visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 			},
 		},

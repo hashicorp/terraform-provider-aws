@@ -12,8 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfcleanrooms "github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,18 +41,32 @@ func TestAccCleanRoomsConfiguredTable_basic(t *testing.T) {
 				Config: testAccConfiguredTableConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableExists(ctx, t, resourceName, &configuredTable),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, TEST_NAME),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, TEST_DESCRIPTION),
-					resource.TestCheckResourceAttr(resourceName, "analysis_method", TEST_ANALYSIS_METHOD),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.1", "my_column_2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
-						names.AttrDatabaseName: rName,
-						names.AttrTableName:    rName,
-					}),
-					resource.TestCheckResourceAttr(resourceName, "tags.Project", TEST_TAG),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_columns"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("my_column_1"),
+						knownvalue.StringExact("my_column_2"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("analysis_method"), knownvalue.StringExact(TEST_ANALYSIS_METHOD)),
+					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "cleanrooms", "configuredtable/{id}"),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreateTime), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(TEST_DESCRIPTION)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(TEST_NAME)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("table_reference"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDatabaseName: knownvalue.StringExact(rName),
+							names.AttrTableName:    knownvalue.StringExact(rName),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Project": knownvalue.StringExact(TEST_TAG),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Project": knownvalue.StringExact(TEST_TAG),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("update_time"), knownvalue.NotNull()),
+				},
 			},
 		},
 	})
@@ -73,6 +92,14 @@ func TestAccCleanRoomsConfiguredTable_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcleanrooms.ResourceConfiguredTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

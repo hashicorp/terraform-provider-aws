@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -91,7 +92,7 @@ func filledMapVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 													names.AttrFormat: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShapeConditionalFormat.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -125,7 +126,7 @@ func filledMapVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilledMapConfiguration.html
 					Type:     schema.TypeList,

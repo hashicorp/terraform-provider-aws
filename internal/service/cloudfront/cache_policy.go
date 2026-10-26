@@ -36,128 +36,130 @@ func resourceCachePolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"default_ttl": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  86400,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"max_ttl": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  31536000,
-			},
-			"min_ttl": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"parameters_in_cache_key_and_forwarded_to_origin": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cookies_config": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cookie_behavior": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyCookieBehavior](),
-									},
-									"cookies": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												attrItems: {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"default_ttl": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  86400,
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"max_ttl": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  31536000,
+				},
+				"min_ttl": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"parameters_in_cache_key_and_forwarded_to_origin": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cookies_config": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cookie_behavior": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CachePolicyCookieBehavior](),
+										},
+										"cookies": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrItems: {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"enable_accept_encoding_brotli": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"enable_accept_encoding_gzip": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"headers_config": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"header_behavior": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyHeaderBehavior](),
-									},
-									"headers": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												attrItems: {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+							"enable_accept_encoding_brotli": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"enable_accept_encoding_gzip": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"headers_config": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"header_behavior": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CachePolicyHeaderBehavior](),
+										},
+										"headers": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrItems: {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"query_strings_config": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"query_string_behavior": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyQueryStringBehavior](),
-									},
-									"query_strings": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												attrItems: {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+							"query_strings_config": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"query_string_behavior": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CachePolicyQueryStringBehavior](),
+										},
+										"query_strings": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrItems: {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
@@ -167,7 +169,7 @@ func resourceCachePolicy() *schema.Resource {
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

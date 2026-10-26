@@ -55,266 +55,283 @@ func resourceServer() *schema.Resource {
 
 				return false
 			}),
+			// When ip_address_type is DUALSTACK, address_allocation_ids cannot be specified.
+			func(ctx context.Context, d *schema.ResourceDiff, i any) error {
+				if v, ok := d.GetOk(names.AttrIPAddressType); ok && v.(string) == string(awstypes.IpAddressTypeDualstack) {
+					if v, ok := d.GetOk("endpoint_details.0.address_allocation_ids"); ok && v.(*schema.Set).Len() > 0 {
+						return fmt.Errorf("cannot specify address_allocation_ids when ip_address_type is DUALSTACK")
+					}
+				}
+				return nil
+			},
 		),
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificate: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"directory_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrDomain: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.DomainS3,
-				ValidateDiagFunc: enum.Validate[awstypes.Domain](),
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_details": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"address_allocation_ids": {
-							Type:          schema.TypeSet,
-							Optional:      true,
-							Elem:          &schema.Schema{Type: schema.TypeString},
-							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:          schema.TypeSet,
-							Optional:      true,
-							Computed:      true,
-							Elem:          &schema.Schema{Type: schema.TypeString},
-							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
-						},
-						names.AttrSubnetIDs: {
-							Type:          schema.TypeSet,
-							Optional:      true,
-							Elem:          &schema.Schema{Type: schema.TypeString},
-							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
-						},
-						names.AttrVPCEndpointID: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.security_group_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
-						},
-						names.AttrVPCID: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ValidateFunc:  validation.NoZeroValues,
-							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrEndpointType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.EndpointTypePublic,
-				ValidateDiagFunc: enum.Validate[awstypes.EndpointType](),
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"function": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"host_key": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 4096),
-			},
-			"host_key_fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"identity_provider_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.IdentityProviderTypeServiceManaged,
-				ValidateDiagFunc: enum.Validate[awstypes.IdentityProviderType](),
-			},
-			"invocation_role": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"logging_role": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"post_authentication_login_banner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 4096),
-			},
-			"pre_authentication_login_banner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 4096),
-			},
-			"protocol_details": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"as2_transports": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.As2Transport](),
-							},
-						},
-						"passive_ip": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(0, 15),
-						},
-						"set_stat_option": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SetStatOption](),
-						},
-						"tls_session_resumption_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.TlsSessionResumptionMode](),
-						},
-					},
-				},
-			},
-			"protocols": {
-				Type:     schema.TypeSet,
-				MinItems: 1,
-				MaxItems: 3,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
-				},
-			},
-			"s3_storage_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"directory_listing_optimization": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DirectoryListingOptimization](),
-						},
-					},
-				},
-			},
-			"security_policy_name": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          securityPolicyName2018_11,
-				ValidateDiagFunc: enum.Validate[securityPolicyName](),
-			},
-			"sftp_authentication_methods": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.SftpAuthenticationMethods](),
-			},
-			"structured_log_destinations": {
-				Type: schema.TypeSet,
-				Elem: &schema.Schema{
+				names.AttrCertificate: {
 					Type:         schema.TypeString,
+					Optional:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				Description: "This is a set of arns of destinations that will receive structured logs from the transfer server",
-				Optional:    true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"workflow_details": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"on_partial_upload": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							MaxItems:     1,
-							AtLeastOneOf: []string{"workflow_details.0.on_upload", "workflow_details.0.on_partial_upload"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"execution_role": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"workflow_id": {
-										Type:     schema.TypeString,
-										Required: true,
+				"directory_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrDomain: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.DomainS3,
+					ValidateDiagFunc: enum.Validate[awstypes.Domain](),
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_details": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"address_allocation_ids": {
+								Type:          schema.TypeSet,
+								Optional:      true,
+								Elem:          &schema.Schema{Type: schema.TypeString},
+								ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:          schema.TypeSet,
+								Optional:      true,
+								Computed:      true,
+								Elem:          &schema.Schema{Type: schema.TypeString},
+								ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
+							},
+							names.AttrSubnetIDs: {
+								Type:          schema.TypeSet,
+								Optional:      true,
+								Elem:          &schema.Schema{Type: schema.TypeString},
+								ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
+							},
+							names.AttrVPCEndpointID: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.security_group_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
+							},
+							names.AttrVPCID: {
+								Type:          schema.TypeString,
+								Optional:      true,
+								ValidateFunc:  validation.NoZeroValues,
+								ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
+							},
+						},
+					},
+				},
+				names.AttrEndpointType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.EndpointTypePublic,
+					ValidateDiagFunc: enum.Validate[awstypes.EndpointType](),
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"function": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"host_key": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(0, 4096),
+				},
+				"host_key_fingerprint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_provider_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.IdentityProviderTypeServiceManaged,
+					ValidateDiagFunc: enum.Validate[awstypes.IdentityProviderType](),
+				},
+				"invocation_role": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrIPAddressType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+				},
+				"logging_role": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"post_authentication_login_banner": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(0, 4096),
+				},
+				"pre_authentication_login_banner": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(0, 4096),
+				},
+				"protocol_details": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"as2_transports": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.As2Transport](),
+								},
+							},
+							"passive_ip": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 15),
+							},
+							"set_stat_option": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SetStatOption](),
+							},
+							"tls_session_resumption_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TlsSessionResumptionMode](),
+							},
+						},
+					},
+				},
+				"protocols": {
+					Type:     schema.TypeSet,
+					MinItems: 1,
+					MaxItems: 3,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
+					},
+				},
+				"s3_storage_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"directory_listing_optimization": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DirectoryListingOptimization](),
+							},
+						},
+					},
+				},
+				"security_policy_name": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          securityPolicyName2018_11,
+					ValidateDiagFunc: enum.Validate[securityPolicyName](),
+				},
+				"sftp_authentication_methods": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SftpAuthenticationMethods](),
+				},
+				"structured_log_destinations": {
+					Type: schema.TypeSet,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+					Description: "This is a set of arns of destinations that will receive structured logs from the transfer server",
+					Optional:    true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"workflow_details": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"on_partial_upload": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								MaxItems:     1,
+								AtLeastOneOf: []string{"workflow_details.0.on_upload", "workflow_details.0.on_partial_upload"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"execution_role": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"workflow_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"on_upload": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							MaxItems:     1,
-							AtLeastOneOf: []string{"workflow_details.0.on_upload", "workflow_details.0.on_partial_upload"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"execution_role": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"workflow_id": {
-										Type:     schema.TypeString,
-										Required: true,
+							"on_upload": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								MaxItems:     1,
+								AtLeastOneOf: []string{"workflow_details.0.on_upload", "workflow_details.0.on_partial_upload"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"execution_role": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"workflow_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -380,6 +397,10 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		input.IdentityProviderDetails.InvocationRole = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
+		input.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
 	if v, ok := d.GetOk("sftp_authentication_methods"); ok {
@@ -532,6 +553,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	} else {
 		d.Set("invocation_role", "")
 	}
+	d.Set(names.AttrIPAddressType, output.IpAddressType)
 	if output.IdentityProviderDetails != nil {
 		d.Set("sftp_authentication_methods", output.IdentityProviderDetails.SftpAuthenticationMethods)
 	} else {
@@ -704,6 +726,11 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 
 			input.IdentityProviderDetails = identityProviderDetails
+		}
+
+		if d.HasChanges(names.AttrIPAddressType) {
+			input.IpAddressType = awstypes.IpAddressType(d.Get(names.AttrIPAddressType).(string))
+			offlineUpdate = true
 		}
 
 		if d.HasChange("logging_role") {

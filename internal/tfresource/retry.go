@@ -250,7 +250,7 @@ func Retry(ctx context.Context, timeout time.Duration, f func(context.Context) *
 
 			return false, err
 		},
-		backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(options.Delay, options.PollInterval, options.MinPollInterval)),
+		backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(ctx, options.Delay, options.PollInterval, options.MinPollInterval)),
 	)
 
 	return err

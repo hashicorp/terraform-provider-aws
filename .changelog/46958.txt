@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_datasync_agent: Support activation of advanced mode agents. Previously, attempting to activate advanced mode agents would result in `EOF` errors when retrieving the activation key
-```

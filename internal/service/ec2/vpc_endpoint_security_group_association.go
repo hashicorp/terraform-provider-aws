@@ -32,23 +32,25 @@ func resourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 			StateContext: resourceVPCEndpointSecurityGroupAssociationImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"replace_default_association": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			"security_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrVPCEndpointID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"replace_default_association": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				"security_group_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrVPCEndpointID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

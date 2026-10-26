@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -107,6 +108,14 @@ func TestAccSSOAdminPermissionsBoundaryAttachment_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssoadmin.ResourcePermissionsBoundaryAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_permissions_boundary_attachment.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_permissions_boundary_attachment.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -133,6 +142,14 @@ func TestAccSSOAdminPermissionsBoundaryAttachment_Disappears_permissionSet(t *te
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_permissions_boundary_attachment.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ssoadmin_permissions_boundary_attachment.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

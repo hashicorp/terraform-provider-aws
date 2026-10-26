@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_scheduler_schedule: Mark `arn` property of `dead_letter_config` as a required property
-```

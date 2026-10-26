@@ -24,17 +24,17 @@ data "aws_apigatewayv2_export" "test" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
-* `specification` - (Required) Version of the API specification to use. `OAS30`, for OpenAPI 3.0, is the only supported value.
-* `output_type` - (Required) Output type of the exported definition file. Valid values are `JSON` and `YAML`.
 * `export_version` - (Optional) Version of the API Gateway export algorithm. API Gateway uses the latest version by default. Currently, the only supported version is `1.0`.
 * `include_extensions` - (Optional) Whether to include API Gateway extensions in the exported API definition. API Gateway extensions are included by default.
+* `output_type` - (Required) Output type of the exported definition file. Valid values are `JSON` and `YAML`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `specification` - (Required) Version of the API specification to use. `OAS30`, for OpenAPI 3.0, is the only supported value.
 * `stage_name` - (Optional) Name of the API stage to export. If you don't specify this property, a representation of the latest API configuration is exported.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - API identifier.
 * `body` - ID of the API.
+* `id` - API identifier.

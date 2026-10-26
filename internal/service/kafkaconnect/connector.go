@@ -48,271 +48,149 @@ func resourceConnector() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"capacity": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"autoscaling": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"max_worker_count": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(1, 10),
-									},
-									"mcu_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      1,
-										ValidateFunc: validation.IntInSlice([]int{1, 2, 4, 8}),
-									},
-									"min_worker_count": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(1, 10),
-									},
-									"scale_in_policy": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cpu_utilization_percentage": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													Computed:     true,
-													ValidateFunc: validation.IntBetween(1, 100),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"capacity": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"autoscaling": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_worker_count": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(1, 10),
+										},
+										"mcu_count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      1,
+											ValidateFunc: validation.IntInSlice([]int{1, 2, 4, 8}),
+										},
+										"min_worker_count": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(1, 10),
+										},
+										"scale_in_policy": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cpu_utilization_percentage": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														Computed:     true,
+														ValidateFunc: validation.IntBetween(1, 100),
+													},
 												},
 											},
 										},
-									},
-									"scale_out_policy": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cpu_utilization_percentage": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													Computed:     true,
-													ValidateFunc: validation.IntBetween(1, 100),
+										"scale_out_policy": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cpu_utilization_percentage": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														Computed:     true,
+														ValidateFunc: validation.IntBetween(1, 100),
+													},
 												},
 											},
 										},
 									},
 								},
+								ExactlyOneOf: []string{"capacity.0.autoscaling", "capacity.0.provisioned_capacity"},
 							},
-							ExactlyOneOf: []string{"capacity.0.autoscaling", "capacity.0.provisioned_capacity"},
-						},
-						"provisioned_capacity": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"mcu_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      1,
-										ValidateFunc: validation.IntInSlice([]int{1, 2, 4, 8}),
-									},
-									"worker_count": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(1, 10),
-									},
-								},
-							},
-							ExactlyOneOf: []string{"capacity.0.autoscaling", "capacity.0.provisioned_capacity"},
-						},
-					},
-				},
-			},
-			"connector_configuration": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Required: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"kafka_cluster": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"apache_kafka_cluster": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bootstrap_servers": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									"vpc": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Required: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrSecurityGroups: {
-													Type:     schema.TypeSet,
-													Required: true,
-													ForceNew: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												names.AttrSubnets: {
-													Type:     schema.TypeSet,
-													Required: true,
-													ForceNew: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
+							"provisioned_capacity": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"mcu_count": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      1,
+											ValidateFunc: validation.IntInSlice([]int{1, 2, 4, 8}),
+										},
+										"worker_count": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(1, 10),
 										},
 									},
 								},
+								ExactlyOneOf: []string{"capacity.0.autoscaling", "capacity.0.provisioned_capacity"},
 							},
 						},
 					},
 				},
-			},
-			"kafka_cluster_client_authentication": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authentication_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          awstypes.KafkaClusterClientAuthenticationTypeNone,
-							ValidateDiagFunc: enum.Validate[awstypes.KafkaClusterClientAuthenticationType](),
-						},
-					},
+				"connector_configuration": {
+					Type:     schema.TypeMap,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Required: true,
 				},
-			},
-			"kafka_cluster_encryption_in_transit": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          awstypes.KafkaClusterEncryptionInTransitTypePlaintext,
-							ValidateDiagFunc: enum.Validate[awstypes.KafkaClusterEncryptionInTransitType](),
-						},
-					},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
 				},
-			},
-			"kafkaconnect_version": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"log_delivery": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"worker_log_delivery": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrCloudWatchLogs: {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Required: true,
-													ForceNew: true,
-												},
-												"log_group": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
-												},
-											},
+				"kafka_cluster": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"apache_kafka_cluster": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bootstrap_servers": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
 										},
-									},
-									"firehose": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"delivery_stream": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
-												},
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Required: true,
-													ForceNew: true,
-												},
-											},
-										},
-									},
-									"s3": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										ForceNew: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrBucket: {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
-												},
-												names.AttrEnabled: {
-													Type:     schema.TypeBool,
-													Required: true,
-													ForceNew: true,
-												},
-												names.AttrPrefix: {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
+										"vpc": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Required: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrSecurityGroups: {
+														Type:     schema.TypeSet,
+														Required: true,
+														ForceNew: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+													names.AttrSubnets: {
+														Type:     schema.TypeSet,
+														Required: true,
+														ForceNew: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
@@ -322,76 +200,200 @@ func resourceConnector() *schema.Resource {
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"plugin": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_plugin": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"revision": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
+				"kafka_cluster_client_authentication": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authentication_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          awstypes.KafkaClusterClientAuthenticationTypeNone,
+								ValidateDiagFunc: enum.Validate[awstypes.KafkaClusterClientAuthenticationType](),
+							},
+						},
+					},
+				},
+				"kafka_cluster_encryption_in_transit": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								Default:          awstypes.KafkaClusterEncryptionInTransitTypePlaintext,
+								ValidateDiagFunc: enum.Validate[awstypes.KafkaClusterEncryptionInTransitType](),
+							},
+						},
+					},
+				},
+				"kafkaconnect_version": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"log_delivery": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"worker_log_delivery": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrCloudWatchLogs: {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+														ForceNew: true,
+													},
+													"log_group": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+												},
+											},
+										},
+										"firehose": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"delivery_stream": {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+														ForceNew: true,
+													},
+												},
+											},
+										},
+										"s3": {
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											ForceNew: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrBucket: {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+														ForceNew: true,
+													},
+													names.AttrPrefix: {
+														Type:     schema.TypeString,
+														Optional: true,
+														ForceNew: true,
+													},
+												},
+											},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"service_execution_role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"worker_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"revision": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"plugin": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_plugin": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"revision": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
+										},
+									},
+								},
+							},
 						},
 					},
 				},
-			},
+				"service_execution_role_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"worker_configuration": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"revision": {
+								Type:     schema.TypeInt,
+								Required: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

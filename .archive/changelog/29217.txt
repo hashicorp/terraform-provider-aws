@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_appmesh_route: Fix RequiredWith setting for `spec.0.grpc_route.0.match.0.method_name` attribute
-```

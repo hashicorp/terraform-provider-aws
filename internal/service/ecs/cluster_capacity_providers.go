@@ -37,47 +37,49 @@ func resourceClusterCapacityProviders() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"capacity_providers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"capacity_providers": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			names.AttrClusterName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				// The API accepts both an ARN and a name in a generic "cluster"
-				// parameter, but allowing that would force the resource to guess
-				// which one to return on read.
-				ValidateFunc: validateClusterName,
-			},
-			"default_capacity_provider_strategy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"base": {
-							Type:         schema.TypeInt,
-							Default:      0,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 100000),
-						},
-						"capacity_provider": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrWeight: {
-							Type:         schema.TypeInt,
-							Default:      0,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 1000),
+				names.AttrClusterName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					// The API accepts both an ARN and a name in a generic "cluster"
+					// parameter, but allowing that would force the resource to guess
+					// which one to return on read.
+					ValidateFunc: validateClusterName,
+				},
+				"default_capacity_provider_strategy": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"base": {
+								Type:         schema.TypeInt,
+								Default:      0,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 100000),
+							},
+							"capacity_provider": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrWeight: {
+								Type:         schema.TypeInt,
+								Default:      0,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 1000),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -94,7 +96,7 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 		DefaultCapacityProviderStrategy: expandCapacityProviderStrategyItems(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 	}
 
-	err := retryClusterCapacityProvidersPut(ctx, conn, input)
+	err := retryClusterCapacityProvidersPut(ctx, conn, input, false)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating ECS Cluster Capacity Providers (%s): %s", clusterName, err)
@@ -149,9 +151,9 @@ func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.Resou
 	}
 
 	log.Printf("[DEBUG] Deleting ECS Cluster Capacity Providers: %s", d.Id())
-	err := retryClusterCapacityProvidersPut(ctx, conn, input)
-
-	if errs.IsA[*awstypes.ClusterNotFoundException](err) {
+	err := retryClusterCapacityProvidersPut(ctx, conn, input, true)
+	if errs.IsA[*awstypes.ClusterNotFoundException](err) ||
+		errs.IsAErrorMessageContains[*awstypes.ClientException](err, "Cluster was not ACTIVE") {
 		return diags
 	}
 
@@ -166,7 +168,7 @@ func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.Client, input *ecs.PutClusterCapacityProvidersInput) error {
+func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.Client, input *ecs.PutClusterCapacityProvidersInput, isDelete bool) error {
 	const (
 		timeout = 10 * time.Minute
 	)
@@ -175,7 +177,7 @@ func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.Client, inp
 			return conn.PutClusterCapacityProviders(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "Cluster was not ACTIVE") {
+			if !isDelete && errs.IsAErrorMessageContains[*awstypes.ClientException](err, "Cluster was not ACTIVE") {
 				return true, err
 			}
 

@@ -1,3 +1,0 @@
-```release-note:bug
-provider/tags: Fix crash when some `tags` are `null` and others are `computed`
-```

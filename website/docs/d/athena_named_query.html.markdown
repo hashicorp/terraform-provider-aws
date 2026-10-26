@@ -33,4 +33,4 @@ This data source exports the following attributes in addition to the arguments a
 * `database` - Database to which the query belongs.
 * `description` - Brief explanation of the query.
 * `id` - The unique ID of the query.
-* `query` - Text of the query itself.
+* `querystring` - Text of the query itself.

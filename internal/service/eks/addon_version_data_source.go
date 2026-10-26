@@ -27,24 +27,26 @@ func dataSourceAddonVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAddonVersionRead,
 
-		Schema: map[string]*schema.Schema{
-			"addon_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"kubernetes_version": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"addon_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"kubernetes_version": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

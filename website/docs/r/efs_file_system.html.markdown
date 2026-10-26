@@ -15,7 +15,7 @@ Provides an Elastic File System (EFS) File System resource.
 ### EFS File System w/ tags
 
 ```terraform
-resource "aws_efs_file_system" "foo" {
+resource "aws_efs_file_system" "example" {
   creation_token = "my-product"
 
   tags = {
@@ -53,7 +53,7 @@ user guide for more information.
 * `performance_mode` - (Optional) The file system performance mode. Can be either `"generalPurpose"` or `"maxIO"` (Default: `"generalPurpose"`).
 * `provisioned_throughput_in_mibps` - (Optional) The throughput, measured in MiB/s, that you want to provision for the file system. Only applicable with `throughput_mode` set to `provisioned`.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `throughput_mode` - (Optional) Throughput mode for the file system. Defaults to `bursting`. Valid values: `bursting`, `provisioned`, or `elastic`. When using `provisioned`, also set `provisioned_throughput_in_mibps`.
+* `throughput_mode` - (Optional) Throughput mode for the file system. Defaults to `bursting`, matching the [`CreateFileSystem`](https://docs.aws.amazon.com/efs/latest/ug/API_CreateFileSystem.html) API default. Note that AWS [recommends `elastic` for most use cases](https://docs.aws.amazon.com/efs/latest/ug/managing-throughput.html), and `elastic` is the default in the Amazon EFS console. Valid values: `bursting`, `provisioned`, or `elastic`. When using `provisioned`, also set `provisioned_throughput_in_mibps`.
 
 ### `lifecycle_policy` Block
 
@@ -77,7 +77,7 @@ The `protection` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the file system.
+* `arn` - ARN of the file system.
 * `availability_zone_id` - The identifier of the Availability Zone in which the file system's One Zone storage classes exist.
 * `id` - The ID that identifies the file system (e.g., fs-ccfc0d65).
 * `dns_name` - The DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
@@ -95,11 +95,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_efs_file_system.example
+  identity = {
+    id = "fs-6fa144c6"
+  }
+}
+
+resource "aws_efs_file_system" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the file system.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the EFS file systems using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_efs_file_system.foo
+  to = aws_efs_file_system.example
   id = "fs-6fa144c6"
 }
 ```
@@ -107,5 +133,5 @@ import {
 Using `terraform import`, import the EFS file systems using the `id`. For example:
 
 ```console
-% terraform import aws_efs_file_system.foo fs-6fa144c6
+% terraform import aws_efs_file_system.example fs-6fa144c6
 ```

@@ -45,37 +45,39 @@ func resourceMethodResponse() *schema.Resource {
 		UpdateWithoutTimeout: resourceMethodResponseUpdate,
 		DeleteWithoutTimeout: resourceMethodResponseDelete,
 
-		Schema: map[string]*schema.Schema{
-			"http_method": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validHTTPMethod(),
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"response_models": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"response_parameters": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeBool},
-				Optional: true,
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrStatusCode: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"http_method": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validHTTPMethod(),
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"response_models": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"response_parameters": {
+					Type:     schema.TypeMap,
+					Elem:     &schema.Schema{Type: schema.TypeBool},
+					Optional: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrStatusCode: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

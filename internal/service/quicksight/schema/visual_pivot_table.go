@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -54,8 +55,8 @@ func pivotTableVisualSchema() *schema.Schema {
 														MaxItems: 20,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																attrFieldID:   stringLenBetweenSchema(attrRequired, 1, 512),
-																"field_value": stringLenBetweenSchema(attrRequired, 1, 2048),
+																attrFieldID:   sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
+																"field_value": sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 2048),
 															},
 														},
 													},
@@ -73,9 +74,9 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrFieldID:    stringLenBetweenSchema(attrRequired, 1, 512),
-													"custom_label": stringLenBetweenSchema(attrOptional, 1, 2048),
-													attrVisibility: stringEnumSchema[awstypes.Visibility](attrOptional),
+													attrFieldID:    sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
+													"custom_label": sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 2048),
+													attrVisibility: sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 												},
 											},
 										},
@@ -112,8 +113,8 @@ func pivotTableVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"overflow_column_header_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
-										"vertical_overflow_visibility":      stringEnumSchema[awstypes.Visibility](attrOptional),
+										"overflow_column_header_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+										"vertical_overflow_visibility":      sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
@@ -132,7 +133,7 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 200,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 													"sort_by": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableSortBy.html
 														Type:     schema.TypeList,
 														Required: true,
@@ -148,7 +149,7 @@ func pivotTableVisualSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"direction":  stringEnumSchema[awstypes.SortDirection](attrRequired),
+																			"direction":  sdkschema.StringEnumSchema[awstypes.SortDirection](sdkschema.AttrRequired),
 																			"sort_paths": dataPathValueSchema(dataPathValueMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathValue.html
 																		},
 																	},
@@ -171,15 +172,15 @@ func pivotTableVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"cell_style":                          tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"collapsed_row_dimensions_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+										"collapsed_row_dimensions_visibility": sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 										"column_header_style":                 tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"column_names_visibility":             stringEnumSchema[awstypes.Visibility](attrOptional),
-										"metric_placement":                    stringEnumSchema[awstypes.PivotTableMetricPlacement](attrOptional),
+										"column_names_visibility":             sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+										"metric_placement":                    sdkschema.StringEnumSchema[awstypes.PivotTableMetricPlacement](sdkschema.AttrOptional),
 										"row_alternate_color_options":         rowAlternateColorOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RowAlternateColorOptions.html
 										"row_field_names_style":               tableCellStyleSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 										"row_header_style":                    tableCellStyleSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"single_metric_visibility":            stringEnumSchema[awstypes.Visibility](attrOptional),
-										"toggle_buttons_visibility":           stringEnumSchema[awstypes.Visibility](attrOptional),
+										"single_metric_visibility":            sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
+										"toggle_buttons_visibility":           sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 									},
 								},
 							},
@@ -221,7 +222,7 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													attrFieldID: stringLenBetweenSchema(attrRequired, 1, 512),
+													attrFieldID: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, 1, 512),
 													names.AttrScope: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConditionalFormattingScope.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -229,7 +230,7 @@ func pivotTableVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																names.AttrRole: stringEnumSchema[awstypes.PivotTableConditionalFormattingScopeRole](attrOptional),
+																names.AttrRole: sdkschema.StringEnumSchema[awstypes.PivotTableConditionalFormattingScopeRole](sdkschema.AttrOptional),
 															},
 														},
 													},
@@ -256,7 +257,7 @@ func pivotTableVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConfiguration.html
 					Type:     schema.TypeList,
@@ -285,7 +286,7 @@ func pivotTableVisualDataSourceSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													attrFieldID:    stringComputedOnly(),
 													"custom_label": stringComputedOnly(),
-													attrVisibility: stringEnumDataSourceSchema[awstypes.Visibility](),
+													attrVisibility: sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 												},
 											},
 										},
@@ -316,8 +317,8 @@ func pivotTableVisualDataSourceSchema() *schema.Schema {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"overflow_column_header_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
-										"vertical_overflow_visibility":      stringEnumDataSourceSchema[awstypes.Visibility](),
+										"overflow_column_header_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+										"vertical_overflow_visibility":      sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
@@ -343,7 +344,7 @@ func pivotTableVisualDataSourceSchema() *schema.Schema {
 																	Computed: true,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"direction":  stringEnumDataSourceSchema[awstypes.SortDirection](),
+																			"direction":  sdkschema.StringEnumDataSourceSchema[awstypes.SortDirection](),
 																			"sort_paths": dataPathValueDataSourceSchema(),
 																		},
 																	},
@@ -364,15 +365,15 @@ func pivotTableVisualDataSourceSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"cell_style":                          tableCellStyleDataSourceSchema(),
-										"collapsed_row_dimensions_visibility": stringEnumDataSourceSchema[awstypes.Visibility](),
+										"collapsed_row_dimensions_visibility": sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 										"column_header_style":                 tableCellStyleDataSourceSchema(),
-										"column_names_visibility":             stringEnumDataSourceSchema[awstypes.Visibility](),
-										"metric_placement":                    stringEnumDataSourceSchema[awstypes.PivotTableMetricPlacement](),
+										"column_names_visibility":             sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+										"metric_placement":                    sdkschema.StringEnumDataSourceSchema[awstypes.PivotTableMetricPlacement](),
 										"row_alternate_color_options":         rowAlternateColorOptionsDataSourceSchema(),
 										"row_field_names_style":               tableCellStyleDataSourceSchema(),
 										"row_header_style":                    tableCellStyleDataSourceSchema(),
-										"single_metric_visibility":            stringEnumDataSourceSchema[awstypes.Visibility](),
-										"toggle_buttons_visibility":           stringEnumDataSourceSchema[awstypes.Visibility](),
+										"single_metric_visibility":            sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
+										"toggle_buttons_visibility":           sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 									},
 								},
 							},
@@ -412,7 +413,7 @@ func pivotTableVisualDataSourceSchema() *schema.Schema {
 														Computed: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																names.AttrRole: stringEnumDataSourceSchema[awstypes.PivotTableConditionalFormattingScopeRole](),
+																names.AttrRole: sdkschema.StringEnumDataSourceSchema[awstypes.PivotTableConditionalFormattingScopeRole](),
 															},
 														},
 													},
@@ -441,9 +442,9 @@ var tableBorderOptionsSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				attrColor:   hexColorSchema(attrOptional),
-				"style":     stringEnumSchema[awstypes.TableBorderStyle](attrOptional),
-				"thickness": intBetweenSchema(attrOptional, 1, 4),
+				attrColor:   hexColorSchema(sdkschema.AttrOptional),
+				"style":     sdkschema.StringEnumSchema[awstypes.TableBorderStyle](sdkschema.AttrOptional),
+				"thickness": sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 1, 4),
 			},
 		},
 	}
@@ -456,7 +457,7 @@ var tableBorderOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				attrColor:   stringComputedOnly(),
-				"style":     stringEnumDataSourceSchema[awstypes.TableBorderStyle](),
+				"style":     sdkschema.StringEnumDataSourceSchema[awstypes.TableBorderStyle](),
 				"thickness": intComputedOnly(),
 			},
 		},
@@ -471,7 +472,7 @@ var tableCellStyleSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"background_color": hexColorSchema(attrOptional),
+				"background_color": hexColorSchema(sdkschema.AttrOptional),
 				"border": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GlobalTableBorderOptions.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -500,11 +501,11 @@ var tableCellStyleSchema = sync.OnceValue(func() *schema.Schema {
 					},
 				},
 				"font_configuration":        fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				"height":                    intBetweenSchema(attrOptional, 8, 500),
-				"horizontal_text_alignment": stringEnumSchema[awstypes.HorizontalTextAlignment](attrOptional),
-				"text_wrap":                 stringEnumSchema[awstypes.TextWrap](attrOptional),
-				"vertical_text_alignment":   stringEnumSchema[awstypes.VerticalTextAlignment](attrOptional),
-				attrVisibility:              stringEnumSchema[awstypes.Visibility](attrOptional),
+				"height":                    sdkschema.IntBetweenSchema(sdkschema.AttrOptional, 8, 500),
+				"horizontal_text_alignment": sdkschema.StringEnumSchema[awstypes.HorizontalTextAlignment](sdkschema.AttrOptional),
+				"text_wrap":                 sdkschema.StringEnumSchema[awstypes.TextWrap](sdkschema.AttrOptional),
+				"vertical_text_alignment":   sdkschema.StringEnumSchema[awstypes.VerticalTextAlignment](sdkschema.AttrOptional),
+				attrVisibility:              sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 			},
 		},
 	}
@@ -542,10 +543,10 @@ var tableCellStyleDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 				},
 				"font_configuration":        fontConfigurationDataSourceSchema(),
 				"height":                    intComputedOnly(),
-				"horizontal_text_alignment": stringEnumDataSourceSchema[awstypes.HorizontalTextAlignment](),
-				"text_wrap":                 stringEnumDataSourceSchema[awstypes.TextWrap](),
-				"vertical_text_alignment":   stringEnumDataSourceSchema[awstypes.VerticalTextAlignment](),
-				attrVisibility:              stringEnumDataSourceSchema[awstypes.Visibility](),
+				"horizontal_text_alignment": sdkschema.StringEnumDataSourceSchema[awstypes.HorizontalTextAlignment](),
+				"text_wrap":                 sdkschema.StringEnumDataSourceSchema[awstypes.TextWrap](),
+				"vertical_text_alignment":   sdkschema.StringEnumDataSourceSchema[awstypes.VerticalTextAlignment](),
+				attrVisibility:              sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 			},
 		},
 	}
@@ -563,7 +564,7 @@ var subtotalOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"field_level": stringEnumSchema[awstypes.PivotTableSubtotalLevel](attrOptional),
+				"field_level": sdkschema.StringEnumSchema[awstypes.PivotTableSubtotalLevel](sdkschema.AttrOptional),
 				"field_level_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableFieldSubtotalOptions.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -571,13 +572,13 @@ var subtotalOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 100,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							attrFieldID: stringLenBetweenSchema(attrOptional, 1, 512),
+							attrFieldID: sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, 1, 512),
 						},
 					},
 				},
 				"metric_header_cell_style": tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 				"total_cell_style":         tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-				"totals_visibility":        stringEnumSchema[awstypes.Visibility](attrOptional),
+				"totals_visibility":        sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 				"value_cell_style":         tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 			},
 		},
@@ -591,7 +592,7 @@ var subtotalOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"custom_label": stringComputedOnly(),
-				"field_level":  stringEnumDataSourceSchema[awstypes.PivotTableSubtotalLevel](),
+				"field_level":  sdkschema.StringEnumDataSourceSchema[awstypes.PivotTableSubtotalLevel](),
 				"field_level_options": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -603,7 +604,7 @@ var subtotalOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 				},
 				"metric_header_cell_style": tableCellStyleDataSourceSchema(),
 				"total_cell_style":         tableCellStyleDataSourceSchema(),
-				"totals_visibility":        stringEnumDataSourceSchema[awstypes.Visibility](),
+				"totals_visibility":        sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 				"value_cell_style":         tableCellStyleDataSourceSchema(),
 			},
 		},
@@ -623,10 +624,10 @@ var pivotTotalOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					Optional: true,
 				},
 				"metric_header_cell_style": tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-				"placement":                stringEnumSchema[awstypes.TableTotalsPlacement](attrOptional),
-				"scroll_status":            stringEnumSchema[awstypes.TableTotalsScrollStatus](attrOptional),
+				"placement":                sdkschema.StringEnumSchema[awstypes.TableTotalsPlacement](sdkschema.AttrOptional),
+				"scroll_status":            sdkschema.StringEnumSchema[awstypes.TableTotalsScrollStatus](sdkschema.AttrOptional),
 				"total_cell_style":         tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-				"totals_visibility":        stringEnumSchema[awstypes.Visibility](attrOptional),
+				"totals_visibility":        sdkschema.StringEnumSchema[awstypes.Visibility](sdkschema.AttrOptional),
 				"value_cell_style":         tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 			},
 		},
@@ -641,10 +642,10 @@ var pivotTotalOptionsDataSourceSchema = sync.OnceValue(func() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"custom_label":             stringComputedOnly(),
 				"metric_header_cell_style": tableCellStyleDataSourceSchema(),
-				"placement":                stringEnumDataSourceSchema[awstypes.TableTotalsPlacement](),
-				"scroll_status":            stringEnumDataSourceSchema[awstypes.TableTotalsScrollStatus](),
+				"placement":                sdkschema.StringEnumDataSourceSchema[awstypes.TableTotalsPlacement](),
+				"scroll_status":            sdkschema.StringEnumDataSourceSchema[awstypes.TableTotalsScrollStatus](),
 				"total_cell_style":         tableCellStyleDataSourceSchema(),
-				"totals_visibility":        stringEnumDataSourceSchema[awstypes.Visibility](),
+				"totals_visibility":        sdkschema.StringEnumDataSourceSchema[awstypes.Visibility](),
 				"value_cell_style":         tableCellStyleDataSourceSchema(),
 			},
 		},
@@ -666,7 +667,7 @@ var rowAlternateColorOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					MaxItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")},
 				},
-				names.AttrStatus: stringEnumSchema[awstypes.Status](attrOptional),
+				names.AttrStatus: sdkschema.StringEnumSchema[awstypes.Status](sdkschema.AttrOptional),
 			},
 		},
 	}
@@ -683,7 +684,7 @@ var rowAlternateColorOptionsDataSourceSchema = sync.OnceValue(func() *schema.Sch
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrStatus: stringEnumDataSourceSchema[awstypes.Status](),
+				names.AttrStatus: sdkschema.StringEnumDataSourceSchema[awstypes.Status](),
 			},
 		},
 	}

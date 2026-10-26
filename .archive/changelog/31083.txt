@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_grafana_workspace: Make `grafana_version` optional so that its value can be specified in configuration
-```

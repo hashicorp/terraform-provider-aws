@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_s3_bucket: Ensure `versioning` is set correctly when nested values are explicitly set to `false`.
-```

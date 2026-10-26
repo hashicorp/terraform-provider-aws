@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_timestreaminfluxdb_db_instance: Add `maintenance_schedule` configuration block
-```

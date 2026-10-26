@@ -41,15 +41,37 @@ resource "aws_glue_resource_policy" "example" {
 
 This resource supports the following arguments:
 
+* `enable_hybrid` - (Optional) Whether you are using both methods to grant cross-account. Valid values are `TRUE` and `FALSE`. Note the terraform will not perform drift detetction on this field as its not return on read.
+* `policy` - (Required) Policy to be applied to the aws glue data catalog.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `policy` - (Required) The policy to be applied to the aws glue data catalog.
-* `enable_hybrid` - (Optional) Indicates that you are using both methods to grant cross-account. Valid values are `TRUE` and `FALSE`. Note the terraform will not perform drift detetction on this field as its not return on read.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_glue_resource_policy.Test
+  identity = {
+    region = "us-east-1"
+  }
+}
+
+resource "aws_glue_resource_policy" "Test" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Resource Policy using the region where the resource resides. For example:
 

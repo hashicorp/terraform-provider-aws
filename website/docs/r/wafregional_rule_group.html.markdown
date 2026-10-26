@@ -43,8 +43,6 @@ This resource supports the following arguments:
 * `activated_rule` - (Optional) A list of activated rules, see below
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Nested Blocks
-
 ### `activated_rule`
 
 #### Arguments
@@ -65,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Rule Group using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Rule Group using the ID. For example:
 
 ```terraform
 import {
@@ -74,7 +72,7 @@ import {
 }
 ```
 
-Using `terraform import`, import WAF Regional Rule Group using the id. For example:
+Using `terraform import`, import WAF Regional Rule Group using the ID. For example:
 
 ```console
 % terraform import aws_wafregional_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

@@ -1,3 +1,0 @@
-```release-note:note
-resource/aws_autoscaling_group: The `tags` argument has been deprecated. All configurations using `tags` should be updated to use the `tag` argument instead
-```

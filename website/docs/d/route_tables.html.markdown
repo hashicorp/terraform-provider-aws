@@ -8,12 +8,12 @@ description: |-
 
 # Data Source: aws_route_tables
 
-This resource can be useful for getting back a list of route table ids to be referenced elsewhere.
+This resource can be useful for getting back a list of route table IDs to be referenced elsewhere.
 
 ## Example Usage
 
-The following adds a route for a particular cidr block to every (private
-kops) route table in a specified vpc to use a particular vpc peering
+The following adds a route for a particular CIDR block to every (private
+kops) route table in a specified VPC to use a particular VPC peering
 connection.
 
 ```terraform
@@ -28,7 +28,7 @@ data "aws_route_tables" "rts" {
 
 resource "aws_route" "r" {
   count                     = length(data.aws_route_tables.rts.ids)
-  route_table_id            = tolist(data.aws_route_tables.rts.ids)[count.index]
+  route_table_id            = data.aws_route_tables.rts.ids[count.index]
   destination_cidr_block    = "10.0.0.0/22"
   vpc_peering_connection_id = "pcx-0e9a7a9ecd137dc54"
 }
@@ -58,7 +58,7 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `ids` - List of all the route table ids found.
+* `ids` - List of all the route table IDs found.
 
 ## Timeouts
 

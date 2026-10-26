@@ -12,11 +12,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
@@ -42,20 +41,20 @@ func TestAccODBCloudExadataInfrastructureResource_basic(t *testing.T) {
 
 	var cloudExaDataInfrastructure odbtypes.CloudExadataInfrastructure
 	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
-	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, exaInfraTestResource.displayNamePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			exaInfraTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
+		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure),
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, t, resourceName, &cloudExaDataInfrastructure),
 				),
 			},
 			{
@@ -75,23 +74,23 @@ func TestAccODBCloudExadataInfrastructureResource_withAllParameters(t *testing.T
 
 	var cloudExaDataInfrastructure odbtypes.CloudExadataInfrastructure
 	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
-	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
+	rName := acctest.RandomWithPrefix(t, exaInfraTestResource.displayNamePrefix)
 	domain := acctest.RandomDomainName(t)
 	emailAddress1 := acctest.RandomEmailAddress(domain)
 	emailAddress2 := acctest.RandomEmailAddress(domain)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			exaInfraTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
+		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: exaInfraTestResource.exaDataInfraResourceWithAllConfig(rName, emailAddress1, emailAddress2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure),
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, t, resourceName, &cloudExaDataInfrastructure),
 				),
 			},
 			{
@@ -112,20 +111,20 @@ func TestAccODBCloudExadataInfrastructureResource_tagging(t *testing.T) {
 	var cloudExaDataInfrastructure1 odbtypes.CloudExadataInfrastructure
 	var cloudExaDataInfrastructure2 odbtypes.CloudExadataInfrastructure
 	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
-	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
-	resource.Test(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, exaInfraTestResource.displayNamePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			exaInfraTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
+		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfigWithTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure1),
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, t, resourceName, &cloudExaDataInfrastructure1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
@@ -138,7 +137,7 @@ func TestAccODBCloudExadataInfrastructureResource_tagging(t *testing.T) {
 			{
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure2),
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, t, resourceName, &cloudExaDataInfrastructure2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(cloudExaDataInfrastructure1.CloudExadataInfrastructureId), *(cloudExaDataInfrastructure2.CloudExadataInfrastructureId)) != 0 {
 							return errors.New("Should not  create a new cloud exa basicExaInfraDataSource after  update")
@@ -166,20 +165,20 @@ func TestAccODBCloudExadataInfrastructureResource_updateDisplayName(t *testing.T
 	var cloudExaDataInfrastructure1 odbtypes.CloudExadataInfrastructure
 	var cloudExaDataInfrastructure2 odbtypes.CloudExadataInfrastructure
 	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
-	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
-	resource.Test(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, exaInfraTestResource.displayNamePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			exaInfraTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
+		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure1),
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, t, resourceName, &cloudExaDataInfrastructure1),
 				),
 			},
 			{
@@ -190,7 +189,7 @@ func TestAccODBCloudExadataInfrastructureResource_updateDisplayName(t *testing.T
 			{
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName + "-u"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure2),
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, t, resourceName, &cloudExaDataInfrastructure2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(cloudExaDataInfrastructure1.CloudExadataInfrastructureId), *(cloudExaDataInfrastructure2.CloudExadataInfrastructureId)) == 0 {
 							return errors.New("Should   create a new cloud exa basicExaInfraDataSource after update")
@@ -217,20 +216,20 @@ func TestAccODBCloudExadataInfrastructureResource_updateMaintenanceWindow(t *tes
 	var cloudExaDataInfrastructure1 odbtypes.CloudExadataInfrastructure
 	var cloudExaDataInfrastructure2 odbtypes.CloudExadataInfrastructure
 	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
-	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
-	resource.ParallelTest(t, resource.TestCase{
+	rName := acctest.RandomWithPrefix(t, exaInfraTestResource.displayNamePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			exaInfraTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
+		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure1),
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, t, resourceName, &cloudExaDataInfrastructure1),
 				),
 			},
 			{
@@ -241,7 +240,7 @@ func TestAccODBCloudExadataInfrastructureResource_updateMaintenanceWindow(t *tes
 			{
 				Config: exaInfraTestResource.basicWithCustomMaintenanceWindow(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure2),
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, t, resourceName, &cloudExaDataInfrastructure2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(cloudExaDataInfrastructure1.CloudExadataInfrastructureId), *(cloudExaDataInfrastructure2.CloudExadataInfrastructureId)) != 0 {
 							return errors.New("Should not  create a new cloud exa basicExaInfraDataSource after  update")
@@ -267,33 +266,41 @@ func TestAccODBCloudExadataInfrastructureResource_disappears(t *testing.T) {
 
 	var cloudExaDataInfrastructure odbtypes.CloudExadataInfrastructure
 
-	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
+	rName := acctest.RandomWithPrefix(t, exaInfraTestResource.displayNamePrefix)
 	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			exaInfraTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
+		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure),
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, t, resourceName, &cloudExaDataInfrastructure),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceCloudExadataInfrastructure, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func (cloudExaDataInfraResourceTest) testAccCheckCloudExaDataInfraDestroyed(ctx context.Context) resource.TestCheckFunc {
+func (cloudExaDataInfraResourceTest) testAccCheckCloudExaDataInfraDestroyed(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_exadata_infrastructure" {
@@ -314,7 +321,7 @@ func (cloudExaDataInfraResourceTest) testAccCheckCloudExaDataInfraDestroyed(ctx 
 	}
 }
 
-func (cloudExaDataInfraResourceTest) testAccCheckCloudExadataInfrastructureExists(ctx context.Context, name string, cloudExadataInfrastructure *odbtypes.CloudExadataInfrastructure) resource.TestCheckFunc {
+func (cloudExaDataInfraResourceTest) testAccCheckCloudExadataInfrastructureExists(ctx context.Context, t *testing.T, name string, cloudExadataInfrastructure *odbtypes.CloudExadataInfrastructure) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -325,7 +332,7 @@ func (cloudExaDataInfraResourceTest) testAccCheckCloudExadataInfrastructureExist
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudExadataInfrastructure, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		resp, err := tfodb.FindExadataInfraResourceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -339,7 +346,7 @@ func (cloudExaDataInfraResourceTest) testAccCheckCloudExadataInfrastructureExist
 }
 
 func (cloudExaDataInfraResourceTest) testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 	input := odb.ListCloudExadataInfrastructuresInput{}
 

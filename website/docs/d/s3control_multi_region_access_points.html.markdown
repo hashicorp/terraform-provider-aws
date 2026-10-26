@@ -29,25 +29,25 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `access_points` - List of multi-region access points. See [`access_points`](#access_points-attribute-reference) below.
+* `access_points` - List of multi-region access points. See [`access_points`](#access_points-block) below.
 
-### `access_points` Attribute Reference
+### `access_points` Block
 
 * `alias` - Alias for the multi-region access point.
 * `created_at` - Time the multi-region access point was created.
 * `name` - Name of the multi-region access point.
-* `public_access_block` - Public access block configuration for this multi-region access point. See [`public_access_block`](#public_access_block-attribute-reference) below.
-* `regions` - List of AWS Regions where the multi-region access point has data support. See [`regions`](#regions-attribute-reference) below.
+* `public_access_block` - Public access block configuration for this multi-region access point. See [`public_access_block`](#public_access_block-block) below.
+* `regions` - List of AWS Regions where the multi-region access point has data support. See [`regions`](#regions-block) below.
 * `status` - Current status of the multi-region access point.
 
-#### `public_access_block` Attribute Reference
+#### `public_access_block` Block
 
 * `block_public_acls` - Whether Amazon S3 should block public ACLs for buckets in this account.
 * `block_public_policy` - Whether Amazon S3 should block public bucket policies for buckets in this account.
 * `ignore_public_acls` - Whether Amazon S3 should ignore public ACLs for buckets in this account.
 * `restrict_public_buckets` - Whether Amazon S3 should restrict public bucket policies for buckets in this account.
 
-#### `regions` Attribute Reference
+#### `regions` Block
 
 * `bucket` - Name of the associated bucket for the Region.
 * `bucket_account_id` - AWS account ID that owns the Amazon S3 bucket associated with this multi-region access point.

@@ -34,21 +34,9 @@ type layerVersionListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type layerVersionListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *layerVersionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.LambdaClient(ctx)
-
-	var query layerVersionListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	tflog.Info(ctx, "Listing Lambda Layer Versions")
 
@@ -71,15 +59,19 @@ func (l *layerVersionListResource) List(ctx context.Context, request list.ListRe
 			rd.Set(names.AttrVersion, strconv.FormatInt(item.layerVersion.Version, 10))
 
 			if request.IncludeResource {
-				tflog.Info(ctx, "Reading Lambda Layer Version")
-				diags := resourceLayerVersionRead(ctx, rd, awsClient)
-				if diags.HasError() {
-					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": fmt.Sprintf("reading Lambda Layer Version (%s)", id)})
+				layerName, versionNumber, err := layerVersionParseResourceID(id)
+				if err != nil {
+					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": err})
 					continue
 				}
-				if rd.Id() == "" {
+
+				output, err := findLayerVersionByTwoPartKey(ctx, conn, layerName, versionNumber)
+				if err != nil {
+					tflog.Error(ctx, "Reading Lambda Layer Version", map[string]any{"error": err})
 					continue
 				}
+
+				flattenLayerVersion(rd, layerName, output)
 			}
 
 			result.DisplayName = id

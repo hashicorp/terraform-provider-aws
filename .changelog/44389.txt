@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dms_endpoint: Ensure that `postgres_settings` are updated
-```

@@ -159,7 +159,7 @@ The following arguments are optional:
 * `allowed_oauth_flows_user_pool_client` - (Optional) Whether the client is allowed to use OAuth 2.0 features. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure the following arguments: `callback_urls`, `logout_urls`, `allowed_oauth_scopes` and `allowed_oauth_flows`.
 * `allowed_oauth_flows` - (Optional) List of allowed OAuth flows, including `code`, `implicit`, and `client_credentials`. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
 * `allowed_oauth_scopes` - (Optional) List of allowed OAuth scopes, including `phone`, `email`, `openid`, `profile`, and `aws.cognito.signin.user.admin`. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
-* `analytics_configuration` - (Optional) Configuration block for Amazon Pinpoint analytics that collects metrics for this user pool. See [details below](#analytics_configuration).
+* `analytics_configuration` - (Optional) Configuration block for AWS End User Messaging analytics that collects metrics for this user pool. See [details below](#analytics_configuration).
 * `auth_session_validity` - (Optional) Duration, in minutes, of the session token created by Amazon Cognito for each API request in an authentication flow. The session token must be responded to by the native user of the user pool before it expires. Valid values for `auth_session_validity` are between `3` and `15`, with a default value of `3`.
 * `callback_urls` - (Optional) List of allowed callback URLs for the identity providers. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
 * `default_redirect_uri` - (Optional) Default redirect URI and must be included in the list of callback URLs.
@@ -181,11 +181,11 @@ The following arguments are optional:
 
 Either `application_arn` or `application_id` is required.
 
-* `application_arn` - (Optional) Application ARN for an Amazon Pinpoint application. Conflicts with `external_id` and `role_arn`.
-* `application_id` - (Optional) Application ID for an Amazon Pinpoint application.
+* `application_arn` - (Optional) Application ARN for an AWS End User Messaging application. Conflicts with `external_id` and `role_arn`.
+* `application_id` - (Optional) Application ID for an AWS End User Messaging application.
 * `external_id` - (Optional) ID for the Analytics Configuration. Conflicts with `application_arn`.
-* `role_arn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. Conflicts with `application_arn`.
-* `user_data_shared` (Optional) If set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
+* `role_arn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to AWS End User Messaging analytics. Conflicts with `application_arn`.
+* `user_data_shared` (Optional) If set to `true`, Amazon Cognito will include user data in the events it publishes to AWS End User Messaging analytics.
 
 ### refresh_token_rotation
 

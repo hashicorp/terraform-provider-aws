@@ -7,10 +7,8 @@ package transcribe
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -47,57 +46,59 @@ func ResourceLanguageModel() *schema.Resource {
 			Create: schema.DefaultTimeout(600 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"base_model_name": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.BaseModelName](),
-			},
-			"input_data_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_access_role_arn": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
-						},
-						"s3_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"tuning_data_s3_uri": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"base_model_name": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.BaseModelName](),
+				},
+				"input_data_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_access_role_arn": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+							},
+							"s3_uri": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"tuning_data_s3_uri": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrLanguageCode: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.LanguageCode](),
-			},
-			"model_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrLanguageCode: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.LanguageCode](),
+				},
+				"model_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -128,9 +129,8 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 			return conn.CreateLanguageModel(ctx, in)
 		},
 		func(err error) (bool, error) {
-			var bre *types.BadRequestException
-			if errors.As(err, &bre) {
-				return strings.Contains(bre.ErrorMessage(), "Make sure that you have read permission"), err
+			if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Make sure that you have read permission") {
+				return true, err
 			}
 			return false, err
 		},
@@ -201,8 +201,7 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 	_, err := conn.DeleteLanguageModel(ctx, &input)
 
-	var resourceNotFoundException *types.NotFoundException
-	if errors.As(err, &resourceNotFoundException) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -253,8 +252,7 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 
 	out, err := conn.DescribeLanguageModel(ctx, in)
 
-	var bre *types.BadRequestException
-	if errors.As(err, &bre) {
+	if errs.IsA[*types.BadRequestException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}

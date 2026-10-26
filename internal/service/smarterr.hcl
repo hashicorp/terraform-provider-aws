@@ -45,6 +45,7 @@ token "happening" {
     "fw_read",
     "fw_update",
     "fw_delete",
+    "fw_list",
   ]
 }
 
@@ -158,6 +159,14 @@ stack_match "fw_update" {
 stack_match "fw_delete" {
   called_from = ".*\\.Delete$$"
   display     = "deleting"
+}
+
+stack_match "fw_list" {
+  # Matches the List method and its iterator closures (e.g. ...List.func1), so the
+  # happening resolves whether the error is raised in the method body or inside
+  # the streamed iterator. Framework list resources only.
+  called_from = ".*\\.List(\\.func[0-9]+)?$$"
+  display     = "listing"
 }
 
 stack_match "set" {

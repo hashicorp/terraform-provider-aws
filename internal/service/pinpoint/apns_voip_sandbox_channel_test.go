@@ -61,7 +61,7 @@ func testAccAPNSVoIPSandboxChannelCertConfigurationFromEnv(t *testing.T) *testAc
 	}
 
 	if conf == nil {
-		t.Skipf("Pinpoint certificate credentials envs are missing, skipping test")
+		t.Skipf("End User Messaging certificate credentials envs are missing, skipping test")
 	}
 
 	return conf
@@ -185,7 +185,7 @@ func testAccCheckAPNSVoIPSandboxChannelExists(ctx context.Context, t *testing.T,
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint APNS VoIP Sandbox Channel with that Application ID exists")
+			return fmt.Errorf("No End User Messaging APNS VoIP Sandbox Channel with that Application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -221,7 +221,7 @@ func testAccCheckAPNSVoIPSandboxChannelDestroy(ctx context.Context, t *testing.T
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint APNS VoIP Sandbox Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging APNS VoIP Sandbox Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

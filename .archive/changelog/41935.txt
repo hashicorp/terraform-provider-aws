@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_kinesisanalyticsv2_application: Allow `runtime_environment` to be updated in-place
-```

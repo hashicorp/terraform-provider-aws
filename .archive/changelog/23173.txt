@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_apprunner_vpc_connector
-```
-
-```release-note:enhancement
-resource/aws_apprunner_service: Add `network_configuration` argument
-```

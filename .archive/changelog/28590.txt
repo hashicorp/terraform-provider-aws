@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lightsail_database: The `availability_zone` attribute is now optional/computed to support HA `bundle_id`s
-```

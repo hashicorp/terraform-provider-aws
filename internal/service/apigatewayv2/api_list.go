@@ -38,14 +38,6 @@ type apiListResource struct {
 func (l *apiListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().APIGatewayV2Client(ctx)
 
-	var query listAPIModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -87,10 +79,6 @@ func (l *apiListResource) List(ctx context.Context, request list.ListRequest, st
 			}
 		}
 	}
-}
-
-type listAPIModel struct {
-	framework.WithRegionModel
 }
 
 func listAPIs(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetApisInput) iter.Seq2[awstypes.Api, error] {

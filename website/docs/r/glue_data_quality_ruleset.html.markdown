@@ -62,16 +62,16 @@ resource "aws_glue_data_quality_ruleset" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the data quality ruleset.
 * `name` - (Required, Forces new resource) Name of the data quality ruleset.
-* `ruleset` - (Optional) A Data Quality Definition Language (DQDL) ruleset. For more information, see the AWS Glue developer guide.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `ruleset` - (Required) Data Quality Definition Language (DQDL) ruleset. For more information, see the AWS Glue developer guide.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `target_table` - (Optional, Forces new resource) A Configuration block specifying a target table associated with the data quality ruleset. See [`target_table`](#target_table) below.
+* `target_table` - (Optional, Forces new resource) Configuration block specifying a target table associated with the data quality ruleset. See [`target_table` Block](#target_table-block) below.
 
-### target_table
+### `target_table` Block
 
-* `catalog_id` - (Optional, Forces new resource) The catalog id where the AWS Glue table exists.
+* `catalog_id` - (Optional, Forces new resource) Catalog ID where the AWS Glue table exists.
 * `database_name` - (Required, Forces new resource) Name of the database where the AWS Glue table exists.
 * `table_name` - (Required, Forces new resource) Name of the AWS Glue table.
 
@@ -80,10 +80,10 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Glue Data Quality Ruleset.
-* `created_on` - The time and date that this data quality ruleset was created.
-* `last_modified_on` - The time and date that this data quality ruleset was created.
+* `created_on` - Time and date that this data quality ruleset was created.
+* `last_modified_on` - Time and date that this data quality ruleset was created.
 * `recommendation_run_id` - When a ruleset was created from a recommendation run, this run ID is generated to link the two together.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

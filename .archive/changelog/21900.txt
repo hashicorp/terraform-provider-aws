@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_rds_cluster_instance: Fix error from unexpected state `storage-optimization`
-```

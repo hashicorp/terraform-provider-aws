@@ -23,12 +23,12 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckENIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckNetworkInterfaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, t, "aws_network_interface.test", &conf),
+					testAccCheckNetworkInterfaceExists(ctx, t, "aws_network_interface.test", &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "device_index", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -60,12 +60,12 @@ func TestAccVPCNetworkInterfaceAttachment_networkCardIndex(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckENIDestroy(ctx, t),
+		CheckDestroy:             testAccCheckNetworkInterfaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceAttachmentConfig_networkCardIndex(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, t, "aws_network_interface.test", &conf),
+					testAccCheckNetworkInterfaceExists(ctx, t, "aws_network_interface.test", &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "device_index", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),

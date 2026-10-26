@@ -22,6 +22,7 @@ func TestAccECSTaskDefinitionDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionDataSourceConfig_basic(rName),
@@ -49,6 +50,7 @@ func TestAccECSTaskDefinitionDataSource_ec2(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionDataSourceConfig_ec2(rName),
@@ -90,6 +92,7 @@ func TestAccECSTaskDefinitionDataSource_fargate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionDataSourceConfig_fargate(rName),
@@ -125,6 +128,7 @@ func TestAccECSTaskDefinitionDataSource_proxyConfiguration(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionDataSourceConfig_proxyConfiguration(rName),

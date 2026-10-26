@@ -24,7 +24,7 @@ import (
 )
 
 // @SDKResource("aws_detective_invitation_accepter", name="Invitation Accepter")
-func ResourceInvitationAccepter() *schema.Resource {
+func resourceInvitationAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInvitationAccepterCreate,
 		ReadWithoutTimeout:   resourceInvitationAccepterRead,
@@ -34,28 +34,29 @@ func ResourceInvitationAccepter() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"graph_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"graph_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
 
 func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	graphARN := d.Get("graph_arn").(string)
-	input := &detective.AcceptInvitationInput{
+	input := detective.AcceptInvitationInput{
 		GraphArn: aws.String(graphARN),
 	}
 
-	_, err := conn.AcceptInvitation(ctx, input)
+	_, err := conn.AcceptInvitation(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "accepting Detective Invitation (%s): %s", graphARN, err)
@@ -68,10 +69,9 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
-	member, err := FindInvitationByGraphARN(ctx, conn, d.Id())
+	member, err := findInvitationByGraphARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Detective Invitation Accepter (%s) not found, removing from state", d.Id())
@@ -110,10 +110,10 @@ func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func FindInvitationByGraphARN(ctx context.Context, conn *detective.Client, graphARN string) (*awstypes.MemberDetail, error) {
-	input := &detective.ListInvitationsInput{}
+func findInvitationByGraphARN(ctx context.Context, conn *detective.Client, graphARN string) (*awstypes.MemberDetail, error) {
+	var input detective.ListInvitationsInput
 
-	return findInvitation(ctx, conn, input, func(v awstypes.MemberDetail) bool {
+	return findInvitation(ctx, conn, &input, func(v awstypes.MemberDetail) bool {
 		return aws.ToString(v.GraphArn) == graphARN
 	})
 }
@@ -132,7 +132,6 @@ func findInvitations(ctx context.Context, conn *detective.Client, input *detecti
 	var output []awstypes.MemberDetail
 
 	pages := detective.NewListInvitationsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

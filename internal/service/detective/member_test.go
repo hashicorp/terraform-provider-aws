@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/detective/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -77,6 +78,14 @@ func testAccMember_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdetective.ResourceMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -212,12 +221,7 @@ func testAccCheckMemberExists(ctx context.Context, t *testing.T, n string, v *aw
 
 		conn := acctest.ProviderMeta(ctx, t).DetectiveClient(ctx)
 
-		graphARN, accountID, err := tfdetective.MemberParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		output, err := tfdetective.FindMemberByGraphByTwoPartKey(ctx, conn, graphARN, accountID)
+		output, err := tfdetective.FindMemberByTwoPartKey(ctx, conn, rs.Primary.Attributes["graph_arn"], rs.Primary.Attributes[names.AttrAccountID])
 
 		if err != nil {
 			return err
@@ -238,12 +242,7 @@ func testAccCheckMemberDestroy(ctx context.Context, t *testing.T) resource.TestC
 				continue
 			}
 
-			graphARN, accountID, err := tfdetective.MemberParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfdetective.FindMemberByGraphByTwoPartKey(ctx, conn, graphARN, accountID)
+			_, err := tfdetective.FindMemberByTwoPartKey(ctx, conn, rs.Primary.Attributes["graph_arn"], rs.Primary.Attributes[names.AttrAccountID])
 
 			if retry.NotFound(err) {
 				continue

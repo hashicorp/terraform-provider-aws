@@ -10,7 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -68,7 +70,6 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 func TestAccEFSMountTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mount awstypes.MountTargetDescription
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -78,12 +79,21 @@ func TestAccEFSMountTarget_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckMountTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMountTargetConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/MountTarget/basic/"),
+				ConfigVariables: config.Variables{},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMountTargetExists(ctx, t, resourceName, &mount),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceMountTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

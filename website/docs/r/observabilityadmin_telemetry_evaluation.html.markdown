@@ -16,6 +16,8 @@ For more information, see the [AWS CloudWatch Observability Admin documentation]
 
 ~> **NOTE:** Only one telemetry evaluation can exist per account per region. Creating this resource enables the feature; destroying it disables the feature.
 
+~> **NOTE:** Do not use this resource in an account where telemetry evaluation is centrally managed by an AWS Organization via [`aws_observabilityadmin_telemetry_evaluation_for_organization`](observabilityadmin_telemetry_evaluation_for_organization.html.markdown). In that case, the per-account `StartTelemetryEvaluation` API silently returns success without changing per-account state, and `GetTelemetryEvaluationStatus` reports the org-derived `RUNNING` status — so `terraform apply` appears to succeed. However, the matching `StopTelemetryEvaluation` call is rejected with `ValidationException: Telemetry evaluation is managed by the caller's organization`, so a later `terraform destroy` will fail and leave the resource in state. Use the organization variant from the management account instead.
+
 ## Example Usage
 
 ### Basic Usage
@@ -24,11 +26,29 @@ For more information, see the [AWS CloudWatch Observability Admin documentation]
 resource "aws_observabilityadmin_telemetry_evaluation" "example" {}
 ```
 
+### All Regions
+
+```terraform
+resource "aws_observabilityadmin_telemetry_evaluation" "example" {
+  all_regions = true
+}
+```
+
+### Specific Regions
+
+```terraform
+resource "aws_observabilityadmin_telemetry_evaluation" "example" {
+  regions = ["us-east-1", "eu-west-1"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
 
+* `all_regions` - (Optional) Whether to start telemetry evaluation in all AWS Regions where CloudWatch Observability Admin is available. The current region becomes the home region. Mutually exclusive with `regions`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `regions` - (Optional) List of AWS Regions to include in multi-region telemetry evaluation. The current region is always implicitly included. Mutually exclusive with `all_regions`.
 
 ## Attribute Reference
 

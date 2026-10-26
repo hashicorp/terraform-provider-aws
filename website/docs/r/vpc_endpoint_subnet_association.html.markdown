@@ -32,14 +32,14 @@ resource "aws_vpc_endpoint_subnet_association" "sn_ec2" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `vpc_endpoint_id` - (Required) The ID of the VPC endpoint with which the subnet will be associated.
-* `subnet_id` - (Required) The ID of the subnet to be associated with the VPC endpoint.
+* `subnet_id` - (Required) ID of the subnet to be associated with the VPC endpoint.
+* `vpc_endpoint_id` - (Required) ID of the VPC endpoint with which the subnet will be associated.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the association.
+* `id` - ID of the association.
 
 ## Timeouts
 

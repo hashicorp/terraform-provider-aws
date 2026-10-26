@@ -8,6 +8,7 @@ package logs
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"strings"
 
@@ -46,70 +47,72 @@ func resourceMetricFilter() *schema.Resource {
 		UpdateWithoutTimeout: resourceMetricFilterPut,
 		DeleteWithoutTimeout: resourceMetricFilterDelete,
 
-		Schema: map[string]*schema.Schema{
-			"apply_on_transformed_logs": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrLogGroupName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validLogGroupName,
-			},
-			"metric_transformation": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDefaultValue: {
-							Type:         nullable.TypeNullableFloat,
-							Optional:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableFloat,
-						},
-						"dimensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validLogMetricFilterTransformationName,
-						},
-						names.AttrNamespace: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validLogMetricFilterTransformationName,
-						},
-						names.AttrUnit: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.StandardUnitNone,
-							ValidateDiagFunc: enum.Validate[awstypes.StandardUnit](),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(0, 100),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"apply_on_transformed_logs": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrLogGroupName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validLogGroupName,
+				},
+				"metric_transformation": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDefaultValue: {
+								Type:         nullable.TypeNullableFloat,
+								Optional:     true,
+								ValidateFunc: nullable.ValidateTypeStringNullableFloat,
+							},
+							"dimensions": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validLogMetricFilterTransformationName,
+							},
+							names.AttrNamespace: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validLogMetricFilterTransformationName,
+							},
+							names.AttrUnit: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.StandardUnitNone,
+								ValidateDiagFunc: enum.Validate[awstypes.StandardUnit](),
+							},
+							names.AttrValue: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(0, 100),
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validLogMetricFilterName,
-			},
-			"pattern": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: verify.StringUTF8LenBetween(0, 1024),
-				StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
-			},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validLogMetricFilterName,
+				},
+				"pattern": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: verify.StringUTF8LenBetween(0, 1024),
+					StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
+				},
+			}
 		},
 	}
 }
@@ -221,13 +224,13 @@ func findMetricFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Clie
 		LogGroupName:     aws.String(logGroupName),
 	}
 
-	return findMetricFilter(ctx, conn, &input, func(v *awstypes.MetricFilter) bool {
+	return findMetricFilter(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.MetricFilter) bool {
 		return aws.ToString(v.FilterName) == name
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.MetricFilter]())
 }
 
-func findMetricFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, filter tfslices.Predicate[*awstypes.MetricFilter]) (*awstypes.MetricFilter, error) {
-	output, err := findMetricFilters(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findMetricFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.MetricFilter]) (*awstypes.MetricFilter, error) {
+	output, err := findMetricFilters(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -236,35 +239,37 @@ func findMetricFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *c
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, filter tfslices.Predicate[*awstypes.MetricFilter], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.MetricFilter, error) {
-	var output []awstypes.MetricFilter
-	opts := tfslices.NewFinderOptions(optFns)
+func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.MetricFilter]) ([]awstypes.MetricFilter, error) {
+	output, err := tfslices.CollectAndConcatWithError(listMetricFilterPages(ctx, conn, input), optFns...)
 
-	pages := cloudwatchlogs.NewDescribeMetricFiltersPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.MetricFilters {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
-				}
-			}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output, nil
+}
+
+func listMetricFilterPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[[]awstypes.MetricFilter, error] {
+	return func(yield func([]awstypes.MetricFilter, error) bool) {
+		pages := cloudwatchlogs.NewDescribeMetricFiltersPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Metric Filters: %w", err))
+				return
+			}
+
+			if !yield(page.MetricFilters, nil) {
+				return
+			}
+		}
+	}
 }
 
 func expandMetricTransformation(tfMap map[string]any) *awstypes.MetricTransformation {

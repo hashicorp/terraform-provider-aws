@@ -33,26 +33,49 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role` - (Required) ARN referencing the IAM role assumed by S3 when replicating tables.
-* `rule` - (Optional) Replication rules. See [Rule](#rule) below for more details.
+* `rule` - (Optional) Replication rules. See [Rule](#rule-block) below for more details.
 * `table_arn` - (Required, Forces new resource) ARN referencing the Table that owns this replication configuration.
 
-### Rule
+### `rule` Block
 
 The `rule` block supports the following:
 
-* `destination` - (Required) Replication destination. See [Destination](#destination) below for more details.
+* `destination` - (Required) Replication destination. See [Destination](#destination-block) below for more details.
 
-### Destination
+### `destination` Block
 
 The `destination` block supports the following:
 
-* `destination_table_bucket_arn` (Required) ARN of destination table bucket to replicate source tables to.
+* `destination_table_bucket_arn` - (Required) ARN of destination table bucket to replicate source tables to.
 
 ## Attribute Reference
 
-This resource exports no additional attributes.
+This resource exports the following attributes in addition to the arguments above:
+
+* `version_token` - Identifier for the current version of the replication configuration.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3tables_table_replication.example
+  identity = {
+    table_arn = "arn:aws:s3tables:us-west-2:123456789012:table/example-table"
+  }
+}
+
+resource "aws_s3tables_table_replication" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `table_arn` (String) ARN of the S3 Tables Table.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Tables Table Replication using the `table_arn`. For example:
 

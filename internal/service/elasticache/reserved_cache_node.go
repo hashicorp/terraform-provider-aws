@@ -173,7 +173,7 @@ func (r *reservedCacheNodeResource) Create(ctx context.Context, request resource
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, reservation, &data)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, reservation, &data, r.flexOpts()...)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -207,7 +207,7 @@ func (r *reservedCacheNodeResource) Read(ctx context.Context, request resource.R
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, reservation, &data)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, reservation, &data, r.flexOpts()...)...)
 	if response.Diagnostics.HasError() {
 		return
 	}

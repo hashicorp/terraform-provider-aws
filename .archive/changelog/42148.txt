@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_msk_serverless_cluster: Add `bootstrap_brokers_sasl_iam` attribute. This functionality requires the `kafka:GetBootstrapBrokers` IAM permission
-```

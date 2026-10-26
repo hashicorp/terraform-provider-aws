@@ -33,21 +33,9 @@ type listResourceRule struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type listRuleModel struct {
-	framework.WithRegionModel
-}
-
 func (l *listResourceRule) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.Route53ResolverClient(ctx)
-
-	var query listRuleModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	tflog.Info(ctx, "Listing Route 53 Resolver Rules")
 	stream.Results = func(yield func(list.ListResult) bool) {

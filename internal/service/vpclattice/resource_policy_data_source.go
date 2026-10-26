@@ -21,16 +21,18 @@ func dataSourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourcePolicyRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPolicy: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

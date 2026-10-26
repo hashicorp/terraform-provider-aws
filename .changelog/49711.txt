@@ -1,0 +1,31 @@
+```release-note:enhancement
+resource/aws_dx_connection: Add `prefix_pool_size_ipv4`, `prefix_pool_size_ipv6`, `prefix_pool_unallocated_count_ipv4`, and `prefix_pool_unallocated_count_ipv6` attributes
+```
+
+```release-note:enhancement
+resource/aws_dx_private_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments
+```
+
+```release-note:enhancement
+resource/aws_dx_transit_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_private_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` attributes
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_transit_virtual_interface: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` attributes
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_private_virtual_interface_accepter: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_transit_virtual_interface_accepter: Add `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments
+```
+
+```release-note:enhancement
+data-source/aws_dx_connection: Add `prefix_pool_size_ipv4`, `prefix_pool_size_ipv6`, `prefix_pool_unallocated_count_ipv4`, and `prefix_pool_unallocated_count_ipv6` attributes
+```

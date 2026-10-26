@@ -41,4 +41,24 @@ This resource exports no additional attributes.
 
 ## Import
 
-You cannot import this resource.
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ec2_image_block_public_access.example
+  identity = {
+    region = "us-east-1"
+  }
+}
+
+resource "aws_ec2_image_block_public_access" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.

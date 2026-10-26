@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_vpc_endpoint_subnet_association: Fix resource importing
-```

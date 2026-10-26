@@ -45,59 +45,61 @@ func resourceMethod() *schema.Resource {
 		UpdateWithoutTimeout: resourceMethodUpdate,
 		DeleteWithoutTimeout: resourceMethodDelete,
 
-		Schema: map[string]*schema.Schema{
-			"api_key_required": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"authorization": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"authorization_scopes": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"authorizer_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"http_method": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validHTTPMethod(),
-			},
-			"operation_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"request_models": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"request_parameters": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeBool},
-				Optional: true,
-			},
-			"request_validator_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrResourceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_key_required": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"authorization": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"authorization_scopes": {
+					Type:     schema.TypeSet,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					Optional: true,
+				},
+				"authorizer_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"http_method": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validHTTPMethod(),
+				},
+				"operation_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"request_models": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"request_parameters": {
+					Type:     schema.TypeMap,
+					Elem:     &schema.Schema{Type: schema.TypeBool},
+					Optional: true,
+				},
+				"request_validator_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrResourceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

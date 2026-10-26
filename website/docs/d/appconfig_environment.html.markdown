@@ -25,20 +25,19 @@ data "aws_appconfig_environment" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) ID of the AppConfig Application to which this Environment belongs.
 * `environment_id` - (Required) ID of the AppConfig Environment.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the environment.
-* `name` - Name of the environment.
 * `description` - Name of the environment.
 * `monitor` - Set of Amazon CloudWatch alarms to monitor during the deployment process.
     * `alarm_arn` - ARN of the Amazon CloudWatch alarm.
     * `alarm_role_arn` - ARN of an IAM role for AWS AppConfig to monitor.
-* `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK`
-  or `ROLLED_BACK`.
+* `name` - Name of the environment.
+* `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK` or `ROLLED_BACK`.
 * `tags` - Map of tags for the resource.

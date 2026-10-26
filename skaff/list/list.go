@@ -143,8 +143,7 @@ type testConfigTemplateData struct {
 }
 
 func testConfig(listName, path string, force bool, templateData TemplateData, includeResource, regionOverride bool) error {
-	tcf := "main.tf"
-	tcf = filepath.Join("testdata", listName, path, tcf)
+	tcf := filepath.Join("testdata", listName, path, "main.tf")
 	if err := os.MkdirAll(filepath.Dir(tcf), 0755); err != nil {
 		return fmt.Errorf("creating test config directory: %w", err)
 	}
@@ -159,8 +158,7 @@ func testConfig(listName, path string, force bool, templateData TemplateData, in
 		return fmt.Errorf("writing list resource test config template: %w", err)
 	}
 
-	qf := "main.tfquery.hcl"
-	qf = filepath.Join("testdata", listName, path, "query.tfquery.hcl")
+	qf := filepath.Join("testdata", listName, path, "query.tfquery.hcl")
 	if err := writeTemplate("queryconfig", qf, queryTmpl, force, testConfig); err != nil {
 		return fmt.Errorf("writing list resource query config template: %w", err)
 	}

@@ -61,7 +61,7 @@ func testAccAPNSChannelCertConfigurationFromEnv(t *testing.T) *testAccAPNSChanne
 	}
 
 	if conf == nil {
-		t.Skipf("Pinpoint certificate credentials envs are missing, skipping test")
+		t.Skipf("End User Messaging certificate credentials envs are missing, skipping test")
 	}
 
 	return conf
@@ -185,7 +185,7 @@ func testAccCheckAPNSChannelExists(ctx context.Context, t *testing.T, n string, 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint APNs Channel with that Application ID exists")
+			return fmt.Errorf("No End User Messaging APNs Channel with that Application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -221,7 +221,7 @@ func testAccCheckAPNSChannelDestroy(ctx context.Context, t *testing.T) resource.
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint APNS Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging APNS Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

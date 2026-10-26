@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_instance: Add `launch_time` attribute
-```

@@ -63,54 +63,56 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 			}
 			return nil
 		},
-		Schema: map[string]*schema.Schema{
-			"assign_generated_ipv6_cidr_block": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"ipv6_pool", "ipv6_ipam_pool_id", "ipv6_cidr_block", "ipv6_netmask_length"},
-			},
-			"ip_source": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_address_attribute": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_cidr_block": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validVPCIPv6CIDRBlock,
-			},
-			"ipv6_ipam_pool_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"assign_generated_ipv6_cidr_block", "ipv6_pool"},
-			},
-			"ipv6_netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
-				ConflictsWith: []string{"ipv6_cidr_block"},
-			},
-			"ipv6_pool": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"assign_generated_ipv6_cidr_block", "ipv6_ipam_pool_id"},
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"assign_generated_ipv6_cidr_block": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"ipv6_pool", "ipv6_ipam_pool_id", "ipv6_cidr_block", "ipv6_netmask_length"},
+				},
+				"ip_source": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_address_attribute": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_cidr_block": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validVPCIPv6CIDRBlock,
+				},
+				"ipv6_ipam_pool_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"assign_generated_ipv6_cidr_block", "ipv6_pool"},
+				},
+				"ipv6_netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
+					ConflictsWith: []string{"ipv6_cidr_block"},
+				},
+				"ipv6_pool": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"assign_generated_ipv6_cidr_block", "ipv6_ipam_pool_id"},
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_s3_bucket_logging: Fix perpetual drift when `expected_bucket_owner` is configured
-```

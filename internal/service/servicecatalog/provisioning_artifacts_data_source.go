@@ -28,53 +28,55 @@ func dataSourceProvisioningArtifacts() *schema.Resource {
 			Read: schema.DefaultTimeout(ConstraintReadTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Default:      acceptLanguageEnglish,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			"product_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"provisioning_artifact_details": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"active": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrCreatedTime: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"guidance": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Default:      acceptLanguageEnglish,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
+				},
+				"product_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"provisioning_artifact_details": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"active": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrCreatedTime: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"guidance": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

@@ -27,16 +27,18 @@ func ResourceDomain() *schema.Resource {
 		ReadWithoutTimeout:   resourceDomainRead,
 		DeleteWithoutTimeout: resourceDomainDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

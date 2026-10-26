@@ -37,7 +37,6 @@ import (
 
 // @FrameworkResource("aws_workspacesweb_ip_access_settings", name="IP Access Settings")
 // @Tags(identifierAttribute="ip_access_settings_arn")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.IpAccessSettings")
 // @Testing(importStateIdAttribute="ip_access_settings_arn")

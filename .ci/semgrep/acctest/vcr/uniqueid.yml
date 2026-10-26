@@ -19,4 +19,3 @@ rules:
         - "**/*.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/odb"

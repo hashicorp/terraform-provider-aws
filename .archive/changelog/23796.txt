@@ -1,3 +1,0 @@
-```new-data-source
-aws_memorydb_subnet_group
-```

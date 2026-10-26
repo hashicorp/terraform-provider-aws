@@ -32,109 +32,111 @@ func dataSourceSubnet() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assign_ipv6_address_on_creation": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"availability_zone_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"available_ip_address_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrCIDRBlock: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"customer_owned_ipv4_pool": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_for_az": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"enable_dns64": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_lni_at_device_index": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"enable_resource_name_dns_aaaa_record_on_launch": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_resource_name_dns_a_record_on_launch": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"ipv6_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"ipv6_cidr_block_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_native": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"map_customer_owned_ip_on_launch": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"map_public_ip_on_launch": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns_hostname_type_on_launch": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"assign_ipv6_address_on_creation": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"available_ip_address_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrCIDRBlock: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"customer_owned_ipv4_pool": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_for_az": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"enable_dns64": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_lni_at_device_index": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"enable_resource_name_dns_aaaa_record_on_launch": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_resource_name_dns_a_record_on_launch": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"ipv6_cidr_block": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"ipv6_cidr_block_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_native": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"map_customer_owned_ip_on_launch": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"map_public_ip_on_launch": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrOutpostARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"private_dns_hostname_type_on_launch": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -224,7 +226,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
-	d.Set("outpost_arn", subnet.OutpostArn)
+	d.Set(names.AttrOutpostARN, subnet.OutpostArn)
 	d.Set(names.AttrOwnerID, subnet.OwnerId)
 	d.Set(names.AttrState, subnet.State)
 
