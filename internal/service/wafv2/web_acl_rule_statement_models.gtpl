@@ -184,6 +184,7 @@ var andChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Cont
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAndChildStatementLevel{{.}}Model](ctx),
 		Validators: []validator.List{
+			listvalidator.IsRequired(),
 			listvalidator.SizeAtLeast(2),
 		},
 		NestedObject: schema.NestedBlockObject{
@@ -212,6 +213,7 @@ var orChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Conte
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleOrChildStatementLevel{{.}}Model](ctx),
 		Validators: []validator.List{
+			listvalidator.IsRequired(),
 			listvalidator.SizeAtLeast(2),
 		},
 		NestedObject: schema.NestedBlockObject{
@@ -238,6 +240,7 @@ var notChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Cont
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleNotChildStatementLevel{{.}}Model](ctx),
 		Validators: []validator.List{
+			listvalidator.IsRequired(),
 			listvalidator.SizeAtMost(1),
 			listvalidator.SizeAtLeast(1),
 		},

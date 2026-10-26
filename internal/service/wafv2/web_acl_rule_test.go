@@ -1011,15 +1011,15 @@ func TestAccWAFV2WebACLRule_invalidLogicalStatementNesting(t *testing.T) {
 		},
 		"empty and": {
 			statement:   "and_statement {}",
-			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+			expectError: regexache.MustCompile(`must have a configuration value\s+as the provider has marked it as required`),
 		},
 		"empty or": {
 			statement:   "or_statement {}",
-			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+			expectError: regexache.MustCompile(`must have a configuration value\s+as the provider has marked it as required`),
 		},
 		"empty not": {
 			statement:   "not_statement {}",
-			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+			expectError: regexache.MustCompile(`must have a configuration value\s+as the provider has marked it as required`),
 		},
 	}
 
@@ -1077,15 +1077,15 @@ func TestAccWAFV2WebACLRule_invalidScopeDownLogicalStatementNesting(t *testing.T
 		},
 		"empty and": {
 			statement:   "and_statement {}",
-			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+			expectError: regexache.MustCompile(`must have a configuration value\s+as the provider has marked it as required`),
 		},
 		"empty or": {
 			statement:   "or_statement {}",
-			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+			expectError: regexache.MustCompile(`must have a configuration value\s+as the provider has marked it as required`),
 		},
 		"empty not": {
 			statement:   "not_statement {}",
-			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+			expectError: regexache.MustCompile(`must have a configuration value\s+as the provider has marked it as required`),
 		},
 	}
 

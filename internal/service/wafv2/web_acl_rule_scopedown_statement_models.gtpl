@@ -147,6 +147,7 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
          return schema.ListNestedBlock{
             CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel{{ . }}Model](ctx),
             Validators: []validator.List{
+                listvalidator.IsRequired(),
                 listvalidator.SizeAtLeast(2),
             },
             NestedObject: schema.NestedBlockObject{
@@ -171,6 +172,7 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
         return schema.ListNestedBlock{
             CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
             Validators: []validator.List{
+                listvalidator.IsRequired(),
                 listvalidator.SizeAtLeast(1),
                 listvalidator.SizeAtMost(1),
             },
@@ -190,6 +192,7 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
         return schema.ListNestedBlock{
             CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownAndStatementLevel{{ . }}ChildModel](ctx),
             Validators: []validator.List{
+                listvalidator.IsRequired(),
                 listvalidator.SizeAtLeast(2),
             },
             NestedObject: schema.NestedBlockObject{
@@ -208,6 +211,7 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
         return schema.ListNestedBlock{
             CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownOrStatementLevel{{ . }}ChildModel](ctx),
             Validators: []validator.List{
+                listvalidator.IsRequired(),
                 listvalidator.SizeAtLeast(2),
             },
             NestedObject: schema.NestedBlockObject{
@@ -228,6 +232,7 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
         return schema.ListNestedBlock{
             CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel{{ . }}Model](ctx),
             Validators: []validator.List{
+                listvalidator.IsRequired(),
                 listvalidator.SizeAtLeast(1),
                 listvalidator.SizeAtMost(1),
             },

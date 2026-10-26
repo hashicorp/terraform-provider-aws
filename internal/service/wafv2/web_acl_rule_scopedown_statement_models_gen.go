@@ -201,6 +201,7 @@ var scopeDownStatementLevel0MultipleBlock = tfsync.OnceValueCtx(func(ctx context
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
 		Validators: []validator.List{
+			listvalidator.IsRequired(),
 			listvalidator.SizeAtLeast(2),
 		},
 		NestedObject: schema.NestedBlockObject{
@@ -225,6 +226,7 @@ var scopeDownNotStatementLevel0ChildBlock = tfsync.OnceValueCtx(func(ctx context
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
 		Validators: []validator.List{
+			listvalidator.IsRequired(),
 			listvalidator.SizeAtLeast(1),
 			listvalidator.SizeAtMost(1),
 		},
@@ -286,6 +288,7 @@ var scopeDownAndStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownAndStatementLevel1ChildModel](ctx),
 		Validators: []validator.List{
+			listvalidator.IsRequired(),
 			listvalidator.SizeAtLeast(2),
 		},
 		NestedObject: schema.NestedBlockObject{
@@ -304,6 +307,7 @@ var scopeDownOrStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context.
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownOrStatementLevel1ChildModel](ctx),
 		Validators: []validator.List{
+			listvalidator.IsRequired(),
 			listvalidator.SizeAtLeast(2),
 		},
 		NestedObject: schema.NestedBlockObject{
@@ -323,6 +327,7 @@ var scopeDownNotStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel1Model](ctx),
 		Validators: []validator.List{
+			listvalidator.IsRequired(),
 			listvalidator.SizeAtLeast(1),
 			listvalidator.SizeAtMost(1),
 		},
