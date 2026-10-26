@@ -124,7 +124,12 @@ func (l *networkInterfaceListResource) List(ctx context.Context, request list.Li
 
 func listNetworkInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) iter.Seq2[awstypes.NetworkInterface, error] {
 	return func(yield func(awstypes.NetworkInterface, error) bool) {
-		pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, input)
+		pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, input, func(o *ec2.DescribeNetworkInterfacesPaginatorOptions) {
+			// MaxResults cannot be combined with NetworkInterfaceIds.
+			if o.Limit == 0 && len(input.NetworkInterfaceIds) == 0 {
+				o.Limit = 1000
+			}
+		})
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {

@@ -53,9 +53,35 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newDashboardResource,
+			TypeName: "aws_cloudwatchomni_dashboard",
+			Name:     "Dashboard",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("dashboard_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      dashboardImportID{},
+			},
+		},
+		{
 			Factory:  newDomainResource,
 			TypeName: "aws_cloudwatchomni_domain",
 			Name:     "Domain",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newOrganizationDomainResource,
+			TypeName: "aws_cloudwatchomni_organization_domain",
+			Name:     "Organization Domain",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_id", true)),
 			Import: inttypes.FrameworkImport{
@@ -107,9 +133,28 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 		},
 		{
+			Factory:  newDashboardResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_dashboard",
+			Name:     "Dashboard",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("dashboard_id", true),
+			}),
+		},
+		{
 			Factory:  newDomainResourceAsListResource,
 			TypeName: "aws_cloudwatchomni_domain",
 			Name:     "Domain",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_id", true)),
+		},
+		{
+			Factory:  newOrganizationDomainResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_organization_domain",
+			Name:     "Organization Domain",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_id", true)),
 		},
