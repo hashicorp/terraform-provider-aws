@@ -22,6 +22,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mq/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -576,14 +578,18 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if strings.EqualFold(string(output.EngineType), string(types.EngineTypeRabbitmq)) {
 		sharedResources, err := findSharedResourcesByBrokerID(ctx, conn, d.Id())
 
-		if err != nil {
+		switch {
+		case sharedResourcesUnavailableInPartition(meta.(*conns.AWSClient).Partition(ctx), err):
+			d.Set("resource_share_arns", nil)
+			d.Set("shared_resources", nil)
+		case err != nil:
 			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) shared resources: %s", d.Id(), err)
-		}
+		default:
+			d.Set("resource_share_arns", flattenResourceShareARNs(sharedResources))
 
-		d.Set("resource_share_arns", flattenResourceShareARNs(sharedResources))
-
-		if err := d.Set("shared_resources", flattenSharedResources(sharedResources)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting shared_resources: %s", err)
+			if err := d.Set("shared_resources", flattenSharedResources(sharedResources)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting shared_resources: %s", err)
+			}
 		}
 	} else {
 		d.Set("shared_resources", nil)
@@ -810,6 +816,17 @@ func findSharedResourcesByBrokerID(ctx context.Context, conn *mq.Client, id stri
 	}
 
 	return findSharedResources(ctx, conn, &input)
+}
+
+// errCodeMissingAuthenticationToken is returned by API Gateway when an operation is
+// not routed in a partition.
+const errCodeMissingAuthenticationToken = "MissingAuthenticationTokenException"
+
+// sharedResourcesUnavailableInPartition reports whether an error from
+// DescribeSharedResources indicates the operation is unavailable in the partition.
+func sharedResourcesUnavailableInPartition(partition string, err error) bool {
+	return errs.IsUnsupportedOperationInPartitionError(partition, err) ||
+		(partition != endpoints.AwsPartitionID && tfawserr.ErrCodeEquals(err, errCodeMissingAuthenticationToken))
 }
 
 func findSharedResources(ctx context.Context, conn *mq.Client, input *mq.DescribeSharedResourcesInput) ([]types.SharedResource, error) {

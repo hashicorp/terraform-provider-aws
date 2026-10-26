@@ -24,8 +24,11 @@ resource "aws_pinpoint_event_stream" "stream" {
 resource "aws_pinpoint_app" "app" {}
 
 resource "aws_kinesis_stream" "test_stream" {
-  name        = "pinpoint-kinesis-test"
-  shard_count = 1
+  name = "pinpoint-kinesis-test"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -69,7 +72,7 @@ resource "aws_iam_role_policy" "test_role_policy" {
 This resource supports the following arguments:
 
 * `application_id` - (Required, **Deprecated**) Application ID.
-* `destination_stream_arn` - (Required, **Deprecated**) Amazon Resource Name (ARN) of the Amazon Kinesis stream or Firehose delivery stream to which you want to publish events.
+* `destination_stream_arn` - (Required, **Deprecated**) ARN of the Amazon Kinesis stream or Firehose delivery stream to which you want to publish events.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role_arn` - (Required, **Deprecated**) IAM role that authorizes AWS End User Messaging to publish events to the stream in your account.
 

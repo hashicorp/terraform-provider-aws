@@ -32,107 +32,216 @@ resource "aws_macie2_classification_job" "test" {
 
 This resource supports the following arguments:
 
+* `custom_data_identifier_ids` - (Optional) Custom data identifiers to use for data analysis and classification.
+* `description` - (Optional) Custom description of the job. Can contain as many as 200 characters.
+* `initial_run` - (Optional) Whether to analyze all existing, eligible objects immediately after the job is created.
+* `job_status` - (Optional) Status for the job. Valid values are `CANCELLED`, `RUNNING` and `USER_PAUSED`.
+* `job_type` - (Required) Schedule for running the job. Valid values are `ONE_TIME`, to run the job only once, and `SCHEDULED`, to run the job on a daily, weekly, or monthly basis. When set to `SCHEDULED`, use `schedule_frequency` to define the recurrence pattern for the job.
+* `name` - (Optional) Custom name for the job. Can contain as many as 500 characters. If omitted, Terraform assigns a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `schedule_frequency` -  (Optional) The recurrence pattern for running the job. To run the job only once, don't specify a value for this property and set the value for the `job_type` property to `ONE_TIME`. (documented below)
-* `custom_data_identifier_ids` -  (Optional) The custom data identifiers to use for data analysis and classification.
-* `sampling_percentage` -  (Optional) The sampling depth, as a percentage, to apply when processing objects. This value determines the percentage of eligible objects that the job analyzes. If this value is less than 100, Amazon Macie selects the objects to analyze at random, up to the specified percentage, and analyzes all the data in those objects.
-* `name` -  (Optional) A custom name for the job. The name can contain as many as 500 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
-* `name_prefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `description` -  (Optional) A custom description of the job. The description can contain as many as 200 characters.
-* `initial_run` -  (Optional) Specifies whether to analyze all existing, eligible objects immediately after the job is created.
-* `job_type` -  (Required) The schedule for running the job. Valid values are: `ONE_TIME` - Run the job only once. If you specify this value, don't specify a value for the `schedule_frequency` property. `SCHEDULED` - Run the job on a daily, weekly, or monthly basis. If you specify this value, use the `schedule_frequency` property to define the recurrence pattern for the job.
-* `s3_job_definition` -  (Optional) The S3 buckets that contain the objects to analyze, and the scope of that analysis. (documented below)
+* `s3_job_definition` - (Required) S3 buckets that contain the objects to analyze, and the scope of that analysis. See [`s3_job_definition` Block](#s3_job_definition-block) for details.
+* `sampling_percentage` - (Optional) Sampling depth, as a percentage, to apply when processing objects. This value determines the percentage of eligible objects that the job analyzes. If this value is less than 100, Amazon Macie selects the objects to analyze at random, up to the specified percentage, and analyzes all the data in those objects.
+* `schedule_frequency` - (Optional) Recurrence pattern for running the job. To run the job only once, omit this argument and set `job_type` to `ONE_TIME`. See [`schedule_frequency` Block](#schedule_frequency-block) for details.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `job_status` -  (Optional) The status for the job. Valid values are: `CANCELLED`, `RUNNING` and `USER_PAUSED`
 
-The `schedule_frequency` object supports the following:
+### `s3_job_definition` Block
 
-* `daily_schedule` -  (Optional) Specifies a daily recurrence pattern for running the job.
-* `weekly_schedule` -  (Optional) Specifies a weekly recurrence pattern for running the job.
-* `monthly_schedule` -  (Optional) Specifies a monthly recurrence pattern for running the job.
+The `s3_job_definition` configuration block supports the following arguments:
 
-The `s3_job_definition` object supports the following:
+* `bucket_criteria` - (Optional) Property- and tag-based conditions that determine which S3 buckets to include or exclude from the analysis. Conflicts with `bucket_definitions`. See [`bucket_criteria` Block](#bucket_criteria-block) for details.
+* `bucket_definitions` - (Optional) Array of objects, one for each AWS account that owns buckets to analyze. Each object specifies the account ID for an account and one or more buckets to analyze for the account. Conflicts with `bucket_criteria`. See [`bucket_definitions` Block](#bucket_definitions-block) for details.
+* `scoping` - (Optional) Property- and tag-based conditions that determine which objects to include or exclude from the analysis. See [`scoping` Block](#scoping-block) for details.
 
-* `bucket_criteria` - (Optional) The property- and tag-based conditions that determine which S3 buckets to include or exclude from the analysis. Conflicts with `bucket_definitions`. (documented below)
-* `bucket_definitions` -  (Optional) An array of objects, one for each AWS account that owns buckets to analyze. Each object specifies the account ID for an account and one or more buckets to analyze for the account. Conflicts with `bucket_criteria`. (documented below)
-* `scoping` -  (Optional) The property- and tag-based conditions that determine which objects to include or exclude from the analysis. (documented below)
+### `bucket_criteria` Block
 
-### bucket_criteria Configuration Block
+The `bucket_criteria` configuration block supports the following arguments:
 
-The `bucket_criteria` object supports the following:
+* `excludes` - (Optional) Property- or tag-based conditions that determine which S3 buckets to exclude from the analysis. See [`bucket_criteria.excludes` Block](#bucket_criteriaexcludes-block) for details.
+* `includes` - (Optional) Property- or tag-based conditions that determine which S3 buckets to include in the analysis. See [`bucket_criteria.includes` Block](#bucket_criteriaincludes-block) for details.
 
-* `excludes` -  (Optional) The property- or tag-based conditions that determine which S3 buckets to exclude from the analysis. (documented below)
-* `includes` -  (Optional) The property- or tag-based conditions that determine which S3 buckets to include in the analysis. (documented below)
+### `bucket_criteria.excludes` Block
 
-The `excludes` and `includes` object supports the following:
+The `excludes` configuration block supports the following arguments:
 
-* `and` -  (Optional) An array of conditions, one for each condition that determines which S3 buckets to include or exclude from the job. (documented below)
+* `and` - (Optional) Array of conditions, one for each condition that determines which S3 buckets to include or exclude from the job. See [`bucket_criteria.excludes.and` Block](#bucket_criteriaexcludesand-block) for details.
 
-The `and` object supports the following:
+### `bucket_criteria.excludes.and` Block
 
-* `simple_criterion` -  (Optional) A property-based condition that defines a property, operator, and one or more values for including or excluding an S3 buckets from the job. (documented below)
-* `tag_criterion` -  (Optional) A tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an S3 buckets from the job. (documented below)
+The `and` configuration block supports the following arguments:
 
-The `simple_criterion` object supports the following:
+* `simple_criterion` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an S3 bucket from the job. See [`excludes.simple_criterion` Block](#excludessimple_criterion-block) for details.
+* `tag_criterion` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an S3 bucket from the job. See [`excludes.tag_criterion` Block](#excludestag_criterion-block) for details.
 
-* `comparator` -  (Required) The operator to use in a condition. Valid combination of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-jobcomparator)
-* `key` -  (Required) The object property to use in the condition. Valid combination of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionkeyforjob)
-* `values` -  (Required) An array that lists the values to use in the condition. Valid combination of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionforjob)
+### `excludes.simple_criterion` Block
 
-The `tag_criterion` object supports the following:
+The `simple_criterion` configuration block supports the following arguments:
 
-* `comparator` -  (Required) The operator to use in the condition. Valid combination and values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-jobcomparator)
-* `tag_values` -  (Required) The  tag key and value pairs to use in the condition. One or more blocks are allowed. (documented below)
+* `comparator` - (Optional) Operator to use in a condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-jobcomparator).
+* `key` - (Optional) Object property to use in the condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionkeyforjob).
+* `values` - (Optional) Array that lists the values to use in the condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionforjob).
 
-The `tag_values` object supports the following:
+### `excludes.tag_criterion` Block
 
-* `key` - (Required) The tag key.
-* `value` - (Required) The tag value.
+The `tag_criterion` configuration block supports the following arguments:
 
-### bucket_definitions Configuration Block
+* `comparator` - (Optional) Operator to use in the condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-jobcomparator).
+* `tag_values` - (Optional) Tag key and value pairs to use in the condition. One or more blocks are allowed. See [`s3_job_definition.bucket_criteria.excludes.and.tag_criterion.tag_values` Block](#s3_job_definitionbucket_criteriaexcludesandtag_criteriontag_values-block) for details.
 
-The `bucket_definitions` object supports the following:
+### `s3_job_definition.bucket_criteria.excludes.and.tag_criterion.tag_values` Block
 
-* `account_id` -  (Required) The unique identifier for the AWS account that owns the buckets.
-* `buckets` -  (Required) An array that lists the names of the buckets.
+The `tag_values` configuration block supports the following arguments:
 
-### scoping Configuration Block
+* `key` - (Optional) Tag key.
+* `value` - (Optional) Tag value.
 
-The `scoping` object supports the following:
+### `bucket_criteria.includes` Block
 
-* `excludes` -  (Optional) The property- or tag-based conditions that determine which objects to exclude from the analysis. (documented below)
-* `includes` -  (Optional) The property- or tag-based conditions that determine which objects to include in the analysis. (documented below)
+The `includes` configuration block supports the following arguments:
 
-The `excludes` and `includes` object supports the following:
+* `and` - (Optional) Array of conditions, one for each condition that determines which S3 buckets to include or exclude from the job. See [`bucket_criteria.includes.and` Block](#bucket_criteriaincludesand-block) for details.
 
-* `and` -  (Optional) An array of conditions, one for each condition that determines which objects to include or exclude from the job. (documented below)
+### `bucket_criteria.includes.and` Block
 
-The `and` object supports the following:
+The `and` configuration block supports the following arguments:
 
-* `simple_scope_term` -  (Optional) A property-based condition that defines a property, operator, and one or more values for including or excluding an object from the job. (documented below)
-* `tag_scope_term` -  (Optional) A tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an object from the job. (documented below)
+* `simple_criterion` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an S3 bucket from the job. See [`includes.simple_criterion` Block](#includessimple_criterion-block) for details.
+* `tag_criterion` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an S3 bucket from the job. See [`includes.tag_criterion` Block](#includestag_criterion-block) for details.
 
-The `simple_scope_term` object supports the following:
+### `includes.simple_criterion` Block
 
-* `comparator` -  (Optional) The operator to use in a condition. Valid values are: `EQ`, `GT`, `GTE`, `LT`, `LTE`, `NE`, `CONTAINS`, `STARTS_WITH`
-* `values` -  (Optional) An array that lists the values to use in the condition.
-* `key` -  (Optional) The object property to use in the condition.
+The `simple_criterion` configuration block supports the following arguments:
 
-The `tag_scope_term` object supports the following:
+* `comparator` - (Optional) Operator to use in a condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-jobcomparator).
+* `key` - (Optional) Object property to use in the condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionkeyforjob).
+* `values` - (Optional) Array that lists the values to use in the condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionforjob).
 
-* `comparator` -  (Optional) The operator to use in the condition.
-* `tag_values` -  (Optional) The tag keys or tag key and value pairs to use in the condition.
-* `key` -  (Required) The tag key to use in the condition. The only valid value is `TAG`.
-* `target` -  (Required) The type of object to apply the condition to. The only valid value is `S3_OBJECT`.
+### `includes.tag_criterion` Block
+
+The `tag_criterion` configuration block supports the following arguments:
+
+* `comparator` - (Optional) Operator to use in the condition. Valid combinations of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-jobcomparator).
+* `tag_values` - (Optional) Tag key and value pairs to use in the condition. One or more blocks are allowed. See [`s3_job_definition.bucket_criteria.includes.and.tag_criterion.tag_values` Block](#s3_job_definitionbucket_criteriaincludesandtag_criteriontag_values-block) for details.
+
+### `s3_job_definition.bucket_criteria.includes.and.tag_criterion.tag_values` Block
+
+The `tag_values` configuration block supports the following arguments:
+
+* `key` - (Optional) Tag key.
+* `value` - (Optional) Tag value.
+
+### `bucket_definitions` Block
+
+The `bucket_definitions` configuration block supports the following arguments:
+
+* `account_id` - (Required) Unique identifier for the AWS account that owns the buckets.
+* `buckets` - (Required) Array that lists the names of the buckets.
+
+### `scoping` Block
+
+The `scoping` configuration block supports the following arguments:
+
+* `excludes` - (Optional) Property- or tag-based conditions that determine which objects to exclude from the analysis. See [`scoping.excludes` Block](#scopingexcludes-block) for details.
+* `includes` - (Optional) Property- or tag-based conditions that determine which objects to include in the analysis. See [`scoping.includes` Block](#scopingincludes-block) for details.
+
+### `scoping.excludes` Block
+
+The `excludes` configuration block supports the following arguments:
+
+* `and` - (Optional) Array of conditions, one for each condition that determines which objects to include or exclude from the job. See [`scoping.excludes.and` Block](#scopingexcludesand-block) for details.
+
+### `scoping.excludes.and` Block
+
+The `and` configuration block supports the following arguments:
+
+* `simple_scope_term` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an object from the job. See [`excludes.simple_scope_term` Block](#excludessimple_scope_term-block) for details.
+* `tag_scope_term` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an object from the job. See [`excludes.tag_scope_term` Block](#excludestag_scope_term-block) for details.
+
+### `excludes.simple_scope_term` Block
+
+The `simple_scope_term` configuration block supports the following arguments:
+
+* `comparator` - (Optional) Operator to use in a condition. Valid values are `EQ`, `GT`, `GTE`, `LT`, `LTE`, `NE`, `CONTAINS`, `STARTS_WITH`.
+* `key` - (Optional) Object property to use in the condition.
+* `values` - (Optional) Array that lists the values to use in the condition.
+
+### `excludes.tag_scope_term` Block
+
+The `tag_scope_term` configuration block supports the following arguments:
+
+* `comparator` - (Optional) Operator to use in the condition.
+* `key` - (Optional) Tag key to use in the condition. The only valid value is `TAG`.
+* `tag_values` - (Optional) Tag keys or tag key and value pairs to use in the condition. See [`s3_job_definition.scoping.excludes.and.tag_scope_term.tag_values` Block](#s3_job_definitionscopingexcludesandtag_scope_termtag_values-block) for details.
+* `target` - (Optional) Type of object to apply the condition to. The only valid value is `S3_OBJECT`. The AWS API requires this argument when `tag_scope_term` is used.
+
+### `s3_job_definition.scoping.excludes.and.tag_scope_term.tag_values` Block
+
+The `tag_values` configuration block supports the following arguments:
+
+* `key` - (Optional) Tag key.
+* `value` - (Optional) Tag value.
+
+### `scoping.includes` Block
+
+The `includes` configuration block supports the following arguments:
+
+* `and` - (Optional) Array of conditions, one for each condition that determines which objects to include or exclude from the job. See [`scoping.includes.and` Block](#scopingincludesand-block) for details.
+
+### `scoping.includes.and` Block
+
+The `and` configuration block supports the following arguments:
+
+* `simple_scope_term` - (Optional) Property-based condition that defines a property, operator, and one or more values for including or excluding an object from the job. See [`includes.simple_scope_term` Block](#includessimple_scope_term-block) for details.
+* `tag_scope_term` - (Optional) Tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an object from the job. See [`includes.tag_scope_term` Block](#includestag_scope_term-block) for details.
+
+### `includes.simple_scope_term` Block
+
+The `simple_scope_term` configuration block supports the following arguments:
+
+* `comparator` - (Optional) Operator to use in a condition. Valid values are `EQ`, `GT`, `GTE`, `LT`, `LTE`, `NE`, `CONTAINS`, `STARTS_WITH`.
+* `key` - (Optional) Object property to use in the condition.
+* `values` - (Optional) Array that lists the values to use in the condition.
+
+### `includes.tag_scope_term` Block
+
+The `tag_scope_term` configuration block supports the following arguments:
+
+* `comparator` - (Optional) Operator to use in the condition.
+* `key` - (Optional) Tag key to use in the condition. The only valid value is `TAG`.
+* `tag_values` - (Optional) Tag keys or tag key and value pairs to use in the condition. See [`s3_job_definition.scoping.includes.and.tag_scope_term.tag_values` Block](#s3_job_definitionscopingincludesandtag_scope_termtag_values-block) for details.
+* `target` - (Optional) Type of object to apply the condition to. The only valid value is `S3_OBJECT`. The AWS API requires this argument when `tag_scope_term` is used.
+
+### `s3_job_definition.scoping.includes.and.tag_scope_term.tag_values` Block
+
+The `tag_values` configuration block supports the following arguments:
+
+* `key` - (Optional) Tag key.
+* `value` - (Optional) Tag value.
+
+### `schedule_frequency` Block
+
+The `schedule_frequency` configuration block supports the following arguments:
+
+* `daily_schedule` - (Optional) Whether to run the job on a daily recurrence pattern.
+* `monthly_schedule` - (Optional) Day of the month on which to run the job for a monthly recurrence pattern.
+* `weekly_schedule` - (Optional) Day of the week on which to run the job for a weekly recurrence pattern.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The unique identifier (ID) of the macie classification job.
-* `created_at` -  The date and time, in UTC and extended RFC 3339 format, when the job was created.
-* `user_paused_details` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be canceled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `created_at` - Date and time, in UTC and extended RFC 3339 format, when the job was created.
+* `id` - Unique identifier (ID) of the Macie classification job.
+* `job_arn` - ARN of the classification job.
+* `job_id` - Unique identifier (ID) of the classification job.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `user_paused_details` - If the current status of the job is `USER_PAUSED`, information about when the job was paused and when the job or job run will expire and be cancelled if it isn't resumed. This value is present only if `job_status` is `USER_PAUSED`. See [`user_paused_details` Block](#user_paused_details-block) for details.
+
+### `user_paused_details` Block
+
+* `job_expires_at` - Date and time, in UTC and extended RFC 3339 format, when the job or job run will expire and be cancelled if it isn't resumed.
+* `job_imminent_expiration_health_event_arn` - ARN of the AWS Health event that Macie sent to notify of the job or job run's imminent expiration.
+* `job_paused_at` - Date and time, in UTC and extended RFC 3339 format, when the job was paused.
 
 ## Timeouts
 
@@ -143,7 +252,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_classification_job` using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_classification_job` using the ID. For example:
 
 ```terraform
 import {
@@ -152,7 +261,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_macie2_classification_job` using the id. For example:
+Using `terraform import`, import `aws_macie2_classification_job` using the ID. For example:
 
 ```console
 % terraform import aws_macie2_classification_job.example abcd1

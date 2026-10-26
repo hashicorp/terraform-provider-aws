@@ -83,22 +83,23 @@ resource "aws_vpc_ipam" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `cidr` - (Optional, Forces new resource) The CIDR you want to assign to the pool.
-* `description` - (Optional, Forces new resource) The description for the allocation.
+* `cidr` - (Optional, Forces new resource) CIDR you want to assign to the pool.
+* `description` - (Optional, Forces new resource) Description for the allocation.
 * `disallowed_cidrs` - (Optional, Forces new resource) Exclude a particular CIDR range from being returned by the pool.
-* `ipam_pool_id` - (Required, Forces new resource) The ID of the pool to which you want to assign a CIDR.
-* `netmask_length` - (Optional, Forces new resource) The netmask length of the CIDR you would like to allocate to the IPAM pool. Valid Values: `0-128`.
+* `ipam_pool_id` - (Required, Forces new resource) ID of the pool to which you want to assign a CIDR.
+* `netmask_length` - (Optional, Forces new resource) Netmask length of the CIDR you would like to allocate to the IPAM pool. Valid Values: `0-128`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the allocation.
-* `resource_id` - The ID of the resource.
-* `resource_owner` - The owner of the resource.
-* `resource_type` - The type of the resource.
+* `id` - ID of the allocation.
+* `ipam_pool_allocation_id` - ID of the allocation.
+* `resource_id` - ID of the resource.
+* `resource_owner` - Owner of the resource.
+* `resource_type` - Type of the resource.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

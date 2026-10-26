@@ -143,23 +143,23 @@ This resource supports the following arguments:
 * `pre_token_generation_config` - (Optional) Allow to customize access tokens. See [pre_token_configuration_type](#pre_token_configuration_type)
 * `user_migration` - (Optional) User migration Lambda config type.
 * `verify_auth_challenge_response` - (Optional) Verifies the authentication challenge response.
-* `kms_key_id` - (Optional) The Amazon Resource Name of Key Management Service Customer master keys. Amazon Cognito uses the key to encrypt codes and temporary passwords sent to CustomEmailSender and CustomSMSSender.
+* `kms_key_id` - (Optional) ARN of KMS Customer master keys. Amazon Cognito uses the key to encrypt codes and temporary passwords sent to CustomEmailSender and CustomSMSSender.
 * `custom_email_sender` - (Optional) A custom email sender AWS Lambda trigger. See [custom_email_sender](#custom_email_sender) Below.
 * `custom_sms_sender` - (Optional) A custom SMS sender AWS Lambda trigger. See [custom_sms_sender](#custom_sms_sender) Below.
 
 #### custom_email_sender
 
-* `lambda_arn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to send email notifications to users.
+* `lambda_arn` - (Required) Lambda ARN of the Lambda function that Amazon Cognito triggers to send email notifications to users.
 * `lambda_version` - (Required) The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom email Lambda function. The only supported value is `V1_0`.
 
 #### custom_sms_sender
 
-* `lambda_arn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to send SMS notifications to users.
+* `lambda_arn` - (Required) Lambda ARN of the Lambda function that Amazon Cognito triggers to send SMS notifications to users.
 * `lambda_version` - (Required) The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom SMS Lambda function. The only supported value is `V1_0`.
 
 #### pre_token_configuration_type
 
-* `lambda_arn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `pre_token_generation`, its value must be identical to this one.
+* `lambda_arn` - (Required) Lambda ARN of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `pre_token_generation`, its value must be identical to this one.
 * `lambda_version` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`, `V3_0`.
 
 ### password_policy

@@ -38,14 +38,6 @@ type systemListResource struct {
 func (l *systemListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ResilienceHubV2Client(ctx)
 
-	var query listSystemModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input resiliencehubv2.ListSystemsInput
 		for item, err := range listSystems(ctx, conn, &input) {
@@ -58,6 +50,19 @@ func (l *systemListResource) List(ctx context.Context, request list.ListRequest,
 			arn := aws.ToString(item.SystemArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
+			var output *awstypes.System
+			if request.IncludeResource {
+				var err error
+				output, err = findSystemByARN(ctx, conn, arn)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data systemResourceModel
@@ -65,16 +70,6 @@ func (l *systemListResource) List(ctx context.Context, request list.ListRequest,
 				data.SystemARN = fwflex.StringValueToFramework(ctx, arn)
 
 				if request.IncludeResource {
-					output, err := findSystemByARN(ctx, conn, arn)
-					if retry.NotFound(err) {
-						return
-					}
-					if err != nil {
-						result := fwdiag.NewListResultErrorDiagnostic(err)
-						yield(result)
-						return
-					}
-
 					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
 					if result.Diagnostics.HasError() {
 						return
@@ -84,15 +79,15 @@ func (l *systemListResource) List(ctx context.Context, request list.ListRequest,
 				result.DisplayName = aws.ToString(item.Name)
 			})
 
+			if result.Diagnostics.HasError() {
+				yield(list.ListResult{Diagnostics: result.Diagnostics})
+				return
+			}
 			if !yield(result) {
 				return
 			}
 		}
 	}
-}
-
-type listSystemModel struct {
-	framework.WithRegionModel
 }
 
 func listSystems(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListSystemsInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.SystemSummary, error] {

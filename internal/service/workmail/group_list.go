@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @FrameworkListResource("aws_workmail_group")
@@ -81,6 +82,19 @@ func (l *groupListResource) List(ctx context.Context, request list.ListRequest, 
 			groupName := aws.ToString(item.Name)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("group_id"), groupID)
 
+			var out *workmail.DescribeGroupOutput
+			if request.IncludeResource {
+				var err error
+				out, err = findGroupByTwoPartKey(ctx, conn, organizationID, groupID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data groupResourceModel
@@ -89,12 +103,6 @@ func (l *groupListResource) List(ctx context.Context, request list.ListRequest, 
 				data.GroupId = flex.StringValueToFramework(ctx, groupID)
 
 				if request.IncludeResource {
-					out, err := findGroupByTwoPartKey(ctx, conn, organizationID, groupID)
-					if err != nil {
-						result.Diagnostics.Append(fwdiag.NewListResultErrorDiagnostic(err).Diagnostics...)
-						return
-					}
-
 					result.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 					if result.Diagnostics.HasError() {
 						return

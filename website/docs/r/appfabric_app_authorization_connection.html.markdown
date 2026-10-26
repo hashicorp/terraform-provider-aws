@@ -25,8 +25,8 @@ resource "aws_appfabric_app_authorization_connection" "example" {
 
 The following arguments are required:
 
-* `app_authorization_arn` - (Required) Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the app authorization to use for the request.
-* `app_bundle_arn` - (Required) Amazon Resource Name (ARN) of the app bundle to use for the request.
+* `app_authorization_arn` - (Required) ARN or Universal Unique Identifier (UUID) of the app authorization to use for the request.
+* `app_bundle_arn` - (Required) ARN of the app bundle to use for the request.
 
 The following arguments are optional:
 
@@ -45,7 +45,14 @@ The `auth_request` configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `app` - Name of the application.
-* `tenant` - Contains information about an application tenant, such as the application display name and identifier.
+* `tenant` - Information about an application tenant. See [`tenant` Block](#tenant-block) below.
+
+### `tenant` Block
+
+The `tenant` block exports the following attributes:
+
+* `tenant_display_name` - Display name of the tenant.
+* `tenant_identifier` - ID of the application tenant.
 
 ## Timeouts
 

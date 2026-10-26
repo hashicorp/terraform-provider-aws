@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -964,6 +965,111 @@ func TestAccSSMParameter_Name_fullPath(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_Name_singleNameWithLeadingSlash(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	name := fmt.Sprintf("/%s_%s", t.Name(), acctest.RandString(t, 10))
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_basic(name, "String", "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ssm", "parameter{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_Name_migrate_singleNameWithLeadingSlash(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	nameWithoutSlash := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(t, 10))
+	name := "/" + nameWithoutSlash
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
+		CheckDestroy: testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.58.0",
+					},
+				},
+				Config: testAccParameterConfig_basic(name, "String", "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ssm", "parameter/{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameWithoutSlash),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrName:      knownvalue.StringExact(nameWithoutSlash),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccParameterConfig_basic(name, "String", "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ssm", "parameter{name}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrName:      knownvalue.StringExact(nameWithoutSlash),
+					}),
+				},
 			},
 		},
 	})

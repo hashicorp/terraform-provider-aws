@@ -37,14 +37,6 @@ type resourcePolicyListResource struct {
 func (l *resourcePolicyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().OpenSearchIngestionClient(ctx)
 
-	var query listResourcePolicyModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input osis.ListPipelinesInput
 		for output, err := range listResourcePolicies(ctx, conn, &input) {
@@ -74,10 +66,6 @@ func (l *resourcePolicyListResource) List(ctx context.Context, request list.List
 			}
 		}
 	}
-}
-
-type listResourcePolicyModel struct {
-	framework.WithRegionModel
 }
 
 func listResourcePolicies(ctx context.Context, conn *osis.Client, input *osis.ListPipelinesInput) iter.Seq2[*osis.GetResourcePolicyOutput, error] {

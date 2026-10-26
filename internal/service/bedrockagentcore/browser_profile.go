@@ -9,7 +9,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -42,7 +41,6 @@ import (
 // @IdentityAttribute("profile_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol.GetBrowserProfileOutput")
 // @Testing(generator="testAccRandomBrowserProfileName(t)")
-// @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importStateIdAttribute="profile_id")
 func newBrowserProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -75,7 +73,7 @@ func (r *browserProfileResource) Schema(ctx context.Context, request resource.Sc
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

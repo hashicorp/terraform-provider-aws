@@ -50,14 +50,14 @@ resource "aws_iam_role" "assume" {
 
 The following arguments are required:
 
-* `role` - (Required) The grafana role. Valid values can be found [here](https://docs.aws.amazon.com/grafana/latest/APIReference/API_UpdateInstruction.html#ManagedGrafana-Type-UpdateInstruction-role).
-* `workspace_id` - (Required) The workspace id.
+* `role` - (Required) Grafana role. Valid values can be found [here](https://docs.aws.amazon.com/grafana/latest/APIReference/API_UpdateInstruction.html#ManagedGrafana-Type-UpdateInstruction-role).
+* `workspace_id` - (Required) Workspace ID.
 
 The following arguments are optional:
 
+* `group_ids` - (Optional) AWS SSO group IDs to be assigned the role given in `role`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `group_ids` - (Optional) The AWS SSO group ids to be assigned the role given in `role`.
-* `user_ids` - (Optional) The AWS SSO user ids to be assigned the role given in `role`.
+* `user_ids` - (Optional) AWS SSO user IDs to be assigned the role given in `role`.
 
 ## Attribute Reference
 

@@ -9,7 +9,6 @@ import (
 	"context"
 	"iter"
 	"slices"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
@@ -29,12 +28,43 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newArchiveResource,
+			TypeName: "aws_mailmanager_archive",
+			Name:     "Archive",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newIngressPointResource,
+			TypeName: "aws_mailmanager_ingress_point",
+			Name:     "Ingress Point",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newRelayResource,
+			TypeName: "aws_mailmanager_relay",
+			Name:     "Relay",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newRuleSetResource,
 			TypeName: "aws_mailmanager_rule_set",
 			Name:     "Rule Set",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.FrameworkImport{
@@ -45,9 +75,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newTrafficPolicyResource,
 			TypeName: "aws_mailmanager_traffic_policy",
 			Name:     "Traffic Policy",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 			Import: inttypes.FrameworkImport{
@@ -60,12 +88,34 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newArchiveResourceAsListResource,
+			TypeName: "aws_mailmanager_archive",
+			Name:     "Archive",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newIngressPointResourceAsListResource,
+			TypeName: "aws_mailmanager_ingress_point",
+			Name:     "Ingress Point",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newRelayResourceAsListResource,
+			TypeName: "aws_mailmanager_relay",
+			Name:     "Relay",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
 			Factory:  newRuleSetResourceAsListResource,
 			TypeName: "aws_mailmanager_rule_set",
 			Name:     "Rule Set",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
@@ -73,9 +123,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newTrafficPolicyResourceAsListResource,
 			TypeName: "aws_mailmanager_traffic_policy",
 			Name:     "Traffic Policy",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			}),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
@@ -96,7 +144,7 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*mailmanager.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*mailmanager.Options){
 		mailmanager.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

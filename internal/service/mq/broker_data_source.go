@@ -357,14 +357,18 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any)
 	if strings.EqualFold(string(output.EngineType), string(types.EngineTypeRabbitmq)) {
 		sharedResources, err := findSharedResourcesByBrokerID(ctx, conn, brokerID)
 
-		if err != nil {
+		switch {
+		case sharedResourcesUnavailableInPartition(meta.(*conns.AWSClient).Partition(ctx), err):
+			d.Set("resource_share_arns", nil)
+			d.Set("shared_resources", nil)
+		case err != nil:
 			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) shared resources: %s", brokerID, err)
-		}
+		default:
+			d.Set("resource_share_arns", flattenResourceShareARNs(sharedResources))
 
-		d.Set("resource_share_arns", flattenResourceShareARNs(sharedResources))
-
-		if err := d.Set("shared_resources", flattenSharedResources(sharedResources)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting shared_resources: %s", err)
+			if err := d.Set("shared_resources", flattenSharedResources(sharedResources)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting shared_resources: %s", err)
+			}
 		}
 	}
 	d.Set(names.AttrStorageType, output.StorageType)

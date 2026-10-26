@@ -50,24 +50,21 @@ func (l *hubContentReferenceListResource) List(ctx context.Context, request list
 			hubContentName := aws.ToString(item.info.HubContentName)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("hub_content_name"), hubContentName)
 
+			output, err := findHubContentByName(ctx, conn, hubName, hubContentName, awstypes.HubContentTypeModelReference)
+			if retry.NotFound(err) {
+				tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+				continue
+			}
+			if err != nil {
+				yield(fwdiag.NewListResultErrorDiagnostic(err))
+				return
+			}
+
 			result := request.NewListResult(ctx)
 			result.DisplayName = hubContentName
 
 			var data hubContentReferenceResourceModel
 			l.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
-				output, err := findHubContentByName(ctx, conn, hubName, hubContentName, awstypes.HubContentTypeModelReference)
-				if retry.NotFound(err) {
-					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
-					return
-				}
-				if err != nil {
-					result.Diagnostics.AddError(
-						"Reading SageMaker Hub Content Reference",
-						fmt.Sprintf("Error reading hub content reference (%s): %s", hubContentName, err),
-					)
-					return
-				}
-
 				result.Diagnostics.Append(l.flatten(ctx, output, &data)...)
 			})
 

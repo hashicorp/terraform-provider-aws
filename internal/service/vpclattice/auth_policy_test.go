@@ -72,6 +72,7 @@ func TestAccVPCLatticeAuthPolicy_disappears(t *testing.T) {
 				Config: testAccAuthPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthPolicyExists(ctx, t, resourceName, &authpolicy),
+					// nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceAuthPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,7 +81,11 @@ func TestAccVPCLatticeAuthPolicy_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						// For backwards compatibility the Read operation does NOT check
+						// for nil/empty policy content and remove the resource from state.
+						// This means that out of band removal will result in a planned
+						// update instead of a creation.
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},

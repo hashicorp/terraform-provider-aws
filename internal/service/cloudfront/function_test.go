@@ -6,8 +6,10 @@ package cloudfront_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -52,6 +54,39 @@ func TestAccCloudFrontFunction_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"publish"},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontFunction_validation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// name contains a character outside [a-zA-Z0-9-_].
+				Config:      testAccFunctionConfig_basic(rName + "."),
+				ExpectError: regexache.MustCompile(`must contain only alphanumeric characters, hyphens, and underscores`),
+			},
+			{
+				// name exceeds the 64-character maximum.
+				Config:      testAccFunctionConfig_basic(rName + strings.Repeat("x", 65)),
+				ExpectError: regexache.MustCompile(`expected length of`),
+			},
+			{
+				// code exceeds the 40960-byte maximum.
+				Config:      testAccFunctionConfig_code(rName, strings.Repeat("x", 40961)),
+				ExpectError: regexache.MustCompile(`expected length of`),
+			},
+			{
+				// comment exceeds the 128-character maximum.
+				Config:      testAccFunctionConfig_comment(rName, strings.Repeat("x", 129)),
+				ExpectError: regexache.MustCompile(`expected length of`),
 			},
 		},
 	})
@@ -592,6 +627,16 @@ function handler(event) {
 EOT
 }
 `, rName)
+}
+
+func testAccFunctionConfig_code(rName, code string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_function" "test" {
+  name    = %[1]q
+  runtime = "cloudfront-js-1.0"
+  code    = %[2]q
+}
+`, rName, code)
 }
 
 func testAccFunctionConfig_comment(rName, comment string) string {

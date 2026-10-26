@@ -28,7 +28,7 @@ import (
 // @SDKResource("aws_globalaccelerator_custom_routing_listener", name="Custom Routing Listener")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes.CustomRoutingListener")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes;awstypes.CustomRoutingListener")
 func resourceCustomRoutingListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomRoutingListenerCreate,

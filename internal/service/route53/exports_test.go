@@ -37,6 +37,7 @@ var (
 	FindZoneAssociationByThreePartKey           = findZoneAssociationByThreePartKey
 	KeySigningKeyStatusActive                   = keySigningKeyStatusActive
 	KeySigningKeyStatusInactive                 = keySigningKeyStatusInactive
+	RecordBatchReadEnvVar                       = recordBatchReadEnvVar
 	ServeSignatureNotSigning                    = serveSignatureNotSigning
 	ServeSignatureSigning                       = serveSignatureSigning
 	WaitChangeInsync                            = waitChangeInsync

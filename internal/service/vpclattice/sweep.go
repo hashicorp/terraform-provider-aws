@@ -16,6 +16,7 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_vpclattice_domain_verification", sweepDomainVerifications)
 	awsv2.Register("aws_vpclattice_resource_configuration", sweepResourceConfigurations, "aws_vpclattice_service_network_resource_association")
 	awsv2.Register("aws_vpclattice_resource_gateway", sweepResourceGateways, "aws_vpclattice_resource_configuration")
 	awsv2.Register("aws_vpclattice_service", sweepServices)
@@ -23,6 +24,28 @@ func RegisterSweepers() {
 	awsv2.Register("aws_vpclattice_service_network_resource_association", sweepServiceNetworkResourceAssociations)
 	awsv2.Register("aws_vpclattice_target_group", sweepTargetGroups, "aws_vpclattice_target_group_attachment")
 	awsv2.Register("aws_vpclattice_target_group_attachment", sweepTargetGroupAttachments)
+}
+
+func sweepDomainVerifications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
+	input := &vpclattice.ListDomainVerificationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := vpclattice.NewListDomainVerificationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDomainVerificationResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepResourceConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

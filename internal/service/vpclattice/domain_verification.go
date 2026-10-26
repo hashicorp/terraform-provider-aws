@@ -34,6 +34,7 @@ import (
 // @FrameworkResource("aws_vpclattice_domain_verification", name="Domain Verification")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetDomainVerificationOutput")
+// @Testing(serialize=true)
 func newDomainVerificationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &domainVerificationResource{}, nil
 }

@@ -22,4 +22,7 @@ var (
 	FindSecurityConfigurationByName    = findSecurityConfigurationByName
 	FindStudioByID                     = findStudioByID
 	FindStudioSessionMappingByIDOrName = findStudioSessionMappingByIDOrName
+
+	SerializeAutoScalingPolicy = serializeAutoScalingPolicy
+	SerializeConfigurations    = serializeConfigurations
 )

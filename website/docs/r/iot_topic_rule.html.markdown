@@ -158,7 +158,7 @@ The `http_header` object takes the following arguments:
 
 The `iot_analytics` object takes the following arguments:
 
-* `channel_name` - (Required) Name of AWS IOT Analytics channel.
+* `channel_name` - (Required) Name of AWS IoT Analytics channel.
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
 * `batch_mode` - (Optional) The payload that contains a JSON array of records will be sent to IoT Analytics via a batch call.
 

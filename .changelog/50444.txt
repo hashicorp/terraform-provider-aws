@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_api_gateway_method: Fix `deserialization failed, expected string, got null` failure during Read
+```

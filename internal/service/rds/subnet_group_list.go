@@ -34,21 +34,9 @@ type subnetGroupListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type subnetGroupListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *subnetGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.RDSClient(ctx)
-
-	var query subnetGroupListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	tflog.Info(ctx, "Listing RDS DB Subnet Groups")
 

@@ -56,7 +56,7 @@ The `nas1_configuration` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) identifier of the KX volume.
+* `arn` - ARN identifier of the KX volume.
 * `attached_clusters` - Clusters attached to the volume. See [`attached_clusters` Block](#attached_clusters-block) below.
 * `created_timestamp` - Timestamp at which the volume was created in FinSpace. The value is determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000.
 * `last_modified_timestamp` - Last timestamp at which the volume was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.

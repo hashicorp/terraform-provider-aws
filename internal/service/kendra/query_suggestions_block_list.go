@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -282,9 +283,7 @@ func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.Reso
 		IndexId: aws.String(indexId),
 	})
 
-	var notFound *types.ResourceNotFoundException
-
-	if errors.As(err, &notFound) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 

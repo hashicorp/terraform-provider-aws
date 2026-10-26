@@ -6,7 +6,6 @@ package arcregionswitch
 import (
 	"cmp"
 	"context"
-	"errors"
 	"slices"
 	"time"
 
@@ -502,6 +501,159 @@ func rdsPromoteReadReplicaConfigBlock(ctx context.Context) fwschema.Block {
 	}
 }
 
+func auroraProvisionedScalingConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[auroraProvisionedScalingConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"cross_account_role": fwschema.StringAttribute{
+					Optional: true,
+				},
+				names.AttrExternalID: fwschema.StringAttribute{
+					Optional: true,
+				},
+				"global_cluster_identifier": fwschema.StringAttribute{
+					Required: true,
+				},
+				"instance_arns": fwschema.MapAttribute{
+					CustomType: fwtypes.MapOfStringType,
+					Required:   true,
+				},
+				"region_database_cluster_arns": fwschema.MapAttribute{
+					CustomType: fwtypes.MapOfStringType,
+					Required:   true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+}
+
+func auroraServerlessScalingConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[auroraServerlessScalingConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"cross_account_role": fwschema.StringAttribute{
+					Optional: true,
+				},
+				names.AttrExternalID: fwschema.StringAttribute{
+					Optional: true,
+				},
+				"global_cluster_identifier": fwschema.StringAttribute{
+					Required: true,
+				},
+				"region_database_cluster_arns": fwschema.MapAttribute{
+					CustomType: fwtypes.MapOfStringType,
+					Required:   true,
+				},
+				"target_percent": fwschema.Int32Attribute{
+					Optional: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+}
+
+func lambdaEventSourceMappingConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaEventSourceMappingConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				names.AttrAction: fwschema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.EventSourceMappingAction](),
+					Required:   true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"region_event_source_mapping": fwschema.SetNestedBlock{
+					CustomType: fwtypes.NewSetNestedObjectTypeOf[regionEventSourceMappingModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							names.AttrRegion:     fwschema.StringAttribute{Required: true},
+							names.AttrARN:        fwschema.StringAttribute{CustomType: fwtypes.ARNType, Required: true},
+							"cross_account_role": fwschema.StringAttribute{Optional: true},
+							names.AttrExternalID: fwschema.StringAttribute{Optional: true},
+						},
+					},
+				},
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaEsmUngracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"behavior": fwschema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.LambdaEventSourceMappingUngracefulBehavior](), Required: true},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func neptuneGlobalDatabaseConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[neptuneGlobalDatabaseConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"behavior":                     fwschema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.NeptuneDefaultBehavior](), Required: true},
+				"cross_account_role":           fwschema.StringAttribute{Optional: true},
+				names.AttrExternalID:           fwschema.StringAttribute{Optional: true},
+				"global_cluster_identifier":    fwschema.StringAttribute{Required: true},
+				"region_database_cluster_arns": fwschema.MapAttribute{CustomType: fwtypes.MapOfStringType, Required: true},
+				"timeout_minutes":              fwschema.Int32Attribute{Optional: true},
+			},
+			Blocks: map[string]fwschema.Block{
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[neptuneUngracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"ungraceful": fwschema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.NeptuneUngracefulBehavior](), Required: true},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func rdsSwitchoverReadReplicaConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[rdsSwitchoverReadReplicaConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"cross_account_role":  fwschema.StringAttribute{Optional: true},
+				"db_instance_arn_map": fwschema.MapAttribute{CustomType: fwtypes.MapOfStringType, Required: true},
+				names.AttrExternalID:  fwschema.StringAttribute{Optional: true},
+				"timeout_minutes":     fwschema.Int32Attribute{Optional: true},
+			},
+			Blocks: map[string]fwschema.Block{
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[rdsSwitchoverUngracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"ungraceful": fwschema.StringAttribute{CustomType: fwtypes.StringEnumType[awstypes.RdsUngracefulBehavior](), Required: true},
+						},
+					},
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+				},
+			},
+		},
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+	}
+}
+
 func route53HealthCheckConfigBlock(ctx context.Context) fwschema.Block {
 	return fwschema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[route53HealthCheckConfigModel](ctx),
@@ -588,6 +740,9 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"regions": fwschema.ListAttribute{
 				Required:   true,
 				CustomType: fwtypes.ListOfStringType,
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(2),
+				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
 				},
@@ -648,11 +803,17 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 												},
 											},
 										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
 									},
 								},
 							},
 						},
 					},
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
 			},
 			names.AttrTriggers: fwschema.ListNestedBlock{
@@ -724,6 +885,8 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 								},
 								Blocks: map[string]fwschema.Block{
 									"arc_routing_control_config":                  arcRoutingControlConfigBlock(ctx),
+									"aurora_provisioned_scaling_config":           auroraProvisionedScalingConfigBlock(ctx),
+									"aurora_serverless_scaling_config":            auroraServerlessScalingConfigBlock(ctx),
 									"custom_action_lambda_config":                 customActionLambdaConfigBlock(ctx),
 									"document_db_config":                          documentDBConfigBlock(ctx),
 									"ec2_asg_capacity_increase_config":            ec2ASGCapacityIncreaseConfigBlock(ctx),
@@ -731,8 +894,11 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"eks_resource_scaling_config":                 eksResourceScalingConfigBlock(ctx),
 									"execution_approval_config":                   executionApprovalConfigBlock(ctx),
 									"global_aurora_config":                        globalAuroraConfigBlock(ctx),
+									"lambda_event_source_mapping_config":          lambdaEventSourceMappingConfigBlock(ctx),
+									"neptune_global_database_config":              neptuneGlobalDatabaseConfigBlock(ctx),
 									"rds_create_cross_region_read_replica_config": rdsCreateCrossRegionReadReplicaConfigBlock(ctx),
 									"rds_promote_read_replica_config":             rdsPromoteReadReplicaConfigBlock(ctx),
+									"rds_switchover_read_replica_config":          rdsSwitchoverReadReplicaConfigBlock(ctx),
 									"region_switch_plan_config":                   regionSwitchPlanConfigBlock(ctx),
 									"parallel_config": fwschema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[parallelConfigModel](ctx),
@@ -755,6 +921,8 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 														},
 														Blocks: map[string]fwschema.Block{
 															"arc_routing_control_config":                  arcRoutingControlConfigBlock(ctx),
+															"aurora_provisioned_scaling_config":           auroraProvisionedScalingConfigBlock(ctx),
+															"aurora_serverless_scaling_config":            auroraServerlessScalingConfigBlock(ctx),
 															"custom_action_lambda_config":                 customActionLambdaConfigBlock(ctx),
 															"document_db_config":                          documentDBConfigBlock(ctx),
 															"ec2_asg_capacity_increase_config":            ec2ASGCapacityIncreaseConfigBlock(ctx),
@@ -762,8 +930,11 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"eks_resource_scaling_config":                 eksResourceScalingConfigBlock(ctx),
 															"execution_approval_config":                   executionApprovalConfigBlock(ctx),
 															"global_aurora_config":                        globalAuroraConfigBlock(ctx),
+															"lambda_event_source_mapping_config":          lambdaEventSourceMappingConfigBlock(ctx),
+															"neptune_global_database_config":              neptuneGlobalDatabaseConfigBlock(ctx),
 															"rds_create_cross_region_read_replica_config": rdsCreateCrossRegionReadReplicaConfigBlock(ctx),
 															"rds_promote_read_replica_config":             rdsPromoteReadReplicaConfigBlock(ctx),
+															"rds_switchover_read_replica_config":          rdsSwitchoverReadReplicaConfigBlock(ctx),
 															"region_switch_plan_config":                   regionSwitchPlanConfigBlock(ctx),
 															"route53_health_check_config":                 route53HealthCheckConfigBlock(ctx),
 														},
@@ -957,8 +1128,7 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	_, err := conn.DeletePlan(ctx, &input)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 		// Retry if health check allocation is in progress (check error message generically)
@@ -971,7 +1141,7 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 			// Retry delete
 			_, err = conn.DeletePlan(ctx, &input)
 			if err != nil {
-				if errors.As(err, &nfe) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					return
 				}
 				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
@@ -992,8 +1162,7 @@ func findPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string
 	output, err := conn.GetPlan(ctx, &input)
 
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
@@ -1132,6 +1301,8 @@ type s3ReportOutputConfigurationModel struct {
 
 type stepModel struct {
 	ArcRoutingControlConfig               fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]               `tfsdk:"arc_routing_control_config" autoflex:"-"`
+	AuroraProvisionedScalingConfig        fwtypes.ListNestedObjectValueOf[auroraProvisionedScalingConfigModel]        `tfsdk:"aurora_provisioned_scaling_config" autoflex:"-"`
+	AuroraServerlessScalingConfig         fwtypes.ListNestedObjectValueOf[auroraServerlessScalingConfigModel]         `tfsdk:"aurora_serverless_scaling_config" autoflex:"-"`
 	CustomActionLambdaConfig              fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]              `tfsdk:"custom_action_lambda_config" autoflex:"-"`
 	Description                           types.String                                                                `tfsdk:"description"`
 	DocumentDbConfig                      fwtypes.ListNestedObjectValueOf[documentDbConfigModel]                      `tfsdk:"document_db_config" autoflex:"-"`
@@ -1141,10 +1312,13 @@ type stepModel struct {
 	ExecutionApprovalConfig               fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]               `tfsdk:"execution_approval_config" autoflex:"-"`
 	ExecutionBlockType                    fwtypes.StringEnum[awstypes.ExecutionBlockType]                             `tfsdk:"execution_block_type"`
 	GlobalAuroraConfig                    fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]                    `tfsdk:"global_aurora_config" autoflex:"-"`
+	LambdaEventSourceMappingConfig        fwtypes.ListNestedObjectValueOf[lambdaEventSourceMappingConfigModel]        `tfsdk:"lambda_event_source_mapping_config" autoflex:"-"`
 	Name                                  types.String                                                                `tfsdk:"name"`
+	NeptuneGlobalDatabaseConfig           fwtypes.ListNestedObjectValueOf[neptuneGlobalDatabaseConfigModel]           `tfsdk:"neptune_global_database_config" autoflex:"-"`
 	ParallelConfig                        fwtypes.ListNestedObjectValueOf[parallelConfigModel]                        `tfsdk:"parallel_config" autoflex:"-"`
 	RdsCreateCrossRegionReadReplicaConfig fwtypes.ListNestedObjectValueOf[rdsCreateCrossRegionReadReplicaConfigModel] `tfsdk:"rds_create_cross_region_read_replica_config" autoflex:"-"`
 	RdsPromoteReadReplicaConfig           fwtypes.ListNestedObjectValueOf[rdsPromoteReadReplicaConfigModel]           `tfsdk:"rds_promote_read_replica_config" autoflex:"-"`
+	RdsSwitchoverReadReplicaConfig        fwtypes.ListNestedObjectValueOf[rdsSwitchoverReadReplicaConfigModel]        `tfsdk:"rds_switchover_read_replica_config" autoflex:"-"`
 	RegionSwitchPlanConfig                fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]                `tfsdk:"region_switch_plan_config" autoflex:"-"`
 	Route53HealthCheckConfig              fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]              `tfsdk:"route53_health_check_config" autoflex:"-"`
 }
@@ -1175,6 +1349,30 @@ func (m stepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
 			return nil, diags
 		}
 		var r awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.AuroraProvisionedScalingConfig.IsNull():
+		config, d := m.AuroraProvisionedScalingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.AuroraServerlessScalingConfig.IsNull():
+		config, d := m.AuroraServerlessScalingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig
 		diags.Append(flex.Expand(ctx, config, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
@@ -1264,6 +1462,30 @@ func (m stepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
 			return nil, diags
 		}
 		result.ExecutionBlockConfiguration = &r
+	case !m.LambdaEventSourceMappingConfig.IsNull():
+		config, d := m.LambdaEventSourceMappingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberLambdaEventSourceMappingConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.NeptuneGlobalDatabaseConfig.IsNull():
+		config, d := m.NeptuneGlobalDatabaseConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberNeptuneGlobalDatabaseConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
 	case !m.ParallelConfig.IsNull():
 		config, d := m.ParallelConfig.ToPtr(ctx)
 		diags.Append(d...)
@@ -1312,6 +1534,18 @@ func (m stepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
 			return nil, diags
 		}
 		result.ExecutionBlockConfiguration = &r
+	case !m.RdsSwitchoverReadReplicaConfig.IsNull():
+		config, d := m.RdsSwitchoverReadReplicaConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberRdsSwitchoverReadReplicaConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
 	case !m.Route53HealthCheckConfig.IsNull():
 		config, d := m.Route53HealthCheckConfig.ToPtr(ctx)
 		diags.Append(d...)
@@ -1351,6 +1585,10 @@ func (m *stepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
 		switch v := step.ExecutionBlockConfiguration.(type) {
 		case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ArcRoutingControlConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraProvisionedScalingConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraServerlessScalingConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.CustomActionLambdaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
@@ -1365,6 +1603,10 @@ func (m *stepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ExecutionApprovalConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.GlobalAuroraConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberLambdaEventSourceMappingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.LambdaEventSourceMappingConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberNeptuneGlobalDatabaseConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.NeptuneGlobalDatabaseConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberParallelConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ParallelConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
@@ -1373,6 +1615,8 @@ func (m *stepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsCreateCrossRegionReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRdsPromoteReadReplicaConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsPromoteReadReplicaConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberRdsSwitchoverReadReplicaConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsSwitchoverReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.Route53HealthCheckConfig)...)
 		}
@@ -1734,6 +1978,8 @@ type parallelConfigModel struct {
 
 type parallelStepModel struct {
 	ArcRoutingControlConfig               fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]               `tfsdk:"arc_routing_control_config" autoflex:"-"`
+	AuroraProvisionedScalingConfig        fwtypes.ListNestedObjectValueOf[auroraProvisionedScalingConfigModel]        `tfsdk:"aurora_provisioned_scaling_config" autoflex:"-"`
+	AuroraServerlessScalingConfig         fwtypes.ListNestedObjectValueOf[auroraServerlessScalingConfigModel]         `tfsdk:"aurora_serverless_scaling_config" autoflex:"-"`
 	CustomActionLambdaConfig              fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]              `tfsdk:"custom_action_lambda_config" autoflex:"-"`
 	Description                           types.String                                                                `tfsdk:"description"`
 	DocumentDbConfig                      fwtypes.ListNestedObjectValueOf[documentDbConfigModel]                      `tfsdk:"document_db_config" autoflex:"-"`
@@ -1743,9 +1989,12 @@ type parallelStepModel struct {
 	ExecutionApprovalConfig               fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]               `tfsdk:"execution_approval_config" autoflex:"-"`
 	ExecutionBlockType                    fwtypes.StringEnum[awstypes.ExecutionBlockType]                             `tfsdk:"execution_block_type"`
 	GlobalAuroraConfig                    fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]                    `tfsdk:"global_aurora_config" autoflex:"-"`
+	LambdaEventSourceMappingConfig        fwtypes.ListNestedObjectValueOf[lambdaEventSourceMappingConfigModel]        `tfsdk:"lambda_event_source_mapping_config" autoflex:"-"`
 	Name                                  types.String                                                                `tfsdk:"name"`
+	NeptuneGlobalDatabaseConfig           fwtypes.ListNestedObjectValueOf[neptuneGlobalDatabaseConfigModel]           `tfsdk:"neptune_global_database_config" autoflex:"-"`
 	RdsCreateCrossRegionReadReplicaConfig fwtypes.ListNestedObjectValueOf[rdsCreateCrossRegionReadReplicaConfigModel] `tfsdk:"rds_create_cross_region_read_replica_config" autoflex:"-"`
 	RdsPromoteReadReplicaConfig           fwtypes.ListNestedObjectValueOf[rdsPromoteReadReplicaConfigModel]           `tfsdk:"rds_promote_read_replica_config" autoflex:"-"`
+	RdsSwitchoverReadReplicaConfig        fwtypes.ListNestedObjectValueOf[rdsSwitchoverReadReplicaConfigModel]        `tfsdk:"rds_switchover_read_replica_config" autoflex:"-"`
 	RegionSwitchPlanConfig                fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]                `tfsdk:"region_switch_plan_config" autoflex:"-"`
 	Route53HealthCheckConfig              fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]              `tfsdk:"route53_health_check_config" autoflex:"-"`
 }
@@ -1776,6 +2025,30 @@ func (m parallelStepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics)
 			return nil, diags
 		}
 		var r awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.AuroraProvisionedScalingConfig.IsNull():
+		config, d := m.AuroraProvisionedScalingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.AuroraServerlessScalingConfig.IsNull():
+		config, d := m.AuroraServerlessScalingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig
 		diags.Append(flex.Expand(ctx, config, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
@@ -1865,6 +2138,30 @@ func (m parallelStepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics)
 			return nil, diags
 		}
 		result.ExecutionBlockConfiguration = &r
+	case !m.LambdaEventSourceMappingConfig.IsNull():
+		config, d := m.LambdaEventSourceMappingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberLambdaEventSourceMappingConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.NeptuneGlobalDatabaseConfig.IsNull():
+		config, d := m.NeptuneGlobalDatabaseConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberNeptuneGlobalDatabaseConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
 	case !m.RegionSwitchPlanConfig.IsNull():
 		config, d := m.RegionSwitchPlanConfig.ToPtr(ctx)
 		diags.Append(d...)
@@ -1896,6 +2193,18 @@ func (m parallelStepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics)
 			return nil, diags
 		}
 		var r awstypes.ExecutionBlockConfigurationMemberRdsPromoteReadReplicaConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.RdsSwitchoverReadReplicaConfig.IsNull():
+		config, d := m.RdsSwitchoverReadReplicaConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberRdsSwitchoverReadReplicaConfig
 		diags.Append(flex.Expand(ctx, config, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
@@ -1940,6 +2249,10 @@ func (m *parallelStepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnosti
 		switch v := step.ExecutionBlockConfiguration.(type) {
 		case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ArcRoutingControlConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberAuroraProvisionedScalingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraProvisionedScalingConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberAuroraServerlessScalingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.AuroraServerlessScalingConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.CustomActionLambdaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
@@ -1954,12 +2267,18 @@ func (m *parallelStepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnosti
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.ExecutionApprovalConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.GlobalAuroraConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberLambdaEventSourceMappingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.LambdaEventSourceMappingConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberNeptuneGlobalDatabaseConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.NeptuneGlobalDatabaseConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RegionSwitchPlanConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRdsCreateCrossRegionReadReplicaConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsCreateCrossRegionReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRdsPromoteReadReplicaConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsPromoteReadReplicaConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberRdsSwitchoverReadReplicaConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.RdsSwitchoverReadReplicaConfig)...)
 		case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
 			diags.Append(flex.Flatten(ctx, &v.Value, &m.Route53HealthCheckConfig)...)
 		}
@@ -2002,6 +2321,18 @@ type rdsPromoteReadReplicaConfigModel struct {
 	DbInstanceArnMap fwtypes.MapOfString `tfsdk:"db_instance_arn_map"`
 	ExternalID       types.String        `tfsdk:"external_id"`
 	TimeoutMinutes   types.Int32         `tfsdk:"timeout_minutes"`
+}
+
+type rdsSwitchoverReadReplicaConfigModel struct {
+	CrossAccountRole types.String                                                  `tfsdk:"cross_account_role"`
+	DBInstanceARNMap fwtypes.MapOfString                                           `tfsdk:"db_instance_arn_map"`
+	ExternalID       types.String                                                  `tfsdk:"external_id"`
+	TimeoutMinutes   types.Int32                                                   `tfsdk:"timeout_minutes"`
+	Ungraceful       fwtypes.ListNestedObjectValueOf[rdsSwitchoverUngracefulModel] `tfsdk:"ungraceful"`
+}
+
+type rdsSwitchoverUngracefulModel struct {
+	Ungraceful fwtypes.StringEnum[awstypes.RdsUngracefulBehavior] `tfsdk:"ungraceful"`
 }
 
 // Trigger Configuration Models
@@ -2149,4 +2480,136 @@ func statusPlanDeletable(conn *arcregionswitch.Client, arn string) retry.StateRe
 		// Other error
 		return nil, "", smarterr.NewError(err)
 	}
+}
+
+// Aurora Provisioned Scaling — AutoFlex handles all fields
+type auroraProvisionedScalingConfigModel struct {
+	CrossAccountRole          types.String        `tfsdk:"cross_account_role"`
+	ExternalID                types.String        `tfsdk:"external_id"`
+	GlobalClusterIdentifier   types.String        `tfsdk:"global_cluster_identifier"`
+	InstanceArns              fwtypes.MapOfString `tfsdk:"instance_arns"`
+	RegionDatabaseClusterArns fwtypes.MapOfString `tfsdk:"region_database_cluster_arns"`
+	TimeoutMinutes            types.Int32         `tfsdk:"timeout_minutes"`
+}
+
+// Aurora Serverless Scaling — AutoFlex handles all fields
+type auroraServerlessScalingConfigModel struct {
+	CrossAccountRole          types.String        `tfsdk:"cross_account_role"`
+	ExternalID                types.String        `tfsdk:"external_id"`
+	GlobalClusterIdentifier   types.String        `tfsdk:"global_cluster_identifier"`
+	RegionDatabaseClusterArns fwtypes.MapOfString `tfsdk:"region_database_cluster_arns"`
+	TargetPercent             types.Int32         `tfsdk:"target_percent"`
+	TimeoutMinutes            types.Int32         `tfsdk:"timeout_minutes"`
+}
+
+// Neptune Global Database — AutoFlex handles all fields
+type neptuneGlobalDatabaseConfigModel struct {
+	Behavior                  fwtypes.StringEnum[awstypes.NeptuneDefaultBehavior]     `tfsdk:"behavior"`
+	CrossAccountRole          types.String                                            `tfsdk:"cross_account_role"`
+	ExternalID                types.String                                            `tfsdk:"external_id"`
+	GlobalClusterIdentifier   types.String                                            `tfsdk:"global_cluster_identifier"`
+	RegionDatabaseClusterArns fwtypes.MapOfString                                     `tfsdk:"region_database_cluster_arns"`
+	TimeoutMinutes            types.Int32                                             `tfsdk:"timeout_minutes"`
+	Ungraceful                fwtypes.ListNestedObjectValueOf[neptuneUngracefulModel] `tfsdk:"ungraceful"`
+}
+
+type neptuneUngracefulModel struct {
+	Ungraceful fwtypes.StringEnum[awstypes.NeptuneUngracefulBehavior] `tfsdk:"ungraceful"`
+}
+
+// Lambda Event Source Mapping — custom Expand/Flatten for map[string]EventSourceMapping
+type lambdaEventSourceMappingConfigModel struct {
+	Action                    fwtypes.StringEnum[awstypes.EventSourceMappingAction]         `tfsdk:"action"`
+	RegionEventSourceMappings fwtypes.SetNestedObjectValueOf[regionEventSourceMappingModel] `tfsdk:"region_event_source_mapping" autoflex:"-"`
+	TimeoutMinutes            types.Int32                                                   `tfsdk:"timeout_minutes"`
+	Ungraceful                fwtypes.ListNestedObjectValueOf[lambdaEsmUngracefulModel]     `tfsdk:"ungraceful"`
+}
+
+type regionEventSourceMappingModel struct {
+	Region           types.String `tfsdk:"region"`
+	ARN              fwtypes.ARN  `tfsdk:"arn"`
+	CrossAccountRole types.String `tfsdk:"cross_account_role"`
+	ExternalID       types.String `tfsdk:"external_id"`
+}
+
+type lambdaEsmUngracefulModel struct {
+	Behavior fwtypes.StringEnum[awstypes.LambdaEventSourceMappingUngracefulBehavior] `tfsdk:"behavior"`
+}
+
+var (
+	_ flex.Expander  = lambdaEventSourceMappingConfigModel{}
+	_ flex.Flattener = &lambdaEventSourceMappingConfigModel{}
+)
+
+func (m lambdaEventSourceMappingConfigModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
+	var result awstypes.LambdaEventSourceMappingConfiguration
+	var diags fwdiag.Diagnostics
+	result.Action = m.Action.ValueEnum()
+	diags.Append(flex.Expand(ctx, m.TimeoutMinutes, &result.TimeoutMinutes)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+	if !m.Ungraceful.IsNull() && !m.Ungraceful.IsUnknown() {
+		ungracefulModel, d := m.Ungraceful.ToPtr(ctx)
+		diags.Append(d...)
+		if !diags.HasError() && ungracefulModel != nil {
+			result.Ungraceful = &awstypes.LambdaEventSourceMappingUngraceful{Behavior: ungracefulModel.Behavior.ValueEnum()}
+		}
+	}
+	if !m.RegionEventSourceMappings.IsNull() && !m.RegionEventSourceMappings.IsUnknown() {
+		var mappingModels []regionEventSourceMappingModel
+		diags.Append(m.RegionEventSourceMappings.ElementsAs(ctx, &mappingModels, false)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.RegionEventSourceMappings = make(map[string]awstypes.EventSourceMapping, len(mappingModels))
+		for _, model := range mappingModels {
+			esm := awstypes.EventSourceMapping{Arn: model.ARN.ValueStringPointer()}
+			diags.Append(flex.Expand(ctx, model.CrossAccountRole, &esm.CrossAccountRole)...)
+			diags.Append(flex.Expand(ctx, model.ExternalID, &esm.ExternalId)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			result.RegionEventSourceMappings[model.Region.ValueString()] = esm
+		}
+	}
+	return &result, diags
+}
+
+func (m *lambdaEventSourceMappingConfigModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
+	var diags fwdiag.Diagnostics
+	config, ok := v.(awstypes.LambdaEventSourceMappingConfiguration)
+	if !ok {
+		diags.AddError("Unexpected Type", "Expected awstypes.LambdaEventSourceMappingConfiguration")
+		return diags
+	}
+	m.Action = fwtypes.StringEnumValue(config.Action)
+	diags.Append(flex.Flatten(ctx, config.TimeoutMinutes, &m.TimeoutMinutes)...)
+	if config.Ungraceful != nil {
+		ungraceful, d := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []lambdaEsmUngracefulModel{{Behavior: fwtypes.StringEnumValue(config.Ungraceful.Behavior)}})
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		m.Ungraceful = ungraceful
+	}
+	if len(config.RegionEventSourceMappings) > 0 {
+		mappingModels := make([]regionEventSourceMappingModel, 0, len(config.RegionEventSourceMappings))
+		for region, esm := range config.RegionEventSourceMappings {
+			model := regionEventSourceMappingModel{Region: types.StringValue(region), ARN: fwtypes.ARNValue(aws.ToString(esm.Arn))}
+			diags.Append(flex.Flatten(ctx, esm.CrossAccountRole, &model.CrossAccountRole)...)
+			diags.Append(flex.Flatten(ctx, esm.ExternalId, &model.ExternalID)...)
+			if diags.HasError() {
+				return diags
+			}
+			mappingModels = append(mappingModels, model)
+		}
+		mappings, d := fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, mappingModels)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		m.RegionEventSourceMappings = mappings
+	}
+	return diags
 }

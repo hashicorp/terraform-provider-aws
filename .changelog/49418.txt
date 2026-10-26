@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_db_parameter_group: Add Resource Identity support
+```
+
+```release-note:new-list-resource
+aws_db_parameter_group
+```

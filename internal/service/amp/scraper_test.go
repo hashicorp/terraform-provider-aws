@@ -67,6 +67,7 @@ func TestAccAMPScraper_basic(t *testing.T) {
 						"amp":        knownvalue.ListSizeExact(1),
 						"cloudwatch": knownvalue.ListSizeExact(0),
 					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exporter"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRoleARN), knownvalue.NotNull()),
@@ -247,6 +248,52 @@ func TestAccAMPScraper_securityGroups(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAMPScraper_openSearchExporter(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domainName := fmt.Sprintf("tf-test-%s", acctest.RandString(t, 20))
+	resourceName := "aws_prometheus_scraper.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_openSearchExporter(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exporter"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"opensearch": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"domain_arn": knownvalue.NotNull(),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAMPScraper_roleConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -316,6 +363,22 @@ func TestAccAMPScraper_cloudWatchDestination(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScraperConfig_cloudWatchDestination(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.cloudwatch.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination.0.cloudwatch.0.dataset_arn"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.vpc.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScraperConfig_cloudWatchDestination(rName, "60s"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
@@ -738,6 +801,76 @@ EOT
 `, rName))
 }
 
+func testAccScraperConfig_openSearchExporter(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[2]q
+  engine_version = "OpenSearch_2.11"
+
+  cluster_config {
+    instance_type  = "t3.small.search"
+    instance_count = 1
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  vpc_options {
+    subnet_ids         = [aws_subnet.test[0].id]
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  access_policies = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"AWS": "*"},
+    "Action": "es:*",
+    "Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/%[2]s/*"
+  }]
+}
+POLICY
+}
+
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_prometheus_scraper" "test" {
+  alias = %[1]q
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 60s
+scrape_configs:
+  - job_name: opensearch-exporter
+EOT
+
+  source {
+    vpc {
+      security_group_ids = [aws_security_group.test.id]
+      subnet_ids         = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.test.arn
+    }
+  }
+
+  exporter {
+    opensearch {
+      domain_arn = aws_opensearch_domain.test.arn
+    }
+  }
+}
+`, rName, domainName))
+}
+
 func testAccScraperConfig_baseVPC(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -779,7 +912,12 @@ resource "aws_prometheus_workspace" "test" {
 `, rName))
 }
 
-func testAccScraperConfig_cloudWatchDestination(rName string) string {
+func testAccScraperConfig_cloudWatchDestination(rName string, interval ...string) string {
+	scrapeInterval := "30s"
+	if len(interval) > 0 {
+		scrapeInterval = interval[0]
+	}
+
 	return acctest.ConfigCompose(testAccScraperConfig_baseVPC(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
@@ -806,7 +944,7 @@ resource "aws_service_discovery_service" "test" {
 resource "aws_prometheus_scraper" "test" {
   scrape_configuration = <<EOT
 global:
-  scrape_interval: 30s
+  scrape_interval: %[2]s
   scrape_timeout: 10s
 
 scrape_configs:
@@ -831,5 +969,5 @@ EOT
     }
   }
 }
-`, rName))
+`, rName, scrapeInterval))
 }

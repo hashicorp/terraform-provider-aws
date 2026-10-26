@@ -312,7 +312,7 @@ Forward Blocks (for `forward`) support the following:
 
 Target Group Blocks (for `target_group`) supports the following:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the target group.
+* `arn` - (Required) ARN of the target group.
 * `weight` - (Optional) The weight. The range is 0 to 999.
 
 Target Group Stickiness Config Blocks (for `stickiness`) supports the following:
@@ -390,7 +390,7 @@ Condition Blocks (for `condition`) support the following:
 * `http_request_method` - (Optional) Contains a single `values` item which is a list of HTTP request methods or verbs to match. Maximum size is 40 characters. Only allowed characters are A-Z, hyphen (-) and underscore (\_). Comparison is case sensitive. Wildcards are not supported. Only one needs to match for the condition to be satisfied. AWS recommends that GET and HEAD requests are routed in the same way because the response to a HEAD request may be cached.
 * `path_pattern` - (Optional) Path patterns to match against the request URL. [Path Pattern block](#path-pattern-blocks) fields documented below.
 * `query_string` - (Optional) Query strings to match. [Query String block](#query-string-blocks) fields documented below.
-* `source_ip` - (Optional) Contains a single `values` item which is a list of source IP CIDR notations to match. You can use both IPv4 and IPv6 addresses. Wildcards are not supported. Condition is satisfied if the source IP address of the request matches one of the CIDR blocks. Condition is not satisfied by the addresses in the `X-Forwarded-For` header, use `http_header` condition instead.
+* `source_ip` - (Optional) Source IP address to match. For ALB, use `values` to specify CIDR ranges. For NLB, use `ip_address_type` to match the IP address type (`ipv4` or `ipv6`). [Source IP block](#source-ip-blocks) fields documented below.
 
 ~> **NOTE::** Exactly one of `host_header`, `http_header`, `http_request_method`, `path_pattern`, `query_string` or `source_ip` must be set per condition.
 
@@ -426,6 +426,13 @@ Query String Value Blocks (for `query_string.values`) support the following:
 
 * `key` - (Optional) Query string key pattern to match.
 * `value` - (Required) Query string value pattern to match.
+
+#### Source IP Blocks
+
+Source IP Blocks (for `source_ip`) support the following:
+
+* `values` - (Optional) List of source IP addresses in CIDR format for Application Load Balancers. Both IPv4 and IPv6 addresses can be used. Wildcards are not supported. Condition is satisfied if the source IP address of the request matches one of the CIDR blocks. Condition is not satisfied by the addresses in the `X-Forwarded-For` header, use `http_header` condition instead.
+* `ip_address_type` - (Optional) IP address type for Network Load Balancers. Valid values are `ipv4` and `ipv6`.
 
 #### Transform Blocks
 
@@ -483,7 +490,7 @@ resource "aws_lb_listener_rule" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the load balancer listener rule.
+- `arn` (String) ARN of the load balancer listener rule.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import rules using their ARN. For example:
 
