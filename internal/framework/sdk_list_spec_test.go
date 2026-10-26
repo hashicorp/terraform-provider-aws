@@ -485,3 +485,51 @@ func TestSDKListSpecIDSeesTheQuery(t *testing.T) {
 		t.Errorf("display names = %v, want %v", got, want)
 	}
 }
+
+// A nil required field panics on the first listing, far from the declaration
+// that left it out, so construction rejects it instead.
+func TestSDKListSpecRequiresItemsIDAndFlatten(t *testing.T) {
+	t.Parallel()
+
+	items := func(context.Context, *conns.AWSClient, struct{}) (iter.Seq2[listSpecItem, error], diag.Diagnostics) {
+		return itemSeq(), nil
+	}
+	id := func(it listSpecItem, _ struct{}) string { return it.id }
+	flatten := func(context.Context, *conns.AWSClient, *listSpecItem, *schema.ResourceData) error { return nil }
+
+	testCases := map[string]struct {
+		spec      SDKListSpec[listSpecItem, struct{}]
+		wantPanic string
+	}{
+		"no Items": {
+			spec:      SDKListSpec[listSpecItem, struct{}]{ID: id, Flatten: flatten},
+			wantPanic: "list spec has no Items",
+		},
+		"no ID": {
+			spec:      SDKListSpec[listSpecItem, struct{}]{Items: items, Flatten: flatten},
+			wantPanic: "list spec has no ID",
+		},
+		"no Flatten": {
+			spec:      SDKListSpec[listSpecItem, struct{}]{Items: items, ID: id},
+			wantPanic: "list spec has no Flatten",
+		},
+		"all three": {
+			spec: SDKListSpec[listSpecItem, struct{}]{Items: items, ID: id, Flatten: flatten},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			defer func() {
+				got, _ := recover().(string)
+				if got != testCase.wantPanic {
+					t.Errorf("got panic %q, want %q", got, testCase.wantPanic)
+				}
+			}()
+
+			NewSDKListResource(&schema.Resource{}, testCase.spec)
+		})
+	}
+}

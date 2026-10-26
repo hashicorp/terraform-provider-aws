@@ -80,6 +80,18 @@ type sdkListResourceFromSpec[Item, Query any] struct {
 
 // NewSDKListResource builds a list resource from an SDKv2 schema and a spec.
 func NewSDKListResource[Item, Query any](res *schema.Resource, spec SDKListSpec[Item, Query]) inttypes.ListResourceForSDK {
+	// The loop cannot run without these three, and a nil one is a panic on the
+	// first listing, a long way from the declaration that left it out. The
+	// optional fields are nil-checked where they are called.
+	switch {
+	case spec.Items == nil:
+		panic("list spec has no Items")
+	case spec.ID == nil:
+		panic("list spec has no ID")
+	case spec.Flatten == nil:
+		panic("list spec has no Flatten")
+	}
+
 	l := &sdkListResourceFromSpec[Item, Query]{spec: spec}
 	l.SetResourceSchema(res)
 
