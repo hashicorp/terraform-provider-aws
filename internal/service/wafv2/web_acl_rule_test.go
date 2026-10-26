@@ -6,6 +6,7 @@ package wafv2_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -875,7 +876,7 @@ func TestAccWAFV2WebACLRule_logicalStatementNesting(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACLRule_scopeDownStatementNesting(t *testing.T) {
+func TestAccWAFV2WebACLRule_scopeDownLogicalStatementNesting(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
@@ -970,75 +971,143 @@ func TestAccWAFV2WebACLRule_scopeDownStatementNesting(t *testing.T) {
 }
 
 func TestAccWAFV2WebACLRule_invalidLogicalStatementNesting(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	t.Parallel()
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_rateBased, testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`rate_based_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
-			},
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_managedRuleGroup, testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`managed_rule_group_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
-			},
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_ruleGroupReference)),
-				ExpectError: regexache.MustCompile(`rule_group_reference_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
-			},
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_rateBased), testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`rate_based_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
-			},
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`and_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
-			},
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`or_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
-			},
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
-			},
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch)),
-				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
-			},
-			// Nested AND -> AND
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch))),
-				ExpectError: regexache.MustCompile(`Blocks of type "and_statement" are not expected here`),
-			},
-			// Nested OR -> OR
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch))),
-				ExpectError: regexache.MustCompile(`Blocks of type "or_statement" are not expected here`),
-			},
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch))),
-				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
-			},
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch))),
-				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
-			},
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch)))),
-				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
-			},
-			{
-				Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch)))),
-				ExpectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
-			},
+	testcases := map[string]struct {
+		statement   string
+		expectError *regexp.Regexp
+	}{
+		"rate_based in and": {
+			statement:   testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_rateBased, testAccWebACLRuleStatement_geoMatch),
+			expectError: regexache.MustCompile(`rate_based_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
 		},
-	})
+		"managed_rule_group in or": {
+			statement:   testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_managedRuleGroup, testAccWebACLRuleStatement_geoMatch),
+			expectError: regexache.MustCompile(`managed_rule_group_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
+		},
+		"rule_group_reference in not": {
+			statement:   testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_ruleGroupReference),
+			expectError: regexache.MustCompile(`rule_group_reference_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
+		},
+		"rate_based in not in and": {
+			statement:   testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_rateBased), testAccWebACLRuleStatement_geoMatch),
+			expectError: regexache.MustCompile(`rate_based_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
+		},
+		"and in and": {
+			statement:   testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch),
+			expectError: regexache.MustCompile(`and_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
+		},
+		"or in or": {
+			statement:   testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch),
+			expectError: regexache.MustCompile(`or_statement\s+list\s+must\s+contain\s+at\s+most\s+0\s+elements`),
+		},
+		"and with one statement": {
+			statement:   testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch),
+			expectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+		},
+		"or with one statement": {
+			statement:   testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch),
+			expectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+		},
+		"empty and": {
+			statement:   "and_statement {}",
+			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+		},
+		"empty or": {
+			statement:   "or_statement {}",
+			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+		},
+		"empty not": {
+			statement:   "not_statement {}",
+			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+		},
+	}
+
+	for name, tc := range testcases { //nolint:paralleltest // false positive
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+			acctest.ParallelTest(ctx, t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+				Steps: []resource.TestStep{
+					{
+						Config:      testAccWebACLRuleConfig_statement(rName, tc.statement),
+						ExpectError: tc.expectError,
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccWAFV2WebACLRule_invalidScopeDownLogicalStatementNesting(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[string]struct {
+		statement   string
+		expectError *regexp.Regexp
+	}{
+		"and in and": {
+			statement:   testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch),
+			expectError: regexache.MustCompile(`Blocks of type "and_statement" are not expected here`),
+		},
+		"or in or": {
+			statement:   testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch, testAccWebACLRuleStatement_labelMatch), testAccWebACLRuleStatement_geoMatch),
+			expectError: regexache.MustCompile(`Blocks of type "or_statement" are not expected here`),
+		},
+		"and with one statement": {
+			statement:   testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch),
+			expectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+		},
+		"or with one statement": {
+			statement:   testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch),
+			expectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+		},
+		"and with one statement in not": {
+			statement:   testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_and(testAccWebACLRuleStatement_geoMatch)),
+			expectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+		},
+		"or with one statement in not": {
+			statement:   testAccWebACLRuleStatement_not(testAccWebACLRuleStatement_or(testAccWebACLRuleStatement_geoMatch)),
+			expectError: regexache.MustCompile(`must contain at least\s+2\s+elements`),
+		},
+		"empty and": {
+			statement:   "and_statement {}",
+			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+		},
+		"empty or": {
+			statement:   "or_statement {}",
+			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+		},
+		"empty not": {
+			statement:   "not_statement {}",
+			expectError: regexache.MustCompile(`must have a configuration value as the provider has marked it as required`),
+		},
+	}
+
+	for name, tc := range testcases { //nolint:paralleltest // false positive
+		t.Run(name, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+			acctest.ParallelTest(ctx, t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+				Steps: []resource.TestStep{
+					{
+						Config:      testAccWebACLRuleConfig_statement(rName, testAccWebACLRuleStatement_rateBasedScopeDown(tc.statement)),
+						ExpectError: tc.expectError,
+					},
+				},
+			})
+		})
+	}
 }
 
 // State written before and_statement, or_statement and not_statement were narrowed to the
