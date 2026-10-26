@@ -19,8 +19,8 @@ type TypeAtPather interface {
 }
 
 type JSONFlexer interface {
-	Expand(context.Context, TypeAtPather, tftypes.Value) (map[string]any, error)
-	Flatten(context.Context, TypeAtPather, map[string]any) (tftypes.Value, error)
+	Expand(context.Context, TypeAtPather, tftypes.Value) (string, error)
+	Flatten(context.Context, TypeAtPather, string) (tftypes.Value, error)
 }
 
 var (
@@ -48,28 +48,32 @@ type jsonFlex struct {
 }
 
 // Expand converts a Terraform value into its JSON representation.
-func (j jsonFlex) Expand(ctx context.Context, typeAtPather TypeAtPather, val tftypes.Value) (map[string]any, error) {
-	switch v, err := j.rawFromValue(ctx, typeAtPather, nil, val); {
-	case err != nil:
-		return nil, err
-	case v == nil:
-		return make(map[string]any), nil
-	default:
-		if v, ok := v.(map[string]any); ok {
-			return v, nil
-		}
-		return nil, fmt.Errorf("unexpected raw type: %T", v)
+func (j jsonFlex) Expand(ctx context.Context, typeAtPather TypeAtPather, val tftypes.Value) (string, error) {
+	v, err := j.toRaw(ctx, typeAtPather, nil, val)
+	if err != nil {
+		return "", err
 	}
+	if v, ok := v.(map[string]any); ok {
+		return tfjson.EncodeToString(v)
+	}
+	return "", fmt.Errorf("unexpected raw type: %T", v)
 }
 
 // Flatten converts a JSON representation into its Terraform value.
-func (j jsonFlex) Flatten(ctx context.Context, typeAtPather TypeAtPather, raw map[string]any) (tftypes.Value, error) {
-	return j.valueFromRaw(ctx, typeAtPather, nil, raw)
+func (j jsonFlex) Flatten(ctx context.Context, typeAtPather TypeAtPather, s string) (tftypes.Value, error) {
+	var v any
+	if err := tfjson.DecodeFromString(s, &v); err != nil {
+		return inttypes.Zero[tftypes.Value](), err
+	}
+	if v, ok := v.(map[string]any); ok {
+		return j.fromRaw(ctx, typeAtPather, nil, v)
+	}
+	return inttypes.Zero[tftypes.Value](), fmt.Errorf("unexpected raw type: %T", v)
 }
 
-func (j jsonFlex) rawFromValue(ctx context.Context, typeAtPather TypeAtPather, path *tftypes.AttributePath, val tftypes.Value) (any, error) {
+func (j jsonFlex) toRaw(ctx context.Context, typeAtPather TypeAtPather, path *tftypes.AttributePath, val tftypes.Value) (any, error) {
 	if val.IsNull() || !val.IsKnown() {
-		return nil, nil
+		return make(map[string]any), nil
 	}
 
 	switch typ, err := typeAtPather.TypeAtPath(ctx, path); {
@@ -117,7 +121,7 @@ func (j jsonFlex) rawFromValue(ctx context.Context, typeAtPather TypeAtPather, p
 			} else {
 				path = path.WithElementKeyInt(idx)
 			}
-			v, err := j.rawFromValue(ctx, typeAtPather, path, val)
+			v, err := j.toRaw(ctx, typeAtPather, path, val)
 			if err != nil {
 				return nil, err
 			}
@@ -154,7 +158,7 @@ func (j jsonFlex) rawFromValue(ctx context.Context, typeAtPather TypeAtPather, p
 				}
 			}
 
-			v, err := j.rawFromValue(ctx, typeAtPather, path, val)
+			v, err := j.toRaw(ctx, typeAtPather, path, val)
 			if err != nil {
 				return nil, err
 			}
@@ -178,7 +182,7 @@ func (j jsonFlex) rawFromValue(ctx context.Context, typeAtPather TypeAtPather, p
 	}
 }
 
-func (j jsonFlex) valueFromRaw(ctx context.Context, typeAtPather TypeAtPather, path *tftypes.AttributePath, v any) (tftypes.Value, error) {
+func (j jsonFlex) fromRaw(ctx context.Context, typeAtPather TypeAtPather, path *tftypes.AttributePath, v any) (tftypes.Value, error) {
 	typ, err := typeAtPather.TypeAtPath(ctx, path)
 	if err != nil {
 		return inttypes.Zero[tftypes.Value](), err
@@ -222,7 +226,7 @@ func (j jsonFlex) valueFromRaw(ctx context.Context, typeAtPather TypeAtPather, p
 			} else {
 				path = path.WithElementKeyInt(idx)
 			}
-			val, err := j.valueFromRaw(ctx, typeAtPather, path, v)
+			val, err := j.fromRaw(ctx, typeAtPather, path, v)
 			if err != nil {
 				return inttypes.Zero[tftypes.Value](), err
 			}
@@ -259,7 +263,7 @@ func (j jsonFlex) valueFromRaw(ctx context.Context, typeAtPather TypeAtPather, p
 				path = path.WithElementKeyString(key)
 			}
 
-			val, err := j.valueFromRaw(ctx, typeAtPather, path, v)
+			val, err := j.fromRaw(ctx, typeAtPather, path, v)
 			if err != nil {
 				if isObject {
 					tflog.Info(ctx, "not found in Terraform schema", map[string]any{
