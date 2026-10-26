@@ -183,7 +183,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.112.3
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.48.6
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.51.4
-	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.48.5
+	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.48.6
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.38.5
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.42.5
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.56.5
