@@ -355,12 +355,16 @@ func (hubContentReferenceImportID) Parse(id string) (string, map[string]any, err
 }
 
 func findHubContentByName(ctx context.Context, conn *sagemaker.Client, hubName, hubContentName string, contentType awstypes.HubContentType) (*sagemaker.DescribeHubContentOutput, error) {
-	input := &sagemaker.DescribeHubContentInput{
+	input := sagemaker.DescribeHubContentInput{
 		HubName:        aws.String(hubName),
 		HubContentName: aws.String(hubContentName),
 		HubContentType: contentType,
 	}
 
+	return findHubContent(ctx, conn, &input)
+}
+
+func findHubContent(ctx context.Context, conn *sagemaker.Client, input *sagemaker.DescribeHubContentInput) (*sagemaker.DescribeHubContentOutput, error) {
 	output, err := conn.DescribeHubContent(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
