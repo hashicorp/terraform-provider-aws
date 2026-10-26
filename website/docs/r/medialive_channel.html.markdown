@@ -327,7 +327,7 @@ The following arguments are optional:
 * `motion_graphics_configuration` - (Optional) Settings for motion graphics. See [`motion_graphics_configuration` Block](#motion_graphics_configuration-block) for details.
 * `nielsen_configuration` - (Optional) Nielsen configuration settings. See [`nielsen_configuration` Block](#nielsen_configuration-block) for details.
 * `output_groups` - (Required) Output groups for the channel. See [`output_groups` Block](#output_groups-block) for details.
-* `thumbnail_configuration` - (Optional) Thumbnail configuration settings. See [`thumbnail_configuration` Block](#thumbnail-configuration-block) for details.
+* `thumbnail_configuration` - (Optional) Thumbnail configuration settings. See [`thumbnail_configuration` Block](#thumbnail_configuration-block) for details.
 * `timecode_config` - (Required) Settings used to acquire and adjust timecode information from inputs. See [`timecode_config` Block](#timecode_config-block) for details.
 * `video_descriptions` - (Optional) Video descriptions for the channel. See [`video_descriptions` Block](#video_descriptions-block) for details.
 
