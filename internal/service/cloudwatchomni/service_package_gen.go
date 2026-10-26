@@ -28,6 +28,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAccessGrantResource,
+			TypeName: "aws_cloudwatchomni_access_grant",
+			Name:     "Access Grant",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("grant_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newAccessProfileResource,
 			TypeName: "aws_cloudwatchomni_access_profile",
 			Name:     "Access Profile",
@@ -39,6 +50,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 				ImportID:      accessProfileImportID{},
+			},
+		},
+		{
+			Factory:  newDashboardResource,
+			TypeName: "aws_cloudwatchomni_dashboard",
+			Name:     "Dashboard",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("dashboard_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      dashboardImportID{},
 			},
 		},
 		{
@@ -78,6 +104,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newAccessGrantResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_access_grant",
+			Name:     "Access Grant",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("grant_id", true)),
+		},
+		{
 			Factory:  newAccessProfileResourceAsListResource,
 			TypeName: "aws_cloudwatchomni_access_profile",
 			Name:     "Access Profile",
@@ -85,6 +119,17 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("space_id", true),
 				inttypes.StringIdentityAttribute("profile_id", true),
+			}),
+		},
+		{
+			Factory:  newDashboardResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_dashboard",
+			Name:     "Dashboard",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("dashboard_id", true),
 			}),
 		},
 		{

@@ -22,7 +22,15 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newDatasetIntegrationDataSource,
+			TypeName: "aws_observabilityadmin_dataset_integration",
+			Name:     "Dataset Integration",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
@@ -33,6 +41,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Centralization Rule For Organization",
 			Tags:     inttypes.ResourceTagsAttribute("rule_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newDatasetIntegrationResource,
+			TypeName: "aws_observabilityadmin_dataset_integration",
+			Name:     "Dataset Integration",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newS3TableIntegrationResource,

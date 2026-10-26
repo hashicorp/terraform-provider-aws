@@ -5,7 +5,6 @@ package s3files
 
 import (
 	"context"
-	"errors"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/s3files"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -157,8 +157,7 @@ func (r *fileSystemPolicyResource) Delete(ctx context.Context, request resource.
 
 	_, err := conn.DeleteFileSystemPolicy(ctx, &input)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return // Resource already deleted
 		}
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.FileSystemID.ValueString())
@@ -178,8 +177,7 @@ func findFileSystemPolicyByID(ctx context.Context, conn *s3files.Client, id stri
 
 	output, err := conn.GetFileSystemPolicy(ctx, &input)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

@@ -1,0 +1,3 @@
+```release-note:note
+provider: The provider is now built with Go 1.26.10, which no longer trusts certificates issued through a set of compromised eMudhra intermediate CAs (CVE-2026-111943)
+```

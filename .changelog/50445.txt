@@ -1,0 +1,18 @@
+```release-note:enhancement
+resource/aws_guardduty_detector_feature: Add `RDS_DATA_RISK` as a valid value for `additional_configuration.name`
+```
+```release-note:enhancement
+resource/aws_guardduty_member_detector_feature: Add `RDS_DATA_RISK` as a valid value for `additional_configuration.name`
+```
+```release-note:enhancement
+resource/aws_guardduty_organization_configuration_feature: Add `RDS_DATA_RISK` as a valid value for `additional_configuration.name`
+```
+```release-note:bug
+resource/aws_guardduty_detector_feature: Fix perpetual diff when `additional_configuration` is omitted and AWS returns default entries such as `RDS_DATA_RISK`
+```
+```release-note:bug
+resource/aws_guardduty_member_detector_feature: Fix perpetual diff when `additional_configuration` is omitted and AWS returns default entries such as `RDS_DATA_RISK`
+```
+```release-note:bug
+resource/aws_guardduty_organization_configuration_feature: Fix forced replacement when `additional_configuration` is omitted and AWS returns default entries such as `RDS_DATA_RISK`
+```
