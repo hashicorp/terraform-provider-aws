@@ -94,9 +94,14 @@ The `primary_container` and `container` block both support:
 #### S3 Data Source
 
 * `compression_type` - (Required) How the model data is prepared. Allowed values are: `None` and `Gzip`.
+* `hub_access_config` - (Optional) Configuration for deploying a model from a SageMaker JumpStart private hub. See [Hub Access Config](#hub-access-config).
 * `model_access_config` - (Optional) Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the [`model_access_config` configuration block](#model-access-config). See [Model Access Config](#model-access-config).
 * `s3_data_type` - (Required) Type of model data to deploy. Allowed values are: `S3Object` and `S3Prefix`.
 * `s3_uri` - (Required) The S3 path of model data to deploy.
+
+#### Hub Access Config
+
+* `hub_content_arn` - (Required) Versioned ARN of the private hub content to deploy. For an [`aws_sagemaker_hub_content_reference`](sagemaker_hub_content_reference.html), use `"${aws_sagemaker_hub_content_reference.example.hub_content_arn}/${aws_sagemaker_hub_content_reference.example.hub_content_version}"`. `s3_uri` must match the hub content's hosting artifact URI.
 
 #### Model Access Config
 

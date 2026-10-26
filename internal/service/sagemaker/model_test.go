@@ -6,6 +6,7 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -614,6 +615,39 @@ func TestAccSageMakerModel_primaryContainerModelS3DataSourceAcceptEula(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.model_data_source.0.s3_data_source.0.model_access_config.0.accept_eula", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerModel_primaryContainerModelS3DataSourceHubAccessConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerModelS3DataSourceHubAccessConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.model_data_source.0.s3_data_source.0.hub_access_config.#", "1"),
+					resource.TestCheckResourceAttrWith(resourceName, "primary_container.0.model_data_source.0.s3_data_source.0.hub_access_config.0.hub_content_arn", func(v string) error {
+						if !strings.Contains(v, ":hub-content/"+rName+"/ModelReference/"+rName+"/") {
+							return fmt.Errorf("unexpected hub_content_arn: %s", v)
+						}
+						return nil
+					}),
 				),
 			},
 			{
@@ -1316,6 +1350,58 @@ resource "aws_sagemaker_model" "test" {
         compression_type = "None"
         s3_data_type     = "S3Prefix"
         s3_uri           = format("s3://jumpstart-private-cache-prod-%%s/meta-textgeneration/meta-textgeneration-llama-2-13b-f/artifacts/inference-prepack/v1.0.0/", data.aws_region.current.region)
+        model_access_config {
+          accept_eula = true
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccModelConfig_primaryContainerModelS3DataSourceHubAccessConfig(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
+data "aws_sagemaker_prebuilt_ecr_image" "hub_test" {
+  repository_name = "huggingface-pytorch-tgi-inference"
+  image_tag       = "2.3.0-tgi2.2.0-gpu-py310-cu121-ubuntu22.04-v2.0"
+}
+
+resource "aws_sagemaker_hub" "test" {
+  hub_name        = %[1]q
+  hub_description = %[1]q
+}
+
+resource "aws_sagemaker_hub_content_reference" "test" {
+  hub_name                         = aws_sagemaker_hub.test.hub_name
+  hub_content_name                 = %[1]q
+  sagemaker_public_hub_content_arn = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.region}:aws:hub-content/SageMakerPublicHub/Model/meta-textgeneration-llama-2-13b-f"
+}
+
+resource "aws_sagemaker_model" "test" {
+  name                     = %[1]q
+  enable_network_isolation = true
+  execution_role_arn       = aws_iam_role.test.arn
+
+  primary_container {
+    image = data.aws_sagemaker_prebuilt_ecr_image.hub_test.registry_path
+    mode  = "SingleModel"
+    environment = {
+      HF_MODEL_ID      = "/opt/ml/model"
+      MODEL_CACHE_ROOT = "/opt/ml/model"
+      SAGEMAKER_ENV    = 1
+    }
+
+    model_data_source {
+      s3_data_source {
+        compression_type = "None"
+        s3_data_type     = "S3Prefix"
+        s3_uri           = format("s3://jumpstart-private-cache-prod-%%s/meta-textgeneration/meta-textgeneration-llama-2-13b-f/artifacts/inference-prepack/v1.1.0/", data.aws_region.current.region)
+
+        hub_access_config {
+          hub_content_arn = "${aws_sagemaker_hub_content_reference.test.hub_content_arn}/${aws_sagemaker_hub_content_reference.test.hub_content_version}"
+        }
+
         model_access_config {
           accept_eula = true
         }
