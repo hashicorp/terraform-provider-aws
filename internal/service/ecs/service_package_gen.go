@@ -63,6 +63,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags:     inttypes.ResourceTagsAttribute("service_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newGatewayResource,
+			TypeName: "aws_ecs_gateway",
+			Name:     "Gateway",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
 }
 
