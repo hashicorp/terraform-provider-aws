@@ -18,18 +18,19 @@ The initial tenant database is created with the DB instance, using its `db_name`
 
 ```terraform
 resource "aws_db_instance" "example" {
-  allocated_storage   = 20
-  apply_immediately   = true
-  db_name             = "PDB1"
-  engine              = "oracle-se2-cdb"
-  engine_version      = "19.0.0.0.ru-2026-07.rur-2026-07.r1"
-  identifier          = "example"
-  instance_class      = "db.t3.small"
-  license_model       = "bring-your-own-license"
-  multi_tenant        = true
-  password_wo         = var.master_password
-  password_wo_version = 1
-  username            = "admin"
+  allocated_storage         = 20
+  apply_immediately         = true
+  db_name                   = "PDB1"
+  engine                    = "oracle-se2-cdb"
+  engine_version            = "19.0.0.0.ru-2026-07.rur-2026-07.r1"
+  final_snapshot_identifier = "example-final"
+  identifier                = "example"
+  instance_class            = "db.t3.small"
+  license_model             = "bring-your-own-license"
+  multi_tenant              = true
+  password_wo               = var.master_password
+  password_wo_version       = 1
+  username                  = "admin"
 }
 
 resource "aws_rds_tenant_database" "example" {
