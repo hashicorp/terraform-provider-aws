@@ -80,6 +80,7 @@ Config
 Connect
 Connect Cases
 Connect Customer Profiles
+Continuum
 Control Tower
 Cost Optimization Hub
 Cost and Usage Report

@@ -73,6 +73,7 @@ val services = mapOf(
     "configservice" to ServiceSpec("Config"),
     "connect" to ServiceSpec("Connect"),
     "connectcases" to ServiceSpec("Connect Cases"),
+    "continuum" to ServiceSpec("Continuum"),
     "controltower" to ServiceSpec("Control Tower"),
     "costoptimizationhub" to ServiceSpec("Cost Optimization Hub"),
     "cur" to ServiceSpec("Cost and Usage Report", regionOverride = "us-east-1"),

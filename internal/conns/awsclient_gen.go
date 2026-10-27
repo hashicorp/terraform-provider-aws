@@ -77,6 +77,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	"github.com/aws/aws-sdk-go-v2/service/connectcases"
+	"github.com/aws/aws-sdk-go-v2/service/continuum"
 	"github.com/aws/aws-sdk-go-v2/service/controltower"
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
@@ -568,6 +569,10 @@ func (c *AWSClient) ConnectClient(ctx context.Context) *connect.Client {
 
 func (c *AWSClient) ConnectCasesClient(ctx context.Context) *connectcases.Client {
 	return errs.Must(c.client[*connectcases.Client](ctx, names.ConnectCases, make(map[string]any)))
+}
+
+func (c *AWSClient) ContinuumClient(ctx context.Context) *continuum.Client {
+	return errs.Must(c.client[*continuum.Client](ctx, names.Continuum, make(map[string]any)))
 }
 
 func (c *AWSClient) ControlTowerClient(ctx context.Context) *controltower.Client {

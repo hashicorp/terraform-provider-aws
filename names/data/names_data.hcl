@@ -2623,6 +2623,30 @@ service "wisdom" {
   not_implemented          = true
 }
 
+service "continuum" {
+  sdk {
+    id            = "Continuum"
+    arn_namespace = "continuum"
+  }
+
+  names {
+    provider_name_upper = "Continuum"
+    human_friendly      = "Continuum"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListIntegrations"
+  }
+
+  resource_prefix {
+    correct = "aws_continuum_"
+  }
+
+  provider_package_correct = "continuum"
+  doc_prefix               = ["continuum_"]
+  brand                    = "AWS"
+}
+
 service "controltower" {
   sdk {
     id            = "ControlTower"
