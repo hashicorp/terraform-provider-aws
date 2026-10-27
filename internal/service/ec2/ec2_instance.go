@@ -269,9 +269,22 @@ func instancePlacementHasChanges(diff *schema.ResourceDiff) bool {
 	return instancePlacementHasChange(diff, "placement_group") || instancePlacementHasChange(diff, "placement_group_id") || instancePlacementHasChange(diff, "placement_partition_number")
 }
 
-func isSpotInstancePlacementChange(key string) customdiff.ResourceConditionFunc {
+func instancePlacementChangeRequiresReplacement(key string) customdiff.ResourceConditionFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-		return diff.Id() != "" && instancePlacementHasChange(diff, key) && diff.Get("instance_lifecycle").(string) == string(awstypes.InstanceLifecycleSpot)
+		if diff.Id() == "" || !instancePlacementHasChange(diff, key) {
+			return false
+		}
+
+		if diff.Get("instance_lifecycle").(string) == string(awstypes.InstanceLifecycleSpot) {
+			return true
+		}
+
+		// Use prior state: Update stops the instance before applying a new disable_api_stop value,
+		// and the destroy half of a replacement uses the prior force_destroy value.
+		oldStop, _ := diff.GetChange("disable_api_stop")
+		oldForceDestroy, _ := diff.GetChange(names.AttrForceDestroy)
+
+		return oldStop.(bool) && oldForceDestroy.(bool)
 	}
 }
 
