@@ -29,7 +29,6 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the environment.
 * `findings` - List of code findings. Each has:
     * `category`
     * `completed_at`
@@ -47,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
     * `status_message`
     * `title`
     * `type`
-
+* `id` - ID of the environment.

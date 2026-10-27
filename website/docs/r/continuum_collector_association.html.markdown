@@ -36,7 +36,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `collector_id` - ID of the collector.
-* `id` - Import ID in the format `environment_id,collector_arn`.
+* `id` - (**Deprecated**) Import ID in the format `environment_id,collector_arn`. Use `environment_id` and `collector_arn` instead.
 
 ## Import
 
@@ -82,4 +82,3 @@ Using `terraform import`, import `aws_continuum_collector_association` using the
 ```console
 % terraform import aws_continuum_collector_association.example 01a17e22728b7d25b3a2294e0ca5c35e,arn:aws:continuum:us-east-1:123456789012:collectors/01a17e22728b7d25b3a2294e0ca5c35f
 ```
-

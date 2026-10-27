@@ -44,25 +44,25 @@ resource "aws_continuum_environment" "example" {
 
 This resource supports the following arguments:
 
-* `name` - (Required) Name of the environment.
 * `allowed_domains` - (Optional) Set of domains that code and context in this environment may reach over the network.
+* `name` - (Required) Name of the environment.
 * `patch_creation_policy` - (Optional) Whether Continuum creates patches. Valid values are `ENABLED` and `DISABLED`. Computed when omitted.
-* `repository_source` - (Optional) Repository code sources, up to 10. See [`repository_source`](#repository_source) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `s3_source` - (Optional) Amazon S3 code sources. See [`s3_source`](#s3_source) below.
+* `repository_source` - (Optional) Repository code sources, up to 10. See [`repository_source`](#repository_source-block) below.
+* `s3_source` - (Optional) Amazon S3 code sources. See [`s3_source`](#s3_source-block) below.
 * `scan_frequency` - (Optional) ISO 8601 duration between automatic scans, such as `P1D` or `P7D`. `PT0H` turns automatic scans off. Computed when omitted.
 
-### `repository_source`
+### `repository_source` Block
 
+* `default_branch` - (Optional) Branch to scan. Computed when omitted.
 * `integration_id` - (Required) ID of the GitHub or GitLab integration.
 * `repository` - (Required) Repository to scan.
-* `default_branch` - (Optional) Branch to scan. Computed when omitted.
 
-### `s3_source`
+### `s3_source` Block
 
-* `integration_id` - (Required) ID of the Amazon S3 integration.
 * `code_prefix` - (Required) Prefix under which the code `.zip` package is stored.
 * `context_prefix` - (Optional) Prefix of business-context documents. Computed when omitted.
+* `integration_id` - (Required) ID of the Amazon S3 integration.
 
 ## Attribute Reference
 
@@ -126,4 +126,3 @@ Using `terraform import`, import `aws_continuum_environment` using the ID. For e
 ```console
 % terraform import aws_continuum_environment.example ID_PLACEHOLDER
 ```
-

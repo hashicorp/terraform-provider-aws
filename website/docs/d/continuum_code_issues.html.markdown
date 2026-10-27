@@ -43,4 +43,3 @@ This data source exports the following attributes in addition to the arguments a
     * `status_reason`
     * `status_updated_at`
     * `updated_at`
-

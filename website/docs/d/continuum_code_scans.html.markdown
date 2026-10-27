@@ -38,4 +38,3 @@ This data source exports the following attributes in addition to the arguments a
     * `origin`
     * `scan_run_id`
     * `status`
-

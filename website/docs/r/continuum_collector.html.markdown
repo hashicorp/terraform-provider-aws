@@ -86,4 +86,3 @@ Using `terraform import`, import `aws_continuum_collector` using the ID. For exa
 ```console
 % terraform import aws_continuum_collector.example ID_PLACEHOLDER
 ```
-

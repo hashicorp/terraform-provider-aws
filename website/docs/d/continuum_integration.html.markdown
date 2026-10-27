@@ -40,4 +40,3 @@ This data source exports the following attributes in addition to the arguments a
 * `target_path` - Target path of a GitLab integration.
 * `target_type` - Target type of a GitLab integration.
 * `updated_at` - Time the integration was last updated.
-

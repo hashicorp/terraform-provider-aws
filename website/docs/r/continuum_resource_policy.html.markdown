@@ -66,10 +66,6 @@ resource "aws_continuum_resource_policy" "example" {
 
 * `resource_arn` (String) ARN of the Continuum resource.
 
-#### Optional
-
-* `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_continuum_resource_policy` using the ID. For example:
 
@@ -85,4 +81,3 @@ Using `terraform import`, import `aws_continuum_resource_policy` using the ID. F
 ```console
 % terraform import aws_continuum_resource_policy.example arn:aws:continuum:us-east-1:123456789012:collectors/01a17e22728b7d25b3a2294e0ca5c35f
 ```
-

@@ -35,10 +35,21 @@ This data source exports the following attributes in addition to the arguments a
 * `collector_data_access_role_arn` - ARN of the collector data access role.
 * `created_at` - Time the environment was created.
 * `patch_creation_policy` - Patch creation policy.
-* `repository_source` - Repository sources. Each has `default_branch`, `integration_id` and `repository`.
-* `s3_source` - Amazon S3 sources. Each has `code_prefix`, `context_prefix` and `integration_id`.
+* `repository_source` - Repository sources. See [`repository_source`](#repository_source-block) below.
+* `s3_source` - Amazon S3 sources. See [`s3_source`](#s3_source-block) below.
 * `scan_frequency` - Scan frequency.
 * `status` - Environment status.
 * `status_message` - Additional detail about the status.
 * `updated_at` - Time the environment was last updated.
 
+### `repository_source` Block
+
+* `default_branch` - Branch that is scanned.
+* `integration_id` - ID of the GitHub or GitLab integration.
+* `repository` - Repository that is scanned.
+
+### `s3_source` Block
+
+* `code_prefix` - Prefix under which the code package is stored.
+* `context_prefix` - Prefix of business-context documents.
+* `integration_id` - ID of the Amazon S3 integration.

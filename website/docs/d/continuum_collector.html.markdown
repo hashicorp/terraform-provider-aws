@@ -34,4 +34,3 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Collector status.
 * `type` - Collector type.
 * `updated_at` - Time the collector was last updated.
-
