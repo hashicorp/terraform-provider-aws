@@ -66,7 +66,6 @@ resource "aws_continuum_resource_policy" "example" {
 
 * `resource_arn` (String) ARN of the Continuum resource.
 
-
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_continuum_resource_policy` using the ID. For example:
 
 ```terraform
