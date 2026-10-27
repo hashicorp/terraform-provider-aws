@@ -14,7 +14,7 @@ Provides an AutoScaling Lifecycle Hook resource.
 the `initial_lifecycle_hook` attribute from the
 [`aws_autoscaling_group`](/docs/providers/aws/r/autoscaling_group.html)
 resource, or via this one. Hooks added via this resource will not be added
-until the autoscaling group has been created, and depending on your
+until the Auto Scaling group has been created, and depending on your
 [capacity](/docs/providers/aws/r/autoscaling_group.html#waiting-for-capacity)
 settings, after the initial instances have been launched, creating unintended
 behavior. If you need hooks to run on all instances, add them with

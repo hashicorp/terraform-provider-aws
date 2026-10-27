@@ -38,7 +38,3 @@ var (
 	UpdateDiffGSI                                = updateDiffGSI
 	CheckIfGSIRecreateAttributesChanged          = checkIfGSIRecreateAttributesChanged
 )
-
-const (
-	GlobalSecondaryIndexExperimentalFlagEnvVar = globalSecondaryIndexExperimentalFlagEnvVar
-)

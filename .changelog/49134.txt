@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ssm_parameter: Prevents errors when importing specific version.
+```
+
+```release-note:bug
+resource/aws_ssm_parameter: Correctly imports when passing ARN value.
+```

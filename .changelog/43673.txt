@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_inspector2_enabler: Support resource import
-```

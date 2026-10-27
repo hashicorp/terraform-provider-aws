@@ -5,11 +5,14 @@ package redshift
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
+	redshiftserverlesstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -955,4 +958,56 @@ func findRedshiftIDCApplicationByARN(ctx context.Context, conn *redshift.Client,
 	}
 
 	return findRedshiftIDCApplication(ctx, conn, &input)
+}
+
+// findNamespaceRegistrationByID verifies that a namespace or cluster exists.
+// It does not rely on LakehouseRegistrationStatus which is unreliable (often empty for provisioned clusters).
+func findNamespaceRegistrationByID(ctx context.Context, redshiftConn *redshift.Client, serverlessConn *redshiftserverless.Client, consumerIdentifier, namespaceType, serverlessNamespaceIdentifier, serverlessWorkgroupIdentifier, provisionedClusterIdentifier string) error {
+	if namespaceType == "serverless" {
+		return findServerlessNamespace(ctx, serverlessConn, serverlessNamespaceIdentifier)
+	}
+	return findProvisionedCluster(ctx, redshiftConn, provisionedClusterIdentifier)
+}
+
+func findServerlessNamespace(ctx context.Context, conn *redshiftserverless.Client, namespaceIdentifier string) error {
+	output, err := conn.GetNamespace(ctx, &redshiftserverless.GetNamespaceInput{
+		NamespaceName: aws.String(namespaceIdentifier),
+	})
+	if err != nil {
+		if errs.IsA[*redshiftserverlesstypes.ResourceNotFoundException](err) {
+			return &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+		return err
+	}
+
+	if output == nil || output.Namespace == nil {
+		return &retry.NotFoundError{
+			Message: "empty response",
+		}
+	}
+
+	return nil
+}
+
+func findProvisionedCluster(ctx context.Context, conn *redshift.Client, clusterIdentifier string) error {
+	_, err := findClusterByID(ctx, conn, clusterIdentifier)
+	return err
+}
+
+func findInternalDataShareByNamespaceID(ctx context.Context, conn *redshift.Client, namespaceID, accountID, region, partition string) (*awstypes.DataShare, error) {
+	dataShareARN := arn.ARN{
+		Partition: partition,
+		Service:   "redshift",
+		Region:    region,
+		AccountID: accountID,
+		Resource:  fmt.Sprintf("datashare:%s/ds_internal_namespace", namespaceID),
+	}.String()
+
+	input := &redshift.DescribeDataSharesInput{
+		DataShareArn: aws.String(dataShareARN),
+	}
+
+	return findDataShare(ctx, conn, input)
 }

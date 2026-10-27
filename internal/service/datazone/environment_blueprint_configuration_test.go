@@ -76,6 +76,14 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceEnvironmentBlueprintConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -300,6 +308,62 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_upgradeFromV5_100_0(t *tes
 	})
 }
 
+func TestAccDataZoneEnvironmentBlueprintConfiguration_globalParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
+	domainName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment_blueprint_configuration.test"
+
+	quickSightRole := fmt.Sprintf("arn:%s:iam::%s:role/example", acctest.Partition(), acctest.AccountID(ctx))
+	quickSightRoleUpdated := fmt.Sprintf("arn:%s:iam::%s:role/example-updated", acctest.Partition(), acctest.AccountID(ctx))
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentBlueprintConfigurationConfig_global_parameters(domainName, "quickSightVPCConnectionRoleArn", quickSightRole),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
+					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.quickSightVPCConnectionRoleArn", quickSightRole),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccEnvironmentBlueprintConfigurationImportStateIdFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "environment_blueprint_id",
+				ImportStateVerifyIgnore:              []string{"global_parameters"},
+			},
+			{
+				Config: testAccEnvironmentBlueprintConfigurationConfig_global_parameters(domainName, "quickSightVPCConnectionRoleArn", quickSightRoleUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, t, resourceName, &environmentblueprintconfiguration),
+					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "global_parameters.quickSightVPCConnectionRoleArn", quickSightRoleUpdated),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
@@ -427,5 +491,22 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
   }
 }
 `, region, key, value),
+	)
+}
+
+func testAccEnvironmentBlueprintConfigurationConfig_global_parameters(domainName, key, value string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentBlueprintDataSourceConfig_basic(domainName),
+		fmt.Sprintf(`
+resource "aws_datazone_environment_blueprint_configuration" "test" {
+  domain_id                = aws_datazone_domain.test.id
+  environment_blueprint_id = data.aws_datazone_environment_blueprint.test.id
+  enabled_regions          = []
+
+  global_parameters = {
+    %[1]q = %[2]q
+  }
+}
+`, key, value),
 	)
 }

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_fsx_lustre_file_system: Fix validation of SSD read cache size for file systems using the Intelligent-Tiering storage class
-```

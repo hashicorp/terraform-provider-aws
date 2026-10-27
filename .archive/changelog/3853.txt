@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_acm_certificate: Add `validation_option` argument
-```

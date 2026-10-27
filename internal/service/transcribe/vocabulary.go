@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -46,43 +47,45 @@ func ResourceVocabulary() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"download_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLanguageCode: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(validateLanguageCodes(types.LanguageCode("").Values()), false),
-			},
-			"phrases": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     256,
-				ExactlyOneOf: []string{"phrases", "vocabulary_file_uri"},
-				Elem:         &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vocabulary_file_uri": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"phrases", "vocabulary_file_uri"},
-				ValidateFunc: validation.StringLenBetween(1, 2000),
-			},
-			"vocabulary_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 200),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"download_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLanguageCode: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(validateLanguageCodes(types.LanguageCode("").Values()), false),
+				},
+				"phrases": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MaxItems:     256,
+					ExactlyOneOf: []string{"phrases", "vocabulary_file_uri"},
+					Elem:         &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vocabulary_file_uri": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"phrases", "vocabulary_file_uri"},
+					ValidateFunc: validation.StringLenBetween(1, 2000),
+				},
+				"vocabulary_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 200),
+				},
+			}
 		},
 	}
 }
@@ -202,8 +205,7 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	_, err := conn.DeleteVocabulary(ctx, &input)
 
-	var badRequestException *types.BadRequestException
-	if errors.As(err, &badRequestException) {
+	if errs.IsA[*types.BadRequestException](err) {
 		return diags
 	}
 
@@ -304,8 +306,7 @@ func FindVocabularyByName(ctx context.Context, conn *transcribe.Client, id strin
 
 	out, err := conn.GetVocabulary(ctx, in)
 
-	var badRequestException *types.BadRequestException
-	if errors.As(err, &badRequestException) {
+	if errs.IsA[*types.BadRequestException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}

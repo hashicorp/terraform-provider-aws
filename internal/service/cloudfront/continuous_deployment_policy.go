@@ -65,7 +65,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"items": schema.SetAttribute{
+						attrItems: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,

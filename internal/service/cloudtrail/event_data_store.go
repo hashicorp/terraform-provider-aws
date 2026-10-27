@@ -45,149 +45,151 @@ func resourceEventDataStore() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"advanced_event_selector": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"field_selector": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ends_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"advanced_event_selector": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field_selector": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"ends_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									"equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"equals": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									names.AttrField: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice(field_Values(), false),
-									},
-									"not_ends_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
+										names.AttrField: {
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringInSlice(field_Values(), false),
 										},
-									},
-									"not_equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"not_ends_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									"not_starts_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"not_equals": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
-									},
-									"starts_with": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										MinItems: 1,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 2048),
+										"not_starts_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
+										},
+										"starts_with": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MinItems: 1,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 2048),
+											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringLenBetween(0, 1000),
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1000),
+							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"billing_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.BillingModeExtendableRetentionPricing,
-				ValidateDiagFunc: enum.Validate[types.BillingMode](),
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"multi_region_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 128),
-			},
-			"organization_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrRetentionPeriod: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  2555,
-				ValidateFunc: validation.All(
-					validation.IntBetween(7, 2555),
-				),
-			},
-			"suspend": {
-				Type:         nullable.TypeNullableBool,
-				Optional:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableBool,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"termination_protection_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"billing_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.BillingModeExtendableRetentionPricing,
+					ValidateDiagFunc: enum.Validate[types.BillingMode](),
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"multi_region_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(3, 128),
+				},
+				"organization_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrRetentionPeriod: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  2555,
+					ValidateFunc: validation.All(
+						validation.IntBetween(7, 2555),
+					),
+				},
+				"suspend": {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"termination_protection_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			}
 		},
 	}
 }

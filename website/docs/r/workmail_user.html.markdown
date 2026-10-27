@@ -72,12 +72,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `state` - Current WorkMail state of the user.
 * `user_id` - Identifier of the user.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-This resource does not support configurable timeouts.
-
 ## Import
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:

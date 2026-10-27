@@ -31,17 +31,19 @@ func resourceAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceAttachmentRead,
 		DeleteWithoutTimeout: resourceAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			"elb": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"instance": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"elb": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"instance": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+			}
 		},
 	}
 }

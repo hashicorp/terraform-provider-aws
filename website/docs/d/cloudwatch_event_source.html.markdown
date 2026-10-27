@@ -16,7 +16,7 @@ Use this data source to get information about an EventBridge Partner Event Sourc
 
 ```terraform
 data "aws_cloudwatch_event_source" "examplepartner" {
-  name_prefix = "aws.partner/examplepartner.com"
+  name_prefix = "aws.partner/example.com"
 }
 ```
 

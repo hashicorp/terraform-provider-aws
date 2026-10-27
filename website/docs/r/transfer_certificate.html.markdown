@@ -28,22 +28,22 @@ resource "aws_transfer_certificate" "example" {
 
 This resource supports the following arguments:
 
+* `certificate` - (Required) Valid certificate file required for the transfer.
+* `certificate_chain` - (Optional) Optional list of certificate that make up the chain for the certificate that is being imported.
+* `description` - (Optional) Short description that helps identify the certificate.
+* `private_key` - (Optional) Private key associated with the certificate being imported.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `certificate` - (Required) The valid certificate file required for the transfer.
-* `certificate_chain` - (Optional) The optional list of certificate that make up the chain for the certificate that is being imported.
-* `description` - (Optional) A short description that helps identify the certificate.
-* `private_key` - (Optional) The private key associated with the certificate being imported.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `usage` - (Required) Specifies if a certificate is being used for signing or encryption. The valid values are SIGNING and ENCRYPTION.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `usage` - (Required) Whether a certificate is being used for signing or encryption. The valid values are SIGNING and ENCRYPTION.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the certificate
-* `certificate_id` - The unique identifier for the AS2 certificate
-* `active_date` - An date when the certificate becomes active
-* `inactive_date` - An date when the certificate becomes inactive
+* `active_date` - Date when the certificate becomes active
+* `arn` - ARN of the certificate
+* `certificate_id` - Unique identifier for the AS2 certificate
+* `inactive_date` - Date when the certificate becomes inactive
 
 ## Import
 

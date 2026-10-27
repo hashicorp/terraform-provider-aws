@@ -61,98 +61,100 @@ func resourceTransitGateway() *schema.Resource {
 			}),
 		),
 
-		Schema: map[string]*schema.Schema{
-			"amazon_side_asn": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  64512,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"association_default_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_accept_shared_attachments": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.AutoAcceptSharedAttachmentsValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.AutoAcceptSharedAttachmentsValue](),
-			},
-			"default_route_table_association": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DefaultRouteTableAssociationValueEnable,
-				ValidateDiagFunc: enum.Validate[awstypes.DefaultRouteTableAssociationValue](),
-			},
-			"default_route_table_propagation": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DefaultRouteTablePropagationValueEnable,
-				ValidateDiagFunc: enum.Validate[awstypes.DefaultRouteTablePropagationValue](),
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"dns_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DnsSupportValueEnable,
-				ValidateDiagFunc: enum.Validate[awstypes.DnsSupportValue](),
-			},
-			"encryption_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.EncryptionSupportOptionValue](),
-			},
-			"multicast_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.MulticastSupportValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.MulticastSupportValue](),
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"propagation_default_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"security_group_referencing_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.SecurityGroupReferencingSupportValueDisable,
-				ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_cidr_blocks": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
-						validation.All(
-							validation.IsCIDRNetwork(0, 24),
-							validation.StringDoesNotMatch(regexache.MustCompile(`^169\.254\.`), "must not be from range 169.254.0.0/16"),
-						),
-						validation.IsCIDRNetwork(0, 64),
-					),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"amazon_side_asn": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  64512,
 				},
-			},
-			"vpn_ecmp_support": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.VpnEcmpSupportValueEnable,
-				ValidateDiagFunc: enum.Validate[awstypes.VpnEcmpSupportValue](),
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"association_default_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_accept_shared_attachments": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.AutoAcceptSharedAttachmentsValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.AutoAcceptSharedAttachmentsValue](),
+				},
+				"default_route_table_association": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DefaultRouteTableAssociationValueEnable,
+					ValidateDiagFunc: enum.Validate[awstypes.DefaultRouteTableAssociationValue](),
+				},
+				"default_route_table_propagation": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DefaultRouteTablePropagationValueEnable,
+					ValidateDiagFunc: enum.Validate[awstypes.DefaultRouteTablePropagationValue](),
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"dns_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.DnsSupportValueEnable,
+					ValidateDiagFunc: enum.Validate[awstypes.DnsSupportValue](),
+				},
+				"encryption_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EncryptionSupportOptionValue](),
+				},
+				"multicast_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.MulticastSupportValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.MulticastSupportValue](),
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"propagation_default_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"security_group_referencing_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.SecurityGroupReferencingSupportValueDisable,
+					ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"transit_gateway_cidr_blocks": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
+							validation.All(
+								validation.IsCIDRNetwork(0, 24),
+								validation.StringDoesNotMatch(regexache.MustCompile(`^169\.254\.`), "must not be from range 169.254.0.0/16"),
+							),
+							validation.IsCIDRNetwork(0, 64),
+						),
+					},
+				},
+				"vpn_ecmp_support": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.VpnEcmpSupportValueEnable,
+					ValidateDiagFunc: enum.Validate[awstypes.VpnEcmpSupportValue](),
+				},
+			}
 		},
 	}
 }

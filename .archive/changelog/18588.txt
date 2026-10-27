@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ssm_parameter: Allow `allowed_pattern` and `description` arguments to be empty strings
-```

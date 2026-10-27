@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -116,9 +117,22 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(ctx, t, resourceName, &policy),
+					// nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_policy.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						// For backwards compatibility the Read operation does NOT check
+						// for nil/empty policy content and remove the resource from state.
+						// This means that out of band removal will result in a planned
+						// update instead of a creation.
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_policy.test", plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -144,6 +158,14 @@ func TestAccSecretsManagerSecretPolicy_Disappears_secret(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecret(), secretResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_policy.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_secretsmanager_secret_policy.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

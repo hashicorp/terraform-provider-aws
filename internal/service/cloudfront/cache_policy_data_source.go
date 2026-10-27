@@ -22,122 +22,124 @@ func dataSourceCachePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCachePolicyRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_ttl": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{names.AttrID, names.AttrName},
-			},
-			"max_ttl": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"min_ttl": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{names.AttrID, names.AttrName},
-			},
-			"parameters_in_cache_key_and_forwarded_to_origin": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cookies_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cookie_behavior": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"cookies": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"items": {
-													Type:     schema.TypeSet,
-													Computed: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_ttl": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{names.AttrID, names.AttrName},
+				},
+				"max_ttl": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"min_ttl": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{names.AttrID, names.AttrName},
+				},
+				"parameters_in_cache_key_and_forwarded_to_origin": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cookies_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cookie_behavior": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"cookies": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrItems: {
+														Type:     schema.TypeSet,
+														Computed: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"enable_accept_encoding_brotli": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"enable_accept_encoding_gzip": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"headers_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"header_behavior": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"headers": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"items": {
-													Type:     schema.TypeSet,
-													Computed: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+							"enable_accept_encoding_brotli": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"enable_accept_encoding_gzip": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"headers_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"header_behavior": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"headers": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrItems: {
+														Type:     schema.TypeSet,
+														Computed: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"query_strings_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"query_string_behavior": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"query_strings": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"items": {
-													Type:     schema.TypeSet,
-													Computed: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+							"query_strings_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"query_string_behavior": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"query_strings": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													attrItems: {
+														Type:     schema.TypeSet,
+														Computed: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
@@ -147,7 +149,7 @@ func dataSourceCachePolicy() *schema.Resource {
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

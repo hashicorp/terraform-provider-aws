@@ -106,7 +106,7 @@ func setZeroValueAttrFieldsToNull(ctx context.Context, target any) diag.Diagnost
 		return diags
 	}
 
-	if value.Kind() != reflect.Ptr {
+	if value.Kind() != reflect.Pointer {
 		diags.AddError("Normalizing List Result", fmt.Sprintf("target must be a pointer, got %T", target))
 		return diags
 	}
@@ -134,7 +134,7 @@ func walkStructSetZeroAttrNull(ctx context.Context, value reflect.Value, diags *
 			continue
 		}
 
-		if attrValue, ok := field.Interface().(attr.Value); ok {
+		if attrValue, ok := reflect.TypeAssert[attr.Value](field); ok {
 			if field.IsZero() {
 				nullValue, d := fwtypes.NullValueOf(ctx, attrValue)
 				if d.HasError() {

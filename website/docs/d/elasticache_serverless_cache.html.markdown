@@ -29,7 +29,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the serverless cache.
+* `arn` - ARN of the serverless cache.
 * `cache_usage_limits` - The cache usage limits for storage and ElastiCache Processing Units for the cache. See [`cache_usage_limits` Block](#cache_usage_limits-block) for details.
 * `create_time` - Timestamp of when the serverless cache was created.
 * `daily_snapshot_time` - The daily time that snapshots will be created from the new serverless cache. Only available for engine types `"redis"` and `"valkey"`.
@@ -44,7 +44,7 @@ This data source exports the following attributes in addition to the arguments a
 * `snapshot_retention_limit` - The number of snapshots that will be retained for the serverless cache. Available for Redis only.
 * `status` - The current status of the serverless cache.
 * `subnet_ids` - A list of the identifiers of the subnets where the VPC endpoint for the serverless cache are deployed.
-* `user_group_id` - The identifier of the UserGroup associated with the serverless cache. Available for Redis only.
+* `user_group_id` - The identifier of the UserGroup associated with the serverless cache. Available for Redis and Valkey.
 
 ### `cache_usage_limits` Block
 

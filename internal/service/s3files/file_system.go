@@ -5,7 +5,6 @@ package s3files
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -244,8 +244,7 @@ func (r *fileSystemResource) Delete(ctx context.Context, request resource.Delete
 
 	_, err := conn.DeleteFileSystem(ctx, &input)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return // Resource already deleted
 		}
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())
@@ -284,8 +283,7 @@ func findFileSystemByID(ctx context.Context, conn *s3files.Client, id string) (*
 
 	output, err := conn.GetFileSystem(ctx, &input)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}
@@ -303,8 +301,8 @@ func findFileSystemByID(ctx context.Context, conn *s3files.Client, id string) (*
 func waitFileSystemCreated(ctx context.Context, conn *s3files.Client, id string, timeout time.Duration) (*s3files.GetFileSystemOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LifeCycleStateCreating),
-		Target:     enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateError),
-		Refresh:    statusFileSystem(ctx, conn, id),
+		Target:     enum.Slice(awstypes.LifeCycleStateAvailable, lifeCycleStateMisconfigured, awstypes.LifeCycleStateError),
+		Refresh:    statusFileSystem(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -320,9 +318,9 @@ func waitFileSystemCreated(ctx context.Context, conn *s3files.Client, id string,
 
 func waitFileSystemDeleted(ctx context.Context, conn *s3files.Client, id string, timeout time.Duration) (*s3files.GetFileSystemOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
+		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, lifeCycleStateMisconfigured, awstypes.LifeCycleStateDeleting),
 		Target:  []string{},
-		Refresh: statusFileSystem(ctx, conn, id),
+		Refresh: statusFileSystem(conn, id),
 		Timeout: timeout,
 	}
 
@@ -335,7 +333,7 @@ func waitFileSystemDeleted(ctx context.Context, conn *s3files.Client, id string,
 	return nil, smarterr.NewError(err)
 }
 
-func statusFileSystem(_ context.Context, conn *s3files.Client, id string) retry.StateRefreshFunc {
+func statusFileSystem(conn *s3files.Client, id string) retry.StateRefreshFunc {
 	const iamPropagationBuffer = 3 * time.Minute
 	firstErrorTime := time.Time{}
 

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_network_firewall_policy: Allow use of managed rule group arns for network firewall managed rule groups.
-```

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_dynamodb_table: Fix perpetual diff when using `key_schema` with a single range key on a global secondary index
-```

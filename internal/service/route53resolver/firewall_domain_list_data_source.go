@@ -21,47 +21,49 @@ func dataSourceFirewallDomainList() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallDomainListRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creator_request_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"firewall_domain_list_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"managed_owner_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"modification_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatusMessage: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"creator_request_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"domain_count": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"firewall_domain_list_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"managed_owner_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"modification_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatusMessage: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -199,14 +199,12 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 		},
 	})
 	if err != nil {
-		var timeoutErr *actionwait.TimeoutError
-		var unexpectedErr *actionwait.UnexpectedStateError
-		if errors.As(err, &timeoutErr) {
+		if errs.IsA[*actionwait.TimeoutError](err) {
 			resp.Diagnostics.AddError(
 				"Timeout Waiting for Instance to Stop",
 				fmt.Sprintf("EC2 instance %s did not stop within %s: %s", instanceID, timeout, err),
 			)
-		} else if errors.As(err, &unexpectedErr) {
+		} else if errs.IsA[*actionwait.UnexpectedStateError](err) {
 			resp.Diagnostics.AddError(
 				"Unexpected Instance State",
 				fmt.Sprintf("EC2 instance %s entered unexpected state while stopping: %s", instanceID, err),

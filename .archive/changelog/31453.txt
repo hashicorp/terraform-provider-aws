@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_acm_certificate: Mark `domain` and `tags` as Optional. This enables certificates to be matched based on tags
-```

@@ -182,7 +182,7 @@ func testAccMember_inviteOrganizationMember(t *testing.T) {
 	providers := make(map[string]*schema.Provider)
 	var member types.Member
 	resourceName := "aws_securityhub_member.test"
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {

@@ -115,3 +115,44 @@ func removeEmptyFields(in []byte) ([]byte, int) {
 
 	return out, removed
 }
+
+// removeEmptyFields removes empty string (`""`) fields from a valid JSON string.
+// Returns the new JSON string.
+func RemoveEmptyStringFields(in []byte) []byte {
+	out := make([]byte, 0, len(in))
+
+	err := ujson.Walk(in, func(_ int, key, value []byte) bool {
+		n := len(out)
+
+		skip := false
+		switch value[0] {
+		case '"': // String
+			if len(key) > 0 { // Fields, not values in arrays.
+				if unquoted, err := ujson.Unquote(value); err == nil && len(unquoted) == 0 {
+					skip = true
+				}
+			}
+		}
+
+		if skip {
+			return false
+		}
+
+		if n != 0 && ujson.ShouldAddComma(value, out[n-1]) {
+			out = append(out, ',')
+		}
+		if len(key) > 0 {
+			out = append(out, key...)
+			out = append(out, ':')
+		}
+		out = append(out, value...)
+
+		return true
+	})
+
+	if err != nil {
+		return nil
+	}
+
+	return out
+}

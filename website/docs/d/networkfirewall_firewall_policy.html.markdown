@@ -37,7 +37,7 @@ data "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-AWS Network Firewall does not allow multiple firewall policies with the same name to be created in an account. It is possible, however, to have multiple firewall policies available in a single account with identical `name` values but distinct `arn` values, e.g. firewall policies shared via a [Resource Access Manager (RAM) share][1]. In that case specifying `arn`, or `name` and `arn`, is recommended.
+AWS Network Firewall does not allow multiple firewall policies with the same name to be created in an account. It is possible, however, to have multiple firewall policies available in a single account with identical `name` values but distinct `arn` values, e.g. firewall policies shared via a [Resource Access Manager (RAM) share](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_resource_share). In that case specifying `arn`, or `name` and `arn`, is recommended.
 
 ~> **Note:** If there are multiple firewall policies in an account with the same `name`, and `arn` is not specified, the default behavior will return the firewall policy with `name` that was created in the account.
 
@@ -56,9 +56,6 @@ One or more of these arguments is required.
 This data source exports the following attributes in addition to the arguments above:
 
 * `description` - Description of the firewall policy.
-* `firewall_policy` - The [policy][2] for the specified firewall policy.
+* `firewall_policy` - The [policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall_policy) for the specified firewall policy.
 * `tags` - Key-value tags for the firewall policy.
 * `update_token` - Token used for optimistic locking.
-
-[1]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_resource_share
-[2]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall_policy

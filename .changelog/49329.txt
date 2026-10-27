@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_backup_plan
+```
+```release-note:enhancement
+resource/aws_backup_plan: Add resource identity support
+```

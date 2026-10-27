@@ -4,10 +4,12 @@
 package flex
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 const (
@@ -15,16 +17,20 @@ const (
 )
 
 const (
-	logAttrKeySourceType      = "autoflex.source.type"
-	logAttrKeySourceFieldname = "autoflex.source.fieldname"
-	logAttrKeySourcePath      = "autoflex.source.path"
-	logAttrKeySourceSize      = "autoflex.source.size"
+	logAttrKeySourceFieldname   = "autoflex.source.fieldname"
+	logAttrKeySourcePath        = "autoflex.source.path"
+	logAttrKeySourceSize        = "autoflex.source.size"
+	logAttrKeySourceType        = "autoflex.source.type"
+	logAttrKeySourceTypeLiteral = "source_type"
 
 	logAttrKeyTargetType      = "autoflex.target.type"
 	logAttrKeyTargetFieldname = "autoflex.target.fieldname"
 	logAttrKeyTargetPath      = "autoflex.target.path"
 
-	logAttrKeyError = "error"
+	logAttrKeyError        = "error"
+	logAttrKeyFrom         = "from"
+	logAttrKeyTo           = "to"
+	logAttrKeyWrapperField = "wrapper_field"
 )
 
 const (
@@ -49,4 +55,11 @@ func fullTypeName(t reflect.Type) string {
 		return fmt.Sprintf("%s.%s", path, t.Name())
 	}
 	return t.Name()
+}
+
+func setLogFields(ctx context.Context, fields map[string]any) context.Context {
+	for k, v := range fields {
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, k, v)
+	}
+	return ctx
 }

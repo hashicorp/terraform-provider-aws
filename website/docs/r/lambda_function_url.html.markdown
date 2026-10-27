@@ -51,12 +51,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `cors` - (Optional) Cross-origin resource sharing (CORS) settings for the function URL. [See below](#cors).
+* `cors` - (Optional) Cross-origin resource sharing (CORS) settings for the function URL. [See below](#cors-block).
 * `invoke_mode` - (Optional) How the Lambda function responds to an invocation. Valid values are `BUFFERED` (default) and `RESPONSE_STREAM`.
 * `qualifier` - (Optional) Alias name or `$LATEST`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### CORS
+### `cors` Block
 
 * `allow_credentials` - (Optional) Whether to allow cookies or other credentials in requests to the function URL.
 * `allow_headers` - (Optional) HTTP headers that origins can include in requests to the function URL.

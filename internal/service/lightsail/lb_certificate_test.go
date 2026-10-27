@@ -13,6 +13,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -26,7 +27,7 @@ func testAccLoadBalancerCertificate_basic(t *testing.T) {
 	resourceName := "aws_lightsail_lb_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lbName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -62,8 +63,8 @@ func testAccLoadBalancerCertificate_subjectAlternativeNames(t *testing.T) {
 	resourceName := "aws_lightsail_lb_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lbName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
-	subjectAlternativeName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
+	subjectAlternativeName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -131,7 +132,7 @@ func testAccLoadBalancerCertificate_disappears(t *testing.T) {
 	resourceName := "aws_lightsail_lb_certificate.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lbName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
+	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName(t))
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -149,6 +150,14 @@ func testAccLoadBalancerCertificate_disappears(t *testing.T) {
 					testAccCheckLoadBalancerCertificateExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceLoadBalancerCertificate(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},

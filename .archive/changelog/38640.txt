@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_iot_provisioning_template: Properly send `type` argument on create when configured
-```

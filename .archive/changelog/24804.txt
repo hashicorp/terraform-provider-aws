@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_servicecatalog_provisioned_product: Add possible `TAINTED` target state for resource update and remove one of the internal waiters during read
-```

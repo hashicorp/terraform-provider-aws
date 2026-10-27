@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_redshift_parameter_group: Make Redshift parameters case sensitive.
-```

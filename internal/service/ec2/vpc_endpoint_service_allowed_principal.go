@@ -26,17 +26,19 @@ func resourceVPCEndpointServiceAllowedPrincipal() *schema.Resource {
 		ReadWithoutTimeout:   resourceVPCEndpointServiceAllowedPrincipalRead,
 		DeleteWithoutTimeout: resourceVPCEndpointServiceAllowedPrincipalDelete,
 
-		Schema: map[string]*schema.Schema{
-			"principal_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"vpc_endpoint_service_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"principal_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"vpc_endpoint_service_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

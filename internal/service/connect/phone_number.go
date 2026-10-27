@@ -14,11 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -48,62 +48,64 @@ func resourcePhoneNumber() *schema.Resource {
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"country_code": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PhoneNumberCountryCode](),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 500),
-			},
-			"phone_number": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPrefix: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validPhoneNumberPrefix,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"country_code": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PhoneNumberCountryCode](),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 500),
+				},
+				"phone_number": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPrefix: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validPhoneNumberPrefix,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTargetARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PhoneNumberType](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTargetARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PhoneNumberType](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -117,7 +119,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	{
 		phoneNumberType := d.Get(names.AttrType).(string)
-		input := &connect.SearchAvailablePhoneNumbersInput{
+		input := connect.SearchAvailablePhoneNumbersInput{
 			MaxResults:             aws.Int32(1),
 			PhoneNumberCountryCode: awstypes.PhoneNumberCountryCode(d.Get("country_code").(string)),
 			PhoneNumberType:        awstypes.PhoneNumberType(phoneNumberType),
@@ -128,7 +130,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.PhoneNumberPrefix = aws.String(v.(string))
 		}
 
-		output, err := conn.SearchAvailablePhoneNumbers(ctx, input)
+		output, err := conn.SearchAvailablePhoneNumbers(ctx, &input)
 
 		if err == nil && (output == nil || len(output.AvailableNumbersList) == 0) {
 			err = tfresource.NewEmptyResultError()
@@ -142,13 +144,8 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	{
-		uuid, err := uuid.GenerateUUID()
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-
-		input := &connect.ClaimPhoneNumberInput{
-			ClientToken: aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
+		input := connect.ClaimPhoneNumberInput{
+			ClientToken: aws.String(create.UUID(ctx)),
 			PhoneNumber: aws.String(phoneNumber),
 			Tags:        getTagsIn(ctx),
 			TargetArn:   aws.String(targetARN),
@@ -158,7 +155,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.PhoneNumberDescription = aws.String(v.(string))
 		}
 
-		output, err := conn.ClaimPhoneNumber(ctx, input)
+		output, err := conn.ClaimPhoneNumber(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "claiming Connect Phone Number (%s,%s): %s", targetARN, phoneNumber, err)
@@ -210,18 +207,13 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		uuid, err := uuid.GenerateUUID()
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-
-		input := &connect.UpdatePhoneNumberInput{
-			ClientToken:   aws.String(uuid),
+		input := connect.UpdatePhoneNumberInput{
+			ClientToken:   aws.String(create.UUID(ctx)),
 			PhoneNumberId: aws.String(d.Id()),
 			TargetArn:     aws.String(d.Get(names.AttrTargetARN).(string)),
 		}
 
-		_, err = conn.UpdatePhoneNumber(ctx, input)
+		_, err := conn.UpdatePhoneNumber(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Connect Phone Number (%s): %s", d.Id(), err)
@@ -239,17 +231,12 @@ func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
 	log.Printf("[DEBUG] Deleting Connect Phone Number: %s", d.Id())
 	input := connect.ReleasePhoneNumberInput{
-		ClientToken:   aws.String(uuid),
+		ClientToken:   aws.String(create.UUID(ctx)),
 		PhoneNumberId: aws.String(d.Id()),
 	}
-	_, err = conn.ReleasePhoneNumber(ctx, &input)
+	_, err := conn.ReleasePhoneNumber(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -267,11 +254,11 @@ func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func findPhoneNumberByID(ctx context.Context, conn *connect.Client, id string) (*awstypes.ClaimedPhoneNumberSummary, error) {
-	input := &connect.DescribePhoneNumberInput{
+	input := connect.DescribePhoneNumberInput{
 		PhoneNumberId: aws.String(id),
 	}
 
-	return findPhoneNumber(ctx, conn, input)
+	return findPhoneNumber(ctx, conn, &input)
 }
 
 func findPhoneNumber(ctx context.Context, conn *connect.Client, input *connect.DescribePhoneNumberInput) (*awstypes.ClaimedPhoneNumberSummary, error) {

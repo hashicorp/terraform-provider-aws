@@ -112,7 +112,7 @@
     "autoflex.source.path": "DefaultCacheBehavior",
     "autoflex.source.type": "*github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DefaultCacheBehavior",
     "autoflex.target.path": "DefaultCacheBehavior",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel·157]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.defaultCacheBehaviorModel·161]"
   },
   {
     "@level": "trace",
@@ -203,7 +203,7 @@
     "autoflex.source.path": "DefaultCacheBehavior.AllowedMethods",
     "autoflex.source.type": "*github.com/aws/aws-sdk-go-v2/service/cloudfront/types.AllowedMethods",
     "autoflex.target.path": "DefaultCacheBehavior.AllowedMethods",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel·156]"
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.allowedMethodsModel·160]"
   },
   {
     "@level": "trace",
@@ -491,6 +491,16 @@
     "@message": "Skipping field already processed by XML wrapper split",
     "@module": "provider.autoflex",
     "autoflex.source.fieldname": "CacheBehaviors",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfModel"
+  },
+  {
+    "@level": "debug",
+    "@message": "No corresponding target field",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "CacheTagConfig",
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/aws/aws-sdk-go-v2/service/cloudfront/types.DistributionConfig",
     "autoflex.target.path": "",

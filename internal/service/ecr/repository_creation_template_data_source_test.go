@@ -47,7 +47,7 @@ func TestAccECRRepositoryCreationTemplateDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccECRRepositoryCreationTemplateDataSource_root(t *testing.T) {
+func testAccRepositoryCreationTemplateDataSource_root(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSource := "data.aws_ecr_repository_creation_template.root"
 
@@ -71,7 +71,7 @@ func TestAccECRRepositoryCreationTemplateDataSource_mutabilityWithExclusion(t *t
 	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	dataSource := "data.aws_ecr_repository_creation_template.root"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

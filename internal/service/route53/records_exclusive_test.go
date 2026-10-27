@@ -34,8 +34,8 @@ func TestAccRoute53RecordsExclusive_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 	resourceName := "aws_route53_records_exclusive.test"
 	zoneResourceName := "aws_route53_zone.test"
 
@@ -78,8 +78,8 @@ func TestAccRoute53RecordsExclusive_disappears_Zone(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 	resourceName := "aws_route53_records_exclusive.test"
 	zoneResourceName := "aws_route53_zone.test"
 
@@ -96,6 +96,14 @@ func TestAccRoute53RecordsExclusive_disappears_Zone(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceZone(), zoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(zoneResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(zoneResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -107,7 +115,7 @@ func TestAccRoute53RecordsExclusive_multiple(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	zoneName := acctest.RandomDomain()
+	zoneName := acctest.RandomDomain(t)
 	resourceName := "aws_route53_records_exclusive.test"
 	zoneResourceName := "aws_route53_zone.test"
 
@@ -233,8 +241,8 @@ func TestAccRoute53RecordsExclusive_upsert(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 	resourceName := "aws_route53_records_exclusive.test"
 	zoneResourceName := "aws_route53_zone.test"
 
@@ -331,8 +339,8 @@ func TestAccRoute53RecordsExclusive_empty(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 	resourceName := "aws_route53_records_exclusive.test"
 	recordResourceName := "aws_route53_record.test"
 
@@ -380,9 +388,9 @@ func TestAccRoute53RecordsExclusive_outOfBandAddition(t *testing.T) {
 	}
 
 	var zone route53.GetHostedZoneOutput
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
-	recordName2 := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
+	recordName2 := zoneName.RandomSubdomain(t)
 	resourceName := "aws_route53_records_exclusive.test"
 	zoneResourceName := "aws_route53_zone.test"
 
@@ -436,8 +444,8 @@ func TestAccRoute53RecordsExclusive_outOfBandRemoval(t *testing.T) {
 	}
 
 	var zone route53.GetHostedZoneOutput
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 	resourceName := "aws_route53_records_exclusive.test"
 	zoneResourceName := "aws_route53_zone.test"
 
@@ -495,8 +503,8 @@ func TestAccRoute53RecordsExclusive_outOfBandUpdate(t *testing.T) {
 	}
 
 	var zone route53.GetHostedZoneOutput
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 	resourceName := "aws_route53_records_exclusive.test"
 	zoneResourceName := "aws_route53_zone.test"
 

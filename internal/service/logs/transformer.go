@@ -930,7 +930,7 @@ func findTransformer(ctx context.Context, conn *cloudwatchlogs.Client, input *cl
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || len(output.TransformerConfig) == 0 {
 		return nil, tfresource.NewEmptyResultError()
 	}
 

@@ -31,6 +31,8 @@ func TestAccSecretsManagerSecretRotationDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSecretRotationDataSourceConfig_default(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "external_secret_rotation_metadata.#", resourceName, "external_secret_rotation_metadata.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "external_secret_rotation_role_arn", resourceName, "external_secret_rotation_role_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "rotation_enabled", resourceName, "rotation_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "rotation_lambda_arn", resourceName, "rotation_lambda_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "rotation_rules.#", resourceName, "rotation_rules.#"),
@@ -54,7 +56,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s-1"
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 
 resource "aws_lambda_permission" "test" {

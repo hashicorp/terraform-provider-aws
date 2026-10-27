@@ -34,8 +34,8 @@ resource "aws_appstream_user_stack_association" "test" {
 The following arguments are required:
 
 * `authentication_type` - (Required) Authentication type for the user.
-* `stack_name` (Required) Name of the stack that is associated with the user.
-* `user_name` (Required) Email address of the user who is associated with the stack.
+* `stack_name` - (Required) Name of the stack that is associated with the user.
+* `user_name` - (Required) Email address of the user who is associated with the stack.
 
 The following arguments are optional:
 
@@ -46,7 +46,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique ID of the appstream User Stack association.
+* `id` - Unique ID of the AppStream User Stack association.
 
 ## Import
 

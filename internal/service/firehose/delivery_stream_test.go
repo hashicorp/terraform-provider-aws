@@ -117,13 +117,13 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 				ResourceName:  resourceName,
 				ImportState:   true,
 				ImportStateId: "just-a-name",
-				ExpectError:   regexache.MustCompile(`Expected ID in format`),
+				ExpectError:   regexache.MustCompile(`could not parse import ID`),
 			},
 			{
 				ResourceName:  resourceName,
 				ImportState:   true,
 				ImportStateId: "arn:aws:firehose:us-east-1:123456789012:missing-slash", //lintignore:AWSAT003,AWSAT005
-				ExpectError:   regexache.MustCompile(`Expected ID in format`),
+				ExpectError:   regexache.MustCompile(`unexpected format for ID`),
 			},
 		},
 	})
@@ -148,6 +148,14 @@ func TestAccFirehoseDeliveryStream_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tffirehose.ResourceDeliveryStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -2949,7 +2957,7 @@ resource "aws_lambda_function" "lambda_function_test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, rName)
 }

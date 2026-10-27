@@ -36,28 +36,30 @@ func resourceDomainPermissionsPolicy() *schema.Resource {
 		ReadWithoutTimeout:   resourceDomainPermissionsPolicyRead,
 		DeleteWithoutTimeout: resourceDomainPermissionsPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"domain_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"policy_document": sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
-			"policy_revision": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrResourceARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"domain_owner": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"policy_document": sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
+				"policy_revision": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrResourceARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

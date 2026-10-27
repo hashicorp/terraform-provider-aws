@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_redshift_cluster: The `snapshot_copy` attribute has been removed
-```

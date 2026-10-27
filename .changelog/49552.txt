@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_accountaccess_entitlement
+```
+
+```release-note:new-list-resource
+aws_accountaccess_entitlement
+```

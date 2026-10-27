@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_route53_health_check: Add `triggers` argument to support synchronization with upstream CloudWatch alarm changes
-```

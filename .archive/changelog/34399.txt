@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_msk_configuration: Remove `name` length validation
-```

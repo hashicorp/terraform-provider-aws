@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_msk_cluster_policy: Fix `Current cluster policy version needed for Update` errors
-```

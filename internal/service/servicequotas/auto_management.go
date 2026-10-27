@@ -253,7 +253,7 @@ func expandExclusionList(ctx context.Context, tfMap fwtypes.MapValueOf[fwtypes.L
 		return make(map[string][]string, 0), diags
 	}
 
-	apiMap := make(map[string][]string, len(tfMap.Elements()))
+	apiMap := make(map[string][]string, tfMap.Length(fwtypes.CollectionLengthUnhandledAsZero))
 
 	diags.Append(tfMap.ElementsAs(ctx, &apiMap, false)...)
 

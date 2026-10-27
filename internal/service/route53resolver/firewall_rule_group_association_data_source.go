@@ -21,59 +21,61 @@ func dataSourceFirewallRuleGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRuleGroupAssociationRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creator_request_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"firewall_rule_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"firewall_rule_group_association_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"managed_owner_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"modification_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mutation_protection": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPriority: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatusMessage: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"creator_request_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"firewall_rule_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"firewall_rule_group_association_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"managed_owner_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"modification_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mutation_protection": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPriority: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatusMessage: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

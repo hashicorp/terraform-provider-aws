@@ -10,7 +10,7 @@ description: |-
 
 ## Example Usage
 
-The following shows outputting all network ACL ids in a vpc.
+The following shows outputting all network ACL IDs in a VPC.
 
 ```terraform
 data "aws_network_acls" "example" {
@@ -22,7 +22,7 @@ output "example" {
 }
 ```
 
-The following example retrieves a list of all network ACL ids in a VPC with a custom
+The following example retrieves a list of all network ACL IDs in a VPC with a custom
 tag of `Tier` set to a value of "Private".
 
 ```terraform
@@ -35,7 +35,7 @@ data "aws_network_acls" "example" {
 }
 ```
 
-The following example retrieves a network ACL id in a VPC which associated
+The following example retrieves a network ACL ID in a VPC which associated
 with specific subnet.
 
 ```terraform
@@ -73,7 +73,7 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `ids` - List of all the network ACL ids found.
+* `ids` - List of all the network ACL IDs found.
 
 ## Timeouts
 
