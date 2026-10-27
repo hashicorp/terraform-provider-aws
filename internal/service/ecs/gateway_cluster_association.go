@@ -174,7 +174,7 @@ func (r *gatewayClusterAssociationResource) Delete(ctx context.Context, request 
 	}
 	_, err := conn.DisassociateGatewayFromCluster(ctx, &input)
 
-	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.GatewayNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.GatewayNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ClientException](err, "No gateway found") {
 		return
 	}
 
@@ -222,7 +222,7 @@ func findGatewayClusterAssociations(ctx context.Context, conn *ecs.Client, input
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.GatewayNotFoundException](err) {
+		if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.GatewayNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ClientException](err, "No gateway found") {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}
