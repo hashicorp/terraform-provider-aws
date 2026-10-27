@@ -14,9 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfivschat "github.com/hashicorp/terraform-provider-aws/internal/service/ivschat"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -125,6 +127,14 @@ func TestAccIVSChatRoom_disappears(t *testing.T) {
 					testAccCheckRoomExists(ctx, t, resourceName, &room),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfivschat.ResourceRoom(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -290,8 +300,7 @@ func testAccCheckRoomDestroy(ctx context.Context, t *testing.T) resource.TestChe
 			})
 
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
+				if errs.IsA[*types.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err
@@ -384,7 +393,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.test.arn
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
-  runtime          = "nodejs20.x"
+  runtime          = "nodejs24.x"
   handler          = "index.handler"
 }
 

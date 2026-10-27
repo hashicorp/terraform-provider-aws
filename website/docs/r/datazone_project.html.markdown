@@ -49,8 +49,8 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `created_by` - Creator of the project.
-* `domain_id` - Id of the project's DataZone domain.
-* `id` - Id of the project.
+* `domain_id` - ID of the project's DataZone domain.
+* `id` - ID of the project.
 * `name` - Name of the project.
 * `created_at` - Timestamp of when the project was made.
 * `description` - Description of the project.
@@ -67,6 +67,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datazone_project.example
+  identity = {
+    domain_identifier = "domain-1234"
+    id                = "project-1234"
+  }
+}
+
+resource "aws_datazone_project" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_identifier` - (String) Identifier of the DataZone domain.
+* `id` - (String) ID of the project.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Project using a colon-delimited string combining `domain_id` and `id`. For example:
 

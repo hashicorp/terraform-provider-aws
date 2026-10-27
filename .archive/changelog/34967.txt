@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ssoadmin_application: Fix `portal_options.sign_in_options.application_url` triggering `ValidationError` when unset
-```

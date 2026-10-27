@@ -72,7 +72,33 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import this resource using the `log_group_name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_data_protection_policy.example
+  identity = {
+    log_group_name = "my-log-group"
+  }
+}
+
+resource "aws_cloudwatch_log_data_protection_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `log_group_name` (String) Name of the log group.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Data Protection Policies using `log_group_name`. For example:
 
 ```terraform
 import {
@@ -81,7 +107,7 @@ import {
 }
 ```
 
-Using `terraform import`, import this resource using the `log_group_name`. For example:
+Using `terraform import`, import Data Protection Policies using `log_group_name`. For example:
 
 ```console
 % terraform import aws_cloudwatch_log_data_protection_policy.example my-log-group

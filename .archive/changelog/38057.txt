@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Now falls back to non-FIPS endpoint if `use_fips_endpoint` is set and no FIPS endpoint is available
-```

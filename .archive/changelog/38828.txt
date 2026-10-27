@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_redshift_cluster: Set `encrypted` on snapshot restore, when enabled
-```

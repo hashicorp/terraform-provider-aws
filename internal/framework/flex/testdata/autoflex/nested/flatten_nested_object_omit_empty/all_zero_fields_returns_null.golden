@@ -1,0 +1,56 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsOuter",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfOuter"
+  },
+  {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsOuter",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfOuter"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsOuter",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfOuter"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Inner",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsOuter",
+    "autoflex.target.fieldname": "Inner",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfOuter"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Inner",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInner",
+    "autoflex.target.path": "Inner",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInner·52]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Nested struct has all zero values with omitempty, returning null",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Inner",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInner",
+    "autoflex.target.path": "Inner",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInner·52]"
+  }
+]

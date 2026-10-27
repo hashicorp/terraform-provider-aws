@@ -107,7 +107,7 @@ func testAccCheckClassificationExportConfigurationExists(ctx context.Context, t 
 			return err
 		}
 
-		if resp == nil || (macie2.GetClassificationExportConfigurationOutput{}.Configuration) == resp.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+		if resp == nil || (macie2.GetClassificationExportConfigurationOutput{}.Configuration) == resp.Configuration {
 			return fmt.Errorf("macie classification export configuration %q does not exist", rs.Primary.ID)
 		}
 

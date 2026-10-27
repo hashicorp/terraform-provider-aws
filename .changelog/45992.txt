@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudformation_stack_set: Fix perpetual diff when using `auto_deployment` with `permission_model` set to `SERVICE_MANAGED`
-```

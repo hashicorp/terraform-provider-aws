@@ -25,7 +25,7 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -223,7 +223,7 @@ func TestAccACMPCACertificateAuthority_Tags_null(t *testing.T) {
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -297,7 +297,7 @@ func TestAccACMPCACertificateAuthority_Tags_emptyMap(t *testing.T) {
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -367,7 +367,7 @@ func TestAccACMPCACertificateAuthority_Tags_addOnUpdate(t *testing.T) {
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -455,7 +455,7 @@ func TestAccACMPCACertificateAuthority_Tags_EmptyTag_onCreate(t *testing.T) {
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -554,7 +554,7 @@ func TestAccACMPCACertificateAuthority_Tags_EmptyTag_OnUpdate_add(t *testing.T) 
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -701,7 +701,7 @@ func TestAccACMPCACertificateAuthority_Tags_EmptyTag_OnUpdate_replace(t *testing
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -797,7 +797,7 @@ func TestAccACMPCACertificateAuthority_Tags_DefaultTags_providerOnly(t *testing.
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -994,7 +994,7 @@ func TestAccACMPCACertificateAuthority_Tags_DefaultTags_nonOverlapping(t *testin
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1167,7 +1167,7 @@ func TestAccACMPCACertificateAuthority_Tags_DefaultTags_overlapping(t *testing.T
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1356,7 +1356,7 @@ func TestAccACMPCACertificateAuthority_Tags_DefaultTags_updateToProviderOnly(t *
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1453,7 +1453,7 @@ func TestAccACMPCACertificateAuthority_Tags_DefaultTags_updateToResourceOnly(t *
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1549,7 +1549,7 @@ func TestAccACMPCACertificateAuthority_Tags_DefaultTags_emptyResourceTag(t *test
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1621,7 +1621,7 @@ func TestAccACMPCACertificateAuthority_Tags_DefaultTags_emptyProviderOnlyTag(t *
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1685,7 +1685,7 @@ func TestAccACMPCACertificateAuthority_Tags_DefaultTags_nullOverlappingResourceT
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1754,7 +1754,7 @@ func TestAccACMPCACertificateAuthority_Tags_DefaultTags_nullNonOverlappingResour
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1823,7 +1823,7 @@ func TestAccACMPCACertificateAuthority_Tags_ComputedTag_onCreate(t *testing.T) {
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1885,7 +1885,7 @@ func TestAccACMPCACertificateAuthority_Tags_ComputedTag_OnUpdate_add(t *testing.
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1989,7 +1989,7 @@ func TestAccACMPCACertificateAuthority_Tags_ComputedTag_OnUpdate_replace(t *test
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2083,7 +2083,7 @@ func TestAccACMPCACertificateAuthority_Tags_IgnoreTags_Overlap_defaultTag(t *tes
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2249,7 +2249,7 @@ func TestAccACMPCACertificateAuthority_Tags_IgnoreTags_Overlap_resourceTag(t *te
 
 	var v types.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

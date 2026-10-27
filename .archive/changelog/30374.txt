@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_ce_anomaly_subscription: The `threshold` attribute has been removed
-```

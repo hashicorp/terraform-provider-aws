@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Fix `Value Conversion Error` panic for certain resources when `null` tag values are specified
-```

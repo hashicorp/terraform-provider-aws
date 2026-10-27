@@ -37,56 +37,58 @@ func resourceSnapshot() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accounts_with_provisioned_restore_access": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accounts_with_provisioned_restore_access": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			"accounts_with_restore_access": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"accounts_with_restore_access": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			"admin_username": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"namespace_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"namespace_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"owner_account": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRetentionPeriod: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  -1,
-			},
-			"snapshot_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"admin_username": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"namespace_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"namespace_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"owner_account": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRetentionPeriod: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  -1,
+				},
+				"snapshot_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

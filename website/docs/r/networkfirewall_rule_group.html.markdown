@@ -379,7 +379,7 @@ The `port_sets` block supports the following arguments:
 
 ### Port Set
 
-The `port_set` configuration block suppports the following argument:
+The `port_set` configuration block supports the following argument:
 
 * `definition` - (Required) Set of port ranges.
 
@@ -411,7 +411,7 @@ The `rules_source_list` block supports the following arguments:
 
 * `generated_rules_type` - (Required) String value to specify whether domains in the target list are allowed or denied access. Valid values: `ALLOWLIST`, `DENYLIST`.
 
-* `target_types` - (Required) Set of types of domain specifications that are provided in the `targets` argument. Valid values: `HTTP_HOST`, `TLS_SNI`.
+* `target_types` - (Required) Set of types of domain specifications that are provided in the `targets` argument. Valid values: `AWS_ROUTE_53_RESOLVED_DOMAIN`, `HTTP_HOST`, `TLS_SNI`. `AWS_ROUTE_53_RESOLVED_DOMAIN` takes effect only when the firewall policy that uses the rule group configures `route53_resolved_ip_validation`. For more information, see [Route 53 resolved IP validation rules](https://docs.aws.amazon.com/network-firewall/latest/developerguide/route53-resolved-ip-validation-rules.html) in the AWS Network Firewall Developer Guide.
 
 * `targets` - (Required) Set of domains that you want to inspect for in your traffic flows.
 
@@ -489,7 +489,7 @@ The `match_attributes` block supports the following arguments:
 
 * `destination_port` - (Optional) Set of configuration blocks describing the destination ports to inspect for. If not specified, this matches with any destination port. See [Destination Port](#destination-port) below for details.
 
-* `protocols` - (Optional) Set of protocols to inspect for, specified using the protocol's assigned internet protocol number (IANA). If not specified, this matches with any protocol.
+* `protocols` - (Optional) Set of protocols to inspect for, specified using the protocol's assigned IP number (IANA). If not specified, this matches with any protocol.
 
 * `source` - (Optional) Set of configuration blocks describing the source IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any source address. See [Source](#source) below for details.
 
@@ -557,9 +557,9 @@ Valid values: `FIN`, `SYN`, `RST`, `PSH`, `ACK`, `URG`, `ECE`, `CWR`.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) that identifies the rule group.
+* `id` - ARN that identifies the rule group.
 
-* `arn` - The Amazon Resource Name (ARN) that identifies the rule group.
+* `arn` - ARN that identifies the rule group.
 
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

@@ -50,126 +50,128 @@ func resourceReplicationConfig() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compute_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZone: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						"dns_name_servers": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrKMSKeyID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"max_capacity_units": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"min_capacity_units": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"multi_az": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrPreferredMaintenanceWindow: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-						},
-						"replication_subnet_group_id": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validReplicationSubnetGroupID,
-						},
-						names.AttrVPCSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compute_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAvailabilityZone: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							"dns_name_servers": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrKMSKeyID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"max_capacity_units": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"min_capacity_units": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"multi_az": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrPreferredMaintenanceWindow: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+							},
+							"replication_subnet_group_id": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validReplicationSubnetGroupID,
+							},
+							names.AttrVPCSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"replication_config_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			// "replication_settings" is equivalent to "replication_task_settings" on "aws_dms_replication_task"
-			// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_task"
-			"replication_settings": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.ToDiagFunc(validation.StringIsJSON),
-					validateReplicationSettings,
-				),
-				DiffSuppressFunc:      suppressEquivalentTaskSettings,
-				DiffSuppressOnRefresh: true,
-			},
-			"replication_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MigrationTypeValue](),
-			},
-			"resource_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"source_endpoint_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"start_replication": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"supplemental_settings": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-			},
-			"table_mappings": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_endpoint_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				"replication_config_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				// "replication_settings" is equivalent to "replication_task_settings" on "aws_dms_replication_task"
+				// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_task"
+				"replication_settings": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringIsJSON),
+						validateReplicationSettings,
+					),
+					DiffSuppressFunc:      suppressEquivalentTaskSettings,
+					DiffSuppressOnRefresh: true,
+				},
+				"replication_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MigrationTypeValue](),
+				},
+				"resource_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"source_endpoint_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"start_replication": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"supplemental_settings": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				},
+				"table_mappings": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"target_endpoint_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

@@ -1,3 +1,0 @@
-```release-note:enhancement
-data/aws_outposts_asset: Add `rack_elevation` attribute
-```

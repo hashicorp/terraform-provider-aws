@@ -36,23 +36,23 @@ This data source exports the following attributes in addition to the arguments a
 * `file_system_id` - File system ID.
 * `name` - Access point name.
 * `owner_id` - AWS account ID of the owner.
-* `posix_user` - POSIX user configuration. See [`posix_user`](#posix_user) below.
-* `root_directory` - Root directory configuration. See [`root_directory`](#root_directory) below.
+* `posix_user` - POSIX user configuration. See [`posix_user`](#posix_user-block) below.
+* `root_directory` - Root directory configuration. See [`root_directory`](#root_directory-block) below.
 * `status` - Access point status.
 * `tags` - Map of tags assigned to the resource.
 
-### posix_user
+### `posix_user` Block
 
 * `gid` - POSIX group ID.
 * `secondary_gids` - Set of secondary POSIX group IDs.
 * `uid` - POSIX user ID.
 
-### root_directory
+### `root_directory` Block
 
+* `creation_permissions` - Permissions set when the root directory was created. See [`creation_permissions`](#creation_permissions-block) below.
 * `path` - Root directory path.
-* `creation_permissions` - Permissions set when the root directory was created. See [`creation_permissions`](#creation_permissions) below.
 
-### creation_permissions
+### `creation_permissions` Block
 
 * `owner_gid` - Owner group ID.
 * `owner_uid` - Owner user ID.

@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -33,7 +34,12 @@ import (
 
 // @SDKResource("aws_network_acl", name="Network ACL")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @CustomImport
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.NetworkAcl")
+// @Testing(preIdentityVersion="v6.64.0")
+// @Testing(generator=false)
 func resourceNetworkACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLCreate,
@@ -43,6 +49,15 @@ func resourceNetworkACL() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
+				// Region may be overridden in the import block.
+				// Ensure the appropriate value is in context before initializing the client.
+				if v, ok := d.GetOk(names.AttrRegion); ok {
+					ctx = conns.NewResourceContext(ctx, names.EC2, "Network ACL", "aws_network_acl", v.(string))
+				}
 				conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 				nacl, err := findNetworkACLByID(ctx, conn, d.Id())
@@ -106,62 +121,64 @@ func resourceNetworkACL() *schema.Resource {
 // Used in aws_network_acl and aws_default_network_acl ingress and egress rule sets.
 func networkACLRuleNestedBlock() *schema.Resource {
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:     schema.TypeString,
-				Required: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.EqualFold(old, new)
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:     schema.TypeString,
+					Required: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
+					// Accept pascal case for backwards compatibility reasons, See: TestAccVPCNetworkACL_caseSensitivityNoChanges
+					ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.RuleAction.Values("")...), true),
 				},
-				// Accept pascal case for backwards compatibility reasons, See: TestAccVPCNetworkACL_caseSensitivityNoChanges
-				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.RuleAction.Values("")...), true),
-			},
-			names.AttrCIDRBlock: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-			},
-			"from_port": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IsPortNumberOrZero,
-			},
-			"icmp_code": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"icmp_type": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"ipv6_cidr_block": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-			},
-			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: func(v any, k string) (ws []string, errors []error) {
-					_, err := networkACLProtocolNumber(v.(string))
-
-					if err != nil {
-						errors = append(errors, fmt.Errorf("%q : %w", k, err))
-					}
-
-					return
+				names.AttrCIDRBlock: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 				},
-			},
-			"rule_no": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 32766),
-			},
-			"to_port": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IsPortNumberOrZero,
-			},
+				"from_port": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IsPortNumberOrZero,
+				},
+				"icmp_code": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"icmp_type": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"ipv6_cidr_block": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+				},
+				names.AttrProtocol: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: func(v any, k string) (ws []string, errors []error) {
+						_, err := networkACLProtocolNumber(v.(string))
+
+						if err != nil {
+							errors = append(errors, fmt.Errorf("%q : %w", k, err))
+						}
+
+						return
+					},
+				},
+				"rule_no": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(1, 32766),
+				},
+				"to_port": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IsPortNumberOrZero,
+				},
+			}
 		},
 	}
 }
@@ -210,21 +227,27 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL (%s): %s", d.Id(), err)
 	}
 
-	ownerID := aws.ToString(nacl.OwnerId)
+	return append(diags, resourceNetworkACLFlatten(ctx, c, d, nacl)...)
+}
+
+func resourceNetworkACLFlatten(ctx context.Context, c *conns.AWSClient, d *schema.ResourceData, networkACL *awstypes.NetworkAcl) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	ownerID := aws.ToString(networkACL.OwnerId)
 	d.Set(names.AttrARN, networkACLARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)
 
 	var subnetIDs []string
-	for _, v := range nacl.Associations {
+	for _, v := range networkACL.Associations {
 		subnetIDs = append(subnetIDs, aws.ToString(v.SubnetId))
 	}
 	d.Set(names.AttrSubnetIDs, subnetIDs)
 
-	d.Set(names.AttrVPCID, nacl.VpcId)
+	d.Set(names.AttrVPCID, networkACL.VpcId)
 
 	var egressEntries []awstypes.NetworkAclEntry
 	var ingressEntries []awstypes.NetworkAclEntry
-	for _, v := range nacl.Entries {
+	for _, v := range networkACL.Entries {
 		// Skip the default rules added by AWS. They can be neither
 		// configured or deleted by users.
 		if v := aws.ToInt32(v.RuleNumber); v == defaultACLRuleNumberIPv4 || v == defaultACLRuleNumberIPv6 {
@@ -244,7 +267,7 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "setting ingress: %s", err)
 	}
 
-	setTagsOut(ctx, nacl.Tags)
+	setTagsOut(ctx, networkACL.Tags)
 
 	return diags
 }

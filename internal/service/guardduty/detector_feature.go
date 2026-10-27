@@ -33,41 +33,44 @@ func resourceDetectorFeature() *schema.Resource {
 		UpdateWithoutTimeout: resourceDetectorFeaturePut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"additional_configuration": {
-				Optional: true,
-				Type:     schema.TypeSet,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.FeatureAdditionalConfiguration](),
-						},
-						names.AttrStatus: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"additional_configuration": {
+					Optional: true,
+					Computed: true,
+					Type:     schema.TypeSet,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FeatureAdditionalConfiguration](),
+							},
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+							},
 						},
 					},
 				},
-			},
-			"detector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrName: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DetectorFeature](),
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
-			},
+				"detector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DetectorFeature](),
+				},
+				names.AttrStatus: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+				},
+			}
 		},
 	}
 }
@@ -82,8 +85,9 @@ func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, met
 		Status: awstypes.FeatureStatus(d.Get(names.AttrStatus).(string)),
 	}
 
-	if v, ok := d.GetOk("additional_configuration"); ok && v.(*schema.Set).Len() > 0 {
-		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.(*schema.Set).List())
+	// Retrieve the value set in the config directly so that Computed values returned by AWS aren't sent back.
+	if v := d.GetRawConfig().GetAttr("additional_configuration"); v.IsKnown() && !v.IsNull() && v.LengthInt() > 0 {
+		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(d.Get("additional_configuration").(*schema.Set).List())
 	}
 
 	input := &guardduty.UpdateDetectorInput{

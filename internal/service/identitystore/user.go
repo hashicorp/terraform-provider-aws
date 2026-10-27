@@ -38,218 +38,220 @@ func resourceUser() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"addresses": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"country": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						"formatted": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						"locality": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						"postal_code": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						"primary": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrRegion: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						"street_address": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-					},
-				},
-			},
-			names.AttrDisplayName: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-			},
-			"emails": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"primary": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						names.AttrValue: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"addresses": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"country": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							"formatted": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							"locality": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							"postal_code": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							"primary": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrRegion: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							"street_address": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
 						},
 					},
 				},
-			},
-			"external_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrIssuer: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrDisplayName: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+				},
+				"emails": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"primary": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							names.AttrValue: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
 						},
 					},
 				},
-			},
-			"identity_store_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"locale": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-			},
-			names.AttrName: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"family_name": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						"formatted": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						"given_name": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						"honorific_prefix": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						"honorific_suffix": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						"middle_name": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+				"external_ids": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrIssuer: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"nickname": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-			},
-			"phone_numbers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"primary": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-						},
-						names.AttrValue: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+				"identity_store_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"locale": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+				},
+				names.AttrName: {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"family_name": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							"formatted": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							"given_name": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							"honorific_prefix": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							"honorific_suffix": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							"middle_name": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
 						},
 					},
 				},
-			},
-			"preferred_language": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-			},
-			"profile_url": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-			},
-			"timezone": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-			},
-			"title": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-			},
-			"user_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"user_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrUserName: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
-			},
-			"user_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
-			},
+				"nickname": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+				},
+				"phone_numbers": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"primary": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+							names.AttrValue: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+							},
+						},
+					},
+				},
+				"preferred_language": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+				},
+				"profile_url": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+				},
+				"timezone": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+				},
+				"title": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+				},
+				"user_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"user_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrUserName: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
+				},
+				"user_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
+				},
+			}
 		},
 	}
 }

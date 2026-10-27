@@ -32,7 +32,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `collection_group_summaries`
 
-* `arn` - Amazon Resource Name (ARN) of the collection group.
+* `arn` - ARN of the collection group.
 * `capacity_limits` - Capacity limits configured for the collection group. See [`capacity_limits`](#capacity_limits) below for details.
 * `created_date` - Epoch time, in milliseconds, when the collection group was created.
 * `id` - Unique identifier for the collection group.

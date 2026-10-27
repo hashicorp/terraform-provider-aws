@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_vpc_security_group_rules_exclusive
 
-Terraform resource for managing an exclusive set of AWS VPC (Virtual Private Cloud) Security Group Rules.
+Terraform resource for managing an exclusive set of AWS VPC Security Group Rules.
 
 This resource manages the complete set of ingress and egress rules assigned to a security group. It provides exclusive control by removing any rules not explicitly defined in the configuration.
 

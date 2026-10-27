@@ -58,6 +58,23 @@ This data source exports the following attributes in addition to the arguments a
 * `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For an example using this information to enable IAM Roles for Service Accounts, see the [`aws_eks_cluster` resource documentation](/docs/providers/aws/r/eks_cluster.html).
     * `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
         * `issuer` - Issuer URL for the OpenID Connect identity provider.
+* `kube_api_server_config` - Configuration for the Kubernetes API server.
+    * `event_ttl` - The duration that Kubernetes events are retained.
+    * `service_node_port_range` - The port range for NodePort services.
+        * `min_port` - The minimum port number in the range.
+        * `max_port` - The maximum port number in the range.
+* `kube_controller_manager_config` - Configuration for the Kubernetes controller manager.
+    * `horizontal_pod_autoscaler_controller_config` - Configuration for the horizontal pod autoscaler controller.
+        * `horizontal_pod_autoscaler_sync_period` - The interval between each sync of the horizontal pod autoscaler.
+    * `pod_gc_controller_config` - Configuration for the pod garbage collection controller.
+        * `terminated_pod_gc_threshold` - The number of terminated pods that can exist before the pod garbage collector starts deleting them.
+* `kube_scheduler_config` - Configuration for the Kubernetes scheduler.
+    * `node_resources_fit` - Configuration for the NodeResourcesFit scheduler plugin.
+        * `scoring_strategy` - The scoring strategy used to rank nodes during scheduling.
+            * `type` - The scoring strategy type (`LeastAllocated` or `MostAllocated`).
+            * `resource` - List of resource weights for scoring nodes.
+                * `name` - The name of the resource (e.g., `cpu`, `memory`).
+                * `weight` - The weight assigned to the resource for scoring (1-100).
 * `kubernetes_network_config` - Nested list containing Kubernetes Network Configuration.
     * `elastic_load_balancing` - Contains Elastic Load Balancing configuration for EKS Auto Mode enabled cluster.
         * `enabled` - Indicates if the load balancing capability is enabled for EKS Auto Mode enabled cluster.
@@ -68,6 +85,10 @@ This data source exports the following attributes in addition to the arguments a
     * `control_plane_instance_type` - The Amazon EC2 instance type for all Kubernetes control plane instances.
     * `control_plane_placement` - An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
         * `group_name` - The name of the placement group for the Kubernetes control plane instances.
+        * `spread_level` - Placement group spread level for control plane instances.
+    * `etcd_instance_type` - Amazon EC2 instance type for etcd instances.
+    * `etcd_placement` - Placement configuration for the etcd instances.
+        * `spread_level` - Placement group spread level for etcd instances.
     * `outpost_arns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
 * `platform_version` - Platform version for the cluster.
 * `remote_network_config` - Contains remote network configuration for EKS Hybrid Nodes.
@@ -86,6 +107,7 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Kubernetes server version for the cluster.
 * `vpc_config` - Nested list containing VPC configuration for the cluster.
     * `cluster_security_group_id` - The cluster security group that was created by Amazon EKS for the cluster.
+    * `control_plane_egress_mode` - The egress mode for the EKS control plane. Possible values are `AWS_MANAGED` and `CUSTOMER_ROUTED`.
     * `endpoint_private_access` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.
     * `endpoint_public_access` - Indicates whether or not the Amazon EKS public API server endpoint is enabled.
     * `public_access_cidrs` - List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint.

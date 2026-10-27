@@ -41,109 +41,111 @@ func resourceWorkspace() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"bundle_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"computer_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrIPAddress: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_volume_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"user_volume_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"volume_encryption_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"workspace_properties": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"compute_type_name": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.ComputeValue,
-							ValidateDiagFunc: enum.Validate[types.Compute](),
-						},
-						"root_volume_size_gib": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  80,
-							ValidateFunc: validation.Any(
-								validation.IntInSlice([]int{80}),
-								validation.IntBetween(175, 2000),
-							),
-						},
-						"running_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  types.RunningModeAlwaysOn,
-							ValidateFunc: validation.StringInSlice(enum.Slice(
-								types.RunningModeAlwaysOn,
-								types.RunningModeAutoStop,
-							), false),
-						},
-						"running_mode_auto_stop_timeout_in_minutes": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: func(v any, k string) (ws []string, errors []error) {
-								val := v.(int)
-								if val%60 != 0 {
-									errors = append(errors, fmt.Errorf(
-										"%q should be configured in 60-minute intervals, got: %d", k, val))
-								}
-								return
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"bundle_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"computer_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"directory_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrIPAddress: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_volume_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"user_volume_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+					Default:  false,
+				},
+				"volume_encryption_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"workspace_properties": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"compute_type_name": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.ComputeValue,
+								ValidateDiagFunc: enum.Validate[types.Compute](),
 							},
-						},
-						"user_volume_size_gib": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  10,
-							ValidateFunc: validation.Any(
-								validation.IntInSlice([]int{10, 50}),
-								validation.IntBetween(100, 2000),
-							),
+							"root_volume_size_gib": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  80,
+								ValidateFunc: validation.Any(
+									validation.IntInSlice([]int{80}),
+									validation.IntBetween(175, 2000),
+								),
+							},
+							"running_mode": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  types.RunningModeAlwaysOn,
+								ValidateFunc: validation.StringInSlice(enum.Slice(
+									types.RunningModeAlwaysOn,
+									types.RunningModeAutoStop,
+								), false),
+							},
+							"running_mode_auto_stop_timeout_in_minutes": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+								ValidateFunc: func(v any, k string) (ws []string, errors []error) {
+									val := v.(int)
+									if val%60 != 0 {
+										errors = append(errors, fmt.Errorf(
+											"%q should be configured in 60-minute intervals, got: %d", k, val))
+									}
+									return
+								},
+							},
+							"user_volume_size_gib": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  10,
+								ValidateFunc: validation.Any(
+									validation.IntInSlice([]int{10, 50}),
+									validation.IntBetween(100, 2000),
+								),
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{

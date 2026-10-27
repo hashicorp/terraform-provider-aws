@@ -1,7 +1,0 @@
-```release-note:new-data-source
-aws_organizations_organizational_unit_child_accounts
-```
-
-```release-note:new-data-source
-aws_organizations_organizational_unit_descendant_accounts
-```

@@ -14,7 +14,7 @@ This data source allows to find a list of name servers associated with a specifi
 
 ## Example Usage
 
-The following example shows how to get a delegation set from its id.
+The following example shows how to get a delegation set from its ID.
 
 ```terraform
 data "aws_route53_delegation_set" "dset" {

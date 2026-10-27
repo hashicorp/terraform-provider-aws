@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_rds_instance: Allow `domain_dns_ips` to use single DNS server IP
-```

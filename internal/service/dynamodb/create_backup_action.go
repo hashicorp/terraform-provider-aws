@@ -5,7 +5,6 @@ package dynamodb
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -113,7 +112,7 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 
 	var output *dynamodb.CreateBackupOutput
 	var err error
-	for l := backoff.NewLoop(timeout); l.Continue(ctx); {
+	for l := backoff.NewLoop(ctx, timeout); l.Continue(ctx); {
 		output, err = conn.CreateBackup(ctx, &input)
 
 		if err != nil {
@@ -148,7 +147,7 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 		return actionwait.FetchResult[*awstypes.BackupDescription]{Status: actionwait.Status(desc.BackupDetails.BackupStatus), Value: desc}, nil
 	}, actionwait.Options[*awstypes.BackupDescription]{
 		Timeout:            timeout,
-		Interval:           actionwait.WithBackoffDelay(backoff.DefaultSDKv2HelperRetryCompatibleDelay()),
+		Interval:           actionwait.WithBackoffDelay(backoff.DefaultSDKv2HelperRetryCompatibleDelay(ctx)),
 		ProgressInterval:   30 * time.Second,
 		SuccessStates:      []actionwait.Status{actionwait.Status(awstypes.BackupStatusAvailable)},
 		TransitionalStates: []actionwait.Status{actionwait.Status(awstypes.BackupStatusCreating)},
@@ -158,14 +157,11 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 		},
 	})
 	if err != nil {
-		var timeoutErr *actionwait.TimeoutError
-		var failureErr *actionwait.FailureStateError
-		var unexpectedErr *actionwait.UnexpectedStateError
-		if errors.As(err, &timeoutErr) {
+		if errs.IsA[*actionwait.TimeoutError](err) {
 			resp.Diagnostics.AddError("Backup timeout", "Backup did not complete within the specified timeout")
-		} else if errors.As(err, &failureErr) {
+		} else if errs.IsA[*actionwait.FailureStateError](err) {
 			resp.Diagnostics.AddError("Backup failed", "Backup completed with status: "+err.Error())
-		} else if errors.As(err, &unexpectedErr) {
+		} else if errs.IsA[*actionwait.UnexpectedStateError](err) {
 			resp.Diagnostics.AddError("Unexpected backup status", err.Error())
 		} else {
 			resp.Diagnostics.AddError("Error waiting for backup", err.Error())

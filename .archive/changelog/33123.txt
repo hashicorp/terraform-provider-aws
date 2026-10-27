@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_finspace_kx_environment: Add `transit_gateway_configuration.*.attachment_network_acl_configuration` argument.
-```

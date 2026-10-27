@@ -31,20 +31,8 @@ type topicPolicyListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type listTopicPolicyModel struct {
-	framework.WithRegionModel
-}
-
 func (l *topicPolicyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().SNSClient(ctx)
-
-	var query listTopicPolicyModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	tflog.Info(ctx, "Listing SNS Topic Policies")
 	stream.Results = func(yield func(list.ListResult) bool) {

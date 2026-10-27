@@ -205,6 +205,14 @@ func testAccDataLake_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceDataLake, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securitylake_data_lake.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_securitylake_data_lake.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

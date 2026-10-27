@@ -61,7 +61,7 @@ func testAccAPNSChannelCertConfigurationFromEnv(t *testing.T) *testAccAPNSChanne
 	}
 
 	if conf == nil {
-		t.Skipf("Pinpoint certificate credentials envs are missing, skipping test")
+		t.Skipf("End User Messaging certificate credentials envs are missing, skipping test")
 	}
 
 	return conf
@@ -94,7 +94,20 @@ func testAccAPNSChannelTokenConfigurationFromEnv(t *testing.T) *testAccAPNSChann
 	return &conf
 }
 
-func TestAccPinpointAPNSChannel_basicCertificate(t *testing.T) {
+// APNS tests share credentials from environment variables tied to a single
+// Apple Developer identity.
+func TestAccPinpointAPNSChannel_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		"basicCertificate": testAccAPNSChannel_basicCertificate,
+		"basicToken":       testAccAPNSChannel_basicToken,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccAPNSChannel_basicCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSChannelResponse
 	resourceName := "aws_pinpoint_apns_channel.test_apns_channel"
@@ -129,7 +142,7 @@ func TestAccPinpointAPNSChannel_basicCertificate(t *testing.T) {
 	})
 }
 
-func TestAccPinpointAPNSChannel_basicToken(t *testing.T) {
+func testAccAPNSChannel_basicToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.APNSChannelResponse
 	resourceName := "aws_pinpoint_apns_channel.test_apns_channel"
@@ -172,7 +185,7 @@ func testAccCheckAPNSChannelExists(ctx context.Context, t *testing.T, n string, 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Pinpoint APNs Channel with that Application ID exists")
+			return fmt.Errorf("No End User Messaging APNs Channel with that Application ID exists")
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).PinpointClient(ctx)
@@ -208,7 +221,7 @@ func testAccCheckAPNSChannelDestroy(ctx context.Context, t *testing.T) resource.
 				return err
 			}
 
-			return fmt.Errorf("Pinpoint APNS Channel %s still exists", rs.Primary.ID)
+			return fmt.Errorf("End User Messaging APNS Channel %s still exists", rs.Primary.ID)
 		}
 
 		return nil

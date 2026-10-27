@@ -28,310 +28,312 @@ func dataSourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCatalogTableRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrDatabaseName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
-				),
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"partition_index": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"index_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"index_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"keys": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrDatabaseName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 255),
+						validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
+					),
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"partition_index": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"index_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"index_status": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"keys": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"partition_keys": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrComment: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrParameters: {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"partition_keys": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrComment: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrParameters: {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"query_as_of_time": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"transaction_id"},
-				ValidateFunc:  validation.IsRFC3339Time,
-			},
-			"retention": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"storage_descriptor": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"additional_locations": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"bucket_columns": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"query_as_of_time": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"transaction_id"},
+					ValidateFunc:  validation.IsRFC3339Time,
+				},
+				"retention": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"storage_descriptor": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"additional_locations": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-						},
-						"columns": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrComment: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrParameters: {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Computed: true,
+							"bucket_columns": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"columns": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrComment: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrParameters: {
+											Type:     schema.TypeMap,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"compressed": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"input_format": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrLocation: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"number_of_buckets": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"output_format": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrParameters: {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ser_de_info": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrParameters: {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"serialization_library": {
-										Type:     schema.TypeString,
-										Computed: true,
+							"compressed": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"input_format": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrLocation: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"number_of_buckets": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"output_format": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrParameters: {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ser_de_info": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrParameters: {
+											Type:     schema.TypeMap,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"serialization_library": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"schema_reference": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"schema_id": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"registry_name": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"schema_arn": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"schema_name": {
-													Type:     schema.TypeString,
-													Computed: true,
+							"schema_reference": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"schema_id": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"registry_name": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"schema_arn": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"schema_name": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 												},
 											},
 										},
-									},
-									"schema_version_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"schema_version_number": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"skewed_info": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"skewed_column_names": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										"schema_version_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"schema_version_number": {
+											Type:     schema.TypeInt,
+											Computed: true,
 										},
 									},
-									"skewed_column_value_location_maps": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"skewed_column_values": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+								},
+							},
+							"skewed_info": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"skewed_column_names": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"skewed_column_value_location_maps": {
+											Type:     schema.TypeMap,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"skewed_column_values": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"sort_columns": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"column": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"sort_order": {
-										Type:     schema.TypeInt,
-										Computed: true,
+							"sort_columns": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"sort_order": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"stored_as_sub_directories": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"table_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"target_table": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Computed: true,
+							"stored_as_sub_directories": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"transaction_id": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{"query_as_of_time"},
-			},
-			"view_original_text": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"view_expanded_text": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"table_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_table": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"transaction_id": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ConflictsWith: []string{"query_as_of_time"},
+				},
+				"view_original_text": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"view_expanded_text": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

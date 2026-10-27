@@ -391,6 +391,14 @@ func TestAccIAMRole_disappears(t *testing.T) {
 					testAccCheckRoleExists(ctx, t, resourceName, &role),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRole(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},

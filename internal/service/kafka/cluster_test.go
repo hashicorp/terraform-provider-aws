@@ -169,6 +169,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_uuid"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "customer_action_status"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
@@ -768,7 +769,7 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -829,7 +830,7 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *te
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
+	commonName := acctest.RandomDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

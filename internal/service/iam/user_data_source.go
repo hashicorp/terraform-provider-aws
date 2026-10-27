@@ -24,28 +24,30 @@ func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"permissions_boundary": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"user_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"permissions_boundary": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"user_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

@@ -35,57 +35,59 @@ func resourceGrantAccepter() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allowed_operations": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allowed_operations": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Description: "Allowed operations for the grant.",
 				},
-				Description: "Allowed operations for the grant.",
-			},
-			"grant_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				Description:  "Amazon Resource Name (ARN) of the grant.",
-			},
-			"home_region": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Home Region of the grant.",
-			},
-			"license_arn": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "License ARN.",
-			},
-			names.AttrName: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Name of the grant.",
-			},
-			"parent_arn": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Parent ARN.",
-			},
-			names.AttrPrincipal: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The grantee principal ARN.",
-			},
-			names.AttrStatus: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "GrantAccepter status.",
-			},
-			names.AttrVersion: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "GrantAccepter version.",
-			},
+				"grant_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					Description:  "Amazon Resource Name (ARN) of the grant.",
+				},
+				"home_region": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Home Region of the grant.",
+				},
+				"license_arn": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "License ARN.",
+				},
+				names.AttrName: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Name of the grant.",
+				},
+				"parent_arn": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Parent ARN.",
+				},
+				names.AttrPrincipal: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The grantee principal ARN.",
+				},
+				names.AttrStatus: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "GrantAccepter status.",
+				},
+				names.AttrVersion: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "GrantAccepter version.",
+				},
+			}
 		},
 	}
 }

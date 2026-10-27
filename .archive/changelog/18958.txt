@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Prevent `Provider produced inconsistent final plan` errors when resource `tags` are not known until apply
-```

@@ -39,7 +39,7 @@ const (
 
 // @SDKResource("aws_dynamodb_table_replica", name="Table Replica")
 // @Tags(identifierAttribute="arn")
-// @Testing(altRegionProvider=true)
+// @Testing(altRegionTfVars=true)
 func resourceTableReplica() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -58,44 +58,46 @@ func resourceTableReplica() *schema.Resource {
 			Update: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: { // direct to replica
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deletion_protection_enabled": { // direct to replica
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			// global_secondary_index read capacity override can be set but not return by aws atm either through main/replica nor directly
-			"global_table_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrKMSKeyARN: { // through main table
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"point_in_time_recovery": { // direct to replica
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			// read_capacity_override can be set but requires table write_capacity to be autoscaled which is not yet supported in the provider
-			"table_class_override": { // through main table
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),         // direct to replica
-			names.AttrTagsAll: tftags.TagsSchemaComputed(), // direct to replica
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: { // direct to replica
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deletion_protection_enabled": { // direct to replica
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				// global_secondary_index read capacity override can be set but not return by aws atm either through main/replica nor directly
+				"global_table_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrKMSKeyARN: { // through main table
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"point_in_time_recovery": { // direct to replica
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				// read_capacity_override can be set but requires table write_capacity to be autoscaled which is not yet supported in the provider
+				"table_class_override": { // through main table
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),         // direct to replica
+				names.AttrTagsAll: tftags.TagsSchemaComputed(), // direct to replica
+			}
 		},
 	}
 }
@@ -154,6 +156,10 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 				return tfresource.RetryableError(err)
 			}
 			if errs.IsA[*awstypes.ResourceInUseException](err) {
+				return tfresource.RetryableError(err)
+			}
+			// Race condition when re-creating resource
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "because one or more replicas already existed as tables") {
 				return tfresource.RetryableError(err)
 			}
 

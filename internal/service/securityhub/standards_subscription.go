@@ -27,7 +27,7 @@ import (
 )
 
 // @SDKResource("aws_securityhub_standards_subscription", name="Standards Subscription")
-// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.StandardsSubscription")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.42.0")
@@ -38,17 +38,19 @@ func resourceStandardsSubscription() *schema.Resource {
 		ReadWithoutTimeout:   resourceStandardsSubscriptionRead,
 		DeleteWithoutTimeout: resourceStandardsSubscriptionDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"standards_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"standards_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(3 * time.Minute),

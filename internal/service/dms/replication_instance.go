@@ -48,134 +48,136 @@ func resourceReplicationInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAllocatedStorage: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(5, 6144),
-			},
-			names.AttrAllowMajorVersionUpgrade: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"dns_name_servers": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"kerberos_authentication_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key_cache_secret_iam_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"key_cache_secret_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"krb5_file_contents": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAllocatedStorage: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(5, 6144),
+				},
+				names.AttrAllowMajorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"dns_name_servers": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+				},
+				"kerberos_authentication_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"key_cache_secret_iam_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"key_cache_secret_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"krb5_file_contents": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrKMSKeyARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"multi_az": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"network_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
-			},
-			names.AttrPreferredMaintenanceWindow: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"replication_instance_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replication_instance_class": {
-				Type:     schema.TypeString,
-				Required: true,
-				// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large | dms.c4.large |
-				// dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
-			},
-			"replication_instance_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validReplicationInstanceID,
-			},
-			"replication_instance_private_ips": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"replication_instance_public_ips": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"replication_subnet_group_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCSecurityGroupIDs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				names.AttrKMSKeyARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"multi_az": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"network_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(networkType_Values(), false),
+				},
+				names.AttrPreferredMaintenanceWindow: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+				},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"replication_instance_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"replication_instance_class": {
+					Type:     schema.TypeString,
+					Required: true,
+					// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large | dms.c4.large |
+					// dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
+				},
+				"replication_instance_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validReplicationInstanceID,
+				},
+				"replication_instance_private_ips": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"replication_instance_public_ips": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"replication_subnet_group_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCSecurityGroupIDs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

@@ -27,49 +27,51 @@ func dataSourceContainerDefinition() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContainerDefinitionRead,
 
-		Schema: map[string]*schema.Schema{
-			"container_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"cpu": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"disable_networking": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"docker_labels": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrEnvironment: {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"image": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_digest": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"memory": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"memory_reservation": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"task_definition": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"container_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"cpu": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"disable_networking": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"docker_labels": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrEnvironment: {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"image": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_digest": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"memory": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"memory_reservation": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"task_definition": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_rekognition_stream_processor: Deprecates `stream_processor_arn` in favor of `arn`.
-```

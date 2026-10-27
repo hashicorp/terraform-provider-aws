@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -32,6 +33,11 @@ import (
 
 // @SDKResource("aws_rds_cluster_instance", name="Cluster Instance")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("identifier")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBInstance")
+// @Testing(importIgnore="apply_immediately;force_destroy")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.64.0")
 // @Testing(tagsTest=false)
 func resourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
@@ -40,207 +46,210 @@ func resourceClusterInstance() *schema.Resource {
 		UpdateWithoutTimeout: resourceClusterInstanceUpdate,
 		DeleteWithoutTimeout: resourceClusterInstanceDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(90 * time.Minute),
 			Update: schema.DefaultTimeout(90 * time.Minute),
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			// apply_immediately is used to determine when the update modifications take place.
-			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			names.AttrApplyImmediately: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAutoMinorVersionUpgrade: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"ca_cert_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrClusterIdentifier: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"copy_tags_to_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"custom_iam_instance_profile": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
-			},
-			"db_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"db_subnet_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"dbi_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
-					validation.StringInSlice(clusterInstanceEngine_Values(), false),
-				),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"engine_version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrIdentifier: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"identifier_prefix"},
-				ValidateFunc:  validIdentifier,
-			},
-			"identifier_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrIdentifier},
-				ValidateFunc:  validIdentifierPrefix,
-			},
-			"instance_class": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"monitoring_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-			},
-			"monitoring_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"network_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"performance_insights_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"performance_insights_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"performance_insights_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validation.IntInSlice([]int{7, 731}),
-					validation.All(
-						validation.IntAtLeast(7),
-						validation.IntAtMost(731),
-						validation.IntDivisibleBy(31),
-					),
-				),
-			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"preferred_backup_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceADayWindowFormat,
-			},
-			names.AttrPreferredMaintenanceWindow: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(v any) string {
-					if v != nil {
-						value := v.(string)
-						return strings.ToLower(value)
-					}
-					return ""
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				// apply_immediately is used to determine when the update modifications take place.
+				// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
+				names.AttrApplyImmediately: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
 				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-			"promotion_tier": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-			},
-			names.AttrPubliclyAccessible: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"writer": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrAutoMinorVersionUpgrade: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrAvailabilityZone: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"ca_cert_identifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrClusterIdentifier: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"copy_tags_to_snapshot": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"custom_iam_instance_profile": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+				},
+				"db_parameter_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"db_subnet_group_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"dbi_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
+						validation.StringInSlice(clusterInstanceEngine_Values(), false),
+					),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"engine_version_actual": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrIdentifier: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"identifier_prefix"},
+					ValidateFunc:  validIdentifier,
+				},
+				"identifier_prefix": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrIdentifier},
+					ValidateFunc:  validIdentifierPrefix,
+				},
+				"instance_class": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrKMSKeyID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"monitoring_interval": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  0,
+				},
+				"monitoring_role_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"network_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"performance_insights_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"performance_insights_kms_key_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"performance_insights_retention_period": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.Any(
+						validation.IntInSlice([]int{7, 731}),
+						validation.All(
+							validation.IntAtLeast(7),
+							validation.IntAtMost(731),
+							validation.IntDivisibleBy(31),
+						),
+					),
+				},
+				names.AttrPort: {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"preferred_backup_window": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidOnceADayWindowFormat,
+				},
+				names.AttrPreferredMaintenanceWindow: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					StateFunc: func(v any) string {
+						if v != nil {
+							value := v.(string)
+							return strings.ToLower(value)
+						}
+						return ""
+					},
+					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+				},
+				"promotion_tier": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  0,
+				},
+				names.AttrPubliclyAccessible: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"warning_event_categories": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"writer": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -255,6 +264,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate(ctx)
+	createStart := time.Now().UTC()
 	input := &rds.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
@@ -360,6 +370,11 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
+	if v, ok := d.GetOk("warning_event_categories"); ok {
+		diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbInstance, createStart,
+			flex.ExpandStringValueSet(v.(*schema.Set)))...)
+	}
+
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
@@ -380,24 +395,24 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	dbClusterID := aws.ToString(db.DBClusterIdentifier)
-
 	if dbClusterID == "" {
 		return sdkdiag.AppendErrorf(diags, "DBClusterIdentifier is missing from RDS Cluster Instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
 	}
 
 	dbc, err := findDBClusterByID(ctx, conn, dbClusterID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
 
-	for _, m := range dbc.DBClusterMembers {
+	resourceClusterInstanceFlatten(ctx, db, d, dbc)
+
+	return diags
+}
+
+func resourceClusterInstanceFlatten(ctx context.Context, db *types.DBInstance, d *schema.ResourceData, dbClusters *types.DBCluster) {
+	for _, m := range dbClusters.DBClusterMembers {
 		if aws.ToString(m.DBInstanceIdentifier) == d.Id() {
-			if aws.ToBool(m.IsClusterWriter) {
-				d.Set("writer", true)
-			} else {
-				d.Set("writer", false)
-			}
+			d.Set("writer", m.IsClusterWriter)
 		}
 	}
 
@@ -438,10 +453,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrStorageEncrypted, db.StorageEncrypted)
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
-
 	setTagsOut(ctx, db.TagList)
-
-	return diags
 }
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
@@ -509,6 +521,8 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.PubliclyAccessible = aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool))
 		}
 
+		modifyStart := time.Now().UTC()
+
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBInstance(ctx, input)
@@ -521,6 +535,11 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if _, err := waitDBClusterInstanceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
+		}
+
+		if v, ok := d.GetOk("warning_event_categories"); ok {
+			diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbInstance, modifyStart,
+				flex.ExpandStringValueSet(v.(*schema.Set)))...)
 		}
 	}
 

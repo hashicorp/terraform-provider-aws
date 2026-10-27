@@ -39,7 +39,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identified of the Vpc Endpoint.
+* `id` - Unique identified of the VPC Endpoint.
 
 ## Timeouts
 
@@ -77,7 +77,7 @@ resource "aws_opensearchserverless_vpc_endpoint" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearchServerless Vpc Endpoint using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearchServerless VPC Endpoint using the `id`. For example:
 
 ```terraform
 import {
@@ -86,7 +86,7 @@ import {
 }
 ```
 
-Using `terraform import`, import OpenSearchServerless Vpc Endpoint using the `id`. For example:
+Using `terraform import`, import OpenSearchServerless VPC Endpoint using the `id`. For example:
 
 ```console
 % terraform import aws_opensearchserverless_vpc_endpoint.example vpce-8012925589

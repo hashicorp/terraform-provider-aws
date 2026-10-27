@@ -51,7 +51,7 @@ This data source exports the following attributes in addition to the arguments a
 * `protocol` - Tunnel protocol
 * `tags` - Key-value tags for the EC2 Transit Gateway Connect
 * `transit_gateway_id` - EC2 Transit Gateway identifier
-* `transport_attachment_id` - The underlaying VPC attachment
+* `transport_attachment_id` - The underlying VPC attachment
 
 ## Timeouts
 

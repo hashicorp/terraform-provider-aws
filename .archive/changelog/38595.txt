@@ -1,3 +1,0 @@
-```release-note:bug
-datasource/aws_networkmanager_core_network_policy_document: Fix `CoreNetworkPolicyException` when putting policy with single wildcard in `when_sent_to`
-```

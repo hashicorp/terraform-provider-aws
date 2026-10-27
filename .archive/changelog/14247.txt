@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_config_configuration_aggregator: Allow name to have uppercase characters
-```

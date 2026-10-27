@@ -44,83 +44,85 @@ func resourceReportDefinition() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"additional_artifacts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{Type: schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.AdditionalArtifact](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"additional_artifacts": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{Type: schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.AdditionalArtifact](),
+					},
 				},
-			},
-			"additional_schema_elements": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
+				"additional_schema_elements": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.SchemaElement](),
+					},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compression": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.SchemaElement](),
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.CompressionFormat](),
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compression": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.CompressionFormat](),
-			},
-			names.AttrFormat: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.ReportFormat](),
-			},
-			"refresh_closed_reports": {
-				Type:     schema.TypeBool,
-				Default:  true,
-				Optional: true,
-			},
-			"report_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
-				),
-			},
-			"report_versioning": {
-				Type:             schema.TypeString,
-				ForceNew:         true,
-				Optional:         true,
-				Default:          types.ReportVersioningCreateNewReport,
-				ValidateDiagFunc: enum.Validate[types.ReportVersioning](),
-			},
-			names.AttrS3Bucket: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"s3_prefix": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 256),
-					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*'()]*`), ""),
-				),
-			},
-			"s3_region": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(awsRegion_Values(), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"time_unit": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.TimeUnit](),
-			},
+				names.AttrFormat: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.ReportFormat](),
+				},
+				"refresh_closed_reports": {
+					Type:     schema.TypeBool,
+					Default:  true,
+					Optional: true,
+				},
+				"report_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
+					),
+				},
+				"report_versioning": {
+					Type:             schema.TypeString,
+					ForceNew:         true,
+					Optional:         true,
+					Default:          types.ReportVersioningCreateNewReport,
+					ValidateDiagFunc: enum.Validate[types.ReportVersioning](),
+				},
+				names.AttrS3Bucket: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"s3_prefix": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 256),
+						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*'()]*`), ""),
+					),
+				},
+				"s3_region": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(awsRegion_Values(), false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"time_unit": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.TimeUnit](),
+				},
+			}
 		},
 	}
 }

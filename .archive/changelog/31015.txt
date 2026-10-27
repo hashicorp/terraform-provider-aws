@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_rds_cluster_role_association: Add configurable Create and Delete timeouts
-```

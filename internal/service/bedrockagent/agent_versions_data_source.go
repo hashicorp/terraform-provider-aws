@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource("aws_bedrockagent_agent_versions, name="Agent Versions")
+// @FrameworkDataSource("aws_bedrockagent_agent_versions", name="Agent Versions")
 func newDataSourceAgentVersions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &agentVersionsDataSource{}, nil
 }

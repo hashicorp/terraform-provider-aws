@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudwatch_log_metric_filter: Add `apply_on_transformed_logs` argument
-```
