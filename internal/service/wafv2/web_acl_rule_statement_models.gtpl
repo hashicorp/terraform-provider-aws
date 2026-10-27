@@ -164,11 +164,11 @@ var orStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Context) s
 // andChildStatementBlockLevel{{.}} is for the statements of an AND statement.
 var andChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
-{{- template "leafBlocks"}}
-{{- if gt . 0 -}}
-		"not_statement":                         notStatementBlockLevel{{minus .}}(ctx),
-		"or_statement":                          orStatementBlockLevel{{minus .}}(ctx),
-{{- end}}
+		{{- if gt . 0}}
+			"not_statement": notStatementBlockLevel{{minus .}}(ctx),
+			"or_statement":  orStatementBlockLevel{{minus .}}(ctx),
+		{{- end}}
+		{{- template "leafBlocks"}}
 	}
 
 	return schema.ListNestedBlock{
@@ -193,11 +193,11 @@ var andChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Cont
 // orChildStatementBlockLevel{{.}} is for the statements of an OR statement.
 var orChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
-{{- template "leafBlocks"}}
-{{- if gt . 0 -}}
-		"and_statement":                         andStatementBlockLevel{{minus .}}(ctx),
-		"not_statement":                         notStatementBlockLevel{{minus .}}(ctx),
-{{- end}}
+		{{- if gt . 0}}
+			"and_statement": andStatementBlockLevel{{minus .}}(ctx),
+			"not_statement": notStatementBlockLevel{{minus .}}(ctx),
+		{{- end}}
+		{{- template "leafBlocks"}}
 	}
 
 	return schema.ListNestedBlock{
@@ -222,12 +222,12 @@ var orChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Conte
 // notChildStatementBlockLevel{{.}} is for the single statement of a NOT statement.
 var notChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
-{{- template "leafBlocks"}}
-{{- if gt . 0 -}}
-		"and_statement":                         andStatementBlockLevel{{minus .}}(ctx),
-		"not_statement":                         notStatementBlockLevel{{minus .}}(ctx),
-		"or_statement":                          orStatementBlockLevel{{minus .}}(ctx),
-{{- end}}
+		{{- if gt . 0}}
+			"and_statement": andStatementBlockLevel{{minus .}}(ctx),
+			"not_statement": notStatementBlockLevel{{minus .}}(ctx),
+			"or_statement":  orStatementBlockLevel{{minus .}}(ctx),
+		{{- end}}
+		{{- template "leafBlocks"}}
 	}
 
 	return schema.ListNestedBlock{
@@ -250,15 +250,16 @@ var notChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Cont
 	}
 })
 {{end}}
+
 func statementBlockLevel{{.MaxLevel}}(ctx context.Context) schema.ListNestedBlock {
 	blocks := map[string]schema.Block{
-{{- template "leafBlocks" -}}
-		"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  rateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),
-		"and_statement":                         andStatementBlockLevel{{minus .MaxLevel}}(ctx),
-		"not_statement":                         notStatementBlockLevel{{minus .MaxLevel}}(ctx),
-		"or_statement":                          orStatementBlockLevel{{minus .MaxLevel}}(ctx),
+		"and_statement":                  andStatementBlockLevel{{minus .MaxLevel}}(ctx),
+		"not_statement":                  notStatementBlockLevel{{minus .MaxLevel}}(ctx),
+		"or_statement":                   orStatementBlockLevel{{minus .MaxLevel}}(ctx),
+		{{- template "leafBlocks" -}}
+		"managed_rule_group_statement":   managedRuleGroupStatementBlock(ctx),
+		"rate_based_statement":           rateBasedStatementBlock(ctx),
+		"rule_group_reference_statement": ruleGroupReferenceStatementBlock(ctx),
 	}
 
 	return schema.ListNestedBlock{

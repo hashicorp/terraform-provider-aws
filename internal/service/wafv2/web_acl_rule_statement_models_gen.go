@@ -364,6 +364,8 @@ var orStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context) schem
 // andChildStatementBlockLevel1 is for the statements of an AND statement.
 var andChildStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
+		"not_statement":                         notStatementBlockLevel0(ctx),
+		"or_statement":                          orStatementBlockLevel0(ctx),
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
 		"geo_match_statement":                   geoMatchStatementBlock(ctx),
@@ -374,8 +376,6 @@ var andChildStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"not_statement":                         notStatementBlockLevel0(ctx),
-		"or_statement":                          orStatementBlockLevel0(ctx),
 	}
 
 	return schema.ListNestedBlock{
@@ -394,6 +394,8 @@ var andChildStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context)
 // orChildStatementBlockLevel1 is for the statements of an OR statement.
 var orChildStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
+		"and_statement":                         andStatementBlockLevel0(ctx),
+		"not_statement":                         notStatementBlockLevel0(ctx),
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
 		"geo_match_statement":                   geoMatchStatementBlock(ctx),
@@ -404,8 +406,6 @@ var orChildStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context) 
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"and_statement":                         andStatementBlockLevel0(ctx),
-		"not_statement":                         notStatementBlockLevel0(ctx),
 	}
 
 	return schema.ListNestedBlock{
@@ -424,6 +424,9 @@ var orChildStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context) 
 // notChildStatementBlockLevel1 is for the single statement of a NOT statement.
 var notChildStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
+		"and_statement":                         andStatementBlockLevel0(ctx),
+		"not_statement":                         notStatementBlockLevel0(ctx),
+		"or_statement":                          orStatementBlockLevel0(ctx),
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
 		"geo_match_statement":                   geoMatchStatementBlock(ctx),
@@ -434,9 +437,6 @@ var notChildStatementBlockLevel1 = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"and_statement":                         andStatementBlockLevel0(ctx),
-		"not_statement":                         notStatementBlockLevel0(ctx),
-		"or_statement":                          orStatementBlockLevel0(ctx),
 	}
 
 	return schema.ListNestedBlock{
@@ -495,6 +495,8 @@ var orStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context) schem
 // andChildStatementBlockLevel2 is for the statements of an AND statement.
 var andChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
+		"not_statement":                         notStatementBlockLevel1(ctx),
+		"or_statement":                          orStatementBlockLevel1(ctx),
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
 		"geo_match_statement":                   geoMatchStatementBlock(ctx),
@@ -505,8 +507,6 @@ var andChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"not_statement":                         notStatementBlockLevel1(ctx),
-		"or_statement":                          orStatementBlockLevel1(ctx),
 	}
 
 	return schema.ListNestedBlock{
@@ -525,6 +525,8 @@ var andChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context)
 // orChildStatementBlockLevel2 is for the statements of an OR statement.
 var orChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
+		"and_statement":                         andStatementBlockLevel1(ctx),
+		"not_statement":                         notStatementBlockLevel1(ctx),
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
 		"geo_match_statement":                   geoMatchStatementBlock(ctx),
@@ -535,8 +537,6 @@ var orChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context) 
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"and_statement":                         andStatementBlockLevel1(ctx),
-		"not_statement":                         notStatementBlockLevel1(ctx),
 	}
 
 	return schema.ListNestedBlock{
@@ -555,6 +555,9 @@ var orChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context) 
 // notChildStatementBlockLevel2 is for the single statement of a NOT statement.
 var notChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
+		"and_statement":                         andStatementBlockLevel1(ctx),
+		"not_statement":                         notStatementBlockLevel1(ctx),
+		"or_statement":                          orStatementBlockLevel1(ctx),
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
 		"geo_match_statement":                   geoMatchStatementBlock(ctx),
@@ -565,9 +568,6 @@ var notChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context)
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"and_statement":                         andStatementBlockLevel1(ctx),
-		"not_statement":                         notStatementBlockLevel1(ctx),
-		"or_statement":                          orStatementBlockLevel1(ctx),
 	}
 
 	return schema.ListNestedBlock{
@@ -586,6 +586,9 @@ var notChildStatementBlockLevel2 = tfsync.OnceValueCtx(func(ctx context.Context)
 
 func statementBlockLevel3(ctx context.Context) schema.ListNestedBlock {
 	blocks := map[string]schema.Block{
+		"and_statement":                         andStatementBlockLevel2(ctx),
+		"not_statement":                         notStatementBlockLevel2(ctx),
+		"or_statement":                          orStatementBlockLevel2(ctx),
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
 		"geo_match_statement":                   geoMatchStatementBlock(ctx),
@@ -599,9 +602,6 @@ func statementBlockLevel3(ctx context.Context) schema.ListNestedBlock {
 		"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx),
 		"rate_based_statement":                  rateBasedStatementBlock(ctx),
 		"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),
-		"and_statement":                         andStatementBlockLevel2(ctx),
-		"not_statement":                         notStatementBlockLevel2(ctx),
-		"or_statement":                          orStatementBlockLevel2(ctx),
 	}
 
 	return schema.ListNestedBlock{
