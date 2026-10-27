@@ -15,6 +15,32 @@ import (
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 )
 
+{{ define "leafFields" }}
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
+	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+{{ end }}
+
+{{ define "leafBlocks" }}
+    "ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
+    "geo_match_statement":                   geoMatchStatementBlock(ctx),
+    "byte_match_statement":                  byteMatchStatementBlock(ctx),
+    "sqli_match_statement":                  sqliMatchStatementBlock(ctx),
+    "xss_match_statement":                   xssMatchStatementBlock(ctx),
+    "size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+    "regex_match_statement":                 regexMatchStatementBlock(ctx),
+    "regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+    "label_match_statement":                 labelMatchStatementBlock(ctx),
+    "asn_match_statement":                   asnMatchStatementBlock(ctx),
+{{ end }}
+
 // Level-based scope_down statement models
 
 {{ range .Levels }}
@@ -54,55 +80,28 @@ type webACLRuleScopeDownOrStatementLevel{{minus .}}Model struct {
 {{- end }}
 type webACLRuleScopeDownStatementLevel{{.}}Model struct {
 {{- if gt . 0}}
-	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel{{minus .}}Model]      `tfsdk:"and_statement"`
-	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel{{minus .}}Model]      `tfsdk:"not_statement"`
-	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel{{minus .}}Model]       `tfsdk:"or_statement"`
+	AndStatement fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel{{minus .}}Model] `tfsdk:"and_statement"`
+	NotStatement fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel{{minus .}}Model] `tfsdk:"not_statement"`
+	OrStatement  fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel{{minus .}}Model]  `tfsdk:"or_statement"`
 {{- end}}
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
-	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
-	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
-	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+{{- template "leafFields" -}}
 }
 
 {{ if gt . 0 }}
 // webACLRuleScopeDownAndStatementLevel{{.}}ChildModel contains leaf statements plus not/or at level {{ minus . }}.
 // AWS WAF doesn't accept an AND statement directly inside an AND statement.
 type webACLRuleScopeDownAndStatementLevel{{.}}ChildModel struct {
-	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel{{ minus . }}Model]       `tfsdk:"not_statement"`
-	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel{{ minus . }}Model]        `tfsdk:"or_statement"`
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
-	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
-	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
-	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+	NotStatement fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel{{ minus . }}Model] `tfsdk:"not_statement"`
+	OrStatement  fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel{{ minus . }}Model]  `tfsdk:"or_statement"`
+{{- template "leafFields" -}}
 }
 
 // webACLRuleScopeDownOrStatementLevel{{.}}ChildModel contains leaf statements plus and/not at level {{ minus . }}.
 // AWS WAF doesn't accept an OR statement directly inside an OR statement.
 type webACLRuleScopeDownOrStatementLevel{{.}}ChildModel struct {
-	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel{{ minus . }}Model]       `tfsdk:"and_statement"`
-	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel{{ minus . }}Model]       `tfsdk:"not_statement"`
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
-	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
-	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
-	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+	AndStatement fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel{{ minus . }}Model] `tfsdk:"and_statement"`
+	NotStatement fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel{{ minus . }}Model] `tfsdk:"not_statement"`
+{{- template "leafFields" -}}
 }
 {{end}}
 {{end}}
@@ -115,24 +114,6 @@ type webACLRuleScopeDownOrStatementModel = webACLRuleScopeDownOrStatementLevel{{
 
 // Schema block functions for each level.
 
-// scopeDownLeafStatementBlocks returns only leaf statements (no managed_rule_group, rate_based,
-// or rule_group_reference) to avoid initialization cycles when used inside scope_down_statement
-// which is itself referenced by managed_rule_group_statement and rate_based_statement.
-func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
-	return map[string]schema.Block{
-		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
-		"geo_match_statement":                   geoMatchStatementBlock(ctx),
-		"byte_match_statement":                  byteMatchStatementBlock(ctx),
-		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
-		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
-		"regex_match_statement":                 regexMatchStatementBlock(ctx),
-		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
-		"label_match_statement":                 labelMatchStatementBlock(ctx),
-		"asn_match_statement":                   asnMatchStatementBlock(ctx),
-	}
-}
-
 // Level-based scope_down blocks — mirrors web_acl_rule_statement_models_gen.go.
 // Level 0 blocks: leaf statements only (no and/not/or).
 // Level 1 blocks: leaf + and/not/or at level 0.
@@ -143,8 +124,11 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
 {{ if eq . 0}}
     // scopeDownStatementLevel{{ . }}MultipleBlock: at least two level-{{ . }} statements, used by AND/OR at level {{ . }}.
     var scopeDownStatementLevel{{ . }}MultipleBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-        blocks := scopeDownLeafStatementBlocks(ctx)
-         return schema.ListNestedBlock{
+        blocks := map[string]schema.Block{
+            {{- template "leafBlocks" }}
+        }
+
+        return schema.ListNestedBlock{
             CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel{{ . }}Model](ctx),
             Validators: []validator.List{
                 listvalidator.IsRequired(),
@@ -167,7 +151,9 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
 
     // scopeDownNotStatementLevel0ChildBlock: exactly one level-0 statement, used by NOT at level 0.
     var scopeDownNotStatementLevel0ChildBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-        blocks := scopeDownLeafStatementBlocks(ctx)
+        blocks := map[string]schema.Block{
+            {{- template "leafBlocks" }}
+        }
 
         return schema.ListNestedBlock{
             CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
@@ -185,9 +171,11 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
 {{ else if ne . $.MaxLevel }}
     // scopeDownAndStatementLevel{{ . }}ChildBlock: at least two level-{{ . }} statements (leaf + not/or at level {{minus .}}), used by AND at level {{ . }}.
     var scopeDownAndStatementLevel{{ . }}ChildBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-        blocks := scopeDownLeafStatementBlocks(ctx)
-        blocks["not_statement"] = scopeDownNotStatementLevel{{ minus . }}Block(ctx)
-        blocks["or_statement"] = scopeDownOrStatementLevel{{ minus . }}Block(ctx)
+        blocks := map[string]schema.Block{
+            "not_statement": scopeDownNotStatementLevel{{ minus . }}Block(ctx),
+            "or_statement":  scopeDownOrStatementLevel{{ minus . }}Block(ctx),
+            {{- template "leafBlocks" }}
+        }
 
         return schema.ListNestedBlock{
             CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownAndStatementLevel{{ . }}ChildModel](ctx),
@@ -204,9 +192,11 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
 
     // scopeDownOrStatementLevel{{ . }}ChildBlock: at least two level-{{ . }} statements (leaf + and/not at level {{minus .}}), used by OR at level {{ . }}.
     var scopeDownOrStatementLevel{{ . }}ChildBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-        blocks := scopeDownLeafStatementBlocks(ctx)
-        blocks["and_statement"] = scopeDownAndStatementLevel{{ minus . }}Block(ctx)
-        blocks["not_statement"] = scopeDownNotStatementLevel{{ minus . }}Block(ctx)
+        blocks := map[string]schema.Block{
+            "and_statement": scopeDownAndStatementLevel{{ minus . }}Block(ctx),
+            "not_statement": scopeDownNotStatementLevel{{ minus . }}Block(ctx),
+            {{- template "leafBlocks" }}
+        }
 
         return schema.ListNestedBlock{
             CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownOrStatementLevel{{ . }}ChildModel](ctx),
@@ -223,12 +213,14 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
 
     // scopeDownNotStatementLevel{{ . }}ChildBlock: exactly one level-{{ . }} statement, used by NOT at level {{ . }}.
     var scopeDownNotStatementLevel{{ . }}ChildBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-        blocks := scopeDownLeafStatementBlocks(ctx)
-        {{ if gt . 0 -}}
-            blocks["and_statement"] = scopeDownAndStatementLevel{{ minus . }}Block(ctx)
-            blocks["not_statement"] = scopeDownNotStatementLevel{{ minus . }}Block(ctx)
-            blocks["or_statement"] = scopeDownOrStatementLevel{{ minus . }}Block(ctx)
-        {{ end }}
+        blocks := map[string]schema.Block{
+            {{ if gt . 0 -}}
+                "and_statement": scopeDownAndStatementLevel{{ minus . }}Block(ctx),
+                "not_statement": scopeDownNotStatementLevel{{ minus . }}Block(ctx),
+                "or_statement":  scopeDownOrStatementLevel{{ minus . }}Block(ctx),
+            {{- end }}
+            {{- template "leafBlocks" }}
+        }
         return schema.ListNestedBlock{
             CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel{{ . }}Model](ctx),
             Validators: []validator.List{
@@ -291,10 +283,12 @@ var scopeDownOrStatementLevel{{ . }}Block = tfsync.OnceValueCtx(func(ctx context
 
 // scopeDownStatementBlock returns the top-level scopedown statement block schema.
 var scopeDownStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-	blocks := scopeDownLeafStatementBlocks(ctx)
-	blocks["and_statement"] = scopeDownAndStatementLevel1Block(ctx)
-	blocks["not_statement"] = scopeDownNotStatementLevel1Block(ctx)
-	blocks["or_statement"] = scopeDownOrStatementLevel1Block(ctx)
+    blocks := map[string]schema.Block{
+        "and_statement": scopeDownAndStatementLevel1Block(ctx),
+        "not_statement": scopeDownNotStatementLevel1Block(ctx),
+        "or_statement":  scopeDownOrStatementLevel1Block(ctx),
+        {{- template "leafBlocks" }}
+    }
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel2Model](ctx),
