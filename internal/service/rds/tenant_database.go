@@ -418,7 +418,8 @@ func (r *tenantDatabaseResource) ModifyPlan(ctx context.Context, request resourc
 	}
 
 	// RDS can't change the KMS key of an existing managed secret.
-	if state.ManageMasterUserPassword.ValueBool() && plan.ManageMasterUserPassword.ValueBool() && !plan.MasterUserSecretKMSKeyID.Equal(state.MasterUserSecretKMSKeyID) {
+	// An unknown key is checked when Terraform plans again during apply with the resolved value.
+	if state.ManageMasterUserPassword.ValueBool() && plan.ManageMasterUserPassword.ValueBool() && !plan.MasterUserSecretKMSKeyID.IsUnknown() && !plan.MasterUserSecretKMSKeyID.Equal(state.MasterUserSecretKMSKeyID) {
 		response.Diagnostics.AddAttributeError(
 			path.Root("master_user_secret_kms_key_id"),
 			"Unsupported change",
