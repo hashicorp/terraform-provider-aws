@@ -157,7 +157,7 @@ func TestAccECSGateway_update(t *testing.T) {
 				Config: testAccGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.host_shared_alb.0.network_configuration.0.inbound_security_group", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.host_shared_alb.0.network_configuration.0.inbound_security_group"),
 				),
 			},
 			{
