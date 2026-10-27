@@ -476,6 +476,11 @@ func resourceInstance() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				"multi_tenant": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
 				"nchar_character_set_name": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -751,6 +756,15 @@ func resourceInstance() *schema.Resource {
 				}
 				return nil
 			},
+			// Conversion to the multi-tenant configuration is irreversible.
+			// Skip unknown values, which ResourceDiff reports as false.
+			customdiff.ForceNewIf("multi_tenant", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
+				if !d.NewValueKnown("multi_tenant") {
+					return false
+				}
+				old, new := d.GetChange("multi_tenant")
+				return old.(bool) && !new.(bool)
+			}),
 		),
 	}
 }
@@ -1813,6 +1827,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.MultiAZ = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk("multi_tenant"); ok {
+			input.MultiTenant = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("nchar_character_set_name"); ok {
 			input.NcharCharacterSetName = aws.String(v.(string))
 		}
@@ -1943,6 +1961,20 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	// Restores and read replicas can't request the multi-tenant configuration at creation.
+	if d.Get("multi_tenant").(bool) {
+		instance, err := findDBInstanceByID(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", identifier, err)
+		}
+
+		if !aws.ToBool(instance.MultiTenant) {
+			if err := dbInstanceConvertToMultiTenant(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (%s): converting to multi-tenant configuration: %s", identifier, err)
+			}
+		}
+	}
+
 	if v, ok := d.GetOk("warning_event_categories"); ok {
 		diags = append(diags, surfaceEvents(ctx, conn, identifier, types.SourceTypeDbInstance, createStart,
 			flex.ExpandStringValueSet(v.(*schema.Set)))...)
@@ -1997,7 +2029,13 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 	d.Set("custom_iam_instance_profile", v.CustomIamInstanceProfile)
 	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
 	d.Set("database_insights_mode", v.DatabaseInsightsMode)
-	d.Set("db_name", v.DBName)
+	// For RDS for Oracle CDB instances in the multi-tenant configuration, the API doesn't return
+	// DBName or MasterUsername; they belong to the tenant databases. Keep the values already in
+	// state rather than forcing replacement of the instance.
+	multiTenant := aws.ToBool(v.MultiTenant)
+	if v.DBName != nil || !multiTenant {
+		d.Set("db_name", v.DBName)
+	}
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
@@ -2058,6 +2096,7 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 	d.Set("monitoring_interval", v.MonitoringInterval)
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 	d.Set("multi_az", v.MultiAZ)
+	d.Set("multi_tenant", multiTenant)
 	d.Set("nchar_character_set_name", v.NcharCharacterSetName)
 	d.Set("network_type", v.NetworkType)
 	if len(v.OptionGroupMemberships) > 0 {
@@ -2098,7 +2137,9 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 	d.Set(names.AttrStorageType, v.StorageType)
 	d.Set("timezone", v.Timezone)
 	d.Set("upgrade_rollout_order", v.UpgradeRolloutOrder)
-	d.Set(names.AttrUsername, v.MasterUsername)
+	if v.MasterUsername != nil || !multiTenant {
+		d.Set(names.AttrUsername, v.MasterUsername)
+	}
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(v.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
 	}))
@@ -2131,6 +2172,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutUpdate))
+
+	// RDS applies the conversion, and any pending modifications, immediately. Require explicit
+	// consent before making any changes. This is checked here rather than in CustomizeDiff, which
+	// can't tell whether the instance is being replaced (Create needs no conversion).
+	if d.HasChange("multi_tenant") && d.Get("multi_tenant").(bool) && !d.Get(names.AttrApplyImmediately).(bool) {
+		return sdkdiag.AppendErrorf(diags, `updating RDS DB Instance (%s): "apply_immediately" must be true to convert to the multi-tenant configuration`, d.Get(names.AttrIdentifier).(string))
+	}
 
 	// Separate request to promote a database.
 	if d.HasChange("replicate_source_db") {
@@ -2165,6 +2213,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		"blue_green_update",
 		"delete_automated_backups",
 		names.AttrFinalSnapshotIdentifier,
+		"multi_tenant",
 		"replicate_source_db",
 		"skip_final_snapshot",
 		names.AttrTags, names.AttrTagsAll,
@@ -2174,6 +2223,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			"blue_green_update",
 			"delete_automated_backups",
 			names.AttrFinalSnapshotIdentifier,
+			"multi_tenant",
 			"replicate_source_db",
 			"skip_final_snapshot",
 			names.AttrTags, names.AttrTagsAll,
@@ -2387,6 +2437,16 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				diags = append(diags, surfaceEvents(ctx, conn, d.Get(names.AttrIdentifier).(string), types.SourceTypeDbInstance, modifyStart,
 					flex.ExpandStringValueSet(v.(*schema.Set)))...)
 			}
+		}
+	}
+
+	// Convert from the single-tenant to the multi-tenant configuration in a dedicated request.
+	// The conversion can't be combined with some other modifications (e.g. engine version
+	// upgrades or ManageMasterUserPassword) and always requires ApplyImmediately.
+	// A change from true to false forces replacement (see CustomizeDiff).
+	if d.HasChange("multi_tenant") && d.Get("multi_tenant").(bool) {
+		if err := dbInstanceConvertToMultiTenant(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): converting to multi-tenant configuration: %s", d.Get(names.AttrIdentifier).(string), err)
 		}
 	}
 
@@ -2794,6 +2854,34 @@ func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, 
 	return nil
 }
 
+func dbInstanceConvertToMultiTenant(ctx context.Context, conn *rds.Client, resourceID string, timeout time.Duration) error {
+	_, err := tfresource.RetryWhenIsA[*rds.ModifyDBInstanceOutput, *types.InvalidDBInstanceStateFault](ctx, timeout, func(ctx context.Context) (*rds.ModifyDBInstanceOutput, error) {
+		// Look up the current identifier; a rename in the same apply may not have taken effect yet.
+		instance, err := findDBInstanceByID(ctx, conn, resourceID)
+		if err != nil {
+			return nil, err
+		}
+
+		input := rds.ModifyDBInstanceInput{
+			ApplyImmediately:     aws.Bool(true),
+			DBInstanceIdentifier: instance.DBInstanceIdentifier,
+			MultiTenant:          aws.Bool(true),
+		}
+
+		return conn.ModifyDBInstance(ctx, &input)
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if err := waitDBInstanceMultiTenant(ctx, conn, resourceID, timeout); err != nil {
+		return fmt.Errorf("waiting for completion: %w", err)
+	}
+
+	return nil
+}
+
 // See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage.
 func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool {
 	if storageType := d.Get(names.AttrStorageType).(string); storageType != storageTypeGP3 {
@@ -2938,6 +3026,30 @@ func statusDBInstance(conn *rds.Client, id string, optFns ...func(*rds.Options))
 
 		return output, aws.ToString(output.DBInstanceStatus), nil
 	}
+}
+
+// Conversion to the multi-tenant configuration may pass through statuses that waitDBInstanceAvailable
+// doesn't expect, so only known terminal statuses are treated as errors here.
+func waitDBInstanceMultiTenant(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) error {
+	return tfresource.WaitUntil(ctx, timeout, func(ctx context.Context) (bool, error) {
+		output, err := findDBInstanceByID(ctx, conn, id)
+		if err != nil {
+			return false, err
+		}
+
+		switch status := aws.ToString(output.DBInstanceStatus); status {
+		case instanceStatusAvailable:
+			return aws.ToBool(output.MultiTenant), nil
+		case instanceStatusFailed, instanceStatusIncompatibleOptionGroup, instanceStatusIncompatibleParameters, instanceStatusStopped:
+			return false, fmt.Errorf("unexpected status: %s", status)
+		default:
+			return false, nil
+		}
+	}, tfresource.WaitOpts{
+		ContinuousTargetOccurence: 3,
+		Delay:                     1 * time.Minute,
+		PollInterval:              10 * time.Second,
+	})
 }
 
 func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.DBInstance, error) {
