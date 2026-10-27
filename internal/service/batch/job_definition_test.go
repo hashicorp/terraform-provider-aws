@@ -2325,7 +2325,7 @@ resource "aws_batch_job_definition" "test" {
         }
       }
       volumes {
-        name = "tmp"   
+        name = "tmp"
         empty_dir {
           size_limit = "128Mi"
         }
@@ -2364,7 +2364,7 @@ resource "aws_batch_job_definition" "test" {
         }
       }
       volumes {
-        name = "tmp"   
+        name = "tmp"
         empty_dir {
           medium     = ""
           size_limit = "128Mi"
@@ -2404,7 +2404,7 @@ resource "aws_batch_job_definition" "test" {
         }
       }
       volumes {
-        name = "tmp"   
+        name = "tmp"
         empty_dir {
           medium     = "Memory"
           size_limit = "128Mi"
