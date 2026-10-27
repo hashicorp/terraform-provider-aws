@@ -1377,6 +1377,46 @@ func TestAccEC2Instance_disableAPIStop_placementGroupUpdate(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_disableAPIStopOff_placementGroupUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_disableAPIStopOffPlacementGroup(rName, true, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
+				),
+			},
+			{
+				// Disable stop protection and move into a placement group in the same apply.
+				Config: testAccInstanceConfig_disableAPIStopOffPlacementGroup(rName, false, "aws_placement_group.test.name"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
@@ -8601,6 +8641,32 @@ resource "aws_instance" "test" {
   }
 }
 `, rName, placementGroup))
+}
+
+func testAccInstanceConfig_disableAPIStopOffPlacementGroup(rName string, disableAPIStop bool, placementGroup string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "spread"
+}
+
+resource "aws_instance" "test" {
+  ami              = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type    = "t2.small"
+  subnet_id        = aws_subnet.test.id
+  disable_api_stop = %[2]t
+  placement_group  = %[3]s
+
+  depends_on = [aws_placement_group.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, disableAPIStop, placementGroup))
 }
 
 func testAccInstanceConfig_ipv6Error(rName string) string {
