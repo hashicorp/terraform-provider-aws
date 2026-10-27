@@ -517,6 +517,109 @@ func TestAccCloudFrontMultiTenantDistribution_updateCommentHTTPVersionAndDefault
 	})
 }
 
+func TestAccCloudFrontMultiTenantDistribution_cacheTagConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_cacheTagConfig("Test multi-tenant distribution", []string{"cache-tag"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.0.header_name", "cache-tag"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_cacheTagConfig("Test multi-tenant distribution", []string{"x-cache-tag"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.0.header_name", "x-cache-tag"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_cacheTagConfig("Test multi-tenant distribution", nil),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontMultiTenantDistribution_cacheTagConfig_unrelatedUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_cacheTagConfig("Initial comment", []string{"cache-tag"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Initial comment"),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.0.header_name", "cache-tag"),
+				),
+			},
+			{
+				// Updating an unrelated argument must not drop the cache tag configuration.
+				Config: testAccMultiTenantDistributionConfig_cacheTagConfig("Updated comment", []string{"cache-tag"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Updated comment"),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.0.header_name", "cache-tag"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontMultiTenantDistribution_cacheTagConfig_tooManyBlocks(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMultiTenantDistributionConfig_cacheTagConfig("Test multi-tenant distribution", []string{"cache-tag", "x-cache-tag"}),
+				ExpectError: regexache.MustCompile(`at\s+most\s+1`),
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_functionAssociationSwapBlocks(t *testing.T) {
 	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
 
@@ -1343,6 +1446,69 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
 }
 `, comment, httpVersion, defaultRootObjectConfig)
 }
+func testAccMultiTenantDistributionConfig_cacheTagConfig(comment string, headerNames []string) string {
+	var cacheTagConfigs string
+	for _, headerName := range headerNames {
+		cacheTagConfigs += fmt.Sprintf(`
+  cache_tag_config {
+    header_name = %[1]q
+  }
+`, headerName)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = %[1]q
+%[2]s
+  origin {
+    domain_name = "example.com"
+    id          = "example"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+`, comment, cacheTagConfigs)
+}
+
 func testAccMultiTenantDistributionConfig_originMtlsConfig(t *testing.T, rName string, certIndex int) string {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedClientCertificatePEM(t, key, rName+".example.com")
