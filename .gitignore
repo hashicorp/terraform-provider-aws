@@ -58,3 +58,6 @@ awssdk.patch
 # go-vcr recordings
 /testdata
 sdkmap.json
+
+# service-reference-data for injector
+tools/injectr/service-data
