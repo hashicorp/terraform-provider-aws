@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_wafv2_web_acl_rule: Fix `scope_down_statement` not supporting logical statements (`and_statement`, `not_statement`, `or_statement`), including `not_statement` nested inside `and_statement`
+```
+
+```release-note:bug
+resource/aws_wafv2_web_acl_rule: Reject `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement` nested in `and_statement`, `not_statement` or `or_statement`, `and_statement` directly in `and_statement`, `or_statement` directly in `or_statement`, and `and_statement` or `or_statement` with fewer than 2 statements at validation time, in both `statement` and `scope_down_statement`, matching AWS WAF
+```

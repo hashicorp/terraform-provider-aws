@@ -13,6 +13,18 @@ func TestAccObservabilityAdmin_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"DatasetIntegration": {
+			acctest.CtBasic:      testAccDatasetIntegration_basic,
+			acctest.CtDisappears: testAccDatasetIntegration_disappears,
+			"roleARN":            testAccDatasetIntegration_roleARN,
+			"tags":               testAccObservabilityAdminDatasetIntegration_tagsSerial,
+			"Identity":           testAccObservabilityAdminDatasetIntegration_identitySerial,
+		},
+		"DatasetIntegrationDataSource": {
+			acctest.CtBasic: testAccDatasetIntegrationDataSource_basic,
+			"notFound":      testAccDatasetIntegrationDataSource_notFound,
+			"tags":          testAccObservabilityAdminDatasetIntegrationDataSource_tagsSerial,
+		},
 		"S3TableIntegration": {
 			acctest.CtBasic:      testAccS3TableIntegration_basic,
 			acctest.CtDisappears: testAccS3TableIntegration_disappears,

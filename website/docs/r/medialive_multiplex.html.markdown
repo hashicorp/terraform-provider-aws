@@ -42,22 +42,22 @@ resource "aws_medialive_multiplex" "example" {
 
 The following arguments are required:
 
-* `availability_zones` - (Required) A list of availability zones. You must specify exactly two.
-* `multiplex_settings`- (Required) Multiplex settings. See [Multiplex Settings](#multiplex-settings) for more details.
+* `availability_zones` - (Required) List of availability zones. You must specify exactly two.
+* `multiplex_settings` - (Required) Multiplex settings. See [`multiplex_settings` Block](#multiplex_settings-block) for more details.
 * `name` - (Required) name of Multiplex.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `start_multiplex` - (Optional) Whether to start the Multiplex. Defaults to `false`.
-* `tags` - (Optional) A map of tags to assign to the Multiplex. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the Multiplex. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Multiplex Settings
+### `multiplex_settings` Block
 
+* `maximum_video_buffer_delay_milliseconds` - (Optional) Maximum video buffer delay.
 * `transport_stream_bitrate` - (Required) Transport stream bit rate.
 * `transport_stream_id` - (Required) Unique ID for each multiplex.
 * `transport_stream_reserved_bitrate` - (Optional) Transport stream reserved bit rate.
-* `maximum_video_buffer_delay_milliseconds` - (Optional) Maximum video buffer delay.
 
 ## Attribute Reference
 

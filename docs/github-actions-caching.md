@@ -92,7 +92,7 @@ Where `CACHE_DATE=$(date +%Y-%m-%d)`
 │ - validate_sweepers            │
 │ - copyright                    │
 │ - dependencies                 │
-│ - modern_go                    │
+│ - go_fix                       │
 │ - providerlint                 │
 │ - pull_request_target          │
 │ - skaff                        │

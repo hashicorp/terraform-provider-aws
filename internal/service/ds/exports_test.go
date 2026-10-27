@@ -9,6 +9,7 @@ var (
 	ResourceDirectory               = resourceDirectory
 	ResourceIPRoute                 = newIPRouteResource
 	ResourceIPRoutesExclusive       = newIPRoutesExclusiveResource
+	ResourceDirectorySettings       = newDirectorySettingsResource
 	ResourceLogSubscription         = resourceLogSubscription
 	ResourceRadiusSettings          = resourceRadiusSettings
 	ResourceRegion                  = resourceRegion
@@ -24,6 +25,7 @@ var (
 	WaitIPRoutesRemoved                  = waitIPRoutesRemoved
 	IsIPRoutesUpdateRetryable            = isIPRoutesUpdateRetryable
 	IPRoutesSemanticEquals               = ipRoutesSemanticEquals
+	FindDirectorySettingByTwoPartKey     = findDirectorySettingByTwoPartKey
 	FindLogSubscriptionByID              = findLogSubscriptionByID
 	FindRadiusSettingsByID               = findRadiusSettingsByID
 	FindRegionByTwoPartKey               = findRegionByTwoPartKey

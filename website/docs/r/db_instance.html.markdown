@@ -355,12 +355,13 @@ This resource supports the following arguments:
 * `monitoring_interval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
 * `monitoring_role_arn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `multi_az` - (Optional) Whether the RDS instance is multi-AZ.
+* `multi_tenant` - (Optional) Whether to use the multi-tenant configuration of the Oracle CDB architecture. Only valid for RDS for Oracle CDB engines (`oracle-ee-cdb` and `oracle-se2-cdb`). Changing from `false` to `true` converts the instance in place and requires `apply_immediately = true`; RDS also applies any pending modifications at that time. Restored instances and read replicas are converted after creation. Conversion is irreversible, so changing from `true` to `false` forces a new resource. After conversion, RDS rejects changes to `password`, `password_wo`, and `manage_master_user_password` on the instance; manage master user credentials on the tenant database instead. Additional tenant databases are managed outside this resource. See the [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Oracle.Concepts.CDBs.html) for details.
 * `nchar_character_set_name` - (Optional, Forces new resource) National character set is used in the NCHAR, NVARCHAR2, and NCLOB data types for Oracle instances. This can't be changed. See [Oracle Character Sets Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
 * `network_type` - (Optional) Network type of the DB instance. Valid values: `IPV4`, `DUAL`.
 * `option_group_name` - (Optional) Name of the DB option group to associate.
 * `parameter_group_name` - (Optional) Name of the DB parameter group to associate.
 * `password` - (Optional, required unless `manage_master_user_password` is set to true, `snapshot_identifier`, `replicate_source_db`, or `password_wo` is provided) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Cannot be set if `manage_master_user_password` is set to `true`.
-* `password_wo` - (Optional, Write-Only, required unless `manage_master_user_password` is set to true, `snapshot_identifier`, `replicate_source_db`, or `password` is provided) Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file. Cannot be set if `manage_master_user_password` is set to `true`. If set, requires `password_wo_version` to be set.
+* `password_wo` - (Optional, Write-Only, required unless `manage_master_user_password` is set to true, `snapshot_identifier`, `replicate_source_db`, or `password` is provided) Password for the master DB user. Note that this may show up in logs. Cannot be set if `manage_master_user_password` is set to `true`. If set, requires `password_wo_version` to be set.
 * `password_wo_version` - (Optional) Required when `password_wo` is set. Changing this value triggers an update to `password_wo`.
 * `performance_insights_enabled` - (Optional) Whether Performance Insights are enabled. Defaults to false.
 * `performance_insights_kms_key_id` - (Optional) ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true. Once KMS key is set, it can never be changed.
@@ -442,6 +443,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `maintenance_window` - Instance maintenance window.
 * `master_user_secret` - Block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. See [`master_user_secret` Block](#master_user_secret-block) below.
 * `multi_az` - If the RDS instance is multi AZ enabled.
+* `multi_tenant` - Whether the instance uses the multi-tenant configuration of the Oracle CDB architecture.
 * `port` - Database port.
 * `replicas` - List of read replica identifiers associated with this instance.
 * `resource_id` - RDS Resource ID of this instance.

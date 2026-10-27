@@ -4,10 +4,12 @@
 package flex
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 const (
@@ -53,4 +55,11 @@ func fullTypeName(t reflect.Type) string {
 		return fmt.Sprintf("%s.%s", path, t.Name())
 	}
 	return t.Name()
+}
+
+func setLogFields(ctx context.Context, fields map[string]any) context.Context {
+	for k, v := range fields {
+		ctx = tflog.SubsystemSetField(ctx, subsystemName, k, v)
+	}
+	return ctx
 }

@@ -244,6 +244,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/schemas"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityir"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	"github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
@@ -290,1113 +291,1117 @@ import (
 )
 
 func (c *AWSClient) ACMClient(ctx context.Context) *acm.Client {
-	return errs.Must(client[*acm.Client](ctx, c, names.ACM, make(map[string]any)))
+	return errs.Must(c.client[*acm.Client](ctx, names.ACM, make(map[string]any)))
 }
 
 func (c *AWSClient) ACMPCAClient(ctx context.Context) *acmpca.Client {
-	return errs.Must(client[*acmpca.Client](ctx, c, names.ACMPCA, make(map[string]any)))
+	return errs.Must(c.client[*acmpca.Client](ctx, names.ACMPCA, make(map[string]any)))
 }
 
 func (c *AWSClient) AMPClient(ctx context.Context) *amp.Client {
-	return errs.Must(client[*amp.Client](ctx, c, names.AMP, make(map[string]any)))
+	return errs.Must(c.client[*amp.Client](ctx, names.AMP, make(map[string]any)))
 }
 
 func (c *AWSClient) APIGatewayClient(ctx context.Context) *apigateway.Client {
-	return errs.Must(client[*apigateway.Client](ctx, c, names.APIGateway, make(map[string]any)))
+	return errs.Must(c.client[*apigateway.Client](ctx, names.APIGateway, make(map[string]any)))
 }
 
 func (c *AWSClient) APIGatewayV2Client(ctx context.Context) *apigatewayv2.Client {
-	return errs.Must(client[*apigatewayv2.Client](ctx, c, names.APIGatewayV2, make(map[string]any)))
+	return errs.Must(c.client[*apigatewayv2.Client](ctx, names.APIGatewayV2, make(map[string]any)))
 }
 
 func (c *AWSClient) ARCRegionSwitchClient(ctx context.Context) *arcregionswitch.Client {
-	return errs.Must(client[*arcregionswitch.Client](ctx, c, names.ARCRegionSwitch, make(map[string]any)))
+	return errs.Must(c.client[*arcregionswitch.Client](ctx, names.ARCRegionSwitch, make(map[string]any)))
 }
 
 func (c *AWSClient) ARCZonalShiftClient(ctx context.Context) *arczonalshift.Client {
-	return errs.Must(client[*arczonalshift.Client](ctx, c, names.ARCZonalShift, make(map[string]any)))
+	return errs.Must(c.client[*arczonalshift.Client](ctx, names.ARCZonalShift, make(map[string]any)))
 }
 
 func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer.Client {
-	return errs.Must(client[*accessanalyzer.Client](ctx, c, names.AccessAnalyzer, make(map[string]any)))
+	return errs.Must(c.client[*accessanalyzer.Client](ctx, names.AccessAnalyzer, make(map[string]any)))
 }
 
 func (c *AWSClient) AccountClient(ctx context.Context) *account.Client {
-	return errs.Must(client[*account.Client](ctx, c, names.Account, make(map[string]any)))
+	return errs.Must(c.client[*account.Client](ctx, names.Account, make(map[string]any)))
 }
 
 func (c *AWSClient) AccountAccessClient(ctx context.Context) *accountaccess.Client {
-	return errs.Must(client[*accountaccess.Client](ctx, c, names.AccountAccess, make(map[string]any)))
+	return errs.Must(c.client[*accountaccess.Client](ctx, names.AccountAccess, make(map[string]any)))
 }
 
 func (c *AWSClient) AgentRegistryClient(ctx context.Context) *agentregistrycontrol.Client {
-	return errs.Must(client[*agentregistrycontrol.Client](ctx, c, names.AgentRegistry, make(map[string]any)))
+	return errs.Must(c.client[*agentregistrycontrol.Client](ctx, names.AgentRegistry, make(map[string]any)))
 }
 
 func (c *AWSClient) AmplifyClient(ctx context.Context) *amplify.Client {
-	return errs.Must(client[*amplify.Client](ctx, c, names.Amplify, make(map[string]any)))
+	return errs.Must(c.client[*amplify.Client](ctx, names.Amplify, make(map[string]any)))
 }
 
 func (c *AWSClient) AppAutoScalingClient(ctx context.Context) *applicationautoscaling.Client {
-	return errs.Must(client[*applicationautoscaling.Client](ctx, c, names.AppAutoScaling, make(map[string]any)))
+	return errs.Must(c.client[*applicationautoscaling.Client](ctx, names.AppAutoScaling, make(map[string]any)))
 }
 
 func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig.Client {
-	return errs.Must(client[*appconfig.Client](ctx, c, names.AppConfig, make(map[string]any)))
+	return errs.Must(c.client[*appconfig.Client](ctx, names.AppConfig, make(map[string]any)))
 }
 
 func (c *AWSClient) AppFabricClient(ctx context.Context) *appfabric.Client {
-	return errs.Must(client[*appfabric.Client](ctx, c, names.AppFabric, make(map[string]any)))
+	return errs.Must(c.client[*appfabric.Client](ctx, names.AppFabric, make(map[string]any)))
 }
 
 func (c *AWSClient) AppFlowClient(ctx context.Context) *appflow.Client {
-	return errs.Must(client[*appflow.Client](ctx, c, names.AppFlow, make(map[string]any)))
+	return errs.Must(c.client[*appflow.Client](ctx, names.AppFlow, make(map[string]any)))
 }
 
 func (c *AWSClient) AppIntegrationsClient(ctx context.Context) *appintegrations.Client {
-	return errs.Must(client[*appintegrations.Client](ctx, c, names.AppIntegrations, make(map[string]any)))
+	return errs.Must(c.client[*appintegrations.Client](ctx, names.AppIntegrations, make(map[string]any)))
 }
 
 func (c *AWSClient) AppMeshClient(ctx context.Context) *appmesh.Client {
-	return errs.Must(client[*appmesh.Client](ctx, c, names.AppMesh, make(map[string]any)))
+	return errs.Must(c.client[*appmesh.Client](ctx, names.AppMesh, make(map[string]any)))
 }
 
 func (c *AWSClient) AppRunnerClient(ctx context.Context) *apprunner.Client {
-	return errs.Must(client[*apprunner.Client](ctx, c, names.AppRunner, make(map[string]any)))
+	return errs.Must(c.client[*apprunner.Client](ctx, names.AppRunner, make(map[string]any)))
 }
 
 func (c *AWSClient) AppStreamClient(ctx context.Context) *appstream.Client {
-	return errs.Must(client[*appstream.Client](ctx, c, names.AppStream, make(map[string]any)))
+	return errs.Must(c.client[*appstream.Client](ctx, names.AppStream, make(map[string]any)))
 }
 
 func (c *AWSClient) AppSyncClient(ctx context.Context) *appsync.Client {
-	return errs.Must(client[*appsync.Client](ctx, c, names.AppSync, make(map[string]any)))
+	return errs.Must(c.client[*appsync.Client](ctx, names.AppSync, make(map[string]any)))
 }
 
 func (c *AWSClient) ApplicationInsightsClient(ctx context.Context) *applicationinsights.Client {
-	return errs.Must(client[*applicationinsights.Client](ctx, c, names.ApplicationInsights, make(map[string]any)))
+	return errs.Must(c.client[*applicationinsights.Client](ctx, names.ApplicationInsights, make(map[string]any)))
 }
 
 func (c *AWSClient) ApplicationSignalsClient(ctx context.Context) *applicationsignals.Client {
-	return errs.Must(client[*applicationsignals.Client](ctx, c, names.ApplicationSignals, make(map[string]any)))
+	return errs.Must(c.client[*applicationsignals.Client](ctx, names.ApplicationSignals, make(map[string]any)))
 }
 
 func (c *AWSClient) AthenaClient(ctx context.Context) *athena.Client {
-	return errs.Must(client[*athena.Client](ctx, c, names.Athena, make(map[string]any)))
+	return errs.Must(c.client[*athena.Client](ctx, names.Athena, make(map[string]any)))
 }
 
 func (c *AWSClient) AuditManagerClient(ctx context.Context) *auditmanager.Client {
-	return errs.Must(client[*auditmanager.Client](ctx, c, names.AuditManager, make(map[string]any)))
+	return errs.Must(c.client[*auditmanager.Client](ctx, names.AuditManager, make(map[string]any)))
 }
 
 func (c *AWSClient) AutoScalingClient(ctx context.Context) *autoscaling.Client {
-	return errs.Must(client[*autoscaling.Client](ctx, c, names.AutoScaling, make(map[string]any)))
+	return errs.Must(c.client[*autoscaling.Client](ctx, names.AutoScaling, make(map[string]any)))
 }
 
 func (c *AWSClient) AutoScalingPlansClient(ctx context.Context) *autoscalingplans.Client {
-	return errs.Must(client[*autoscalingplans.Client](ctx, c, names.AutoScalingPlans, make(map[string]any)))
+	return errs.Must(c.client[*autoscalingplans.Client](ctx, names.AutoScalingPlans, make(map[string]any)))
 }
 
 func (c *AWSClient) BCMDataExportsClient(ctx context.Context) *bcmdataexports.Client {
-	return errs.Must(client[*bcmdataexports.Client](ctx, c, names.BCMDataExports, make(map[string]any)))
+	return errs.Must(c.client[*bcmdataexports.Client](ctx, names.BCMDataExports, make(map[string]any)))
 }
 
 func (c *AWSClient) BackupClient(ctx context.Context) *backup.Client {
-	return errs.Must(client[*backup.Client](ctx, c, names.Backup, make(map[string]any)))
+	return errs.Must(c.client[*backup.Client](ctx, names.Backup, make(map[string]any)))
 }
 
 func (c *AWSClient) BatchClient(ctx context.Context) *batch.Client {
-	return errs.Must(client[*batch.Client](ctx, c, names.Batch, make(map[string]any)))
+	return errs.Must(c.client[*batch.Client](ctx, names.Batch, make(map[string]any)))
 }
 
 func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock.Client {
-	return errs.Must(client[*bedrock.Client](ctx, c, names.Bedrock, make(map[string]any)))
+	return errs.Must(c.client[*bedrock.Client](ctx, names.Bedrock, make(map[string]any)))
 }
 
 func (c *AWSClient) BedrockAgentClient(ctx context.Context) *bedrockagent.Client {
-	return errs.Must(client[*bedrockagent.Client](ctx, c, names.BedrockAgent, make(map[string]any)))
+	return errs.Must(c.client[*bedrockagent.Client](ctx, names.BedrockAgent, make(map[string]any)))
 }
 
 func (c *AWSClient) BedrockAgentCoreClient(ctx context.Context) *bedrockagentcorecontrol.Client {
-	return errs.Must(client[*bedrockagentcorecontrol.Client](ctx, c, names.BedrockAgentCore, make(map[string]any)))
+	return errs.Must(c.client[*bedrockagentcorecontrol.Client](ctx, names.BedrockAgentCore, make(map[string]any)))
 }
 
 func (c *AWSClient) BedrockRuntimeClient(ctx context.Context) *bedrockruntime.Client {
-	return errs.Must(client[*bedrockruntime.Client](ctx, c, names.BedrockRuntime, make(map[string]any)))
+	return errs.Must(c.client[*bedrockruntime.Client](ctx, names.BedrockRuntime, make(map[string]any)))
 }
 
 func (c *AWSClient) BillingClient(ctx context.Context) *billing.Client {
-	return errs.Must(client[*billing.Client](ctx, c, names.Billing, make(map[string]any)))
+	return errs.Must(c.client[*billing.Client](ctx, names.Billing, make(map[string]any)))
 }
 
 func (c *AWSClient) BudgetsClient(ctx context.Context) *budgets.Client {
-	return errs.Must(client[*budgets.Client](ctx, c, names.Budgets, make(map[string]any)))
+	return errs.Must(c.client[*budgets.Client](ctx, names.Budgets, make(map[string]any)))
 }
 
 func (c *AWSClient) CEClient(ctx context.Context) *costexplorer.Client {
-	return errs.Must(client[*costexplorer.Client](ctx, c, names.CE, make(map[string]any)))
+	return errs.Must(c.client[*costexplorer.Client](ctx, names.CE, make(map[string]any)))
 }
 
 func (c *AWSClient) CURClient(ctx context.Context) *costandusagereportservice.Client {
-	return errs.Must(client[*costandusagereportservice.Client](ctx, c, names.CUR, make(map[string]any)))
+	return errs.Must(c.client[*costandusagereportservice.Client](ctx, names.CUR, make(map[string]any)))
 }
 
 func (c *AWSClient) ChatbotClient(ctx context.Context) *chatbot.Client {
-	return errs.Must(client[*chatbot.Client](ctx, c, names.Chatbot, make(map[string]any)))
+	return errs.Must(c.client[*chatbot.Client](ctx, names.Chatbot, make(map[string]any)))
 }
 
 func (c *AWSClient) ChimeClient(ctx context.Context) *chime.Client {
-	return errs.Must(client[*chime.Client](ctx, c, names.Chime, make(map[string]any)))
+	return errs.Must(c.client[*chime.Client](ctx, names.Chime, make(map[string]any)))
 }
 
 func (c *AWSClient) ChimeSDKMediaPipelinesClient(ctx context.Context) *chimesdkmediapipelines.Client {
-	return errs.Must(client[*chimesdkmediapipelines.Client](ctx, c, names.ChimeSDKMediaPipelines, make(map[string]any)))
+	return errs.Must(c.client[*chimesdkmediapipelines.Client](ctx, names.ChimeSDKMediaPipelines, make(map[string]any)))
 }
 
 func (c *AWSClient) ChimeSDKVoiceClient(ctx context.Context) *chimesdkvoice.Client {
-	return errs.Must(client[*chimesdkvoice.Client](ctx, c, names.ChimeSDKVoice, make(map[string]any)))
+	return errs.Must(c.client[*chimesdkvoice.Client](ctx, names.ChimeSDKVoice, make(map[string]any)))
 }
 
 func (c *AWSClient) CleanRoomsClient(ctx context.Context) *cleanrooms.Client {
-	return errs.Must(client[*cleanrooms.Client](ctx, c, names.CleanRooms, make(map[string]any)))
+	return errs.Must(c.client[*cleanrooms.Client](ctx, names.CleanRooms, make(map[string]any)))
 }
 
 func (c *AWSClient) Cloud9Client(ctx context.Context) *cloud9.Client {
-	return errs.Must(client[*cloud9.Client](ctx, c, names.Cloud9, make(map[string]any)))
+	return errs.Must(c.client[*cloud9.Client](ctx, names.Cloud9, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudControlClient(ctx context.Context) *cloudcontrol.Client {
-	return errs.Must(client[*cloudcontrol.Client](ctx, c, names.CloudControl, make(map[string]any)))
+	return errs.Must(c.client[*cloudcontrol.Client](ctx, names.CloudControl, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudFormationClient(ctx context.Context) *cloudformation.Client {
-	return errs.Must(client[*cloudformation.Client](ctx, c, names.CloudFormation, make(map[string]any)))
+	return errs.Must(c.client[*cloudformation.Client](ctx, names.CloudFormation, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudFrontClient(ctx context.Context) *cloudfront.Client {
-	return errs.Must(client[*cloudfront.Client](ctx, c, names.CloudFront, make(map[string]any)))
+	return errs.Must(c.client[*cloudfront.Client](ctx, names.CloudFront, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudFrontKeyValueStoreClient(ctx context.Context) *cloudfrontkeyvaluestore.Client {
-	return errs.Must(client[*cloudfrontkeyvaluestore.Client](ctx, c, names.CloudFrontKeyValueStore, make(map[string]any)))
+	return errs.Must(c.client[*cloudfrontkeyvaluestore.Client](ctx, names.CloudFrontKeyValueStore, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudHSMV2Client(ctx context.Context) *cloudhsmv2.Client {
-	return errs.Must(client[*cloudhsmv2.Client](ctx, c, names.CloudHSMV2, make(map[string]any)))
+	return errs.Must(c.client[*cloudhsmv2.Client](ctx, names.CloudHSMV2, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudSearchClient(ctx context.Context) *cloudsearch.Client {
-	return errs.Must(client[*cloudsearch.Client](ctx, c, names.CloudSearch, make(map[string]any)))
+	return errs.Must(c.client[*cloudsearch.Client](ctx, names.CloudSearch, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudTrailClient(ctx context.Context) *cloudtrail.Client {
-	return errs.Must(client[*cloudtrail.Client](ctx, c, names.CloudTrail, make(map[string]any)))
+	return errs.Must(c.client[*cloudtrail.Client](ctx, names.CloudTrail, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudWatchClient(ctx context.Context) *cloudwatch.Client {
-	return errs.Must(client[*cloudwatch.Client](ctx, c, names.CloudWatch, make(map[string]any)))
+	return errs.Must(c.client[*cloudwatch.Client](ctx, names.CloudWatch, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudWatchOmniClient(ctx context.Context) *cloudwatchomni.Client {
-	return errs.Must(client[*cloudwatchomni.Client](ctx, c, names.CloudWatchOmni, make(map[string]any)))
+	return errs.Must(c.client[*cloudwatchomni.Client](ctx, names.CloudWatchOmni, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeArtifactClient(ctx context.Context) *codeartifact.Client {
-	return errs.Must(client[*codeartifact.Client](ctx, c, names.CodeArtifact, make(map[string]any)))
+	return errs.Must(c.client[*codeartifact.Client](ctx, names.CodeArtifact, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeBuildClient(ctx context.Context) *codebuild.Client {
-	return errs.Must(client[*codebuild.Client](ctx, c, names.CodeBuild, make(map[string]any)))
+	return errs.Must(c.client[*codebuild.Client](ctx, names.CodeBuild, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeCatalystClient(ctx context.Context) *codecatalyst.Client {
-	return errs.Must(client[*codecatalyst.Client](ctx, c, names.CodeCatalyst, make(map[string]any)))
+	return errs.Must(c.client[*codecatalyst.Client](ctx, names.CodeCatalyst, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeCommitClient(ctx context.Context) *codecommit.Client {
-	return errs.Must(client[*codecommit.Client](ctx, c, names.CodeCommit, make(map[string]any)))
+	return errs.Must(c.client[*codecommit.Client](ctx, names.CodeCommit, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeConnectionsClient(ctx context.Context) *codeconnections.Client {
-	return errs.Must(client[*codeconnections.Client](ctx, c, names.CodeConnections, make(map[string]any)))
+	return errs.Must(c.client[*codeconnections.Client](ctx, names.CodeConnections, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeGuruProfilerClient(ctx context.Context) *codeguruprofiler.Client {
-	return errs.Must(client[*codeguruprofiler.Client](ctx, c, names.CodeGuruProfiler, make(map[string]any)))
+	return errs.Must(c.client[*codeguruprofiler.Client](ctx, names.CodeGuruProfiler, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeGuruReviewerClient(ctx context.Context) *codegurureviewer.Client {
-	return errs.Must(client[*codegurureviewer.Client](ctx, c, names.CodeGuruReviewer, make(map[string]any)))
+	return errs.Must(c.client[*codegurureviewer.Client](ctx, names.CodeGuruReviewer, make(map[string]any)))
 }
 
 func (c *AWSClient) CodePipelineClient(ctx context.Context) *codepipeline.Client {
-	return errs.Must(client[*codepipeline.Client](ctx, c, names.CodePipeline, make(map[string]any)))
+	return errs.Must(c.client[*codepipeline.Client](ctx, names.CodePipeline, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeStarConnectionsClient(ctx context.Context) *codestarconnections.Client {
-	return errs.Must(client[*codestarconnections.Client](ctx, c, names.CodeStarConnections, make(map[string]any)))
+	return errs.Must(c.client[*codestarconnections.Client](ctx, names.CodeStarConnections, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeStarNotificationsClient(ctx context.Context) *codestarnotifications.Client {
-	return errs.Must(client[*codestarnotifications.Client](ctx, c, names.CodeStarNotifications, make(map[string]any)))
+	return errs.Must(c.client[*codestarnotifications.Client](ctx, names.CodeStarNotifications, make(map[string]any)))
 }
 
 func (c *AWSClient) CognitoIDPClient(ctx context.Context) *cognitoidentityprovider.Client {
-	return errs.Must(client[*cognitoidentityprovider.Client](ctx, c, names.CognitoIDP, make(map[string]any)))
+	return errs.Must(c.client[*cognitoidentityprovider.Client](ctx, names.CognitoIDP, make(map[string]any)))
 }
 
 func (c *AWSClient) CognitoIdentityClient(ctx context.Context) *cognitoidentity.Client {
-	return errs.Must(client[*cognitoidentity.Client](ctx, c, names.CognitoIdentity, make(map[string]any)))
+	return errs.Must(c.client[*cognitoidentity.Client](ctx, names.CognitoIdentity, make(map[string]any)))
 }
 
 func (c *AWSClient) ComprehendClient(ctx context.Context) *comprehend.Client {
-	return errs.Must(client[*comprehend.Client](ctx, c, names.Comprehend, make(map[string]any)))
+	return errs.Must(c.client[*comprehend.Client](ctx, names.Comprehend, make(map[string]any)))
 }
 
 func (c *AWSClient) ComputeOptimizerClient(ctx context.Context) *computeoptimizer.Client {
-	return errs.Must(client[*computeoptimizer.Client](ctx, c, names.ComputeOptimizer, make(map[string]any)))
+	return errs.Must(c.client[*computeoptimizer.Client](ctx, names.ComputeOptimizer, make(map[string]any)))
 }
 
 func (c *AWSClient) ConfigServiceClient(ctx context.Context) *configservice.Client {
-	return errs.Must(client[*configservice.Client](ctx, c, names.ConfigService, make(map[string]any)))
+	return errs.Must(c.client[*configservice.Client](ctx, names.ConfigService, make(map[string]any)))
 }
 
 func (c *AWSClient) ConnectClient(ctx context.Context) *connect.Client {
-	return errs.Must(client[*connect.Client](ctx, c, names.Connect, make(map[string]any)))
+	return errs.Must(c.client[*connect.Client](ctx, names.Connect, make(map[string]any)))
 }
 
 func (c *AWSClient) ConnectCasesClient(ctx context.Context) *connectcases.Client {
-	return errs.Must(client[*connectcases.Client](ctx, c, names.ConnectCases, make(map[string]any)))
+	return errs.Must(c.client[*connectcases.Client](ctx, names.ConnectCases, make(map[string]any)))
 }
 
 func (c *AWSClient) ControlTowerClient(ctx context.Context) *controltower.Client {
-	return errs.Must(client[*controltower.Client](ctx, c, names.ControlTower, make(map[string]any)))
+	return errs.Must(c.client[*controltower.Client](ctx, names.ControlTower, make(map[string]any)))
 }
 
 func (c *AWSClient) CostOptimizationHubClient(ctx context.Context) *costoptimizationhub.Client {
-	return errs.Must(client[*costoptimizationhub.Client](ctx, c, names.CostOptimizationHub, make(map[string]any)))
+	return errs.Must(c.client[*costoptimizationhub.Client](ctx, names.CostOptimizationHub, make(map[string]any)))
 }
 
 func (c *AWSClient) CustomerProfilesClient(ctx context.Context) *customerprofiles.Client {
-	return errs.Must(client[*customerprofiles.Client](ctx, c, names.CustomerProfiles, make(map[string]any)))
+	return errs.Must(c.client[*customerprofiles.Client](ctx, names.CustomerProfiles, make(map[string]any)))
 }
 
 func (c *AWSClient) DAXClient(ctx context.Context) *dax.Client {
-	return errs.Must(client[*dax.Client](ctx, c, names.DAX, make(map[string]any)))
+	return errs.Must(c.client[*dax.Client](ctx, names.DAX, make(map[string]any)))
 }
 
 func (c *AWSClient) DLMClient(ctx context.Context) *dlm.Client {
-	return errs.Must(client[*dlm.Client](ctx, c, names.DLM, make(map[string]any)))
+	return errs.Must(c.client[*dlm.Client](ctx, names.DLM, make(map[string]any)))
 }
 
 func (c *AWSClient) DMSClient(ctx context.Context) *databasemigrationservice.Client {
-	return errs.Must(client[*databasemigrationservice.Client](ctx, c, names.DMS, make(map[string]any)))
+	return errs.Must(c.client[*databasemigrationservice.Client](ctx, names.DMS, make(map[string]any)))
 }
 
 func (c *AWSClient) DRSClient(ctx context.Context) *drs.Client {
-	return errs.Must(client[*drs.Client](ctx, c, names.DRS, make(map[string]any)))
+	return errs.Must(c.client[*drs.Client](ctx, names.DRS, make(map[string]any)))
 }
 
 func (c *AWSClient) DSClient(ctx context.Context) *directoryservice.Client {
-	return errs.Must(client[*directoryservice.Client](ctx, c, names.DS, make(map[string]any)))
+	return errs.Must(c.client[*directoryservice.Client](ctx, names.DS, make(map[string]any)))
 }
 
 func (c *AWSClient) DSQLClient(ctx context.Context) *dsql.Client {
-	return errs.Must(client[*dsql.Client](ctx, c, names.DSQL, make(map[string]any)))
+	return errs.Must(c.client[*dsql.Client](ctx, names.DSQL, make(map[string]any)))
 }
 
 func (c *AWSClient) DataBrewClient(ctx context.Context) *databrew.Client {
-	return errs.Must(client[*databrew.Client](ctx, c, names.DataBrew, make(map[string]any)))
+	return errs.Must(c.client[*databrew.Client](ctx, names.DataBrew, make(map[string]any)))
 }
 
 func (c *AWSClient) DataExchangeClient(ctx context.Context) *dataexchange.Client {
-	return errs.Must(client[*dataexchange.Client](ctx, c, names.DataExchange, make(map[string]any)))
+	return errs.Must(c.client[*dataexchange.Client](ctx, names.DataExchange, make(map[string]any)))
 }
 
 func (c *AWSClient) DataPipelineClient(ctx context.Context) *datapipeline.Client {
-	return errs.Must(client[*datapipeline.Client](ctx, c, names.DataPipeline, make(map[string]any)))
+	return errs.Must(c.client[*datapipeline.Client](ctx, names.DataPipeline, make(map[string]any)))
 }
 
 func (c *AWSClient) DataSyncClient(ctx context.Context) *datasync.Client {
-	return errs.Must(client[*datasync.Client](ctx, c, names.DataSync, make(map[string]any)))
+	return errs.Must(c.client[*datasync.Client](ctx, names.DataSync, make(map[string]any)))
 }
 
 func (c *AWSClient) DataZoneClient(ctx context.Context) *datazone.Client {
-	return errs.Must(client[*datazone.Client](ctx, c, names.DataZone, make(map[string]any)))
+	return errs.Must(c.client[*datazone.Client](ctx, names.DataZone, make(map[string]any)))
 }
 
 func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy.Client {
-	return errs.Must(client[*codedeploy.Client](ctx, c, names.Deploy, make(map[string]any)))
+	return errs.Must(c.client[*codedeploy.Client](ctx, names.Deploy, make(map[string]any)))
 }
 
 func (c *AWSClient) DetectiveClient(ctx context.Context) *detective.Client {
-	return errs.Must(client[*detective.Client](ctx, c, names.Detective, make(map[string]any)))
+	return errs.Must(c.client[*detective.Client](ctx, names.Detective, make(map[string]any)))
 }
 
 func (c *AWSClient) DevOpsAgentClient(ctx context.Context) *devopsagent.Client {
-	return errs.Must(client[*devopsagent.Client](ctx, c, names.DevOpsAgent, make(map[string]any)))
+	return errs.Must(c.client[*devopsagent.Client](ctx, names.DevOpsAgent, make(map[string]any)))
 }
 
 func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru.Client {
-	return errs.Must(client[*devopsguru.Client](ctx, c, names.DevOpsGuru, make(map[string]any)))
+	return errs.Must(c.client[*devopsguru.Client](ctx, names.DevOpsGuru, make(map[string]any)))
 }
 
 func (c *AWSClient) DeviceFarmClient(ctx context.Context) *devicefarm.Client {
-	return errs.Must(client[*devicefarm.Client](ctx, c, names.DeviceFarm, make(map[string]any)))
+	return errs.Must(c.client[*devicefarm.Client](ctx, names.DeviceFarm, make(map[string]any)))
 }
 
 func (c *AWSClient) DirectConnectClient(ctx context.Context) *directconnect.Client {
-	return errs.Must(client[*directconnect.Client](ctx, c, names.DirectConnect, make(map[string]any)))
+	return errs.Must(c.client[*directconnect.Client](ctx, names.DirectConnect, make(map[string]any)))
 }
 
 func (c *AWSClient) DirectoryServiceDataClient(ctx context.Context) *directoryservicedata.Client {
-	return errs.Must(client[*directoryservicedata.Client](ctx, c, names.DirectoryServiceData, make(map[string]any)))
+	return errs.Must(c.client[*directoryservicedata.Client](ctx, names.DirectoryServiceData, make(map[string]any)))
 }
 
 func (c *AWSClient) DocDBClient(ctx context.Context) *docdb.Client {
-	return errs.Must(client[*docdb.Client](ctx, c, names.DocDB, make(map[string]any)))
+	return errs.Must(c.client[*docdb.Client](ctx, names.DocDB, make(map[string]any)))
 }
 
 func (c *AWSClient) DocDBElasticClient(ctx context.Context) *docdbelastic.Client {
-	return errs.Must(client[*docdbelastic.Client](ctx, c, names.DocDBElastic, make(map[string]any)))
+	return errs.Must(c.client[*docdbelastic.Client](ctx, names.DocDBElastic, make(map[string]any)))
 }
 
 func (c *AWSClient) DynamoDBClient(ctx context.Context) *dynamodb.Client {
-	return errs.Must(client[*dynamodb.Client](ctx, c, names.DynamoDB, make(map[string]any)))
+	return errs.Must(c.client[*dynamodb.Client](ctx, names.DynamoDB, make(map[string]any)))
 }
 
 func (c *AWSClient) EC2Client(ctx context.Context) *ec2.Client {
-	return errs.Must(client[*ec2.Client](ctx, c, names.EC2, make(map[string]any)))
+	return errs.Must(c.client[*ec2.Client](ctx, names.EC2, make(map[string]any)))
 }
 
 func (c *AWSClient) ECRClient(ctx context.Context) *ecr.Client {
-	return errs.Must(client[*ecr.Client](ctx, c, names.ECR, make(map[string]any)))
+	return errs.Must(c.client[*ecr.Client](ctx, names.ECR, make(map[string]any)))
 }
 
 func (c *AWSClient) ECRPublicClient(ctx context.Context) *ecrpublic.Client {
-	return errs.Must(client[*ecrpublic.Client](ctx, c, names.ECRPublic, make(map[string]any)))
+	return errs.Must(c.client[*ecrpublic.Client](ctx, names.ECRPublic, make(map[string]any)))
 }
 
 func (c *AWSClient) ECSClient(ctx context.Context) *ecs.Client {
-	return errs.Must(client[*ecs.Client](ctx, c, names.ECS, make(map[string]any)))
+	return errs.Must(c.client[*ecs.Client](ctx, names.ECS, make(map[string]any)))
 }
 
 func (c *AWSClient) EFSClient(ctx context.Context) *efs.Client {
-	return errs.Must(client[*efs.Client](ctx, c, names.EFS, make(map[string]any)))
+	return errs.Must(c.client[*efs.Client](ctx, names.EFS, make(map[string]any)))
 }
 
 func (c *AWSClient) EKSClient(ctx context.Context) *eks.Client {
-	return errs.Must(client[*eks.Client](ctx, c, names.EKS, make(map[string]any)))
+	return errs.Must(c.client[*eks.Client](ctx, names.EKS, make(map[string]any)))
 }
 
 func (c *AWSClient) ELBClient(ctx context.Context) *elasticloadbalancing.Client {
-	return errs.Must(client[*elasticloadbalancing.Client](ctx, c, names.ELB, make(map[string]any)))
+	return errs.Must(c.client[*elasticloadbalancing.Client](ctx, names.ELB, make(map[string]any)))
 }
 
 func (c *AWSClient) ELBV2Client(ctx context.Context) *elasticloadbalancingv2.Client {
-	return errs.Must(client[*elasticloadbalancingv2.Client](ctx, c, names.ELBV2, make(map[string]any)))
+	return errs.Must(c.client[*elasticloadbalancingv2.Client](ctx, names.ELBV2, make(map[string]any)))
 }
 
 func (c *AWSClient) EMRClient(ctx context.Context) *emr.Client {
-	return errs.Must(client[*emr.Client](ctx, c, names.EMR, make(map[string]any)))
+	return errs.Must(c.client[*emr.Client](ctx, names.EMR, make(map[string]any)))
 }
 
 func (c *AWSClient) EMRContainersClient(ctx context.Context) *emrcontainers.Client {
-	return errs.Must(client[*emrcontainers.Client](ctx, c, names.EMRContainers, make(map[string]any)))
+	return errs.Must(c.client[*emrcontainers.Client](ctx, names.EMRContainers, make(map[string]any)))
 }
 
 func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless.Client {
-	return errs.Must(client[*emrserverless.Client](ctx, c, names.EMRServerless, make(map[string]any)))
+	return errs.Must(c.client[*emrserverless.Client](ctx, names.EMRServerless, make(map[string]any)))
 }
 
 func (c *AWSClient) EVSClient(ctx context.Context) *evs.Client {
-	return errs.Must(client[*evs.Client](ctx, c, names.EVS, make(map[string]any)))
+	return errs.Must(c.client[*evs.Client](ctx, names.EVS, make(map[string]any)))
 }
 
 func (c *AWSClient) ElastiCacheClient(ctx context.Context) *elasticache.Client {
-	return errs.Must(client[*elasticache.Client](ctx, c, names.ElastiCache, make(map[string]any)))
+	return errs.Must(c.client[*elasticache.Client](ctx, names.ElastiCache, make(map[string]any)))
 }
 
 func (c *AWSClient) ElasticBeanstalkClient(ctx context.Context) *elasticbeanstalk.Client {
-	return errs.Must(client[*elasticbeanstalk.Client](ctx, c, names.ElasticBeanstalk, make(map[string]any)))
+	return errs.Must(c.client[*elasticbeanstalk.Client](ctx, names.ElasticBeanstalk, make(map[string]any)))
 }
 
 func (c *AWSClient) ElasticTranscoderClient(ctx context.Context) *elastictranscoder.Client {
-	return errs.Must(client[*elastictranscoder.Client](ctx, c, names.ElasticTranscoder, make(map[string]any)))
+	return errs.Must(c.client[*elastictranscoder.Client](ctx, names.ElasticTranscoder, make(map[string]any)))
 }
 
 func (c *AWSClient) ElasticsearchClient(ctx context.Context) *elasticsearchservice.Client {
-	return errs.Must(client[*elasticsearchservice.Client](ctx, c, names.Elasticsearch, make(map[string]any)))
+	return errs.Must(c.client[*elasticsearchservice.Client](ctx, names.Elasticsearch, make(map[string]any)))
 }
 
 func (c *AWSClient) EventBridgeV2Client(ctx context.Context) *eventbridgev2.Client {
-	return errs.Must(client[*eventbridgev2.Client](ctx, c, names.EventBridgeV2, make(map[string]any)))
+	return errs.Must(c.client[*eventbridgev2.Client](ctx, names.EventBridgeV2, make(map[string]any)))
 }
 
 func (c *AWSClient) EventsClient(ctx context.Context) *eventbridge.Client {
-	return errs.Must(client[*eventbridge.Client](ctx, c, names.Events, make(map[string]any)))
+	return errs.Must(c.client[*eventbridge.Client](ctx, names.Events, make(map[string]any)))
 }
 
 func (c *AWSClient) EvidentlyClient(ctx context.Context) *evidently.Client {
-	return errs.Must(client[*evidently.Client](ctx, c, names.Evidently, make(map[string]any)))
+	return errs.Must(c.client[*evidently.Client](ctx, names.Evidently, make(map[string]any)))
 }
 
 func (c *AWSClient) FISClient(ctx context.Context) *fis.Client {
-	return errs.Must(client[*fis.Client](ctx, c, names.FIS, make(map[string]any)))
+	return errs.Must(c.client[*fis.Client](ctx, names.FIS, make(map[string]any)))
 }
 
 func (c *AWSClient) FMSClient(ctx context.Context) *fms.Client {
-	return errs.Must(client[*fms.Client](ctx, c, names.FMS, make(map[string]any)))
+	return errs.Must(c.client[*fms.Client](ctx, names.FMS, make(map[string]any)))
 }
 
 func (c *AWSClient) FSxClient(ctx context.Context) *fsx.Client {
-	return errs.Must(client[*fsx.Client](ctx, c, names.FSx, make(map[string]any)))
+	return errs.Must(c.client[*fsx.Client](ctx, names.FSx, make(map[string]any)))
 }
 
 func (c *AWSClient) FinSpaceClient(ctx context.Context) *finspace.Client {
-	return errs.Must(client[*finspace.Client](ctx, c, names.FinSpace, make(map[string]any)))
+	return errs.Must(c.client[*finspace.Client](ctx, names.FinSpace, make(map[string]any)))
 }
 
 func (c *AWSClient) FirehoseClient(ctx context.Context) *firehose.Client {
-	return errs.Must(client[*firehose.Client](ctx, c, names.Firehose, make(map[string]any)))
+	return errs.Must(c.client[*firehose.Client](ctx, names.Firehose, make(map[string]any)))
 }
 
 func (c *AWSClient) GameLiftClient(ctx context.Context) *gamelift.Client {
-	return errs.Must(client[*gamelift.Client](ctx, c, names.GameLift, make(map[string]any)))
+	return errs.Must(c.client[*gamelift.Client](ctx, names.GameLift, make(map[string]any)))
 }
 
 func (c *AWSClient) GlacierClient(ctx context.Context) *glacier.Client {
-	return errs.Must(client[*glacier.Client](ctx, c, names.Glacier, make(map[string]any)))
+	return errs.Must(c.client[*glacier.Client](ctx, names.Glacier, make(map[string]any)))
 }
 
 func (c *AWSClient) GlobalAcceleratorClient(ctx context.Context) *globalaccelerator.Client {
-	return errs.Must(client[*globalaccelerator.Client](ctx, c, names.GlobalAccelerator, make(map[string]any)))
+	return errs.Must(c.client[*globalaccelerator.Client](ctx, names.GlobalAccelerator, make(map[string]any)))
 }
 
 func (c *AWSClient) GlueClient(ctx context.Context) *glue.Client {
-	return errs.Must(client[*glue.Client](ctx, c, names.Glue, make(map[string]any)))
+	return errs.Must(c.client[*glue.Client](ctx, names.Glue, make(map[string]any)))
 }
 
 func (c *AWSClient) GrafanaClient(ctx context.Context) *grafana.Client {
-	return errs.Must(client[*grafana.Client](ctx, c, names.Grafana, make(map[string]any)))
+	return errs.Must(c.client[*grafana.Client](ctx, names.Grafana, make(map[string]any)))
 }
 
 func (c *AWSClient) GreengrassClient(ctx context.Context) *greengrass.Client {
-	return errs.Must(client[*greengrass.Client](ctx, c, names.Greengrass, make(map[string]any)))
+	return errs.Must(c.client[*greengrass.Client](ctx, names.Greengrass, make(map[string]any)))
 }
 
 func (c *AWSClient) GroundStationClient(ctx context.Context) *groundstation.Client {
-	return errs.Must(client[*groundstation.Client](ctx, c, names.GroundStation, make(map[string]any)))
+	return errs.Must(c.client[*groundstation.Client](ctx, names.GroundStation, make(map[string]any)))
 }
 
 func (c *AWSClient) GuardDutyClient(ctx context.Context) *guardduty.Client {
-	return errs.Must(client[*guardduty.Client](ctx, c, names.GuardDuty, make(map[string]any)))
+	return errs.Must(c.client[*guardduty.Client](ctx, names.GuardDuty, make(map[string]any)))
 }
 
 func (c *AWSClient) HealthLakeClient(ctx context.Context) *healthlake.Client {
-	return errs.Must(client[*healthlake.Client](ctx, c, names.HealthLake, make(map[string]any)))
+	return errs.Must(c.client[*healthlake.Client](ctx, names.HealthLake, make(map[string]any)))
 }
 
 func (c *AWSClient) IAMClient(ctx context.Context) *iam.Client {
-	return errs.Must(client[*iam.Client](ctx, c, names.IAM, make(map[string]any)))
+	return errs.Must(c.client[*iam.Client](ctx, names.IAM, make(map[string]any)))
 }
 
 func (c *AWSClient) IVSClient(ctx context.Context) *ivs.Client {
-	return errs.Must(client[*ivs.Client](ctx, c, names.IVS, make(map[string]any)))
+	return errs.Must(c.client[*ivs.Client](ctx, names.IVS, make(map[string]any)))
 }
 
 func (c *AWSClient) IVSChatClient(ctx context.Context) *ivschat.Client {
-	return errs.Must(client[*ivschat.Client](ctx, c, names.IVSChat, make(map[string]any)))
+	return errs.Must(c.client[*ivschat.Client](ctx, names.IVSChat, make(map[string]any)))
 }
 
 func (c *AWSClient) IdentityStoreClient(ctx context.Context) *identitystore.Client {
-	return errs.Must(client[*identitystore.Client](ctx, c, names.IdentityStore, make(map[string]any)))
+	return errs.Must(c.client[*identitystore.Client](ctx, names.IdentityStore, make(map[string]any)))
 }
 
 func (c *AWSClient) ImageBuilderClient(ctx context.Context) *imagebuilder.Client {
-	return errs.Must(client[*imagebuilder.Client](ctx, c, names.ImageBuilder, make(map[string]any)))
+	return errs.Must(c.client[*imagebuilder.Client](ctx, names.ImageBuilder, make(map[string]any)))
 }
 
 func (c *AWSClient) InspectorClient(ctx context.Context) *inspector.Client {
-	return errs.Must(client[*inspector.Client](ctx, c, names.Inspector, make(map[string]any)))
+	return errs.Must(c.client[*inspector.Client](ctx, names.Inspector, make(map[string]any)))
 }
 
 func (c *AWSClient) Inspector2Client(ctx context.Context) *inspector2.Client {
-	return errs.Must(client[*inspector2.Client](ctx, c, names.Inspector2, make(map[string]any)))
+	return errs.Must(c.client[*inspector2.Client](ctx, names.Inspector2, make(map[string]any)))
 }
 
 func (c *AWSClient) InterconnectClient(ctx context.Context) *interconnect.Client {
-	return errs.Must(client[*interconnect.Client](ctx, c, names.Interconnect, make(map[string]any)))
+	return errs.Must(c.client[*interconnect.Client](ctx, names.Interconnect, make(map[string]any)))
 }
 
 func (c *AWSClient) InternetMonitorClient(ctx context.Context) *internetmonitor.Client {
-	return errs.Must(client[*internetmonitor.Client](ctx, c, names.InternetMonitor, make(map[string]any)))
+	return errs.Must(c.client[*internetmonitor.Client](ctx, names.InternetMonitor, make(map[string]any)))
 }
 
 func (c *AWSClient) InvoicingClient(ctx context.Context) *invoicing.Client {
-	return errs.Must(client[*invoicing.Client](ctx, c, names.Invoicing, make(map[string]any)))
+	return errs.Must(c.client[*invoicing.Client](ctx, names.Invoicing, make(map[string]any)))
 }
 
 func (c *AWSClient) IoTClient(ctx context.Context) *iot.Client {
-	return errs.Must(client[*iot.Client](ctx, c, names.IoT, make(map[string]any)))
+	return errs.Must(c.client[*iot.Client](ctx, names.IoT, make(map[string]any)))
 }
 
 func (c *AWSClient) KMSClient(ctx context.Context) *kms.Client {
-	return errs.Must(client[*kms.Client](ctx, c, names.KMS, make(map[string]any)))
+	return errs.Must(c.client[*kms.Client](ctx, names.KMS, make(map[string]any)))
 }
 
 func (c *AWSClient) KafkaClient(ctx context.Context) *kafka.Client {
-	return errs.Must(client[*kafka.Client](ctx, c, names.Kafka, make(map[string]any)))
+	return errs.Must(c.client[*kafka.Client](ctx, names.Kafka, make(map[string]any)))
 }
 
 func (c *AWSClient) KafkaConnectClient(ctx context.Context) *kafkaconnect.Client {
-	return errs.Must(client[*kafkaconnect.Client](ctx, c, names.KafkaConnect, make(map[string]any)))
+	return errs.Must(c.client[*kafkaconnect.Client](ctx, names.KafkaConnect, make(map[string]any)))
 }
 
 func (c *AWSClient) KendraClient(ctx context.Context) *kendra.Client {
-	return errs.Must(client[*kendra.Client](ctx, c, names.Kendra, make(map[string]any)))
+	return errs.Must(c.client[*kendra.Client](ctx, names.Kendra, make(map[string]any)))
 }
 
 func (c *AWSClient) KeyspacesClient(ctx context.Context) *keyspaces.Client {
-	return errs.Must(client[*keyspaces.Client](ctx, c, names.Keyspaces, make(map[string]any)))
+	return errs.Must(c.client[*keyspaces.Client](ctx, names.Keyspaces, make(map[string]any)))
 }
 
 func (c *AWSClient) KinesisClient(ctx context.Context) *kinesis.Client {
-	return errs.Must(client[*kinesis.Client](ctx, c, names.Kinesis, make(map[string]any)))
+	return errs.Must(c.client[*kinesis.Client](ctx, names.Kinesis, make(map[string]any)))
 }
 
 func (c *AWSClient) KinesisAnalyticsClient(ctx context.Context) *kinesisanalytics.Client {
-	return errs.Must(client[*kinesisanalytics.Client](ctx, c, names.KinesisAnalytics, make(map[string]any)))
+	return errs.Must(c.client[*kinesisanalytics.Client](ctx, names.KinesisAnalytics, make(map[string]any)))
 }
 
 func (c *AWSClient) KinesisAnalyticsV2Client(ctx context.Context) *kinesisanalyticsv2.Client {
-	return errs.Must(client[*kinesisanalyticsv2.Client](ctx, c, names.KinesisAnalyticsV2, make(map[string]any)))
+	return errs.Must(c.client[*kinesisanalyticsv2.Client](ctx, names.KinesisAnalyticsV2, make(map[string]any)))
 }
 
 func (c *AWSClient) KinesisVideoClient(ctx context.Context) *kinesisvideo.Client {
-	return errs.Must(client[*kinesisvideo.Client](ctx, c, names.KinesisVideo, make(map[string]any)))
+	return errs.Must(c.client[*kinesisvideo.Client](ctx, names.KinesisVideo, make(map[string]any)))
 }
 
 func (c *AWSClient) LakeFormationClient(ctx context.Context) *lakeformation.Client {
-	return errs.Must(client[*lakeformation.Client](ctx, c, names.LakeFormation, make(map[string]any)))
+	return errs.Must(c.client[*lakeformation.Client](ctx, names.LakeFormation, make(map[string]any)))
 }
 
 func (c *AWSClient) LambdaClient(ctx context.Context) *lambda.Client {
-	return errs.Must(client[*lambda.Client](ctx, c, names.Lambda, make(map[string]any)))
+	return errs.Must(c.client[*lambda.Client](ctx, names.Lambda, make(map[string]any)))
 }
 
 func (c *AWSClient) LambdaCoreClient(ctx context.Context) *lambdacore.Client {
-	return errs.Must(client[*lambdacore.Client](ctx, c, names.LambdaCore, make(map[string]any)))
+	return errs.Must(c.client[*lambdacore.Client](ctx, names.LambdaCore, make(map[string]any)))
 }
 
 func (c *AWSClient) LambdaMicroVMsClient(ctx context.Context) *lambdamicrovms.Client {
-	return errs.Must(client[*lambdamicrovms.Client](ctx, c, names.LambdaMicroVMs, make(map[string]any)))
+	return errs.Must(c.client[*lambdamicrovms.Client](ctx, names.LambdaMicroVMs, make(map[string]any)))
 }
 
 func (c *AWSClient) LambdaWebClient(ctx context.Context) *lambdaweb.Client {
-	return errs.Must(client[*lambdaweb.Client](ctx, c, names.LambdaWeb, make(map[string]any)))
+	return errs.Must(c.client[*lambdaweb.Client](ctx, names.LambdaWeb, make(map[string]any)))
 }
 
 func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard.Client {
-	return errs.Must(client[*launchwizard.Client](ctx, c, names.LaunchWizard, make(map[string]any)))
+	return errs.Must(c.client[*launchwizard.Client](ctx, names.LaunchWizard, make(map[string]any)))
 }
 
 func (c *AWSClient) LexModelsClient(ctx context.Context) *lexmodelbuildingservice.Client {
-	return errs.Must(client[*lexmodelbuildingservice.Client](ctx, c, names.LexModels, make(map[string]any)))
+	return errs.Must(c.client[*lexmodelbuildingservice.Client](ctx, names.LexModels, make(map[string]any)))
 }
 
 func (c *AWSClient) LexV2ModelsClient(ctx context.Context) *lexmodelsv2.Client {
-	return errs.Must(client[*lexmodelsv2.Client](ctx, c, names.LexV2Models, make(map[string]any)))
+	return errs.Must(c.client[*lexmodelsv2.Client](ctx, names.LexV2Models, make(map[string]any)))
 }
 
 func (c *AWSClient) LicenseManagerClient(ctx context.Context) *licensemanager.Client {
-	return errs.Must(client[*licensemanager.Client](ctx, c, names.LicenseManager, make(map[string]any)))
+	return errs.Must(c.client[*licensemanager.Client](ctx, names.LicenseManager, make(map[string]any)))
 }
 
 func (c *AWSClient) LightsailClient(ctx context.Context) *lightsail.Client {
-	return errs.Must(client[*lightsail.Client](ctx, c, names.Lightsail, make(map[string]any)))
+	return errs.Must(c.client[*lightsail.Client](ctx, names.Lightsail, make(map[string]any)))
 }
 
 func (c *AWSClient) LocationClient(ctx context.Context) *location.Client {
-	return errs.Must(client[*location.Client](ctx, c, names.Location, make(map[string]any)))
+	return errs.Must(c.client[*location.Client](ctx, names.Location, make(map[string]any)))
 }
 
 func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs.Client {
-	return errs.Must(client[*cloudwatchlogs.Client](ctx, c, names.Logs, make(map[string]any)))
+	return errs.Must(c.client[*cloudwatchlogs.Client](ctx, names.Logs, make(map[string]any)))
 }
 
 func (c *AWSClient) M2Client(ctx context.Context) *m2.Client {
-	return errs.Must(client[*m2.Client](ctx, c, names.M2, make(map[string]any)))
+	return errs.Must(c.client[*m2.Client](ctx, names.M2, make(map[string]any)))
 }
 
 func (c *AWSClient) MPAClient(ctx context.Context) *mpa.Client {
-	return errs.Must(client[*mpa.Client](ctx, c, names.MPA, make(map[string]any)))
+	return errs.Must(c.client[*mpa.Client](ctx, names.MPA, make(map[string]any)))
 }
 
 func (c *AWSClient) MQClient(ctx context.Context) *mq.Client {
-	return errs.Must(client[*mq.Client](ctx, c, names.MQ, make(map[string]any)))
+	return errs.Must(c.client[*mq.Client](ctx, names.MQ, make(map[string]any)))
 }
 
 func (c *AWSClient) MWAAClient(ctx context.Context) *mwaa.Client {
-	return errs.Must(client[*mwaa.Client](ctx, c, names.MWAA, make(map[string]any)))
+	return errs.Must(c.client[*mwaa.Client](ctx, names.MWAA, make(map[string]any)))
 }
 
 func (c *AWSClient) MWAAServerlessClient(ctx context.Context) *mwaaserverless.Client {
-	return errs.Must(client[*mwaaserverless.Client](ctx, c, names.MWAAServerless, make(map[string]any)))
+	return errs.Must(c.client[*mwaaserverless.Client](ctx, names.MWAAServerless, make(map[string]any)))
 }
 
 func (c *AWSClient) Macie2Client(ctx context.Context) *macie2.Client {
-	return errs.Must(client[*macie2.Client](ctx, c, names.Macie2, make(map[string]any)))
+	return errs.Must(c.client[*macie2.Client](ctx, names.Macie2, make(map[string]any)))
 }
 
 func (c *AWSClient) MailManagerClient(ctx context.Context) *mailmanager.Client {
-	return errs.Must(client[*mailmanager.Client](ctx, c, names.MailManager, make(map[string]any)))
+	return errs.Must(c.client[*mailmanager.Client](ctx, names.MailManager, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaConnectClient(ctx context.Context) *mediaconnect.Client {
-	return errs.Must(client[*mediaconnect.Client](ctx, c, names.MediaConnect, make(map[string]any)))
+	return errs.Must(c.client[*mediaconnect.Client](ctx, names.MediaConnect, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaConvertClient(ctx context.Context) *mediaconvert.Client {
-	return errs.Must(client[*mediaconvert.Client](ctx, c, names.MediaConvert, make(map[string]any)))
+	return errs.Must(c.client[*mediaconvert.Client](ctx, names.MediaConvert, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaLiveClient(ctx context.Context) *medialive.Client {
-	return errs.Must(client[*medialive.Client](ctx, c, names.MediaLive, make(map[string]any)))
+	return errs.Must(c.client[*medialive.Client](ctx, names.MediaLive, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaPackageClient(ctx context.Context) *mediapackage.Client {
-	return errs.Must(client[*mediapackage.Client](ctx, c, names.MediaPackage, make(map[string]any)))
+	return errs.Must(c.client[*mediapackage.Client](ctx, names.MediaPackage, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaPackageV2Client(ctx context.Context) *mediapackagev2.Client {
-	return errs.Must(client[*mediapackagev2.Client](ctx, c, names.MediaPackageV2, make(map[string]any)))
+	return errs.Must(c.client[*mediapackagev2.Client](ctx, names.MediaPackageV2, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaPackageVODClient(ctx context.Context) *mediapackagevod.Client {
-	return errs.Must(client[*mediapackagevod.Client](ctx, c, names.MediaPackageVOD, make(map[string]any)))
+	return errs.Must(c.client[*mediapackagevod.Client](ctx, names.MediaPackageVOD, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaStoreClient(ctx context.Context) *mediastore.Client {
-	return errs.Must(client[*mediastore.Client](ctx, c, names.MediaStore, make(map[string]any)))
+	return errs.Must(c.client[*mediastore.Client](ctx, names.MediaStore, make(map[string]any)))
 }
 
 func (c *AWSClient) MemoryDBClient(ctx context.Context) *memorydb.Client {
-	return errs.Must(client[*memorydb.Client](ctx, c, names.MemoryDB, make(map[string]any)))
+	return errs.Must(c.client[*memorydb.Client](ctx, names.MemoryDB, make(map[string]any)))
 }
 
 func (c *AWSClient) MgnClient(ctx context.Context) *mgn.Client {
-	return errs.Must(client[*mgn.Client](ctx, c, names.Mgn, make(map[string]any)))
+	return errs.Must(c.client[*mgn.Client](ctx, names.Mgn, make(map[string]any)))
 }
 
 func (c *AWSClient) NeptuneClient(ctx context.Context) *neptune.Client {
-	return errs.Must(client[*neptune.Client](ctx, c, names.Neptune, make(map[string]any)))
+	return errs.Must(c.client[*neptune.Client](ctx, names.Neptune, make(map[string]any)))
 }
 
 func (c *AWSClient) NeptuneGraphClient(ctx context.Context) *neptunegraph.Client {
-	return errs.Must(client[*neptunegraph.Client](ctx, c, names.NeptuneGraph, make(map[string]any)))
+	return errs.Must(c.client[*neptunegraph.Client](ctx, names.NeptuneGraph, make(map[string]any)))
 }
 
 func (c *AWSClient) NetworkFirewallClient(ctx context.Context) *networkfirewall.Client {
-	return errs.Must(client[*networkfirewall.Client](ctx, c, names.NetworkFirewall, make(map[string]any)))
+	return errs.Must(c.client[*networkfirewall.Client](ctx, names.NetworkFirewall, make(map[string]any)))
 }
 
 func (c *AWSClient) NetworkFlowMonitorClient(ctx context.Context) *networkflowmonitor.Client {
-	return errs.Must(client[*networkflowmonitor.Client](ctx, c, names.NetworkFlowMonitor, make(map[string]any)))
+	return errs.Must(c.client[*networkflowmonitor.Client](ctx, names.NetworkFlowMonitor, make(map[string]any)))
 }
 
 func (c *AWSClient) NetworkManagerClient(ctx context.Context) *networkmanager.Client {
-	return errs.Must(client[*networkmanager.Client](ctx, c, names.NetworkManager, make(map[string]any)))
+	return errs.Must(c.client[*networkmanager.Client](ctx, names.NetworkManager, make(map[string]any)))
 }
 
 func (c *AWSClient) NetworkMonitorClient(ctx context.Context) *networkmonitor.Client {
-	return errs.Must(client[*networkmonitor.Client](ctx, c, names.NetworkMonitor, make(map[string]any)))
+	return errs.Must(c.client[*networkmonitor.Client](ctx, names.NetworkMonitor, make(map[string]any)))
 }
 
 func (c *AWSClient) NetworkSecurityManagerClient(ctx context.Context) *networksecuritymanager.Client {
-	return errs.Must(client[*networksecuritymanager.Client](ctx, c, names.NetworkSecurityManager, make(map[string]any)))
+	return errs.Must(c.client[*networksecuritymanager.Client](ctx, names.NetworkSecurityManager, make(map[string]any)))
 }
 
 func (c *AWSClient) NotificationsClient(ctx context.Context) *notifications.Client {
-	return errs.Must(client[*notifications.Client](ctx, c, names.Notifications, make(map[string]any)))
+	return errs.Must(c.client[*notifications.Client](ctx, names.Notifications, make(map[string]any)))
 }
 
 func (c *AWSClient) NotificationsContactsClient(ctx context.Context) *notificationscontacts.Client {
-	return errs.Must(client[*notificationscontacts.Client](ctx, c, names.NotificationsContacts, make(map[string]any)))
+	return errs.Must(c.client[*notificationscontacts.Client](ctx, names.NotificationsContacts, make(map[string]any)))
 }
 
 func (c *AWSClient) ODBClient(ctx context.Context) *odb.Client {
-	return errs.Must(client[*odb.Client](ctx, c, names.ODB, make(map[string]any)))
+	return errs.Must(c.client[*odb.Client](ctx, names.ODB, make(map[string]any)))
 }
 
 func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam.Client {
-	return errs.Must(client[*oam.Client](ctx, c, names.ObservabilityAccessManager, make(map[string]any)))
+	return errs.Must(c.client[*oam.Client](ctx, names.ObservabilityAccessManager, make(map[string]any)))
 }
 
 func (c *AWSClient) ObservabilityAdminClient(ctx context.Context) *observabilityadmin.Client {
-	return errs.Must(client[*observabilityadmin.Client](ctx, c, names.ObservabilityAdmin, make(map[string]any)))
+	return errs.Must(c.client[*observabilityadmin.Client](ctx, names.ObservabilityAdmin, make(map[string]any)))
 }
 
 func (c *AWSClient) OpenSearchClient(ctx context.Context) *opensearch.Client {
-	return errs.Must(client[*opensearch.Client](ctx, c, names.OpenSearch, make(map[string]any)))
+	return errs.Must(c.client[*opensearch.Client](ctx, names.OpenSearch, make(map[string]any)))
 }
 
 func (c *AWSClient) OpenSearchIngestionClient(ctx context.Context) *osis.Client {
-	return errs.Must(client[*osis.Client](ctx, c, names.OpenSearchIngestion, make(map[string]any)))
+	return errs.Must(c.client[*osis.Client](ctx, names.OpenSearchIngestion, make(map[string]any)))
 }
 
 func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchserverless.Client {
-	return errs.Must(client[*opensearchserverless.Client](ctx, c, names.OpenSearchServerless, make(map[string]any)))
+	return errs.Must(c.client[*opensearchserverless.Client](ctx, names.OpenSearchServerless, make(map[string]any)))
 }
 
 func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations.Client {
-	return errs.Must(client[*organizations.Client](ctx, c, names.Organizations, make(map[string]any)))
+	return errs.Must(c.client[*organizations.Client](ctx, names.Organizations, make(map[string]any)))
 }
 
 func (c *AWSClient) OutpostsClient(ctx context.Context) *outposts.Client {
-	return errs.Must(client[*outposts.Client](ctx, c, names.Outposts, make(map[string]any)))
+	return errs.Must(c.client[*outposts.Client](ctx, names.Outposts, make(map[string]any)))
 }
 
 func (c *AWSClient) PCAConnectorADClient(ctx context.Context) *pcaconnectorad.Client {
-	return errs.Must(client[*pcaconnectorad.Client](ctx, c, names.PCAConnectorAD, make(map[string]any)))
+	return errs.Must(c.client[*pcaconnectorad.Client](ctx, names.PCAConnectorAD, make(map[string]any)))
 }
 
 func (c *AWSClient) PCSClient(ctx context.Context) *pcs.Client {
-	return errs.Must(client[*pcs.Client](ctx, c, names.PCS, make(map[string]any)))
+	return errs.Must(c.client[*pcs.Client](ctx, names.PCS, make(map[string]any)))
 }
 
 func (c *AWSClient) PaymentCryptographyClient(ctx context.Context) *paymentcryptography.Client {
-	return errs.Must(client[*paymentcryptography.Client](ctx, c, names.PaymentCryptography, make(map[string]any)))
+	return errs.Must(c.client[*paymentcryptography.Client](ctx, names.PaymentCryptography, make(map[string]any)))
 }
 
 func (c *AWSClient) PinpointClient(ctx context.Context) *pinpoint.Client {
-	return errs.Must(client[*pinpoint.Client](ctx, c, names.Pinpoint, make(map[string]any)))
+	return errs.Must(c.client[*pinpoint.Client](ctx, names.Pinpoint, make(map[string]any)))
 }
 
 func (c *AWSClient) PinpointSMSVoiceV2Client(ctx context.Context) *pinpointsmsvoicev2.Client {
-	return errs.Must(client[*pinpointsmsvoicev2.Client](ctx, c, names.PinpointSMSVoiceV2, make(map[string]any)))
+	return errs.Must(c.client[*pinpointsmsvoicev2.Client](ctx, names.PinpointSMSVoiceV2, make(map[string]any)))
 }
 
 func (c *AWSClient) PipesClient(ctx context.Context) *pipes.Client {
-	return errs.Must(client[*pipes.Client](ctx, c, names.Pipes, make(map[string]any)))
+	return errs.Must(c.client[*pipes.Client](ctx, names.Pipes, make(map[string]any)))
 }
 
 func (c *AWSClient) PollyClient(ctx context.Context) *polly.Client {
-	return errs.Must(client[*polly.Client](ctx, c, names.Polly, make(map[string]any)))
+	return errs.Must(c.client[*polly.Client](ctx, names.Polly, make(map[string]any)))
 }
 
 func (c *AWSClient) PricingClient(ctx context.Context) *pricing.Client {
-	return errs.Must(client[*pricing.Client](ctx, c, names.Pricing, make(map[string]any)))
+	return errs.Must(c.client[*pricing.Client](ctx, names.Pricing, make(map[string]any)))
 }
 
 func (c *AWSClient) PricingPlanManagerClient(ctx context.Context) *pricingplanmanager.Client {
-	return errs.Must(client[*pricingplanmanager.Client](ctx, c, names.PricingPlanManager, make(map[string]any)))
+	return errs.Must(c.client[*pricingplanmanager.Client](ctx, names.PricingPlanManager, make(map[string]any)))
 }
 
 func (c *AWSClient) QBusinessClient(ctx context.Context) *qbusiness.Client {
-	return errs.Must(client[*qbusiness.Client](ctx, c, names.QBusiness, make(map[string]any)))
+	return errs.Must(c.client[*qbusiness.Client](ctx, names.QBusiness, make(map[string]any)))
 }
 
 func (c *AWSClient) QLDBClient(ctx context.Context) *qldb.Client {
-	return errs.Must(client[*qldb.Client](ctx, c, names.QLDB, make(map[string]any)))
+	return errs.Must(c.client[*qldb.Client](ctx, names.QLDB, make(map[string]any)))
 }
 
 func (c *AWSClient) QuickSightClient(ctx context.Context) *quicksight.Client {
-	return errs.Must(client[*quicksight.Client](ctx, c, names.QuickSight, make(map[string]any)))
+	return errs.Must(c.client[*quicksight.Client](ctx, names.QuickSight, make(map[string]any)))
 }
 
 func (c *AWSClient) RAMClient(ctx context.Context) *ram.Client {
-	return errs.Must(client[*ram.Client](ctx, c, names.RAM, make(map[string]any)))
+	return errs.Must(c.client[*ram.Client](ctx, names.RAM, make(map[string]any)))
 }
 
 func (c *AWSClient) RBinClient(ctx context.Context) *rbin.Client {
-	return errs.Must(client[*rbin.Client](ctx, c, names.RBin, make(map[string]any)))
+	return errs.Must(c.client[*rbin.Client](ctx, names.RBin, make(map[string]any)))
 }
 
 func (c *AWSClient) RDSClient(ctx context.Context) *rds.Client {
-	return errs.Must(client[*rds.Client](ctx, c, names.RDS, make(map[string]any)))
+	return errs.Must(c.client[*rds.Client](ctx, names.RDS, make(map[string]any)))
 }
 
 func (c *AWSClient) RDSDataClient(ctx context.Context) *rdsdata.Client {
-	return errs.Must(client[*rdsdata.Client](ctx, c, names.RDSData, make(map[string]any)))
+	return errs.Must(c.client[*rdsdata.Client](ctx, names.RDSData, make(map[string]any)))
 }
 
 func (c *AWSClient) RUMClient(ctx context.Context) *rum.Client {
-	return errs.Must(client[*rum.Client](ctx, c, names.RUM, make(map[string]any)))
+	return errs.Must(c.client[*rum.Client](ctx, names.RUM, make(map[string]any)))
 }
 
 func (c *AWSClient) RedshiftClient(ctx context.Context) *redshift.Client {
-	return errs.Must(client[*redshift.Client](ctx, c, names.Redshift, make(map[string]any)))
+	return errs.Must(c.client[*redshift.Client](ctx, names.Redshift, make(map[string]any)))
 }
 
 func (c *AWSClient) RedshiftDataClient(ctx context.Context) *redshiftdata.Client {
-	return errs.Must(client[*redshiftdata.Client](ctx, c, names.RedshiftData, make(map[string]any)))
+	return errs.Must(c.client[*redshiftdata.Client](ctx, names.RedshiftData, make(map[string]any)))
 }
 
 func (c *AWSClient) RedshiftServerlessClient(ctx context.Context) *redshiftserverless.Client {
-	return errs.Must(client[*redshiftserverless.Client](ctx, c, names.RedshiftServerless, make(map[string]any)))
+	return errs.Must(c.client[*redshiftserverless.Client](ctx, names.RedshiftServerless, make(map[string]any)))
 }
 
 func (c *AWSClient) RekognitionClient(ctx context.Context) *rekognition.Client {
-	return errs.Must(client[*rekognition.Client](ctx, c, names.Rekognition, make(map[string]any)))
+	return errs.Must(c.client[*rekognition.Client](ctx, names.Rekognition, make(map[string]any)))
 }
 
 func (c *AWSClient) ResilienceHubClient(ctx context.Context) *resiliencehub.Client {
-	return errs.Must(client[*resiliencehub.Client](ctx, c, names.ResilienceHub, make(map[string]any)))
+	return errs.Must(c.client[*resiliencehub.Client](ctx, names.ResilienceHub, make(map[string]any)))
 }
 
 func (c *AWSClient) ResilienceHubV2Client(ctx context.Context) *resiliencehubv2.Client {
-	return errs.Must(client[*resiliencehubv2.Client](ctx, c, names.ResilienceHubV2, make(map[string]any)))
+	return errs.Must(c.client[*resiliencehubv2.Client](ctx, names.ResilienceHubV2, make(map[string]any)))
 }
 
 func (c *AWSClient) ResourceExplorer2Client(ctx context.Context) *resourceexplorer2.Client {
-	return errs.Must(client[*resourceexplorer2.Client](ctx, c, names.ResourceExplorer2, make(map[string]any)))
+	return errs.Must(c.client[*resourceexplorer2.Client](ctx, names.ResourceExplorer2, make(map[string]any)))
 }
 
 func (c *AWSClient) ResourceGroupsClient(ctx context.Context) *resourcegroups.Client {
-	return errs.Must(client[*resourcegroups.Client](ctx, c, names.ResourceGroups, make(map[string]any)))
+	return errs.Must(c.client[*resourcegroups.Client](ctx, names.ResourceGroups, make(map[string]any)))
 }
 
 func (c *AWSClient) ResourceGroupsTaggingAPIClient(ctx context.Context) *resourcegroupstaggingapi.Client {
-	return errs.Must(client[*resourcegroupstaggingapi.Client](ctx, c, names.ResourceGroupsTaggingAPI, make(map[string]any)))
+	return errs.Must(c.client[*resourcegroupstaggingapi.Client](ctx, names.ResourceGroupsTaggingAPI, make(map[string]any)))
 }
 
 func (c *AWSClient) RolesAnywhereClient(ctx context.Context) *rolesanywhere.Client {
-	return errs.Must(client[*rolesanywhere.Client](ctx, c, names.RolesAnywhere, make(map[string]any)))
+	return errs.Must(c.client[*rolesanywhere.Client](ctx, names.RolesAnywhere, make(map[string]any)))
 }
 
 func (c *AWSClient) Route53Client(ctx context.Context) *route53.Client {
-	return errs.Must(client[*route53.Client](ctx, c, names.Route53, make(map[string]any)))
+	return errs.Must(c.client[*route53.Client](ctx, names.Route53, make(map[string]any)))
 }
 
 func (c *AWSClient) Route53DomainsClient(ctx context.Context) *route53domains.Client {
-	return errs.Must(client[*route53domains.Client](ctx, c, names.Route53Domains, make(map[string]any)))
+	return errs.Must(c.client[*route53domains.Client](ctx, names.Route53Domains, make(map[string]any)))
 }
 
 func (c *AWSClient) Route53ProfilesClient(ctx context.Context) *route53profiles.Client {
-	return errs.Must(client[*route53profiles.Client](ctx, c, names.Route53Profiles, make(map[string]any)))
+	return errs.Must(c.client[*route53profiles.Client](ctx, names.Route53Profiles, make(map[string]any)))
 }
 
 func (c *AWSClient) Route53RecoveryControlConfigClient(ctx context.Context) *route53recoverycontrolconfig.Client {
-	return errs.Must(client[*route53recoverycontrolconfig.Client](ctx, c, names.Route53RecoveryControlConfig, make(map[string]any)))
+	return errs.Must(c.client[*route53recoverycontrolconfig.Client](ctx, names.Route53RecoveryControlConfig, make(map[string]any)))
 }
 
 func (c *AWSClient) Route53RecoveryReadinessClient(ctx context.Context) *route53recoveryreadiness.Client {
-	return errs.Must(client[*route53recoveryreadiness.Client](ctx, c, names.Route53RecoveryReadiness, make(map[string]any)))
+	return errs.Must(c.client[*route53recoveryreadiness.Client](ctx, names.Route53RecoveryReadiness, make(map[string]any)))
 }
 
 func (c *AWSClient) Route53ResolverClient(ctx context.Context) *route53resolver.Client {
-	return errs.Must(client[*route53resolver.Client](ctx, c, names.Route53Resolver, make(map[string]any)))
+	return errs.Must(c.client[*route53resolver.Client](ctx, names.Route53Resolver, make(map[string]any)))
 }
 
 func (c *AWSClient) S3Client(ctx context.Context) *s3.Client {
-	return errs.Must(client[*s3.Client](ctx, c, names.S3, make(map[string]any)))
+	return errs.Must(c.client[*s3.Client](ctx, names.S3, make(map[string]any)))
 }
 
 func (c *AWSClient) S3ControlClient(ctx context.Context) *s3control.Client {
-	return errs.Must(client[*s3control.Client](ctx, c, names.S3Control, make(map[string]any)))
+	return errs.Must(c.client[*s3control.Client](ctx, names.S3Control, make(map[string]any)))
 }
 
 func (c *AWSClient) S3FilesClient(ctx context.Context) *s3files.Client {
-	return errs.Must(client[*s3files.Client](ctx, c, names.S3Files, make(map[string]any)))
+	return errs.Must(c.client[*s3files.Client](ctx, names.S3Files, make(map[string]any)))
 }
 
 func (c *AWSClient) S3OutpostsClient(ctx context.Context) *s3outposts.Client {
-	return errs.Must(client[*s3outposts.Client](ctx, c, names.S3Outposts, make(map[string]any)))
+	return errs.Must(c.client[*s3outposts.Client](ctx, names.S3Outposts, make(map[string]any)))
 }
 
 func (c *AWSClient) S3TablesClient(ctx context.Context) *s3tables.Client {
-	return errs.Must(client[*s3tables.Client](ctx, c, names.S3Tables, make(map[string]any)))
+	return errs.Must(c.client[*s3tables.Client](ctx, names.S3Tables, make(map[string]any)))
 }
 
 func (c *AWSClient) S3VectorsClient(ctx context.Context) *s3vectors.Client {
-	return errs.Must(client[*s3vectors.Client](ctx, c, names.S3Vectors, make(map[string]any)))
+	return errs.Must(c.client[*s3vectors.Client](ctx, names.S3Vectors, make(map[string]any)))
 }
 
 func (c *AWSClient) SESClient(ctx context.Context) *ses.Client {
-	return errs.Must(client[*ses.Client](ctx, c, names.SES, make(map[string]any)))
+	return errs.Must(c.client[*ses.Client](ctx, names.SES, make(map[string]any)))
 }
 
 func (c *AWSClient) SESV2Client(ctx context.Context) *sesv2.Client {
-	return errs.Must(client[*sesv2.Client](ctx, c, names.SESV2, make(map[string]any)))
+	return errs.Must(c.client[*sesv2.Client](ctx, names.SESV2, make(map[string]any)))
 }
 
 func (c *AWSClient) SFNClient(ctx context.Context) *sfn.Client {
-	return errs.Must(client[*sfn.Client](ctx, c, names.SFN, make(map[string]any)))
+	return errs.Must(c.client[*sfn.Client](ctx, names.SFN, make(map[string]any)))
 }
 
 func (c *AWSClient) SNSClient(ctx context.Context) *sns.Client {
-	return errs.Must(client[*sns.Client](ctx, c, names.SNS, make(map[string]any)))
+	return errs.Must(c.client[*sns.Client](ctx, names.SNS, make(map[string]any)))
 }
 
 func (c *AWSClient) SQSClient(ctx context.Context) *sqs.Client {
-	return errs.Must(client[*sqs.Client](ctx, c, names.SQS, make(map[string]any)))
+	return errs.Must(c.client[*sqs.Client](ctx, names.SQS, make(map[string]any)))
 }
 
 func (c *AWSClient) SSMClient(ctx context.Context) *ssm.Client {
-	return errs.Must(client[*ssm.Client](ctx, c, names.SSM, make(map[string]any)))
+	return errs.Must(c.client[*ssm.Client](ctx, names.SSM, make(map[string]any)))
 }
 
 func (c *AWSClient) SSMContactsClient(ctx context.Context) *ssmcontacts.Client {
-	return errs.Must(client[*ssmcontacts.Client](ctx, c, names.SSMContacts, make(map[string]any)))
+	return errs.Must(c.client[*ssmcontacts.Client](ctx, names.SSMContacts, make(map[string]any)))
 }
 
 func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents.Client {
-	return errs.Must(client[*ssmincidents.Client](ctx, c, names.SSMIncidents, make(map[string]any)))
+	return errs.Must(c.client[*ssmincidents.Client](ctx, names.SSMIncidents, make(map[string]any)))
 }
 
 func (c *AWSClient) SSMQuickSetupClient(ctx context.Context) *ssmquicksetup.Client {
-	return errs.Must(client[*ssmquicksetup.Client](ctx, c, names.SSMQuickSetup, make(map[string]any)))
+	return errs.Must(c.client[*ssmquicksetup.Client](ctx, names.SSMQuickSetup, make(map[string]any)))
 }
 
 func (c *AWSClient) SSMSAPClient(ctx context.Context) *ssmsap.Client {
-	return errs.Must(client[*ssmsap.Client](ctx, c, names.SSMSAP, make(map[string]any)))
+	return errs.Must(c.client[*ssmsap.Client](ctx, names.SSMSAP, make(map[string]any)))
 }
 
 func (c *AWSClient) SSOClient(ctx context.Context) *sso.Client {
-	return errs.Must(client[*sso.Client](ctx, c, names.SSO, make(map[string]any)))
+	return errs.Must(c.client[*sso.Client](ctx, names.SSO, make(map[string]any)))
 }
 
 func (c *AWSClient) SSOAdminClient(ctx context.Context) *ssoadmin.Client {
-	return errs.Must(client[*ssoadmin.Client](ctx, c, names.SSOAdmin, make(map[string]any)))
+	return errs.Must(c.client[*ssoadmin.Client](ctx, names.SSOAdmin, make(map[string]any)))
 }
 
 func (c *AWSClient) STSClient(ctx context.Context) *sts.Client {
-	return errs.Must(client[*sts.Client](ctx, c, names.STS, make(map[string]any)))
+	return errs.Must(c.client[*sts.Client](ctx, names.STS, make(map[string]any)))
 }
 
 func (c *AWSClient) SWFClient(ctx context.Context) *swf.Client {
-	return errs.Must(client[*swf.Client](ctx, c, names.SWF, make(map[string]any)))
+	return errs.Must(c.client[*swf.Client](ctx, names.SWF, make(map[string]any)))
 }
 
 func (c *AWSClient) SageMakerClient(ctx context.Context) *sagemaker.Client {
-	return errs.Must(client[*sagemaker.Client](ctx, c, names.SageMaker, make(map[string]any)))
+	return errs.Must(c.client[*sagemaker.Client](ctx, names.SageMaker, make(map[string]any)))
 }
 
 func (c *AWSClient) SavingsPlansClient(ctx context.Context) *savingsplans.Client {
-	return errs.Must(client[*savingsplans.Client](ctx, c, names.SavingsPlans, make(map[string]any)))
+	return errs.Must(c.client[*savingsplans.Client](ctx, names.SavingsPlans, make(map[string]any)))
 }
 
 func (c *AWSClient) SchedulerClient(ctx context.Context) *scheduler.Client {
-	return errs.Must(client[*scheduler.Client](ctx, c, names.Scheduler, make(map[string]any)))
+	return errs.Must(c.client[*scheduler.Client](ctx, names.Scheduler, make(map[string]any)))
 }
 
 func (c *AWSClient) SchemasClient(ctx context.Context) *schemas.Client {
-	return errs.Must(client[*schemas.Client](ctx, c, names.Schemas, make(map[string]any)))
+	return errs.Must(c.client[*schemas.Client](ctx, names.Schemas, make(map[string]any)))
 }
 
 func (c *AWSClient) SecretsManagerClient(ctx context.Context) *secretsmanager.Client {
-	return errs.Must(client[*secretsmanager.Client](ctx, c, names.SecretsManager, make(map[string]any)))
+	return errs.Must(c.client[*secretsmanager.Client](ctx, names.SecretsManager, make(map[string]any)))
 }
 
 func (c *AWSClient) SecurityHubClient(ctx context.Context) *securityhub.Client {
-	return errs.Must(client[*securityhub.Client](ctx, c, names.SecurityHub, make(map[string]any)))
+	return errs.Must(c.client[*securityhub.Client](ctx, names.SecurityHub, make(map[string]any)))
+}
+
+func (c *AWSClient) SecurityIRClient(ctx context.Context) *securityir.Client {
+	return errs.Must(c.client[*securityir.Client](ctx, names.SecurityIR, make(map[string]any)))
 }
 
 func (c *AWSClient) SecurityLakeClient(ctx context.Context) *securitylake.Client {
-	return errs.Must(client[*securitylake.Client](ctx, c, names.SecurityLake, make(map[string]any)))
+	return errs.Must(c.client[*securitylake.Client](ctx, names.SecurityLake, make(map[string]any)))
 }
 
 func (c *AWSClient) ServerlessRepoClient(ctx context.Context) *serverlessapplicationrepository.Client {
-	return errs.Must(client[*serverlessapplicationrepository.Client](ctx, c, names.ServerlessRepo, make(map[string]any)))
+	return errs.Must(c.client[*serverlessapplicationrepository.Client](ctx, names.ServerlessRepo, make(map[string]any)))
 }
 
 func (c *AWSClient) ServiceCatalogClient(ctx context.Context) *servicecatalog.Client {
-	return errs.Must(client[*servicecatalog.Client](ctx, c, names.ServiceCatalog, make(map[string]any)))
+	return errs.Must(c.client[*servicecatalog.Client](ctx, names.ServiceCatalog, make(map[string]any)))
 }
 
 func (c *AWSClient) ServiceCatalogAppRegistryClient(ctx context.Context) *servicecatalogappregistry.Client {
-	return errs.Must(client[*servicecatalogappregistry.Client](ctx, c, names.ServiceCatalogAppRegistry, make(map[string]any)))
+	return errs.Must(c.client[*servicecatalogappregistry.Client](ctx, names.ServiceCatalogAppRegistry, make(map[string]any)))
 }
 
 func (c *AWSClient) ServiceDiscoveryClient(ctx context.Context) *servicediscovery.Client {
-	return errs.Must(client[*servicediscovery.Client](ctx, c, names.ServiceDiscovery, make(map[string]any)))
+	return errs.Must(c.client[*servicediscovery.Client](ctx, names.ServiceDiscovery, make(map[string]any)))
 }
 
 func (c *AWSClient) ServiceQuotasClient(ctx context.Context) *servicequotas.Client {
-	return errs.Must(client[*servicequotas.Client](ctx, c, names.ServiceQuotas, make(map[string]any)))
+	return errs.Must(c.client[*servicequotas.Client](ctx, names.ServiceQuotas, make(map[string]any)))
 }
 
 func (c *AWSClient) ShieldClient(ctx context.Context) *shield.Client {
-	return errs.Must(client[*shield.Client](ctx, c, names.Shield, make(map[string]any)))
+	return errs.Must(c.client[*shield.Client](ctx, names.Shield, make(map[string]any)))
 }
 
 func (c *AWSClient) SignerClient(ctx context.Context) *signer.Client {
-	return errs.Must(client[*signer.Client](ctx, c, names.Signer, make(map[string]any)))
+	return errs.Must(c.client[*signer.Client](ctx, names.Signer, make(map[string]any)))
 }
 
 func (c *AWSClient) StorageGatewayClient(ctx context.Context) *storagegateway.Client {
-	return errs.Must(client[*storagegateway.Client](ctx, c, names.StorageGateway, make(map[string]any)))
+	return errs.Must(c.client[*storagegateway.Client](ctx, names.StorageGateway, make(map[string]any)))
 }
 
 func (c *AWSClient) SyntheticsClient(ctx context.Context) *synthetics.Client {
-	return errs.Must(client[*synthetics.Client](ctx, c, names.Synthetics, make(map[string]any)))
+	return errs.Must(c.client[*synthetics.Client](ctx, names.Synthetics, make(map[string]any)))
 }
 
 func (c *AWSClient) TaxSettingsClient(ctx context.Context) *taxsettings.Client {
-	return errs.Must(client[*taxsettings.Client](ctx, c, names.TaxSettings, make(map[string]any)))
+	return errs.Must(c.client[*taxsettings.Client](ctx, names.TaxSettings, make(map[string]any)))
 }
 
 func (c *AWSClient) TimestreamInfluxDBClient(ctx context.Context) *timestreaminfluxdb.Client {
-	return errs.Must(client[*timestreaminfluxdb.Client](ctx, c, names.TimestreamInfluxDB, make(map[string]any)))
+	return errs.Must(c.client[*timestreaminfluxdb.Client](ctx, names.TimestreamInfluxDB, make(map[string]any)))
 }
 
 func (c *AWSClient) TimestreamQueryClient(ctx context.Context) *timestreamquery.Client {
-	return errs.Must(client[*timestreamquery.Client](ctx, c, names.TimestreamQuery, make(map[string]any)))
+	return errs.Must(c.client[*timestreamquery.Client](ctx, names.TimestreamQuery, make(map[string]any)))
 }
 
 func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite.Client {
-	return errs.Must(client[*timestreamwrite.Client](ctx, c, names.TimestreamWrite, make(map[string]any)))
+	return errs.Must(c.client[*timestreamwrite.Client](ctx, names.TimestreamWrite, make(map[string]any)))
 }
 
 func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe.Client {
-	return errs.Must(client[*transcribe.Client](ctx, c, names.Transcribe, make(map[string]any)))
+	return errs.Must(c.client[*transcribe.Client](ctx, names.Transcribe, make(map[string]any)))
 }
 
 func (c *AWSClient) TransferClient(ctx context.Context) *transfer.Client {
-	return errs.Must(client[*transfer.Client](ctx, c, names.Transfer, make(map[string]any)))
+	return errs.Must(c.client[*transfer.Client](ctx, names.Transfer, make(map[string]any)))
 }
 
 func (c *AWSClient) UXCClient(ctx context.Context) *uxc.Client {
-	return errs.Must(client[*uxc.Client](ctx, c, names.UXC, make(map[string]any)))
+	return errs.Must(c.client[*uxc.Client](ctx, names.UXC, make(map[string]any)))
 }
 
 func (c *AWSClient) VPCLatticeClient(ctx context.Context) *vpclattice.Client {
-	return errs.Must(client[*vpclattice.Client](ctx, c, names.VPCLattice, make(map[string]any)))
+	return errs.Must(c.client[*vpclattice.Client](ctx, names.VPCLattice, make(map[string]any)))
 }
 
 func (c *AWSClient) VerifiedPermissionsClient(ctx context.Context) *verifiedpermissions.Client {
-	return errs.Must(client[*verifiedpermissions.Client](ctx, c, names.VerifiedPermissions, make(map[string]any)))
+	return errs.Must(c.client[*verifiedpermissions.Client](ctx, names.VerifiedPermissions, make(map[string]any)))
 }
 
 func (c *AWSClient) WAFClient(ctx context.Context) *waf.Client {
-	return errs.Must(client[*waf.Client](ctx, c, names.WAF, make(map[string]any)))
+	return errs.Must(c.client[*waf.Client](ctx, names.WAF, make(map[string]any)))
 }
 
 func (c *AWSClient) WAFRegionalClient(ctx context.Context) *wafregional.Client {
-	return errs.Must(client[*wafregional.Client](ctx, c, names.WAFRegional, make(map[string]any)))
+	return errs.Must(c.client[*wafregional.Client](ctx, names.WAFRegional, make(map[string]any)))
 }
 
 func (c *AWSClient) WAFV2Client(ctx context.Context) *wafv2.Client {
-	return errs.Must(client[*wafv2.Client](ctx, c, names.WAFV2, make(map[string]any)))
+	return errs.Must(c.client[*wafv2.Client](ctx, names.WAFV2, make(map[string]any)))
 }
 
 func (c *AWSClient) WellArchitectedClient(ctx context.Context) *wellarchitected.Client {
-	return errs.Must(client[*wellarchitected.Client](ctx, c, names.WellArchitected, make(map[string]any)))
+	return errs.Must(c.client[*wellarchitected.Client](ctx, names.WellArchitected, make(map[string]any)))
 }
 
 func (c *AWSClient) WorkMailClient(ctx context.Context) *workmail.Client {
-	return errs.Must(client[*workmail.Client](ctx, c, names.WorkMail, make(map[string]any)))
+	return errs.Must(c.client[*workmail.Client](ctx, names.WorkMail, make(map[string]any)))
 }
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces.Client {
-	return errs.Must(client[*workspaces.Client](ctx, c, names.WorkSpaces, make(map[string]any)))
+	return errs.Must(c.client[*workspaces.Client](ctx, names.WorkSpaces, make(map[string]any)))
 }
 
 func (c *AWSClient) WorkSpacesWebClient(ctx context.Context) *workspacesweb.Client {
-	return errs.Must(client[*workspacesweb.Client](ctx, c, names.WorkSpacesWeb, make(map[string]any)))
+	return errs.Must(c.client[*workspacesweb.Client](ctx, names.WorkSpacesWeb, make(map[string]any)))
 }
 
 func (c *AWSClient) XRayClient(ctx context.Context) *xray.Client {
-	return errs.Must(client[*xray.Client](ctx, c, names.XRay, make(map[string]any)))
+	return errs.Must(c.client[*xray.Client](ctx, names.XRay, make(map[string]any)))
 }

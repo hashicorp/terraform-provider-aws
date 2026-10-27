@@ -9,3 +9,11 @@ var (
 
 	FindPlanByARN = findPlanByARN
 )
+
+type (
+	ParallelStepModel = parallelStepModel
+	StepModel         = stepModel
+
+	RDSSwitchoverReadReplicaConfigModel = rdsSwitchoverReadReplicaConfigModel
+	RDSSwitchoverUngracefulModel        = rdsSwitchoverUngracefulModel
+)

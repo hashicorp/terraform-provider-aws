@@ -16,11 +16,34 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_observabilityadmin_dataset_integration", sweepDatasetIntegrations)
 	awsv2.Register("aws_observabilityadmin_s3_table_integration", sweepS3TableIntegrations)
 	awsv2.Register("aws_observabilityadmin_telemetry_enrichment", sweepTelemetryEnrichment, "aws_observabilityadmin_telemetry_rule")
 	awsv2.Register("aws_observabilityadmin_telemetry_evaluation", sweepTelemetryEvaluation)
 	awsv2.Register("aws_observabilityadmin_telemetry_pipeline", sweepTelemetryPipelines)
 	awsv2.Register("aws_observabilityadmin_telemetry_rule", sweepTelemetryRules)
+}
+
+func sweepDatasetIntegrations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ObservabilityAdminClient(ctx)
+	var input observabilityadmin.ListDatasetIntegrationsInput
+	var sweepResources []sweep.Sweepable
+
+	pages := observabilityadmin.NewListDatasetIntegrationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DatasetIntegrationSummaries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDatasetIntegrationResource, client,
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.Arn)),
+			))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepS3TableIntegrations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

@@ -291,6 +291,7 @@ var (
 	FindVolumeAttachmentInstanceByID                            = findVolumeAttachmentInstanceByID
 	FlattenNetworkInterfacePrivateIPAddresses                   = flattenNetworkInterfacePrivateIPAddresses
 	FlattenSecurityGroups                                       = flattenSecurityGroups
+	FlattenTransitGatewayPeeringAttachmentOptions               = flattenTransitGatewayPeeringAttachmentOptions
 	FlowLogStateUpgradeV0                                       = flowLogStateUpgradeV0
 	IPAMServicePrincipal                                        = ipamServicePrincipal
 	InstanceMigrateState                                        = instanceMigrateState

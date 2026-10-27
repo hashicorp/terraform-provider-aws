@@ -2157,6 +2157,12 @@ service/securityhub:
           - any-glob-to-any-file:
               - 'internal/service/securityhub/**/*'
               - 'website/**/securityhub_*'
+service/securityir:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/securityir/**/*'
+              - 'website/**/securityir_*'
 service/securitylake:
   - any:
       - changed-files:
