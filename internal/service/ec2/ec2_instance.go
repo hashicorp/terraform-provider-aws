@@ -1753,6 +1753,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.PartitionNumber = aws.Int32(int32(d.Get("placement_partition_number").(int)))
 		}
 
+		// Stop protection blocks StopInstances, so remove it first if this apply is turning it off.
+		if o, n := d.GetChange("disable_api_stop"); o.(bool) && !n.(bool) {
+			if err := disableInstanceAPIStop(ctx, conn, d.Id(), false); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
+			}
+		}
+
 		if err := stopInstance(ctx, conn, d.Id(), false, instanceStopTimeout); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
