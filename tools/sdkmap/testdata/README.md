@@ -12,7 +12,7 @@ Miniature provider root for tests using `-root testdata`. Its service mocks use 
 | `service/examplecrossservice` | Exported finder used by another service |
 | `service/examplecrud` | No Update; local/shared/cross-service finders, status/waiters, paginator, options, and retry closures |
 | `service/examplecustomizediff` | References, literals, calls, variables, factories, and nested `customdiff` combinators |
-| `service/examplefuncrefs` | Factory-local method values, call results, and `schema.NoopContext` CRUD functions |
+| `service/examplefuncrefs` | Factory-local method values, call results, and a resource with a `schema.NoopContext` delete function |
 | `service/exampleimport` | Passthrough, named, literal, and absent importers |
 | `service/exampleinterface` | Interface dispatch and an SDK client wrapped by a package interface |
 | `service/examplestructfield` | SDK clients in fields, including retry, direct/deferred orchestration, and a same-named foreign client |

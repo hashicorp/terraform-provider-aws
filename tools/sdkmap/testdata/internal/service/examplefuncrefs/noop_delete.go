@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKResource("aws_examplefuncrefs_noop", name="Noop")
-func resourceNoop() *schema.Resource {
+// @SDKResource("aws_examplefuncrefs_noop", name="Noop Delete")
+func resourceNoopDelete() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceNoopUpsert,
-		ReadWithoutTimeout:   resourceNoopRead,
-		UpdateWithoutTimeout: resourceNoopUpsert,
+		CreateWithoutTimeout: resourceNoopDeleteUpsert,
+		ReadWithoutTimeout:   resourceNoopDeleteRead,
+		UpdateWithoutTimeout: resourceNoopDeleteUpsert,
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -33,7 +33,7 @@ func resourceNoop() *schema.Resource {
 	}
 }
 
-func resourceNoopUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceNoopDeleteUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleFuncRefsClient(ctx)
 
@@ -51,10 +51,10 @@ func resourceNoopUpsert(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	}
 
-	return append(diags, resourceNoopRead(ctx, d, meta)...)
+	return append(diags, resourceNoopDeleteRead(ctx, d, meta)...)
 }
 
-func resourceNoopRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceNoopDeleteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ExampleFuncRefsClient(ctx)
 
