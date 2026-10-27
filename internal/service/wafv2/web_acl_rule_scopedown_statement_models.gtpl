@@ -16,29 +16,29 @@ import (
 )
 
 {{ define "leafFields" }}
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
 	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
 {{ end }}
 
 {{ define "leafBlocks" }}
-    "ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
-    "geo_match_statement":                   geoMatchStatementBlock(ctx),
+    "asn_match_statement":                   asnMatchStatementBlock(ctx),
     "byte_match_statement":                  byteMatchStatementBlock(ctx),
-    "sqli_match_statement":                  sqliMatchStatementBlock(ctx),
-    "xss_match_statement":                   xssMatchStatementBlock(ctx),
-    "size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+    "geo_match_statement":                   geoMatchStatementBlock(ctx),
+    "ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
+    "label_match_statement":                 labelMatchStatementBlock(ctx),
     "regex_match_statement":                 regexMatchStatementBlock(ctx),
     "regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
-    "label_match_statement":                 labelMatchStatementBlock(ctx),
-    "asn_match_statement":                   asnMatchStatementBlock(ctx),
+    "size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+    "sqli_match_statement":                  sqliMatchStatementBlock(ctx),
+    "xss_match_statement":                   xssMatchStatementBlock(ctx),
 {{ end }}
 
 // Level-based scope_down statement models
