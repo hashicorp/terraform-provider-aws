@@ -96,6 +96,12 @@ func TestAccECSGatewayClusterAssociation_Disappears_gateway(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecs.ResourceGateway, "aws_ecs_gateway.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_ecs_gateway.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
