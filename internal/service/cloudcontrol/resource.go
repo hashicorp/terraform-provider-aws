@@ -364,6 +364,9 @@ func findResource(ctx context.Context, conn *cloudcontrol.Client, input *cloudco
 func retryGetResourceRequestStatus(pProgressEvent **awstypes.ProgressEvent) func(context.Context, *cloudcontrol.GetResourceRequestStatusInput, *cloudcontrol.GetResourceRequestStatusOutput, error) (bool, error) {
 	return func(ctx context.Context, input *cloudcontrol.GetResourceRequestStatusInput, output *cloudcontrol.GetResourceRequestStatusOutput, err error) (bool, error) {
 		if err == nil {
+			if output == nil || output.ProgressEvent == nil {
+				return false, tfresource.NewEmptyResultError()
+			}
 			progressEvent := output.ProgressEvent
 			if pProgressEvent != nil {
 				*pProgressEvent = progressEvent
