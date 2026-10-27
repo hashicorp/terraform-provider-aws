@@ -1,0 +1,299 @@
+[
+  {
+    "service": "mocktags",
+    "resource_type": "aws_mocktags_bar",
+    "plugin_type": "SDKv2",
+    "expr": "resourceBar",
+    "location": "internal/service/mocktags/bar.go:25",
+    "create": {
+      "expr": "resourceBarCreate",
+      "location": "internal/service/mocktags/bar.go:43",
+      "sdk_calls": [
+        "mocktags.CreateBar",
+        "mocktags.DescribeBar"
+      ]
+    },
+    "read": {
+      "expr": "resourceBarRead",
+      "location": "internal/service/mocktags/bar.go:62",
+      "sdk_calls": [
+        "mocktags.DescribeBar"
+      ]
+    },
+    "update": {
+      "expr": "resourceBarUpdate",
+      "location": "internal/service/mocktags/bar.go:83",
+      "sdk_calls": [
+        "mocktags.DescribeBar"
+      ]
+    },
+    "delete": {
+      "expr": "resourceBarDelete",
+      "location": "internal/service/mocktags/bar.go:88",
+      "sdk_calls": [
+        "mocktags.DeleteBar"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/mocktags/tags.go:22",
+        "sdk_calls": [
+          "mocktags.ListBarTags"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/mocktags/tags.go:58",
+        "sdk_calls": [
+          "mocktags.TagBar",
+          "mocktags.UntagBar"
+        ]
+      }
+    }
+  },
+  {
+    "service": "mocktags",
+    "resource_type": "aws_mocktags_baz",
+    "plugin_type": "SDKv2",
+    "expr": "resourceBaz",
+    "location": "internal/service/mocktags/baz.go:25",
+    "create": {
+      "expr": "resourceBazCreate",
+      "location": "internal/service/mocktags/baz.go:43",
+      "sdk_calls": [
+        "mocktags.CreateBaz",
+        "mocktags.DescribeBaz"
+      ]
+    },
+    "read": {
+      "expr": "resourceBazRead",
+      "location": "internal/service/mocktags/baz.go:62",
+      "sdk_calls": [
+        "mocktags.DescribeBaz"
+      ]
+    },
+    "update": {
+      "expr": "resourceBazUpdate",
+      "location": "internal/service/mocktags/baz.go:83",
+      "sdk_calls": [
+        "mocktags.DescribeBaz"
+      ]
+    },
+    "delete": {
+      "expr": "resourceBazDelete",
+      "location": "internal/service/mocktags/baz.go:88",
+      "sdk_calls": [
+        "mocktags.DeleteBaz"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/mocktags/tags.go:22",
+        "sdk_calls": [
+          "mocktags.ListBarTags"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/mocktags/tags.go:58",
+        "sdk_calls": [
+          "mocktags.TagBar",
+          "mocktags.UntagBar"
+        ]
+      }
+    }
+  },
+  {
+    "service": "mocktags",
+    "resource_type": "aws_mocktags_foo",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFoo",
+    "location": "internal/service/mocktags/foo.go:26",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mocktags/foo.go:49",
+      "sdk_calls": [
+        "mocktags.CreateFoo",
+        "mocktags.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mocktags/foo.go:70",
+      "sdk_calls": [
+        "mocktags.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mocktags/foo.go:92",
+      "sdk_calls": [
+        "mocktags.DescribeFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mocktags/foo.go:97",
+      "sdk_calls": [
+        "mocktags.DeleteFoo"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/mocktags/tags.go:22",
+        "sdk_calls": [
+          "mocktags.ListFooTags",
+          "mocktagsgen.ListTagsForResource"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/mocktags/tags.go:58",
+        "sdk_calls": [
+          "mocktags.TagFoo",
+          "mocktags.UntagFoo",
+          "mocktagsgen.TagResource",
+          "mocktagsgen.UntagResource"
+        ]
+      }
+    }
+  },
+  {
+    "service": "mocktags",
+    "resource_type": "aws_mocktags_legacy_foo",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFoo",
+    "location": "internal/service/mocktags/foo.go:26",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mocktags/foo.go:49",
+      "sdk_calls": [
+        "mocktags.CreateFoo",
+        "mocktags.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mocktags/foo.go:70",
+      "sdk_calls": [
+        "mocktags.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mocktags/foo.go:92",
+      "sdk_calls": [
+        "mocktags.DescribeFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mocktags/foo.go:97",
+      "sdk_calls": [
+        "mocktags.DeleteFoo"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/mocktags/tags.go:22",
+        "sdk_calls": [
+          "mocktags.ListFooTags",
+          "mocktagsgen.ListTagsForResource"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/mocktags/tags.go:58",
+        "sdk_calls": [
+          "mocktags.TagFoo",
+          "mocktags.UntagFoo",
+          "mocktagsgen.TagResource",
+          "mocktagsgen.UntagResource"
+        ]
+      }
+    }
+  },
+  {
+    "service": "mocktags",
+    "resource_type": "aws_mocktags_qux",
+    "plugin_type": "SDKv2",
+    "expr": "resourceQux",
+    "location": "internal/service/mocktags/qux.go:25",
+    "create": {
+      "expr": "resourceQuxCreate",
+      "location": "internal/service/mocktags/qux.go:43",
+      "sdk_calls": [
+        "mocktags.CreateQux",
+        "mocktags.DescribeQux"
+      ]
+    },
+    "read": {
+      "expr": "resourceQuxRead",
+      "location": "internal/service/mocktags/qux.go:62",
+      "sdk_calls": [
+        "mocktags.DescribeQux"
+      ]
+    },
+    "update": {
+      "expr": "resourceQuxUpdate",
+      "location": "internal/service/mocktags/qux.go:83",
+      "sdk_calls": [
+        "mocktags.DescribeQux"
+      ]
+    },
+    "delete": {
+      "expr": "resourceQuxDelete",
+      "location": "internal/service/mocktags/qux.go:88",
+      "sdk_calls": [
+        "mocktags.DeleteQux"
+      ]
+    },
+    "tags": {
+      "list": {
+        "expr": "(*servicePackage).ListTags",
+        "location": "internal/service/mocktags/tags.go:22",
+        "sdk_calls": [
+          "mocktags.ListTagsForResource"
+        ]
+      },
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/mocktags/tags.go:58",
+        "sdk_calls": []
+      }
+    }
+  },
+  {
+    "service": "mocktags",
+    "resource_type": "aws_mocktags_without_identifier",
+    "plugin_type": "SDKv2",
+    "expr": "resourceWithoutIdentifier",
+    "location": "internal/service/mocktags/without_identifier.go:23",
+    "create": {
+      "expr": "resourceWithoutIdentifierCreate",
+      "location": "internal/service/mocktags/without_identifier.go:36",
+      "sdk_calls": [
+        "mocktags.CreateQux",
+        "mocktags.GetQux"
+      ]
+    },
+    "read": {
+      "expr": "resourceWithoutIdentifierRead",
+      "location": "internal/service/mocktags/without_identifier.go:55",
+      "sdk_calls": [
+        "mocktags.GetQux"
+      ]
+    },
+    "delete": {
+      "expr": "resourceWithoutIdentifierDelete",
+      "location": "internal/service/mocktags/without_identifier.go:80",
+      "sdk_calls": [
+        "mocktags.DeleteQux"
+      ]
+    }
+  }
+]

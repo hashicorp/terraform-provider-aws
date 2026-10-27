@@ -1,0 +1,48 @@
+[
+  {
+    "service": "mocktagsupdateonly",
+    "resource_type": "aws_mocktagsupdateonly_foo",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFoo",
+    "location": "internal/service/mocktagsupdateonly/foo.go:23",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mocktagsupdateonly/foo.go:46",
+      "sdk_calls": [
+        "mocktagsupdateonly.CreateFoo",
+        "mocktagsupdateonly.GetFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mocktagsupdateonly/foo.go:65",
+      "sdk_calls": [
+        "mocktagsupdateonly.GetFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mocktagsupdateonly/foo.go:93",
+      "sdk_calls": [
+        "mocktagsupdateonly.GetFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mocktagsupdateonly/foo.go:98",
+      "sdk_calls": [
+        "mocktagsupdateonly.DeleteFoo"
+      ]
+    },
+    "tags": {
+      "update": {
+        "expr": "(*servicePackage).UpdateTags",
+        "location": "internal/service/mocktagsupdateonly/tags_gen.go:90",
+        "sdk_calls": [
+          "mocktagsupdateonly.TagResource",
+          "mocktagsupdateonly.UntagResource"
+        ]
+      }
+    }
+  }
+]

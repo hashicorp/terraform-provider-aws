@@ -1,0 +1,383 @@
+[
+  {
+    "service": "mockcustomizediff",
+    "resource_type": "aws_mockcustomizediff_call",
+    "plugin_type": "SDKv2",
+    "expr": "resourceCall",
+    "location": "internal/service/mockcustomizediff/customize_diff.go:135",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockcustomizediff/foo.go:44",
+      "sdk_calls": [
+        "mockcustomizediff.CreateFoo",
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockcustomizediff/foo.go:65",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mockcustomizediff/foo.go:89",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo",
+        "mockcustomizediff.UpdateFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockcustomizediff/foo.go:108",
+      "sdk_calls": [
+        "mockcustomizediff.DeleteFoo"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customizeDiffValidateQuota(...)",
+      "location": "internal/service/mockcustomizediff/customize_diff.go:198",
+      "sdk_calls": [
+        "mockcustomizediff.GetQuota"
+      ]
+    }
+  },
+  {
+    "service": "mockcustomizediff",
+    "resource_type": "aws_mockcustomizediff_factory_reference",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFactoryReference",
+    "location": "internal/service/mockcustomizediff/customize_diff.go:149",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockcustomizediff/foo.go:44",
+      "sdk_calls": [
+        "mockcustomizediff.CreateFoo",
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockcustomizediff/foo.go:65",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mockcustomizediff/foo.go:89",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo",
+        "mockcustomizediff.UpdateFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockcustomizediff/foo.go:108",
+      "sdk_calls": [
+        "mockcustomizediff.DeleteFoo"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customizeDiffComputedOnUpdate",
+      "location": "internal/service/mockcustomizediff/customize_diff.go:218",
+      "sdk_calls": []
+    }
+  },
+  {
+    "service": "mockcustomizediff",
+    "resource_type": "aws_mockcustomizediff_force_new_if",
+    "plugin_type": "SDKv2",
+    "expr": "resourceForceNewIf",
+    "location": "internal/service/mockcustomizediff/customize_diff.go:105",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockcustomizediff/foo.go:44",
+      "sdk_calls": [
+        "mockcustomizediff.CreateFoo",
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockcustomizediff/foo.go:65",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mockcustomizediff/foo.go:89",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo",
+        "mockcustomizediff.UpdateFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockcustomizediff/foo.go:108",
+      "sdk_calls": [
+        "mockcustomizediff.DeleteFoo"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customdiff.ForceNewIf(...)",
+      "location": "internal/service/mockcustomizediff/customize_diff.go:112",
+      "sdk_calls": []
+    }
+  },
+  {
+    "service": "mockcustomizediff",
+    "resource_type": "aws_mockcustomizediff_function_literal",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFunctionLiteral",
+    "location": "internal/service/mockcustomizediff/customize_diff.go:85",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockcustomizediff/foo.go:44",
+      "sdk_calls": [
+        "mockcustomizediff.CreateFoo",
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockcustomizediff/foo.go:65",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mockcustomizediff/foo.go:89",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo",
+        "mockcustomizediff.UpdateFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockcustomizediff/foo.go:108",
+      "sdk_calls": [
+        "mockcustomizediff.DeleteFoo"
+      ]
+    },
+    "customize_diff": {
+      "expr": "func literal",
+      "location": "internal/service/mockcustomizediff/customize_diff.go:92",
+      "sdk_calls": []
+    }
+  },
+  {
+    "service": "mockcustomizediff",
+    "resource_type": "aws_mockcustomizediff_identifier",
+    "plugin_type": "SDKv2",
+    "expr": "resourceIdentifier",
+    "location": "internal/service/mockcustomizediff/customize_diff.go:17",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockcustomizediff/foo.go:44",
+      "sdk_calls": [
+        "mockcustomizediff.CreateFoo",
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockcustomizediff/foo.go:65",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mockcustomizediff/foo.go:89",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo",
+        "mockcustomizediff.UpdateFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockcustomizediff/foo.go:108",
+      "sdk_calls": [
+        "mockcustomizediff.DeleteFoo"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customizeDiffChecksum",
+      "location": "internal/service/mockcustomizediff/customize_diff.go:167",
+      "sdk_calls": []
+    }
+  },
+  {
+    "service": "mockcustomizediff",
+    "resource_type": "aws_mockcustomizediff_nested",
+    "plugin_type": "SDKv2",
+    "expr": "resourceNested",
+    "location": "internal/service/mockcustomizediff/customize_diff.go:48",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockcustomizediff/foo.go:44",
+      "sdk_calls": [
+        "mockcustomizediff.CreateFoo",
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockcustomizediff/foo.go:65",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mockcustomizediff/foo.go:89",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo",
+        "mockcustomizediff.UpdateFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockcustomizediff/foo.go:108",
+      "sdk_calls": [
+        "mockcustomizediff.DeleteFoo"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customdiff.All(...)",
+      "location": "internal/service/mockcustomizediff/customize_diff.go:55",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeParent",
+        "mockcustomizediff.GetQuota"
+      ],
+      "functions": [
+        {
+          "expr": "validateSize",
+          "location": "internal/service/mockcustomizediff/customize_diff.go:175",
+          "sdk_calls": []
+        },
+        {
+          "expr": "validateParentExists",
+          "location": "internal/service/mockcustomizediff/customize_diff.go:183",
+          "sdk_calls": [
+            "mockcustomizediff.DescribeParent"
+          ]
+        },
+        {
+          "expr": "customdiff.ForceNewIfChange(...)",
+          "location": "internal/service/mockcustomizediff/customize_diff.go:60",
+          "sdk_calls": []
+        },
+        {
+          "expr": "func literal",
+          "location": "internal/service/mockcustomizediff/customize_diff.go:61",
+          "sdk_calls": [
+            "mockcustomizediff.GetQuota"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "service": "mockcustomizediff",
+    "resource_type": "aws_mockcustomizediff_sequence",
+    "plugin_type": "SDKv2",
+    "expr": "resourceSequence",
+    "location": "internal/service/mockcustomizediff/customize_diff.go:31",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockcustomizediff/foo.go:44",
+      "sdk_calls": [
+        "mockcustomizediff.CreateFoo",
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockcustomizediff/foo.go:65",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mockcustomizediff/foo.go:89",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo",
+        "mockcustomizediff.UpdateFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockcustomizediff/foo.go:108",
+      "sdk_calls": [
+        "mockcustomizediff.DeleteFoo"
+      ]
+    },
+    "customize_diff": {
+      "expr": "customdiff.Sequence(...)",
+      "location": "internal/service/mockcustomizediff/customize_diff.go:38",
+      "sdk_calls": [],
+      "functions": [
+        {
+          "expr": "customizeDiffChecksum",
+          "location": "internal/service/mockcustomizediff/customize_diff.go:167",
+          "sdk_calls": []
+        },
+        {
+          "expr": "validateSize",
+          "location": "internal/service/mockcustomizediff/customize_diff.go:175",
+          "sdk_calls": []
+        }
+      ]
+    }
+  },
+  {
+    "service": "mockcustomizediff",
+    "resource_type": "aws_mockcustomizediff_variable",
+    "plugin_type": "SDKv2",
+    "expr": "resourceVariable",
+    "location": "internal/service/mockcustomizediff/customize_diff.go:121",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockcustomizediff/foo.go:44",
+      "sdk_calls": [
+        "mockcustomizediff.CreateFoo",
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockcustomizediff/foo.go:65",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mockcustomizediff/foo.go:89",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeFoo",
+        "mockcustomizediff.UpdateFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockcustomizediff/foo.go:108",
+      "sdk_calls": [
+        "mockcustomizediff.DeleteFoo"
+      ]
+    },
+    "customize_diff": {
+      "expr": "fooCustomizeDiff",
+      "location": "internal/service/mockcustomizediff/customize_diff.go:162",
+      "sdk_calls": [
+        "mockcustomizediff.DescribeParent"
+      ]
+    }
+  }
+]
