@@ -608,6 +608,58 @@ resource "aws_lambda_function" "example" {
 }
 ```
 
+### Function with Durable Configuration and Customer Managed KMS Key
+
+Durable execution state can be encrypted with a customer managed KMS key via `durable_config.kms_key_arn`. The key policy must grant the Lambda service (`lambda.amazonaws.com`) permission to use the key.
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "example" {
+  description = "Durable function execution state encryption"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "EnableIAMUserPermissions"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "AllowLambdaDurableService"
+        Effect    = "Allow"
+        Principal = { Service = "lambda.amazonaws.com" }
+        Action    = ["kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"]
+        Resource  = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example_durable_function"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs24.x"
+
+  durable_config {
+    execution_timeout = 3600
+    retention_period  = 7
+    kms_key_arn       = aws_kms_key.example.arn
+  }
+
+  timeouts {
+    delete = "60m"
+  }
+}
+```
+
 ### Capacity Provider Configuration
 
 ```terraform
