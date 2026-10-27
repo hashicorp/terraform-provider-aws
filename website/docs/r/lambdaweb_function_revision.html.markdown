@@ -60,17 +60,17 @@ The following arguments are optional:
 * `code_config` - (Required) Code configuration. See [`code_config` Block](#service_config-block) below.
 * `runtime_config` - (Required) Runtime configuration for the revision. See [`runtime_config` Block](#service_config-block) below.
 
-##### `code_config` Block
+##### `build_config.code_config` Block
 
 * `s3_object` - (Required) Amazon S3 location of the deployment artifact. See [`s3_object` Block](#service_config-block) below.
 
-###### `s3_object` Block
+###### `build_config.code_config.s3_object` Block
 
 * `bucket` - (Required) Name of the Amazon S3 bucket.
 * `key` - (Required) Amazon S3 object key.
 * `version_id` - (Optional) Version ID of the Amazon S3 object.
 
-##### `runtime_config` Block
+##### `build_config.runtime_config` Block
 
 * `runtime` - (Required) Runtime identifier for the web function, e.g. `nodejs24.x`.
 
@@ -83,11 +83,11 @@ The following arguments are optional:
 * `telemetry_config` - (Optional) Telemetry configuration for the web function. See [`telemetry_config` Block](#service_config-block) below.
 * `timeout_seconds` - (Optional) Amount of time (in seconds) that Lambda allows the web function to run before stopping it. The default is `30`.
 
-##### `telemetry_config` Block
+##### `service_config.telemetry_config` Block
 
 * `logging_config` - (Optional) Logging configuration for the web function. See [`logging_config` Block](#service_config-block) below.
 
-###### `logging_config` Block
+###### `service_config.telemetry_config.logging_config` Block
 
 * `application_log_level` - (Optional) Log level for application logs emitted by the web function. Valid values: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`. The default is `INFO`.
 * `log_group` - (Optional) Name of the Amazon CloudWatch Logs log group the web function sends logs to. The default is `/aws/lambda/web/{function_name}`.
@@ -99,6 +99,24 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the revision.
 * `revision_id` - ID of the revision.
+
+### `service_config` Block
+
+The `service_config` block exports the following attributes in addition to the arguments above:
+
+* `telemetry_config_actual` - Actual deployed telemetry configuration.
+
+### `service_config.telemetry_config_actual` Block
+
+The `service_config.telemetry_config_actual` block exports the following attributes:
+
+* `logging_config` - Deployed logging configuration.
+
+The `service_config.telemetry_config_actual.logging_config` block exports the following attributes:
+
+* `application_log_level` - Log level for application logs emitted by the web function.
+* `log_group` - Name of the Amazon CloudWatch Logs log group the web function sends logs to.
+* `system_log_level` - Log level for system logs emitted by the Lambda runtime.
 
 ## Timeouts
 

@@ -232,6 +232,7 @@ func (r *functionRevisionResource) Schema(ctx context.Context, req resource.Sche
 								int64validator.Between(1, 128),
 							},
 						},
+						"telemetry_config_actual": framework.ResourceComputedListOfObjectsAttribute[telemetryConfigModel](ctx),
 						"timeout_seconds": schema.Int64Attribute{
 							Optional: true,
 							Computed: true,
@@ -258,7 +259,7 @@ func (r *functionRevisionResource) Schema(ctx context.Context, req resource.Sche
 									"logging_config": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[loggingConfigModel](ctx),
 										PlanModifiers: []planmodifier.List{
-											listplanmodifier.RequiresReplaceIfConfigured(),
+											listplanmodifier.RequiresReplace(),
 										},
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
@@ -268,10 +269,8 @@ func (r *functionRevisionResource) Schema(ctx context.Context, req resource.Sche
 												"application_log_level": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.ApplicationLogLevel](),
 													Optional:   true,
-													Computed:   true,
 													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.RequiresReplaceIfConfigured(),
-														stringplanmodifier.UseNonNullStateForUnknown(),
+														stringplanmodifier.RequiresReplace(),
 													},
 												},
 												"log_group": schema.StringAttribute{
@@ -319,7 +318,24 @@ func (r *functionRevisionResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	output, err := conn.CreateWebFunctionRevision(ctx, &input)
+	// IAM/S3-policy eventual consistency: a freshly created execution role or
+	// bucket policy can take tens of seconds to become visible to the service.
+	output, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
+		func(ctx context.Context) (*lambdaweb.CreateWebFunctionRevisionOutput, error) {
+			return conn.CreateWebFunctionRevision(ctx, &input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot be assumed") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "does not have s3:GetObject") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "S3 versioning enabled") {
+				return true, err
+			}
+			return false, err
+		})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, functionName)
 		return
@@ -634,8 +650,74 @@ type serviceConfigModel struct {
 	EnvironmentVariables         fwtypes.MapOfString                                   `tfsdk:"environment_variables"`
 	ExecutionRoleARN             fwtypes.ARN                                           `tfsdk:"execution_role_arn"`
 	MaxConcurrencyPerEnvironment types.Int64                                           `tfsdk:"max_concurrency_per_environment"`
-	TelemetryConfig              fwtypes.ListNestedObjectValueOf[telemetryConfigModel] `tfsdk:"telemetry_config"`
+	TelemetryConfig              fwtypes.ListNestedObjectValueOf[telemetryConfigModel] `tfsdk:"telemetry_config" autoflex:"-"`
+	TelemetryConfigActual        fwtypes.ListNestedObjectValueOf[telemetryConfigModel] `tfsdk:"telemetry_config_actual" autoflex:"-"`
 	TimeoutSeconds               types.Int64                                           `tfsdk:"timeout_seconds"`
+}
+
+var (
+	_ fwflex.Expander  = serviceConfigModel{}
+	_ fwflex.Flattener = &serviceConfigModel{}
+)
+
+func (m *serviceConfigModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	// To prevent infinite recursion...
+	type modelAlias *serviceConfigModel
+	alias := modelAlias(m)
+	switch t := v.(type) {
+	case awstypes.ServiceConfig:
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, v, alias))
+		if diags.HasError() {
+			return diags
+		}
+
+		m.TelemetryConfig = fwtypes.NewListNestedObjectValueOfNull[telemetryConfigModel](ctx)
+		m.TelemetryConfigActual = fwtypes.NewListNestedObjectValueOfNull[telemetryConfigModel](ctx)
+		if t.TelemetryConfig != nil {
+			var model telemetryConfigModel
+			smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.TelemetryConfig, &model))
+			if diags.HasError() {
+				return diags
+			}
+			var d diag.Diagnostics
+			m.TelemetryConfigActual, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+			smerr.AddEnrich(ctx, &diags, d)
+		}
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("serviceConfigModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+
+	return diags
+}
+
+func (m serviceConfigModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var r awstypes.ServiceConfig
+	// To prevent infinite recursion...
+	type modelAlias serviceConfigModel
+	alias := modelAlias(m)
+	smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, alias, &r))
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	if !m.TelemetryConfig.IsNull() {
+		var apiObject awstypes.TelemetryConfig
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.TelemetryConfig, &apiObject))
+		if diags.HasError() {
+			return nil, diags
+		}
+		r.TelemetryConfig = &apiObject
+	}
+
+	return &r, diags
 }
 
 type telemetryConfigModel struct {
