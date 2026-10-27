@@ -364,7 +364,7 @@ The following arguments are optional:
 
 #### `empty_dir` Block
 
-* `medium` - (Optional) Medium to store the volume. The default value is an empty string, which uses the storage of the node.
+* `medium` - (Optional) Medium to store the volume. The default value is an empty string, which uses the storage of the node. Only other supported value is "Memory" which uses a "tmpfs" volume that's backed by the RAM of the node. Contents of the volume are lost when the node reboots, and any storage on the volume counts against the container's memory limit.
 * `size_limit` - (Required) Maximum size of the volume. By default, there's no maximum size defined.
 
 #### `host_path` Block

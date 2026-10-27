@@ -1084,6 +1084,92 @@ func TestAccBatchJobDefinition_EKSProperties_multiContainers(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobDefinition_EKSProperties_emptyDir_nodeStorage_implicit(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd awstypes.JobDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_EKSProperties_emptyDir_nodeStorage_implicit(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, t, resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.volumes.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBatchJobDefinition_EKSProperties_emptyDir_nodeStorage_explicit(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd awstypes.JobDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_EKSProperties_emptyDir_nodeStorage_explicit(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, t, resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.volumes.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBatchJobDefinition_EKSProperties_emptyDir_memoryStorage(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd awstypes.JobDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_EKSProperties_emptyDir_memoryStorage(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, t, resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.volumes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.volumes.0.empty_dir.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.volumes.0.empty_dir.0.medium", "Memory"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBatchJobDefinition_createTypeContainerWithNodeProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2203,6 +2289,125 @@ resource "aws_batch_job_definition" "test" {
         labels = {
           environment = "test"
           name        = %[1]q
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_EKSProperties_emptyDir_nodeStorage_implicit(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  eks_properties {
+    pod_properties {
+      containers {
+        name  = "container2"
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+        }
+      }
+      metadata {
+        labels = {
+          environment = "test"
+          name        = %[1]q
+        }
+      }
+      volumes {
+        name = "tmp"   
+        empty_dir {
+          size_limit = "128Mi"
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_EKSProperties_emptyDir_nodeStorage_explicit(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  eks_properties {
+    pod_properties {
+      containers {
+        name  = "container2"
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+        }
+      }
+      metadata {
+        labels = {
+          environment = "test"
+          name        = %[1]q
+        }
+      }
+      volumes {
+        name = "tmp"   
+        empty_dir {
+          medium = ""
+          size_limit = "128Mi"
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_EKSProperties_emptyDir_memoryStorage(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  eks_properties {
+    pod_properties {
+      containers {
+        name  = "container2"
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+        }
+      }
+      metadata {
+        labels = {
+          environment = "test"
+          name        = %[1]q
+        }
+      }
+      volumes {
+        name = "tmp"   
+        empty_dir {
+          medium = "Memory"
+          size_limit = "128Mi"
         }
       }
     }

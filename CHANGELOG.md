@@ -15,6 +15,10 @@ ENHANCEMENTS:
 * resource/aws_dx_connection: Add configurable `update` timeout. Defaults to the previously hard-coded value of `10m`. ([#50602](https://github.com/hashicorp/terraform-provider-aws/issues/50602))
 * resource/aws_dx_connection_confirmation: Add configurable `create` timeout. Defaults to the previously hard-coded value of `10m`. ([#50602](https://github.com/hashicorp/terraform-provider-aws/issues/50602))
 
+BUG FIXES:
+
+* resource/aws_batch_job_definition: Fix the creation of jobs using "emptyDir" volume type in EKS pod properties. ([#50512](https://github.com/hashicorp/terraform-provider-aws/issues/50512))
+
 ## 6.70.0 (October 21, 2026)
 
 BREAKING CHANGES:
