@@ -13,6 +13,8 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
+	cloudcontroltypes "github.com/aws/aws-sdk-go-v2/service/cloudcontrol/types"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -25,21 +27,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	//"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	//"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
-	//tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 var validFunctionName validator.String = stringvalidator.RegexMatches(
@@ -102,80 +103,52 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	// In order to create a function with no initial revison or endpoint we must use the Cloud Control API.
-	// conn := r.Meta().CloudControlClient(ctx)
-	conn := r.Meta().LambdaWebClient(ctx)
+	conn := r.Meta().CloudControlClient(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, plan.FunctionName)
-	/*
-			desiredStateRaw := map[string]any{
-				"FunctionName": name,
-			}
-			if tags := getTagsIn(ctx); len(tags) > 0 {
-				tagsRaw := []any{}
-				for k, v := range tags {
-					tagsRaw = append(tagsRaw, map[string]any{
-						"Key":   k,
-						"Value": v,
-					})
-				}
-				desiredStateRaw["Tags"] = tagsRaw
-			}
-			desiredState, err := tfjson.EncodeToString(desiredStateRaw)
-			if err != nil {
-				smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewEncodingJSONErrorDiagnostic(err))
-				return
-			}
-
-			input := cloudcontrol.CreateResourceInput{
-			ClientToken:  aws.String(create.UniqueId(ctx)),
-			DesiredState: aws.String(desiredState),
-			TypeName:     aws.String("AWS::Lambda::WebFunction"),
+	desiredStateRaw := map[string]any{
+		"FunctionName": name,
+	}
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		tagsRaw := []any{}
+		for k, v := range tags {
+			tagsRaw = append(tagsRaw, map[string]any{
+				"Key":   k,
+				"Value": v,
+			})
 		}
-	*/
-
-	var input lambdaweb.CreateWebFunctionInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
-	if resp.Diagnostics.HasError() {
+		desiredStateRaw["Tags"] = tagsRaw
+	}
+	desiredState, err := tfjson.EncodeToString(desiredStateRaw)
+	if err != nil {
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewEncodingJSONErrorDiagnostic(err))
 		return
 	}
 
-	input.Tags = getTagsIn(ctx)
-
-	// IAM/S3-policy eventual consistency: a freshly created execution role or
-	// bucket policy can take tens of seconds to become visible to the service.
-	_, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func(ctx context.Context) (any, error) {
-			return conn.CreateWebFunction(ctx, &input)
-		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot be assumed") {
-				return true, err
-			}
-			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "does not have s3:GetObject") {
-				return true, err
-			}
-			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "S3 versioning enabled") {
-				return true, err
-			}
-			return false, err
-		})
+	input := cloudcontrol.CreateResourceInput{
+		ClientToken:  aws.String(create.UniqueId(ctx)),
+		DesiredState: aws.String(desiredState),
+		TypeName:     aws.String("AWS::Lambda::WebFunction"),
+	}
+	output, err := conn.CreateResource(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	function, err := waitFunctionCreated(ctx, conn, name, r.CreateTimeout(ctx, plan.Timeouts))
-	if err != nil {
+	requestToken := aws.ToString(output.ProgressEvent.RequestToken)
+	var progressEvent *cloudcontroltypes.ProgressEvent
+	waiter := cloudcontrol.NewResourceRequestSuccessWaiter(conn, func(o *cloudcontrol.ResourceRequestSuccessWaiterOptions) {
+		o.Retryable = tfcloudcontrol.RetryGetResourceRequestStatus(&progressEvent)
+	})
+	if err := waiter.Wait(ctx, &cloudcontrol.GetResourceRequestStatusInput{RequestToken: aws.String(requestToken)}, r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
 		// Taint the resource.
 		resp.State.SetAttribute(ctx, path.Root("function_name"), name)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, function, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	plan.FunctionARN = fwflex.StringToFramework(ctx, progressEvent.Identifier)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }

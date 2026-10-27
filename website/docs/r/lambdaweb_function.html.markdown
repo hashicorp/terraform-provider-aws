@@ -12,6 +12,8 @@ Manages an AWS Lambda Web function.
 
 ~> **Note:** This resource creates the web function only, with no revisions and no endpoints. The web function serves no traffic until you add revisions and endpoints. To add them, use the `aws_lambdaweb_function_revision` and `aws_lambdaweb_function_endpoint` resources.
 
+~> **Note:** This resource uses the AWS Cloud Control API to create the resource, so requires the [`cloudformation:CreateResource` IAM permission](https://docs.aws.amazon.com/cloudcontrolapi/latest/userguide/security.html#security_iam_service-with-iam-id-based-policies-actions).
+
 ## Example Usage
 
 ### Basic Usage
