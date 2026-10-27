@@ -1,3 +1,6 @@
 ```release-note:enhancement
 resource/aws_elasticache_serverless_cache: Add `connection_type` argument to support public endpoints
 ```
+```release-note:enhancement
+data-source/aws_elasticache_serverless_cache: Add `connection_type` attribute
+```

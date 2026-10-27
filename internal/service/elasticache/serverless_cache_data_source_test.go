@@ -34,6 +34,7 @@ func TestAccElastiCacheServerlessCacheDataSource_Redis_basic(t *testing.T) {
 				Config: testAccServerlessCacheDataSourceConfig_Redis_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "connection_type", resourceName, "connection_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreateTime, resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttrPair(dataSourceName, "daily_snapshot_time", resourceName, "daily_snapshot_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
@@ -80,6 +81,7 @@ func TestAccElastiCacheServerlessCacheDataSource_Valkey_basic(t *testing.T) {
 				Config: testAccServerlessCacheDataSourceConfig_Valkey_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "connection_type", resourceName, "connection_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreateTime, resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttrPair(dataSourceName, "daily_snapshot_time", resourceName, "daily_snapshot_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
