@@ -73,26 +73,26 @@
     "service": "examplefuncrefs",
     "resource_type": "aws_examplefuncrefs_noop",
     "plugin_type": "SDKv2",
-    "expr": "resourceNoop",
-    "location": "internal/service/examplefuncrefs/noop.go:18",
+    "expr": "resourceNoopDelete",
+    "location": "internal/service/examplefuncrefs/noop_delete.go:18",
     "create": {
-      "expr": "resourceNoopUpsert",
-      "location": "internal/service/examplefuncrefs/noop.go:36",
+      "expr": "resourceNoopDeleteUpsert",
+      "location": "internal/service/examplefuncrefs/noop_delete.go:36",
       "sdk_calls": [
         "examplefuncrefs.GetAccountSettings",
         "examplefuncrefs.SetAccountSettings"
       ]
     },
     "read": {
-      "expr": "resourceNoopRead",
-      "location": "internal/service/examplefuncrefs/noop.go:57",
+      "expr": "resourceNoopDeleteRead",
+      "location": "internal/service/examplefuncrefs/noop_delete.go:57",
       "sdk_calls": [
         "examplefuncrefs.GetAccountSettings"
       ]
     },
     "update": {
-      "expr": "resourceNoopUpsert",
-      "location": "internal/service/examplefuncrefs/noop.go:36",
+      "expr": "resourceNoopDeleteUpsert",
+      "location": "internal/service/examplefuncrefs/noop_delete.go:36",
       "sdk_calls": [
         "examplefuncrefs.GetAccountSettings",
         "examplefuncrefs.SetAccountSettings"
