@@ -719,10 +719,10 @@ The following arguments are optional:
 `durable_config` may only be available in [limited regions](https://builder.aws.com/build/capabilities), including `us-east-2`.
 
 * `execution_timeout` - (Required) Maximum execution time in seconds for the durable function. Valid value between 1 and 31622400 (366 days).
-* `kms_key_arn` - (Optional) ARN of the KMS customer managed key used to encrypt the durable function's execution state (input, output, and error payloads). If not specified, the execution state is encrypted with an AWS managed key. Changing this value forces a new resource to be created. Note that the top-level `kms_key_arn` argument is not used for durable function state encryption.
+* `kms_key_arn` - (Optional) ARN of the KMS customer managed key used to encrypt the durable function's execution state (input, output, and error payloads). If not specified, the execution state is encrypted with an AWS managed key. Changing this value applies the new key to executions that start after the change; executions already in progress continue to use the key they started with. Note that the top-level `kms_key_arn` argument is not used for durable function state encryption.
 * `retention_period` - (Optional) Number of days to retain the function's execution state. Valid value between 1 and 90. If not specified, the function's execution state is not retained. Defaults to 14.
 
-~> **NOTE:** When `kms_key_arn` is set, the KMS key policy must grant the Lambda service (`lambda.amazonaws.com`) permission to use the key (`kms:Decrypt`, `kms:GenerateDataKey`, and `kms:DescribeKey`); otherwise function creation fails with a KMS `AccessDeniedException`. The key must be a symmetric encryption key in the same region as the function. Because the encryption key is set at creation time and cannot be changed in place, modifying `kms_key_arn` forces the function to be replaced.
+~> **NOTE:** When `kms_key_arn` is set, the KMS key policy must grant the Lambda service (`lambda.amazonaws.com`) permission to use the key (`kms:Decrypt`, `kms:GenerateDataKey`, and `kms:DescribeKey`); otherwise function creation fails with a KMS `AccessDeniedException`. The key must be a symmetric encryption key in the same region as the function. The key can be changed in place after creation: the new key applies only to executions that start after the change, while executions already in progress continue to use the key they started with.
 
 ### `environment` Block
 
