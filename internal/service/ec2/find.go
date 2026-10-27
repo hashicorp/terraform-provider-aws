@@ -4893,12 +4893,8 @@ func findTransitGatewayAttachmentByID(ctx context.Context, conn *ec2.Client, id 
 	return output, nil
 }
 
-func findTransitGatewayAttachmentNATConfigurationByID(ctx context.Context, conn *ec2.Client, id string) (*ec2.GetTransitGatewayAttachmentNatConfigurationOutput, error) {
-	input := ec2.GetTransitGatewayAttachmentNatConfigurationInput{
-		TransitGatewayAttachmentId: aws.String(id),
-	}
-
-	output, err := conn.GetTransitGatewayAttachmentNatConfiguration(ctx, &input)
+func findTransitGatewayAttachmentNATConfiguration(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayAttachmentNatConfigurationInput) (*ec2.GetTransitGatewayAttachmentNatConfigurationOutput, error) {
+	output, err := conn.GetTransitGatewayAttachmentNatConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
 		return nil, &retry.NotFoundError{
@@ -4914,16 +4910,30 @@ func findTransitGatewayAttachmentNATConfigurationByID(ctx context.Context, conn 
 		return nil, tfresource.NewEmptyResultError()
 	}
 
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayAttachmentId) != aws.ToString(input.TransitGatewayAttachmentId) {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayAttachmentNATConfigurationByID(ctx context.Context, conn *ec2.Client, id string) (*ec2.GetTransitGatewayAttachmentNatConfigurationOutput, error) {
+	input := ec2.GetTransitGatewayAttachmentNatConfigurationInput{
+		TransitGatewayAttachmentId: aws.String(id),
+	}
+
+	output, err := findTransitGatewayAttachmentNATConfiguration(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
 	// Every attachment reports a NAT configuration, so one that is disabled and has no rules is treated as absent.
 	if len(output.NatGatewayRules) == 0 && (output.NatGatewaySupport == "" || output.NatGatewaySupport == awstypes.TransitGatewayAttachmentNatGatewaySupportStateDisabled) {
 		return nil, &retry.NotFoundError{
 			Message: "no NAT configuration",
 		}
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.TransitGatewayAttachmentId) != id {
-		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
