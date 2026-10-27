@@ -38,7 +38,8 @@ func RegisterSweepers() {
 	})
 
 	awsv2.Register("aws_ecs_express_gateway_service", sweepExpressGatewayServices)
-	awsv2.Register("aws_ecs_gateway", sweepGateways)
+	awsv2.Register("aws_ecs_gateway", sweepGateways, "aws_ecs_gateway_cluster_association")
+	awsv2.Register("aws_ecs_gateway_cluster_association", sweepGatewayClusterAssociations, "aws_ecs_service")
 
 	resource.AddTestSweepers("aws_ecs_service", &resource.Sweeper{
 		Name: "aws_ecs_service",
@@ -198,6 +199,39 @@ func sweepGateways(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 			sweepResources = append(sweepResources, framework.NewSweepResource(newGatewayResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(v.GatewayArn))),
 			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepGatewayClusterAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ECSClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	var input ecs.ListGatewaysInput
+	pages := ecs.NewListGatewaysPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Gateways {
+			input := ecs.ListGatewayClusterAssociationsInput{
+				Gateway: v.GatewayArn,
+			}
+			associations, err := findGatewayClusterAssociations(ctx, conn, &input)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, v := range associations {
+				sweepResources = append(sweepResources, framework.NewSweepResource(newGatewayClusterAssociationResource, client,
+					framework.NewAttribute("cluster", aws.ToString(v.ClusterArn)),
+					framework.NewAttribute("gateway", aws.ToString(v.GatewayArn))),
+				)
+			}
 		}
 	}
 

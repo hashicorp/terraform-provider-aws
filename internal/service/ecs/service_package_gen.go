@@ -74,6 +74,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newGatewayClusterAssociationResource,
+			TypeName: "aws_ecs_gateway_cluster_association",
+			Name:     "Gateway Cluster Association",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("cluster", true),
+				inttypes.StringIdentityAttribute("gateway", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      gatewayClusterAssociationImportID{},
+			},
+		},
 	}
 }
 
