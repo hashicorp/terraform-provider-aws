@@ -275,24 +275,6 @@ func statusFunction(conn *lambdaweb.Client, name string) retry.StateRefreshFunc 
 	}
 }
 
-func waitFunctionCreated(ctx context.Context, conn *lambdaweb.Client, name string, timeout time.Duration) (*lambdaweb.GetWebFunctionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.FunctionStatePending),
-		Target:                    enum.Slice(awstypes.FunctionStateActive),
-		Refresh:                   statusFunction(conn, name),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lambdaweb.GetWebFunctionOutput); ok {
-		retry.SetLastError(err, errors.New(aws.ToString(out.StateReason)))
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
 func waitFunctionDeleted(ctx context.Context, conn *lambdaweb.Client, name string, timeout time.Duration) (*lambdaweb.GetWebFunctionOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FunctionStateActive, awstypes.FunctionStateDeleting),
