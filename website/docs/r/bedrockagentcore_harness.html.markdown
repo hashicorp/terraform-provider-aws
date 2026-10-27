@@ -145,7 +145,7 @@ resource "aws_bedrockagentcore_harness" "example" {
 
 ### With Lifecycle Hooks
 
-The execution role must allow `lambda:InvokeFunction`, `sns:Publish`, and `events:PutEvents` on the hook targets. For a target in another account, the target's resource-based policy must also allow the execution role.
+The execution role must allow `lambda:InvokeFunction`, `sns:Publish`, or `events:PutEvents` on each Lambda, SNS, or EventBridge target, respectively. For a target in another account, the target's resource-based policy must also allow the execution role.
 
 ```terraform
 resource "aws_bedrockagentcore_harness" "example" {
@@ -218,7 +218,7 @@ The following arguments are optional:
 * `environment` - (Optional) Compute environment configuration. See [`environment` Block](#environment-block) below. If not specified, configured values can be found in `environment_actual`. Clearing this value will leave the environment configuration as is, but Terraform will not track changes.
 * `environment_artifact` - (Optional) Environment artifact configuration. See [`environment_artifact` Block](#environment_artifact-block) below.
 * `environment_variables` - (Optional, Sensitive) Map of environment variables. Set to an empty map (`{}`) to remove all environment variables.
-* `hook` - (Optional) Lifecycle hooks that send an event to a Lambda function, SNS topic, or EventBridge event bus at defined points in the agent loop. Up to 20 can be specified. The execution role must allow the harness to call each target. Removing all `hook` blocks removes all hooks from the harness. See [`hook` Block](#hook-block) below.
+* `hook` - (Optional) Lifecycle hooks that send an event to a Lambda function, SNS topic, or EventBridge event bus at defined points in the agent loop. Up to 20 can be specified. The execution role must allow the harness to call each target. If no `hook` blocks are configured, Terraform removes all hooks from the harness, including hooks added outside Terraform. See [`hook` Block](#hook-block) below.
 * `max_iterations` - (Optional) Maximum number of iterations the agent loop can perform.
 * `max_tokens` - (Optional) Maximum total number of output tokens the agent can generate across all model calls within a single invocation.
 * `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below. If not specified, configured values can be found in `memory_actual`. Clearing this value will reset the memory configuration to default values.
