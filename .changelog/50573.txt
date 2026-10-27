@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_ecs_gateway
+```
+
+```release-note:new-resource
+aws_ecs_gateway_cluster_association
+```
+
+```release-note:enhancement
+resource/aws_ecs_service: Add `gateway_connector` argument
+```
