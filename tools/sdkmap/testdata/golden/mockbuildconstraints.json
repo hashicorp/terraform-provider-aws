@@ -1,0 +1,31 @@
+[
+  {
+    "service": "mockbuildconstraints",
+    "resource_type": "aws_mockbuildconstraints_included",
+    "plugin_type": "SDKv2",
+    "expr": "resourceIncluded",
+    "location": "internal/service/mockbuildconstraints/included.go:23",
+    "create": {
+      "expr": "resourceIncludedCreate",
+      "location": "internal/service/mockbuildconstraints/included.go:39",
+      "sdk_calls": [
+        "mockbuildconstraints.CreateFoo",
+        "mockbuildconstraints.GetFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceIncludedRead",
+      "location": "internal/service/mockbuildconstraints/included.go:59",
+      "sdk_calls": [
+        "mockbuildconstraints.GetFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceIncludedDelete",
+      "location": "internal/service/mockbuildconstraints/included.go:84",
+      "sdk_calls": [
+        "mockbuildconstraints.DeleteFoo"
+      ]
+    }
+  }
+]

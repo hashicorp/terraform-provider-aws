@@ -1,0 +1,130 @@
+[
+  {
+    "service": "mockimport",
+    "resource_type": "aws_mockimport_function",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFunction",
+    "location": "internal/service/mockimport/import.go:31",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockimport/foo.go:37",
+      "sdk_calls": [
+        "mockimport.CreateFoo",
+        "mockimport.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockimport/foo.go:58",
+      "sdk_calls": [
+        "mockimport.DescribeFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockimport/foo.go:80",
+      "sdk_calls": [
+        "mockimport.DeleteFoo"
+      ]
+    },
+    "import": {
+      "expr": "resourceFunctionImport",
+      "location": "internal/service/mockimport/import.go:83",
+      "sdk_calls": []
+    }
+  },
+  {
+    "service": "mockimport",
+    "resource_type": "aws_mockimport_function_literal",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFunctionLiteral",
+    "location": "internal/service/mockimport/import.go:46",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockimport/foo.go:37",
+      "sdk_calls": [
+        "mockimport.CreateFoo",
+        "mockimport.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockimport/foo.go:58",
+      "sdk_calls": [
+        "mockimport.DescribeFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockimport/foo.go:80",
+      "sdk_calls": [
+        "mockimport.DeleteFoo"
+      ]
+    },
+    "import": {
+      "expr": "func literal",
+      "location": "internal/service/mockimport/import.go:53",
+      "sdk_calls": [
+        "mockimport.DescribeFoo"
+      ]
+    }
+  },
+  {
+    "service": "mockimport",
+    "resource_type": "aws_mockimport_none",
+    "plugin_type": "SDKv2",
+    "expr": "resourceNone",
+    "location": "internal/service/mockimport/import.go:73",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockimport/foo.go:37",
+      "sdk_calls": [
+        "mockimport.CreateFoo",
+        "mockimport.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockimport/foo.go:58",
+      "sdk_calls": [
+        "mockimport.DescribeFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockimport/foo.go:80",
+      "sdk_calls": [
+        "mockimport.DeleteFoo"
+      ]
+    }
+  },
+  {
+    "service": "mockimport",
+    "resource_type": "aws_mockimport_passthrough",
+    "plugin_type": "SDKv2",
+    "expr": "resourcePassthrough",
+    "location": "internal/service/mockimport/import.go:16",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockimport/foo.go:37",
+      "sdk_calls": [
+        "mockimport.CreateFoo",
+        "mockimport.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockimport/foo.go:58",
+      "sdk_calls": [
+        "mockimport.DescribeFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockimport/foo.go:80",
+      "sdk_calls": [
+        "mockimport.DeleteFoo"
+      ]
+    }
+  }
+]

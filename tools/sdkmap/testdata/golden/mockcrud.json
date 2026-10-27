@@ -1,0 +1,110 @@
+[
+  {
+    "service": "mockcrud",
+    "resource_type": "aws_mockcrud_bar",
+    "plugin_type": "SDKv2",
+    "expr": "resourceBar",
+    "location": "internal/service/mockcrud/bar.go:29",
+    "create": {
+      "expr": "resourceBarCreate",
+      "location": "internal/service/mockcrud/bar.go:55",
+      "sdk_calls": [
+        "mockcrossservice.DescribeFoo",
+        "mockcrud.CreateBar",
+        "mockcrud.DescribeBar",
+        "mockcrud.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceBarRead",
+      "location": "internal/service/mockcrud/bar.go:96",
+      "sdk_calls": [
+        "mockcrud.DescribeBar"
+      ]
+    },
+    "update": {
+      "expr": "resourceBarUpdate",
+      "location": "internal/service/mockcrud/bar.go:118",
+      "sdk_calls": [
+        "mockcrud.DescribeBar",
+        "mockcrud.UpdateBar"
+      ]
+    },
+    "delete": {
+      "expr": "resourceBarDelete",
+      "location": "internal/service/mockcrud/bar.go:136",
+      "sdk_calls": [
+        "mockcrud.DeleteBar"
+      ]
+    }
+  },
+  {
+    "service": "mockcrud",
+    "resource_type": "aws_mockcrud_baz",
+    "plugin_type": "SDKv2",
+    "expr": "resourceBaz",
+    "location": "internal/service/mockcrud/baz.go:21",
+    "create": {
+      "expr": "resourceBazCreate",
+      "location": "internal/service/mockcrud/baz.go:37",
+      "sdk_calls": [
+        "mockcrud.CreateBaz",
+        "mockcrud.GetBaz"
+      ]
+    },
+    "read": {
+      "expr": "resourceBazRead",
+      "location": "internal/service/mockcrud/baz.go:57",
+      "sdk_calls": [
+        "mockcrud.GetBaz"
+      ]
+    },
+    "delete": {
+      "expr": "resourceBazDelete",
+      "location": "internal/service/mockcrud/baz.go:82",
+      "sdk_calls": [
+        "mockcrud.DeleteBaz"
+      ]
+    }
+  },
+  {
+    "service": "mockcrud",
+    "resource_type": "aws_mockcrud_foo",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFoo",
+    "location": "internal/service/mockcrud/foo.go:23",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockcrud/foo.go:53",
+      "sdk_calls": [
+        "mockcrud.CreateFoo",
+        "mockcrud.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockcrud/foo.go:78",
+      "sdk_calls": [
+        "mockcrud.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mockcrud/foo.go:101",
+      "sdk_calls": [
+        "mockcrud.DescribeFoo",
+        "mockcrud.UpdateFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockcrud/foo.go:119",
+      "sdk_calls": [
+        "mockcrud.DeleteFoo",
+        "mockcrud.DeleteFooPart",
+        "mockcrud.DescribeFoo",
+        "mockcrud.ListFooParts"
+      ]
+    }
+  }
+]

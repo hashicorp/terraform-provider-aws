@@ -7,19 +7,19 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/examplebuildconstraints"
-	"github.com/aws/aws-sdk-go-v2/service/examplecrossservice"
-	"github.com/aws/aws-sdk-go-v2/service/examplecrud"
-	"github.com/aws/aws-sdk-go-v2/service/examplecustomizediff"
-	"github.com/aws/aws-sdk-go-v2/service/examplefuncrefs"
-	"github.com/aws/aws-sdk-go-v2/service/exampleimport"
-	"github.com/aws/aws-sdk-go-v2/service/exampleinterface"
-	"github.com/aws/aws-sdk-go-v2/service/examplestructfield"
-	"github.com/aws/aws-sdk-go-v2/service/exampletags"
-	"github.com/aws/aws-sdk-go-v2/service/exampletagsgen"
-	"github.com/aws/aws-sdk-go-v2/service/exampletagsnohandlers"
-	"github.com/aws/aws-sdk-go-v2/service/exampletagsupdateonly"
-	"github.com/aws/aws-sdk-go-v2/service/exampleunanalyzed"
+	"github.com/aws/aws-sdk-go-v2/service/mockbuildconstraints"
+	"github.com/aws/aws-sdk-go-v2/service/mockcrossservice"
+	"github.com/aws/aws-sdk-go-v2/service/mockcrud"
+	"github.com/aws/aws-sdk-go-v2/service/mockcustomizediff"
+	"github.com/aws/aws-sdk-go-v2/service/mockfuncrefs"
+	"github.com/aws/aws-sdk-go-v2/service/mockimport"
+	"github.com/aws/aws-sdk-go-v2/service/mockinterface"
+	"github.com/aws/aws-sdk-go-v2/service/mockstructfield"
+	"github.com/aws/aws-sdk-go-v2/service/mocktags"
+	"github.com/aws/aws-sdk-go-v2/service/mocktagsgen"
+	"github.com/aws/aws-sdk-go-v2/service/mocktagsnohandlers"
+	"github.com/aws/aws-sdk-go-v2/service/mocktagsupdateonly"
+	"github.com/aws/aws-sdk-go-v2/service/mockunanalyzed"
 )
 
 type AWSClient struct {
@@ -41,56 +41,56 @@ func (c *AWSClient) Partition(context.Context) string {
 	return c.partition
 }
 
-func (c *AWSClient) ExampleBuildConstraintsClient(ctx context.Context) *examplebuildconstraints.Client {
-	return client[*examplebuildconstraints.Client](ctx, c, "examplebuildconstraints")
+func (c *AWSClient) MockBuildConstraintsClient(ctx context.Context) *mockbuildconstraints.Client {
+	return client[*mockbuildconstraints.Client](ctx, c, "mockbuildconstraints")
 }
 
-func (c *AWSClient) ExampleCrossServiceClient(ctx context.Context) *examplecrossservice.Client {
-	return client[*examplecrossservice.Client](ctx, c, "examplecrossservice")
+func (c *AWSClient) MockCrossServiceClient(ctx context.Context) *mockcrossservice.Client {
+	return client[*mockcrossservice.Client](ctx, c, "mockcrossservice")
 }
 
-func (c *AWSClient) ExampleCRUDClient(ctx context.Context) *examplecrud.Client {
-	return client[*examplecrud.Client](ctx, c, "examplecrud")
+func (c *AWSClient) MockCRUDClient(ctx context.Context) *mockcrud.Client {
+	return client[*mockcrud.Client](ctx, c, "mockcrud")
 }
 
-func (c *AWSClient) ExampleCustomizeDiffClient(ctx context.Context) *examplecustomizediff.Client {
-	return client[*examplecustomizediff.Client](ctx, c, "examplecustomizediff")
+func (c *AWSClient) MockCustomizeDiffClient(ctx context.Context) *mockcustomizediff.Client {
+	return client[*mockcustomizediff.Client](ctx, c, "mockcustomizediff")
 }
 
-func (c *AWSClient) ExampleFuncRefsClient(ctx context.Context) *examplefuncrefs.Client {
-	return client[*examplefuncrefs.Client](ctx, c, "examplefuncrefs")
+func (c *AWSClient) MockFuncRefsClient(ctx context.Context) *mockfuncrefs.Client {
+	return client[*mockfuncrefs.Client](ctx, c, "mockfuncrefs")
 }
 
-func (c *AWSClient) ExampleImportClient(ctx context.Context) *exampleimport.Client {
-	return client[*exampleimport.Client](ctx, c, "exampleimport")
+func (c *AWSClient) MockImportClient(ctx context.Context) *mockimport.Client {
+	return client[*mockimport.Client](ctx, c, "mockimport")
 }
 
-func (c *AWSClient) ExampleInterfaceClient(ctx context.Context) *exampleinterface.Client {
-	return client[*exampleinterface.Client](ctx, c, "exampleinterface")
+func (c *AWSClient) MockInterfaceClient(ctx context.Context) *mockinterface.Client {
+	return client[*mockinterface.Client](ctx, c, "mockinterface")
 }
 
-func (c *AWSClient) ExampleStructFieldClient(ctx context.Context) *examplestructfield.Client {
-	return client[*examplestructfield.Client](ctx, c, "examplestructfield")
+func (c *AWSClient) MockStructFieldClient(ctx context.Context) *mockstructfield.Client {
+	return client[*mockstructfield.Client](ctx, c, "mockstructfield")
 }
 
-func (c *AWSClient) ExampleTagsClient(ctx context.Context) *exampletags.Client {
-	return client[*exampletags.Client](ctx, c, "exampletags")
+func (c *AWSClient) MockTagsClient(ctx context.Context) *mocktags.Client {
+	return client[*mocktags.Client](ctx, c, "mocktags")
 }
 
-func (c *AWSClient) ExampleTagsGenClient(ctx context.Context) *exampletagsgen.Client {
-	return client[*exampletagsgen.Client](ctx, c, "exampletagsgen")
+func (c *AWSClient) MockTagsGenClient(ctx context.Context) *mocktagsgen.Client {
+	return client[*mocktagsgen.Client](ctx, c, "mocktagsgen")
 }
 
-func (c *AWSClient) ExampleTagsNoHandlersClient(ctx context.Context) *exampletagsnohandlers.Client {
-	return client[*exampletagsnohandlers.Client](ctx, c, "exampletagsnohandlers")
+func (c *AWSClient) MockTagsNoHandlersClient(ctx context.Context) *mocktagsnohandlers.Client {
+	return client[*mocktagsnohandlers.Client](ctx, c, "mocktagsnohandlers")
 }
 
-func (c *AWSClient) ExampleTagsUpdateOnlyClient(ctx context.Context) *exampletagsupdateonly.Client {
-	return client[*exampletagsupdateonly.Client](ctx, c, "exampletagsupdateonly")
+func (c *AWSClient) MockTagsUpdateOnlyClient(ctx context.Context) *mocktagsupdateonly.Client {
+	return client[*mocktagsupdateonly.Client](ctx, c, "mocktagsupdateonly")
 }
 
-func (c *AWSClient) ExampleUnanalyzedClient(ctx context.Context) *exampleunanalyzed.Client {
-	return client[*exampleunanalyzed.Client](ctx, c, "exampleunanalyzed")
+func (c *AWSClient) MockUnanalyzedClient(ctx context.Context) *mockunanalyzed.Client {
+	return client[*mockunanalyzed.Client](ctx, c, "mockunanalyzed")
 }
 
 func client[T any](_ context.Context, c *AWSClient, servicePackageName string) T {
