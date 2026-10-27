@@ -967,6 +967,23 @@ func TestAccBedrockAgentCoreHarness_hook(t *testing.T) {
 				ImportStateVerifyIgnore:              []string{names.AttrEnvironment, "memory"},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/hook.ignore_changes/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hook"), expectedHooks),
+				},
+			},
+			{
 				ConfigDirectory: config.StaticDirectory("testdata/Harness/hook.update/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
