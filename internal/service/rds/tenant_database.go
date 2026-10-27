@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -266,6 +265,14 @@ func (r *tenantDatabaseResource) Read(ctx context.Context, request resource.Read
 		return
 	}
 
+	// The API doesn't return the flag, so infer it from the secret (e.g., after import).
+	// An unmanaged null is left alone so an omitted argument doesn't show a diff.
+	if out.MasterUserSecret != nil {
+		data.ManageMasterUserPassword = types.BoolValue(true)
+	} else if data.ManageMasterUserPassword.ValueBool() {
+		data.ManageMasterUserPassword = types.BoolValue(false)
+	}
+
 	setTagsOut(ctx, out.TagList)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
@@ -304,10 +311,7 @@ func (r *tenantDatabaseResource) Update(ctx context.Context, request resource.Up
 		modify = true
 	}
 
-	// After import, state doesn't record management, so an existing secret means it's already on.
-	adopting := plan.ManageMasterUserPassword.ValueBool() && state.ManageMasterUserPassword.IsNull() && state.MasterUserSecret.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
-
-	if !plan.ManageMasterUserPassword.Equal(state.ManageMasterUserPassword) && !adopting {
+	if !plan.ManageMasterUserPassword.Equal(state.ManageMasterUserPassword) {
 		// Null means not managed, so send false rather than omitting the value.
 		input.ManageMasterUserPassword = aws.Bool(fwflex.BoolValueFromFramework(ctx, plan.ManageMasterUserPassword))
 		// The KMS key can only be set when turning on management (see ModifyPlan).
@@ -421,25 +425,32 @@ func (r *tenantDatabaseResource) ModifyPlan(ctx context.Context, request resourc
 	}
 
 	// RDS can't change the KMS key of an existing managed secret.
-	var changed bool
-	switch planKeyID := plan.MasterUserSecretKMSKeyID; {
-	case state.ManageMasterUserPassword.ValueBool():
-		changed = !planKeyID.Equal(state.MasterUserSecretKMSKeyID)
-	case state.ManageMasterUserPassword.IsNull() && secret != nil:
-		// After import, state has neither the flag nor the key, so compare with the secret's key ARN.
-		// A key ID or alias can't be compared with an ARN, so it's accepted.
-		changed = !planKeyID.IsNull() && arn.IsARN(planKeyID.ValueString()) && planKeyID.ValueString() != secret.KMSKeyID.ValueString()
+	// An unknown key is checked when Terraform plans again during apply with the resolved value.
+	planKeyID, stateKeyID := plan.MasterUserSecretKMSKeyID, state.MasterUserSecretKMSKeyID
+	if !state.ManageMasterUserPassword.ValueBool() || !plan.ManageMasterUserPassword.ValueBool() || planKeyID.IsUnknown() || planKeyID.Equal(stateKeyID) {
+		return
 	}
 
-	// An unknown key is checked when Terraform plans again during apply with the resolved value.
-	if changed && plan.ManageMasterUserPassword.ValueBool() && !plan.MasterUserSecretKMSKeyID.IsUnknown() {
-		response.Diagnostics.AddAttributeError(
-			path.Root("master_user_secret_kms_key_id"),
-			"Unsupported change",
-			"master_user_secret_kms_key_id can't be changed while manage_master_user_password is true. "+
-				"Turn off manage_master_user_password, apply, then turn it on with the new key.",
-		)
+	// State has no key after import, or if none was configured. The only value known to match the secret
+	// is its key ARN; a key ID, alias, or alias ARN can't be verified without calling KMS.
+	if stateKeyID.IsNull() && secret != nil {
+		if keyARN := secret.KMSKeyID.ValueString(); planKeyID.ValueString() != keyARN {
+			response.Diagnostics.AddAttributeError(
+				path.Root("master_user_secret_kms_key_id"),
+				"Unsupported change",
+				fmt.Sprintf("The existing secret uses KMS key %s, which can't be changed while manage_master_user_password is true. "+
+					"Omit master_user_secret_kms_key_id or set it to that key ARN.", keyARN),
+			)
+		}
+		return
 	}
+
+	response.Diagnostics.AddAttributeError(
+		path.Root("master_user_secret_kms_key_id"),
+		"Unsupported change",
+		"master_user_secret_kms_key_id can't be changed while manage_master_user_password is true. "+
+			"Turn off manage_master_user_password, apply, then turn it on with the new key.",
+	)
 }
 
 func (r *tenantDatabaseResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {

@@ -70,7 +70,7 @@ The following arguments are optional:
 * `master_user_password` - (Optional) Password for the master user. Stored in the Terraform state. Conflicts with `master_user_password_wo`.
 * `master_user_password_wo` - (Optional, Write-Only) Password for the master user. Not stored in the Terraform state. Requires `master_user_password_wo_version`.
 * `master_user_password_wo_version` - (Optional) Version of `master_user_password_wo`. Change it to update the password.
-* `master_user_secret_kms_key_id` - (Optional) ARN, ID, or alias of the AWS KMS key used to encrypt the Secrets Manager secret when `manage_master_user_password` is `true`. Can't be changed while `manage_master_user_password` is `true`; turn it off, apply, then turn it back on with the new key. Defaults to the `aws/secretsmanager` key.
+* `master_user_secret_kms_key_id` - (Optional) ARN, ID, or alias of the AWS KMS key used to encrypt the Secrets Manager secret when `manage_master_user_password` is `true`. Can't be changed while `manage_master_user_password` is `true`; turn it off, apply, then turn it back on with the new key. After import, omit it or use the secret's key ARN. Defaults to the `aws/secretsmanager` key.
 * `nchar_character_set_name` - (Optional, Forces new resource) National character set of the tenant database. Defaults to `AL16UTF16`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skip_final_snapshot` - (Optional) Whether to skip the final DB snapshot when the tenant database is deleted. Defaults to `false`.
