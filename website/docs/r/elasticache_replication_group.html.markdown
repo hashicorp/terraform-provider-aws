@@ -41,9 +41,11 @@ resource "aws_elasticache_replication_group" "example" {
   preferred_cache_cluster_azs = ["us-west-2a", "us-west-2b"]
   replication_group_id        = "tf-rep-group-1"
   description                 = "example description"
-  node_type                   = "cache.m4.large"
+  engine                      = "valkey"
+  engine_version              = "9.0"
+  node_type                   = "cache.m7g.large"
   num_cache_clusters          = 2
-  parameter_group_name        = "default.redis3.2"
+  parameter_group_name        = "default.valkey9"
   port                        = 6379
 }
 ```
@@ -59,9 +61,11 @@ resource "aws_elasticache_replication_group" "example" {
   preferred_cache_cluster_azs = ["us-west-2a", "us-west-2b"]
   replication_group_id        = "tf-rep-group-1"
   description                 = "example description"
-  node_type                   = "cache.m4.large"
+  engine                      = "valkey"
+  engine_version              = "9.0"
+  node_type                   = "cache.m7g.large"
   num_cache_clusters          = 2
-  parameter_group_name        = "default.redis3.2"
+  parameter_group_name        = "default.valkey9"
   port                        = 6379
 
   lifecycle {
@@ -85,9 +89,11 @@ To create two shards with a primary and a single read replica each:
 resource "aws_elasticache_replication_group" "baz" {
   replication_group_id       = "tf-redis-cluster"
   description                = "example description"
-  node_type                  = "cache.t2.small"
+  engine                     = "valkey"
+  engine_version             = "9.0"
+  node_type                  = "cache.t4g.small"
   port                       = 6379
-  parameter_group_name       = "default.redis3.2.cluster.on"
+  parameter_group_name       = "default.valkey9.cluster.on"
   automatic_failover_enabled = true
 
   num_node_groups         = 2
@@ -103,9 +109,11 @@ To create a cluster with specific availability zone placement and keyspace distr
 resource "aws_elasticache_replication_group" "example" {
   replication_group_id       = "tf-redis-cluster"
   description                = "example description"
-  node_type                  = "cache.t2.small"
+  engine                     = "valkey"
+  engine_version             = "9.0"
+  node_type                  = "cache.t4g.small"
   port                       = 6379
-  parameter_group_name       = "default.redis3.2.cluster.on"
+  parameter_group_name       = "default.valkey9.cluster.on"
   automatic_failover_enabled = true
 
   num_node_groups = 2
