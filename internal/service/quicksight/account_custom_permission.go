@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -21,8 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -199,26 +196,4 @@ type accountCustomPermissionResourceModel struct {
 	framework.WithRegionModel
 	AWSAccountID          types.String `tfsdk:"aws_account_id"`
 	CustomPermissionsName types.String `tfsdk:"custom_permissions_name"`
-}
-
-func sweepAccountCustomPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := quicksight.ListAccountCustomPermissionsInput{}
-	conn := client.QuickSightClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := quicksight.NewListAccountCustomPermissionsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.AccountCustomPermissions {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newAccountCustomPermissionResource, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.AccountCustomPermissionId))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }
