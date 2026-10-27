@@ -351,12 +351,27 @@ func (r *functionRevisionResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
+	// flatten overwrites telemetry_config with a null value (telemetry_config_actual holds the value read from the API).
+	var plannedTelemetryConfigList fwtypes.ListNestedObjectValueOf[telemetryConfigModel]
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.GetAttribute(ctx, r.telemetryConfigPath(), &plannedTelemetryConfigList))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Restore any configured telemetry_config.
+	if !plannedTelemetryConfigList.IsNull() {
+		smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, r.telemetryConfigPath(), plannedTelemetryConfigList))
+	}
 }
 
 func (r *functionRevisionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -380,12 +395,27 @@ func (r *functionRevisionResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
+	// flatten overwrites telemetry_config with a null value (telemetry_config_actual holds the value read from the API).
+	var configuredTelemetryConfigList fwtypes.ListNestedObjectValueOf[telemetryConfigModel]
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.GetAttribute(ctx, r.telemetryConfigPath(), &configuredTelemetryConfigList))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Restore any configured telemetry_config.
+	if !configuredTelemetryConfigList.IsNull() {
+		smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, r.telemetryConfigPath(), configuredTelemetryConfigList))
+	}
 }
 
 func (r *functionRevisionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -418,52 +448,9 @@ func (r *functionRevisionResource) flatten(ctx context.Context, revision *lambda
 	return diags
 }
 
-/*
-// environmentVariablesMaxBytes is the documented 32 KB limit the service
-// enforces on a revision's environment variables.
-const environmentVariablesMaxBytes = 32 * 1024
-
-// validateEnvironmentVariablesSize reports environment variables that cannot
-// fit. The service rejects them, but only up to a point: past roughly 37 KB the
-// whole request is too large and the error stops mentioning environment
-// variables at all ("Request must be smaller than 37888 bytes"), which sends
-// people looking in the wrong place. The keys and values are summed without the
-// serialization overhead the service also counts, so this only ever rejects a
-// configuration the service would reject too.
-func validateEnvironmentVariablesSize(ctx context.Context, cfg functionResourceModel, resp *resource.ValidateConfigResponse) {
-	if cfg.RevisionConfig.IsNull() || cfg.RevisionConfig.IsUnknown() {
-		return
-	}
-
-	revisionConfig, d := cfg.RevisionConfig.ToPtr(ctx)
-	if d.HasError() || revisionConfig == nil || revisionConfig.ServiceConfig.IsNull() || revisionConfig.ServiceConfig.IsUnknown() {
-		return
-	}
-
-	serviceConfig, d := revisionConfig.ServiceConfig.ToPtr(ctx)
-	if d.HasError() || serviceConfig == nil || serviceConfig.EnvironmentVariables.IsNull() || serviceConfig.EnvironmentVariables.IsUnknown() {
-		return
-	}
-
-	var size int
-	for name, value := range serviceConfig.EnvironmentVariables.Elements() {
-		if value.IsUnknown() {
-			return
-		}
-		size += len(name)
-		if v, ok := value.(types.String); ok {
-			size += len(v.ValueString())
-		}
-	}
-
-	if size > environmentVariablesMaxBytes {
-		resp.Diagnostics.AddAttributeError(path.Root("revision_config"),
-			"Environment variables too large",
-			fmt.Sprintf("`environment_variables` must not exceed %d bytes across all names and values; the configuration holds %d.",
-				environmentVariablesMaxBytes, size))
-	}
+func (*functionRevisionResource) telemetryConfigPath() path.Path {
+	return path.Root("service_config").AtListIndex(0).AtName("telemetry_config")
 }
-*/
 
 var _ inttypes.ImportIDParser = functionRevisionImportID{}
 
