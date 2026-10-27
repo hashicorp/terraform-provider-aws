@@ -92,6 +92,7 @@ variable "service_labels" {
     "connectcases",
     "connectcontactlens",
     "connectparticipant",
+    "continuum",
     "controltower",
     "costoptimizationhub",
     "cur",
