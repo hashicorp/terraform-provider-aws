@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: Add `cache_tag_config` argument, fixing cache tag extraction being disabled on every apply
+```
