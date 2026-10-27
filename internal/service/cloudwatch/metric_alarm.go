@@ -225,7 +225,7 @@ func resourceMetricAlarm() *schema.Resource {
 							names.AttrExpression: {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringLenBetween(1, 1024),
+								ValidateFunc: validation.StringLenBetween(1, 2048),
 							},
 							names.AttrID: {
 								Type:         schema.TypeString,
