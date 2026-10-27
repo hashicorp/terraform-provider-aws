@@ -8575,6 +8575,34 @@ resource "aws_instance" "test" {
 `, rName, placementGroup, partitionNumber))
 }
 
+func testAccInstanceConfig_disableAPIStopPlacementGroup(rName, placementGroup string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "spread"
+}
+
+resource "aws_instance" "test" {
+  ami              = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type    = "t2.small"
+  subnet_id        = aws_subnet.test.id
+  disable_api_stop = true
+  placement_group  = %[2]s
+
+  force_destroy = true
+
+  depends_on = [aws_placement_group.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, placementGroup))
+}
+
 func testAccInstanceConfig_ipv6Error(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
