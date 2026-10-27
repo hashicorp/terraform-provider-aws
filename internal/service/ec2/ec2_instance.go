@@ -240,9 +240,21 @@ func resourceInstance() *schema.Resource {
 				return diff.Id() != "" && (instancePlacementHasChange(diff, "placement_group") || instancePlacementHasChange(diff, "placement_group_id")) && diff.GetRawConfig().GetAttr("placement_partition_number").IsNull()
 			}),
 			// Updating placement requires stopping the instance, which isn't supported for all Spot Instances.
-			customdiff.ForceNewIf("placement_group", isSpotInstancePlacementChange("placement_group")),
-			customdiff.ForceNewIf("placement_group_id", isSpotInstancePlacementChange("placement_group_id")),
-			customdiff.ForceNewIf("placement_partition_number", isSpotInstancePlacementChange("placement_partition_number")),
+			customdiff.ForceNewIf("placement_group", instancePlacementChangeRequiresReplacement("placement_group")),
+			customdiff.ForceNewIf("placement_group_id", instancePlacementChangeRequiresReplacement("placement_group_id")),
+			customdiff.ForceNewIf("placement_partition_number", instancePlacementChangeRequiresReplacement("placement_partition_number")),
+			// Capacity Blocks don't support placement groups, reject it at plan time
+			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+				if diff.Id() == "" || !instancePlacementHasChanges(diff) {
+					return nil
+				}
+
+				if diff.Get("instance_lifecycle").(string) == string(awstypes.InstanceLifecycleTypeCapacityBlock) {
+					return errors.New("placement groups are not supported for EC2 Capacity Block instances")
+				}
+
+				return nil
+			},
 		),
 	}
 }
