@@ -75,6 +75,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connectcases"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/continuum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/costoptimizationhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
@@ -343,6 +344,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		configservice.ServicePackage(ctx),
 		connect.ServicePackage(ctx),
 		connectcases.ServicePackage(ctx),
+		continuum.ServicePackage(ctx),
 		controltower.ServicePackage(ctx),
 		costoptimizationhub.ServicePackage(ctx),
 		cur.ServicePackage(ctx),

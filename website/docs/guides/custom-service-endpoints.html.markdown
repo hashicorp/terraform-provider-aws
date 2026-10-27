@@ -150,6 +150,7 @@ provider "aws" {
 |Config|`configservice`(or `config`)|`AWS_ENDPOINT_URL_CONFIG_SERVICE`|`config_service`|
 |Connect|`connect`|`AWS_ENDPOINT_URL_CONNECT`|`connect`|
 |Connect Cases|`connectcases`|`AWS_ENDPOINT_URL_CONNECTCASES`|`connectcases`|
+|Continuum|`continuum`|`AWS_ENDPOINT_URL_CONTINUUM`|`continuum`|
 |Control Tower|`controltower`|`AWS_ENDPOINT_URL_CONTROLTOWER`|`controltower`|
 |Cost Optimization Hub|`costoptimizationhub`|`AWS_ENDPOINT_URL_COST_OPTIMIZATION_HUB`|`cost_optimization_hub`|
 |Cost and Usage Report|`cur`(or `costandusagereportservice`)|`AWS_ENDPOINT_URL_COST_AND_USAGE_REPORT_SERVICE`|`cost_and_usage_report_service`|

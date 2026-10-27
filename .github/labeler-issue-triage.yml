@@ -198,6 +198,8 @@ service/connectcontactlens:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcontactlens_'
 service/connectparticipant:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectparticipant_'
+service/continuum:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_continuum_'
 service/controltower:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_controltower_'
 service/costoptimizationhub:
