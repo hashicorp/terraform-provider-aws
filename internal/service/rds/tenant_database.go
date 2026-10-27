@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -210,13 +211,29 @@ func (r *tenantDatabaseResource) Create(ctx context.Context, request resource.Cr
 	}
 
 	id := aws.ToString(out.TenantDatabase.TenantDatabaseResourceId)
+	// If a wait fails, save enough state to taint the tenant database so it's destroyed rather than orphaned.
+	taint := func() {
+		for name, v := range map[string]attr.Value{
+			names.AttrRegion:                  plan.Region,
+			"db_instance_identifier":          plan.DBInstanceIdentifier,
+			names.AttrFinalSnapshotIdentifier: plan.FinalSnapshotIdentifier,
+			"skip_final_snapshot":             plan.SkipFinalSnapshot,
+			"tenant_database_resource_id":     types.StringValue(id),
+			"tenant_db_name":                  plan.TenantDBName,
+		} {
+			smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(name), v))
+		}
+	}
+
 	tenantDatabase, err := waitTenantDatabaseAvailable(ctx, conn, id, timeout)
 	if err != nil {
+		taint()
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
 	if err := waitTenantDatabaseInstanceAvailable(ctx, conn, tenantDatabase, timeout); err != nil {
+		taint()
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
@@ -296,13 +313,10 @@ func (r *tenantDatabaseResource) Update(ctx context.Context, request resource.Up
 	if !plan.ManageMasterUserPassword.Equal(state.ManageMasterUserPassword) {
 		// Null means not managed, so send false rather than omitting the value.
 		input.ManageMasterUserPassword = aws.Bool(fwflex.BoolValueFromFramework(ctx, plan.ManageMasterUserPassword))
-		modify = true
-	}
-
-	if !plan.MasterUserSecretKMSKeyID.Equal(state.MasterUserSecretKMSKeyID) && !plan.MasterUserSecretKMSKeyID.IsNull() {
-		input.MasterUserSecretKmsKeyId = fwflex.StringFromFramework(ctx, plan.MasterUserSecretKMSKeyID)
-		// A ManageMasterUserPassword value is required when MasterUserSecretKmsKeyId is specified.
-		input.ManageMasterUserPassword = aws.Bool(fwflex.BoolValueFromFramework(ctx, plan.ManageMasterUserPassword))
+		// The KMS key can only be set when turning on management (see ModifyPlan).
+		if plan.ManageMasterUserPassword.ValueBool() {
+			input.MasterUserSecretKmsKeyId = fwflex.StringFromFramework(ctx, plan.MasterUserSecretKMSKeyID)
+		}
 		modify = true
 	}
 
@@ -388,6 +402,29 @@ func (r *tenantDatabaseResource) Delete(ctx context.Context, request resource.De
 	if err := waitTenantDatabaseInstanceAvailable(ctx, conn, tenantDatabase, timeout); err != nil && !retry.NotFound(err) {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
+	}
+}
+
+func (r *tenantDatabaseResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if request.State.Raw.IsNull() || request.Plan.Raw.IsNull() {
+		return
+	}
+
+	var plan, state tenantDatabaseResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &state))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// RDS can't change the KMS key of an existing managed secret.
+	if state.ManageMasterUserPassword.ValueBool() && plan.ManageMasterUserPassword.ValueBool() && !plan.MasterUserSecretKMSKeyID.Equal(state.MasterUserSecretKMSKeyID) {
+		response.Diagnostics.AddAttributeError(
+			path.Root("master_user_secret_kms_key_id"),
+			"Unsupported change",
+			"master_user_secret_kms_key_id can't be changed while manage_master_user_password is true. "+
+				"Turn off manage_master_user_password, apply, then turn it on with the new key.",
+		)
 	}
 }
 

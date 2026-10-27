@@ -195,6 +195,59 @@ func TestAccRDSTenantDatabase_update(t *testing.T) {
 
 // TestAccRDSTenantDatabase_multiple creates tenant databases concurrently on one DB instance,
 // which RDS processes one at a time, and covers character sets.
+// TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey verifies that the KMS key can't be changed on a managed
+// secret, and that it's used again when management is turned off and back on.
+func TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2, v3 types.TenantDatabase
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_tenant_database.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckTenantDatabaseDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "master_user_secret.0.kms_key_id", "aws_kms_key.test.0", names.AttrARN),
+				),
+			},
+			{
+				Config:      testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 1),
+				ExpectError: regexache.MustCompile(`Unsupported change`),
+			},
+			{
+				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, false, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v2),
+					testAccCheckTenantDatabaseNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "0"),
+				),
+			},
+			{
+				// Turning management back on uses the configured key even though it didn't change.
+				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v3),
+					testAccCheckTenantDatabaseNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttrPair(resourceName, "master_user_secret.0.kms_key_id", "aws_kms_key.test.0", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSTenantDatabase_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -440,6 +493,38 @@ resource "aws_rds_tenant_database" "test" {
   }
 }
 `, tenantDBName, acctest.CtKey2, acctest.CtValue2))
+}
+
+func testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName string, managed bool, keyIndex int) string {
+	// Turning off management requires a password.
+	password := `
+  master_user_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  master_user_password_wo_version = 1`
+	if managed {
+		password = fmt.Sprintf(`
+  manage_master_user_password = %[1]t`, managed)
+	}
+
+	return acctest.ConfigCompose(
+		testAccTenantDatabaseConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  count = 2
+
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_rds_tenant_database" "test" {
+  db_instance_identifier        = aws_db_instance.test.identifier
+  master_user_secret_kms_key_id = aws_kms_key.test[%[2]d].arn
+  master_username               = "tfacctest"
+  skip_final_snapshot           = true
+  tenant_db_name                = "TFPDB1"
+%[3]s
+}
+`, rName, keyIndex, password))
 }
 
 func testAccTenantDatabaseConfig_multiple(rName string) string {
