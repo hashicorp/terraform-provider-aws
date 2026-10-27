@@ -474,22 +474,36 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 }
 
 func createGatewayWithRetry(ctx context.Context, conn *ecs.Client, input *ecs.CreateGatewayInput) (*ecs.CreateGatewayOutput, error) {
-	// The infrastructure role may not be assumable straight after it is created.
-	return tfresource.RetryWhenIsAErrorMessageContains[*ecs.CreateGatewayOutput, *awstypes.AccessDeniedException](ctx, propagationTimeout,
+	return tfresource.RetryWhen[*ecs.CreateGatewayOutput](ctx, propagationTimeout,
 		func(ctx context.Context) (*ecs.CreateGatewayOutput, error) {
 			return conn.CreateGateway(ctx, input)
 		},
-		"Could not assume the infrastructure role",
+		retryGatewayInfrastructureRolePropagation,
 	)
 }
 
 func updateGatewayWithRetry(ctx context.Context, conn *ecs.Client, input *ecs.UpdateGatewayInput) (*ecs.UpdateGatewayOutput, error) {
-	return tfresource.RetryWhenIsAErrorMessageContains[*ecs.UpdateGatewayOutput, *awstypes.AccessDeniedException](ctx, propagationTimeout,
+	return tfresource.RetryWhen[*ecs.UpdateGatewayOutput](ctx, propagationTimeout,
 		func(ctx context.Context) (*ecs.UpdateGatewayOutput, error) {
 			return conn.UpdateGateway(ctx, input)
 		},
-		"Could not assume the infrastructure role",
+		retryGatewayInfrastructureRolePropagation,
 	)
+}
+
+// retryGatewayInfrastructureRolePropagation retries while IAM changes to the
+// infrastructure role propagate: the role itself may not be assumable yet, or
+// its policies may not be in effect yet.
+func retryGatewayInfrastructureRolePropagation(err error) (bool, error) {
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Could not assume the infrastructure role") {
+		return true, err
+	}
+
+	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "You are not authorized to perform this operation") {
+		return true, err
+	}
+
+	return false, err
 }
 
 func findGatewayByARN(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.Gateway, error) {
@@ -498,7 +512,8 @@ func findGatewayByARN(ctx context.Context, conn *ecs.Client, arn string) (*awsty
 	}
 	output, err := conn.DescribeGateway(ctx, &input)
 
-	if errs.IsA[*awstypes.GatewayNotFoundException](err) {
+	// A deleted gateway returns "ClientException: No gateway found with name ...".
+	if errs.IsA[*awstypes.GatewayNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ClientException](err, "No gateway found") {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
