@@ -9,12 +9,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
-	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudcontrol/types"
 	cfschema "github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -22,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
@@ -107,7 +107,6 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	output, err := conn.CreateResource(ctx, &input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cloud Control API (%s) Resource: %s", typeName, err)
 	}
@@ -115,15 +114,18 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	// Always try to capture the identifier before returning errors.
 	d.SetId(aws.ToString(output.ProgressEvent.Identifier))
 
-	output.ProgressEvent, err = waitProgressEventOperationStatusSuccess(ctx, conn, aws.ToString(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
+	requestToken := aws.ToString(output.ProgressEvent.RequestToken)
+	var progressEvent *awstypes.ProgressEvent
+	waiter := cloudcontrol.NewResourceRequestSuccessWaiter(conn, func(o *cloudcontrol.ResourceRequestSuccessWaiterOptions) {
+		o.Retryable = retryGetResourceRequestStatus(&progressEvent)
+	})
+	if err := waiter.Wait(ctx, &cloudcontrol.GetResourceRequestStatusInput{RequestToken: aws.String(requestToken)}, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Cloud Control API (%s) Resource (%s) create: %s", typeName, d.Id(), err)
 	}
 
 	// Some resources do not set the identifier until after creation.
-	if d.Id() == "" {
-		d.SetId(aws.ToString(output.ProgressEvent.Identifier))
+	if d.Id() == "" && progressEvent != nil {
+		d.SetId(aws.ToString(progressEvent.Identifier))
 	}
 
 	return append(diags, resourceResourceRead(ctx, d, meta)...)
@@ -183,12 +185,15 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		output, err := conn.UpdateResource(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
 		}
 
-		if _, err := waitProgressEventOperationStatusSuccess(ctx, conn, aws.ToString(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		requestToken := aws.ToString(output.ProgressEvent.RequestToken)
+		waiter := cloudcontrol.NewResourceRequestSuccessWaiter(conn, func(o *cloudcontrol.ResourceRequestSuccessWaiterOptions) {
+			o.Retryable = retryGetResourceRequestStatus(nil)
+		})
+		if err := waiter.Wait(ctx, &cloudcontrol.GetResourceRequestStatusInput{RequestToken: aws.String(requestToken)}, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Cloud Control API (%s) Resource (%s) update: %s", typeName, d.Id(), err)
 		}
 	}
@@ -215,18 +220,15 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta an
 
 	log.Printf("[INFO] Deleting Cloud Control API (%s) Resource: %s", typeName, d.Id())
 	output, err := conn.DeleteResource(ctx, &input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
 	}
 
-	progressEvent, err := waitProgressEventOperationStatusSuccess(ctx, conn, aws.ToString(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutDelete))
-
-	if progressEvent != nil && progressEvent.ErrorCode == types.HandlerErrorCodeNotFound {
-		return diags
-	}
-
-	if err != nil {
+	requestToken := aws.ToString(output.ProgressEvent.RequestToken)
+	waiter := cloudcontrol.NewResourceRequestSuccessWaiter(conn, func(o *cloudcontrol.ResourceRequestSuccessWaiterOptions) {
+		o.Retryable = retryGetResourceRequestStatus(nil)
+	})
+	if err := waiter.Wait(ctx, &cloudcontrol.GetResourceRequestStatusInput{RequestToken: aws.String(requestToken)}, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Cloud Control API (%s) Resource (%s) delete: %s", typeName, d.Id(), err)
 	}
 
@@ -315,7 +317,7 @@ func resourceResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.R
 	return nil
 }
 
-func findResourceByFourPartKey(ctx context.Context, conn *cloudcontrol.Client, resourceID, typeName, typeVersionID, roleARN string) (*types.ResourceDescription, error) {
+func findResourceByFourPartKey(ctx context.Context, conn *cloudcontrol.Client, resourceID, typeName, typeVersionID, roleARN string) (*awstypes.ResourceDescription, error) {
 	input := cloudcontrol.GetResourceInput{
 		Identifier: aws.String(resourceID),
 		TypeName:   aws.String(typeName),
@@ -330,10 +332,10 @@ func findResourceByFourPartKey(ctx context.Context, conn *cloudcontrol.Client, r
 	return findResource(ctx, conn, &input)
 }
 
-func findResource(ctx context.Context, conn *cloudcontrol.Client, input *cloudcontrol.GetResourceInput) (*types.ResourceDescription, error) {
+func findResource(ctx context.Context, conn *cloudcontrol.Client, input *cloudcontrol.GetResourceInput) (*awstypes.ResourceDescription, error) {
 	output, err := conn.GetResource(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
@@ -358,69 +360,94 @@ func findResource(ctx context.Context, conn *cloudcontrol.Client, input *cloudco
 	return output.ResourceDescription, nil
 }
 
-func findProgressEventByRequestToken(ctx context.Context, conn *cloudcontrol.Client, requestToken string) (*types.ProgressEvent, error) {
-	input := cloudcontrol.GetResourceRequestStatusInput{
-		RequestToken: aws.String(requestToken),
-	}
+// retryGetResourceRequestStatus returns a custom retryable function for the GetResourceRequestStatus operation.
+func retryGetResourceRequestStatus(pProgressEvent **awstypes.ProgressEvent) func(context.Context, *cloudcontrol.GetResourceRequestStatusInput, *cloudcontrol.GetResourceRequestStatusOutput, error) (bool, error) {
+	return func(ctx context.Context, input *cloudcontrol.GetResourceRequestStatusInput, output *cloudcontrol.GetResourceRequestStatusOutput, err error) (bool, error) {
+		if err == nil {
+			progressEvent := output.ProgressEvent
+			if pProgressEvent != nil {
+				*pProgressEvent = progressEvent
+			}
 
-	return findProgressEvent(ctx, conn, &input)
+			switch value := progressEvent.OperationStatus; value {
+			case awstypes.OperationStatusSuccess, awstypes.OperationStatusCancelComplete:
+				return false, nil
+
+			case awstypes.OperationStatusFailed:
+				if progressEvent.ErrorCode == awstypes.HandlerErrorCodeNotFound && progressEvent.Operation == awstypes.OperationDelete {
+					// Resource not found error on delete is OK.
+					return false, nil
+				}
+
+				// Retry on throttling errors
+				if progressEvent.ErrorCode == awstypes.HandlerErrorCodeThrottling {
+					return true, err
+				}
+
+				// Build enhanced error message with hook information
+				waiterErr := waiterError(string(value), aws.ToString(progressEvent.StatusMessage))
+				waiterErr.withErrorCode(string(progressEvent.ErrorCode))
+
+				// Add hook information if available
+				if len(output.HooksProgressEvent) > 0 {
+					for _, hookEvent := range output.HooksProgressEvent {
+						hookStatus := aws.ToString(hookEvent.HookStatus)
+						// HOOK_COMPLETE_FAILED: The Hook invocation is complete with a failed result.
+						// HOOK_FAILED: The Hook invocation didn't complete successfully.
+						if hookStatus == "HOOK_COMPLETE_FAILED" || hookStatus == "HOOK_FAILED" {
+							waiterErr.withHookEvent(hookEvent)
+						}
+					}
+				}
+
+				return false, waiterErr
+			}
+		}
+
+		return true, err
+	}
 }
 
-func findProgressEvent(ctx context.Context, conn *cloudcontrol.Client, input *cloudcontrol.GetResourceRequestStatusInput) (*types.ProgressEvent, error) {
-	output, err := conn.GetResourceRequestStatus(ctx, input)
-
-	if errs.IsA[*types.RequestTokenNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.ProgressEvent == nil {
-		return nil, tfresource.NewEmptyResultError()
-	}
-
-	return output.ProgressEvent, nil
+type waiterResultError struct {
+	errorCode  string
+	errorMsg   string
+	hookErrors []string
 }
 
-func statusProgressEventOperation(conn *cloudcontrol.Client, requestToken string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		output, err := findProgressEventByRequestToken(ctx, conn, requestToken)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.OperationStatus), nil
+func (e *waiterResultError) Error() string {
+	if e.errorCode != "" {
+		e.errorMsg += fmt.Sprintf(". ErrorCode: %s", e.errorCode)
 	}
+
+	if len(e.hookErrors) > 0 {
+		e.errorMsg += ". Hook failures: " + strings.Join(e.hookErrors, "; ")
+	}
+
+	return e.errorMsg
 }
 
-func waitProgressEventOperationStatusSuccess(ctx context.Context, conn *cloudcontrol.Client, requestToken string, timeout time.Duration) (*types.ProgressEvent, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.OperationStatusInProgress, types.OperationStatusPending),
-		Target:  enum.Slice(types.OperationStatusSuccess),
-		Refresh: statusProgressEventOperation(conn, requestToken),
-		Timeout: timeout,
-	}
+func waiterError(status, msg string) *waiterResultError {
+	e := waiterResultError{}
+	e.errorMsg = fmt.Sprintf("waiter state transitioned to %s. StatusMessage: %s", status, msg)
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	return &e
+}
 
-	if output, ok := outputRaw.(*types.ProgressEvent); ok {
-		if output.OperationStatus == types.OperationStatusFailed {
-			retry.SetLastError(err, fmt.Errorf("%s: %s", output.ErrorCode, aws.ToString(output.StatusMessage)))
-		}
+func (e *waiterResultError) withErrorCode(code string) {
+	e.errorCode = code
+}
 
-		return output, err
-	}
-
-	return nil, err
+func (e *waiterResultError) withHookEvent(hookEvent awstypes.HookProgressEvent) {
+	e.hookErrors = append(
+		e.hookErrors,
+		fmt.Sprintf("HookName: %s, HookArn: %s, HookVersion: %s, Time: %s, HookMessage: %s",
+			aws.ToString(hookEvent.HookTypeName),
+			aws.ToString(hookEvent.HookTypeArn),
+			aws.ToString(hookEvent.HookTypeVersionId),
+			hookEvent.HookEventTime.Format(time.RFC3339),
+			aws.ToString(hookEvent.HookStatusMessage),
+		),
+	)
 }
 
 // patchDocument returns a JSON Patch document describing the difference between `old` and `new`.
