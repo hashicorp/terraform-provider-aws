@@ -61,3 +61,4 @@ sdkmap.json
 
 # service-reference-data for injector
 tools/injectr/service-data
+tools/injectr/service-urls.json
