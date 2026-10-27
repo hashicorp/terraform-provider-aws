@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -58,6 +59,37 @@ func TestAccLambdaWebFunctionRevision_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkFunctionRevisionARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("build_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"code_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"s3_object": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrBucket: knownvalue.StringExact(rName),
+								names.AttrKey:    knownvalue.StringExact("function.zip"),
+								"version_id":     knownvalue.Null(),
+							})}),
+						})}),
+						"runtime_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"runtime": knownvalue.StringExact("nodejs24.x"),
+						})}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyARN), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision_id"), knownvalue.StringRegexp(regexache.MustCompile(`^rev-[0-9a-z]+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"egress_network_connector_arn":    knownvalue.Null(),
+						"environment_variables":           knownvalue.Null(),
+						"execution_role_arn":              knownvalue.NotNull(),
+						"max_concurrency_per_environment": knownvalue.Int64Exact(64),
+						"telemetry_config":                knownvalue.ListSizeExact(0),
+						"telemetry_config_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"logging_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"application_log_level": tfknownvalue.StringExact(awstypes.ApplicationLogLevelInfo),
+								"log_group":             knownvalue.StringExact("/aws/lambda/web/" + rName),
+								"system_log_level":      tfknownvalue.StringExact(awstypes.SystemLogLevelInfo),
+							})}),
+						})}),
+						"timeout_seconds": knownvalue.Int64Exact(30),
+					})})),
 				},
 			},
 			{
