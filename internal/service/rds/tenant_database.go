@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -98,12 +97,6 @@ func (r *tenantDatabaseResource) Schema(ctx context.Context, request resource.Sc
 			},
 			"manage_master_user_password": schema.BoolAttribute{
 				Optional: true,
-				Validators: []validator.Bool{
-					boolvalidator.ConflictsWith(
-						path.MatchRoot("master_user_password"),
-						path.MatchRoot("master_user_password_wo"),
-					),
-				},
 			},
 			"master_user_password": schema.StringAttribute{
 				Optional:  true,
@@ -436,11 +429,23 @@ func (r *tenantDatabaseResource) ValidateConfig(ctx context.Context, request res
 		return
 	}
 
-	if data.SkipFinalSnapshot.IsUnknown() || data.FinalSnapshotIdentifier.IsUnknown() {
-		return
+	// Unlike ConflictsWith, allow a password when management is explicitly false; turning management off requires one.
+	if data.ManageMasterUserPassword.ValueBool() {
+		for name, v := range map[string]types.String{
+			"master_user_password":    data.MasterUserPassword,
+			"master_user_password_wo": data.MasterUserPasswordWO,
+		} {
+			if !v.IsNull() {
+				response.Diagnostics.AddAttributeError(
+					path.Root(name),
+					"Invalid Attribute Combination",
+					fmt.Sprintf(`"%s" can't be set when "manage_master_user_password" is true`, name),
+				)
+			}
+		}
 	}
 
-	if !data.SkipFinalSnapshot.ValueBool() && data.FinalSnapshotIdentifier.IsNull() {
+	if !data.SkipFinalSnapshot.IsUnknown() && !data.FinalSnapshotIdentifier.IsUnknown() && !data.SkipFinalSnapshot.ValueBool() && data.FinalSnapshotIdentifier.IsNull() {
 		response.Diagnostics.AddAttributeError(
 			path.Root(names.AttrFinalSnapshotIdentifier),
 			"Missing Attribute Configuration",

@@ -248,6 +248,26 @@ func TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey(t *testing.T) {
 	})
 }
 
+// TestAccRDSTenantDatabase_passwordWithManagedPassword verifies that a password is rejected when management is on.
+// It fails during validation, so no infrastructure is created.
+func TestAccRDSTenantDatabase_passwordWithManagedPassword(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTenantDatabaseConfig_passwordWithManagedPassword(rName),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
+			},
+		},
+	})
+}
+
 func TestAccRDSTenantDatabase_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -496,13 +516,13 @@ resource "aws_rds_tenant_database" "test" {
 }
 
 func testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName string, managed bool, keyIndex int) string {
-	// Turning off management requires a password.
-	password := `
+	// Turning off management requires a password. Setting the flag explicitly also covers false with a password.
+	password := fmt.Sprintf(`
+  manage_master_user_password = %[1]t`, managed)
+	if !managed {
+		password += `
   master_user_password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
   master_user_password_wo_version = 1`
-	if managed {
-		password = fmt.Sprintf(`
-  manage_master_user_password = %[1]t`, managed)
 	}
 
 	return acctest.ConfigCompose(
@@ -525,6 +545,19 @@ resource "aws_rds_tenant_database" "test" {
 %[3]s
 }
 `, rName, keyIndex, password))
+}
+
+func testAccTenantDatabaseConfig_passwordWithManagedPassword(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_tenant_database" "test" {
+  db_instance_identifier      = %[1]q
+  manage_master_user_password = %[2]t
+  master_user_password        = "avoid-plaintext-passwords"
+  master_username             = "tfacctest"
+  skip_final_snapshot         = %[2]t
+  tenant_db_name              = "TFPDB1"
+}
+`, rName, true)
 }
 
 func testAccTenantDatabaseConfig_multiple(rName string) string {

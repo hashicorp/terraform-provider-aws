@@ -66,7 +66,7 @@ The following arguments are optional:
 
 * `character_set_name` - (Optional, Forces new resource) Character set of the tenant database. Defaults to `AL32UTF8`.
 * `final_snapshot_identifier` - (Optional) Name of the DB snapshot created when the tenant database is deleted. Required unless `skip_final_snapshot` is `true`.
-* `manage_master_user_password` - (Optional) Whether to manage the master user password with AWS Secrets Manager. Conflicts with `master_user_password` and `master_user_password_wo`.
+* `manage_master_user_password` - (Optional) Whether to manage the master user password with AWS Secrets Manager. When `true`, conflicts with `master_user_password` and `master_user_password_wo`. Turning it off requires one of them.
 * `master_user_password` - (Optional) Password for the master user. Stored in the Terraform state. Conflicts with `master_user_password_wo`.
 * `master_user_password_wo` - (Optional, Write-Only) Password for the master user. Not stored in the Terraform state. Requires `master_user_password_wo_version`.
 * `master_user_password_wo_version` - (Optional) Version of `master_user_password_wo`. Change it to update the password.
