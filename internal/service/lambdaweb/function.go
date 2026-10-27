@@ -25,6 +25,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	//"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -36,6 +38,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	//"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
+	//tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 var validFunctionName validator.String = stringvalidator.RegexMatches(
@@ -97,9 +101,38 @@ func (r *functionResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	// In order to create a function with no initial revison or endpoint we must use the Cloud Control API.
+	// conn := r.Meta().CloudControlClient(ctx)
 	conn := r.Meta().LambdaWebClient(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, plan.FunctionName)
+	/*
+			desiredStateRaw := map[string]any{
+				"FunctionName": name,
+			}
+			if tags := getTagsIn(ctx); len(tags) > 0 {
+				tagsRaw := []any{}
+				for k, v := range tags {
+					tagsRaw = append(tagsRaw, map[string]any{
+						"Key":   k,
+						"Value": v,
+					})
+				}
+				desiredStateRaw["Tags"] = tagsRaw
+			}
+			desiredState, err := tfjson.EncodeToString(desiredStateRaw)
+			if err != nil {
+				smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewEncodingJSONErrorDiagnostic(err))
+				return
+			}
+
+			input := cloudcontrol.CreateResourceInput{
+			ClientToken:  aws.String(create.UniqueId(ctx)),
+			DesiredState: aws.String(desiredState),
+			TypeName:     aws.String("AWS::Lambda::WebFunction"),
+		}
+	*/
+
 	var input lambdaweb.CreateWebFunctionInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
