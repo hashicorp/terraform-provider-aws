@@ -1745,6 +1745,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		if _, err := conn.ModifyInstancePlacement(ctx, &input); err != nil {
+			if startErr := startInstance(ctx, conn, d.Id(), true, instanceStartTimeout); startErr != nil {
+				err = errors.Join(err, startErr)
+			}
+
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) placement: %s", d.Id(), err)
 		}
 
