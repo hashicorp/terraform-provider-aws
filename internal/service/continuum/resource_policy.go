@@ -30,7 +30,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
 // @Testing(identityTest=false)
-// @Testing(tagsTest=false)
 // @Testing(importIgnore="policy")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/continuum;continuum.GetResourcePolicyOutput")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {

@@ -35,7 +35,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
 // @Testing(identityTest=false)
-// @Testing(tagsTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/continuum;continuum.GetCollectorOutput")
 func newCollectorResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &collectorResource{}

@@ -39,7 +39,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(generator=false)
 // @Testing(identityTest=false)
-// @Testing(tagsTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/continuum;continuum.GetIntegrationOutput")
 func newIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &integrationResource{}, nil
