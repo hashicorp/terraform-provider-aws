@@ -97,7 +97,7 @@ func TestAccDevOpsAgentAsset_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrContent), knownvalue.ListSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrCreatedAt), tfknownvalue.StringNotEmpty()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("metadata"), knownvalue.Null()),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("metadata_all"), tfknownvalue.StringNotEmpty()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("metadata_actual"), tfknownvalue.StringNotEmpty()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("updated_at"), tfknownvalue.StringNotEmpty()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrVersion), knownvalue.NotNull()),

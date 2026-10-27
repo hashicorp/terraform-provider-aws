@@ -86,7 +86,7 @@ func (r *assetResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				CustomType:  fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 				Optional:    true,
 			},
-			"metadata_all": schema.StringAttribute{
+			"metadata_actual": schema.StringAttribute{
 				Description: "Full JSON metadata returned by AWS, including retained fields and service-provided defaults.",
 				CustomType:  fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 				Computed:    true,
@@ -270,7 +270,7 @@ func (r *assetResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			return
 		}
 	} else {
-		plan.MetadataAll = state.MetadataAll
+		plan.MetadataActual = state.MetadataActual
 		plan.UpdatedAt = state.UpdatedAt
 		plan.Version = state.Version
 	}
@@ -303,16 +303,20 @@ func findAssetByTwoPartKey(ctx context.Context, conn *devopsagent.Client, agentS
 		AssetId:      aws.String(assetID),
 	}
 	out, err := conn.GetAsset(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	switch {
+	case errs.IsA[*awstypes.ResourceNotFoundException](err):
 		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
-	}
-	// GetAsset returns AccessDeniedException once the parent Agent Space is deleted.
-	if errs.IsA[*awstypes.AccessDeniedException](err) {
-		if _, parentErr := findAgentSpaceByID(ctx, conn, agentSpaceID); retry.NotFound(parentErr) {
+	case errs.IsA[*awstypes.AccessDeniedException](err):
+		// GetAsset returns AccessDeniedException once the parent Agent Space is deleted.
+		_, parentErr := findAgentSpaceByID(ctx, conn, agentSpaceID)
+		if retry.NotFound(parentErr) {
 			return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
 		}
-	}
-	if err != nil {
+		if parentErr != nil {
+			return nil, smarterr.NewError(parentErr)
+		}
+		return nil, smarterr.NewError(err)
+	case err != nil:
 		return nil, smarterr.NewError(err)
 	}
 	if out == nil || out.Asset == nil {
@@ -332,7 +336,7 @@ func (r *assetResource) flatten(ctx context.Context, asset *awstypes.Asset, data
 		return diags
 	}
 	if asset.Metadata == nil {
-		data.MetadataAll = fwtypes.NewSmithyJSONNull[document.Interface]()
+		data.MetadataActual = fwtypes.NewSmithyJSONNull[document.Interface]()
 		return diags
 	}
 	metadata, err := tfsmithy.DocumentToJSONString(asset.Metadata)
@@ -340,7 +344,7 @@ func (r *assetResource) flatten(ctx context.Context, asset *awstypes.Asset, data
 		smerr.AddError(ctx, &diags, err, smerr.ID, data.AssetID.ValueString())
 		return diags
 	}
-	data.MetadataAll = fwtypes.NewSmithyJSONValue(metadata, document.NewLazyDocument)
+	data.MetadataActual = fwtypes.NewSmithyJSONValue(metadata, document.NewLazyDocument)
 	return diags
 }
 
@@ -358,15 +362,15 @@ func (assetImportID) Parse(id string) (string, map[string]any, error) {
 
 type assetResourceModel struct {
 	framework.WithRegionModel
-	AgentSpaceID types.String                                       `tfsdk:"agent_space_id"`
-	AssetID      types.String                                       `tfsdk:"asset_id"`
-	AssetType    types.String                                       `tfsdk:"asset_type"`
-	Content      fwtypes.ListNestedObjectValueOf[assetContentModel] `tfsdk:"content" autoflex:",noflatten"`
-	CreatedAt    timetypes.RFC3339                                  `tfsdk:"created_at"`
-	Metadata     fwtypes.SmithyJSON[document.Interface]             `tfsdk:"metadata" autoflex:",noflatten"`
-	MetadataAll  fwtypes.SmithyJSON[document.Interface]             `tfsdk:"metadata_all" autoflex:"-"`
-	UpdatedAt    timetypes.RFC3339                                  `tfsdk:"updated_at"`
-	Version      types.Int32                                        `tfsdk:"version"`
+	AgentSpaceID   types.String                                       `tfsdk:"agent_space_id"`
+	AssetID        types.String                                       `tfsdk:"asset_id"`
+	AssetType      types.String                                       `tfsdk:"asset_type"`
+	Content        fwtypes.ListNestedObjectValueOf[assetContentModel] `tfsdk:"content" autoflex:",noflatten"`
+	CreatedAt      timetypes.RFC3339                                  `tfsdk:"created_at"`
+	Metadata       fwtypes.SmithyJSON[document.Interface]             `tfsdk:"metadata" autoflex:",noflatten"`
+	MetadataActual fwtypes.SmithyJSON[document.Interface]             `tfsdk:"metadata_actual" autoflex:"-"`
+	UpdatedAt      timetypes.RFC3339                                  `tfsdk:"updated_at"`
+	Version        types.Int32                                        `tfsdk:"version"`
 }
 
 type assetContentModel struct {

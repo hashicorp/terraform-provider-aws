@@ -42,7 +42,7 @@ func TestAccDevOpsAgentAsset_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content.0.file.0.path", "AGENTS.md"),
 					resource.TestCheckResourceAttr(resourceName, "content.0.file.0.body.0.text", "Follow the operational runbook."),
 					acctest.CheckResourceAttrJMES(resourceName, "metadata", "agent_type", "GENERIC"),
-					acctest.CheckResourceAttrJMES(resourceName, "metadata_all", "agent_type", "GENERIC"),
+					acctest.CheckResourceAttrJMES(resourceName, "metadata_actual", "agent_type", "GENERIC"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
@@ -84,7 +84,7 @@ func TestAccDevOpsAgentAsset_update(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAssetExists(ctx, t, resourceName),
-					acctest.CheckResourceAttrJMES(resourceName, "metadata_all", "agent_type", "CHAT"),
+					acctest.CheckResourceAttrJMES(resourceName, "metadata_actual", "agent_type", "CHAT"),
 				),
 			},
 			{

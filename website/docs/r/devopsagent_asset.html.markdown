@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS DevOps Agent Asset.
 
-~> **Note:** `content` and `metadata` are inputs retained in Terraform state. Terraform does not detect out-of-band changes to these inputs. `metadata_all` exposes the current metadata returned by AWS. Import cannot recover the original content or metadata input.
+~> **Note:** `content` and `metadata` are inputs retained in Terraform state. Terraform does not detect out-of-band changes to these inputs. `metadata_actual` exposes the current metadata returned by AWS. Import cannot recover the original content or metadata input.
 
 ~> **Note:** Updating ZIP content replaces all files in the asset, including files managed separately. Updating single-file content adds or replaces that file without deleting other files. Updating source URL content re-syncs from the original source; an unchanged URL does not trigger a re-sync.
 
@@ -87,7 +87,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `asset_id` - Identifier of the asset.
 * `created_at` - Creation timestamp in RFC 3339 format.
-* `metadata_all` - Full JSON metadata returned by AWS, including retained fields and service-provided defaults.
+* `metadata_actual` - Full JSON metadata returned by AWS, including retained fields and service-provided defaults.
 * `updated_at` - Last update timestamp in RFC 3339 format.
 * `version` - Current asset version.
 
