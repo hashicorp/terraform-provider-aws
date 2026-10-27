@@ -447,7 +447,7 @@ func (e *waiterResultError) withHookEvent(hookEvent awstypes.HookProgressEvent) 
 			aws.ToString(hookEvent.HookTypeName),
 			aws.ToString(hookEvent.HookTypeArn),
 			aws.ToString(hookEvent.HookTypeVersionId),
-			hookEvent.HookEventTime.Format(time.RFC3339),
+			aws.ToTime(hookEvent.HookEventTime).Format(time.RFC3339),
 			aws.ToString(hookEvent.HookStatusMessage),
 		),
 	)
