@@ -1338,6 +1338,45 @@ func TestAccEC2Instance_placementGroupUpdate(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_disableAPIStop_placementGroupUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_disableAPIStopPlacementGroup(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", ""),
+				),
+			},
+			{
+				// Stop protection blocks an in-place update; force_destroy allows replacement.
+				Config: testAccInstanceConfig_disableAPIStopPlacementGroup(rName, "aws_placement_group.test.name"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
