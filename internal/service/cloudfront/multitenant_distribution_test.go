@@ -517,7 +517,7 @@ func TestAccCloudFrontMultiTenantDistribution_updateCommentHTTPVersionAndDefault
 	})
 }
 
-func TestAccCloudFrontMultiTenantDistribution_cacheTagConfig(t *testing.T) {
+func TestAccCloudFrontMultiTenantDistribution_CacheTagConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
@@ -570,7 +570,7 @@ func TestAccCloudFrontMultiTenantDistribution_cacheTagConfig(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontMultiTenantDistribution_cacheTagConfig_unrelatedUpdate(t *testing.T) {
+func TestAccCloudFrontMultiTenantDistribution_CacheTagConfig_unrelatedUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
@@ -603,7 +603,7 @@ func TestAccCloudFrontMultiTenantDistribution_cacheTagConfig_unrelatedUpdate(t *
 	})
 }
 
-func TestAccCloudFrontMultiTenantDistribution_cacheTagConfig_tooManyBlocks(t *testing.T) {
+func TestAccCloudFrontMultiTenantDistribution_CacheTagConfig_tooManyBlocks(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -619,7 +619,6 @@ func TestAccCloudFrontMultiTenantDistribution_cacheTagConfig_tooManyBlocks(t *te
 		},
 	})
 }
-
 func TestAccCloudFrontMultiTenantDistribution_DefaultCacheBehavior_functionAssociationSwapBlocks(t *testing.T) {
 	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/46377
 
