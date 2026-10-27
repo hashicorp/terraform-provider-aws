@@ -196,14 +196,14 @@ func TestAccRDSTenantDatabase_update(t *testing.T) {
 // TestAccRDSTenantDatabase_multiple creates tenant databases concurrently on one DB instance,
 // which RDS processes one at a time, and covers character sets.
 // TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey verifies that the KMS key can't be changed on a managed
-// secret, and that it's used again when management is turned off and back on.
+// secret, that it's used again when management is turned off and back on, and that management is adopted after import.
 func TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v1, v2, v3 types.TenantDatabase
+	var v1, v2, v3, v4 types.TenantDatabase
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rds_tenant_database.test"
 
@@ -241,6 +241,38 @@ func TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v3),
 					testAccCheckTenantDatabaseNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttrPair(resourceName, "master_user_secret.0.kms_key_id", "aws_kms_key.test.0", names.AttrARN),
+				),
+			},
+			{
+				// Forget the tenant database so it can be imported again.
+				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKeyRemoved(rName),
+			},
+			{
+				// Imported state has neither manage_master_user_password nor the key.
+				Config:             testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0),
+				ResourceName:       resourceName,
+				ImportState:        true,
+				ImportStateIdFunc:  func(*terraform.State) (string, error) { return aws.ToString(v3.TenantDatabaseResourceId), nil },
+				ImportStatePersist: true,
+			},
+			{
+				// After import, a different key is still rejected.
+				Config:      testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 1),
+				ExpectError: regexache.MustCompile(`Unsupported change`),
+			},
+			{
+				// After import, the existing management and key are adopted without resending the key.
+				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v4),
+					testAccCheckTenantDatabaseNotRecreated(&v3, &v4),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "master_user_secret.0.kms_key_id", "aws_kms_key.test.0", names.AttrARN),
 				),
 			},
@@ -558,6 +590,28 @@ resource "aws_rds_tenant_database" "test" {
   tenant_db_name              = "TFPDB1"
 }
 `, rName, true)
+}
+
+func testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKeyRemoved(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTenantDatabaseConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  count = 2
+
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+removed {
+  from = aws_rds_tenant_database.test
+
+  lifecycle {
+    destroy = %[2]t
+  }
+}
+`, rName, false))
 }
 
 func testAccTenantDatabaseConfig_multiple(rName string) string {

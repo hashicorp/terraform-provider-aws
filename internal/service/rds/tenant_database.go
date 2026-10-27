@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -303,7 +304,10 @@ func (r *tenantDatabaseResource) Update(ctx context.Context, request resource.Up
 		modify = true
 	}
 
-	if !plan.ManageMasterUserPassword.Equal(state.ManageMasterUserPassword) {
+	// After import, state doesn't record management, so an existing secret means it's already on.
+	adopting := plan.ManageMasterUserPassword.ValueBool() && state.ManageMasterUserPassword.IsNull() && state.MasterUserSecret.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+
+	if !plan.ManageMasterUserPassword.Equal(state.ManageMasterUserPassword) && !adopting {
 		// Null means not managed, so send false rather than omitting the value.
 		input.ManageMasterUserPassword = aws.Bool(fwflex.BoolValueFromFramework(ctx, plan.ManageMasterUserPassword))
 		// The KMS key can only be set when turning on management (see ModifyPlan).
@@ -410,9 +414,25 @@ func (r *tenantDatabaseResource) ModifyPlan(ctx context.Context, request resourc
 		return
 	}
 
+	secret, diags := state.MasterUserSecret.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	// RDS can't change the KMS key of an existing managed secret.
+	var changed bool
+	switch planKeyID := plan.MasterUserSecretKMSKeyID; {
+	case state.ManageMasterUserPassword.ValueBool():
+		changed = !planKeyID.Equal(state.MasterUserSecretKMSKeyID)
+	case state.ManageMasterUserPassword.IsNull() && secret != nil:
+		// After import, state has neither the flag nor the key, so compare with the secret's key ARN.
+		// A key ID or alias can't be compared with an ARN, so it's accepted.
+		changed = !planKeyID.IsNull() && arn.IsARN(planKeyID.ValueString()) && planKeyID.ValueString() != secret.KMSKeyID.ValueString()
+	}
+
 	// An unknown key is checked when Terraform plans again during apply with the resolved value.
-	if state.ManageMasterUserPassword.ValueBool() && plan.ManageMasterUserPassword.ValueBool() && !plan.MasterUserSecretKMSKeyID.IsUnknown() && !plan.MasterUserSecretKMSKeyID.Equal(state.MasterUserSecretKMSKeyID) {
+	if changed && plan.ManageMasterUserPassword.ValueBool() && !plan.MasterUserSecretKMSKeyID.IsUnknown() {
 		response.Diagnostics.AddAttributeError(
 			path.Root("master_user_secret_kms_key_id"),
 			"Unsupported change",
