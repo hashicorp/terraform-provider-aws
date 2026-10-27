@@ -39,7 +39,7 @@ func TestParsePackageInvalidDir(t *testing.T) {
 	t.Parallel()
 
 	a := newTestAnalyzer()
-	dir := filepath.Join(testdataRoot, "internal", "service", "examplenonexistent")
+	dir := filepath.Join(testdataRoot, "internal", "service", "mocknonexistent")
 
 	if _, err := a.parsePackage(dir); err == nil {
 		t.Errorf("parsePackage(%q) succeeded, want error", dir)
@@ -60,43 +60,43 @@ func TestFindSDKResources(t *testing.T) {
 		pkg string
 	}{
 		"build constraints": {
-			pkg: "examplebuildconstraints",
+			pkg: "mockbuildconstraints",
 		},
 		"package exporting a finder": {
-			pkg: "examplecrossservice",
+			pkg: "mockcrossservice",
 		},
 		"CRUD": {
-			pkg: "examplecrud",
+			pkg: "mockcrud",
 		},
 		"CustomizeDiff": {
-			pkg: "examplecustomizediff",
+			pkg: "mockcustomizediff",
 		},
 		"function references": {
-			pkg: "examplefuncrefs",
+			pkg: "mockfuncrefs",
 		},
 		"importers": {
-			pkg: "exampleimport",
+			pkg: "mockimport",
 		},
 		"interface dispatch": {
-			pkg: "exampleinterface",
+			pkg: "mockinterface",
 		},
 		"struct fields": {
-			pkg: "examplestructfield",
+			pkg: "mockstructfield",
 		},
 		"shared tag handlers branch on resource type": {
-			pkg: "exampletags",
+			pkg: "mocktags",
 		},
 		"generated tags": {
-			pkg: "exampletagsgen",
+			pkg: "mocktagsgen",
 		},
 		"generated UpdateTags only": {
-			pkg: "exampletagsupdateonly",
+			pkg: "mocktagsupdateonly",
 		},
 		"tagged without ListTags or UpdateTags": {
-			pkg: "exampletagsnohandlers",
+			pkg: "mocktagsnohandlers",
 		},
 		"unanalyzed functions": {
-			pkg: "exampleunanalyzed",
+			pkg: "mockunanalyzed",
 		},
 	}
 

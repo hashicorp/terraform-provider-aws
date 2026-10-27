@@ -1,0 +1,29 @@
+[
+  {
+    "service": "mockinterface",
+    "resource_type": "aws_mockinterface_foo",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFoo",
+    "location": "internal/service/mockinterface/foo.go:23",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockinterface/foo.go:44",
+      "sdk_calls": [
+        "mockinterface.CreateAdvancedFoo",
+        "mockinterface.CreateBasicFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockinterface/foo.go:65",
+      "sdk_calls": []
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockinterface/foo.go:87",
+      "sdk_calls": [
+        "mockinterface.DeleteFoo"
+      ]
+    }
+  }
+]

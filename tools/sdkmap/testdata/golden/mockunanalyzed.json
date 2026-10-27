@@ -1,0 +1,31 @@
+[
+  {
+    "service": "mockunanalyzed",
+    "resource_type": "aws_mockunanalyzed_foo",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFoo",
+    "location": "internal/service/mockunanalyzed/foo.go:24",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockunanalyzed/foo.go:49",
+      "sdk_calls": [
+        "mockunanalyzed.CreateFoo",
+        "mockunanalyzed.ListFoos"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockunanalyzed/foo.go:92",
+      "sdk_calls": [
+        "mockunanalyzed.ListFoos"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockunanalyzed/foo.go:113",
+      "sdk_calls": [
+        "mockunanalyzed.DeleteFoo"
+      ]
+    }
+  }
+]
