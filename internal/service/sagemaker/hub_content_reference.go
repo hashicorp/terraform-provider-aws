@@ -153,6 +153,14 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"versioned_hub_content_arn": schema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
+				Computed:    true,
+				Description: "ARN of the hub content reference, including the version suffix.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -241,6 +249,7 @@ func (r *hubContentReferenceResource) flatten(ctx context.Context, output *sagem
 	data.HubContentArn = fwflex.StringToFrameworkARN(ctx, stripARNVersion(output.HubContentArn))
 	data.MinVersion = fwflex.StringToFramework(ctx, output.ReferenceMinVersion)
 	data.SageMakerPublicHubContentArn = fwflex.StringToFrameworkARN(ctx, stripARNVersion(output.SageMakerPublicHubContentArn))
+	data.VersionedHubContentARN = fwflex.StringToFrameworkARN(ctx, output.HubContentArn)
 
 	return diags
 }
@@ -393,4 +402,5 @@ type hubContentReferenceResourceModel struct {
 	Tags                         tftags.Map                                    `tfsdk:"tags"`
 	TagsAll                      tftags.Map                                    `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                `tfsdk:"timeouts"`
+	VersionedHubContentARN       fwtypes.ARN                                   `tfsdk:"versioned_hub_content_arn"`
 }
