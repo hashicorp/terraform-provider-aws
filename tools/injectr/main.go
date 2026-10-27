@@ -10,9 +10,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 )
 
@@ -105,10 +107,45 @@ func GetServiceRef(su ServiceURL, dir string) error {
 	return nil
 }
 
+// LoadCache returns the index of previously fetched services. It returns an
+// empty index, forcing a full fetch, if the index file is missing or
+// unreadable, or if dir does not exist or is empty.
+func LoadCache(dir, indexPath string) map[string]ServiceURL {
+	entries, err := os.ReadDir(dir)
+	if err != nil || len(entries) == 0 {
+		return map[string]ServiceURL{}
+	}
+
+	index, err := LoadServiceIndex(indexPath)
+	if err != nil {
+		return map[string]ServiceURL{}
+	}
+
+	return index
+}
+
+// needsFetch reports whether the data for su must be (re)fetched: it is not in
+// the cache, its file is missing, or the remote copy is newer than the cached one.
+func needsFetch(su ServiceURL, cache map[string]ServiceURL, dir string) bool {
+	cached, ok := cache[su.Service]
+	if !ok {
+		return true
+	}
+
+	if _, err := os.Stat(filepath.Join(dir, su.Service+".json")); err != nil {
+		return true
+	}
+
+	return su.Modified > cached.Modified
+}
+
 func main() {
 	outDir := flag.String("out", "service-data", "directory to write service reference files to")
-	indexFile := flag.String("index", "service-urls.json", "file to write the service name to URL index to")
+	indexFile := flag.String("index", "service-urls-cache.json", "file to write the service name to URL index to")
 	flag.Parse()
+
+	cache := LoadCache(*outDir, *indexFile)
+	fmt.Printf("#### Loaded %d cached services\n", len(cache))
 
 	if err := os.MkdirAll(*outDir, 0o755); err != nil {
 		log.Fatal(err)
@@ -128,31 +165,46 @@ func main() {
 		wg      sync.WaitGroup
 		mu      sync.Mutex
 		errs    []error
-		fetched []ServiceURL
+		current = make(map[string]ServiceURL, urlCount) // entries whose file on disk is valid
+		fetched int
+		cached  int
 	)
 	for _, su := range urls {
 		wg.Go(func() {
+			if !needsFetch(su, cache, *outDir) {
+				mu.Lock()
+				defer mu.Unlock()
+				current[su.Service] = cache[su.Service]
+				cached++
+				return
+			}
+
 			err := GetServiceRef(su, *outDir)
 
 			mu.Lock()
 			defer mu.Unlock()
 			if err != nil {
 				errs = append(errs, err)
+				// A failed refresh leaves the older file in place, so keep its entry.
+				if old, ok := cache[su.Service]; ok {
+					current[su.Service] = old
+				}
 				return
 			}
-			fetched = append(fetched, su)
+			current[su.Service] = su
+			fetched++
 		})
 	}
 	wg.Wait()
 
-	fmt.Printf("#### Service urls: %d, Files written: %d\n", urlCount, len(fetched))
+	fmt.Printf("#### Service urls: %d, Fetched: %d, Cached (skipped): %d, Failed: %d\n", urlCount, fetched, cached, len(errs))
 
-	// Only services whose data was fetched and written are indexed, so a
-	// service's presence in the index means its file exists.
-	if err := WriteServiceIndex(fetched, *indexFile); err != nil {
+	// Only services with a file on disk are indexed, so a service's presence
+	// in the index means its data exists.
+	if err := WriteServiceIndex(slices.Collect(maps.Values(current)), *indexFile); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("#### Saved service index (%d services) to %s\n", len(fetched), *indexFile)
+	fmt.Printf("#### Saved service index (%d services) to %s\n", len(current), *indexFile)
 
 	if err := errors.Join(errs...); err != nil {
 		log.Fatal(err)
