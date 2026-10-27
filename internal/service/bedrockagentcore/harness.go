@@ -1200,8 +1200,9 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 			}
 		}
 
-		if !state.Hooks.IsNull() && config.Hooks.IsNull() {
-			// Omitting hooks retains the existing hooks; an empty list removes them.
+		// Omitting hooks retains the existing hooks; an empty list removes them. Check the plan
+		// rather than the config, which ignores lifecycle.ignore_changes during apply.
+		if !state.Hooks.IsNull() && plan.Hooks.IsNull() {
 			input.Hooks = []awstypes.HarnessHook{}
 		}
 
