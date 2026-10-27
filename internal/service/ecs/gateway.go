@@ -475,20 +475,20 @@ func (r *gatewayResource) Delete(ctx context.Context, request resource.DeleteReq
 
 func createGatewayWithRetry(ctx context.Context, conn *ecs.Client, input *ecs.CreateGatewayInput) (*ecs.CreateGatewayOutput, error) {
 	// The infrastructure role may not be assumable straight after it is created.
-	return tfresource.RetryWhenIsAErrorMessageContains[*ecs.CreateGatewayOutput, *awstypes.InvalidParameterException](ctx, propagationTimeout,
+	return tfresource.RetryWhenIsAErrorMessageContains[*ecs.CreateGatewayOutput, *awstypes.AccessDeniedException](ctx, propagationTimeout,
 		func(ctx context.Context) (*ecs.CreateGatewayOutput, error) {
 			return conn.CreateGateway(ctx, input)
 		},
-		"assume",
+		"Could not assume the infrastructure role",
 	)
 }
 
 func updateGatewayWithRetry(ctx context.Context, conn *ecs.Client, input *ecs.UpdateGatewayInput) (*ecs.UpdateGatewayOutput, error) {
-	return tfresource.RetryWhenIsAErrorMessageContains[*ecs.UpdateGatewayOutput, *awstypes.InvalidParameterException](ctx, propagationTimeout,
+	return tfresource.RetryWhenIsAErrorMessageContains[*ecs.UpdateGatewayOutput, *awstypes.AccessDeniedException](ctx, propagationTimeout,
 		func(ctx context.Context) (*ecs.UpdateGatewayOutput, error) {
 			return conn.UpdateGateway(ctx, input)
 		},
-		"assume",
+		"Could not assume the infrastructure role",
 	)
 }
 
