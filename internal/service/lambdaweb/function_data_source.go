@@ -77,6 +77,8 @@ func (d *functionDataSource) Read(ctx context.Context, request datasource.ReadRe
 		return
 	case revision != nil:
 		data.LatestRevisionID = fwflex.StringToFramework(ctx, revision.RevisionId)
+	default:
+		data.LatestRevisionID = types.StringNull()
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
