@@ -728,8 +728,6 @@ resource "aws_continuum_collector_association" "test" {
 func testAccResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_continuum_resource_policy.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ContinuumServiceID),
@@ -737,7 +735,7 @@ func testAccResourcePolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyConfig_basic(),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision_id"), knownvalue.NotNull()),
 				},
@@ -776,7 +774,7 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resour
 	}
 }
 
-func testAccResourcePolicyConfig_basic(rName string) string {
+func testAccResourcePolicyConfig_basic() string {
 	return acctest.ConfigCompose(testAccCollectorConfig_basic(), `
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
