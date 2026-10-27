@@ -145,6 +145,210 @@ func TestAccLambdaWebFunctionRevision_disappears(t *testing.T) {
 	})
 }
 
+func TestAccLambdaWebFunctionRevision_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambdaweb.GetWebFunctionRevisionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_function_revision.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionRevisionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionRevision/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("test description"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionRevisionExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("test description")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaWebFunctionRevision_kmsKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambdaweb.GetWebFunctionRevisionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_function_revision.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionRevisionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionRevision/kms_key_arn/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionRevisionExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKMSKeyARN), knownvalue.NotNull()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaWebFunctionRevision_egressNetworkConnectorARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambdaweb.GetWebFunctionRevisionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_function_revision.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionRevisionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionRevision/egress_network_connector_arn/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionRevisionExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"egress_network_connector_arn": knownvalue.NotNull(),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaWebFunctionRevision_environmentVariable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambdaweb.GetWebFunctionRevisionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_function_revision.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionRevisionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionRevision/environment_variables/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionRevisionExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"environment_variables": knownvalue.MapExact(map[string]knownvalue.Check{
+							"APP_ENV": knownvalue.StringExact("acctest"),
+						}),
+						"max_concurrency_per_environment": knownvalue.Int64Exact(10),
+						"timeout_seconds":                 knownvalue.Int64Exact(60),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaWebFunctionRevision_telemetryConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambdaweb.GetWebFunctionRevisionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_function_revision.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionRevisionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionRevision/telemetry_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionRevisionExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"telemetry_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"logging_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"application_log_level": knownvalue.Null(),
+								"log_group":             knownvalue.StringExact("/aws/lambda/web/" + rName + "-acctest"),
+								"system_log_level":      tfknownvalue.StringExact(awstypes.SystemLogLevelWarn),
+							})}),
+						})}),
+						"telemetry_config_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"logging_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"application_log_level": tfknownvalue.StringExact(awstypes.ApplicationLogLevelInfo),
+								"log_group":             knownvalue.StringExact("/aws/lambda/web/" + rName + "-acctest"),
+								"system_log_level":      tfknownvalue.StringExact(awstypes.SystemLogLevelWarn),
+							})}),
+						})}),
+					})})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckFunctionRevisionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LambdaWebClient(ctx)

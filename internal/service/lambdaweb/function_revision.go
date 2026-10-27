@@ -465,40 +465,6 @@ func validateEnvironmentVariablesSize(ctx context.Context, cfg functionResourceM
 }
 */
 
-/*
-// restoreTelemetryConfig keeps telemetry_config as configuration-only state.
-// The service assigns default telemetry (a log group and INFO log levels) to
-// every revision and reports it back, but revisions are immutable, so
-// telemetry the practitioner never wrote is a server default, not drift:
-// reading it into state breaks every apply with "block count changed from 0 to
-// 1", and a partially configured block (say, log_group only) would surface the
-// filled-in log levels as a perpetual diff. prior is the configured
-// revision_config (the plan on create, prior state on refresh); its
-// telemetry_config replaces the server's wholesale. On import there is no
-// prior, so telemetry_config is left unpopulated rather than importing the
-// server defaults.
-func restoreTelemetryConfig(ctx context.Context, revModel *revisionConfigModel, prior fwtypes.ListNestedObjectValueOf[revisionConfigModel]) {
-	desired := fwtypes.NewListNestedObjectValueOfNull[telemetryConfigModel](ctx)
-	if !prior.IsNull() && !prior.IsUnknown() {
-		if priorRev, d := prior.ToPtr(ctx); !d.HasError() && priorRev != nil && !priorRev.ServiceConfig.IsNull() && !priorRev.ServiceConfig.IsUnknown() {
-			if priorSvc, d := priorRev.ServiceConfig.ToPtr(ctx); !d.HasError() && priorSvc != nil && !priorSvc.TelemetryConfig.IsUnknown() {
-				desired = priorSvc.TelemetryConfig
-			}
-		}
-	}
-
-	if revModel.ServiceConfig.IsNull() || revModel.ServiceConfig.IsUnknown() {
-		return
-	}
-	svc, d := revModel.ServiceConfig.ToPtr(ctx)
-	if d.HasError() || svc == nil {
-		return
-	}
-	svc.TelemetryConfig = desired
-	revModel.ServiceConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, svc)
-}
-*/
-
 var _ inttypes.ImportIDParser = functionRevisionImportID{}
 
 type functionRevisionImportID struct{}
@@ -691,8 +657,6 @@ func (m *serviceConfigModel) Flatten(ctx context.Context, v any) diag.Diagnostic
 			fmt.Sprintf("serviceConfigModel.Flatten: %T", v),
 		)
 	}
-
-	return diags
 
 	return diags
 }
