@@ -213,3 +213,55 @@ func testAccOrganizationAccessGrant_List_regionOverride(t *testing.T) {
 		},
 	})
 }
+
+// testAccOrganizationAccessGrant_List_crossRegion verifies that grants of a domain homed in one
+// Region are not listed when querying from another Region, since they cannot be mutated there.
+func testAccOrganizationAccessGrant_List_crossRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName1 := "aws_cloudwatchomni_organization_access_grant.test[0]"
+	resourceName2 := "aws_cloudwatchomni_organization_access_grant.test[1]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckOrganizationAccessGrant(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchOmniServiceID),
+		CheckDestroy:             testAccCheckOrganizationAccessGrantDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Create the domain and grants in the home (provider) Region.
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/OrganizationAccessGrant/list_cross_region/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkOrganizationAccessGrantARN),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkOrganizationAccessGrantARN),
+				},
+			},
+
+			// Step 2: Query from the alternate Region and expect no results.
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/OrganizationAccessGrant/list_cross_region/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectLength("aws_cloudwatchomni_organization_access_grant.test", 0),
+				},
+			},
+		},
+	})
+}

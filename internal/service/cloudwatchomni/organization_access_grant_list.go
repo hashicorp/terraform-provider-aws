@@ -37,7 +37,14 @@ func (l *organizationAccessGrantListResource) List(ctx context.Context, request 
 	conn := l.Meta().CloudWatchOmniClient(ctx)
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		// ListDomainAccessGrantsForOrganization returns every organization grant, regardless of the region it is called in.
+		// ListDomainAccessGrantsForOrganization returns every organization grant from any Region, so scope
+		// to grants whose domain is homed in this Region to keep the listed identities mutable.
+		localDomainIDs, err := findLocalOrganizationDomainIDs(ctx, conn, "")
+		if err != nil {
+			yield(smerr.NewListResultError(ctx, err))
+			return
+		}
+
 		var input cloudwatchomni.ListDomainAccessGrantsForOrganizationInput
 		for item, err := range tfiter.ConcatValuesWithError(listOrganizationAccessGrantPages(ctx, conn, &input)) {
 			if err != nil {
@@ -47,6 +54,10 @@ func (l *organizationAccessGrantListResource) List(ctx context.Context, request 
 
 			// Service-managed grants are created with their domain and cannot be deleted.
 			if item.GrantType == awstypes.AccessGrantTypeServiceManaged {
+				continue
+			}
+
+			if _, ok := localDomainIDs[aws.ToString(item.DomainId)]; !ok {
 				continue
 			}
 

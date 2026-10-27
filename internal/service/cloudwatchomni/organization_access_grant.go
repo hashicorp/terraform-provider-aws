@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -311,6 +312,44 @@ func findOrganizationAccessGrant(ctx context.Context, conn *cloudwatchomni.Clien
 	}
 
 	return output.AccessGrant, nil
+}
+
+// findLocalOrganizationDomainIDs returns the IDs of the organization domains whose home Region is the
+// client's Region. Organization access grants are organization-wide: ListDomainAccessGrantsForOrganization
+// returns every grant from any Region, and a grant's ARN Region is the calling Region, not its domain's
+// home Region. Grants can only be mutated in their domain's home Region, so list and sweep scope to grants
+// of locally-homed domains to keep identities importable and deletions valid. When accountID is non-empty,
+// domains owned by another account are also excluded.
+func findLocalOrganizationDomainIDs(ctx context.Context, conn *cloudwatchomni.Client, accountID string) (map[string]struct{}, error) {
+	region := conn.Options().Region
+	ids := make(map[string]struct{})
+
+	var input cloudwatchomni.ListDomainsInput
+	for domain, err := range listDomains(ctx, conn, &input) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		domainARN := aws.ToString(domain.DomainArn)
+		if !isOrganizationDomainARN(domainARN) {
+			continue
+		}
+
+		parsedARN, err := arn.Parse(domainARN)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+		if parsedARN.Region != region {
+			continue
+		}
+		if accountID != "" && parsedARN.AccountID != accountID {
+			continue
+		}
+
+		ids[aws.ToString(domain.DomainId)] = struct{}{}
+	}
+
+	return ids, nil
 }
 
 func listOrganizationAccessGrantPages(ctx context.Context, conn *cloudwatchomni.Client, input *cloudwatchomni.ListDomainAccessGrantsForOrganizationInput, optFns ...func(*cloudwatchomni.Options)) iter.Seq2[[]awstypes.OrganizationAccessGrantSummary, error] {

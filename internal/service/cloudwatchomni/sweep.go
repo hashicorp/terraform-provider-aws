@@ -186,12 +186,23 @@ func sweepOrganizationAccessGrants(ctx context.Context, client *conns.AWSClient)
 	conn := client.CloudWatchOmniClient(ctx)
 	var sweepResources []sweep.Sweepable
 
+	// Organization access grants are organization-wide and can only be deleted in their domain's home
+	// Region, so sweep only grants whose domain is homed in this account and Region.
+	localDomainIDs, err := findLocalOrganizationDomainIDs(ctx, conn, client.AccountID(ctx))
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
 	for v, err := range tfiter.ConcatValuesWithError(listOrganizationAccessGrantPages(ctx, conn, &input)) {
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
 
 		if v.GrantType == awstypes.AccessGrantTypeServiceManaged {
+			continue
+		}
+
+		if _, ok := localDomainIDs[aws.ToString(v.DomainId)]; !ok {
 			continue
 		}
 
