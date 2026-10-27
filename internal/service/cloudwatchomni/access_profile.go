@@ -250,6 +250,18 @@ func (r *accessProfileResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 	if err != nil {
+		// A missing space is reported as AccessDeniedException.
+		if errs.IsA[*awstypes.AccessDeniedException](err) {
+			_, findErr := findAccessProfileByTwoPartKey(ctx, conn, spaceID, profileID)
+			if retry.NotFound(findErr) {
+				return
+			}
+			if findErr != nil {
+				smerr.AddError(ctx, &resp.Diagnostics, findErr, smerr.ID, profileID)
+				return
+			}
+		}
+
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, profileID)
 		return
 	}
