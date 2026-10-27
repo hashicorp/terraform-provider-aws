@@ -324,7 +324,7 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.ToString(output.FirewallPolicyResponse.FirewallPolicyArn))
 
 	if v, ok := d.GetOk("firewall_policy.0.route53_resolved_ip_validation"); ok && len(v.([]any)) > 0 {
-		if _, err := waitFirewallPolicyUpdated(ctx, conn, d.Id(), firewallPolicyTimeout); err != nil {
+		if err := waitFirewallPolicyUpdated(ctx, conn, d.Id(), firewallPolicyTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall Policy (%s) create: %s", d.Id(), err)
 		}
 	}
@@ -389,7 +389,7 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChange("firewall_policy.0.route53_resolved_ip_validation") {
-			if _, err := waitFirewallPolicyUpdated(ctx, conn, d.Id(), firewallPolicyTimeout); err != nil {
+			if err := waitFirewallPolicyUpdated(ctx, conn, d.Id(), firewallPolicyTimeout); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall Policy (%s) update: %s", d.Id(), err)
 			}
 		}
@@ -487,7 +487,7 @@ func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.Client
 
 // AWS swaps the managed DNS Firewall rule group association for Route 53 resolved IP
 // validation asynchronously and rejects further policy changes until the policy is ACTIVE again.
-func waitFirewallPolicyUpdated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
+func waitFirewallPolicyUpdated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusUpdating),
 		Target:  enum.Slice(awstypes.ResourceStatusActive),
@@ -495,13 +495,9 @@ func waitFirewallPolicyUpdated(ctx context.Context, conn *networkfirewall.Client
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*networkfirewall.DescribeFirewallPolicyOutput); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func expandPolicyVariables(tfMap map[string]any) *awstypes.PolicyVariables {
