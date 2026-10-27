@@ -40,7 +40,7 @@ func TestAccECSGateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.host_shared_alb.0.network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.host_shared_alb.0.network_configuration.0.subnets.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.host_shared_alb.0.scheme", "internet-facing"),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "infrastructure_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -169,7 +169,7 @@ func TestAccECSGateway_update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.host_shared_alb.0.network_configuration.0.inbound_security_group", "aws_security_group.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.host_shared_alb.0.test_traffic_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.host_shared_alb.0.test_traffic_rules.0.header.0.name", "x-test"),
-					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "GATEWAY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, "GATEWAY"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
