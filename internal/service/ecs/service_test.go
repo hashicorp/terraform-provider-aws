@@ -395,7 +395,7 @@ func TestAccECSService_gatewayConnector(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_gatewayConnector(rName, "/"),
+				Config: testAccServiceConfig_gatewayConnector(rName, `["PUBLIC"]`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "gateway_connector.#", "1"),
@@ -407,10 +407,12 @@ func TestAccECSService_gatewayConnector(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceConfig_gatewayConnector(rName, "/health"),
+				// Health check changes are rejected for the ROLLING deployment strategy, so update the access type filter.
+				Config: testAccServiceConfig_gatewayConnector(rName, `["PUBLIC", "PRIVATE"]`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.filters.0.access_types.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "gateway_connector.0.filters.0.access_types.*", "PRIVATE"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -8970,7 +8972,7 @@ resource "aws_ecs_task_definition" "test" {
 
 // desired_count is 0 so the test doesn't need outbound internet access to pull the image;
 // the gateway connector is still recorded on the service revision.
-func testAccServiceConfig_gatewayConnector(rName, healthCheckPath string) string {
+func testAccServiceConfig_gatewayConnector(rName, accessTypes string) string {
 	return acctest.ConfigCompose(testAccServiceConfig_baseGatewayConnector(rName), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name            = %[1]q
@@ -8988,11 +8990,11 @@ resource "aws_ecs_service" "test" {
     port_name = "web"
 
     filters {
-      access_types = ["PUBLIC"]
+      access_types = %[2]s
     }
 
     health_check {
-      path = %[2]q
+      path = "/"
 
       matcher {
         http_code = "200"
@@ -9002,7 +9004,7 @@ resource "aws_ecs_service" "test" {
 
   depends_on = [aws_ecs_gateway_cluster_association.test]
 }
-`, rName, healthCheckPath))
+`, rName, accessTypes))
 }
 
 func testAccServiceConfig_gatewayConnectorRemoved(rName string) string {

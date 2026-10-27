@@ -499,6 +499,10 @@ func retryGatewayInfrastructureRolePropagation(err error) (bool, error) {
 		return true, err
 	}
 
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "not able to validate the provided access credentials") {
+		return true, err
+	}
+
 	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "You are not authorized to perform this operation") {
 		return true, err
 	}
