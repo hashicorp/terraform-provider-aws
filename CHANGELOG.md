@@ -30,6 +30,7 @@ ENHANCEMENTS:
 * resource/aws_ecs_express_gateway_service: Add `cpu_architecture` argument ([#50456](https://github.com/hashicorp/terraform-provider-aws/issues/50456))
 * resource/aws_medialive_channel: Add `encoder_settings.thumbnail_configuration` argument ([#50203](https://github.com/hashicorp/terraform-provider-aws/issues/50203))
 * resource/aws_sagemaker_hub_content_reference: Add `versioned_hub_content_arn` attribute ([#50657](https://github.com/hashicorp/terraform-provider-aws/issues/50657))
+* resource/aws_sagemaker_model: Add `hub_access_config` argument to `primary_container.model_data_source.s3_data_source`, `primary_container.additional_model_data_source.s3_data_source`, `container.model_data_source.s3_data_source`, and `container.additional_model_data_source.s3_data_source` ([#50653](https://github.com/hashicorp/terraform-provider-aws/issues/50653))
 * resource/aws_vpc_endpoint: Add support for `Tunnel` VPC endpoint type ([#50553](https://github.com/hashicorp/terraform-provider-aws/issues/50553))
 * resource/aws_vpclattice_resource_configuration: Add `resource_configuration_definition.cidr_resource` configuration block to support `CIDR` type resource configurations ([#50533](https://github.com/hashicorp/terraform-provider-aws/issues/50533))
 
