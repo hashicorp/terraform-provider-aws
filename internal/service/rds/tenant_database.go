@@ -431,6 +431,19 @@ func (r *tenantDatabaseResource) ModifyPlan(ctx context.Context, request resourc
 		return
 	}
 
+	// Replacement creates a new tenant database and secret, so any key is allowed.
+	// ModifyPlan doesn't see attribute plan modifiers' RequiresReplace, so check those attributes here.
+	for _, v := range [][2]types.String{
+		{plan.CharacterSetName, state.CharacterSetName},
+		{plan.DBInstanceIdentifier, state.DBInstanceIdentifier},
+		{plan.MasterUsername, state.MasterUsername},
+		{plan.NcharCharacterSetName, state.NcharCharacterSetName},
+	} {
+		if !v[0].Equal(v[1]) {
+			return
+		}
+	}
+
 	// State has no key after import, or if none was configured. The only value known to match the secret
 	// is its key ARN; a key ID, alias, or alias ARN can't be verified without calling KMS.
 	if stateKeyID.IsNull() && secret != nil {

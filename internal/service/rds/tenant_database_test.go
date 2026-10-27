@@ -216,18 +216,18 @@ func TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey(t *testing.T) {
 		CheckDestroy: testAccCheckTenantDatabaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0),
+				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0, "tfacctest"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "master_user_secret.0.kms_key_id", "aws_kms_key.test.0", names.AttrARN),
 				),
 			},
 			{
-				Config:      testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 1),
+				Config:      testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 1, "tfacctest"),
 				ExpectError: regexache.MustCompile(`Unsupported change`),
 			},
 			{
-				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, false, 0),
+				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, false, 0, "tfacctest"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v2),
 					testAccCheckTenantDatabaseNotRecreated(&v1, &v2),
@@ -236,7 +236,7 @@ func TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey(t *testing.T) {
 			},
 			{
 				// Turning management back on uses the configured key even though it didn't change.
-				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0),
+				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0, "tfacctest"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTenantDatabaseExists(ctx, t, resourceName, &v3),
 					testAccCheckTenantDatabaseNotRecreated(&v2, &v3),
@@ -249,7 +249,7 @@ func TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey(t *testing.T) {
 			},
 			{
 				// Imported state has no key, and manage_master_user_password is inferred from the secret.
-				Config:             testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0),
+				Config:             testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0, "tfacctest"),
 				ResourceName:       resourceName,
 				ImportState:        true,
 				ImportStateIdFunc:  func(*terraform.State) (string, error) { return aws.ToString(v3.TenantDatabaseResourceId), nil },
@@ -257,12 +257,12 @@ func TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey(t *testing.T) {
 			},
 			{
 				// After import, only the secret's key ARN is accepted.
-				Config:      testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 1),
+				Config:      testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 1, "tfacctest"),
 				ExpectError: regexache.MustCompile(`Unsupported change`),
 			},
 			{
 				// After import, the matching key ARN is recorded without resending it.
-				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0),
+				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0, "tfacctest"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -279,7 +279,7 @@ func TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey(t *testing.T) {
 				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKeyRemoved(rName),
 			},
 			{
-				Config:             testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0),
+				Config:             testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0, "tfacctest"),
 				ResourceName:       resourceName,
 				ImportState:        true,
 				ImportStateIdFunc:  func(*terraform.State) (string, error) { return aws.ToString(v4.TenantDatabaseResourceId), nil },
@@ -298,6 +298,25 @@ func TestAccRDSTenantDatabase_manageMasterUserPasswordKMSKey(t *testing.T) {
 					testAccCheckTenantDatabaseNotRecreated(&v4, &v5),
 					resource.TestCheckNoResourceAttr(resourceName, "manage_master_user_password"),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "0"),
+				),
+			},
+			{
+				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 0, "tfacctest"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "master_user_secret.0.kms_key_id", "aws_kms_key.test.0", names.AttrARN),
+				),
+			},
+			{
+				// A key change is allowed when the tenant database is replaced.
+				Config: testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName, true, 1, "tfacctest2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "master_username", "tfacctest2"),
+					resource.TestCheckResourceAttrPair(resourceName, "master_user_secret.0.kms_key_id", "aws_kms_key.test.1", names.AttrARN),
 				),
 			},
 		},
@@ -571,7 +590,7 @@ resource "aws_rds_tenant_database" "test" {
 `, tenantDBName, acctest.CtKey2, acctest.CtValue2))
 }
 
-func testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName string, managed bool, keyIndex int) string {
+func testAccTenantDatabaseConfig_manageMasterUserPasswordKMSKey(rName string, managed bool, keyIndex int, masterUsername string) string {
 	// Turning off management requires a password. Setting the flag explicitly also covers false with a password.
 	password := fmt.Sprintf(`
   manage_master_user_password = %[1]t`, managed)
@@ -595,12 +614,12 @@ resource "aws_kms_key" "test" {
 resource "aws_rds_tenant_database" "test" {
   db_instance_identifier        = aws_db_instance.test.identifier
   master_user_secret_kms_key_id = aws_kms_key.test[%[2]d].arn
-  master_username               = "tfacctest"
+  master_username               = %[4]q
   skip_final_snapshot           = true
   tenant_db_name                = "TFPDB1"
 %[3]s
 }
-`, rName, keyIndex, password))
+`, rName, keyIndex, password, masterUsername))
 }
 
 func testAccTenantDatabaseConfig_passwordWithManagedPassword(rName string) string {
