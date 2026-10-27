@@ -407,6 +407,10 @@ func retryGetResourceRequestStatus(pProgressEvent **awstypes.ProgressEvent) func
 			}
 		}
 
+		if errs.IsA[*awstypes.RequestTokenNotFoundException](err) {
+			return true, nil
+		}
+
 		return true, err
 	}
 }
