@@ -14,7 +14,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"sync/atomic"
 )
 
 const serviceRefURL = "http://servicereference.us-east-1.amazonaws.com/"
@@ -42,6 +41,40 @@ func GetServiceRefURLs() ([]ServiceURL, error) {
 	err = json.Unmarshal(b, &urls)
 
 	return urls, err
+}
+
+// WriteServiceIndex writes urls to path as a JSON object keyed by service name
+func WriteServiceIndex(urls []ServiceURL, path string) error {
+	index := make(map[string]ServiceURL, len(urls))
+	for _, su := range urls {
+		index[su.Service] = su
+	}
+
+	b, err := json.MarshalIndent(index, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, b, 0o644)
+}
+
+// LoadServiceIndex reads a file written by WriteServiceIndex. The returned map
+// supports constant-time lookup of a service by name:
+//
+//	index, err := LoadServiceIndex("service-urls.json")
+//	su, ok := index["ec2"]
+func LoadServiceIndex(path string) (map[string]ServiceURL, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var index map[string]ServiceURL
+	if err := json.Unmarshal(b, &index); err != nil {
+		return nil, err
+	}
+
+	return index, nil
 }
 
 // GetServiceRef downloads the service reference for su and writes it to
@@ -74,15 +107,16 @@ func GetServiceRef(su ServiceURL, dir string) error {
 
 func main() {
 	outDir := flag.String("out", "service-data", "directory to write service reference files to")
+	indexFile := flag.String("index", "service-urls.json", "file to write the service name to URL index to")
 	flag.Parse()
 
 	if err := os.MkdirAll(*outDir, 0o755); err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("fetching service reference urls")
+	fmt.Println("#### Fetching service reference urls")
 	urls, err := GetServiceRefURLs()
-	fmt.Println("Completed fetching service reference urls")
+	fmt.Println("#### Completed fetching service reference urls")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -91,25 +125,34 @@ func main() {
 	fmt.Printf("service urls found: %d\n", urlCount)
 
 	var (
-		wg        sync.WaitGroup
-		mu        sync.Mutex
-		errs      []error
-		fileCount atomic.Int64
+		wg      sync.WaitGroup
+		mu      sync.Mutex
+		errs    []error
+		fetched []ServiceURL
 	)
 	for _, su := range urls {
 		wg.Go(func() {
-			if err := GetServiceRef(su, *outDir); err != nil {
-				mu.Lock()
-				defer mu.Unlock()
+			err := GetServiceRef(su, *outDir)
+
+			mu.Lock()
+			defer mu.Unlock()
+			if err != nil {
 				errs = append(errs, err)
 				return
 			}
-			fileCount.Add(1)
+			fetched = append(fetched, su)
 		})
 	}
 	wg.Wait()
 
-	fmt.Printf("service urls: %d, files written: %d\n", urlCount, fileCount.Load())
+	fmt.Printf("#### Service urls: %d, Files written: %d\n", urlCount, len(fetched))
+
+	// Only services whose data was fetched and written are indexed, so a
+	// service's presence in the index means its file exists.
+	if err := WriteServiceIndex(fetched, *indexFile); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("#### Saved service index (%d services) to %s\n", len(fetched), *indexFile)
 
 	if err := errors.Join(errs...); err != nil {
 		log.Fatal(err)
