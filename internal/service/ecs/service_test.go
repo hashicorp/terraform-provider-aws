@@ -382,6 +382,53 @@ func TestAccECSService_LatticeConfigurations(t *testing.T) {
 	})
 }
 
+func TestAccECSService_gatewayConnector(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_gatewayConnector(rName, "/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.port_name", "web"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.filters.0.access_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "gateway_connector.0.filters.0.access_types.*", "PUBLIC"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.health_check.0.path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.health_check.0.matcher.0.http_code", "200"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_gatewayConnector(rName, "/health"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.health_check.0.path", "/health"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccServiceConfig_gatewayConnectorRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_PlacementStrategy_unnormalized(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -8878,4 +8925,101 @@ resource "aws_ecs_service" "test" {
 
 data "aws_region" "current" {}
 `, rName, format, includeQueryParams))
+}
+
+func testAccServiceConfig_baseGatewayConnector(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_basic(rName), fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_gateway_cluster_association" "test" {
+  cluster = aws_ecs_cluster.test.name
+  gateway = aws_ecs_gateway.test.arn
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = jsonencode([{
+    name      = "web"
+    image     = "public.ecr.aws/nginx/nginx:latest"
+    essential = true
+    portMappings = [{
+      name          = "web"
+      containerPort = 80
+      protocol      = "tcp"
+    }]
+  }])
+}
+`, rName))
+}
+
+// desired_count is 0 so the test doesn't need outbound internet access to pull the image;
+// the gateway connector is still recorded on the service revision.
+func testAccServiceConfig_gatewayConnector(rName, healthCheckPath string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_baseGatewayConnector(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 0
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = aws_subnet.test[*].id
+    security_groups = [aws_security_group.test.id]
+  }
+
+  gateway_connector {
+    port_name = "web"
+
+    filters {
+      access_types = ["PUBLIC"]
+    }
+
+    health_check {
+      path = %[2]q
+
+      matcher {
+        http_code = "200"
+      }
+    }
+  }
+
+  depends_on = [aws_ecs_gateway_cluster_association.test]
+}
+`, rName, healthCheckPath))
+}
+
+func testAccServiceConfig_gatewayConnectorRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_baseGatewayConnector(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 0
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = aws_subnet.test[*].id
+    security_groups = [aws_security_group.test.id]
+  }
+
+  depends_on = [aws_ecs_gateway_cluster_association.test]
+}
+`, rName))
 }
