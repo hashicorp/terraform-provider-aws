@@ -370,8 +370,11 @@ func retryGetResourceRequestStatus(pProgressEvent **awstypes.ProgressEvent) func
 			}
 
 			switch value := progressEvent.OperationStatus; value {
-			case awstypes.OperationStatusSuccess, awstypes.OperationStatusCancelComplete:
+			case awstypes.OperationStatusSuccess:
 				return false, nil
+
+			case awstypes.OperationStatusCancelComplete:
+				return false, waiterError(string(value), aws.ToString(progressEvent.StatusMessage))
 
 			case awstypes.OperationStatusFailed:
 				if progressEvent.ErrorCode == awstypes.HandlerErrorCodeNotFound && progressEvent.Operation == awstypes.OperationDelete {
