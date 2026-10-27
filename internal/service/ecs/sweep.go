@@ -38,6 +38,7 @@ func RegisterSweepers() {
 	})
 
 	awsv2.Register("aws_ecs_express_gateway_service", sweepExpressGatewayServices)
+	awsv2.Register("aws_ecs_gateway", sweepGateways)
 
 	resource.AddTestSweepers("aws_ecs_service", &resource.Sweeper{
 		Name: "aws_ecs_service",
@@ -175,6 +176,28 @@ func sweepExpressGatewayServices(ctx context.Context, client *conns.AWSClient) (
 					)
 				}
 			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepGateways(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ECSClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	var input ecs.ListGatewaysInput
+	pages := ecs.NewListGatewaysPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Gateways {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newGatewayResource, client,
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.GatewayArn))),
+			)
 		}
 	}
 
