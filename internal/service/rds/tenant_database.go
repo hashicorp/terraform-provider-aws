@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -260,22 +261,31 @@ func (r *tenantDatabaseResource) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
+
+func (r *tenantDatabaseResource) flatten(ctx context.Context, tenantDatabase *awstypes.TenantDatabase, data *tenantDatabaseResourceModel) diag.Diagnostics {
+	diags := fwflex.Flatten(ctx, tenantDatabase, data)
+	if diags.HasError() {
+		return diags
+	}
+
 	// The API doesn't return the flag, so infer it from the secret (e.g., after import).
 	// An unmanaged null is left alone so an omitted argument doesn't show a diff.
-	if out.MasterUserSecret != nil {
+	if tenantDatabase.MasterUserSecret != nil {
 		data.ManageMasterUserPassword = types.BoolValue(true)
 	} else if data.ManageMasterUserPassword.ValueBool() {
 		data.ManageMasterUserPassword = types.BoolValue(false)
 	}
 
-	setTagsOut(ctx, out.TagList)
+	setTagsOut(ctx, tenantDatabase.TagList)
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	return diags
 }
 
 func (r *tenantDatabaseResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
