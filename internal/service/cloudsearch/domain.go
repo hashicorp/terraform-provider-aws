@@ -185,10 +185,6 @@ func resourceDomain() *schema.Resource {
 	}
 }
 
-var (
-	indexNameRegex = regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{0,63}\*?)$`)
-)
-
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
@@ -495,6 +491,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any)
 func validateIndexName(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 
+	indexNameRegex := regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{0,63}\*?)$`)
 	if !indexNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
 			"%q must begin with a letter and be at least 1 and no more than 64 characters long", k))
