@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_batch_job_definition: Fix errors while creating job definitions using node storage for EKS `empty_dir` volumes.
+```
+
