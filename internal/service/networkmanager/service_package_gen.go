@@ -34,6 +34,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAttachmentNATConfigurationResource,
+			TypeName: "aws_networkmanager_attachment_nat_configuration",
+			Name:     "Attachment NAT Configuration",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("core_network_id", true),
+				inttypes.StringIdentityAttribute("attachment_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      attachmentNATConfigurationImportID{},
+			},
+		},
+		{
 			Factory:  newAttachmentRoutingPolicyLabelResource,
 			TypeName: "aws_networkmanager_attachment_routing_policy_label",
 			Name:     "Attachment Routing Policy Label",
