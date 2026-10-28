@@ -431,7 +431,7 @@ func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name str
 	return nil, err
 }
 
-func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
+func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateDeleting),
 		Target:  []string{},
