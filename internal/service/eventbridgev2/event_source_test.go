@@ -161,6 +161,32 @@ func TestAccEventBridgeV2EventSource_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("description two")),
 				},
 			},
+			// Remove the description, pattern, and on-failure configuration, clearing them on the service.
+			{
+				Config: testAccEventSourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEventSourceExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"aws_service_events_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"aws_service":              knownvalue.StringExact("aws.s3"),
+									"on_failure_configuration": knownvalue.ListExact([]knownvalue.Check{}),
+									"pattern":                  knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
 		},
 	})
 }

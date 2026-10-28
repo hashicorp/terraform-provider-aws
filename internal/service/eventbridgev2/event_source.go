@@ -5,6 +5,7 @@ package eventbridgev2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridgev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eventbridgev2/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -26,6 +28,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -41,6 +45,9 @@ import (
 // The service rejects concurrent changes to subscribers and event sources of the same event bus.
 const concurrentModificationTimeout = 2 * time.Minute
 
+// How long to wait for an event source to leave CREATING before re-sending the create request.
+const eventSourceCreatingTimeout = 2 * time.Minute
+
 // @FrameworkResource("aws_eventbridgev2_event_source", name="Event Source")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
@@ -48,11 +55,18 @@ const concurrentModificationTimeout = 2 * time.Minute
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
 func newEventSourceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &eventSourceResource{}, nil
+	r := &eventSourceResource{}
+
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
+
+	return r, nil
 }
 
 type eventSourceResource struct {
 	framework.ResourceWithModel[eventSourceResourceModel]
+	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
@@ -171,6 +185,9 @@ func (r *eventSourceResource) Schema(ctx context.Context, req resource.SchemaReq
 									},
 									"partner_event_source_arn": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"pattern": schema.StringAttribute{
 										CustomType: jsontypes.NormalizedType{},
@@ -185,6 +202,11 @@ func (r *eventSourceResource) Schema(ctx context.Context, req resource.SchemaReq
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -205,24 +227,32 @@ func (r *eventSourceResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	out, err := tfresource.RetryWhenIsA[*eventbridgev2.CreateEventSourceOutput, *awstypes.ConcurrentModificationException](ctx, concurrentModificationTimeout, func(ctx context.Context) (*eventbridgev2.CreateEventSourceOutput, error) {
-		return conn.CreateEventSource(ctx, &input)
+	// Re-sending the request with the same client token resumes a creation that has stalled in CREATING.
+	var arn string
+	output, err := tfresource.RetryWhen(ctx, r.CreateTimeout(ctx, plan.Timeouts), func(ctx context.Context) (*eventbridgev2.DescribeEventSourceOutput, error) {
+		out, err := tfresource.RetryWhenIsA[*eventbridgev2.CreateEventSourceOutput, *awstypes.ConcurrentModificationException](ctx, concurrentModificationTimeout, func(ctx context.Context) (*eventbridgev2.CreateEventSourceOutput, error) {
+			return conn.CreateEventSource(ctx, &input)
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		arn = aws.ToString(out.EventSourceArn)
+
+		return waitEventSourceCreated(ctx, conn, arn, eventSourceCreatingTimeout)
+	}, func(err error) (bool, error) {
+		var timeoutErr *retry.TimeoutError
+		return errors.As(err, &timeoutErr), err
 	})
 	if err != nil {
+		if arn != "" {
+			// Taint the resource.
+			resp.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)
+		}
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
-		return
-	}
-
-	arn := aws.ToString(out.EventSourceArn)
-
-	// Event sources are provisioned synchronously, so read back the full configuration immediately.
-	output, err := findEventSourceByARN(ctx, conn, arn)
-	if err != nil {
-		// Taint the resource.
-		resp.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
 
@@ -287,6 +317,15 @@ func (r *eventSourceResource) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
+		// Fields omitted from the request are left unchanged, so removed fields must be cleared explicitly.
+		if plan.Description.IsNull() && !state.Description.IsNull() {
+			input.Description = aws.String("")
+		}
+		smerr.AddEnrich(ctx, &resp.Diagnostics, clearRemovedEventSourceConfiguration(ctx, input.Configuration, state.Configuration))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		_, err := tfresource.RetryWhenIsA[*eventbridgev2.UpdateEventSourceOutput, *awstypes.ConcurrentModificationException](ctx, concurrentModificationTimeout, func(ctx context.Context) (*eventbridgev2.UpdateEventSourceOutput, error) {
 			return conn.UpdateEventSource(ctx, &input)
 		})
@@ -295,7 +334,7 @@ func (r *eventSourceResource) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		output, err := findEventSourceByARN(ctx, conn, arn)
+		output, err := waitEventSourceUpdated(ctx, conn, arn, r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
@@ -338,6 +377,11 @@ func (r *eventSourceResource) Delete(ctx context.Context, req resource.DeleteReq
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
+
+	if _, err := waitEventSourceDeleted(ctx, conn, arn, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+		return
+	}
 }
 
 func (r *eventSourceResource) flatten(ctx context.Context, out *eventbridgev2.DescribeEventSourceOutput, data *eventSourceResourceModel) diag.Diagnostics {
@@ -354,6 +398,116 @@ func (r *eventSourceResource) flatten(ctx context.Context, out *eventbridgev2.De
 	}
 
 	return diags
+}
+
+// clearRemovedEventSourceConfiguration sets the service's clear value on each optional configuration field
+// that is in state but no longer configured.
+func clearRemovedEventSourceConfiguration(ctx context.Context, configuration awstypes.EventSourceConfiguration, state fwtypes.ListNestedObjectValueOf[eventSourceConfigurationModel]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	old, d := state.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || old == nil {
+		return diags
+	}
+
+	switch v := configuration.(type) {
+	case *awstypes.EventSourceConfigurationMemberAwsServiceEventsConfiguration:
+		old, d := old.AWSServiceEventsConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() || old == nil {
+			return diags
+		}
+
+		if v.Value.OnFailureConfiguration == nil && old.OnFailureConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			v.Value.OnFailureConfiguration = &awstypes.OnFailureConfiguration{}
+		}
+		if v.Value.Pattern == nil && !old.Pattern.IsNull() {
+			v.Value.Pattern = aws.String("")
+		}
+
+	case *awstypes.EventSourceConfigurationMemberPartnerEventsConfiguration:
+		old, d := old.PartnerEventsConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() || old == nil {
+			return diags
+		}
+
+		if v.Value.OnFailureConfiguration == nil && old.OnFailureConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			v.Value.OnFailureConfiguration = &awstypes.OnFailureConfiguration{}
+		}
+		if v.Value.PartnerBusKmsKeyIdentifier == nil && !old.PartnerBusKMSKeyIdentifier.IsNull() {
+			v.Value.PartnerBusKmsKeyIdentifier = aws.String("")
+		}
+		if v.Value.Pattern == nil && !old.Pattern.IsNull() {
+			v.Value.Pattern = aws.String("")
+		}
+	}
+
+	return diags
+}
+
+func waitEventSourceCreated(ctx context.Context, conn *eventbridgev2.Client, arn string, timeout time.Duration) (*eventbridgev2.DescribeEventSourceOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.EventSourceStateCreating),
+		Target:  enum.Slice(awstypes.EventSourceStateActive),
+		Refresh: statusEventSource(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*eventbridgev2.DescribeEventSourceOutput); ok {
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitEventSourceUpdated(ctx context.Context, conn *eventbridgev2.Client, arn string, timeout time.Duration) (*eventbridgev2.DescribeEventSourceOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.EventSourceStateUpdating),
+		Target:  enum.Slice(awstypes.EventSourceStateActive),
+		Refresh: statusEventSource(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*eventbridgev2.DescribeEventSourceOutput); ok {
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func waitEventSourceDeleted(ctx context.Context, conn *eventbridgev2.Client, arn string, timeout time.Duration) (*eventbridgev2.DescribeEventSourceOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.EventSourceStateActive, awstypes.EventSourceStateDeleting),
+		Target:  []string{},
+		Refresh: statusEventSource(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*eventbridgev2.DescribeEventSourceOutput); ok {
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func statusEventSource(conn *eventbridgev2.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		out, err := findEventSourceByARN(ctx, conn, arn)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		return out, string(out.State), nil
+	}
 }
 
 func findEventSourceByARN(ctx context.Context, conn *eventbridgev2.Client, arn string) (*eventbridgev2.DescribeEventSourceOutput, error) {
@@ -403,6 +557,7 @@ type eventSourceResourceModel struct {
 	State            fwtypes.StringEnum[awstypes.EventSourceState]                  `tfsdk:"state"`
 	Tags             tftags.Map                                                     `tfsdk:"tags"`
 	TagsAll          tftags.Map                                                     `tfsdk:"tags_all"`
+	Timeouts         timeouts.Value                                                 `tfsdk:"timeouts"`
 }
 
 type eventSourceConfigurationModel struct {
@@ -458,6 +613,14 @@ func (m *eventSourceConfigurationModel) Flatten(ctx context.Context, v any) diag
 
 	switch t := v.(type) {
 	case awstypes.EventSourceConfigurationMemberAwsServiceEventsConfiguration:
+		// The service returns empty values for cleared fields.
+		if aws.ToString(t.Value.Pattern) == "" {
+			t.Value.Pattern = nil
+		}
+		if c := t.Value.OnFailureConfiguration; c != nil && aws.ToString(c.Arn) == "" {
+			t.Value.OnFailureConfiguration = nil
+		}
+
 		var data awsServiceEventsSourceConfigurationModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
 		if diags.HasError() {
@@ -468,6 +631,17 @@ func (m *eventSourceConfigurationModel) Flatten(ctx context.Context, v any) diag
 		m.PartnerEventsConfiguration = fwtypes.NewListNestedObjectValueOfNull[partnerEventsSourceConfigurationModel](ctx)
 
 	case awstypes.EventSourceConfigurationMemberPartnerEventsConfiguration:
+		// The service returns empty values for cleared fields.
+		if aws.ToString(t.Value.Pattern) == "" {
+			t.Value.Pattern = nil
+		}
+		if aws.ToString(t.Value.PartnerBusKmsKeyIdentifier) == "" {
+			t.Value.PartnerBusKmsKeyIdentifier = nil
+		}
+		if c := t.Value.OnFailureConfiguration; c != nil && aws.ToString(c.Arn) == "" {
+			t.Value.OnFailureConfiguration = nil
+		}
+
 		var data partnerEventsSourceConfigurationModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
 		if diags.HasError() {

@@ -69,7 +69,7 @@ The `partner_events_configuration` block supports the following:
 
 * `on_failure_configuration` - (Optional) Destination for events that could not be forwarded. See [`on_failure_configuration` Block](#on_failure_configuration-block) below.
 * `partner_bus_kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key used to encrypt events on the managed partner event bus. Can be a key ID, key ARN, alias name, or alias ARN.
-* `partner_event_source_arn` - (Required) ARN of the partner event source to forward.
+* `partner_event_source_arn` - (Required) ARN of the partner event source to forward. Changing this value creates a new resource.
 * `pattern` - (Optional) JSON event pattern that selects which of the partner event source's events are forwarded. If omitted, all events are forwarded.
 
 ### `on_failure_configuration` Block
@@ -88,6 +88,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `revoked` - Whether the event bus owner has revoked the event source.
 * `state` - Lifecycle state of the event source.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
