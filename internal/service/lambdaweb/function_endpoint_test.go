@@ -30,6 +30,10 @@ func checkFunctionEndpointARN(functionName, endpointName string) knownvalue.Chec
 	return tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`web-function/`+functionName+`/endpoint/`+endpointName))
 }
 
+func checkFunctionEndpointARNAlternateRegion(functionName, endpointName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("lambda", regexache.MustCompile(`web-function/`+functionName+`/endpoint/`+endpointName))
+}
+
 func TestAccLambdaWebFunctionEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint lambdaweb.GetWebFunctionEndpointOutput

@@ -73,7 +73,7 @@ resource "aws_s3_bucket_policy" "test" {
 
 resource "aws_s3_object" "test" {
   region = var.region
-  
+
   bucket = aws_s3_bucket_versioning.test.bucket
   key    = "function.zip"
   source = "test-fixtures/function.zip"
