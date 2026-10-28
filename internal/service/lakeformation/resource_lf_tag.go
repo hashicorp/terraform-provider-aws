@@ -409,7 +409,7 @@ func (r *resourceLFTagResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 	if outputTag.IsNull() {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(tfresource.NewEmptyResultError()))
 		resp.State.RemoveResource(ctx)
 		return
 	}
