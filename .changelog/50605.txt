@@ -1,3 +1,7 @@
 ```release-note:new-resource
 aws_rds_tenant_database
 ```
+
+```release-note:new-list-resource
+aws_rds_tenant_database
+```
