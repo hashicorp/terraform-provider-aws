@@ -28,18 +28,14 @@ func sweepBlueprints(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 	conn := client.BedrockDataAutomationClient(ctx)
 	var sweepResources []sweep.Sweepable
 
-	pages := bedrockdataautomation.NewListBlueprintsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	for v, err := range listBlueprints(ctx, conn, &input) {
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
 
-		for _, v := range page.Blueprints {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newBlueprintResource, client,
-				framework.NewAttribute(names.AttrARN, aws.ToString(v.BlueprintArn))),
-			)
-		}
+		sweepResources = append(sweepResources, framework.NewSweepResource(newBlueprintResource, client,
+			framework.NewAttribute(names.AttrARN, aws.ToString(v.BlueprintArn))),
+		)
 	}
 
 	return sweepResources, nil
