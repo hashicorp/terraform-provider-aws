@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -59,6 +60,9 @@ func (r *telemetryEvaluationForOrganizationResource) Schema(ctx context.Context,
 		Attributes: map[string]schema.Attribute{
 			"all_regions": schema.BoolAttribute{
 				Optional: true,
+				Validators: []validator.Bool{
+					boolvalidator.ConflictsWith(path.MatchRoot("regions")),
+				},
 			},
 			"failure_reason": schema.StringAttribute{
 				Computed: true,
@@ -72,6 +76,7 @@ func (r *telemetryEvaluationForOrganizationResource) Schema(ctx context.Context,
 				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
 				Validators: []validator.Set{
+					setvalidator.ConflictsWith(path.MatchRoot("all_regions")),
 					setvalidator.ValueStringsAre(fwvalidators.AWSRegion()),
 				},
 			},

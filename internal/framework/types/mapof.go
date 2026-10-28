@@ -149,3 +149,7 @@ func NewMapValueOf[T attr.Value](ctx context.Context, elements map[string]attr.V
 func NewMapValueOfMust[T attr.Value](ctx context.Context, elements map[string]attr.Value) MapValueOf[T] {
 	return fwdiag.Must(NewMapValueOf[T](ctx, elements))
 }
+
+func NewMapValueOfEmpty[T attr.Value](ctx context.Context) MapValueOf[T] {
+	return NewMapValueOfMust[T](ctx, map[string]attr.Value{})
+}

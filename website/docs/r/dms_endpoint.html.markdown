@@ -70,7 +70,7 @@ The following arguments are optional:
 
 * `secrets_manager_arn` - (Optional) Full ARN, partial ARN, or friendly name of the Secrets Manager secret that contains the endpoint connection details. Supported only when `engine_name` is `aurora`, `aurora-postgresql`, `mariadb`, `mongodb`, `mysql`, `oracle`, `postgres`, `redshift`, or `sqlserver`.
 * `server_name` - (Optional) Host name of the server.
-* `service_access_role` - (Optional) ARN used by the service access IAM role for dynamodb endpoints.
+* `service_access_role` - (Optional) ARN used by the service access IAM role for DynamoDB endpoints.
 * `ssl_mode` - (Optional, Default: `none`) SSL mode to use for the connection. Valid values are `none`, `require`, `verify-ca`, `verify-full`
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `username` - (Optional) User name to be used to login to the endpoint database.
@@ -145,7 +145,7 @@ The following arguments are optional:
 * `clean_source_metadata_on_mismatch` - (Optional) Whether to clean and recreate table metadata information on the replication instance when a mismatch occurs.
 * `events_poll_interval` - (Optional) Time interval to check the binary log for new changes/events when the database is idle. Default is `5`.
 * `execute_timeout` - (Optional) Client statement timeout (in seconds) for a MySQL source endpoint.
-* `max_file_size` - (Optional) Maximum size (in KB) of any .csv file used to transfer data to a MySQL-compatible database.
+* `max_file_size` - (Optional) Maximum size (in KB) of any `.csv` file used to transfer data to a MySQL-compatible database.
 * `parallel_load_threads` - (Optional) Number of threads to use to load the data into the MySQL-compatible target database.
 * `server_timezone` - (Optional) Time zone for the source MySQL database.
 * `service_access_role_arn` - (Optional) ARN of the IAM role to authenticate when connecting to the endpoint.
@@ -211,7 +211,7 @@ The following arguments are optional:
 * `map_boolean_as_boolean` - (Optional) You can use PostgreSQL endpoint settings to map a boolean as a boolean from your PostgreSQL source to a Amazon Redshift target. Default value is `false`.
 * `map_jsonb_as_clob` - Optional When true, DMS migrates JSONB values as CLOB.
 * `map_long_varchar_as` - (Optional) Specifies how DMS maps LONG VARCHAR values. Valid values are `wstring`, `clob`, and `nclob`.
-* `max_file_size` - (Optional) Specifies the maximum size (in KB) of any .csv file used to transfer data to PostgreSQL. Default is `32,768 KB`.
+* `max_file_size` - (Optional) Specifies the maximum size (in KB) of any `.csv` file used to transfer data to PostgreSQL. Default is `32,768 KB`.
 * `plugin_name` - (Optional) Specifies the plugin to use to create a replication slot. Valid values: `pglogical`, `test-decoding`.
 * `service_access_role_arn` - (Optional) Specifies the IAM role to use to authenticate the connection.
 * `slot_name` - (Optional) Sets the name of a previously created logical replication slot for a CDC load of the PostgreSQL source instance.
@@ -234,8 +234,8 @@ The following arguments are optional:
 
 * `bucket_folder` - (Optional) Custom S3 Bucket Object prefix for intermediate storage.
 * `bucket_name` - (Optional) Custom S3 Bucket name for intermediate storage.
-* `encryption_mode` - (Optional) The server-side encryption mode that you want to encrypt your intermediate .csv object files copied to S3. Defaults to `SSE_S3`. Valid values are `SSE_S3` and `SSE_KMS`.
-* `server_side_encryption_kms_key_id` - (Required when `encryption_mode` is  `SSE_KMS`, must not be set otherwise) ARN or Id of KMS Key to use when `encryption_mode` is `SSE_KMS`.
+* `encryption_mode` - (Optional) The server-side encryption mode that you want to encrypt your intermediate `.csv` object files copied to S3. Defaults to `SSE_S3`. Valid values are `SSE_S3` and `SSE_KMS`.
+* `server_side_encryption_kms_key_id` - (Required when `encryption_mode` is  `SSE_KMS`, must not be set otherwise) ARN or ID of KMS Key to use when `encryption_mode` is `SSE_KMS`.
 * `service_access_role_arn` - (Optional) ARN of the IAM Role with permissions to read from or write to the S3 Bucket for intermediate storage.
 
 ## Attribute Reference

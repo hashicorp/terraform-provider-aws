@@ -401,7 +401,7 @@ resource "aws_cloudtrail" "sample" {
 
 - `arn` (String) ARN of the CloudTrail trail.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrail Trails using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudTrail Trails using the `arn`. For example:
 
 ```terraform
 import {

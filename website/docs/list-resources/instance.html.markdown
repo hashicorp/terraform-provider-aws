@@ -12,7 +12,7 @@ description: |-
 
 Lists EC2 Instance resources.
 
-By default, EC2 Instances managed by an Auto Scaling Group and EC2 Instances in either the `terminated` or `shutting-down` state are excluded.
+By default, EC2 Instances managed by an Auto Scaling group and EC2 Instances in either the `terminated` or `shutting-down` state are excluded.
 
 ## Example Usage
 
@@ -46,7 +46,7 @@ list "aws_instance" "example" {
 This list resource supports the following arguments:
 
 * `filter` - (Optional) One or more filters to apply to the search. If multiple `filter` blocks are provided, they all must be true. For a full reference of filter names, see [describe-instances in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html). See [`filter` Block](#filter-block) below.
-* `include_auto_scaled` - (Optional) Whether to include EC2 instances that are managed by an Auto Scaling Group. Default value is `false`.
+* `include_auto_scaled` - (Optional) Whether to include EC2 instances that are managed by an Auto Scaling group. Default value is `false`.
 * `region` - (Optional) [Region](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints) to query. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `filter` Block

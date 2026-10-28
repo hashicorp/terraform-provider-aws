@@ -287,8 +287,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	input := lambdaweb.ListWebFunctionsInput{}
-	_, err := client.ListWebFunctions(ctx, &input,
+	input := lambdaweb.GetWebAccountSettingsInput{}
+	_, err := client.GetWebAccountSettings(ctx, &input,
 		func(opts *lambdaweb.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

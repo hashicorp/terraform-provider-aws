@@ -58,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Registry Policy using the registry id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Registry Policy using the registry ID. For example:
 
 ```terraform
 import {
@@ -67,7 +67,7 @@ import {
 }
 ```
 
-Using `terraform import`, import ECR Registry Policy using the registry id. For example:
+Using `terraform import`, import ECR Registry Policy using the registry ID. For example:
 
 ```console
 % terraform import aws_ecr_registry_policy.example 123456789012

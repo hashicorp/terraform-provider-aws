@@ -46,6 +46,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchomni"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
@@ -64,6 +65,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directoryservicedata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
@@ -247,6 +249,7 @@ func registerSweepers() {
 	cloudhsmv2.RegisterSweepers()
 	cloudtrail.RegisterSweepers()
 	cloudwatch.RegisterSweepers()
+	cloudwatchomni.RegisterSweepers()
 	codeartifact.RegisterSweepers()
 	codebuild.RegisterSweepers()
 	codegurureviewer.RegisterSweepers()
@@ -265,6 +268,7 @@ func registerSweepers() {
 	dax.RegisterSweepers()
 	deploy.RegisterSweepers()
 	devicefarm.RegisterSweepers()
+	devopsagent.RegisterSweepers()
 	directconnect.RegisterSweepers()
 	directoryservicedata.RegisterSweepers()
 	dlm.RegisterSweepers()

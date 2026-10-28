@@ -154,10 +154,12 @@ func (r *memberDetectorFeatureResource) Read(ctx context.Context, request resour
 		return
 	}
 
-	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.AdditionalConfiguration, &data.AdditionalConfiguration)...)
-	if response.Diagnostics.HasError() {
-		return
+	// Only refresh additional_configuration if it's in state, as AWS returns unconfigured default entries such as RDS_DATA_RISK.
+	if data.AdditionalConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output.AdditionalConfiguration, &data.AdditionalConfiguration)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 	data.Status = fwtypes.StringEnumValue(output.Status)
 

@@ -42,7 +42,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_licensemanager_grant_accepter` using the grant arn. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_licensemanager_grant_accepter` using the grant ARN. For example:
 
 ```terraform
 import {
@@ -51,7 +51,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_licensemanager_grant_accepter` using the grant arn. For example:
+Using `terraform import`, import `aws_licensemanager_grant_accepter` using the grant ARN. For example:
 
 ```console
 % terraform import aws_licensemanager_grant_accepter.test arn:aws:license-manager::123456789012:grant:g-1cf9fba4ba2f42dcab11c686c4b4d329

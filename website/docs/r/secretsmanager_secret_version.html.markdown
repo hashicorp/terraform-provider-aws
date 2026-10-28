@@ -14,6 +14,10 @@ Provides a resource to manage AWS Secrets Manager secret version including its s
 
 -> **Note:** Write-Only argument `secret_string_wo` is available to use in place of `secret_string`. Write-Only argumentss are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
 
+~> **NOTE:** This resource manages one specific version of a secret. If something else creates newer versions, such as rotation, another Terraform configuration, or the console, this resource keeps tracking its own version even after that version is no longer `AWSCURRENT`. To read the current value of a secret, use the [`aws_secretsmanager_secret_version` data source](/docs/providers/aws/d/secretsmanager_secret_version.html).
+
+~> **NOTE:** When a secret's KMS key changes, Secrets Manager re-encrypts only the `AWSCURRENT`, `AWSPENDING`, and `AWSPREVIOUS` versions with the new key. Once the previous key is disabled or deleted, older versions can no longer be decrypted. If this resource's version is one of them, Terraform keeps the value from state and shows a warning, but cannot import the version or move staging labels onto it. If the version is still `AWSCURRENT` or `AWSPENDING`, reading it fails. See [Change the encryption key for a secret](https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_update-encryption-key.html).
+
 ## Example Usage
 
 ### Simple String Value

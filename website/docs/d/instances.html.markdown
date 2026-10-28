@@ -18,7 +18,7 @@ and [remote state](https://www.terraform.io/docs/state/remote.html) and
 data source instead** if you manage referenced instances via Terraform.
 
 ~> **Note:** It's strongly discouraged to use this data source for querying ephemeral
-instances (e.g., managed via autoscaling group), as the output may change at any time
+instances (e.g., managed via Auto Scaling group), as the output may change at any time
 and you'd need to re-run `apply` every time an instance comes up or dies.
 
 ## Example Usage

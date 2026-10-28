@@ -112,7 +112,7 @@ This resource supports the following arguments:
   or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
   The actual engine version used is returned in the attribute `engine_version_actual`, see [Attribute Reference](#attribute-reference) below.
 * `global_replication_group_id_suffix` - (Required) The suffix name of a Global Datastore. If `global_replication_group_id_suffix` is changed, creates a new resource.
-* `primary_replication_group_id` - (Required) The ID of the primary cluster that accepts writes and will replicate updates to the secondary cluster. If `primary_replication_group_id` is changed, creates a new resource.
+* `primary_replication_group_id` - (Required) The ID of the primary cluster that accepts writes and will replicate updates to the secondary cluster. Changing this value will trigger a failover to the specified replication group.
 * `global_replication_group_description` - (Optional) A user-created description for the global replication group.
 * `num_node_groups` - (Optional) The number of node groups (shards) on the global replication group.
 * `parameter_group_name` - (Optional) An ElastiCache Parameter Group to use for the Global Replication Group.

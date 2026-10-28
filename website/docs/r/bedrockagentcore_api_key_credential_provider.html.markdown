@@ -57,11 +57,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `api_key` - (Optional) API key value. Conflicts with `api_key_wo` and `api_key_secret_config`. This value will be visible in Terraform plan outputs and logs.
+* `api_key` - (Optional) API key value. Exactly one of `api_key`, `api_key_secret_config`, or `api_key_wo` must be set. This value is stored in plain text in the Terraform state; use `api_key_wo` to avoid this.
 * `api_key_secret_config` - (Optional) Reference to a customer-managed AWS Secrets Manager secret that stores the API key. Requires `api_key_secret_source = "EXTERNAL"`. [See below](#api_key_secret_config-block).
 * `api_key_secret_source` - (Optional) Source of the secret backing the credential provider. Valid values are `MANAGED` (AgentCore creates and manages the secret from the supplied `api_key`) and `EXTERNAL` (the provider references a customer-managed AWS Secrets Manager secret via `api_key_secret_config`). Changing between `MANAGED` and `EXTERNAL` forces replacement of the resource.
 * `api_key_wo` - (Optional, Write-Only) Write-only API key value. Conflicts with `api_key` and `api_key_secret_config`. If set, requires `api_key_wo_version` to be set.
-* `api_key_wo_version` - (Optional) Required when `api_key_wo` is set. Changing this value triggers an update to `api_key_wo`.
+* `api_key_wo_version` - (Optional) Version used together with the write-only API key. Required when `api_key_wo` is set. Changing this value triggers an update to `api_key_wo`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

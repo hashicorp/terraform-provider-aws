@@ -84,17 +84,17 @@ The `connector_provider` block supports the following:
 
 The `jira_cloud` block supports the following:
 
-* `auth_status` - (Computed) Status of the authorization between Jira Cloud and the service.
-* `auth_url` - (Computed) URL to provide to customers for OAuth auth code flow.
-* `cloud_id` - (Computed) Cloud ID of the Jira Cloud.
-* `domain` - (Computed) URL domain of the Jira Cloud instance.
+* `auth_status` - (Read-Only) Status of the authorization between Jira Cloud and the service.
+* `auth_url` - (Read-Only) URL to provide to customers for OAuth auth code flow.
+* `cloud_id` - (Read-Only) Cloud ID of the Jira Cloud.
+* `domain` - (Read-Only) URL domain of the Jira Cloud instance.
 * `project_key` - (Required) Jira Cloud project key.
 
 ### `service_now`
 
 The `service_now` block supports the following:
 
-* `auth_status` - (Computed) Status of the authorization between ServiceNow and the service.
+* `auth_status` - (Read-Only) Status of the authorization between ServiceNow and the service.
 * `instance_name` - (Required) Instance name of ServiceNow ITSM.
 * `secret_arn` - (Required) ARN of the AWS Secrets Manager secret that contains the ServiceNow credentials.
 

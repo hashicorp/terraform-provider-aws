@@ -3,12 +3,12 @@ subcategory: "Oracle Database@AWS"
 layout: "AWS: aws_odb_db_server"
 page_title: "AWS: aws_odb_db_server"
 description: |-
-  Terraform data source for managing db server linked to exadata infrastructure of Oracle Database@AWS.
+  Terraform data source for managing DB server linked to exadata infrastructure of Oracle Database@AWS.
 ---
 
 # Data Source: aws_odb_db_server
 
-Terraform data source for managing db server linked to exadata infrastructure of Oracle Database@AWS.
+Terraform data source for managing DB server linked to exadata infrastructure of Oracle Database@AWS.
 
 You can find out more about Oracle Database@AWS from [User Guide](https://docs.aws.amazon.com/odb/latest/UserGuide/what-is-odb.html).
 
@@ -28,7 +28,7 @@ data "aws_odb_db_server" "example" {
 The following arguments are required:
 
 * `cloud_exadata_infrastructure_id` - (Required) Unique identifier of the cloud vm cluster.
-* `id` - (Required) Unique identifier of db node associated with vm cluster.
+* `id` - (Required) Unique identifier of DB node associated with vm cluster.
 
 The following arguments are optional:
 

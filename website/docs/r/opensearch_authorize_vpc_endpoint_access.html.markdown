@@ -3,12 +3,12 @@ subcategory: "OpenSearch"
 layout: "aws"
 page_title: "AWS: aws_opensearch_authorize_vpc_endpoint_access"
 description: |-
-  Terraform resource for managing an AWS OpenSearch Authorize Vpc Endpoint Access.
+  Terraform resource for managing an AWS OpenSearch Authorize VPC Endpoint Access.
 ---
 
 # Resource: aws_opensearch_authorize_vpc_endpoint_access
 
-Terraform resource for managing an AWS OpenSearch Authorize Vpc Endpoint Access.
+Terraform resource for managing an AWS OpenSearch Authorize VPC Endpoint Access.
 
 ## Example Usage
 
@@ -44,7 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Authorize Vpc Endpoint Access using the `domain_name` and `account` separated by a comma (,). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Authorize VPC Endpoint Access using the `domain_name` and `account` separated by a comma (,). For example:
 
 ```terraform
 import {
@@ -53,7 +53,7 @@ import {
 }
 ```
 
-Using `terraform import`, import OpenSearch Authorize Vpc Endpoint Access using the `domain_name` and `account` separated by a comma (,). For example:
+Using `terraform import`, import OpenSearch Authorize VPC Endpoint Access using the `domain_name` and `account` separated by a comma (,). For example:
 
 ```console
 % terraform import aws_opensearch_authorize_vpc_endpoint_access.example authorize_vpc_endpoint_access-id-12345678,123456789012

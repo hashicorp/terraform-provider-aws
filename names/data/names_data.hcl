@@ -1710,7 +1710,7 @@ service "cloudwatch" {
   }
 
   provider_package_correct = "cloudwatch"
-  doc_prefix               = ["cloudwatch_alarm_", "cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_", "cloudwatch_otel_"]
+  doc_prefix               = ["cloudwatch_alarm_", "cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_", "cloudwatch_otel_", "cloudwatch_resource_metrics_"]
   brand                    = "AWS"
 }
 
@@ -5322,7 +5322,7 @@ service "lambdaweb" {
   }
 
   endpoint_info {
-    endpoint_api_call = "ListWebFunctions"
+    endpoint_api_call = "GetWebAccountSettings"
   }
 
   resource_prefix {
@@ -8334,6 +8334,35 @@ service "securityhub" {
 
   provider_package_correct = "securityhub"
   doc_prefix               = ["securityhub_"]
+  brand                    = "AWS"
+}
+
+service "securityir" {
+  cli_v2_command {
+    aws_cli_v2_command           = "security-ir"
+    aws_cli_v2_command_no_dashes = "securityir"
+  }
+
+  sdk {
+    id            = "Security IR"
+    arn_namespace = "security-ir"
+  }
+
+  names {
+    provider_name_upper = "SecurityIR"
+    human_friendly      = "Security Incident Response"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListMemberships"
+  }
+
+  resource_prefix {
+    correct = "aws_securityir_"
+  }
+
+  provider_package_correct = "securityir"
+  doc_prefix               = ["securityir_"]
   brand                    = "AWS"
 }
 
