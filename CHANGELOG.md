@@ -30,6 +30,7 @@ ENHANCEMENTS:
 * resource/aws_dx_connection: Add configurable `update` timeout. Defaults to the previously hard-coded value of `10m`. ([#50602](https://github.com/hashicorp/terraform-provider-aws/issues/50602))
 * resource/aws_dx_connection_confirmation: Add configurable `create` timeout. Defaults to the previously hard-coded value of `10m`. ([#50602](https://github.com/hashicorp/terraform-provider-aws/issues/50602))
 * resource/aws_ecs_express_gateway_service: Add `cpu_architecture` argument ([#50456](https://github.com/hashicorp/terraform-provider-aws/issues/50456))
+* resource/aws_instance: Allow `placement_group`, `placement_group_id`, and `placement_partition_number` to be updated in-place with instance stop/start rather than being replaced. Spot Instances and instances with `disable_api_stop` and `force_destroy` enabled are still replaced ([#50417](https://github.com/hashicorp/terraform-provider-aws/issues/50417))
 * resource/aws_lambda_function: Add `kms_key_arn` argument to the `durable_config` configuration block ([#50614](https://github.com/hashicorp/terraform-provider-aws/issues/50614))
 * resource/aws_medialive_channel: Add `encoder_settings.thumbnail_configuration` argument ([#50203](https://github.com/hashicorp/terraform-provider-aws/issues/50203))
 * resource/aws_networkfirewall_firewall_policy: Add `firewall_policy.route53_resolved_ip_validation` argument ([#50592](https://github.com/hashicorp/terraform-provider-aws/issues/50592))
@@ -43,6 +44,7 @@ BUG FIXES:
 
 * resource/aws_cloudcontrolapi_resource: Add retry handling for Cloud Control `ThrottlingException` errors ([#50667](https://github.com/hashicorp/terraform-provider-aws/issues/50667))
 * resource/aws_db_instance: Fix `db_name` and `username` forcing replacement after an RDS for Oracle CDB instance is converted to the multi-tenant configuration outside of Terraform ([#50585](https://github.com/hashicorp/terraform-provider-aws/issues/50585))
+* resource/aws_lakeformation_resource_lf_tag: Fix crash during refresh when an LF-Tag assignment has been removed outside Terraform ([#50626](https://github.com/hashicorp/terraform-provider-aws/issues/50626))
 * resource/aws_wafv2_web_acl_rule: Fix `scope_down_statement` not supporting logical statements (`and_statement`, `not_statement`, `or_statement`), including `not_statement` nested inside `and_statement` ([#50519](https://github.com/hashicorp/terraform-provider-aws/issues/50519))
 * resource/aws_wafv2_web_acl_rule: Reject `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement` nested in `and_statement`, `not_statement` or `or_statement`, `and_statement` directly in `and_statement`, `or_statement` directly in `or_statement`, and `and_statement` or `or_statement` with fewer than 2 statements at validation time, in both `statement` and `scope_down_statement`, matching AWS WAF ([#50519](https://github.com/hashicorp/terraform-provider-aws/issues/50519))
 
