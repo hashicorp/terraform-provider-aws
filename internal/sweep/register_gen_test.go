@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockdataautomation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
@@ -239,6 +240,7 @@ func registerSweepers() {
 	bedrock.RegisterSweepers()
 	bedrockagent.RegisterSweepers()
 	bedrockagentcore.RegisterSweepers()
+	bedrockdataautomation.RegisterSweepers()
 	billing.RegisterSweepers()
 	budgets.RegisterSweepers()
 	chime.RegisterSweepers()
