@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -51,7 +52,10 @@ func testAccSigningConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSigningConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningConfigurationExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
@@ -67,6 +71,10 @@ func testAccSigningConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrRegion),
@@ -92,7 +100,10 @@ func testAccSigningConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSigningConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningConfigurationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecr.ResourceSigningConfiguration, resourceName),
@@ -123,7 +134,10 @@ func testAccSigningConfiguration_update(t *testing.T) {
 		CheckDestroy:             testAccCheckSigningConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningConfigurationConfig_twoProfiles(rName, testAccSigningConfigurationRules_one),
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/update_one_rule/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
@@ -131,7 +145,10 @@ func testAccSigningConfiguration_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSigningConfigurationConfig_twoProfiles(rName, testAccSigningConfigurationRules_two),
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/update_two_rules/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "2"),
@@ -148,6 +165,10 @@ func testAccSigningConfiguration_update(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/update_two_rules/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrRegion),
@@ -157,7 +178,10 @@ func testAccSigningConfiguration_update(t *testing.T) {
 			// PutSigningConfiguration replaces the whole configuration, so removing a rule must
 			// take effect.
 			{
-				Config: testAccSigningConfigurationConfig_twoProfiles(rName, testAccSigningConfigurationRules_oneOther),
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/update_other_rule/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
@@ -186,7 +210,10 @@ func testAccSigningConfiguration_noRepositoryFilter(t *testing.T) {
 		CheckDestroy:             testAccCheckSigningConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningConfigurationConfig_noRepositoryFilter(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/no_repository_filter/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
@@ -196,6 +223,10 @@ func testAccSigningConfiguration_noRepositoryFilter(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/no_repository_filter/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrRegion),
@@ -270,104 +301,4 @@ func testAccCheckSigningConfigurationDestroy(ctx context.Context, t *testing.T) 
 // allow only alphanumerics and underscores, so acctest.RandomWithPrefix cannot be used.
 func testAccSigningProfileName(t *testing.T) string {
 	return fmt.Sprintf("tf_acc_test_%d", acctest.RandInt(t))
-}
-
-func testAccSigningConfigurationConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_signer_signing_profile" "test" {
-  name        = %[1]q
-  platform_id = "Notation-OCI-SHA384-ECDSA"
-}
-
-resource "aws_ecr_signing_configuration" "test" {
-  rule {
-    signing_profile_arn = aws_signer_signing_profile.test.arn
-
-    repository_filter {
-      filter      = "team-a/*"
-      filter_type = "WILDCARD_MATCH"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccSigningConfigurationConfig_noRepositoryFilter(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_signer_signing_profile" "test" {
-  name        = %[1]q
-  platform_id = "Notation-OCI-SHA384-ECDSA"
-}
-
-resource "aws_ecr_signing_configuration" "test" {
-  rule {
-    signing_profile_arn = aws_signer_signing_profile.test.arn
-  }
-}
-`, rName)
-}
-
-const testAccSigningConfigurationRules_one = `
-  rule {
-    signing_profile_arn = aws_signer_signing_profile.a.arn
-
-    repository_filter {
-      filter      = "team-a/*"
-      filter_type = "WILDCARD_MATCH"
-    }
-  }
-`
-
-const testAccSigningConfigurationRules_two = `
-  rule {
-    signing_profile_arn = aws_signer_signing_profile.a.arn
-
-    repository_filter {
-      filter      = "team-a/*"
-      filter_type = "WILDCARD_MATCH"
-    }
-  }
-
-  rule {
-    signing_profile_arn = aws_signer_signing_profile.b.arn
-
-    repository_filter {
-      filter      = "*/production"
-      filter_type = "WILDCARD_MATCH"
-    }
-
-    repository_filter {
-      filter      = "team-b/*"
-      filter_type = "WILDCARD_MATCH"
-    }
-  }
-`
-
-const testAccSigningConfigurationRules_oneOther = `
-  rule {
-    signing_profile_arn = aws_signer_signing_profile.b.arn
-
-    repository_filter {
-      filter      = "*/production"
-      filter_type = "WILDCARD_MATCH"
-    }
-  }
-`
-
-func testAccSigningConfigurationConfig_twoProfiles(rName, rules string) string {
-	return fmt.Sprintf(`
-resource "aws_signer_signing_profile" "a" {
-  name        = "%[1]s_a"
-  platform_id = "Notation-OCI-SHA384-ECDSA"
-}
-
-resource "aws_signer_signing_profile" "b" {
-  name        = "%[1]s_b"
-  platform_id = "Notation-OCI-SHA384-ECDSA"
-}
-
-resource "aws_ecr_signing_configuration" "test" {
-%[2]s
-}
-`, rName, rules)
 }

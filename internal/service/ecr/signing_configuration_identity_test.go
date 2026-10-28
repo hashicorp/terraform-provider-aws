@@ -4,9 +4,9 @@
 package ecr_test
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -37,7 +37,10 @@ func testAccECRSigningConfiguration_Identity_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				Config: testAccSigningConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningConfigurationExists(ctx, t, resourceName),
 				),
@@ -53,6 +56,10 @@ func testAccECRSigningConfiguration_Identity_basic(t *testing.T) {
 
 			// Step 2: Import command
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateKind:                      resource.ImportCommandWithID,
@@ -63,6 +70,10 @@ func testAccECRSigningConfiguration_Identity_basic(t *testing.T) {
 
 			// Step 3: Import block with Import ID
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
@@ -76,6 +87,10 @@ func testAccECRSigningConfiguration_Identity_basic(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -110,7 +125,11 @@ func testAccECRSigningConfiguration_Identity_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				Config: testAccSigningConfigurationConfig_region(rName, altRegion),
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(altRegion),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningConfigurationExists(ctx, t, resourceName),
 				),
@@ -126,6 +145,11 @@ func testAccECRSigningConfiguration_Identity_regionOverride(t *testing.T) {
 
 			// Step 2: Import command with appended "@<region>"
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(altRegion),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateKind:                      resource.ImportCommandWithID,
@@ -136,6 +160,11 @@ func testAccECRSigningConfiguration_Identity_regionOverride(t *testing.T) {
 
 			// Step 3: Import block with Import ID and appended "@<region>"
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(altRegion),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
@@ -149,6 +178,11 @@ func testAccECRSigningConfiguration_Identity_regionOverride(t *testing.T) {
 
 			// Step 4: Import block with Resource Identity
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/SigningConfiguration/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(altRegion),
+				},
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
@@ -160,29 +194,4 @@ func testAccECRSigningConfiguration_Identity_regionOverride(t *testing.T) {
 			},
 		},
 	})
-}
-
-// Signing profiles must be in the same Region as the registry.
-func testAccSigningConfigurationConfig_region(rName, region string) string {
-	return fmt.Sprintf(`
-resource "aws_signer_signing_profile" "test" {
-  region = %[2]q
-
-  name        = %[1]q
-  platform_id = "Notation-OCI-SHA384-ECDSA"
-}
-
-resource "aws_ecr_signing_configuration" "test" {
-  region = %[2]q
-
-  rule {
-    signing_profile_arn = aws_signer_signing_profile.test.arn
-
-    repository_filter {
-      filter      = "team-a/*"
-      filter_type = "WILDCARD_MATCH"
-    }
-  }
-}
-`, rName, region)
 }
