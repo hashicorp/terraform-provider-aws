@@ -221,7 +221,11 @@ func (r *eventBusResource) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 
-		// An omitted encryption configuration leaves the key unchanged; an empty one reverts to an AWS owned key.
+		// Fields omitted from the request are left unchanged, so removed fields must be cleared explicitly.
+		if plan.Description.IsNull() && !state.Description.IsNull() {
+			input.Description = aws.String("")
+		}
+		// An empty encryption configuration reverts to an AWS owned key.
 		if plan.EncryptionConfiguration.IsNull() && !state.EncryptionConfiguration.IsNull() {
 			input.EncryptionConfiguration = &awstypes.EncryptionConfiguration{}
 		}

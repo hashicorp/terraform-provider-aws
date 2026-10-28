@@ -176,6 +176,23 @@ func TestAccEventBridgeV2EventBus_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.BusStateActive)),
 				},
 			},
+			// Remove the description, clearing it on the service. The retention period is kept.
+			{
+				Config: testAccEventBusConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEventBusExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.BusStateActive)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration").AtMapKey("retention_period_in_days"), knownvalue.Int32Exact(2)),
+				},
+			},
 		},
 	})
 }
