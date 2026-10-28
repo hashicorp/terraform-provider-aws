@@ -341,7 +341,9 @@ var (
 	eventBusARNPattern = sync.OnceValue(func() *regexp.Regexp {
 		return regexache.MustCompile(`^arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
 	})
-	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
+	partnerEventBusPattern = sync.OnceValue(func() *regexp.Regexp {
+		return regexache.MustCompile(`^(?:arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
+	})
 )
 
 const ruleResourceIDSeparator = "/"
@@ -373,7 +375,7 @@ func ruleParseResourceID(id string) (string, string, error) {
 		if eventBusARNPattern().MatchString(eventBusName) && ruleName != "" {
 			return eventBusName, ruleName, nil
 		}
-		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" {
+		if partnerEventBusPattern().MatchString(eventBusName) && ruleName != "" {
 			return eventBusName, ruleName, nil
 		}
 	}

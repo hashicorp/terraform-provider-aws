@@ -1432,7 +1432,7 @@ func targetParseImportID(id string) (string, string, string, error) {
 		if eventBusARNPattern().MatchString(eventBusName) && ruleName != "" && targetID != "" {
 			return eventBusName, ruleName, targetID, nil
 		}
-		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
+		if partnerEventBusPattern().MatchString(eventBusName) && ruleName != "" && targetID != "" {
 			return eventBusName, ruleName, targetID, nil
 		}
 	}

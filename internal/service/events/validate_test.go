@@ -175,7 +175,7 @@ func TestPartnerEventBusPattern(t *testing.T) {
 	}
 
 	for _, pattern := range validPatterns {
-		if !tfevents.PartnerEventBusPattern.MatchString(pattern) {
+		if !tfevents.PartnerEventBusPattern().MatchString(pattern) {
 			t.Errorf("Expected %q to match PartnerEventBusPattern", pattern)
 		}
 	}
@@ -187,7 +187,7 @@ func TestPartnerEventBusPattern(t *testing.T) {
 	}
 
 	for _, pattern := range invalidPatterns {
-		if tfevents.PartnerEventBusPattern.MatchString(pattern) {
+		if tfevents.PartnerEventBusPattern().MatchString(pattern) {
 			t.Errorf("Expected %q to NOT match PartnerEventBusPattern", pattern)
 		}
 	}
