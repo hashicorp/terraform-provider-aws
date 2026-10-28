@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridgev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eventbridgev2/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -190,8 +191,45 @@ func TestAccEventBridgeV2Subscriber_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.SubscriberStateStopped)),
 				},
 			},
+			// Remove the optional configuration, clearing it on the service.
+			{
+				Config: testAccSubscriberConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriberExists(ctx, t, resourceName, &v),
+					testAccCheckSubscriberServiceDefaults(&v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("batch_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invoke_configuration").AtSliceIndex(0).AtMapKey("sqs_parameters"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_failure_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("retry_policy"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+			},
 		},
 	})
+}
+
+// testAccCheckSubscriberServiceDefaults checks that removed batch and log configurations were reverted to the service defaults.
+// They are not tracked in state when unconfigured, so they must be checked against the API response.
+func testAccCheckSubscriberServiceDefaults(v *eventbridgev2.DescribeSubscriberOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if c := v.BatchConfiguration; c != nil && aws.ToInt32(c.MaxBatchSize) == 5 {
+			return fmt.Errorf("batch_configuration.max_batch_size = %d, want service default", aws.ToInt32(c.MaxBatchSize))
+		}
+
+		if c := v.LogConfiguration; c != nil && c.Level != "" && c.Level != awstypes.LogLevelOff {
+			return fmt.Errorf("log_configuration.level = %s, want %s", c.Level, awstypes.LogLevelOff)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckSubscriberDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {

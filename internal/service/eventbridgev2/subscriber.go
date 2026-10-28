@@ -650,6 +650,31 @@ func (r *subscriberResource) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 
+		// Fields omitted from the request are left unchanged, so removed fields must be cleared explicitly.
+		// An empty configuration reverts to the service defaults.
+		if plan.Description.IsNull() && !state.Description.IsNull() {
+			input.Description = aws.String("")
+		}
+		if input.BatchConfiguration == nil && state.BatchConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			input.BatchConfiguration = &awstypes.BatchConfiguration{}
+		}
+		if input.LogConfiguration == nil && state.LogConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			input.LogConfiguration = &awstypes.LogConfiguration{}
+		}
+		if input.OnFailureConfiguration == nil && state.OnFailureConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			input.OnFailureConfiguration = &awstypes.OnFailureConfiguration{}
+		}
+		if input.RetryPolicy == nil && state.RetryPolicy.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			input.RetryPolicy = &awstypes.RetryPolicy{}
+		}
+		if input.Transformer == nil && state.Transformer.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			input.Transformer = &awstypes.Transformer{}
+		}
+		smerr.AddEnrich(ctx, &resp.Diagnostics, clearRemovedSubscriberInvokeConfiguration(ctx, input.InvokeConfiguration, state.InvokeConfiguration))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		_, err := tfresource.RetryWhenIsA[*eventbridgev2.UpdateSubscriberOutput, *awstypes.ConcurrentModificationException](ctx, concurrentModificationTimeout, func(ctx context.Context) (*eventbridgev2.UpdateSubscriberOutput, error) {
 			return conn.UpdateSubscriber(ctx, &input)
 		})
@@ -705,6 +730,11 @@ func (r *subscriberResource) Delete(ctx context.Context, req resource.DeleteRequ
 func (r *subscriberResource) flatten(ctx context.Context, out *eventbridgev2.DescribeSubscriberOutput, data *subscriberResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	// The service returns an empty on-failure configuration once it has been cleared.
+	if c := out.OnFailureConfiguration; c != nil && aws.ToString(c.Arn) == "" {
+		out.OnFailureConfiguration = nil
+	}
+
 	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, out, data, fwflex.WithFieldNamePrefix("Subscriber")))
 	if diags.HasError() {
 		return diags
@@ -744,6 +774,49 @@ func (r *subscriberResource) flattenConfigured(ctx context.Context, out *eventbr
 	}
 	if prior.Transformer.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
 		data.Transformer = prior.Transformer
+	}
+
+	return diags
+}
+
+// clearRemovedSubscriberInvokeConfiguration sets an empty value on each target parameters block
+// that is in state but no longer configured.
+func clearRemovedSubscriberInvokeConfiguration(ctx context.Context, configuration *awstypes.UpdateInvokeConfiguration, state fwtypes.ListNestedObjectValueOf[invokeConfigurationModel]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if configuration == nil {
+		return diags
+	}
+
+	old, d := state.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || old == nil {
+		return diags
+	}
+
+	if configuration.EventBusV2Parameters == nil && old.EventBusV2Parameters.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		configuration.EventBusV2Parameters = &awstypes.EventBusV2Parameters{}
+	}
+	if configuration.HttpParameters == nil && old.HTTPParameters.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		configuration.HttpParameters = &awstypes.HttpParameters{}
+	}
+	if configuration.KinesisParameters == nil && old.KinesisParameters.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		configuration.KinesisParameters = &awstypes.KinesisParameters{}
+	}
+	if configuration.LambdaParameters == nil && old.LambdaParameters.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		configuration.LambdaParameters = &awstypes.LambdaParameters{}
+	}
+	if configuration.SnsParameters == nil && old.SNSParameters.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		configuration.SnsParameters = &awstypes.SnsParameters{}
+	}
+	if configuration.SqsParameters == nil && old.SQSParameters.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		configuration.SqsParameters = &awstypes.SqsParameters{}
+	}
+	if configuration.StepFunctionsParameters == nil && old.StepFunctionsParameters.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		configuration.StepFunctionsParameters = &awstypes.StepFunctionsParameters{}
+	}
+	if configuration.UniversalTargetParameters == nil && old.UniversalTargetParameters.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		configuration.UniversalTargetParameters = &awstypes.UniversalTargetParameters{}
 	}
 
 	return diags
