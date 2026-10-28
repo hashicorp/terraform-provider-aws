@@ -8,9 +8,7 @@ description: |-
 
 # Resource: aws_lambdaweb_function_endpoint
 
-Manages an AWS Lambda Web function endpoint: an HTTPS domain for a function with its own authentication, region placement, and revision routing. A function can have up to 10 endpoints; manage the initial endpoint with the `endpoint_config` block on [`aws_lambdaweb_function`](lambdaweb_function.html.markdown) and additional endpoints with this resource.
-
-~> **Note:** Lambda Web is not available in every AWS Region. In a Region where the service is not available, API calls fail with `AccessDeniedException`.
+Manages an AWS Lambda Web function endpoint. An endpoint exposes the web function over HTTPS and routes traffic to one or more revisions.
 
 ## Example Usage
 
@@ -18,7 +16,7 @@ Manages an AWS Lambda Web function endpoint: an HTTPS domain for a function with
 
 ```terraform
 resource "aws_lambdaweb_function_endpoint" "example" {
-  function_name = aws_lambdaweb_function.example.function_name
+  function_name = aws_lambdaweb_function_revision.example.function_name
   endpoint_name = "canary"
   endpoint_type = "HomeRegion"
   auth_type     = "ApplicationManaged"
@@ -37,12 +35,12 @@ resource "aws_lambdaweb_function_endpoint" "example" {
   auto_deployment_mode = "Disabled"
 
   revision_weight {
-    revision_id = "rev-aaaaaaaa"
+    revision_id = aws_lambdaweb_function_revision.example[0].revision_id
     weight      = 90
   }
 
   revision_weight {
-    revision_id = aws_lambdaweb_function.example.latest_revision_id
+    revision_id =  aws_lambdaweb_function_revision.example[1].revision_id
     weight      = 10
   }
 }
@@ -66,7 +64,7 @@ resource "aws_lambdaweb_function_endpoint" "app" {
   auto_deployment_mode = "Disabled"
 
   revision_weight {
-    revision_id = aws_lambdaweb_function.example.latest_revision_id
+    revision_id = aws_lambdaweb_function_revision.example[0].revision_id
     weight      = 100
   }
 }
