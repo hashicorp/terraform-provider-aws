@@ -129,7 +129,7 @@ func resourceDomain() *schema.Resource {
 							"source_fields": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringDoesNotMatch(scoreRegex, "Cannot be set to reserved field score"),
+								ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`score`), "Cannot be set to reserved field score"),
 							},
 							names.AttrType: {
 								Type:             schema.TypeString,
@@ -188,7 +188,6 @@ func resourceDomain() *schema.Resource {
 var (
 	indexNameRegex = regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{0,63}\*?)$`)
 	nameRegex      = regexache.MustCompile(`^[a-z]([0-9a-z-]){2,27}$`)
-	scoreRegex     = regexache.MustCompile(`score`)
 )
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
