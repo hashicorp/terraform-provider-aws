@@ -425,8 +425,15 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccAddonConfig_configurationValues(rName, addonName, formattedConfigurationValues),
-				PlanOnly: true,
+				Config: testAccAddonConfig_configurationValues(rName, addonName, formattedConfigurationValues),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
