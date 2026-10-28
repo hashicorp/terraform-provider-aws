@@ -437,9 +437,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if d.HasChange("unmanaged_vcpus") {
 			if awstypes.CEType(strings.ToUpper(d.Get(names.AttrType).(string))) == awstypes.CETypeUnmanaged {
-				if v, ok := d.GetOk("unmanaged_vcpus"); ok {
-					input.UnmanagedvCpus = aws.Int32(int32(v.(int)))
-				}
+				input.UnmanagedvCpus = aws.Int32(int32(d.Get("unmanaged_vcpus").(int)))
 			}
 		}
 
@@ -612,7 +610,7 @@ func resourceComputeEnvironmentCustomizeDiff(ctx context.Context, diff *schema.R
 		}
 	} else {
 		// Managed types cannot use unmanaged_vcpus
-		if _, ok := diff.GetOk("unmanaged_vcpus"); ok {
+		if config := diff.GetRawConfig(); config.IsKnown() && !config.IsNull() && !config.GetAttr("unmanaged_vcpus").IsNull() {
 			return fmt.Errorf("`unmanaged_vcpus` can only be specified when `type` is %q", awstypes.CETypeUnmanaged)
 		}
 	}

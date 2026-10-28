@@ -1801,6 +1801,21 @@ func TestAccBatchComputeEnvironment_unmanagedVCPUs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				Config: testAccComputeEnvironmentConfig_unmanagedVCPUs(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "unmanaged_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UNMANAGED"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
 				Config: testAccComputeEnvironmentConfig_unmanagedVCPUs(rName, 512),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, t, resourceName, &ce),
@@ -1809,6 +1824,11 @@ func TestAccBatchComputeEnvironment_unmanagedVCPUs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "unmanaged_vcpus", "512"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UNMANAGED"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
