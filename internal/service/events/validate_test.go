@@ -146,7 +146,7 @@ func TestEventBusARNPattern(t *testing.T) {
 	}
 
 	for _, arn := range validARNs {
-		if !tfevents.EventBusARNPattern.MatchString(arn) {
+		if !tfevents.EventBusARNPattern().MatchString(arn) {
 			t.Errorf("Expected %q to match EventBusARNPattern", arn)
 		}
 	}
@@ -159,7 +159,7 @@ func TestEventBusARNPattern(t *testing.T) {
 	}
 
 	for _, arn := range invalidARNs {
-		if tfevents.EventBusARNPattern.MatchString(arn) {
+		if tfevents.EventBusARNPattern().MatchString(arn) {
 			t.Errorf("Expected %q to NOT match EventBusARNPattern", arn)
 		}
 	}
