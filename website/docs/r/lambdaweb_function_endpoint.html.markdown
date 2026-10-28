@@ -40,7 +40,7 @@ resource "aws_lambdaweb_function_endpoint" "example" {
   }
 
   revision_weight {
-    revision_id =  aws_lambdaweb_function_revision.example[1].revision_id
+    revision_id = aws_lambdaweb_function_revision.example[1].revision_id
     weight      = 10
   }
 }
