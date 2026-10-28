@@ -25,6 +25,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	checkBlueprintARN                knownvalue.Check = tfknownvalue.RegionalARNRegexp("bedrock", regexache.MustCompile(`blueprint/.+`))
+	checkBlueprintARNAlternateRegion knownvalue.Check = tfknownvalue.RegionalARNAlternateRegionRegexp("bedrock", regexache.MustCompile(`blueprint/.+`))
+)
+
 func TestAccBedrockDataAutomationBlueprint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Blueprint
@@ -51,7 +56,7 @@ func TestAccBedrockDataAutomationBlueprint_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("bedrock", regexache.MustCompile(`blueprint/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkBlueprintARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("blueprint_stage"), tfknownvalue.StringExact(awstypes.BlueprintStageLive)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreationTime), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListSizeExact(0)),
