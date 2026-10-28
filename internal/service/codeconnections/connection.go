@@ -75,7 +75,7 @@ func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 256),
-					stringvalidator.RegexMatches(hostARNRegex, ""),
+					stringvalidator.RegexMatches(regexache.MustCompile("^arn:aws(-[\\w]+)*:(codestar-connections|codeconnections):.+:[0-9]{12}:host\\/.+"), ""),
 					stringvalidator.ConflictsWith(path.Expressions{
 						path.MatchRoot("provider_type"),
 					}...),
@@ -119,10 +119,6 @@ func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 		},
 	}
 }
-
-var (
-	hostARNRegex = regexache.MustCompile("^arn:aws(-[\\w]+)*:(codestar-connections|codeconnections):.+:[0-9]{12}:host\\/.+")
-)
 
 func (r *connectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().CodeConnectionsClient(ctx)
