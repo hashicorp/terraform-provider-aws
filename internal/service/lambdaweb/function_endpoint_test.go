@@ -9,14 +9,16 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -30,7 +32,7 @@ func checkFunctionEndpointARN(functionName, endpointName string) knownvalue.Chec
 
 func TestAccLambdaWebFunctionEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint, updated lambdaweb.GetWebFunctionEndpointOutput
+	var endpoint lambdaweb.GetWebFunctionEndpointOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambdaweb_function_endpoint.test"
 
@@ -44,36 +46,81 @@ func TestAccLambdaWebFunctionEndpoint_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionEndpointConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", regexache.MustCompile(`web-function/.+/endpoint/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_name", "extra"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypeHomeRegion)),
-					resource.TestCheckResourceAttr(resourceName, "auth_type", string(awstypes.AuthTypeApplicationManaged)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkFunctionEndpointARN(rName+"-fn", rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auth_type"), tfknownvalue.StringExact(awstypes.AuthTypeApplicationManaged)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_deployment_mode"), tfknownvalue.StringExact(awstypes.AutoDeploymentModeLatestRevision)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomainName), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("endpoint_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("endpoint_type"), tfknownvalue.StringExact(awstypes.EndpointTypeHomeRegion)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.StringExact(rName+"-fn")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regional_domain_names"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision_weight"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.Null()),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ImportStateIdFunc:                    testAccFunctionEndpointImportStateIDFunc(resourceName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "endpoint_name",
 			},
+		},
+	})
+}
+
+func TestAccLambdaWebFunctionEndpoint_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint lambdaweb.GetWebFunctionEndpointOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_function_endpoint.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
 			{
-				// auth_type is updated in place and the domain name is kept.
-				Config: testAccFunctionEndpointConfig_authType(rName, string(awstypes.AuthTypeIamAuth)),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &updated),
-					testAccCheckFunctionEndpointNotRecreated(&endpoint, &updated),
-					resource.TestCheckResourceAttr(resourceName, "auth_type", string(awstypes.AuthTypeIamAuth)),
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambdaweb.ResourceFunctionEndpoint, resourceName),
 				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -121,38 +168,6 @@ func TestAccLambdaWebFunctionEndpoint_scalingAndThrottle(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_environments", "6"),
 					resource.TestCheckResourceAttr(resourceName, "throttle_config.0.rate_limit", "200"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccLambdaWebFunctionEndpoint_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var endpoint lambdaweb.GetWebFunctionEndpointOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambdaweb_function_endpoint.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFunctionEndpointConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambdaweb.ResourceFunctionEndpoint, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
 			},
 		},
 	})
@@ -227,15 +242,6 @@ func TestAccLambdaWebFunctionEndpoint_perRegion(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckFunctionEndpointNotRecreated(before, after *lambdaweb.GetWebFunctionEndpointOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if b, a := aws.ToString(before.DomainName), aws.ToString(after.DomainName); b != a {
-			return fmt.Errorf("Lambda Web Endpoint was recreated: domain name %s became %s", b, a)
-		}
-		return nil
-	}
 }
 
 func testAccCheckFunctionEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {

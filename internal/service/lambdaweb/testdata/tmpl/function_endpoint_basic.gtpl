@@ -1,19 +1,50 @@
 resource "aws_lambdaweb_function_endpoint" "test" {
 {{- template "region" }}
-  function_name = aws_lambdaweb_function.test.function_name
-  endpoint_name = "extra"
+  function_name = aws_lambdaweb_function_revision.test.function_name
+  endpoint_name = var.rName
   endpoint_type = "HomeRegion"
   auth_type     = "ApplicationManaged"
+}
+
+resource "aws_lambdaweb_function_revision" "test" {
+{{- template "region" }}
+  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
+
+  function_name = aws_lambdaweb_function.test.function_name
+
+  build_config {
+    runtime_config {
+      runtime = "nodejs24.x"
+    }
+
+    code_config {
+      s3_object {
+        bucket = aws_s3_object.test.bucket
+        key    = aws_s3_object.test.key
+      }
+    }
+  }
+
+  service_config {
+    execution_role_arn = aws_iam_role.test.arn
+  }
+}
+
+resource "aws_lambdaweb_function" "test" {
+{{- template "region" }}
+  function_name = "${var.rName}-fn"
 }
 
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
+{{- template "region" }}
   bucket        = var.rName
   force_destroy = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {
+{{- template "region" }}
   bucket = aws_s3_bucket.test.id
 
   versioning_configuration {
@@ -22,6 +53,7 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_bucket_policy" "test" {
+{{- template "region" }}
   bucket = aws_s3_bucket.test.id
 
   policy = jsonencode({
@@ -39,6 +71,7 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 resource "aws_s3_object" "test" {
+{{- template "region" }}
   bucket = aws_s3_bucket_versioning.test.bucket
   key    = "function.zip"
   source = "test-fixtures/function.zip"
@@ -62,36 +95,4 @@ resource "aws_iam_role" "test" {
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-resource "aws_lambdaweb_function" "test" {
-{{- template "region" }}
-  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
-
-  function_name = var.rName
-
-  revision_config {
-    build_config {
-      runtime_config {
-        runtime = "nodejs24.x"
-      }
-
-      code_config {
-        s3_object {
-          bucket = aws_s3_object.test.bucket
-          key    = aws_s3_object.test.key
-        }
-      }
-    }
-
-    service_config {
-      execution_role_arn = aws_iam_role.test.arn
-    }
-  }
-
-  endpoint_config {
-    endpoint_name = "default"
-    endpoint_type = "HomeRegion"
-    auth_type     = "ApplicationManaged"
-  }
 }

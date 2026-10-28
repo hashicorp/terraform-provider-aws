@@ -2,10 +2,37 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_lambdaweb_function_endpoint" "test" {
-  function_name = aws_lambdaweb_function.test.function_name
-  endpoint_name = "extra"
+  function_name = aws_lambdaweb_function_revision.test.function_name
+  endpoint_name = var.rName
   endpoint_type = "HomeRegion"
   auth_type     = "ApplicationManaged"
+}
+
+resource "aws_lambdaweb_function_revision" "test" {
+  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
+
+  function_name = aws_lambdaweb_function.test.function_name
+
+  build_config {
+    runtime_config {
+      runtime = "nodejs24.x"
+    }
+
+    code_config {
+      s3_object {
+        bucket = aws_s3_object.test.bucket
+        key    = aws_s3_object.test.key
+      }
+    }
+  }
+
+  service_config {
+    execution_role_arn = aws_iam_role.test.arn
+  }
+}
+
+resource "aws_lambdaweb_function" "test" {
+  function_name = "${var.rName}-fn"
 }
 
 data "aws_partition" "current" {}
@@ -64,37 +91,6 @@ resource "aws_iam_role" "test" {
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-resource "aws_lambdaweb_function" "test" {
-  depends_on = [aws_s3_bucket_policy.test, aws_s3_bucket_versioning.test, aws_iam_role_policy_attachment.test]
-
-  function_name = var.rName
-
-  revision_config {
-    build_config {
-      runtime_config {
-        runtime = "nodejs24.x"
-      }
-
-      code_config {
-        s3_object {
-          bucket = aws_s3_object.test.bucket
-          key    = aws_s3_object.test.key
-        }
-      }
-    }
-
-    service_config {
-      execution_role_arn = aws_iam_role.test.arn
-    }
-  }
-
-  endpoint_config {
-    endpoint_name = "default"
-    endpoint_type = "HomeRegion"
-    auth_type     = "ApplicationManaged"
-  }
 }
 
 variable "rName" {

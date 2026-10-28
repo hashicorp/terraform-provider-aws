@@ -37,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
@@ -158,6 +159,9 @@ func (r *functionEndpointResource) Schema(ctx context.Context, req resource.Sche
 					// Model limit. The number of regions an endpoint may
 					// replicate to is a service quota, enforced by the API.
 					setvalidator.SizeBetween(1, 100),
+					setvalidator.ValueStringsAre(
+						fwvalidators.AWSRegion(),
+					),
 				},
 			},
 			"scaling_config":  framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithPlanModifiers[scalingConfigModel](listplanmodifier.UseStateForUnknown())),

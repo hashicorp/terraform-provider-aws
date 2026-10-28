@@ -6,8 +6,11 @@ package lambdaweb_test
 import (
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,26 +30,20 @@ func TestAccLambdaWebFunctionEndpointDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionEndpointDataSourceConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrEndpointType, string(awstypes.EndpointTypeHomeRegion)),
-					resource.TestCheckResourceAttr(dataSourceName, "auth_type", string(awstypes.AuthTypeApplicationManaged)),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, string(awstypes.EndpointStateActive)),
-					resource.TestCheckResourceAttrPair(dataSourceName, "scaling_config.max_environments", resourceName, "scaling_config.max_environments"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "throttle_config.rate_limit", resourceName, "throttle_config.rate_limit"),
-				),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/data.basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrARN), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("auth_type"), resourceName, tfjsonpath.New("auth_type"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("auto_deployment_mode"), resourceName, tfjsonpath.New("auto_deployment_mode"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrDescription), resourceName, tfjsonpath.New(names.AttrDescription), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrDomainName), resourceName, tfjsonpath.New(names.AttrDomainName), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("regional_domain_names"), resourceName, tfjsonpath.New("regional_domain_names"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("regions"), resourceName, tfjsonpath.New("regions"), compare.ValuesSame()),
+				},
 			},
 		},
 	})
-}
-
-func testAccFunctionEndpointDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionEndpointConfig_basic(rName), `
-data "aws_lambdaweb_function_endpoint" "test" {
-  function_name = aws_lambdaweb_function_endpoint.test.function_name
-  endpoint_name = aws_lambdaweb_function_endpoint.test.endpoint_name
-}
-`)
 }
