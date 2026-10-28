@@ -14,6 +14,10 @@ Manages the Amazon ECR [managed signing](https://docs.aws.amazon.com/AmazonECR/l
 
 ~> **NOTE:** A `rule` with no `repository_filter` blocks signs every image pushed to the registry.
 
+~> **NOTE:** Creating this resource replaces any signing configuration that already exists in the Region, including one created in the console or with the AWS CLI. To manage an existing configuration, [import](#import) it first.
+
+-> **NOTE:** Signing happens when an image is pushed, using the identity of the principal that pushes it. That principal needs `signer:SignPayload` on the signing profile, or signing fails even though this resource applies successfully. Use `aws ecr describe-image-signing-status` to check whether an image was signed. See the [managed signing prerequisites](https://docs.aws.amazon.com/AmazonECR/latest/userguide/managed-signing.html#managed-signing-prerequisites).
+
 ## Example Usage
 
 ### Basic Usage
