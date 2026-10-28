@@ -141,14 +141,15 @@ func BenchmarkProviderGetProviderSchema(b *testing.B) {
 	}
 
 	// Peak: live heap in use while both the server and the response are
-	// referenced, the high-water mark of a schema request.
+	// referenced, the high-water mark of a schema request. The KeepAlive marks
+	// the last point the response must be live; after it, the response is
+	// unreachable and the next collection may reclaim it.
 	_, peakInuse := heapStats()
 	runtime.KeepAlive(resp)
 
-	// Primary: release the response and measure live heap with only the server
-	// referenced. This isolates what the provider holds onto internally after a
-	// GetProviderSchema call completes.
-	resp = nil
+	// Primary: with the response no longer referenced, measure live heap with
+	// only the server referenced. This isolates what the provider holds onto
+	// internally after a GetProviderSchema call completes.
 	heapAlloc, heapInuse := heapStats()
 	runtime.KeepAlive(server)
 
