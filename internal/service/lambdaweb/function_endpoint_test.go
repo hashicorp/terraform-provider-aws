@@ -27,7 +27,7 @@ import (
 )
 
 func checkFunctionEndpointARN(functionName, endpointName string) knownvalue.Check {
-	return tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`web-function/`+functionName+`/endpoint`+endpointName))
+	return tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`web-function/`+functionName+`/endpoint/`+endpointName))
 }
 
 func TestAccLambdaWebFunctionEndpoint_basic(t *testing.T) {
