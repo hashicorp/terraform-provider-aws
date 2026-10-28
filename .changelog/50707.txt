@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_ecr_signing_configuration
+```
+
+```release-note:new-list-resource
+aws_ecr_signing_configuration
+```
