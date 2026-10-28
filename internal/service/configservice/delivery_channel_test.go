@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -112,6 +113,47 @@ func testAccDeliveryChannel_allParams(t *testing.T) {
 	})
 }
 
+func testAccDeliveryChannel_snapshotDeliveryPropertiesRemoved(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dc types.DeliveryChannel
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_config_delivery_channel.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryChannelDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryChannelConfig_allParams(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryChannelExists(ctx, t, resourceName, &dc),
+					testAccCheckDeliveryChannelRemoveSnapshotDeliveryProperties(ctx, t, &dc),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccDeliveryChannelConfig_allParams(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryChannelExists(ctx, t, resourceName, &dc),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_delivery_properties.0.delivery_frequency", "Six_Hours"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDeliveryChannelExists(ctx context.Context, t *testing.T, n string, v *types.DeliveryChannel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -130,6 +172,26 @@ func testAccCheckDeliveryChannelExists(ctx context.Context, t *testing.T, n stri
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccCheckDeliveryChannelRemoveSnapshotDeliveryProperties(ctx context.Context, t *testing.T, v *types.DeliveryChannel) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).ConfigServiceClient(ctx)
+
+		input := configservice.PutDeliveryChannelInput{
+			DeliveryChannel: &types.DeliveryChannel{
+				Name:         v.Name,
+				S3BucketName: v.S3BucketName,
+				S3KeyPrefix:  v.S3KeyPrefix,
+				S3KmsKeyArn:  v.S3KmsKeyArn,
+				SnsTopicARN:  v.SnsTopicARN,
+			},
+		}
+
+		_, err := conn.PutDeliveryChannel(ctx, &input)
+
+		return err
 	}
 }
 
