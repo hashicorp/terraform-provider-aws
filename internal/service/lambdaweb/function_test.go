@@ -32,6 +32,10 @@ func checkFunctionARN(name string) knownvalue.Check {
 	return tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`web-function/`+name))
 }
 
+func checkFunctionARNAlternateRegion(name string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("lambda", regexache.MustCompile(`web-function/`+name))
+}
+
 // testAccPreCheck skips acceptance tests in regions where the Lambda Web API
 // is not available.
 func testAccPreCheck(ctx context.Context, t *testing.T) {

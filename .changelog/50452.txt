@@ -25,3 +25,7 @@ resource/aws_lambdacore_network_connector: Add `latest_version` and `latest_vers
 ```release-note:new-resource
 aws_lambdaweb_function_revision
 ```
+
+```release-note:new-list-resource
+aws_lambdaweb_function
+```
