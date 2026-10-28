@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_backup_vault: Fix `terraform destroy` reporting success and removing the vault from state when `DeleteBackupVault` is denied, e.g. by an IAM policy or SCP
+```
+
+```release-note:bug
+resource/aws_backup_logically_air_gapped_vault: Fix `terraform destroy` reporting success and removing the vault from state when `DeleteBackupVault` is denied, e.g. by an IAM policy or SCP
+```
+
+```release-note:bug
+resource/aws_backup_vault_policy: Fix `terraform destroy` reporting success and removing the policy from state when `DeleteBackupVaultAccessPolicy` is denied, e.g. by an IAM policy or SCP
+```
