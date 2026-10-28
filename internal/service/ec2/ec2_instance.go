@@ -249,8 +249,6 @@ func resourceInstance() *schema.Resource {
 					return nil
 				}
 
-				// Use the planned market type rather than instance_lifecycle, which describes the
-				// existing instance and is stale when a market type change replaces it.
 				if diff.Get("instance_market_options.0.market_type").(string) == string(awstypes.MarketTypeCapacityBlock) {
 					return errors.New("placement groups are not supported for EC2 Capacity Block instances")
 				}
