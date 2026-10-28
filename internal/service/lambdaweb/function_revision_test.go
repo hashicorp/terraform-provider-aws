@@ -78,7 +78,7 @@ func TestAccLambdaWebFunctionRevision_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"egress_network_connector_arn":    knownvalue.Null(),
 						"environment_variables":           knownvalue.Null(),
-						"execution_role_arn":              knownvalue.NotNull(),
+						names.AttrExecutionRoleARN:        knownvalue.NotNull(),
 						"max_concurrency_per_environment": knownvalue.Int64Exact(64),
 						"telemetry_config":                knownvalue.ListSizeExact(0),
 						"telemetry_config_actual": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{

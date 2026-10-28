@@ -65,7 +65,7 @@ func TestAccLambdaWebFunctionEndpoint_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomainName), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("endpoint_name"), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("endpoint_type"), tfknownvalue.StringExact(awstypes.EndpointTypeHomeRegion)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpointType), tfknownvalue.StringExact(awstypes.EndpointTypeHomeRegion)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.StringExact(rName+"-fn")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regional_domain_names"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regions"), knownvalue.SetExact([]knownvalue.Check{
@@ -299,7 +299,7 @@ func TestAccLambdaWebFunctionEndpoint_multiRegion(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("endpoint_type"), tfknownvalue.StringExact(awstypes.EndpointTypeMultiRegion)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpointType), tfknownvalue.StringExact(awstypes.EndpointTypeMultiRegion)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regional_domain_names"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regions"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact(acctest.Region()),
@@ -342,7 +342,7 @@ func TestAccLambdaWebFunctionEndpoint_perRegion(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("endpoint_type"), tfknownvalue.StringExact(awstypes.EndpointTypePerRegion)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpointType), tfknownvalue.StringExact(awstypes.EndpointTypePerRegion)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regional_domain_names"), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.Region():          knownvalue.NotNull(),
 						acctest.AlternateRegion(): knownvalue.NotNull(),
