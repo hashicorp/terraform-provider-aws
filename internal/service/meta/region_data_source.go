@@ -63,7 +63,8 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 		return
 	}
 
-	var region *endpoints.Region
+	var region *regionInfo
+	allowUnlisted := d.Meta().SkipRegionValidation(ctx)
 
 	if !data.Endpoint.IsNull() {
 		endpoint := data.Endpoint.ValueString()
@@ -85,7 +86,7 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 		name = data.Name.ValueString()
 	}
 	if name != "" {
-		matchingRegion, err := findRegionByName(ctx, name)
+		matchingRegion, err := findRegionByName(ctx, name, allowUnlisted)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
@@ -93,7 +94,7 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 			return
 		}
 
-		if region != nil && region.ID() != matchingRegion.ID() {
+		if region != nil && region.id != matchingRegion.id {
 			response.Diagnostics.AddError("multiple Regions matched", "use additional constraints to reduce matches to a single Region")
 
 			return
@@ -105,7 +106,7 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 	// Default to provider current Region if no other filters matched.
 	if region == nil {
 		name := d.Meta().Region(ctx)
-		matchingRegion, err := findRegionByName(ctx, name)
+		matchingRegion, err := findRegionByName(ctx, name, allowUnlisted)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
@@ -116,7 +117,15 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 		region = matchingRegion
 	}
 
-	regionEndpointEC2, err := ec2Endpoint(ctx, region)
+	if region.inferred {
+		response.Diagnostics.AddWarning(
+			"Region not in provider's known Region list",
+			fmt.Sprintf("Region %q matches a known AWS partition but is not in this provider version's Region list. "+
+				"The description attribute is empty. Upgrade the provider for full support of this Region.", region.id),
+		)
+	}
+
+	regionEndpointEC2, err := ec2Endpoint(ctx, region.id)
 
 	if err != nil {
 		response.Diagnostics.AddError("resolving EC2 endpoint", err.Error())
@@ -124,11 +133,11 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 		return
 	}
 
-	data.Description = fwflex.StringValueToFrameworkLegacy(ctx, region.Description())
+	data.Description = fwflex.StringValueToFrameworkLegacy(ctx, region.description)
 	data.Endpoint = fwflex.StringValueToFrameworkLegacy(ctx, regionEndpointEC2.Host)
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
-	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
-	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, region.id)
+	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, region.id)
+	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, region.id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -150,17 +159,30 @@ type regionDataSourceModel struct {
 	Name        types.String `tfsdk:"name"`
 }
 
-func findRegionByEC2Endpoint(ctx context.Context, endpoint string) (*endpoints.Region, error) {
+type regionInfo struct {
+	id          string
+	description string
+	inferred    bool
+}
+
+func newRegionInfo(region endpoints.Region) *regionInfo {
+	return &regionInfo{
+		id:          region.ID(),
+		description: region.Description(),
+	}
+}
+
+func findRegionByEC2Endpoint(ctx context.Context, endpoint string) (*regionInfo, error) {
 	for _, partition := range endpoints.DefaultPartitions() {
 		for _, region := range partition.Regions() {
-			regionEndpointEC2, err := ec2Endpoint(ctx, &region)
+			regionEndpointEC2, err := ec2Endpoint(ctx, region.ID())
 
 			if err != nil {
 				return nil, err
 			}
 
 			if regionEndpointEC2.Host == endpoint {
-				return &region, nil
+				return newRegionInfo(region), nil
 			}
 		}
 	}
@@ -168,21 +190,30 @@ func findRegionByEC2Endpoint(ctx context.Context, endpoint string) (*endpoints.R
 	return nil, &retry.NotFoundError{}
 }
 
-func findRegionByName(_ context.Context, name string) (*endpoints.Region, error) {
-	for _, partition := range endpoints.DefaultPartitions() {
-		for _, region := range partition.Regions() {
-			if region.ID() == name {
-				return &region, nil
-			}
+func findRegionByName(_ context.Context, name string, allowUnlisted bool) (*regionInfo, error) {
+	partitions := endpoints.DefaultPartitions()
+
+	for _, partition := range partitions {
+		if region, ok := partition.Regions()[name]; ok {
+			return newRegionInfo(region), nil
+		}
+	}
+
+	if allowUnlisted {
+		if _, ok := endpoints.PartitionForRegion(partitions, name); ok {
+			return &regionInfo{
+				id:       name,
+				inferred: true,
+			}, nil
 		}
 	}
 
 	return nil, &retry.NotFoundError{}
 }
 
-func ec2Endpoint(ctx context.Context, region *endpoints.Region) (*url.URL, error) {
+func ec2Endpoint(ctx context.Context, regionID string) (*url.URL, error) {
 	endpoint, err := ec2.NewDefaultEndpointResolverV2().ResolveEndpoint(ctx, ec2.EndpointParameters{
-		Region: aws.String(region.ID()),
+		Region: aws.String(regionID),
 	})
 	if err != nil {
 		return nil, err

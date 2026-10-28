@@ -60,34 +60,84 @@ func TestFindRegionByName(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var testCases = []struct {
-		Value    string
-		ErrCount int
+		Value         string
+		AllowUnlisted bool
+		ErrCount      int
+		Inferred      bool
 	}{
 		{
 			Value:    "does-not-exist",
 			ErrCount: 1,
 		},
 		{
+			Value:         "does-not-exist",
+			AllowUnlisted: true,
+			ErrCount:      1,
+		},
+		{
 			Value:    "ec2.us-east-1.amazonaws.com", // lintignore:AWSAT003
 			ErrCount: 1,
+		},
+		{
+			Value:         "ec2.us-east-1.amazonaws.com", // lintignore:AWSAT003
+			AllowUnlisted: true,
+			ErrCount:      1,
 		},
 		{
 			Value:    "us-east-1", // lintignore:AWSAT003
 			ErrCount: 0,
 		},
 		{
+			Value:         "us-east-1", // lintignore:AWSAT003
+			AllowUnlisted: true,
+			ErrCount:      0,
+		},
+		{
 			Value:    "ap-southeast-5", // lintignore:AWSAT003
 			ErrCount: 0,
+		},
+		{
+			Value:    "ap-southeast-99", // lintignore:AWSAT003
+			ErrCount: 1,
+		},
+		{
+			Value:         "ap-southeast-99", // lintignore:AWSAT003
+			AllowUnlisted: true,
+			ErrCount:      0,
+			Inferred:      true,
+		},
+		{
+			Value:         "us-gov-north-9", // lintignore:AWSAT003
+			AllowUnlisted: true,
+			ErrCount:      0,
+			Inferred:      true,
+		},
+		{
+			Value:         "zz-north-1",
+			AllowUnlisted: true,
+			ErrCount:      1,
 		},
 	}
 
 	for _, tc := range testCases {
-		_, err := tfmeta.FindRegionByName(ctx, tc.Value)
+		region, err := tfmeta.FindRegionByName(ctx, tc.Value, tc.AllowUnlisted)
 		if tc.ErrCount == 0 && err != nil {
-			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
+			t.Fatalf("expected %q (allowUnlisted=%t) not to trigger an error, received: %s", tc.Value, tc.AllowUnlisted, err)
 		}
 		if tc.ErrCount > 0 && err == nil {
-			t.Fatalf("expected %q to trigger an error", tc.Value)
+			t.Fatalf("expected %q (allowUnlisted=%t) to trigger an error", tc.Value, tc.AllowUnlisted)
+		}
+		if err != nil {
+			continue
+		}
+		if got, want := tfmeta.RegionInfoID(region), tc.Value; got != want {
+			t.Errorf("%q: id = %q, want %q", tc.Value, got, want)
+		}
+		if got, want := tfmeta.RegionInfoInferred(region), tc.Inferred; got != want {
+			t.Errorf("%q: inferred = %t, want %t", tc.Value, got, want)
+		}
+		if got := tfmeta.RegionInfoDescription(region); (got == "") != tc.Inferred {
+			t.Errorf("%q: description = %q, want empty only when inferred", tc.Value, got)
 		}
 	}
 }
@@ -231,6 +281,43 @@ func TestAccMetaRegionDataSource_region(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccMetaRegionDataSource_unlistedRegionSkipRegionValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_region.test"
+	unlistedRegion := "ap-southeast-99" // lintignore:AWSAT003
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionDataSourceConfig_unlistedRegionSkipRegionValidation(acctest.Region(), unlistedRegion),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrEndpoint), knownvalue.StringExact("ec2."+unlistedRegion+".amazonaws.com")),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(unlistedRegion)),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(unlistedRegion)),
+				},
+			},
+		},
+	})
+}
+
+func testAccRegionDataSourceConfig_unlistedRegionSkipRegionValidation(providerRegion, unlistedRegion string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  region                 = %[1]q
+  skip_region_validation = true
+}
+
+data "aws_region" "test" {
+  region = %[2]q
+}
+`, providerRegion, unlistedRegion)
 }
 
 const testAccRegionDataSourceConfig_empty = `

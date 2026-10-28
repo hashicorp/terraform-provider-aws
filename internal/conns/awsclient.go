@@ -50,6 +50,7 @@ type AWSClient struct {
 	s3OriginalRegion          string // Original region for S3-compatible storage
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
+	skipRegionValidation      bool   // From provider configuration.
 	stsRegion                 string // From provider configuration.
 	tagPolicyConfig           *tftags.TagPolicyConfig
 	terraformVersion          string // From provider configuration.
@@ -107,6 +108,11 @@ func (c *AWSClient) AccountID(context.Context) string {
 // Partition returns the ID of the configured AWS partition.
 func (c *AWSClient) Partition(context.Context) string {
 	return c.partition.ID()
+}
+
+// SkipRegionValidation returns whether the provider is configured to skip Region validation.
+func (c *AWSClient) SkipRegionValidation(context.Context) bool {
+	return c.skipRegionValidation
 }
 
 // RandomnessSource returns the VCR randomness source if set.
