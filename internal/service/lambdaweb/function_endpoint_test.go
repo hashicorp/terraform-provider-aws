@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/acctest/config"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambdaweb "github.com/hashicorp/terraform-provider-aws/internal/service/lambdaweb"
@@ -68,6 +68,9 @@ func TestAccLambdaWebFunctionEndpoint_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("endpoint_type"), tfknownvalue.StringExact(awstypes.EndpointTypeHomeRegion)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("function_name"), knownvalue.StringExact(rName+"-fn")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regional_domain_names"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regions"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(acctest.Region()),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision_weight"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.Null()),
@@ -198,7 +201,7 @@ func TestAccLambdaWebFunctionEndpoint_description(t *testing.T) {
 	})
 }
 
-func TestAccLambdaWebFunctionEndpoint_scalingAndThrottle(t *testing.T) {
+func TestAccLambdaWebFunctionEndpoint_scalingConfigPlusThrottleConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint lambdaweb.GetWebFunctionEndpointOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -214,32 +217,52 @@ func TestAccLambdaWebFunctionEndpoint_scalingAndThrottle(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionEndpointConfig_scalingAndThrottle(rName, 4, 100),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/scaling_config+throttle_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:    config.StringVariable(rName),
+					"max_environments": config.IntegerVariable(4),
+					"rate_limit":       config.IntegerVariable(100),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_environments", "4"),
-					resource.TestCheckResourceAttr(resourceName, "throttle_config.0.rate_limit", "100"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"max_environments": knownvalue.Int64Exact(4),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"rate_limit": knownvalue.Int64Exact(100),
+					})})),
+				},
 			},
 			{
-				ImportStateIdFunc:                    testAccFunctionEndpointImportStateIDFunc(resourceName),
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "endpoint_name",
-			},
-			{
-				Config: testAccFunctionEndpointConfig_scalingAndThrottle(rName, 6, 200),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/scaling_config+throttle_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:    config.StringVariable(rName),
+					"max_environments": config.IntegerVariable(6),
+					"rate_limit":       config.IntegerVariable(200),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_environments", "6"),
-					resource.TestCheckResourceAttr(resourceName, "throttle_config.0.rate_limit", "200"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"max_environments": knownvalue.Int64Exact(6),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"rate_limit": knownvalue.Int64Exact(200),
+					})})),
+				},
 			},
 		},
 	})
@@ -261,21 +284,28 @@ func TestAccLambdaWebFunctionEndpoint_multiRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionEndpointConfig_multiRegion(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/regions/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"endpoint_type": tfconfig.StringVariable(awstypes.EndpointTypeMultiRegion),
+					"regions":       acctest.SetOfStringsVariable(acctest.Region(), acctest.AlternateRegion()),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypeMultiRegion)),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment_mode", string(awstypes.AutoDeploymentModeDisabled)),
-					resource.TestCheckResourceAttr(resourceName, "revision_weight.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "revision_weight.0.weight", "100"),
 				),
-			},
-			{
-				ImportStateIdFunc:                    testAccFunctionEndpointImportStateIDFunc(resourceName),
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "endpoint_name",
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("endpoint_type"), tfknownvalue.StringExact(awstypes.EndpointTypeMultiRegion)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regional_domain_names"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regions"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(acctest.Region()),
+						knownvalue.StringExact(acctest.AlternateRegion()),
+					})),
+				},
 			},
 		},
 	})
@@ -297,20 +327,31 @@ func TestAccLambdaWebFunctionEndpoint_perRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionEndpointConfig_typeWithRegions(rName, string(awstypes.EndpointTypePerRegion)),
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/regions/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"endpoint_type": tfconfig.StringVariable(awstypes.EndpointTypePerRegion),
+					"regions":       acctest.SetOfStringsVariable(acctest.Region(), acctest.AlternateRegion()),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, string(awstypes.EndpointTypePerRegion)),
-					// PerRegion endpoints expose one independent domain per region.
-					resource.TestCheckResourceAttr(resourceName, "regional_domain_names.%", "2"),
 				),
-			},
-			{
-				ImportStateIdFunc:                    testAccFunctionEndpointImportStateIDFunc(resourceName),
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "endpoint_name",
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("endpoint_type"), tfknownvalue.StringExact(awstypes.EndpointTypePerRegion)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regional_domain_names"), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.Region():          knownvalue.NotNull(),
+						acctest.AlternateRegion(): knownvalue.NotNull(),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("regions"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact(acctest.Region()),
+						knownvalue.StringExact(acctest.AlternateRegion()),
+					})),
+				},
 			},
 		},
 	})
@@ -362,67 +403,4 @@ func testAccCheckFunctionEndpointExists(ctx context.Context, t *testing.T, n str
 
 func testAccFunctionEndpointImportStateIDFunc(n string) resource.ImportStateIdFunc {
 	return acctest.AttrsImportStateIdFunc(n, ",", "function_name", "endpoint_name")
-}
-
-func testAccFunctionEndpointConfig_basic(rName string) string {
-	return testAccFunctionEndpointConfig_authType(rName, "ApplicationManaged")
-}
-
-func testAccFunctionEndpointConfig_authType(rName, authType string) string {
-	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), fmt.Sprintf(`
-resource "aws_lambdaweb_function_endpoint" "test" {
-  function_name = aws_lambdaweb_function.test.function_name
-  endpoint_name = "extra"
-  endpoint_type = "HomeRegion"
-  auth_type     = %[1]q
-}
-`, authType))
-}
-
-func testAccFunctionEndpointConfig_multiRegion(rName string) string {
-	return testAccFunctionEndpointConfig_typeWithRegions(rName, "MultiRegion")
-}
-
-func testAccFunctionEndpointConfig_scalingAndThrottle(rName string, maxEnvironments, rateLimit int) string {
-	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), fmt.Sprintf(`
-resource "aws_lambdaweb_function_endpoint" "test" {
-  function_name = aws_lambdaweb_function.test.function_name
-  endpoint_name = "extra"
-  endpoint_type = "HomeRegion"
-  auth_type     = "ApplicationManaged"
-
-  scaling_config {
-    max_environments = %[1]d
-  }
-
-  throttle_config {
-    rate_limit = %[2]d
-  }
-}
-`, maxEnvironments, rateLimit))
-}
-
-func testAccFunctionEndpointConfig_typeWithRegions(rName, endpointType string) string {
-	// Pick a second region distinct from the test region. Regions with the
-	// service active as of July 2026: us-east-1 and eu-west-1 (us-west-2
-	// rollout pending; PreCheckRegion admits it for when it lands).
-	secondRegion := endpoints.EuWest1RegionID
-	if acctest.Region() == endpoints.EuWest1RegionID {
-		secondRegion = endpoints.UsEast1RegionID
-	}
-	return acctest.ConfigCompose(testAccFunctionConfig_basic(rName), fmt.Sprintf(`
-resource "aws_lambdaweb_function_endpoint" "test" {
-  function_name        = aws_lambdaweb_function.test.function_name
-  endpoint_name        = "multi"
-  endpoint_type        = %[3]q
-  regions              = [%[1]q, %[2]q]
-  auth_type            = "ApplicationManaged"
-  auto_deployment_mode = "Disabled"
-
-  revision_weight {
-    revision_id = aws_lambdaweb_function.test.latest_revision_id
-    weight      = 100
-  }
-}
-`, secondRegion, acctest.Region(), endpointType))
 }
