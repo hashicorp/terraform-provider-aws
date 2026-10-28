@@ -2106,7 +2106,7 @@ func TestAccRoute53Record_TXT_CharacterStringTooLong(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRecordConfig_txtCharacterStringTooLong(),
-				ExpectError: regexache.MustCompile(`individual TXT/SPF quoted string segment must be 255 characters or fewer`),
+				ExpectError: regexache.MustCompile(`TXT/SPF character-string is 256 characters, must be 255 or fewer`),
 			},
 		},
 	})

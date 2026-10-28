@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -348,25 +347,7 @@ func resourceRecord() *schema.Resource {
 			}
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
-				recordType := diff.Get(names.AttrType).(string)
-				if recordType != string(awstypes.RRTypeTxt) && recordType != string(awstypes.RRTypeSpf) {
-					return nil
-				}
-				if v, ok := diff.GetOk("records"); ok {
-					for _, record := range v.(*schema.Set).List() {
-						value := record.(string)
-						for seg := range strings.SplitSeq(value, "\" \"") {
-							if len(seg) > 255 {
-								return fmt.Errorf("individual TXT/SPF quoted string segment must be 255 characters or fewer, got %d characters", len(seg))
-							}
-						}
-					}
-				}
-				return nil
-			},
-		),
+		CustomizeDiff: resourceRecordCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -1200,6 +1181,82 @@ func expandTxtEntry(s string) string {
 
 func flattenTxtEntry(s string) string {
 	return fmt.Sprintf(`"%s"`, s)
+}
+
+// Route 53 rejects a TXT or SPF character-string longer than 255 characters with
+// CharacterStringTooLong, so catch it at plan time.
+func resourceRecordCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	if !d.NewValueKnown(names.AttrType) || !d.NewValueKnown("records") {
+		return nil
+	}
+
+	if rrType := awstypes.RRType(d.Get(names.AttrType).(string)); rrType != awstypes.RRTypeTxt && rrType != awstypes.RRTypeSpf {
+		return nil
+	}
+
+	for _, v := range d.Get("records").(*schema.Set).List() {
+		for _, n := range txtCharacterStringLengths(v.(string)) {
+			if n > txtCharacterStringMaxLen {
+				return fmt.Errorf(`records: TXT/SPF character-string is %d characters, must be %d or fewer; split longer values with \"\"`, n, txtCharacterStringMaxLen)
+			}
+		}
+	}
+
+	return nil
+}
+
+const txtCharacterStringMaxLen = 255
+
+// txtCharacterStringLengths returns the length of each character-string that
+// Route 53 parses from a Terraform TXT or SPF record value, following the
+// quoting and escaping rules of the zone file format (RFC 1035 section 5.1).
+// Strings are separated by quotes with or without whitespace between them,
+// e.g. `abc" "def` and `abc""def` both contain two strings.
+func txtCharacterStringLengths(s string) []int {
+	var lengths []int
+
+	s = flattenTxtEntry(s)
+	for i := 0; i < len(s); {
+		if s[i] == ' ' || s[i] == '\t' {
+			i++
+			continue
+		}
+
+		quoted := s[i] == '"'
+		if quoted {
+			i++
+		}
+
+		n := 0
+		for i < len(s) {
+			c := s[i]
+			if quoted && c == '"' {
+				i++
+				break
+			}
+			if !quoted && (c == ' ' || c == '\t' || c == '"') {
+				break
+			}
+			if c == '\\' && i+1 < len(s) {
+				// "\DDD" is one octet; "\X" is a literal X.
+				if i+3 < len(s) && isDigit(s[i+1]) && isDigit(s[i+2]) && isDigit(s[i+3]) {
+					i += 4
+				} else {
+					i += 2
+				}
+			} else {
+				i++
+			}
+			n++
+		}
+		lengths = append(lengths, n)
+	}
+
+	return lengths
+}
+
+func isDigit(c byte) bool {
+	return c >= '0' && c <= '9'
 }
 
 type recordImportID struct{}
