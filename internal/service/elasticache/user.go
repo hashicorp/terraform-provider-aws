@@ -219,9 +219,10 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
-	// An ongoing OOB update (where the user is in "modifying" state) can cause "UserNotFound: ... is not available for tagging" errors.
-	// https://github.com/hashicorp/terraform-provider-aws/issues/34002.
-	user, err := waitUserUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead), 0)
+	// Read the user once. A missing user is reported immediately: going through the
+	// waiter would poll DescribeUsers up to 21 times (NotFoundChecks defaults to 20)
+	// before giving up.
+	user, err := findUserByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache User (%s) not found, removing from state", d.Id())
@@ -231,6 +232,17 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache User (%s): %s", d.Id(), err)
+	}
+
+	// An ongoing OOB update (where the user is in "modifying" state) can cause "UserNotFound: ... is not available for tagging" errors.
+	// https://github.com/hashicorp/terraform-provider-aws/issues/34002.
+	// Wait only when the user is not already active.
+	if aws.ToString(user.Status) != userStatusActive {
+		user, err = waitUserUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead), 0)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ElastiCache User (%s): %s", d.Id(), err)
+		}
 	}
 
 	d.Set("access_string", user.AccessString)
