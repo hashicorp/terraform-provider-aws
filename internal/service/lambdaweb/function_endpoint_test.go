@@ -126,6 +126,78 @@ func TestAccLambdaWebFunctionEndpoint_disappears(t *testing.T) {
 	})
 }
 
+func TestAccLambdaWebFunctionEndpoint_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint lambdaweb.GetWebFunctionEndpointOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambdaweb_function_endpoint.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("test description 1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("test description 1")),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("test description 2"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("test description 2")),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
 func TestAccLambdaWebFunctionEndpoint_scalingAndThrottle(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint lambdaweb.GetWebFunctionEndpointOutput
