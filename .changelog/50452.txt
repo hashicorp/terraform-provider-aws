@@ -29,3 +29,7 @@ aws_lambdaweb_function_revision
 ```release-note:new-list-resource
 aws_lambdaweb_function
 ```
+
+```release-note:new-list-resource
+aws_lambdaweb_function_revision
+```

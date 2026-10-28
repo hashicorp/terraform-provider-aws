@@ -29,6 +29,10 @@ func checkFunctionRevisionARN(functionName string) knownvalue.Check {
 	return tfknownvalue.RegionalARNRegexp("lambda", regexache.MustCompile(`web-function/`+functionName+`/revision/rev-[0-9a-z]+`))
 }
 
+func checkFunctionRevisionARNAlternateRegion(functionName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("lambda", regexache.MustCompile(`web-function/`+functionName+`/revision/rev-[0-9a-z]+`))
+}
+
 func TestAccLambdaWebFunctionRevision_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lambdaweb.GetWebFunctionRevisionOutput

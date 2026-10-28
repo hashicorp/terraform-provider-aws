@@ -103,6 +103,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("function_name", true)),
 		},
+		{
+			Factory:  newFunctionRevisionResourceAsListResource,
+			TypeName: "aws_lambdaweb_function_revision",
+			Name:     "Function Revision",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("revision_id", true),
+			}),
+		},
 	})
 }
 
