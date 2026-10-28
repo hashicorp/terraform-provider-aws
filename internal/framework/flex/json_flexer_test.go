@@ -15,34 +15,36 @@ import (
 )
 
 func TestJSONFlexer_Expand(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
-		TestName      string
-		Plan          tfsdk.Plan
-		TfToCfNameMap map[string]string
-		ExpectedError bool
-		ExpectedState map[string]any
+		TestName       string
+		Plan           tfsdk.Plan
+		TfToCfnNameMap map[string]string
+		ExpectedError  bool
+		ExpectedState  map[string]any
 	}{
 		{
-			TestName:      "simple Plan",
-			Plan:          makeSimpleTestPlan(),
-			TfToCfNameMap: simpleTfToCfNameMap,
+			TestName:       "simple Plan",
+			Plan:           makeSimpleTestPlan(),
+			TfToCfnNameMap: simpleTfToCfnNameMap,
 			ExpectedState: map[string]any{
 				"Name": "testing",
 			},
 		},
 		{
-			TestName:      "simple Plan with Optional",
-			Plan:          makeSimpleTestPlanWithOptionalPopulated(),
-			TfToCfNameMap: simpleTfToCfNameMap,
+			TestName:       "simple Plan with Optional",
+			Plan:           makeSimpleTestPlanWithOptionalPopulated(),
+			TfToCfnNameMap: simpleTfToCfnNameMap,
 			ExpectedState: map[string]any{
 				"Name":   "testing",
 				"Number": float64(42),
 			},
 		},
 		{
-			TestName:      "complex Plan",
-			Plan:          makeComplexTestPlan(),
-			TfToCfNameMap: complexTfToCfNameMap,
+			TestName:       "complex Plan",
+			Plan:           makeComplexTestPlan(),
+			TfToCfnNameMap: complexTfToCfnNameMap,
 			ExpectedState: map[string]any{
 				"Name":        "hello, world",
 				"MachineType": "e2-medium",
@@ -68,9 +70,9 @@ func TestJSONFlexer_Expand(t *testing.T) {
 			},
 		},
 		{
-			TestName:      "maps Plan",
-			Plan:          makeMapsTestPlan(),
-			TfToCfNameMap: mapsTfToCfNameMap,
+			TestName:       "maps Plan",
+			Plan:           makeMapsTestPlan(),
+			TfToCfnNameMap: mapsTfToCfnNameMap,
 			ExpectedState: map[string]any{
 				"Name": "testing",
 				"SimpleMap": map[string]any{
@@ -93,7 +95,9 @@ func TestJSONFlexer_Expand(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			flexer := NewJSONFlexer(testCase.Plan.Schema, testCase.TfToCfNameMap)
+			t.Parallel()
+
+			flexer := NewJSONFlexer(testCase.Plan.Schema, testCase.TfToCfnNameMap)
 			got, err := flexer.toRawMap(t.Context(), testCase.Plan.Raw)
 
 			if err == nil && testCase.ExpectedError {
@@ -114,18 +118,20 @@ func TestJSONFlexer_Expand(t *testing.T) {
 }
 
 func TestJSONFlexer_Flatten(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
-		TestName      string
-		Schema        schema.Schema
-		TfToCfNameMap map[string]string
-		ResourceModel map[string]any
-		ExpectedError bool
-		ExpectedValue tftypes.Value
+		TestName       string
+		Schema         schema.Schema
+		TfToCfnNameMap map[string]string
+		ResourceModel  map[string]any
+		ExpectedError  bool
+		ExpectedValue  tftypes.Value
 	}{
 		{
-			TestName:      "simple State",
-			Schema:        testSimpleSchema,
-			TfToCfNameMap: simpleTfToCfNameMap,
+			TestName:       "simple State",
+			Schema:         testSimpleSchema,
+			TfToCfnNameMap: simpleTfToCfnNameMap,
 			ResourceModel: map[string]any{
 				"Arn":    "arn:aws:test:::test",
 				"Name":   "testing",
@@ -146,9 +152,9 @@ func TestJSONFlexer_Flatten(t *testing.T) {
 			}),
 		},
 		{
-			TestName:      "simple State with extra field",
-			Schema:        testSimpleSchema,
-			TfToCfNameMap: simpleTfToCfNameMap,
+			TestName:       "simple State with extra field",
+			Schema:         testSimpleSchema,
+			TfToCfnNameMap: simpleTfToCfnNameMap,
 			ResourceModel: map[string]any{
 				"Arn":    "arn:aws:test:::test",
 				"Height": float64(1.75),
@@ -170,9 +176,9 @@ func TestJSONFlexer_Flatten(t *testing.T) {
 			}),
 		},
 		{
-			TestName:      "simple State with List",
-			Schema:        testSimpleSchemaWithList,
-			TfToCfNameMap: simpleTfToCfNameMap,
+			TestName:       "simple State with List",
+			Schema:         testSimpleSchemaWithList,
+			TfToCfnNameMap: simpleTfToCfnNameMap,
 			ResourceModel: map[string]any{
 				"Arn":    "arn:aws:test:::test",
 				"Name":   "testing",
@@ -199,9 +205,9 @@ func TestJSONFlexer_Flatten(t *testing.T) {
 			}),
 		},
 		{
-			TestName:      "simple State with empty List",
-			Schema:        testSimpleSchemaWithList,
-			TfToCfNameMap: simpleTfToCfNameMap,
+			TestName:       "simple State with empty List",
+			Schema:         testSimpleSchemaWithList,
+			TfToCfnNameMap: simpleTfToCfnNameMap,
 			ResourceModel: map[string]any{
 				"Arn":    "arn:aws:test:::test",
 				"Name":   "testing",
@@ -225,9 +231,9 @@ func TestJSONFlexer_Flatten(t *testing.T) {
 			}),
 		},
 		{
-			TestName:      "simple State with missing List",
-			Schema:        testSimpleSchemaWithList,
-			TfToCfNameMap: simpleTfToCfNameMap,
+			TestName:       "simple State with missing List",
+			Schema:         testSimpleSchemaWithList,
+			TfToCfnNameMap: simpleTfToCfnNameMap,
 			ResourceModel: map[string]any{
 				"Arn":    "arn:aws:test:::test",
 				"Name":   "testing",
@@ -250,9 +256,9 @@ func TestJSONFlexer_Flatten(t *testing.T) {
 			}),
 		},
 		{
-			TestName:      "complex State",
-			Schema:        testComplexSchema,
-			TfToCfNameMap: complexTfToCfNameMap,
+			TestName:       "complex State",
+			Schema:         testComplexSchema,
+			TfToCfnNameMap: complexTfToCfnNameMap,
 			ResourceModel: map[string]any{
 				"Name":        "hello, world",
 				"MachineType": "e2-medium",
@@ -372,9 +378,9 @@ func TestJSONFlexer_Flatten(t *testing.T) {
 			}),
 		},
 		{
-			TestName:      "maps State",
-			Schema:        testMapsSchema,
-			TfToCfNameMap: mapsTfToCfNameMap,
+			TestName:       "maps State",
+			Schema:         testMapsSchema,
+			TfToCfnNameMap: mapsTfToCfnNameMap,
 			ResourceModel: map[string]any{
 				"Name": "testing",
 				"SimpleMap": map[string]any{
@@ -435,7 +441,9 @@ func TestJSONFlexer_Flatten(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			flexer := NewJSONFlexer(testCase.Schema, testCase.TfToCfNameMap)
+			t.Parallel()
+
+			flexer := NewJSONFlexer(testCase.Schema, testCase.TfToCfnNameMap)
 			got, err := flexer.fromRawMap(t.Context(), testCase.ResourceModel)
 
 			if err == nil && testCase.ExpectedError {
@@ -522,7 +530,7 @@ func makeSimpleTestPlanWithOptionalPopulated() tfsdk.Plan {
 	}
 }
 
-var simpleTfToCfNameMap = map[string]string{
+var simpleTfToCfnNameMap = map[string]string{
 	"arn":        "Arn",
 	"identifier": "Identifier",
 	"name":       "Name",
@@ -660,7 +668,7 @@ func makeComplexTestPlan() tfsdk.Plan {
 	}
 }
 
-var complexTfToCfNameMap = map[string]string{
+var complexTfToCfnNameMap = map[string]string{
 	"boot_disk":            "BootDisk",
 	"delete_with_instance": "DeleteWithInstance",
 	"disks":                "Disks",
@@ -764,7 +772,7 @@ func makeMapsTestPlan() tfsdk.Plan {
 	}
 }
 
-var mapsTfToCfNameMap = map[string]string{
+var mapsTfToCfnNameMap = map[string]string{
 	"flags":       "Flags",
 	"id":          "Id",
 	"name":        "Name",
