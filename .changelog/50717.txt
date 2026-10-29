@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_config_delivery_channel: Fix `snapshot_delivery_properties` drift not being detected when removed outside of Terraform
+```
