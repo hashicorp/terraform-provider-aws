@@ -162,7 +162,7 @@ func TestAccBedrockDataAutomationBlueprint_List_regionOverride(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockDataAutomationServiceID),
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckBlueprintDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup

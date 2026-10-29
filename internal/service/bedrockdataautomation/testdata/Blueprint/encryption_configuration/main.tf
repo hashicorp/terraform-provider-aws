@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_kms_key" "test" {
-  description             = var.rName
+  count = 2
+
+  description             = "${var.rName}-${count.index}"
   deletion_window_in_days = 7
   enable_key_rotation     = true
 }
@@ -26,11 +28,15 @@ resource "aws_bedrockdataautomation_blueprint" "test" {
     }
   })
 
-  encryption_configuration {
-    kms_key_id = aws_kms_key.test.arn
+  dynamic "encryption_configuration" {
+    for_each = var.kms_key_index == null ? [] : [var.kms_key_index]
 
-    kms_encryption_context = {
-      Purpose = "test"
+    content {
+      kms_key_id = aws_kms_key.test[encryption_configuration.value].arn
+
+      kms_encryption_context = {
+        Purpose = var.context_value
+      }
     }
   }
 }
@@ -39,4 +45,15 @@ variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
+}
+
+variable "kms_key_index" {
+  type     = number
+  default  = null
+  nullable = true
+}
+
+variable "context_value" {
+  type     = string
+  nullable = false
 }

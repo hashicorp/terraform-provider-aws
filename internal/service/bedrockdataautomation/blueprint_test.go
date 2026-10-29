@@ -170,6 +170,35 @@ func TestAccBedrockDataAutomationBlueprint_encryptionConfiguration(t *testing.T)
 	var v awstypes.Blueprint
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockdataautomation_blueprint.test"
+	encryptionConfigurationPath := tfjsonpath.New(names.AttrEncryptionConfiguration)
+	kmsKeyIDPath := encryptionConfigurationPath.AtSliceIndex(0).AtMapKey(names.AttrKMSKeyID)
+	kmsEncryptionContextPath := encryptionConfigurationPath.AtSliceIndex(0).AtMapKey("kms_encryption_context")
+	step := func(kmsKeyIndex config.Variable, contextValue string, action plancheck.ResourceActionType, checks ...statecheck.StateCheck) resource.TestStep {
+		variables := config.Variables{
+			acctest.CtRName: config.StringVariable(rName),
+			"context_value": config.StringVariable(contextValue),
+		}
+		if kmsKeyIndex != nil {
+			variables["kms_key_index"] = kmsKeyIndex
+		}
+
+		return resource.TestStep{
+			ConfigDirectory: config.StaticDirectory("testdata/Blueprint/encryption_configuration/"),
+			ConfigVariables: variables,
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckBlueprintExists(ctx, t, resourceName, &v),
+			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, action),
+				},
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectEmptyPlan(),
+				},
+			},
+			ConfigStateChecks: checks,
+		}
+	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -177,26 +206,19 @@ func TestAccBedrockDataAutomationBlueprint_encryptionConfiguration(t *testing.T)
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBlueprintDestroy(ctx, t),
 		Steps: []resource.TestStep{
+			step(config.IntegerVariable(0), "test", plancheck.ResourceActionCreate,
+				statecheck.ExpectKnownValue(resourceName, encryptionConfigurationPath, knownvalue.ListSizeExact(1)),
+				statecheck.CompareValuePairs(resourceName, kmsKeyIDPath, "aws_kms_key.test[0]", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				statecheck.ExpectKnownValue(resourceName, kmsEncryptionContextPath, knownvalue.MapExact(map[string]knownvalue.Check{
+					"Purpose": knownvalue.StringExact("test"),
+				})),
+			),
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Blueprint/encryption_configuration/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlueprintExists(ctx, t, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListSizeExact(1)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration).AtSliceIndex(0).AtMapKey("kms_encryption_context"), knownvalue.MapExact(map[string]knownvalue.Check{
-						"Purpose": knownvalue.StringExact("test"),
-					})),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration).AtSliceIndex(0).AtMapKey(names.AttrKMSKeyID), "aws_kms_key.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-				},
-			},
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/Blueprint/encryption_configuration/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					"kms_key_index": config.IntegerVariable(0),
+					"context_value": config.StringVariable("test"),
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
@@ -204,6 +226,18 @@ func TestAccBedrockDataAutomationBlueprint_encryptionConfiguration(t *testing.T)
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
+			step(config.IntegerVariable(1), "test", plancheck.ResourceActionUpdate,
+				statecheck.CompareValuePairs(resourceName, kmsKeyIDPath, "aws_kms_key.test[1]", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+			),
+			step(config.IntegerVariable(1), "updated", plancheck.ResourceActionUpdate,
+				statecheck.CompareValuePairs(resourceName, kmsKeyIDPath, "aws_kms_key.test[1]", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				statecheck.ExpectKnownValue(resourceName, kmsEncryptionContextPath, knownvalue.MapExact(map[string]knownvalue.Check{
+					"Purpose": knownvalue.StringExact("updated"),
+				})),
+			),
+			step(nil, "updated", plancheck.ResourceActionUpdate,
+				statecheck.ExpectKnownValue(resourceName, encryptionConfigurationPath, knownvalue.ListSizeExact(0)),
+			),
 		},
 	})
 }
@@ -230,13 +264,13 @@ func testAccCheckBlueprintExists(ctx context.Context, t *testing.T, n string, v 
 
 func testAccCheckBlueprintDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).BedrockDataAutomationClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockdataautomation_blueprint" {
 				continue
 			}
 
+			ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).BedrockDataAutomationClient(ctx)
 			_, err := tfbedrockdataautomation.FindBlueprintByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 			if retry.NotFound(err) {
 				continue
