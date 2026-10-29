@@ -387,6 +387,12 @@ func (r *eventSourceResource) Delete(ctx context.Context, req resource.DeleteReq
 func (r *eventSourceResource) flatten(ctx context.Context, out *eventbridgev2.DescribeEventSourceOutput, data *eventSourceResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	prior, d := data.Configuration.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() {
+		return diags
+	}
+
 	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, out, data, fwflex.WithFieldNamePrefix("EventSource")))
 	if diags.HasError() {
 		return diags
@@ -395,6 +401,29 @@ func (r *eventSourceResource) flatten(ctx context.Context, out *eventbridgev2.De
 	// The service returns an empty description when none is set.
 	if aws.ToString(out.Description) == "" {
 		data.Description = types.StringNull()
+	}
+
+	// The service returns the key ARN for a key ID, alias name, or alias ARN, so keep the configured identifier.
+	if prior != nil {
+		old, d := prior.PartnerEventsConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		configuration, d := data.Configuration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() || old == nil || configuration == nil {
+			return diags
+		}
+
+		current, d := configuration.PartnerEventsConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return diags
+		}
+
+		if current != nil && !old.PartnerBusKMSKeyIdentifier.IsNull() && kmsKeyIdentifierEquivalent(old.PartnerBusKMSKeyIdentifier.ValueString(), current.PartnerBusKMSKeyIdentifier.ValueString()) {
+			current.PartnerBusKMSKeyIdentifier = old.PartnerBusKMSKeyIdentifier
+			configuration.PartnerEventsConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, current)
+			data.Configuration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, configuration)
+		}
 	}
 
 	return diags
