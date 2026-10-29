@@ -45,7 +45,7 @@ resource "aws_lambdaweb_function" "example" {
 
 The following arguments are required:
 
-* `build_config` - (Required) Build configuration for the revision. See [`build_config` Block](#service_config-block) below.
+* `build_config` - (Required) Build configuration for the revision. See [`build_config` Block](#build_config-block) below.
 * `function_name` - (Required) Web function name.
 * `service_config` - (Required) Service configuration for the revision. See [`service_config` Block](#service_config-block) below.
 
@@ -57,12 +57,12 @@ The following arguments are optional:
 
 #### `build_config` Block
 
-* `code_config` - (Required) Code configuration. See [`code_config` Block](#service_config-block) below.
-* `runtime_config` - (Required) Runtime configuration for the revision. See [`runtime_config` Block](#service_config-block) below.
+* `code_config` - (Required) Code configuration. See [`build_config.code_config` Block](#build_config.code_config-block) below.
+* `runtime_config` - (Required) Runtime configuration for the revision. See [`build_config.runtime_config` Block](#build_config.runtime_config-block) below.
 
 ##### `build_config.code_config` Block
 
-* `s3_object` - (Required) Amazon S3 location of the deployment artifact. See [`s3_object` Block](#service_config-block) below.
+* `s3_object` - (Required) Amazon S3 location of the deployment artifact. See [`build_config.code_config.s3_object` Block](#build_config.code_config.s3_object-block) below.
 
 ###### `build_config.code_config.s3_object` Block
 
@@ -76,16 +76,16 @@ The following arguments are optional:
 
 #### `service_config` Block
 
-* `egress_network_connector_arn` - (Optional) ARN of the Lambda network connector that gives the web function access to resources in a VPC. Specify the fully qualified ARN, including the connector version, which pins the revision to that version.
+* `egress_network_connector_arn` - (Optional) ARN of the Lambda network connector that gives the web function access to resources in a VPC. Specify the fully qualified ARN, including the connector version, which pins the revision to that version. Supported only with `HomeRegion` endpoints.
 * `environment_variables` - (Optional) Map of environment variable key-value pairs available to the web function at runtime.
 * `execution_role_arn` - (Required) ARN of the IAM role that the web function assumes when it runs. The trust principal must be `lambda.amazonaws.com`.
 * `max_concurrency_per_environment` - (Optional) Maximum number of concurrent requests handled per execution environment. The default is `64`.
-* `telemetry_config` - (Optional) Telemetry configuration for the web function. See [`telemetry_config` Block](#service_config-block) below.
+* `telemetry_config` - (Optional) Telemetry configuration for the web function. See [`service_config.telemetry_config` Block](#service_config.telemetry_config-block) below.
 * `timeout_seconds` - (Optional) Amount of time (in seconds) that Lambda allows the web function to run before stopping it. The default is `30`.
 
 ##### `service_config.telemetry_config` Block
 
-* `logging_config` - (Optional) Logging configuration for the web function. See [`logging_config` Block](#service_config-block) below.
+* `logging_config` - (Optional) Logging configuration for the web function. See [`service_config.telemetry_config.logging_config` Block](#service_config.telemetry_config.logging_config-block) below.
 
 ###### `service_config.telemetry_config.logging_config` Block
 

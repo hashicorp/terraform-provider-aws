@@ -110,7 +110,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the network connector.
 * `latest_version` - Number of the connector's latest version. Each configuration change creates a new immutable version.
-* `latest_version_arn` - Version-qualified ARN of the connector's latest version. Use it for `egress_network_connector_arn` on an `aws_lambdaweb_function` revision.
+* `latest_version_arn` - Version-qualified ARN of the connector's latest version. Use it for `service_config.egress_network_connector_arn` on an `aws_lambdaweb_function_revision` resource.
 
 ## Timeouts
 
