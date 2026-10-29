@@ -26,8 +26,8 @@ import (
 
 // @FrameworkResource("aws_quicksight_account_custom_permission", name="Account Custom Permission")
 // @IdentityAttribute("aws_account_id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight;quicksight.DescribeAccountCustomPermissionOutput")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(serialize=true)
 func newAccountCustomPermissionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accountCustomPermissionResource{}
 

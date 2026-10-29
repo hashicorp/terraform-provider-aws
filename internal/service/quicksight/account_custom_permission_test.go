@@ -186,6 +186,10 @@ func testAccCheckAccountCustomPermissionExists(ctx context.Context, t *testing.T
 			return smarterr.NewError(fmt.Errorf("Not found: %s", name))
 		}
 
+		if rs.Primary.ID == "" {
+			return smarterr.NewError(fmt.Errorf("resource %s has no ID", name))
+		}
+
 		if rs.Primary.Attributes[names.AttrAWSAccountID] == "" {
 			return smarterr.NewError(fmt.Errorf("resource %s has no AWS account ID", name))
 		}
