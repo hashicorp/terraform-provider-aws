@@ -39,6 +39,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newLibraryResource,
+			TypeName: "aws_bedrockdataautomation_library",
+			Name:     "Library",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newProjectResource,
 			TypeName: "aws_bedrockdataautomation_project",
 			Name:     "Project",
