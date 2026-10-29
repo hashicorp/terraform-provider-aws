@@ -163,8 +163,6 @@ func (r *functionEndpointResource) Schema(ctx context.Context, req resource.Sche
 					),
 				},
 			},
-			"scaling_config":  optionalLimitsAttribute[scalingConfigModel](ctx),
-			"throttle_config": optionalLimitsAttribute[throttleConfigModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			"revision_weight": schema.ListNestedBlock{
@@ -181,6 +179,38 @@ func (r *functionEndpointResource) Schema(ctx context.Context, req resource.Sche
 							Required: true,
 							Validators: []validator.Int64{
 								int64validator.Between(1, 100),
+							},
+						},
+					},
+				},
+			},
+			"scaling_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[scalingConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"max_environments": schema.Int64Attribute{
+							Required: true,
+							Validators: []validator.Int64{
+								int64validator.Between(2, 10000),
+							},
+						},
+					},
+				},
+			},
+			"throttle_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[throttleConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"rate_limit": schema.Int64Attribute{
+							Required: true,
+							Validators: []validator.Int64{
+								int64validator.AtLeast(0),
 							},
 						},
 					},
@@ -354,7 +384,17 @@ func (r *functionEndpointResource) Update(ctx context.Context, req resource.Upda
 	if plan.Description.IsNull() && !state.Description.IsNull() {
 		input.Description = aws.String("")
 	}
-	clearRemovedLimits(ctx, plan.ScalingConfig, state.ScalingConfig, plan.ThrottleConfig, state.ThrottleConfig, &input)
+
+	// clearRemovedLimits sends an empty scalingConfig/throttleConfig for a block
+	// that was removed from the configuration. UpdateWebFunctionEndpoint keeps the
+	// current value when the field is omitted; only an empty object clears it.
+	if plan.ScalingConfig.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 && state.ScalingConfig.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		input.ScalingConfig = &awstypes.ScalingConfig{}
+	}
+
+	if plan.ThrottleConfig.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 && state.ThrottleConfig.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		input.ThrottleConfig = &awstypes.ThrottleConfig{}
+	}
 
 	_, err := conn.UpdateWebFunctionEndpoint(ctx, &input)
 	if err != nil {
@@ -408,12 +448,7 @@ func (r *functionEndpointResource) Delete(ctx context.Context, req resource.Dele
 func (r *functionEndpointResource) flatten(ctx context.Context, endpoint *lambdaweb.GetWebFunctionEndpointOutput, data *functionEndpointResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// normalizeDescription maps the empty string the API reports for a cleared
-	// description back to null, so it matches a configuration that omits it.
-	if aws.ToString(endpoint.Description) == "" {
-		endpoint.Description = nil
-	}
-	normalizeLimits(&endpoint.ScalingConfig, &endpoint.ThrottleConfig)
+	normalizeEndpoint(endpoint)
 
 	diags.Append(fwflex.Flatten(ctx, endpoint, data)...)
 	if diags.HasError() {
@@ -433,51 +468,21 @@ func (r *functionEndpointResource) flatten(ctx context.Context, endpoint *lambda
 	return diags
 }
 
-// optionalLimitsAttribute returns the schema for scaling_config and
-// throttle_config. They are Optional only: the service has no default for
-// either and omits them from the response when unset, so state can follow the
-// configuration exactly and removing a block plans an update.
-func optionalLimitsAttribute[T any](ctx context.Context) schema.ListAttribute {
-	return schema.ListAttribute{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[T](ctx),
-		Optional:   true,
-		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
-		},
-		ElementType: types.ObjectType{
-			AttrTypes: fwtypes.AttributeTypesMust[T](ctx),
-		},
+func normalizeEndpoint(endpoint *lambdaweb.GetWebFunctionEndpointOutput) {
+	// normalizeDescription maps the empty string the API reports for a cleared
+	// description back to null, so it matches a configuration that omits it.
+	if aws.ToString(endpoint.Description) == "" {
+		endpoint.Description = nil
 	}
-}
 
-// clearRemovedLimits sends an empty scalingConfig/throttleConfig for a block
-// that was removed from the configuration. UpdateWebFunctionEndpoint keeps the
-// current value when the field is omitted; only an empty object clears it.
-func clearRemovedLimits(ctx context.Context, planScaling, stateScaling fwtypes.ListNestedObjectValueOf[scalingConfigModel], planThrottle, stateThrottle fwtypes.ListNestedObjectValueOf[throttleConfigModel], input *lambdaweb.UpdateWebFunctionEndpointInput) {
-	if isUnsetList(ctx, planScaling) && !isUnsetList(ctx, stateScaling) {
-		input.ScalingConfig = &awstypes.ScalingConfig{}
+	// normalizeLimits maps the empty objects the API reports after a limit is
+	// cleared ("scalingConfig": {}) to nil, so they read back as unset.
+	if endpoint.ScalingConfig != nil && endpoint.ScalingConfig.MaxEnvironments == nil {
+		endpoint.ScalingConfig = nil
 	}
-	if isUnsetList(ctx, planThrottle) && !isUnsetList(ctx, stateThrottle) {
-		input.ThrottleConfig = &awstypes.ThrottleConfig{}
-	}
-}
 
-func isUnsetList[T any](ctx context.Context, v fwtypes.ListNestedObjectValueOf[T]) bool {
-	if v.IsNull() || v.IsUnknown() {
-		return true
-	}
-	ptr, diags := v.ToPtr(ctx)
-	return diags.HasError() || ptr == nil
-}
-
-// normalizeLimits maps the empty objects the API reports after a limit is
-// cleared ("scalingConfig": {}) to nil, so they read back as unset.
-func normalizeLimits(scaling **awstypes.ScalingConfig, throttle **awstypes.ThrottleConfig) {
-	if *scaling != nil && (*scaling).MaxEnvironments == nil {
-		*scaling = nil
-	}
-	if *throttle != nil && (*throttle).RateLimit == nil {
-		*throttle = nil
+	if endpoint.ThrottleConfig != nil && endpoint.ThrottleConfig.RateLimit == nil {
+		endpoint.ThrottleConfig = nil
 	}
 }
 

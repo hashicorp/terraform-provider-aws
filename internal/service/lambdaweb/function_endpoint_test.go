@@ -77,8 +77,8 @@ func TestAccLambdaWebFunctionEndpoint_basic(t *testing.T) {
 						knownvalue.StringExact(acctest.Region()),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision_weight"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListSizeExact(0)),
 				},
 			},
 			{
@@ -287,8 +287,80 @@ func TestAccLambdaWebFunctionEndpoint_scalingConfigPlusThrottleConfig(t *testing
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/scaling_config+throttle_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:    config.StringVariable(rName),
+					"max_environments": config.IntegerVariable(5),
+					"rate_limit":       config.IntegerVariable(300),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"max_environments": knownvalue.Int64Exact(5),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"rate_limit": knownvalue.Int64Exact(300),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/scaling_config+throttle_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:    config.StringVariable(rName),
+					"max_environments": config.IntegerVariable(5),
+					"rate_limit":       config.IntegerVariable(400),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"max_environments": knownvalue.Int64Exact(5),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"rate_limit": knownvalue.Int64Exact(400),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/scaling_config+throttle_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:    config.StringVariable(rName),
+					"max_environments": config.IntegerVariable(6),
+					"rate_limit":       config.IntegerVariable(400),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"max_environments": knownvalue.Int64Exact(6),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"rate_limit": knownvalue.Int64Exact(400),
+					})})),
 				},
 			},
 		},
