@@ -1,5 +1,10 @@
 ## 6.72.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_rds_tenant_database` ([#50605](https://github.com/hashicorp/terraform-provider-aws/issues/50605))
+* **New Resource:** `aws_rds_tenant_database` ([#50605](https://github.com/hashicorp/terraform-provider-aws/issues/50605))
+
 ## 6.71.0 (October 28, 2026)
 
 NOTES:
