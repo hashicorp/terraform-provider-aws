@@ -50,5 +50,5 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the phone number. Possible values are `PENDING`, `ACTIVE`, `ASSOCIATING`, `DISASSOCIATING`, and `DELETED`.
 * `tags` - Map of tags assigned to the phone number.
 * `two_way_channel_arn` - Destination for incoming messages.
-* `two_way_channel_role` - ARN of the IAM role that End User Messaging SMS assumes to publish inbound messages to the two-way channel.
 * `two_way_channel_enabled` - Whether inbound message reception is enabled for the phone number.
+* `two_way_channel_role` - ARN of the IAM role that End User Messaging SMS assumes to publish inbound messages to the two-way channel.

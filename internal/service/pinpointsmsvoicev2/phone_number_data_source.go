@@ -89,12 +89,12 @@ func (d *phoneNumberDataSource) Schema(ctx context.Context, req datasource.Schem
 			"two_way_channel_arn": schema.StringAttribute{
 				Computed: true,
 			},
+			"two_way_channel_enabled": schema.BoolAttribute{
+				Computed: true,
+			},
 			"two_way_channel_role": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Computed:   true,
-			},
-			"two_way_channel_enabled": schema.BoolAttribute{
-				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{},
