@@ -38,14 +38,6 @@ type tieringConfigurationListResource struct {
 func (l *tieringConfigurationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().BackupClient(ctx)
 
-	var query listTieringConfigurationModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input backup.ListTieringConfigurationsInput
 		for item, err := range listTieringConfigurations(ctx, conn, &input) {
@@ -94,10 +86,6 @@ func (l *tieringConfigurationListResource) List(ctx context.Context, request lis
 			}
 		}
 	}
-}
-
-type listTieringConfigurationModel struct {
-	framework.WithRegionModel
 }
 
 func listTieringConfigurations(ctx context.Context, conn *backup.Client, input *backup.ListTieringConfigurationsInput) iter.Seq2[awstypes.TieringConfigurationsListMember, error] {
