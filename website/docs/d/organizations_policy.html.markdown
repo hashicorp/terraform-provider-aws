@@ -30,7 +30,7 @@ data "aws_organizations_policy" "test" {
 
 The following arguments are required:
 
-* `policy_id` - (Required) The unique identifier (ID) of the policy that you want more details on. Policy id starts with a "p-" followed by 8-28 lowercase or uppercase letters, digits, and underscores.
+* `policy_id` - (Required) The unique identifier (ID) of the policy that you want more details on. Policy ID starts with a "p-" followed by 8-28 lowercase or uppercase letters, digits, and underscores.
 
 ## Attribute Reference
 

@@ -10,13 +10,13 @@ description: |-
 
 `aws_vpc` provides details about a specific VPC.
 
-This resource can prove useful when a module accepts a vpc id as
+This resource can prove useful when a module accepts a VPC ID as
 an input variable and needs to, for example, determine the CIDR block of that
 VPC.
 
 ## Example Usage
 
-The following example shows how one might accept a VPC id as a variable
+The following example shows how one might accept a VPC ID as a variable
 and use this data source to obtain the data necessary to create a subnet
 within it.
 
@@ -40,7 +40,7 @@ This data source supports the following arguments:
 
 * `cidr_block` - (Optional) CIDR block of the desired VPC.
 * `default` - (Optional) Boolean constraint on whether the desired VPC is the default VPC for the region.
-* `dhcp_options_id` - (Optional) DHCP options id of the desired VPC.
+* `dhcp_options_id` - (Optional) DHCP options ID of the desired VPC.
 * `filter` - (Optional) Custom filter block as described below. See [`filter` Block](#filter-block) below.
 * `id` - (Optional) ID of the specific VPC to retrieve.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

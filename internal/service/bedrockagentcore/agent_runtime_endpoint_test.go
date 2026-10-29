@@ -29,8 +29,8 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentruntimeendpoint bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -43,7 +43,7 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeEndpointConfig_basic(rName, rImageUri),
+				Config: testAccAgentRuntimeEndpointConfig_basic(rName, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeEndpointExists(ctx, t, resourceName, &agentruntimeendpoint),
 				),
@@ -75,8 +75,8 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentruntimeendpoint bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
-	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -89,7 +89,7 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeEndpointConfig_basic(rName, rImageUri),
+				Config: testAccAgentRuntimeEndpointConfig_basic(rName, rBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeEndpointExists(ctx, t, resourceName, &agentruntimeendpoint),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceAgentRuntimeEndpoint, resourceName),
@@ -112,9 +112,8 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentruntimeendpoint bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
-	rImageUriV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
-	rImageUriV2 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -127,7 +126,7 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_update(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentRuntimeEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentRuntimeEndpointConfig_description(rName, rImageUriV1, "test endpoint"),
+				Config: testAccAgentRuntimeEndpointConfig_description(rName, rBucketName, "test endpoint"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeEndpointExists(ctx, t, resourceName, &agentruntimeendpoint),
 				),
@@ -150,7 +149,7 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_update(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
-				Config: testAccAgentRuntimeEndpointConfig_description(rName, rImageUriV2, "updated endpoint"),
+				Config: testAccAgentRuntimeEndpointConfig_description(rName, rBucketName, "updated endpoint"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentRuntimeEndpointExists(ctx, t, resourceName, &agentruntimeendpoint),
 				),
@@ -231,8 +230,8 @@ func testAccAgentRuntimeEndpointPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccAgentRuntimeEndpointConfig_basic(rName, imageUri string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_basic(rName, imageUri), fmt.Sprintf(`
+func testAccAgentRuntimeEndpointConfig_basic(rName, rBucketName string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_codeConfiguration(rName, rBucketName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime_endpoint" "test" {
   name                  = %[1]q
   agent_runtime_id      = aws_bedrockagentcore_agent_runtime.test.agent_runtime_id
@@ -241,8 +240,8 @@ resource "aws_bedrockagentcore_agent_runtime_endpoint" "test" {
 `, rName))
 }
 
-func testAccAgentRuntimeEndpointConfig_description(rName, imageUri, description string) string {
-	return acctest.ConfigCompose(testAccAgentRuntimeConfig_basic(rName, imageUri), fmt.Sprintf(`
+func testAccAgentRuntimeEndpointConfig_description(rName, rBucketName, description string) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_codeConfiguration(rName, rBucketName), fmt.Sprintf(`
 resource "aws_bedrockagentcore_agent_runtime_endpoint" "test" {
   name                  = %[1]q
   description           = %[2]q

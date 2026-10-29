@@ -40,14 +40,6 @@ func (l *collectionGroupListResource) List(ctx context.Context, request list.Lis
 	awsClient := l.Meta()
 	conn := awsClient.OpenSearchServerlessClient(ctx)
 
-	var query listCollectionGroupModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input opensearchserverless.ListCollectionGroupsInput
 
@@ -105,10 +97,6 @@ func (l *collectionGroupListResource) List(ctx context.Context, request list.Lis
 			}
 		}
 	}
-}
-
-type listCollectionGroupModel struct {
-	framework.WithRegionModel
 }
 
 func listCollectionGroups(ctx context.Context, conn *opensearchserverless.Client, input *opensearchserverless.ListCollectionGroupsInput) iter.Seq2[awstypes.CollectionGroupSummary, error] {

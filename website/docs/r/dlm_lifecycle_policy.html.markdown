@@ -320,13 +320,13 @@ This resource supports the following arguments:
 * `cross_region_copy` - (Optional) The rule for copying shared snapshots across Regions. See the [`cross_region_copy` configuration](#action-cross-region-copy-rule-arguments) block.
 * `name` - (Optional) A descriptive name for the action.
 
-##### Action Cross Region Copy Rule arguments
+#### Action Cross Region Copy Rule arguments
 
 * `encryption_configuration` - (Required) The encryption settings for the copied snapshot. See the [`encryption_configuration`](#encryption-configuration-arguments) block. Max of 1 per action.
 * `retain_rule` - (Required) Specifies the retention rule for cross-Region snapshot copies. See the [`retain_rule`](#cross-region-copy-rule-retain-rule-arguments) block. Max of 1 per action.
 * `target` - (Required) Target Region or the ARN of the target Outpost for the snapshot copies.
 
-###### Encryption Configuration arguments
+#### Encryption Configuration arguments
 
 * `cmk_arn` - (Optional) ARN of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
 * `encrypted` - (Required) To encrypt a copy of an unencrypted snapshot when encryption by default is not enabled, enable encryption using this parameter. Copies of encrypted snapshots are encrypted, even if this parameter is false or when encryption by default is not enabled.
@@ -336,7 +336,7 @@ This resource supports the following arguments:
 * `parameters` - (Required) Information about the event. See the [`parameters` configuration](#event-source-parameters-arguments) block.
 * `type` - (Required) The source of the event. Currently only managed CloudWatch Events rules are supported. Valid values are `MANAGED_CWE`.
 
-##### Event Source Parameters arguments
+#### Event Source Parameters arguments
 
 * `description_regex` - (Required) The snapshot description that can trigger the policy. The description pattern is specified using a regular expression. The policy runs only if a snapshot with a description that matches the specified pattern is shared with your account.
 * `event_type` - (Required) The type of event. Currently, only `shareSnapshot` events are supported.

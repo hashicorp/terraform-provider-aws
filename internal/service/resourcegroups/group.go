@@ -180,7 +180,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrName, group.Name)
 
 	q, err := conn.GetGroupQuery(ctx, &resourcegroups.GetGroupQueryInput{
-		GroupName: aws.String(d.Id()),
+		Group: aws.String(d.Id()),
 	})
 
 	hasQuery := true
@@ -234,7 +234,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if d.HasChange(names.AttrDescription) {
 		input := &resourcegroups.UpdateGroupInput{
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
-			GroupName:   aws.String(d.Id()),
+			Group:       aws.String(d.Id()),
 		}
 
 		_, err := conn.UpdateGroup(ctx, input)
@@ -246,7 +246,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if d.HasChange("resource_query") {
 		input := &resourcegroups.UpdateGroupQueryInput{
-			GroupName:     aws.String(d.Id()),
+			Group:         aws.String(d.Id()),
 			ResourceQuery: expandResourceQuery(d.Get("resource_query").([]any)),
 		}
 
@@ -283,7 +283,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	log.Printf("[DEBUG] Deleting Resource Groups Group: %s", d.Id())
 	_, err := conn.DeleteGroup(ctx, &resourcegroups.DeleteGroupInput{
-		GroupName: aws.String(d.Id()),
+		Group: aws.String(d.Id()),
 	})
 
 	if errs.IsA[*types.NotFoundException](err) {
@@ -299,7 +299,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func findGroupByName(ctx context.Context, conn *resourcegroups.Client, name string) (*types.Group, error) {
 	input := &resourcegroups.GetGroupInput{
-		GroupName: aws.String(name),
+		Group: aws.String(name),
 	}
 
 	output, err := conn.GetGroup(ctx, input)

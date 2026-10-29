@@ -35,7 +35,7 @@ func NewListNestedObjectTypeOf[T any](ctx context.Context, f ...NestedObjectOfOp
 	opts := newNestedObjectOfOptions(f...)
 
 	return listNestedObjectTypeOf[T]{
-		ListType:             basetypes.ListType{ElemType: NewObjectTypeOf[T](ctx)},
+		ElemType:             NewObjectTypeOf[T](ctx),
 		semanticEqualityFunc: opts.SemanticEqualityFunc,
 	}
 }

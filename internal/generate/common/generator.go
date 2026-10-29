@@ -9,12 +9,12 @@ import (
 	"go/format"
 	"maps"
 	"os"
-	"os/exec"
 	"path"
 	"strings"
 	"text/template"
 
 	"github.com/hashicorp/cli"
+	"golang.org/x/tools/imports"
 )
 
 type Generator struct {
@@ -68,11 +68,8 @@ type Destination interface {
 // needed, knowing that goimports will remove any unnecessary packages.
 func (g *Generator) NewGoFileDestination(filename string) Destination {
 	return &fileDestination{
-		baseDestination: baseDestination{
-			formatter:      format.Source,
-			writeFormatter: goodgo,
-		},
-		filename: filename,
+		writeFormatter: goodgo,
+		filename:       filename,
 	}
 }
 
@@ -84,10 +81,8 @@ func (g *Generator) NewUnformattedFileDestination(filename string) Destination {
 
 func (g *Generator) NewFileDestinationWithFormatter(filename string, formatter func([]byte) ([]byte, error)) Destination {
 	return &fileDestination{
-		filename: filename,
-		baseDestination: baseDestination{
-			formatter: formatter,
-		},
+		filename:  filename,
+		formatter: formatter,
 	}
 }
 
@@ -234,30 +229,16 @@ func (d *baseDestination) format(body []byte) ([]byte, error) {
 
 // goodgo formats the given Go source code using gofmt and goimports.
 func goodgo(body []byte) ([]byte, error) {
-	// Run gofmt with the -s option
-	formattedBody, err := runCommand("gofmt", "-s", body)
+	formattedBody, err := format.Source(body)
 	if err != nil {
 		return nil, fmt.Errorf("running gofmt: %w", err)
 	}
 
-	// Run goimports to fix imports
-	formattedBody, err = runCommand("goimports", "-v", formattedBody)
+	// Run goimports to fix imports.
+	formattedBody, err = imports.Process("", formattedBody, nil)
 	if err != nil {
 		return nil, fmt.Errorf("running goimports: %w", err)
 	}
 
 	return formattedBody, nil
-}
-
-// runCommand runs a command with the given arguments and input, and returns the output.
-func runCommand(name string, arg string, input []byte) ([]byte, error) {
-	cmd := exec.Command(name, arg)
-	cmd.Stdin = bytes.NewReader(input)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		return nil, err
-	}
-	return out.Bytes(), nil
 }

@@ -33,7 +33,7 @@ import (
 // @SDKResource("aws_route53_resolver_rule", name="Rule")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes.ResolverRule")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes;awstypes.ResolverRule")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomDomainName(t)")
 func resourceRule() *schema.Resource {

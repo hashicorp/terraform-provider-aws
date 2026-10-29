@@ -127,7 +127,7 @@ This resource supports the following arguments:
 * `kms_key_id` - (Optional) KMS key that SageMaker AI uses to encrypt the asynchronous inference output in S3.
 * `notification_config` - (Optional) Configuration for notifications of inference results for asynchronous inference.
 
-##### notification_config
+#### notification_config
 
 * `error_topic` - (Optional) SNS topic to post a notification to when inference fails. If no topic is provided, no notification is sent on failure.
 * `include_inference_response_in` - (Optional) SNS topics where you want the inference response to be included. Valid values are `SUCCESS_NOTIFICATION_TOPIC` and `ERROR_NOTIFICATION_TOPIC`.

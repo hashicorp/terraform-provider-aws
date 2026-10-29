@@ -144,6 +144,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_id` - The ID of the AWS account that owns the subnet.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+### GuardDuty Cleanup Permissions
+
 ~> **Note:** The following IAM permissions are optional but recommended for automatic cleanup of GuardDuty-managed resources during subnet deletion: `ec2:DescribeVpcEndpoints`, `ec2:DescribeSubnets`, `ec2:DescribeVpcs` (on all resources), and `ec2:ModifyVpcEndpoint` (on resources tagged `GuardDutyManaged: true`).
 
 ## Timeouts

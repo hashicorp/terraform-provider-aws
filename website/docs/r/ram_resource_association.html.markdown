@@ -33,9 +33,33 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN of the resource share.
+* `id` - Composite identifier containing the Resource Share ARN and resource ARN, separated by a comma.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ram_resource_association.example
+  identity = {
+    "resource_share_arn" = "arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12"
+    "resource_arn"       = "arn:aws:ec2:eu-west-1:123456789012:subnet/subnet-12345678"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `resource_share_arn` (String) ARN of the RAM Resource Share.
+* `resource_arn` (String) ARN of the resource associated with the RAM Resource Share.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RAM Resource Associations using their Resource Share ARN and Resource ARN separated by a comma. For example:
 

@@ -194,23 +194,23 @@ The following arguments are optional:
 * `logs_encryption_configuration` - (Optional) Configuration block for logs encryption settings. See [`logs_encryption_configuration`](#logs_encryption_configuration) below.
 * `tag_propagation_configuration` - (Optional) Configuration block for propagating source resource tags to centralized destination log groups. See [`tag_propagation_configuration`](#tag_propagation_configuration) below.
 
-##### backup_configuration
+#### backup_configuration
 
 * `region` - (Required) AWS region for backup storage.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use for backup encryption.
 
-##### log_group_name_configuration
+#### log_group_name_configuration
 
 * `log_group_name_pattern` - (Required) Pattern used for generating destination log group names during centralization. The pattern can contain static text and dynamic variables that are replaced with source attributes. For supported dynamic variables, see the [AWS documentation](https://docs.aws.amazon.com/cloudwatch/latest/observabilityadmin/API_LogGroupNameConfiguration.html). Note that `$` used in dynamic variables must be escaped as `$$` in Terraform configuration.
 
-##### logs_encryption_configuration
+#### logs_encryption_configuration
 
 * `encryption_strategy` - (Required) Encryption strategy for logs. Valid values: `AWS_OWNED`, `CUSTOMER_MANAGED`.
 * `encryption_conflict_resolution_strategy` - (Optional) Strategy for resolving encryption conflicts. Valid values: `ALLOW`, `SKIP`.
 * `encryption_scope` - (Optional) Determines which newly created destination log groups are encrypted with `kms_key_arn` when `encryption_strategy` is `CUSTOMER_MANAGED`. Valid values: `ENCRYPTED_SOURCE_ONLY` (default), `NEW_DESTINATION_LOG_GROUPS`. Not valid when `encryption_strategy` is `AWS_OWNED`.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use for encryption when `encryption_strategy` is `CUSTOMER_MANAGED`.
 
-##### tag_propagation_configuration
+#### tag_propagation_configuration
 
 * `destination_role_arn` - (Required) ARN of the IAM role that the service assumes to propagate source resource tags to centralized destination log groups.
 * `tag_conflict_resolution_strategy` - (Optional) Strategy for resolving tag conflicts when propagating tags to destination log groups. Valid values: `IN_SYNC`, `ADD_ONLY`, `UPDATE_SYNC`.
@@ -219,7 +219,7 @@ The following arguments are optional:
 
 * `backup_configuration` - (Optional) Configuration block for metrics backup settings. See [`destination_metrics_backup_configuration`](#destination_metrics_backup_configuration) below.
 
-##### destination_metrics_backup_configuration
+#### destination_metrics_backup_configuration
 
 * `region` - (Required) AWS region for metrics backup destination.
 

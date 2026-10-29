@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcleanrooms "github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -351,8 +352,7 @@ func testAccCheckCollaborationDestroy(ctx context.Context, t *testing.T) resourc
 			_, err := conn.GetCollaboration(ctx, &input)
 			if err != nil {
 				// We throw access denied exceptions for Not Found Collaboration since they are cross account resources
-				var nfe *types.AccessDeniedException
-				if errors.As(err, &nfe) {
+				if errs.IsA[*types.AccessDeniedException](err) {
 					return nil
 				}
 				return err

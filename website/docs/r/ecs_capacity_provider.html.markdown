@@ -10,7 +10,7 @@ description: |-
 
 Provides an ECS cluster capacity provider. More information can be found on the [ECS Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-capacity-providers.html).
 
-~> **NOTE:** Associating an ECS Capacity Provider to an Auto Scaling Group will automatically add the `AmazonECSManaged` tag to the Auto Scaling Group. This tag should be included in the `aws_autoscaling_group` resource configuration to prevent Terraform from removing it in subsequent executions as well as ensuring the `AmazonECSManaged` tag is propagated to all EC2 Instances in the Auto Scaling Group if `min_size` is above 0 on creation. Any EC2 Instances in the Auto Scaling Group without this tag must be manually be updated, otherwise they may cause unexpected scaling behavior and metrics.
+~> **NOTE:** Associating an ECS Capacity Provider to an Auto Scaling group will automatically add the `AmazonECSManaged` tag to the Auto Scaling group. This tag should be included in the `aws_autoscaling_group` resource configuration to prevent Terraform from removing it in subsequent executions as well as ensuring the `AmazonECSManaged` tag is propagated to all EC2 Instances in the Auto Scaling group if `min_size` is above 0 on creation. Any EC2 Instances in the Auto Scaling group without this tag must be manually be updated, otherwise they may cause unexpected scaling behavior and metrics.
 
 ~> **NOTE:** You must specify exactly one of `auto_scaling_group_provider` or `managed_instances_provider`. When using `managed_instances_provider`, the `cluster` parameter is required. When using `auto_scaling_group_provider`, the `cluster` parameter must not be set.
 
@@ -18,7 +18,7 @@ Provides an ECS cluster capacity provider. More information can be found on the 
 
 ## Example Usage
 
-### Auto Scaling Group Provider
+### Auto Scaling group Provider
 
 ```terraform
 resource "aws_autoscaling_group" "example" {
@@ -95,7 +95,7 @@ resource "aws_ecs_capacity_provider" "example" {
 
 This resource supports the following arguments:
 
-* `auto_scaling_group_provider` - (Optional) Configuration block for the provider for the ECS auto scaling group. Detailed below. Exactly one of `auto_scaling_group_provider` or `managed_instances_provider` must be specified.
+* `auto_scaling_group_provider` - (Optional) Configuration block for the provider for the ECS Auto Scaling group. Detailed below. Exactly one of `auto_scaling_group_provider` or `managed_instances_provider` must be specified.
 * `cluster` - (Optional) Name of the ECS cluster. Required when using `managed_instances_provider`. Must not be set when using `auto_scaling_group_provider`.
 * `managed_instances_provider` - (Optional) Configuration block for the managed instances provider. Detailed below. Exactly one of `auto_scaling_group_provider` or `managed_instances_provider` must be specified.
 * `name` - (Required) Name of the capacity provider.
@@ -104,10 +104,10 @@ This resource supports the following arguments:
 
 ### `auto_scaling_group_provider` Block
 
-* `auto_scaling_group_arn` - (Required) - ARN of the associated auto scaling group.
+* `auto_scaling_group_arn` - (Required) - ARN of the associated Auto Scaling group.
 * `managed_draining` - (Optional) - Enables or disables a graceful shutdown of instances without disturbing workloads. Valid values are `ENABLED` and `DISABLED`. The default value is `ENABLED` when a capacity provider is created.
 * `managed_scaling` - (Optional) - Configuration block defining the parameters of the auto scaling. Detailed below.
-* `managed_termination_protection` - (Optional) - Enables or disables container-aware termination of instances in the auto scaling group when scale-in happens. Valid values are `ENABLED` and `DISABLED`.
+* `managed_termination_protection` - (Optional) - Enables or disables container-aware termination of instances in the Auto Scaling group when scale-in happens. Valid values are `ENABLED` and `DISABLED`.
 
 ### `managed_scaling` Block
 

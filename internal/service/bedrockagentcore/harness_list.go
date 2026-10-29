@@ -38,14 +38,6 @@ type harnessListResource struct {
 func (l *harnessListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().BedrockAgentCoreClient(ctx)
 
-	var query listHarnessModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input bedrockagentcorecontrol.ListHarnessesInput
 		for item, err := range listHarnesses(ctx, conn, &input) {
@@ -93,10 +85,6 @@ func (l *harnessListResource) List(ctx context.Context, request list.ListRequest
 			}
 		}
 	}
-}
-
-type listHarnessModel struct {
-	framework.WithRegionModel
 }
 
 func listHarnesses(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListHarnessesInput) iter.Seq2[awstypes.HarnessSummary, error] {

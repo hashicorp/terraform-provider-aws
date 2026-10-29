@@ -50,11 +50,8 @@ func resourceBGPPeer() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"bgp_asn": {
-					Type:     schema.TypeInt,
-					Required: true,
-					ForceNew: true,
-				},
+				"bgp_asn":      bgpASNAttributeSchema(false),
+				"bgp_asn_long": bgpASNAttributeSchema(true),
 				"bgp_auth_key": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -96,11 +93,12 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	vifID := d.Get("virtual_interface_id").(string)
 	addrFamily := awstypes.AddressFamily(d.Get("address_family").(string))
-	asn := int32(d.Get("bgp_asn").(int))
+	asn, asnLong := expandBGPASN(d)
 	input := &directconnect.CreateBGPPeerInput{
 		NewBGPPeer: &awstypes.NewBGPPeer{
 			AddressFamily: addrFamily,
 			Asn:           asn,
+			AsnLong:       asnLong,
 		},
 		VirtualInterfaceId: aws.String(vifID),
 	}
@@ -121,9 +119,10 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "creating Direct Connect BGP Peer: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s-%s-%d", vifID, addrFamily, asn))
+	effectiveASN := effectiveBGPASN(asn, asnLong)
+	d.SetId(fmt.Sprintf("%s-%s-%d", vifID, addrFamily, effectiveASN))
 
-	if _, err = waitBGPPeerCreated(ctx, conn, vifID, addrFamily, asn, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err = waitBGPPeerCreated(ctx, conn, vifID, addrFamily, effectiveASN, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect BGP Peer (%s) create: %s", d.Id(), err)
 	}
 
@@ -136,8 +135,8 @@ func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	vifID := d.Get("virtual_interface_id").(string)
 	addrFamily := awstypes.AddressFamily(d.Get("address_family").(string))
-	asn := int32(d.Get("bgp_asn").(int))
-	bgpPeer, err := findBGPPeerByThreePartKey(ctx, conn, vifID, addrFamily, asn)
+	asn, asnLong := expandBGPASN(d)
+	bgpPeer, err := findBGPPeerByThreePartKey(ctx, conn, vifID, addrFamily, effectiveBGPASN(asn, asnLong))
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect BGP Peer (%s) not found, removing from state", d.Id())
@@ -151,6 +150,9 @@ func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.Set("amazon_address", bgpPeer.AmazonAddress)
 	d.Set("aws_device", bgpPeer.AwsDeviceV2)
+	if err := setBGPASN(d, bgpPeer.Asn, bgpPeer.AsnLong); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting BGP ASN: %s", err)
+	}
 	d.Set("bgp_auth_key", bgpPeer.AuthKey)
 	d.Set("bgp_peer_id", bgpPeer.BgpPeerId)
 	d.Set("bgp_status", bgpPeer.BgpStatus)
@@ -165,11 +167,13 @@ func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	vifID := d.Get("virtual_interface_id").(string)
 	addrFamily := awstypes.AddressFamily(d.Get("address_family").(string))
-	asn := int32(d.Get("bgp_asn").(int))
+	asn, asnLong := expandBGPASN(d)
+	effectiveASN := effectiveBGPASN(asn, asnLong)
 
 	log.Printf("[DEBUG] Deleting Direct Connect BGP peer: %s", d.Id())
 	input := directconnect.DeleteBGPPeerInput{
 		Asn:                asn,
+		AsnLong:            asnLong,
 		CustomerAddress:    aws.String(d.Get("customer_address").(string)),
 		VirtualInterfaceId: aws.String(vifID),
 	}
@@ -183,14 +187,14 @@ func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "deleting Direct Connect BGP Peer (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitBGPPeerDeleted(ctx, conn, vifID, addrFamily, asn, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err = waitBGPPeerDeleted(ctx, conn, vifID, addrFamily, effectiveASN, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect BGP Peer (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findBGPPeerByThreePartKey(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32) (*awstypes.BGPPeer, error) {
+func findBGPPeerByThreePartKey(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int64) (*awstypes.BGPPeer, error) {
 	vif, err := findVirtualInterfaceByID(ctx, conn, vifID)
 
 	if err != nil {
@@ -198,7 +202,7 @@ func findBGPPeerByThreePartKey(ctx context.Context, conn *directconnect.Client, 
 	}
 
 	output, err := tfresource.AssertSingleValueResult(tfslices.Filter(vif.BgpPeers, func(v awstypes.BGPPeer) bool {
-		return v.AddressFamily == addrFamily && v.Asn == asn
+		return v.AddressFamily == addrFamily && effectiveBGPASN(v.Asn, v.AsnLong) == asn
 	}))
 
 	if err != nil {
@@ -214,7 +218,7 @@ func findBGPPeerByThreePartKey(ctx context.Context, conn *directconnect.Client, 
 	return output, nil
 }
 
-func statusBGPPeer(conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32) retry.StateRefreshFunc {
+func statusBGPPeer(conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int64) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findBGPPeerByThreePartKey(ctx, conn, vifID, addrFamily, asn)
 
@@ -230,7 +234,7 @@ func statusBGPPeer(conn *directconnect.Client, vifID string, addrFamily awstypes
 	}
 }
 
-func waitBGPPeerCreated(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32, timeout time.Duration) (*awstypes.BGPPeer, error) {
+func waitBGPPeerCreated(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int64, timeout time.Duration) (*awstypes.BGPPeer, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.BGPPeerStatePending),
 		Target:     enum.Slice(awstypes.BGPPeerStateAvailable, awstypes.BGPPeerStateVerifying),
@@ -249,7 +253,7 @@ func waitBGPPeerCreated(ctx context.Context, conn *directconnect.Client, vifID s
 	return nil, err
 }
 
-func waitBGPPeerDeleted(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int32, timeout time.Duration) (*awstypes.BGPPeer, error) {
+func waitBGPPeerDeleted(ctx context.Context, conn *directconnect.Client, vifID string, addrFamily awstypes.AddressFamily, asn int64, timeout time.Duration) (*awstypes.BGPPeer, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.BGPPeerStateAvailable, awstypes.BGPPeerStateDeleting, awstypes.BGPPeerStatePending, awstypes.BGPPeerStateVerifying),
 		Target:     []string{},

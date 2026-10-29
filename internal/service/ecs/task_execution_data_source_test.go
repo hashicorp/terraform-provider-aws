@@ -30,6 +30,10 @@ func TestAccECSTaskExecutionDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeTestCheckFunc(
+			testAccCheckTaskDefinitionDestroy(ctx, t),
+			testAccCheckClusterDestroy(ctx, t),
+		),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskExecutionDataSourceConfig_basic(rName),
@@ -65,6 +69,10 @@ func TestAccECSTaskExecutionDataSource_overrides(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeTestCheckFunc(
+			testAccCheckTaskDefinitionDestroy(ctx, t),
+			testAccCheckClusterDestroy(ctx, t),
+		),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskExecutionDataSourceConfig_overrides(rName, acctest.CtKey1, acctest.CtValue1),
@@ -104,6 +112,10 @@ func TestAccECSTaskExecutionDataSource_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeTestCheckFunc(
+			testAccCheckTaskDefinitionDestroy(ctx, t),
+			testAccCheckClusterDestroy(ctx, t),
+		),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskExecutionDataSourceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),

@@ -374,8 +374,8 @@ The `opensearch` configuration block supports the following arguments:
 
 The `role_configuration` configuration block supports the following arguments:
 
-* `source_role_arn` - (Required) ARN of the source role configuration. Must be an IAM role ARN.
-* `target_role_arn` - (Required) ARN of the target role configuration. Must be an IAM role ARN.
+* `source_role_arn` - (Optional) ARN of the source role configuration. Must be an IAM role ARN.
+* `target_role_arn` - (Optional) ARN of the target role configuration. Must be an IAM role ARN.
 
 ## Attribute Reference
 

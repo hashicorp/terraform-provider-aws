@@ -51,8 +51,8 @@ The following arguments are optional:
 
 The `credential` configuration block supports the following arguments:
 
-* `api_key_credential` - (Optional) API key credential information. See [`api_key_credential` Block](#credential-api_key_credential-block) for details.
-* `oauth2_credential` - (Optional) OAuth2 client credential information. See [`oauth2_credential` Block](#credential-oauth2_credential-block) for details.
+* `api_key_credential` - (Optional) API key credential information. See [`api_key_credential` Block](#credentialapi_key_credential-block) for details.
+* `oauth2_credential` - (Optional) OAuth2 client credential information. See [`oauth2_credential` Block](#credentialoauth2_credential-block) for details.
 
 ### `credential.api_key_credential` Block
 

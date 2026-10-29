@@ -52,7 +52,7 @@ const (
 // @ImportIDHandler("keywordImportID")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheckKeyword")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes.KeywordInformation")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes;awstypes.KeywordInformation")
 // @Testing(importStateIdAttributes="origination_identity_arn;keyword", importStateIdAttributesSep="flex.ResourceIdSeparator")
 // @Testing(generator="randomKeywordName(t)")
 func newKeywordResource(_ context.Context) (resource.ResourceWithConfigure, error) {

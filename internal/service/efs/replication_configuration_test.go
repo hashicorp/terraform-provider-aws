@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,13 +24,8 @@ import (
 
 func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	resourceName := "aws_efs_replication_configuration.test"
 	fsResourceName := "aws_efs_file_system.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -38,7 +34,10 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/ReplicationConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					"destination_region": config.StringVariable(acctest.AlternateRegion()),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
@@ -53,6 +52,10 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/ReplicationConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					"destination_region": config.StringVariable(acctest.AlternateRegion()),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -64,7 +67,6 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_efs_replication_configuration.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -76,7 +78,10 @@ func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/ReplicationConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					"destination_region": config.StringVariable(acctest.AlternateRegion()),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceReplicationConfiguration(), resourceName),
@@ -97,10 +102,6 @@ func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 
 func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	resourceName := "aws_efs_replication_configuration.test"
 	fsResourceName := "aws_efs_file_system.test"
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -139,10 +140,6 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 
 func TestAccEFSReplicationConfiguration_existingDestination(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	resourceName := "aws_efs_replication_configuration.test"
 	destinationFsResourceName := "aws_efs_file_system.destination"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -216,24 +213,6 @@ func testAccCheckReplicationConfigurationDestroyWithProvider(ctx context.Context
 
 		return nil
 	}
-}
-
-func testAccReplicationConfigurationConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_efs_replication_configuration" "test" {
-  source_file_system_id = aws_efs_file_system.test.id
-
-  destination {
-    region = %[2]q
-  }
-}
-`, rName, acctest.AlternateRegion())
 }
 
 func testAccReplicationConfigurationConfig_existingDestination(rName string) string {

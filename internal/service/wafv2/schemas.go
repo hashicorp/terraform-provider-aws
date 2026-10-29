@@ -403,10 +403,10 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 40),
+								validation.StringLenBetween(1, 64),
 								// The value is returned in lower case by the API.
 								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+								validation.StringMatch(regexache.MustCompile(`^.*\S.*$`), "Must be any string that contains at least one non-whitespace character"),
 							),
 						},
 					},
@@ -425,7 +425,7 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 								validation.StringLenBetween(1, 30),
 								// The value is returned in lower case by the API.
 								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+								validation.StringMatch(regexache.MustCompile(`^.*\S.*$`), "Must be any string that contains at least one non-whitespace character"),
 							),
 						},
 					},
@@ -759,6 +759,100 @@ var countConfigSchema = sync.OnceValue(func() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"custom_request_handling": customRequestHandlingSchema(),
+			},
+		},
+	}
+})
+
+var monetizeConfigSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"price_multiplier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 3),
+						validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]?|100)$`), "must be an integer between 1 and 100"),
+					),
+				},
+			},
+		},
+	}
+})
+
+// monetizationConfigSchema is the WebACL/RuleGroup-level monetization configuration.
+// Required by the API when any rule uses the monetize action.
+var monetizationConfigSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"crypto_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"payment_network": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 2,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"chain": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.BlockchainChain](),
+										},
+										"prices": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"amount": {
+														Type:     schema.TypeString,
+														Required: true,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(1, 13),
+															validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]{0,8}(\.[0-9]{1,3})?|0\.([1-9][0-9]{0,2}|0[1-9][0-9]?|00[1-9]))$`), "must be a decimal amount between 0.001 and 999999999.999 with up to 3 decimal places"),
+														),
+													},
+													"currency": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.CryptoCurrency](),
+													},
+												},
+											},
+										},
+										"wallet_address": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(26, 44),
+												validation.StringMatch(regexache.MustCompile(`^.*\S.*$`), "must not be blank"),
+											),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"currency_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.CurrencyMode](),
+				},
 			},
 		},
 	}

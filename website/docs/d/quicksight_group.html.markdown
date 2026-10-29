@@ -26,7 +26,7 @@ data "aws_quicksight_group" "example" {
 
 The following arguments are required:
 
-* `group_name` - (Required) The name of the group that you want to match.
+* `group_name` - (Required) Name of the group that you want to match.
 
 The following arguments are optional:
 
@@ -39,5 +39,5 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for the group.
-* `description` - The group description.
-* `principal_id` - The principal ID of the group.
+* `description` - Group description.
+* `principal_id` - Principal ID of the group.

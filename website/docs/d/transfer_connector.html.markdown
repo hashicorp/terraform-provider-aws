@@ -45,9 +45,9 @@ This data source exports the following attributes in addition to the arguments a
     * `vpc_lattice` - VPC Lattice configuration. Contains the following attributes:
         * `port_number` - Port number for connecting to the SFTP server through VPC Lattice.
         * `resource_configuration_arn` - ARN of the VPC Lattice Resource Configuration.
-* `logging_role` -  ARN of the IAM role that allows a connector to turn on CLoudwatch logging for Amazon S3 events.
+* `logging_role` -  ARN of the IAM role that allows a connector to turn on CloudWatch logging for Amazon S3 events.
 * `security_policy_name` - Name of security policy.
-* `service_managed_egress_ip_addresses` - List of egress Ip addresses.
+* `service_managed_egress_ip_addresses` - List of egress IP addresses.
 * `sftp_config` - Object containing the following attributes:
     * `trusted_host_keys` - List of the public portions of the host keys that are used to identify the servers the connector is connected to.
     * `user_secret_id` - Identifier for the secret in AWS Secrets Manager that contains the SFTP user's private key, and/or password.

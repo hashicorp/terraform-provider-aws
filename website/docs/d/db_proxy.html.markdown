@@ -30,7 +30,7 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the DB Proxy.
-* `auth` - Configuration(s) with authorization mechanisms to connect to the associated instance or cluster.
+* `auth` - Configuration(s) with authorization mechanisms to connect to the associated instance or cluster. See the [`auth`](#auth-block) block below.
 * `debug_logging` - Whether the proxy includes detailed information about SQL statements in its logs.
 * `default_auth_scheme` - Default authentication scheme that the proxy uses for client connections to the proxy and connections from the proxy to the underlying database.
 * `endpoint` - Endpoint that you can use to connect to the DB proxy.
@@ -43,3 +43,14 @@ This data source exports the following attributes in addition to the arguments a
 * `vpc_id` - Provides the VPC ID of the DB proxy.
 * `vpc_security_group_ids` - Provides a list of VPC security groups that the proxy belongs to.
 * `vpc_subnet_ids` - EC2 subnet IDs for the proxy.
+
+### `auth` Block
+
+The `auth` block exports the following attributes:
+
+* `auth_scheme` - Type of authentication that the proxy uses for connections from the proxy to the underlying database.
+* `client_password_auth_type` - Type of authentication the proxy uses for connections from clients.
+* `description` - User-specified description about the authentication used by a proxy to log in as a specific database user.
+* `iam_auth` - Whether to require or disallow AWS Identity and Access Management (IAM) authentication for connections to the proxy.
+* `secret_arn` - ARN representing the secret that the proxy uses to authenticate to the RDS DB instance or Aurora DB cluster.
+* `username` - Name of the database user to which the proxy connects.

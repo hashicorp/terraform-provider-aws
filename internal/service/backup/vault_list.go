@@ -32,19 +32,7 @@ type vaultListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type vaultListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *vaultListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query vaultListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	awsClient := l.Meta()
 	conn := awsClient.BackupClient(ctx)
 

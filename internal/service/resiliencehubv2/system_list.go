@@ -38,14 +38,6 @@ type systemListResource struct {
 func (l *systemListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ResilienceHubV2Client(ctx)
 
-	var query listSystemModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input resiliencehubv2.ListSystemsInput
 		for item, err := range listSystems(ctx, conn, &input) {
@@ -96,10 +88,6 @@ func (l *systemListResource) List(ctx context.Context, request list.ListRequest,
 			}
 		}
 	}
-}
-
-type listSystemModel struct {
-	framework.WithRegionModel
 }
 
 func listSystems(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListSystemsInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.SystemSummary, error] {

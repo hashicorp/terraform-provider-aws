@@ -70,6 +70,7 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags to assign to the volume. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tiering_policy` - (Optional) Data tiering policy for an FSx for ONTAP volume. See [`tiering_policy` Block](#tiering_policy-block) for details.
 * `volume_style` - (Optional) Styles of volume, valid values are `FLEXVOL`, `FLEXGROUP`. Default value is `FLEXVOL`. FLEXGROUPS have a larger minimum and maximum size. See Volume Styles for more details. [Volume Styles](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/volume-styles.html)
+* `volume_type` - (Optional) Type of volume, currently the only valid value is `ONTAP`.
 
 ### `aggregate_configuration` Block
 
@@ -93,7 +94,7 @@ The `snaplock_configuration` configuration block supports the following argument
 
 The `autocommit_period` configuration block supports the following arguments:
 
-* `type` - (Required) Type of time for the autocommit period of a file in an FSx for ONTAP SnapLock volume. Setting this value to `NONE` disables autocommit. Valid values: `MINUTES`, `HOURS`, `DAYS`, `MONTHS`, `YEARS`, `NONE`.
+* `type` - (Optional) Type of time for the autocommit period of a file in an FSx for ONTAP SnapLock volume. Setting this value to `NONE` disables autocommit. Valid values: `MINUTES`, `HOURS`, `DAYS`, `MONTHS`, `YEARS`, `NONE`.
 * `value` - (Optional) Amount of time for the autocommit period of a file in an FSx for ONTAP SnapLock volume.
 
 ### `retention_period` Block
@@ -108,21 +109,21 @@ The `retention_period` configuration block supports the following arguments:
 
 The `default_retention` configuration block supports the following arguments:
 
-* `type` - (Required) Type of time for the retention period of an FSx for ONTAP SnapLock volume. Set it to one of the valid types. If you set it to `INFINITE`, the files are retained forever. If you set it to `UNSPECIFIED`, the files are retained until you set an explicit retention period. Valid values: `SECONDS`, `MINUTES`, `HOURS`, `DAYS`, `MONTHS`, `YEARS`, `INFINITE`, `UNSPECIFIED`.
+* `type` - (Optional) Type of time for the retention period of an FSx for ONTAP SnapLock volume. Set it to one of the valid types. If you set it to `INFINITE`, the files are retained forever. If you set it to `UNSPECIFIED`, the files are retained until you set an explicit retention period. Valid values: `SECONDS`, `MINUTES`, `HOURS`, `DAYS`, `MONTHS`, `YEARS`, `INFINITE`, `UNSPECIFIED`.
 * `value` - (Optional) Amount of time for the autocommit period of a file in an FSx for ONTAP SnapLock volume.
 
 ### `maximum_retention` Block
 
 The `maximum_retention` configuration block supports the following arguments:
 
-* `type` - (Required) Type of time for the retention period of an FSx for ONTAP SnapLock volume. Set it to one of the valid types. If you set it to `INFINITE`, the files are retained forever. If you set it to `UNSPECIFIED`, the files are retained until you set an explicit retention period. Valid values: `SECONDS`, `MINUTES`, `HOURS`, `DAYS`, `MONTHS`, `YEARS`, `INFINITE`, `UNSPECIFIED`.
+* `type` - (Optional) Type of time for the retention period of an FSx for ONTAP SnapLock volume. Set it to one of the valid types. If you set it to `INFINITE`, the files are retained forever. If you set it to `UNSPECIFIED`, the files are retained until you set an explicit retention period. Valid values: `SECONDS`, `MINUTES`, `HOURS`, `DAYS`, `MONTHS`, `YEARS`, `INFINITE`, `UNSPECIFIED`.
 * `value` - (Optional) Amount of time for the autocommit period of a file in an FSx for ONTAP SnapLock volume.
 
 ### `minimum_retention` Block
 
 The `minimum_retention` configuration block supports the following arguments:
 
-* `type` - (Required) Type of time for the retention period of an FSx for ONTAP SnapLock volume. Set it to one of the valid types. If you set it to `INFINITE`, the files are retained forever. If you set it to `UNSPECIFIED`, the files are retained until you set an explicit retention period. Valid values: `SECONDS`, `MINUTES`, `HOURS`, `DAYS`, `MONTHS`, `YEARS`, `INFINITE`, `UNSPECIFIED`.
+* `type` - (Optional) Type of time for the retention period of an FSx for ONTAP SnapLock volume. Set it to one of the valid types. If you set it to `INFINITE`, the files are retained forever. If you set it to `UNSPECIFIED`, the files are retained until you set an explicit retention period. Valid values: `SECONDS`, `MINUTES`, `HOURS`, `DAYS`, `MONTHS`, `YEARS`, `INFINITE`, `UNSPECIFIED`.
 * `value` - (Optional) Amount of time for the autocommit period of a file in an FSx for ONTAP SnapLock volume.
 
 ### `tiering_policy` Block
@@ -130,7 +131,7 @@ The `minimum_retention` configuration block supports the following arguments:
 The `tiering_policy` configuration block supports the following arguments:
 
 * `cooling_period` - (Optional) Number of days that user data in a volume must remain inactive before it is considered "cold" and moved to the capacity pool. Used with `AUTO` and `SNAPSHOT_ONLY` tiering policies only. Valid values are whole numbers between 2 and 183. Default values are 31 days for `AUTO` and 2 days for `SNAPSHOT_ONLY`.
-* `name` - (Required) Tiering policy for the ONTAP volume for moving data to the capacity pool storage. Valid values are `SNAPSHOT_ONLY`, `AUTO`, `ALL`, `NONE`. Default value is `SNAPSHOT_ONLY`.
+* `name` - (Optional) Tiering policy for the ONTAP volume for moving data to the capacity pool storage. Valid values are `SNAPSHOT_ONLY`, `AUTO`, `ALL`, `NONE`. Default value is `SNAPSHOT_ONLY`.
 
 ## Attribute Reference
 
@@ -143,7 +144,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Identifier of the volume, e.g., `fsvol-12345678`
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - Volume's UUID (universally unique identifier).
-* `volume_type` - Type of volume, currently the only valid value is `ONTAP`.
 
 ## Timeouts
 

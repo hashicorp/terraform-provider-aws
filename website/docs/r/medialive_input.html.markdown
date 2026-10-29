@@ -41,42 +41,42 @@ resource "aws_medialive_input" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the input.
-* `input_security_groups` - (Required) List of input security groups.
-* `type` - (Required) The different types of inputs that AWS Elemental MediaLive supports.
+* `type` - (Required) Type of input that AWS Elemental MediaLive supports.
 
 The following arguments are optional:
 
+* `destinations` - (Optional) Destination settings for PUSH type inputs. See [`destinations` Block](#destinations-block) for more details.
+* `input_devices` - (Optional) Settings for the devices. See [`input_devices` Block](#input_devices-block) for more details.
+* `input_security_groups` - (Optional) List of input security groups.
+* `media_connect_flows` - (Optional) MediaConnect Flows. See [`media_connect_flows` Block](#media_connect_flows-block) for more details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `destinations` - (Optional) Destination settings for PUSH type inputs. See [Destinations](#destinations) for more details.
-* `input_devices` - (Optional) Settings for the devices. See [Input Devices](#input-devices) for more details.
-* `media_connect_flows` - (Optional) A list of the MediaConnect Flows. See [Media Connect Flows](#media-connect-flows) for more details.
-* `role_arn` - (Optional) The ARN of the role this input assumes during and after creation.
-* `sources` - (Optional) The source URLs for a PULL-type input. See [Sources](#sources) for more details.
-* `tags`- (Optional) A map of tags to assign to the Input. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc` - (Optional) Settings for a private VPC Input. See [VPC](#vpc) for more details.
+* `role_arn` - (Optional) ARN of the role this input assumes during and after creation.
+* `sources` - (Optional) Source URLs for a PULL-type input. See [`sources` Block](#sources-block) for more details.
+* `tags` - (Optional) Map of tags to assign to the Input. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc` - (Optional) Settings for a private VPC Input. See [`vpc` Block](#vpc-block) for more details.
 
-### Destinations
+### `destinations` Block
 
-* `stream_name` - A unique name for the location the RTMP stream is being pushed to.
+* `stream_name` - (Required) Unique name for the location the RTMP stream is being pushed to.
 
-### Input Devices
+### `input_devices` Block
 
-* `id` - The unique ID for the device.
+* `id` - (Required) Unique ID for the device.
 
-### Media Connect Flows
+### `media_connect_flows` Block
 
-* `flow_arn` - The ARN of the MediaConnect Flow
+* `flow_arn` - (Required) ARN of the MediaConnect Flow.
 
-### Sources
+### `sources` Block
 
-* `password_param` - The key used to extract the password from EC2 Parameter store.
-* `url` - The URL where the stream is pulled from.
-* `username` - The username for the input source.
+* `password_param` - (Required) Key used to extract the password from EC2 Parameter store.
+* `url` - (Required) URL where the stream is pulled from.
+* `username` - (Required) Username for the input source.
 
-### VPC
+### `vpc` Block
 
-* `subnet_ids` - A list of 2 VPC subnet IDs from the same VPC.
-* `security_group_ids` - A list of up to 5 EC2 VPC security group IDs to attach to the Input.
+* `security_group_ids` - (Optional) List of up to 5 EC2 VPC security group IDs to attach to the Input.
+* `subnet_ids` - (Required) List of 2 VPC subnet IDs from the same VPC.
 
 ## Attribute Reference
 
@@ -84,8 +84,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Input.
 * `attached_channels` - Channels attached to Input.
-* `input_class` - The input class.
-* `input_partner_ids` - A list of IDs for all Inputs which are partners of this one.
+* `input_class` - Input class.
+* `input_partner_ids` - IDs for all Inputs which are partners of this one.
 * `input_source_type` - Source type of the input.
 
 ## Timeouts

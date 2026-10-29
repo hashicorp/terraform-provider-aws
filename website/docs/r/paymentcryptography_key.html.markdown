@@ -39,12 +39,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `deletion_window_in_days` - (Optional) Number of days between 3 and 180 to wait after the resource is deleted before the key is deleted.
 * `enabled` - (Optional) Whether to enable the key.
 * `key_check_value_algorithm` - (Optional) Algorithm that AWS Payment Cryptography uses to calculate the key check value (KCV).
-* `tags` - (Optional) Map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags assigned to the key. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### key_attributes
+### `key_attributes` Block
 
 The following arguments are required:
 
@@ -53,11 +54,10 @@ The following arguments are required:
 * `key_modes_of_use`- (Required) List of cryptographic operations that you can perform using the key.
 * `key_usage` - (Required) Cryptographic usage of an AWS Payment Cryptography key as defined in section A.5.2 of the TR-31 spec.
 
-### key_modes_of_use
+### `key_modes_of_use` Block
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `decrypt` - (Optional) Whether an AWS Payment Cryptography key can be used to decrypt data.
 * `derive_key` - (Optional) Whether an AWS Payment Cryptography key can be used to derive new keys.
 * `encrypt` - (Optional) Whether an AWS Payment Cryptography key can be used to encrypt data.

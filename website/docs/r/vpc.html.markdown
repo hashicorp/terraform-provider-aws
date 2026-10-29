@@ -93,7 +93,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `default_network_acl_id` - ID of the network ACL created by default on VPC creation.
 * `default_route_table_id` - ID of the route table created by default on VPC creation.
 * `default_security_group_id` - ID of the security group created by default on VPC creation.
-* `dhcp_options_id` - DHCP options id of the desired VPC.
+* `dhcp_options_id` - DHCP options ID of the desired VPC.
 * `enable_dns_hostnames` - Whether the VPC has DNS hostname support.
 * `enable_dns_support` - Whether the VPC has DNS support.
 * `enable_network_address_usage_metrics` - Whether Network Address Usage metrics are enabled for the VPC.
@@ -104,6 +104,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `main_route_table_id` - ID of the main route table associated with this VPC. Note that you can change a VPC's main route table by using an [`aws_main_route_table_association`](/docs/providers/aws/r/main_route_table_association.html).
 * `owner_id` - ID of the AWS account that owns the VPC.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### GuardDuty Cleanup Permissions
 
 ~> **Note:** The following IAM permissions are optional but recommended for automatic cleanup of GuardDuty-managed resources during VPC deletion: `ec2:DescribeVpcEndpoints`, `ec2:DescribeSecurityGroups` (on all resources), and `ec2:DeleteVpcEndpoints`, `ec2:ModifyVpcEndpoint`, `ec2:DeleteSecurityGroup` (on resources tagged `GuardDutyManaged: true`).
 

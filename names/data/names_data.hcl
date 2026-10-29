@@ -1032,6 +1032,65 @@ service "bedrockagentcore" {
   brand                    = "Amazon"
 }
 
+service "bedrockdataautomation" {
+  cli_v2_command {
+    aws_cli_v2_command           = "bedrock-data-automation"
+    aws_cli_v2_command_no_dashes = "bedrockdataautomation"
+  }
+
+  sdk {
+    id            = "Bedrock Data Automation"
+    arn_namespace = "bedrock"
+  }
+
+  names {
+    provider_name_upper = "BedrockDataAutomation"
+    human_friendly      = "Bedrock Data Automation"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListBlueprints"
+  }
+
+  resource_prefix {
+    correct = "aws_bedrockdataautomation_"
+  }
+
+  provider_package_correct = "bedrockdataautomation"
+  doc_prefix               = ["bedrockdataautomation_"]
+  brand                    = "Amazon"
+}
+
+service "bedrockruntime" {
+  cli_v2_command {
+    aws_cli_v2_command           = "bedrock-runtime"
+    aws_cli_v2_command_no_dashes = "bedrockruntime"
+  }
+
+  sdk {
+    id            = "Bedrock Runtime"
+    arn_namespace = "bedrock"
+  }
+
+  names {
+    provider_name_upper = "BedrockRuntime"
+    human_friendly      = "Bedrock Runtime"
+  }
+
+  endpoint_info {
+    endpoint_api_call   = "InvokeModel"
+    endpoint_api_params = "Body: []byte(\"{}\"), ModelId: aws.String(\"test\")"
+  }
+
+  resource_prefix {
+    correct = "aws_bedrockruntime_"
+  }
+
+  provider_package_correct = "bedrockruntime"
+  doc_prefix               = ["bedrockruntime_"]
+  brand                    = "Amazon"
+}
+
 service "bcmdataexports" {
   sdk {
     id            = "BCM Data Exports"
@@ -1680,7 +1739,7 @@ service "cloudwatch" {
   }
 
   provider_package_correct = "cloudwatch"
-  doc_prefix               = ["cloudwatch_alarm_", "cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_", "cloudwatch_otel_"]
+  doc_prefix               = ["cloudwatch_alarm_", "cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_", "cloudwatch_otel_", "cloudwatch_resource_metrics_"]
   brand                    = "AWS"
 }
 
@@ -1843,6 +1902,30 @@ service "networkflowmonitor" {
 
   provider_package_correct = "networkflowmonitor"
   doc_prefix               = ["networkflowmonitor_"]
+  brand                    = "Amazon"
+}
+
+service "cloudwatchomni" {
+  sdk {
+    id            = "CloudWatchOmni"
+    arn_namespace = "cloudwatch"
+  }
+
+  names {
+    provider_name_upper = "CloudWatchOmni"
+    human_friendly      = "CloudWatch Omni"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListDomains"
+  }
+
+  resource_prefix {
+    correct = "aws_cloudwatchomni_"
+  }
+
+  provider_package_correct = "cloudwatchomni"
+  doc_prefix               = ["cloudwatchomni_"]
   brand                    = "Amazon"
 }
 
@@ -3875,6 +3958,30 @@ service "events" {
   brand                    = "AWS"
 }
 
+service "eventbridgev2" {
+  sdk {
+    id            = "EventBridgeV2"
+    arn_namespace = "events"
+  }
+
+  names {
+    provider_name_upper = "EventBridgeV2"
+    human_friendly      = "EventBridge V2"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListEventBuses"
+  }
+
+  resource_prefix {
+    correct = "aws_eventbridgev2_"
+  }
+
+  provider_package_correct = "eventbridgev2"
+  doc_prefix               = ["eventbridgev2_"]
+  brand                    = "AWS"
+}
+
 service "schemas" {
   sdk {
     id            = "schemas"
@@ -5232,6 +5339,30 @@ service "lambdamicrovms" {
   brand      = "AWS"
 }
 
+service "lambdaweb" {
+  sdk {
+    id             = "Lambda Web"
+    arn_namespace  = "lambda"
+  }
+
+  names {
+    provider_name_upper = "LambdaWeb"
+    human_friendly      = "Lambda Web"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "GetWebAccountSettings"
+  }
+
+  resource_prefix {
+    correct = "aws_lambdaweb_"
+  }
+
+  provider_package_correct = "lambdaweb"
+  doc_prefix               = ["lambdaweb_"]
+  brand                    = "AWS"
+}
+
 service "launchwizard" {
   cli_v2_command {
     aws_cli_v2_command           = "launch-wizard"
@@ -6251,6 +6382,35 @@ service "networkmanager" {
   is_global = true
 }
 
+service "networksecuritymanager" {
+  cli_v2_command {
+    aws_cli_v2_command           = "network-security-manager"
+    aws_cli_v2_command_no_dashes = "networksecuritymanager"
+  }
+
+  sdk {
+    id            = "Network Security Manager"
+    arn_namespace = "network-security-manager"
+  }
+
+  names {
+    provider_name_upper = "NetworkSecurityManager"
+    human_friendly      = "Network Security Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListScopes"
+  }
+
+  resource_prefix {
+    correct = "aws_networksecuritymanager_"
+  }
+
+  provider_package_correct = "networksecuritymanager"
+  doc_prefix               = ["networksecuritymanager_"]
+  brand                    = "AWS"
+}
+
 service "nimble" {
   go_packages {
     v1_package = "nimblestudio"
@@ -6949,6 +7109,41 @@ service "pricing" {
 
   provider_package_correct = "pricing"
   doc_prefix               = ["pricing_"]
+  brand                    = "AWS"
+
+  is_global = true
+}
+
+service "pricingplanmanager" {
+  cli_v2_command {
+    aws_cli_v2_command           = "pricing-plan-manager"
+    aws_cli_v2_command_no_dashes = "pricingplanmanager"
+  }
+
+  sdk {
+    id            = "Pricing Plan Manager"
+    arn_namespace = "pricingplanmanager"
+  }
+
+  names {
+    provider_name_upper = "PricingPlanManager"
+    human_friendly      = "Pricing Plan Manager"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListSubscriptions"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+    endpoint_no_fips_support = true
+  }
+
+  resource_prefix {
+    correct = "aws_pricingplanmanager_"
+  }
+
+  provider_package_correct = "pricingplanmanager"
+  doc_prefix               = ["pricingplanmanager_"]
   brand                    = "AWS"
 
   is_global = true
@@ -8168,6 +8363,35 @@ service "securityhub" {
 
   provider_package_correct = "securityhub"
   doc_prefix               = ["securityhub_"]
+  brand                    = "AWS"
+}
+
+service "securityir" {
+  cli_v2_command {
+    aws_cli_v2_command           = "security-ir"
+    aws_cli_v2_command_no_dashes = "securityir"
+  }
+
+  sdk {
+    id            = "Security IR"
+    arn_namespace = "security-ir"
+  }
+
+  names {
+    provider_name_upper = "SecurityIR"
+    human_friendly      = "Security Incident Response"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListMemberships"
+  }
+
+  resource_prefix {
+    correct = "aws_securityir_"
+  }
+
+  provider_package_correct = "securityir"
+  doc_prefix               = ["securityir_"]
   brand                    = "AWS"
 }
 

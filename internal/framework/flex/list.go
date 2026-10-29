@@ -20,6 +20,14 @@ func ExpandFrameworkStringValueList(ctx context.Context, v basetypes.ListValuabl
 	return output
 }
 
+func ExpandFrameworkStringyValueList[E ~string](ctx context.Context, v basetypes.ListValuable) []E {
+	var output []E
+
+	must(Expand(ctx, v, &output))
+
+	return output
+}
+
 // FlattenFrameworkStringValueList converts a slice of string values to a framework List value.
 //
 // A nil slice is converted to a null List.
