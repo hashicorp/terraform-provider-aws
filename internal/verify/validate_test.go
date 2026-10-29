@@ -668,7 +668,7 @@ func TestValidServicePrincipal(t *testing.T) {
 	t.Parallel()
 
 	v := ""
-	_, errors := ValidServicePrincipal(v, "test.google.com")
+	_, errors := ValidServicePrincipal(v, "arn")
 	if len(errors) != 0 {
 		t.Fatalf("%q should not be validated as an Service Principal name: %q", v, errors)
 	}
