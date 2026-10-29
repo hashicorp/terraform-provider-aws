@@ -74,6 +74,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
+			Factory:  newLibraryResourceAsListResource,
+			TypeName: "aws_bedrockdataautomation_library",
+			Name:     "Library",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
 			Factory:  newProjectResourceAsListResource,
 			TypeName: "aws_bedrockdataautomation_project",
 			Name:     "Project",
