@@ -28,9 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
-var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|aws-marketplace|partner-managed|\d{12}|cw.{10})$`)
-var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
-
 func StringIsInt32(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -111,6 +108,7 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 			return ws, errors
 		}
 
+		partitionRegexp := regexache.MustCompile(`^aws(-[a-z]+)*$`)
 		if parsedARN.Partition == "" {
 			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: missing partition value", k, value))
 		} else if !partitionRegexp.MatchString(parsedARN.Partition) {
@@ -121,6 +119,7 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid region value", k, value))
 		}
 
+		accountIDRegexp := regexache.MustCompile(`^(aws|aws-managed|third-party|aws-marketplace|partner-managed|\d{12}|cw.{10})$`)
 		if parsedARN.AccountID != "" && !accountIDRegexp.MatchString(parsedARN.AccountID) {
 			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid account ID value (expecting to match regular expression: %s)", k, value, accountIDRegexp))
 		}
