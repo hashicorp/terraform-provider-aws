@@ -577,6 +577,9 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
 
+provider-memory: prereq-go ## Run provider memory benchmarks (SAMPLES=N)
+	@GO="$(GO_VER)" .ci/scripts/provider-memory.sh
+
 quick-fix-core-heading: ## [internal] Just a heading for quick-fix-core
 	@echo "make: Quick fixes for core (non-service) directories..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
@@ -1392,6 +1395,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
+	provider-memory \
 	quick-fix \
 	quick-fix-core \
 	quick-fix-core-heading \

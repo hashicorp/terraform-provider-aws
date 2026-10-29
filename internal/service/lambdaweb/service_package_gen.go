@@ -7,6 +7,8 @@ package lambdaweb
 
 import (
 	"context"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
@@ -20,11 +22,108 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newFunctionDataSource,
+			TypeName: "aws_lambdaweb_function",
+			Name:     "Function",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newFunctionEndpointDataSource,
+			TypeName: "aws_lambdaweb_function_endpoint",
+			Name:     "Function Endpoint",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newFunctionResource,
+			TypeName: "aws_lambdaweb_function",
+			Name:     "Function",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("function_name", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newFunctionEndpointResource,
+			TypeName: "aws_lambdaweb_function_endpoint",
+			Name:     "Function Endpoint",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("endpoint_name", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      functionEndpointImportID{},
+			},
+		},
+		{
+			Factory:  newFunctionRevisionResource,
+			TypeName: "aws_lambdaweb_function_revision",
+			Name:     "Function Revision",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("revision_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      functionRevisionImportID{},
+			},
+		},
+		{
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_lambdaweb_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newFunctionResourceAsListResource,
+			TypeName: "aws_lambdaweb_function",
+			Name:     "Function",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("function_name", true)),
+		},
+		{
+			Factory:  newFunctionEndpointResourceAsListResource,
+			TypeName: "aws_lambdaweb_function_endpoint",
+			Name:     "Function Endpoint",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("endpoint_name", true),
+			}),
+		},
+		{
+			Factory:  newFunctionRevisionResourceAsListResource,
+			TypeName: "aws_lambdaweb_function_revision",
+			Name:     "Function Revision",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("revision_id", true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
