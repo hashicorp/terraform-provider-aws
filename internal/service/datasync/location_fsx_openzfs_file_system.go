@@ -188,7 +188,7 @@ func resourceLocationFSxOpenZFSFileSystemRead(ctx context.Context, d *schema.Res
 	}
 
 	uri := aws.ToString(output.LocationUri)
-	subdirectory, err := subdirectoryFromLocationURI(uri)
+	_, subdirectory, err := parseLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

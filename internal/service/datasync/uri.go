@@ -16,13 +16,13 @@ var (
 	s3OutpostsAccessPointARNResourcePattern = regexache.MustCompile(`^(outpost/.*/accesspoint/.*?)(/.*)$`)
 )
 
-// globalIDFromLocationURI extracts the global ID from a location URI.
+// parseLocationURI extracts the global ID and subdirectory from a location URI.
 // https://docs.aws.amazon.com/datasync/latest/userguide/API_LocationListEntry.html#DataSync-Type-LocationListEntry-LocationUri
-func globalIDFromLocationURI(uri string) (string, error) {
+func parseLocationURI(uri string) (string, string, error) {
 	submatches := locationURIPattern.FindStringSubmatch(uri)
 
 	if len(submatches) != 3 {
-		return "", fmt.Errorf("location URI (%s) does not match pattern %q", uri, locationURIPattern)
+		return "", "", fmt.Errorf("location URI (%s) does not match pattern %q", uri, locationURIPattern)
 	}
 
 	globalIDAndSubdir := submatches[2]
@@ -30,7 +30,7 @@ func globalIDFromLocationURI(uri string) (string, error) {
 		submatches = s3OutpostsAccessPointARNResourcePattern.FindStringSubmatch(parsedARN.Resource)
 
 		if len(submatches) != 3 {
-			return "", fmt.Errorf("location URI S3 on Outposts access point ARN resource (%s) does not match pattern %q", parsedARN.Resource, s3OutpostsAccessPointARNResourcePattern)
+			return "", "", fmt.Errorf("location URI S3 on Outposts access point ARN resource (%s) does not match pattern %q", parsedARN.Resource, s3OutpostsAccessPointARNResourcePattern)
 		}
 
 		s3OutpostsAccessPointARN := arn.ARN{
@@ -41,45 +41,14 @@ func globalIDFromLocationURI(uri string) (string, error) {
 			Resource:  submatches[1],
 		}.String()
 
-		return s3OutpostsAccessPointARN, nil
+		return s3OutpostsAccessPointARN, submatches[2], nil
 	}
 
 	submatches = locationURIGlobalIDAndSubdirPattern.FindStringSubmatch(globalIDAndSubdir)
 
 	if len(submatches) != 3 {
-		return "", fmt.Errorf("location URI global ID and subdirectory (%s) does not match pattern %q", globalIDAndSubdir, locationURIGlobalIDAndSubdirPattern)
+		return "", "", fmt.Errorf("location URI global ID and subdirectory (%s) does not match pattern %q", globalIDAndSubdir, locationURIGlobalIDAndSubdirPattern)
 	}
 
-	return submatches[1], nil
-}
-
-// subdirectoryFromLocationURI extracts the subdirectory from a location URI.
-// https://docs.aws.amazon.com/datasync/latest/userguide/API_LocationListEntry.html#DataSync-Type-LocationListEntry-LocationUri
-func subdirectoryFromLocationURI(uri string) (string, error) {
-	submatches := locationURIPattern.FindStringSubmatch(uri)
-
-	if len(submatches) != 3 {
-		return "", fmt.Errorf("location URI (%s) does not match pattern %q", uri, locationURIPattern)
-	}
-
-	globalIDAndSubdir := submatches[2]
-	parsedARN, err := arn.Parse(globalIDAndSubdir)
-
-	if err == nil {
-		submatches = s3OutpostsAccessPointARNResourcePattern.FindStringSubmatch(parsedARN.Resource)
-
-		if len(submatches) != 3 {
-			return "", fmt.Errorf("location URI S3 on Outposts access point ARN resource (%s) does not match pattern %q", parsedARN.Resource, s3OutpostsAccessPointARNResourcePattern)
-		}
-
-		return submatches[2], nil
-	}
-
-	submatches = locationURIGlobalIDAndSubdirPattern.FindStringSubmatch(globalIDAndSubdir)
-
-	if len(submatches) != 3 {
-		return "", fmt.Errorf("location URI global ID and subdirectory (%s) does not match pattern %q", globalIDAndSubdir, locationURIGlobalIDAndSubdirPattern)
-	}
-
-	return submatches[2], nil
+	return submatches[1], submatches[2], nil
 }

@@ -167,11 +167,7 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	uri := aws.ToString(output.LocationUri)
-	serverHostName, err := globalIDFromLocationURI(uri)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	subdirectory, err := subdirectoryFromLocationURI(aws.ToString(output.LocationUri))
+	serverHostName, subdirectory, err := parseLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
