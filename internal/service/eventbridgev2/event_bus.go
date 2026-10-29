@@ -6,6 +6,7 @@ package eventbridgev2
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -20,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -44,6 +44,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridgev2;eventbridgev2.DescribeEventBusOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(importIgnore="storage_configuration")
 func newEventBusResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &eventBusResource{}
 
@@ -104,14 +105,10 @@ func (r *eventBusResource) Schema(ctx context.Context, req resource.SchemaReques
 			"state_reason": schema.StringAttribute{
 				Computed: true,
 			},
-			// The service applies a default retention period when none is configured.
+			// Not Computed: removing the attribute from configuration is a change that reverts the retention period to the service default.
 			"storage_configuration": schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[storageConfigurationModel](ctx),
 				Optional:   true,
-				Computed:   true,
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -229,6 +226,10 @@ func (r *eventBusResource) Update(ctx context.Context, req resource.UpdateReques
 		if plan.EncryptionConfiguration.IsNull() && !state.EncryptionConfiguration.IsNull() {
 			input.EncryptionConfiguration = &awstypes.EncryptionConfiguration{}
 		}
+		// An empty storage configuration reverts to the default retention period.
+		if plan.StorageConfiguration.IsNull() && !state.StorageConfiguration.IsNull() {
+			input.StorageConfiguration = &awstypes.StorageConfiguration{}
+		}
 
 		_, err := conn.UpdateEventBus(ctx, &input)
 		if err != nil {
@@ -287,9 +288,30 @@ func (r *eventBusResource) Delete(ctx context.Context, req resource.DeleteReques
 func (r *eventBusResource) flatten(ctx context.Context, out *eventbridgev2.DescribeEventBusOutput, data *eventBusResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	prior := *data
+
 	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, out, data, fwflex.WithFieldNamePrefix("EventBus")))
 	if diags.HasError() {
 		return diags
+	}
+
+	// The service returns the key ARN for a key ID, alias name, or alias ARN, so keep the configured identifier.
+	if out.EncryptionConfiguration != nil && !prior.EncryptionConfiguration.IsNull() {
+		old, d := prior.EncryptionConfiguration.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return diags
+		}
+
+		if kmsKeyIdentifierEquivalent(old.KMSKeyIdentifier.ValueString(), aws.ToString(out.EncryptionConfiguration.KmsKeyIdentifier)) {
+			data.EncryptionConfiguration = prior.EncryptionConfiguration
+		}
+	}
+
+	// The service always returns the retention period, so keep it untracked unless it is configured.
+	// On import (no prior name), the service value is kept.
+	if prior.StorageConfiguration.IsNull() && !prior.Name.IsNull() {
+		data.StorageConfiguration = prior.StorageConfiguration
 	}
 
 	// The service returns an empty description when none is set.
@@ -298,6 +320,19 @@ func (r *eventBusResource) flatten(ctx context.Context, out *eventbridgev2.Descr
 	}
 
 	return diags
+}
+
+// kmsKeyIdentifierEquivalent reports whether a configured KMS key identifier can refer to the key ARN the service returns.
+// An alias cannot be resolved without calling KMS, so it is assumed to refer to the returned key.
+func kmsKeyIdentifierEquivalent(configured, keyARN string) bool {
+	switch {
+	case configured == keyARN:
+		return true
+	case strings.HasPrefix(configured, "alias/"), strings.Contains(configured, ":alias/"):
+		return true
+	default:
+		return strings.HasSuffix(keyARN, ":key/"+configured)
+	}
 }
 
 func waitEventBusCreated(ctx context.Context, conn *eventbridgev2.Client, arn string, timeout time.Duration) (*eventbridgev2.DescribeEventBusOutput, error) {

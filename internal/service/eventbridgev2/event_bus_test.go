@@ -5,10 +5,12 @@ package eventbridgev2_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridgev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eventbridgev2/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -60,7 +62,7 @@ func TestAccEventBridgeV2EventBus_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.BusStateActive)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.Null()),
 				},
 			},
 			{
@@ -69,6 +71,9 @@ func TestAccEventBridgeV2EventBus_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore: []string{
+					"storage_configuration", // Service default is not tracked unless configured.
+				},
 			},
 		},
 	})
@@ -176,11 +181,12 @@ func TestAccEventBridgeV2EventBus_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.BusStateActive)),
 				},
 			},
-			// Remove the description, clearing it on the service. The retention period is kept.
+			// Remove the description and storage configuration, reverting them to the service defaults.
 			{
 				Config: testAccEventBusConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventBusExists(ctx, t, resourceName, &v),
+					testAccCheckEventBusRetentionPeriod(&v, 1),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -190,7 +196,7 @@ func TestAccEventBridgeV2EventBus_update(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), tfknownvalue.StringExact(awstypes.BusStateActive)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration").AtMapKey("retention_period_in_days"), knownvalue.Int32Exact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.Null()),
 				},
 			},
 		},
@@ -242,6 +248,37 @@ func TestAccEventBridgeV2EventBus_encryptionConfiguration(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore: []string{
+					"storage_configuration", // Service default is not tracked unless configured.
+				},
+			},
+			// The service returns the key ARN for a key ID or alias; the configured identifier is kept.
+			{
+				Config: testAccEventBusConfig_encryptionConfigurationKeyIdentifier(rName, "aws_kms_key.test[0].key_id"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEventBusExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration).AtMapKey("kms_key_identifier"), keyResourceName, tfjsonpath.New(names.AttrKeyID), compare.ValuesSame()),
+				},
+			},
+			{
+				Config: testAccEventBusConfig_encryptionConfigurationKeyIdentifier(rName, "aws_kms_alias.test.name"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEventBusExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration).AtMapKey("kms_key_identifier"), "aws_kms_alias.test", tfjsonpath.New(names.AttrName), compare.ValuesSame()),
+				},
+			},
+			{
+				Config: testAccEventBusConfig_encryptionConfigurationKeyIdentifier(rName, "aws_kms_alias.test.arn"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEventBusExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration).AtMapKey("kms_key_identifier"), "aws_kms_alias.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
 			},
 			{
 				// Keep the keys so that only the event bus changes; UpdateEventBus fails if the current key is pending deletion.
@@ -305,6 +342,20 @@ func testAccCheckEventBusExists(ctx context.Context, t *testing.T, n string, v *
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+// testAccCheckEventBusRetentionPeriod checks the retention period applied by the service, which is not tracked in state unless configured.
+func testAccCheckEventBusRetentionPeriod(v *eventbridgev2.DescribeEventBusOutput, want int32) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if v.StorageConfiguration == nil {
+			return errors.New("storage_configuration not returned")
+		}
+		if got := aws.ToInt32(v.StorageConfiguration.RetentionPeriodInDays); got != want {
+			return fmt.Errorf("storage_configuration.retention_period_in_days = %d, want %d", got, want)
+		}
 
 		return nil
 	}
@@ -416,6 +467,23 @@ resource "aws_eventbridgev2_event_bus" "test" {
   }
 }
 `, rName, description, retentionPeriod))
+}
+
+func testAccEventBusConfig_encryptionConfigurationKeyIdentifier(rName, keyIdentifier string) string {
+	return acctest.ConfigCompose(testAccEventBusConfig_kmsKeys(rName), fmt.Sprintf(`
+resource "aws_kms_alias" "test" {
+  name          = "alias/%[1]s"
+  target_key_id = aws_kms_key.test[0].key_id
+}
+
+resource "aws_eventbridgev2_event_bus" "test" {
+  name = %[1]q
+
+  encryption_configuration = {
+    kms_key_identifier = %[2]s
+  }
+}
+`, rName, keyIdentifier))
 }
 
 func testAccEventBusConfig_encryptionConfiguration(rName string) string {

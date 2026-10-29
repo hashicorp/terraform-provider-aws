@@ -100,14 +100,14 @@ The following arguments are optional:
 * `description` - (Optional) Description of the event bus.
 * `encryption_configuration` - (Optional) Encryption configuration for the event bus. If omitted, events are encrypted with an AWS owned key. Removing it reverts the event bus to an AWS owned key. See [`encryption_configuration` Block](#encryption_configuration-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `storage_configuration` - (Optional) Event storage configuration for the event bus. If omitted, the service default is applied. See [`storage_configuration` Block](#storage_configuration-block) below.
+* `storage_configuration` - (Optional) Event storage configuration for the event bus. If omitted, the service default is applied. Removing it reverts the event bus to the default retention period. See [`storage_configuration` Block](#storage_configuration-block) below.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `encryption_configuration` Block
 
 The `encryption_configuration` object supports the following:
 
-* `kms_key_identifier` - (Optional) ARN of the symmetric AWS KMS customer managed key used to encrypt events. The key policy must grant EventBridge access to the key; see [Encryption at rest for custom event buses](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-custom-bus-encryption.html).
+* `kms_key_identifier` - (Optional) Identifier of the symmetric AWS KMS customer managed key used to encrypt events. Can be a key ID, key ARN, alias name, or alias ARN. The key policy must grant EventBridge access to the key; see [Encryption at rest for custom event buses](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-custom-bus-encryption.html).
 
 ### `storage_configuration` Block
 
