@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lambdaweb_function_endpoint: Fix removing `scaling_config` or `throttle_config` from the configuration not clearing the limit on the endpoint
-```
