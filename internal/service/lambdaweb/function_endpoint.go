@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
@@ -164,8 +163,6 @@ func (r *functionEndpointResource) Schema(ctx context.Context, req resource.Sche
 					),
 				},
 			},
-			"scaling_config":  framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithPlanModifiers[scalingConfigModel](listplanmodifier.UseStateForUnknown())),
-			"throttle_config": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, framework.WithPlanModifiers[throttleConfigModel](listplanmodifier.UseStateForUnknown())),
 		},
 		Blocks: map[string]schema.Block{
 			"revision_weight": schema.ListNestedBlock{
@@ -182,6 +179,38 @@ func (r *functionEndpointResource) Schema(ctx context.Context, req resource.Sche
 							Required: true,
 							Validators: []validator.Int64{
 								int64validator.Between(1, 100),
+							},
+						},
+					},
+				},
+			},
+			"scaling_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[scalingConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"max_environments": schema.Int64Attribute{
+							Required: true,
+							Validators: []validator.Int64{
+								int64validator.Between(2, 10000),
+							},
+						},
+					},
+				},
+			},
+			"throttle_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[throttleConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"rate_limit": schema.Int64Attribute{
+							Required: true,
+							Validators: []validator.Int64{
+								int64validator.AtLeast(0),
 							},
 						},
 					},
@@ -356,6 +385,17 @@ func (r *functionEndpointResource) Update(ctx context.Context, req resource.Upda
 		input.Description = aws.String("")
 	}
 
+	// clearRemovedLimits sends an empty scalingConfig/throttleConfig for a block
+	// that was removed from the configuration. UpdateWebFunctionEndpoint keeps the
+	// current value when the field is omitted; only an empty object clears it.
+	if plan.ScalingConfig.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 && state.ScalingConfig.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		input.ScalingConfig = &awstypes.ScalingConfig{}
+	}
+
+	if plan.ThrottleConfig.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 && state.ThrottleConfig.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+		input.ThrottleConfig = &awstypes.ThrottleConfig{}
+	}
+
 	_, err := conn.UpdateWebFunctionEndpoint(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, endpointName)
@@ -408,11 +448,7 @@ func (r *functionEndpointResource) Delete(ctx context.Context, req resource.Dele
 func (r *functionEndpointResource) flatten(ctx context.Context, endpoint *lambdaweb.GetWebFunctionEndpointOutput, data *functionEndpointResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// normalizeDescription maps the empty string the API reports for a cleared
-	// description back to null, so it matches a configuration that omits it.
-	if aws.ToString(endpoint.Description) == "" {
-		endpoint.Description = nil
-	}
+	normalizeEndpoint(endpoint)
 
 	diags.Append(fwflex.Flatten(ctx, endpoint, data)...)
 	if diags.HasError() {
@@ -430,6 +466,24 @@ func (r *functionEndpointResource) flatten(ctx context.Context, endpoint *lambda
 	}
 
 	return diags
+}
+
+func normalizeEndpoint(endpoint *lambdaweb.GetWebFunctionEndpointOutput) {
+	// normalizeDescription maps the empty string the API reports for a cleared
+	// description back to null, so it matches a configuration that omits it.
+	if aws.ToString(endpoint.Description) == "" {
+		endpoint.Description = nil
+	}
+
+	// normalizeLimits maps the empty objects the API reports after a limit is
+	// cleared ("scalingConfig": {}) to nil, so they read back as unset.
+	if endpoint.ScalingConfig != nil && endpoint.ScalingConfig.MaxEnvironments == nil {
+		endpoint.ScalingConfig = nil
+	}
+
+	if endpoint.ThrottleConfig != nil && endpoint.ThrottleConfig.RateLimit == nil {
+		endpoint.ThrottleConfig = nil
+	}
 }
 
 // regionalDomainNames projects the API regionalEndpoints map (region ->

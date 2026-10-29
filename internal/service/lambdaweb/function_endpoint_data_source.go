@@ -89,6 +89,7 @@ func (d *functionEndpointDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
+	normalizeEndpoint(out)
 	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
