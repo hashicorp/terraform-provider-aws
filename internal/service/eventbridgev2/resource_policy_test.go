@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridgev2"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -136,6 +137,36 @@ func TestAccEventBridgeV2ResourcePolicy_update(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					revisionID.AddStateValue(resourceName, tfjsonpath.New("revision_id")),
 				},
+			},
+		},
+	})
+}
+
+func TestAccEventBridgeV2ResourcePolicy_existingPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridgev2.GetResourcePolicyOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eventbridgev2_resource_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourcePolicyConfig_basic(rName, "events:PutEvents"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
+				),
+			},
+			// A second policy on the same event bus fails instead of overwriting the existing one.
+			{
+				Config:      testAccResourcePolicyConfig_existingPolicy(rName),
+				ExpectError: regexache.MustCompile(`event bus already has a resource policy`),
 			},
 		},
 	})
@@ -301,6 +332,29 @@ resource "aws_eventbridgev2_resource_policy" "test" {
   })
 }
 `, rName, action)
+}
+
+func testAccResourcePolicyConfig_existingPolicy(rName string) string {
+	return acctest.ConfigCompose(testAccResourcePolicyConfig_basic(rName, "events:PutEvents"), `
+resource "aws_eventbridgev2_resource_policy" "second" {
+  resource_arn = aws_eventbridgev2_event_bus.test.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowAccountRawEvents"
+      Effect = "Allow"
+      Principal = {
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action   = "events:PutRawEvents"
+      Resource = aws_eventbridgev2_event_bus.test.arn
+    }]
+  })
+
+  depends_on = [aws_eventbridgev2_resource_policy.test]
+}
+`)
 }
 
 // testAccResourcePolicyConfig_ramSharedEventBus shares an event bus with the alternate account through AWS RAM, adds a
