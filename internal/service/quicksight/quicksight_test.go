@@ -25,6 +25,11 @@ func TestAccQuickSight_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"AccountCustomPermission": {
+			acctest.CtBasic:      testAccAccountCustomPermission_basic,
+			acctest.CtDisappears: testAccAccountCustomPermission_disappears,
+			"update":             testAccAccountCustomPermission_update,
+		},
 		"AccountSettings": {
 			acctest.CtBasic: testAccAccountSettings_basic,
 		},
