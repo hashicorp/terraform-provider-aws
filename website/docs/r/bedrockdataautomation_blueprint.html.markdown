@@ -96,7 +96,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_bedrockdataautomation_blueprint.example
   identity = {
-    "arn" = "arn:aws:bedrock:us-west-2:123456789012:blueprint/abcd1234efgh"
+    arn = "arn:aws:bedrock:us-west-2:123456789012:blueprint/abcd1234efgh"
   }
 }
 

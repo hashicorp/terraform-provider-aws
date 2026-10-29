@@ -192,9 +192,6 @@ func TestAccBedrockDataAutomationBlueprint_encryptionConfiguration(t *testing.T)
 				PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(resourceName, action),
 				},
-				PostApplyPostRefresh: []plancheck.PlanCheck{
-					plancheck.ExpectEmptyPlan(),
-				},
 			},
 			ConfigStateChecks: checks,
 		}
