@@ -667,10 +667,9 @@ func TestFloatGreaterThan(t *testing.T) {
 func TestValidServicePrincipal(t *testing.T) {
 	t.Parallel()
 
-	v := ""
-	_, errors := ValidServicePrincipal(v, "arn")
+	_, errors := ValidServicePrincipal("", "arn")
 	if len(errors) != 0 {
-		t.Fatalf("%q should not be validated as an Service Principal name: %q", v, errors)
+		t.Fatalf("empty string should be ignored. Got %q", errors)
 	}
 
 	validNames := []string{
