@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 )
 
@@ -139,6 +140,39 @@ func needsFetch(su ServiceURL, cache map[string]ServiceURL, dir string) bool {
 	return su.Modified > cached.Modified
 }
 
+// PruneStale deletes <service>.json files in dir for services that are no
+// longer in urls and returns the names of the services pruned.
+func PruneStale(dir string, urls []ServiceURL) ([]string, error) {
+	remote := make(map[string]struct{}, len(urls))
+	for _, su := range urls {
+		remote[su.Service] = struct{}{}
+	}
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	var pruned []string
+	var errs []error
+	for _, e := range entries {
+		name, ok := strings.CutSuffix(e.Name(), ".json")
+		if e.IsDir() || !ok {
+			continue
+		}
+		if _, ok := remote[name]; ok {
+			continue
+		}
+		if err := os.Remove(filepath.Join(dir, e.Name())); err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		pruned = append(pruned, name)
+	}
+
+	return pruned, errors.Join(errs...)
+}
+
 func main() {
 	outDir := flag.String("out", "service-data", "directory to write service reference files to")
 	indexFile := flag.String("index", "service-urls-cache.json", "file to write the service name to URL index to")
@@ -199,6 +233,17 @@ func main() {
 
 	fmt.Printf("#### Service urls: %d, Fetched: %d, Cached (skipped): %d, Failed: %d\n", urlCount, fetched, cached, len(errs))
 
+	// current only holds services from the remote list, so removed services
+	// are already gone from the index; delete their files too.
+	pruned, err := PruneStale(*outDir, urls)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	for _, name := range pruned {
+		fmt.Printf("pruned %s\n", name)
+	}
+	fmt.Printf("#### Pruned: %d\n", len(pruned))
+	
 	// Only services with a file on disk are indexed, so a service's presence
 	// in the index means its data exists.
 	if err := WriteServiceIndex(slices.Collect(maps.Values(current)), *indexFile); err != nil {
