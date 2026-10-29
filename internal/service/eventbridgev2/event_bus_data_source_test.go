@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -37,7 +38,8 @@ func TestAccEventBridgeV2EventBusDataSource_basic(t *testing.T) {
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrDescription), resourceName, tfjsonpath.New(names.AttrDescription), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), resourceName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrState), resourceName, tfjsonpath.New(names.AttrState), compare.ValuesSame()),
-					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("storage_configuration"), resourceName, tfjsonpath.New("storage_configuration"), compare.ValuesSame()),
+					// The resource does not track the service default retention period unless it is configured.
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("storage_configuration").AtMapKey("retention_period_in_days"), knownvalue.Int32Exact(1)),
 				},
 			},
 		},
