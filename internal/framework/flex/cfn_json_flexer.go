@@ -19,22 +19,13 @@ type typeAtTerraformPather interface {
 	TypeAtTerraformPath(context.Context, *tftypes.AttributePath) (attr.Type, error)
 }
 
-type JSONFlexer interface {
-	Expand(context.Context, tftypes.Value) (string, error)
-	Flatten(context.Context, string) (tftypes.Value, error)
-}
-
-var (
-	_ JSONFlexer = jsonFlex{}
-)
-
-func NewJSONFlexer(schema typeAtTerraformPather, tfToCfnNameMap map[string]string) jsonFlex {
+func NewCloudFormationJSONFlexer(schema typeAtTerraformPather, tfToCfnNameMap map[string]string) cfnJSONFlex {
 	cfnToTfNameMap := make(map[string]string)
 	for k, v := range tfToCfnNameMap {
 		cfnToTfNameMap[v] = k
 	}
 
-	return jsonFlex{
+	return cfnJSONFlex{
 		cfnToTfNameMap: cfnToTfNameMap,
 		tfToCfnNameMap: tfToCfnNameMap,
 		typeAtPath: func(ctx context.Context, path *tftypes.AttributePath) (tftypes.Type, error) {
@@ -47,17 +38,17 @@ func NewJSONFlexer(schema typeAtTerraformPather, tfToCfnNameMap map[string]strin
 	}
 }
 
-// JSONFlexer provides methods to expand and flatten JSON representation of Terraform values.
+// cfnJSONFlex provides methods to expand and flatten CloudFormation JSON representation of Terraform values.
 // The initial use case is for the Cloud Control API.
 // Cribbed from terraform-provider-awscc/internal/generic/translate.go@v1.107.0.
-type jsonFlex struct {
+type cfnJSONFlex struct {
 	cfnToTfNameMap map[string]string
 	tfToCfnNameMap map[string]string
 	typeAtPath     func(context.Context, *tftypes.AttributePath) (tftypes.Type, error)
 }
 
-// Expand converts a Terraform value into its JSON representation.
-func (j jsonFlex) Expand(ctx context.Context, val tftypes.Value) (string, error) {
+// Expand converts a Terraform value into its CFN JSON representation.
+func (j cfnJSONFlex) Expand(ctx context.Context, val tftypes.Value) (string, error) {
 	v, err := j.toRawMap(ctx, val)
 	if err != nil {
 		return "", err
@@ -65,8 +56,8 @@ func (j jsonFlex) Expand(ctx context.Context, val tftypes.Value) (string, error)
 	return tfjson.EncodeToString(v)
 }
 
-// Flatten converts a JSON representation into its Terraform value.
-func (j jsonFlex) Flatten(ctx context.Context, s string) (tftypes.Value, error) {
+// Flatten converts a CFN JSON representation into its Terraform value.
+func (j cfnJSONFlex) Flatten(ctx context.Context, s string) (tftypes.Value, error) {
 	var v any
 	if err := tfjson.DecodeFromString(s, &v); err != nil {
 		return inttypes.Zero[tftypes.Value](), err
@@ -77,7 +68,7 @@ func (j jsonFlex) Flatten(ctx context.Context, s string) (tftypes.Value, error) 
 	return inttypes.Zero[tftypes.Value](), fmt.Errorf("unexpected raw type: %T", v)
 }
 
-func (j jsonFlex) toRawMap(ctx context.Context, val tftypes.Value) (map[string]any, error) {
+func (j cfnJSONFlex) toRawMap(ctx context.Context, val tftypes.Value) (map[string]any, error) {
 	switch v, err := j.toRaw(ctx, nil, val); {
 	case err != nil:
 		return nil, err
@@ -91,7 +82,7 @@ func (j jsonFlex) toRawMap(ctx context.Context, val tftypes.Value) (map[string]a
 	}
 }
 
-func (j jsonFlex) toRaw(ctx context.Context, path *tftypes.AttributePath, val tftypes.Value) (any, error) {
+func (j cfnJSONFlex) toRaw(ctx context.Context, path *tftypes.AttributePath, val tftypes.Value) (any, error) {
 	if val.IsNull() || !val.IsKnown() {
 		return nil, nil
 	}
@@ -202,11 +193,11 @@ func (j jsonFlex) toRaw(ctx context.Context, path *tftypes.AttributePath, val tf
 	}
 }
 
-func (j jsonFlex) fromRawMap(ctx context.Context, v map[string]any) (tftypes.Value, error) {
+func (j cfnJSONFlex) fromRawMap(ctx context.Context, v map[string]any) (tftypes.Value, error) {
 	return j.fromRaw(ctx, nil, v)
 }
 
-func (j jsonFlex) fromRaw(ctx context.Context, path *tftypes.AttributePath, v any) (tftypes.Value, error) {
+func (j cfnJSONFlex) fromRaw(ctx context.Context, path *tftypes.AttributePath, v any) (tftypes.Value, error) {
 	typ, err := j.typeAtPath(ctx, path)
 	if err != nil {
 		return inttypes.Zero[tftypes.Value](), err

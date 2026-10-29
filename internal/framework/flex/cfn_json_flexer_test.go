@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
-func TestJSONFlexer_Expand(t *testing.T) {
+func TestClooudFormationJSONFlexer_Expand(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -97,7 +97,7 @@ func TestJSONFlexer_Expand(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			flexer := NewJSONFlexer(testCase.Plan.Schema, testCase.TfToCfnNameMap)
+			flexer := NewCloudFormationJSONFlexer(testCase.Plan.Schema, testCase.TfToCfnNameMap)
 			got, err := flexer.toRawMap(t.Context(), testCase.Plan.Raw)
 
 			if err == nil && testCase.ExpectedError {
@@ -117,7 +117,7 @@ func TestJSONFlexer_Expand(t *testing.T) {
 	}
 }
 
-func TestJSONFlexer_Flatten(t *testing.T) {
+func TestCloudFormationJSONFlexer_Flatten(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -443,7 +443,7 @@ func TestJSONFlexer_Flatten(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			flexer := NewJSONFlexer(testCase.Schema, testCase.TfToCfnNameMap)
+			flexer := NewCloudFormationJSONFlexer(testCase.Schema, testCase.TfToCfnNameMap)
 			got, err := flexer.fromRawMap(t.Context(), testCase.ResourceModel)
 
 			if err == nil && testCase.ExpectedError {
