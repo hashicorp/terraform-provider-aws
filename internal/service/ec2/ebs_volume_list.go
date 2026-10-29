@@ -11,15 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,15 +25,24 @@ import (
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_ebs_volume")
 func newEBSVolumeResourceAsListResource() inttypes.ListResourceForSDK {
-	l := ebsVolumeListResource{}
-	l.SetResourceSchema(resourceEBSVolume())
-	return &l
-}
+	return framework.NewSDKListResource(resourceEBSVolume(), framework.SDKListSpec[awstypes.Volume, listEBSVolumeModel]{
+		ConfigSchema: listEBSVolumeConfigSchema,
+		Items: func(ctx context.Context, c *conns.AWSClient, query listEBSVolumeModel) (iter.Seq2[awstypes.Volume, error], diag.Diagnostics) {
+			var input ec2.DescribeVolumesInput
+			if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+				return nil, diags
+			}
 
-var _ list.ListResource = &ebsVolumeListResource{}
-
-type ebsVolumeListResource struct {
-	framework.ListResourceWithSDKv2Resource
+			return listEBSVolumes(ctx, c.EC2Client(ctx), &input), nil
+		},
+		ID: func(v awstypes.Volume, _ listEBSVolumeModel) string {
+			return aws.ToString(v.VolumeId)
+		},
+		Flatten: resourceEBSVolumeFlatten,
+		DisplayName: func(v awstypes.Volume) string {
+			return listDisplayName(v.Tags, aws.ToString(v.VolumeId))
+		},
+	})
 }
 
 type listEBSVolumeModel struct {
@@ -44,8 +51,8 @@ type listEBSVolumeModel struct {
 	Filters   customListFilters                 `tfsdk:"filter"`
 }
 
-func (l *ebsVolumeListResource) ListResourceConfigSchema(ctx context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
+func listEBSVolumeConfigSchema(ctx context.Context) listschema.Schema {
+	return listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
 			"volume_ids": listschema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
@@ -56,71 +63,6 @@ func (l *ebsVolumeListResource) ListResourceConfigSchema(ctx context.Context, _ 
 		Blocks: map[string]listschema.Block{
 			names.AttrFilter: customListFiltersBlock(ctx),
 		},
-	}
-}
-
-func (l *ebsVolumeListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.EC2Client(ctx)
-
-	var query listEBSVolumeModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	var input ec2.DescribeVolumesInput
-	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
-	}
-
-	tflog.Info(ctx, "Listing resources")
-	stream.Results = func(yield func(list.ListResult) bool) {
-		for item, err := range listEBSVolumes(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			id := aws.ToString(item.VolumeId)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
-
-			result := request.NewListResult(ctx)
-
-			tags := keyValueTags(ctx, item.Tags)
-
-			rd := l.ResourceData()
-			rd.SetId(id)
-
-			if request.IncludeResource {
-				if err := resourceEBSVolumeFlatten(ctx, awsClient, &item, rd); err != nil {
-					tflog.Error(ctx, "Reading EC2 EBS Volume", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			if v, ok := tags["Name"]; ok {
-				result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), id)
-			} else {
-				result.DisplayName = id
-			}
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
 	}
 }
 
