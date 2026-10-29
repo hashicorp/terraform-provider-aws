@@ -203,6 +203,7 @@ func (r *blueprintResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	var blueprint *awstypes.Blueprint
 	if diff.HasChanges() {
 		var input bedrockdataautomation.UpdateBlueprintInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Blueprint")))
@@ -210,20 +211,24 @@ func (r *blueprintResource) Update(ctx context.Context, req resource.UpdateReque
 			return
 		}
 
-		if _, err := conn.UpdateBlueprint(ctx, &input); err != nil {
+		out, err := conn.UpdateBlueprint(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+			return
+		}
+
+		blueprint = out.Blueprint
+	} else {
+		// Only tags changed. Read back the last modified time, which is unknown in the plan.
+		var err error
+		blueprint, err = findBlueprintByARN(ctx, conn, arn)
+		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
 		}
 	}
 
-	// Version and last modified time are not known until after the update.
-	out, err := findBlueprintByARN(ctx, conn, arn)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, blueprint, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
