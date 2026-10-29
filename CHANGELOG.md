@@ -1,4 +1,6 @@
-## 6.71.0 (Unreleased)
+## 6.72.0 (Unreleased)
+
+## 6.71.0 (October 28, 2026)
 
 NOTES:
 
@@ -8,15 +10,45 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_observabilityadmin_dataset_integration` ([#50529](https://github.com/hashicorp/terraform-provider-aws/issues/50529))
+* **New Data Source:** `aws_sagemaker_hub_content` ([#50659](https://github.com/hashicorp/terraform-provider-aws/issues/50659))
 * **New List Resource:** `aws_cloudwatchomni_dashboard` ([#50482](https://github.com/hashicorp/terraform-provider-aws/issues/50482))
+* **New List Resource:** `aws_cloudwatchomni_organization_domain` ([#50551](https://github.com/hashicorp/terraform-provider-aws/issues/50551))
+* **New List Resource:** `aws_devopsagent_asset` ([#50479](https://github.com/hashicorp/terraform-provider-aws/issues/50479))
 * **New Resource:** `aws_cloudwatchomni_dashboard` ([#50482](https://github.com/hashicorp/terraform-provider-aws/issues/50482))
+* **New Resource:** `aws_cloudwatchomni_organization_domain` ([#50551](https://github.com/hashicorp/terraform-provider-aws/issues/50551))
+* **New Resource:** `aws_devopsagent_asset` ([#50479](https://github.com/hashicorp/terraform-provider-aws/issues/50479))
 * **New Resource:** `aws_observabilityadmin_dataset_integration` ([#50529](https://github.com/hashicorp/terraform-provider-aws/issues/50529))
 
 ENHANCEMENTS:
 
+* data-source/aws_backup_plan: Add `rule.rule_id` attribute ([#47749](https://github.com/hashicorp/terraform-provider-aws/issues/47749))
+* data-source/aws_db_instance: Add `multi_tenant` attribute ([#50585](https://github.com/hashicorp/terraform-provider-aws/issues/50585))
+* data-source/aws_lambda_function: Add `kms_key_arn` attribute to the `durable_config` block ([#50614](https://github.com/hashicorp/terraform-provider-aws/issues/50614))
+* data-source/aws_networkfirewall_firewall_policy: Add `firewall_policy.route53_resolved_ip_validation` attribute ([#50592](https://github.com/hashicorp/terraform-provider-aws/issues/50592))
+* provider: Set `MaxResults` on `ec2:DescribeNetworkInterfaces` requests so that results are paginated, reducing throttling and timeouts in accounts with many network interfaces ([#50647](https://github.com/hashicorp/terraform-provider-aws/issues/50647))
+* resource/aws_backup_plan: Add `rule.rule_id` attribute ([#47749](https://github.com/hashicorp/terraform-provider-aws/issues/47749))
+* resource/aws_bcmdataexports_export: Add `s3_bucket_owner` to `destination_configurations.s3_destination` ([#47958](https://github.com/hashicorp/terraform-provider-aws/issues/47958))
+* resource/aws_db_instance: Add `multi_tenant` argument ([#50585](https://github.com/hashicorp/terraform-provider-aws/issues/50585))
 * resource/aws_dx_connection: Add configurable `update` timeout. Defaults to the previously hard-coded value of `10m`. ([#50602](https://github.com/hashicorp/terraform-provider-aws/issues/50602))
 * resource/aws_dx_connection_confirmation: Add configurable `create` timeout. Defaults to the previously hard-coded value of `10m`. ([#50602](https://github.com/hashicorp/terraform-provider-aws/issues/50602))
+* resource/aws_ecs_express_gateway_service: Add `cpu_architecture` argument ([#50456](https://github.com/hashicorp/terraform-provider-aws/issues/50456))
+* resource/aws_instance: Allow `placement_group`, `placement_group_id`, and `placement_partition_number` to be updated in-place with instance stop/start rather than being replaced. Spot Instances and instances with `disable_api_stop` and `force_destroy` enabled are still replaced ([#50417](https://github.com/hashicorp/terraform-provider-aws/issues/50417))
+* resource/aws_lambda_function: Add `kms_key_arn` argument to the `durable_config` configuration block ([#50614](https://github.com/hashicorp/terraform-provider-aws/issues/50614))
+* resource/aws_medialive_channel: Add `encoder_settings.thumbnail_configuration` argument ([#50203](https://github.com/hashicorp/terraform-provider-aws/issues/50203))
+* resource/aws_networkfirewall_firewall_policy: Add `firewall_policy.route53_resolved_ip_validation` argument ([#50592](https://github.com/hashicorp/terraform-provider-aws/issues/50592))
+* resource/aws_networkfirewall_rule_group: Add `AWS_ROUTE_53_RESOLVED_DOMAIN` as a valid value for `rule_group.rules_source.rules_source_list.target_types` ([#50592](https://github.com/hashicorp/terraform-provider-aws/issues/50592))
+* resource/aws_sagemaker_hub_content_reference: Add `versioned_hub_content_arn` attribute ([#50657](https://github.com/hashicorp/terraform-provider-aws/issues/50657))
+* resource/aws_sagemaker_model: Add `hub_access_config` argument to `primary_container.model_data_source.s3_data_source`, `primary_container.additional_model_data_source.s3_data_source`, `container.model_data_source.s3_data_source`, and `container.additional_model_data_source.s3_data_source` ([#50653](https://github.com/hashicorp/terraform-provider-aws/issues/50653))
+* resource/aws_vpc_endpoint: Add support for `Tunnel` VPC endpoint type ([#50553](https://github.com/hashicorp/terraform-provider-aws/issues/50553))
 * resource/aws_vpclattice_resource_configuration: Add `resource_configuration_definition.cidr_resource` configuration block to support `CIDR` type resource configurations ([#50533](https://github.com/hashicorp/terraform-provider-aws/issues/50533))
+
+BUG FIXES:
+
+* resource/aws_cloudcontrolapi_resource: Add retry handling for Cloud Control `ThrottlingException` errors ([#50667](https://github.com/hashicorp/terraform-provider-aws/issues/50667))
+* resource/aws_db_instance: Fix `db_name` and `username` forcing replacement after an RDS for Oracle CDB instance is converted to the multi-tenant configuration outside of Terraform ([#50585](https://github.com/hashicorp/terraform-provider-aws/issues/50585))
+* resource/aws_lakeformation_resource_lf_tag: Fix crash during refresh when an LF-Tag assignment has been removed outside Terraform ([#50626](https://github.com/hashicorp/terraform-provider-aws/issues/50626))
+* resource/aws_wafv2_web_acl_rule: Fix `scope_down_statement` not supporting logical statements (`and_statement`, `not_statement`, `or_statement`), including `not_statement` nested inside `and_statement` ([#50519](https://github.com/hashicorp/terraform-provider-aws/issues/50519))
+* resource/aws_wafv2_web_acl_rule: Reject `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement` nested in `and_statement`, `not_statement` or `or_statement`, `and_statement` directly in `and_statement`, `or_statement` directly in `or_statement`, and `and_statement` or `or_statement` with fewer than 2 statements at validation time, in both `statement` and `scope_down_statement`, matching AWS WAF ([#50519](https://github.com/hashicorp/terraform-provider-aws/issues/50519))
 
 ## 6.70.0 (October 21, 2026)
 
