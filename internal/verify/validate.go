@@ -31,9 +31,6 @@ import (
 var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|aws-marketplace|partner-managed|\d{12}|cw.{10})$`)
 var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
 
-// validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
-var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)
-
 func StringIsInt32(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -454,14 +451,14 @@ func ValidServicePrincipal(v any, k string) (ws []string, errors []error) {
 	}
 
 	if !IsServicePrincipal(value) {
-		errors = append(errors, fmt.Errorf("%q (%s) is an invalid Service Principal: invalid prefix value (expecting to match regular expression: %s)", k, value, servicePrincipalRegexp))
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid Service Principal", k, value))
 	}
 
 	return ws, errors
 }
 
 func IsServicePrincipal(value string) (valid bool) {
-	return servicePrincipalRegexp.MatchString(value)
+	return inttypes.IsServicePrincipal(value)
 }
 
 func MapKeyNoMatch(r *regexp.Regexp, message string) schema.SchemaValidateDiagFunc {
