@@ -13,10 +13,10 @@ func TestGlobalIDFromLocationURI(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		TestName             string
-		InputURI             string
-		ExpectError          bool
-		ExpectedSubdirectory string
+		TestName         string
+		InputURI         string
+		ExpectError      bool
+		ExpectedGlobalID string
 	}{
 		{
 			TestName:    "empty URI",
@@ -39,124 +39,124 @@ func TestGlobalIDFromLocationURI(t *testing.T) {
 			ExpectError: true,
 		},
 		{
-			TestName:             "S3 bucket URI top level",
-			InputURI:             "s3://bucket/",
-			ExpectedSubdirectory: names.AttrBucket,
+			TestName:         "S3 bucket URI top level",
+			InputURI:         "s3://bucket/",
+			ExpectedGlobalID: names.AttrBucket,
 		},
 		{
-			TestName:             "S3 bucket URI one level",
-			InputURI:             "s3://bucket/my-folder-1/",
-			ExpectedSubdirectory: names.AttrBucket,
+			TestName:         "S3 bucket URI one level",
+			InputURI:         "s3://bucket/my-folder-1/",
+			ExpectedGlobalID: names.AttrBucket,
 		},
 		{
-			TestName:             "S3 bucket URI two levels",
-			InputURI:             "s3://bucket/my-folder-1/my-folder-2",
-			ExpectedSubdirectory: names.AttrBucket,
+			TestName:         "S3 bucket URI two levels",
+			InputURI:         "s3://bucket/my-folder-1/my-folder-2",
+			ExpectedGlobalID: names.AttrBucket,
 		},
 		{
-			TestName:             "S3 Outposts ARN URI top level",
-			InputURI:             "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/", //lintignore:AWSAT003,AWSAT005
-			ExpectedSubdirectory: "arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point",       //lintignore:AWSAT003,AWSAT005
+			TestName:         "S3 Outposts ARN URI top level",
+			InputURI:         "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/", //lintignore:AWSAT003,AWSAT005
+			ExpectedGlobalID: "arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point",       //lintignore:AWSAT003,AWSAT005
 		},
 		{
-			TestName:             "S3 Outposts ARN URI one level",
-			InputURI:             "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/my-folder-1/", //lintignore:AWSAT003,AWSAT005
-			ExpectedSubdirectory: "arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point",                   //lintignore:AWSAT003,AWSAT005
+			TestName:         "S3 Outposts ARN URI one level",
+			InputURI:         "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/my-folder-1/", //lintignore:AWSAT003,AWSAT005
+			ExpectedGlobalID: "arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point",                   //lintignore:AWSAT003,AWSAT005
 		},
 		{
-			TestName:             "S3 Outposts ARN URI two levels",
-			InputURI:             "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/my-folder-1/my-folder-2", //lintignore:AWSAT003,AWSAT005
-			ExpectedSubdirectory: "arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point",                              //lintignore:AWSAT003,AWSAT005
+			TestName:         "S3 Outposts ARN URI two levels",
+			InputURI:         "s3://arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point/my-folder-1/my-folder-2", //lintignore:AWSAT003,AWSAT005
+			ExpectedGlobalID: "arn:aws:s3-outposts:eu-west-3:123456789012:outpost/op-YYYYYYYYYY/accesspoint/my-access-point",                              //lintignore:AWSAT003,AWSAT005
 		},
 		{
-			TestName:             "EFS URI top level",
-			InputURI:             "efs://us-west-2.fs-abcdef01/", //lintignore:AWSAT003
-			ExpectedSubdirectory: "us-west-2.fs-abcdef01",        //lintignore:AWSAT003
+			TestName:         "EFS URI top level",
+			InputURI:         "efs://us-west-2.fs-abcdef01/", //lintignore:AWSAT003
+			ExpectedGlobalID: "us-west-2.fs-abcdef01",        //lintignore:AWSAT003
 		},
 		{
-			TestName:             "EFS URI one level",
-			InputURI:             "efs://us-west-2.fs-abcdef01/my-folder-1/", //lintignore:AWSAT003
-			ExpectedSubdirectory: "us-west-2.fs-abcdef01",                    //lintignore:AWSAT003
+			TestName:         "EFS URI one level",
+			InputURI:         "efs://us-west-2.fs-abcdef01/my-folder-1/", //lintignore:AWSAT003
+			ExpectedGlobalID: "us-west-2.fs-abcdef01",                    //lintignore:AWSAT003
 		},
 		{
-			TestName:             "EFS URI two levels",
-			InputURI:             "efs://us-west-2.fs-abcdef01/my-folder-1/my-folder-2", //lintignore:AWSAT003
-			ExpectedSubdirectory: "us-west-2.fs-abcdef01",                               //lintignore:AWSAT003
+			TestName:         "EFS URI two levels",
+			InputURI:         "efs://us-west-2.fs-abcdef01/my-folder-1/my-folder-2", //lintignore:AWSAT003
+			ExpectedGlobalID: "us-west-2.fs-abcdef01",                               //lintignore:AWSAT003
 		},
 		{
-			TestName:             "NFS URI top level",
-			InputURI:             "nfs://example.com/",
-			ExpectedSubdirectory: "example.com",
+			TestName:         "NFS URI top level",
+			InputURI:         "nfs://example.com/",
+			ExpectedGlobalID: "example.com",
 		},
 		{
-			TestName:             "NFS URI one level",
-			InputURI:             "nfs://example.com/my-folder-1/",
-			ExpectedSubdirectory: "example.com",
+			TestName:         "NFS URI one level",
+			InputURI:         "nfs://example.com/my-folder-1/",
+			ExpectedGlobalID: "example.com",
 		},
 		{
-			TestName:             "NFS URI two levels",
-			InputURI:             "nfs://example.com/my-folder-1/my-folder-2",
-			ExpectedSubdirectory: "example.com",
+			TestName:         "NFS URI two levels",
+			InputURI:         "nfs://example.com/my-folder-1/my-folder-2",
+			ExpectedGlobalID: "example.com",
 		},
 		{
-			TestName:             "SMB URI top level",
-			InputURI:             "smb://192.168.1.1/",
-			ExpectedSubdirectory: "192.168.1.1",
+			TestName:         "SMB URI top level",
+			InputURI:         "smb://192.168.1.1/",
+			ExpectedGlobalID: "192.168.1.1",
 		},
 		{
-			TestName:             "SMB URI one level",
-			InputURI:             "smb://192.168.1.1/my-folder-1/",
-			ExpectedSubdirectory: "192.168.1.1",
+			TestName:         "SMB URI one level",
+			InputURI:         "smb://192.168.1.1/my-folder-1/",
+			ExpectedGlobalID: "192.168.1.1",
 		},
 		{
-			TestName:             "SMB URI two levels",
-			InputURI:             "smb://192.168.1.1/my-folder-1/my-folder-2",
-			ExpectedSubdirectory: "192.168.1.1",
+			TestName:         "SMB URI two levels",
+			InputURI:         "smb://192.168.1.1/my-folder-1/my-folder-2",
+			ExpectedGlobalID: "192.168.1.1",
 		},
 		{
-			TestName:             "HDFS URI top level",
-			InputURI:             "hdfs://192.168.1.1:80/",
-			ExpectedSubdirectory: "192.168.1.1",
+			TestName:         "HDFS URI top level",
+			InputURI:         "hdfs://192.168.1.1:80/",
+			ExpectedGlobalID: "192.168.1.1",
 		},
 		{
-			TestName:             "HDFS URI one level",
-			InputURI:             "hdfs://192.168.1.1:80/my-folder-1/",
-			ExpectedSubdirectory: "192.168.1.1",
+			TestName:         "HDFS URI one level",
+			InputURI:         "hdfs://192.168.1.1:80/my-folder-1/",
+			ExpectedGlobalID: "192.168.1.1",
 		},
 		{
-			TestName:             "HDFS URI two levels",
-			InputURI:             "hdfs://192.168.1.1:80/my-folder-1/my-folder-2",
-			ExpectedSubdirectory: "192.168.1.1",
+			TestName:         "HDFS URI two levels",
+			InputURI:         "hdfs://192.168.1.1:80/my-folder-1/my-folder-2",
+			ExpectedGlobalID: "192.168.1.1",
 		},
 		{
-			TestName:             "FSx Windows URI top level",
-			InputURI:             "fsxw://us-west-2.fs-abcdef123456789012/", //lintignore:AWSAT003
-			ExpectedSubdirectory: "us-west-2.fs-abcdef123456789012",         //lintignore:AWSAT003
+			TestName:         "FSx Windows URI top level",
+			InputURI:         "fsxw://us-west-2.fs-abcdef123456789012/", //lintignore:AWSAT003
+			ExpectedGlobalID: "us-west-2.fs-abcdef123456789012",         //lintignore:AWSAT003
 		},
 		{
-			TestName:             "FSx Windows URI one level",
-			InputURI:             "fsxw://us-west-2.fs-abcdef123456789012/my-folder-1/", //lintignore:AWSAT003
-			ExpectedSubdirectory: "us-west-2.fs-abcdef123456789012",                     //lintignore:AWSAT003
+			TestName:         "FSx Windows URI one level",
+			InputURI:         "fsxw://us-west-2.fs-abcdef123456789012/my-folder-1/", //lintignore:AWSAT003
+			ExpectedGlobalID: "us-west-2.fs-abcdef123456789012",                     //lintignore:AWSAT003
 		},
 		{
-			TestName:             "FSx Windows URI two levels",
-			InputURI:             "fsxw://us-west-2.fs-abcdef123456789012/my-folder-1/my-folder-2", //lintignore:AWSAT003
-			ExpectedSubdirectory: "us-west-2.fs-abcdef123456789012",                                //lintignore:AWSAT003
+			TestName:         "FSx Windows URI two levels",
+			InputURI:         "fsxw://us-west-2.fs-abcdef123456789012/my-folder-1/my-folder-2", //lintignore:AWSAT003
+			ExpectedGlobalID: "us-west-2.fs-abcdef123456789012",                                //lintignore:AWSAT003
 		},
 		{
-			TestName:             "FSx Zfs URI top level",
-			InputURI:             "fsxz://us-west-2.fs-abcdef123456789012/", //lintignore:AWSAT003
-			ExpectedSubdirectory: "us-west-2.fs-abcdef123456789012",         //lintignore:AWSAT003
+			TestName:         "FSx Zfs URI top level",
+			InputURI:         "fsxz://us-west-2.fs-abcdef123456789012/", //lintignore:AWSAT003
+			ExpectedGlobalID: "us-west-2.fs-abcdef123456789012",         //lintignore:AWSAT003
 		},
 		{
-			TestName:             "FSx Zfs URI one level",
-			InputURI:             "fsxz://us-west-2.fs-abcdef123456789012/my-folder-1/", //lintignore:AWSAT003
-			ExpectedSubdirectory: "us-west-2.fs-abcdef123456789012",                     //lintignore:AWSAT003
+			TestName:         "FSx Zfs URI one level",
+			InputURI:         "fsxz://us-west-2.fs-abcdef123456789012/my-folder-1/", //lintignore:AWSAT003
+			ExpectedGlobalID: "us-west-2.fs-abcdef123456789012",                     //lintignore:AWSAT003
 		},
 		{
-			TestName:             "FSx Zfs URI two levels",
-			InputURI:             "fsxz://us-west-2.fs-abcdef123456789012/my-folder-1/my-folder-2", //lintignore:AWSAT003
-			ExpectedSubdirectory: "us-west-2.fs-abcdef123456789012",                                //lintignore:AWSAT003
+			TestName:         "FSx Zfs URI two levels",
+			InputURI:         "fsxz://us-west-2.fs-abcdef123456789012/my-folder-1/my-folder-2", //lintignore:AWSAT003
+			ExpectedGlobalID: "us-west-2.fs-abcdef123456789012",                                //lintignore:AWSAT003
 		},
 		{
 			TestName:    "Object storage two levels",
@@ -164,9 +164,9 @@ func TestGlobalIDFromLocationURI(t *testing.T) {
 			ExpectError: true,
 		},
 		{
-			TestName:             "Azure blob URI one level",
-			InputURI:             "azure-blob://example.com/path/",
-			ExpectedSubdirectory: "example.com",
+			TestName:         "Azure blob URI one level",
+			InputURI:         "azure-blob://example.com/path/",
+			ExpectedGlobalID: "example.com",
 		},
 	}
 
@@ -184,8 +184,8 @@ func TestGlobalIDFromLocationURI(t *testing.T) {
 				t.Fatalf("unexpected error: %s", err)
 			}
 
-			if got != testCase.ExpectedSubdirectory {
-				t.Errorf("got %s, expected %s", got, testCase.ExpectedSubdirectory)
+			if got != testCase.ExpectedGlobalID {
+				t.Errorf("got %s, expected %s", got, testCase.ExpectedGlobalID)
 			}
 		})
 	}
