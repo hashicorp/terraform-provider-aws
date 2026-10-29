@@ -450,15 +450,11 @@ func ValidServicePrincipal(v any, k string) (ws []string, errors []error) {
 		return ws, errors
 	}
 
-	if !IsServicePrincipal(value) {
+	if !inttypes.IsServicePrincipal(value) {
 		errors = append(errors, fmt.Errorf("%q (%s) is an invalid Service Principal", k, value))
 	}
 
 	return ws, errors
-}
-
-func IsServicePrincipal(value string) (valid bool) {
-	return inttypes.IsServicePrincipal(value)
 }
 
 func MapKeyNoMatch(r *regexp.Regexp, message string) schema.SchemaValidateDiagFunc {
