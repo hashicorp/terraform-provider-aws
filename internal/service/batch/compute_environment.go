@@ -603,12 +603,14 @@ func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceComputeEnvironmentCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, _ any) error {
-	if computeEnvironmentType := strings.ToUpper(diff.Get(names.AttrType).(string)); computeEnvironmentType == string(awstypes.CETypeUnmanaged) {
+	computeEnvironmentType := strings.ToUpper(diff.Get(names.AttrType).(string))
+	switch computeEnvironmentType {
+	case string(awstypes.CETypeUnmanaged):
 		// UNMANAGED compute environments can have no compute_resources configured.
 		if v, ok := diff.GetOk("compute_resources"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			return fmt.Errorf("no `compute_resources` can be specified when `type` is %q", computeEnvironmentType)
 		}
-	} else {
+	case string(awstypes.CETypeManaged):
 		// Managed types cannot use unmanaged_vcpus
 		if config := diff.GetRawConfig(); config.IsKnown() && !config.IsNull() && !config.GetAttr("unmanaged_vcpus").IsNull() {
 			return fmt.Errorf("`unmanaged_vcpus` can only be specified when `type` is %q", awstypes.CETypeUnmanaged)
