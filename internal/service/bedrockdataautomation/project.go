@@ -889,9 +889,9 @@ func keepConfiguredValue(ctx context.Context, prior, current fwtypes.NestedObjec
 
 	priorStruct, currentStruct := reflect.ValueOf(priorPtr).Elem(), reflect.ValueOf(currentPtr).Elem()
 	for i := range currentStruct.NumField() {
-		c, ok := currentStruct.Field(i).Interface().(fwtypes.NestedObjectCollectionValue)
+		c, ok := reflect.TypeAssert[fwtypes.NestedObjectCollectionValue](currentStruct.Field(i))
 		if !ok {
-			if p, ok := priorStruct.Field(i).Interface().(attr.Value); ok && p.IsNull() {
+			if p, ok := reflect.TypeAssert[attr.Value](priorStruct.Field(i)); ok && p.IsNull() {
 				currentStruct.Field(i).Set(priorStruct.Field(i))
 			}
 			continue
