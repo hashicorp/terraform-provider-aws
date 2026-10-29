@@ -57,12 +57,12 @@ The following arguments are optional:
 
 #### `build_config` Block
 
-* `code_config` - (Required) Code configuration. See [`build_config.code_config` Block](#build_config.code_config-block) below.
-* `runtime_config` - (Required) Runtime configuration for the revision. See [`build_config.runtime_config` Block](#build_config.runtime_config-block) below.
+* `code_config` - (Required) Code configuration. See [`build_config.code_config` Block](#build_configcode_config-block) below.
+* `runtime_config` - (Required) Runtime configuration for the revision. See [`build_config.runtime_config` Block](#build_configruntime_config-block) below.
 
 ##### `build_config.code_config` Block
 
-* `s3_object` - (Required) Amazon S3 location of the deployment artifact. See [`build_config.code_config.s3_object` Block](#build_config.code_config.s3_object-block) below.
+* `s3_object` - (Required) Amazon S3 location of the deployment artifact. See [`build_config.code_config.s3_object` Block](#build_configcode_configs3_object-block) below.
 
 ###### `build_config.code_config.s3_object` Block
 
@@ -80,12 +80,12 @@ The following arguments are optional:
 * `environment_variables` - (Optional) Map of environment variable key-value pairs available to the web function at runtime.
 * `execution_role_arn` - (Required) ARN of the IAM role that the web function assumes when it runs. The trust principal must be `lambda.amazonaws.com`.
 * `max_concurrency_per_environment` - (Optional) Maximum number of concurrent requests handled per execution environment. The default is `64`.
-* `telemetry_config` - (Optional) Telemetry configuration for the web function. See [`service_config.telemetry_config` Block](#service_config.telemetry_config-block) below.
+* `telemetry_config` - (Optional) Telemetry configuration for the web function. See [`service_config.telemetry_config` Block](#service_configtelemetry_config-block) below.
 * `timeout_seconds` - (Optional) Amount of time (in seconds) that Lambda allows the web function to run before stopping it. The default is `30`.
 
 ##### `service_config.telemetry_config` Block
 
-* `logging_config` - (Optional) Logging configuration for the web function. See [`service_config.telemetry_config.logging_config` Block](#service_config.telemetry_config.logging_config-block) below.
+* `logging_config` - (Optional) Logging configuration for the web function. See [`service_config.telemetry_config.logging_config` Block](#service_configtelemetry_configlogging_config-block) below.
 
 ###### `service_config.telemetry_config.logging_config` Block
 
