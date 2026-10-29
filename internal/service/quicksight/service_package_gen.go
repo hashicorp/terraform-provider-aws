@@ -26,6 +26,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAccountCustomPermissionResource,
+			TypeName: "aws_quicksight_account_custom_permission",
+			Name:     "Account Custom Permission",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrAWSAccountID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newAccountSettingsResource,
 			TypeName: "aws_quicksight_account_settings",
 			Name:     "Account Settings",
