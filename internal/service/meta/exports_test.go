@@ -8,7 +8,3 @@ var (
 	FindRegionByEC2Endpoint = findRegionByEC2Endpoint
 	FindRegionByName        = findRegionByName
 )
-
-func RegionInfoID(r *regionInfo) string          { return r.id }
-func RegionInfoDescription(r *regionInfo) string { return r.description }
-func RegionInfoInferred(r *regionInfo) bool      { return r.inferred }

@@ -64,7 +64,7 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
-	regionID := region.id
+	regionID := region.ID()
 	serviceName := fwflex.StringValueFromFramework(ctx, data.ServiceName)
 	sourceServicePrincipal := servicePrincipalNameForPartition(serviceName, names.PartitionForRegion(regionID))
 

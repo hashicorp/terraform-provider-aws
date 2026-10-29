@@ -94,7 +94,7 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 			return
 		}
 
-		if region != nil && region.id != matchingRegion.id {
+		if region != nil && region.ID() != matchingRegion.ID() {
 			response.Diagnostics.AddError("multiple Regions matched", "use additional constraints to reduce matches to a single Region")
 
 			return
@@ -117,15 +117,17 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 		region = matchingRegion
 	}
 
-	if region.inferred {
+	regionID := region.ID()
+
+	if region.Inferred() {
 		response.Diagnostics.AddWarning(
 			"Region not in provider's known Region list",
 			fmt.Sprintf("Region %q matches a known AWS partition but is not in this provider version's Region list. "+
-				"The description attribute is empty. Upgrade the provider for full support of this Region.", region.id),
+				"The description attribute is empty. Upgrade the provider for full support of this Region.", regionID),
 		)
 	}
 
-	regionEndpointEC2, err := ec2Endpoint(ctx, region.id)
+	regionEndpointEC2, err := ec2Endpoint(ctx, regionID)
 
 	if err != nil {
 		response.Diagnostics.AddError("resolving EC2 endpoint", err.Error())
@@ -133,11 +135,11 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 		return
 	}
 
-	data.Description = fwflex.StringValueToFrameworkLegacy(ctx, region.description)
+	data.Description = fwflex.StringValueToFrameworkLegacy(ctx, region.Description())
 	data.Endpoint = fwflex.StringValueToFrameworkLegacy(ctx, regionEndpointEC2.Host)
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, region.id)
-	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, region.id)
-	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, region.id)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, regionID)
+	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, regionID)
+	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, regionID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -171,6 +173,10 @@ func newRegionInfo(region endpoints.Region) *regionInfo {
 		description: region.Description(),
 	}
 }
+
+func (r *regionInfo) ID() string          { return r.id }
+func (r *regionInfo) Description() string { return r.description }
+func (r *regionInfo) Inferred() bool      { return r.inferred }
 
 func findRegionByEC2Endpoint(ctx context.Context, endpoint string) (*regionInfo, error) {
 	for _, partition := range endpoints.DefaultPartitions() {

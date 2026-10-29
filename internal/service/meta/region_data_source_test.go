@@ -130,13 +130,13 @@ func TestFindRegionByName(t *testing.T) {
 		if err != nil {
 			continue
 		}
-		if got, want := tfmeta.RegionInfoID(region), tc.Value; got != want {
+		if got, want := region.ID(), tc.Value; got != want {
 			t.Errorf("%q: id = %q, want %q", tc.Value, got, want)
 		}
-		if got, want := tfmeta.RegionInfoInferred(region), tc.Inferred; got != want {
+		if got, want := region.Inferred(), tc.Inferred; got != want {
 			t.Errorf("%q: inferred = %t, want %t", tc.Value, got, want)
 		}
-		if got := tfmeta.RegionInfoDescription(region); (got == "") != tc.Inferred {
+		if got := region.Description(); (got == "") != tc.Inferred {
 			t.Errorf("%q: description = %q, want empty only when inferred", tc.Value, got)
 		}
 	}
