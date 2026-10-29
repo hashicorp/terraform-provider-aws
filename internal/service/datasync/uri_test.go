@@ -15,28 +15,28 @@ func TestGlobalIDFromLocationURI(t *testing.T) {
 	testCases := []struct {
 		TestName             string
 		InputURI             string
-		ExpectedError        bool
+		ExpectError          bool
 		ExpectedSubdirectory string
 	}{
 		{
-			TestName:      "empty URI",
-			InputURI:      "",
-			ExpectedError: true,
+			TestName:    "empty URI",
+			InputURI:    "",
+			ExpectError: true,
 		},
 		{
-			TestName:      "invalid URI scheme",
-			InputURI:      "test://testing/",
-			ExpectedError: true,
+			TestName:    "invalid URI scheme",
+			InputURI:    "test://testing/",
+			ExpectError: true,
 		},
 		{
-			TestName:      "S3 bucket URI no bucket name (1)",
-			InputURI:      "s3://",
-			ExpectedError: true,
+			TestName:    "S3 bucket URI no bucket name (1)",
+			InputURI:    "s3://",
+			ExpectError: true,
 		},
 		{
-			TestName:      "S3 bucket URI no bucket name (2)",
-			InputURI:      "s3:///",
-			ExpectedError: true,
+			TestName:    "S3 bucket URI no bucket name (2)",
+			InputURI:    "s3:///",
+			ExpectError: true,
 		},
 		{
 			TestName:             "S3 bucket URI top level",
@@ -159,9 +159,9 @@ func TestGlobalIDFromLocationURI(t *testing.T) {
 			ExpectedSubdirectory: "us-west-2.fs-abcdef123456789012",                                //lintignore:AWSAT003
 		},
 		{
-			TestName:      "Object storage two levels",
-			InputURI:      "object-storage://192.168.1.1/tf-acc-test-5815577519131245007/tf-acc-test-5815577519131245008/",
-			ExpectedError: true,
+			TestName:    "Object storage two levels",
+			InputURI:    "object-storage://192.168.1.1/tf-acc-test-5815577519131245007/tf-acc-test-5815577519131245008/",
+			ExpectError: true,
 		},
 		{
 			TestName:             "Azure blob URI one level",
@@ -176,11 +176,11 @@ func TestGlobalIDFromLocationURI(t *testing.T) {
 
 			got, err := globalIDFromLocationURI(testCase.InputURI)
 
-			if err == nil && testCase.ExpectedError {
+			if err == nil && testCase.ExpectError {
 				t.Fatalf("expected error")
 			}
 
-			if err != nil && !testCase.ExpectedError {
+			if err != nil && !testCase.ExpectError {
 				t.Fatalf("unexpected error: %s", err)
 			}
 
@@ -197,28 +197,28 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 	testCases := []struct {
 		TestName             string
 		InputURI             string
-		ExpectedError        bool
+		ExpectError          bool
 		ExpectedSubdirectory string
 	}{
 		{
-			TestName:      "empty URI",
-			InputURI:      "",
-			ExpectedError: true,
+			TestName:    "empty URI",
+			InputURI:    "",
+			ExpectError: true,
 		},
 		{
-			TestName:      "invalid URI scheme",
-			InputURI:      "test://testing/",
-			ExpectedError: true,
+			TestName:    "invalid URI scheme",
+			InputURI:    "test://testing/",
+			ExpectError: true,
 		},
 		{
-			TestName:      "S3 bucket URI no bucket name (1)",
-			InputURI:      "s3://",
-			ExpectedError: true,
+			TestName:    "S3 bucket URI no bucket name (1)",
+			InputURI:    "s3://",
+			ExpectError: true,
 		},
 		{
-			TestName:      "S3 bucket URI no bucket name (2)",
-			InputURI:      "s3:///",
-			ExpectedError: true,
+			TestName:    "S3 bucket URI no bucket name (2)",
+			InputURI:    "s3:///",
+			ExpectError: true,
 		},
 		{
 			TestName:             "S3 bucket URI top level",
@@ -341,9 +341,9 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 			ExpectedSubdirectory: "/my-folder-1/my-folder-2",
 		},
 		{
-			TestName:      "Object storage two levels",
-			InputURI:      "object-storage://192.168.1.1/tf-acc-test-5815577519131245007/tf-acc-test-5815577519131245008/",
-			ExpectedError: true,
+			TestName:    "Object storage two levels",
+			InputURI:    "object-storage://192.168.1.1/tf-acc-test-5815577519131245007/tf-acc-test-5815577519131245008/",
+			ExpectError: true,
 		},
 		{
 			TestName:             "Azure blob URI one level",
@@ -358,11 +358,11 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 
 			got, err := subdirectoryFromLocationURI(testCase.InputURI)
 
-			if err == nil && testCase.ExpectedError {
+			if err == nil && testCase.ExpectError {
 				t.Fatalf("expected error")
 			}
 
-			if err != nil && !testCase.ExpectedError {
+			if err != nil && !testCase.ExpectError {
 				t.Fatalf("unexpected error: %s", err)
 			}
 
