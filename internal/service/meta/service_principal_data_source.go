@@ -56,7 +56,7 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 	}
 
 	name := d.Meta().Region(ctx)
-	region, err := findRegionByName(ctx, name)
+	region, err := findRegionByName(ctx, name, d.Meta().SkipRegionValidation(ctx))
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())

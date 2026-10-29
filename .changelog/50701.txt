@@ -1,0 +1,6 @@
+```release-note:enhancement
+data-source/aws_region: Resolve Regions not yet in the provider's Region list when `skip_region_validation` is `true`
+```
+```release-note:enhancement
+data-source/aws_service_principal: Resolve Regions not yet in the provider's Region list when `skip_region_validation` is `true`
+```
