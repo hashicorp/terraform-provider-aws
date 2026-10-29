@@ -26,6 +26,34 @@ resource "aws_cloudfront_origin_access_control" "example" {
 }
 ```
 
+### S3 Multi-Region Access Point Origin
+
+Use `sigv4a` when the origin is an Amazon S3 Multi-Region Access Point, so that CloudFront signs origin requests with Signature Version 4A.
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+
+resource "aws_s3control_multi_region_access_point" "example" {
+  details {
+    name = "example"
+
+    region {
+      bucket = aws_s3_bucket.example.id
+    }
+  }
+}
+
+resource "aws_cloudfront_origin_access_control" "example" {
+  name                              = "example"
+  description                       = "Example Policy"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4a"
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -34,7 +62,7 @@ This resource supports the following arguments:
 * `description` - (Optional) The description of the Origin Access Control. Defaults to "Managed by Terraform" if omitted.
 * `origin_access_control_origin_type` - (Required) The type of origin that this Origin Access Control is for. Valid values are `lambda`, `mediapackagev2`, `mediastore`, and `s3`.
 * `signing_behavior` - (Required) Specifies which requests CloudFront signs. Specify `always` for the most common use case. Allowed values: `always`, `never`, and `no-override`.
-* `signing_protocol` - (Required) Determines how CloudFront signs (authenticates) requests. The only valid value is `sigv4`.
+* `signing_protocol` - (Required) Determines how CloudFront signs (authenticates) requests. Valid values are `sigv4` and `sigv4a`. Use `sigv4a` for Amazon S3 Multi-Region Access Point origins.
 
 ## Attribute Reference
 
