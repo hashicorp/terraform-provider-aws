@@ -2,6 +2,17 @@
 <!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
+A static-analysis utility that maps Terraform resource types to AWS SDK service-client operations detected in their supported
+service-package handlers.
+
+The high-level workflow is:
+
+- Identify `conns.AWSClient` methods that return AWS SDK service clients and index service packages.
+- Walk service packages to find resource factories functions (currently only Plugin SDK V2 based-resources are collected).
+- Statically follow supported `Create`, `Read`, `Update`, `Delete`, `Import`, and `CustomizeDiff` handler references to record detectable AWS SDK service-client operations.
+- Include applicable tag-interceptor operations for resources with tag annotations.
+- Write the results as JSON.
+
 ## Usage
 
 From the repository root:
