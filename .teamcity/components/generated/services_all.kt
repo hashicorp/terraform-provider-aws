@@ -37,6 +37,7 @@ val services = mapOf(
     "bedrock" to ServiceSpec("Bedrock"),
     "bedrockagent" to ServiceSpec("Bedrock Agents"),
     "bedrockagentcore" to ServiceSpec("Bedrock AgentCore"),
+    "bedrockdataautomation" to ServiceSpec("Bedrock Data Automation"),
     "bedrockruntime" to ServiceSpec("Bedrock Runtime"),
     "billing" to ServiceSpec("Billing"),
     "budgets" to ServiceSpec("Web Services Budgets"),
