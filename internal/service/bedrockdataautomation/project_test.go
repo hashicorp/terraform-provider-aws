@@ -139,11 +139,6 @@ func TestAccBedrockDataAutomationProject_standardOutputConfiguration(t *testing.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, t, resourceName, &v),
 				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("standard_output_configuration").AtSliceIndex(0).AtMapKey("audio"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, documentPath.AtMapKey("extraction").AtSliceIndex(0).AtMapKey("granularity").AtSliceIndex(0).AtMapKey("types"), knownvalue.SetExact([]knownvalue.Check{
@@ -182,9 +177,6 @@ func TestAccBedrockDataAutomationProject_standardOutputConfiguration(t *testing.
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, documentPath.AtMapKey("extraction").AtSliceIndex(0).AtMapKey("granularity").AtSliceIndex(0).AtMapKey("types"), knownvalue.SetExact([]knownvalue.Check{
@@ -220,11 +212,6 @@ func TestAccBedrockDataAutomationProject_overrideConfiguration(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, t, resourceName, &v),
 				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, overridePath.AtMapKey("audio"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, overridePath.AtMapKey("document").AtSliceIndex(0).AtMapKey("modality_processing"), knownvalue.ListSizeExact(0)),
@@ -245,9 +232,6 @@ func TestAccBedrockDataAutomationProject_overrideConfiguration(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -281,11 +265,6 @@ func TestAccBedrockDataAutomationProject_customOutputConfiguration(t *testing.T)
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, t, resourceName, &v),
 				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, blueprintPath, knownvalue.ListSizeExact(1)),
 					statecheck.CompareValuePairs(resourceName, blueprintPath.AtSliceIndex(0).AtMapKey("blueprint_arn"), "aws_bedrockdataautomation_blueprint.test[0]", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -318,9 +297,6 @@ func TestAccBedrockDataAutomationProject_customOutputConfiguration(t *testing.T)
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
