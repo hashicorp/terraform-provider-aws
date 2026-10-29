@@ -659,9 +659,10 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	arn := aws.ToString(out.ProjectArn)
-	// Save the ARN so that a failed wait leaves a tainted resource rather than an orphan.
+	// Save the ARN and Region so that a failed wait leaves a tainted resource rather than an orphan.
 	plan.ARN = fwflex.StringValueToFramework(ctx, arn)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrARN), plan.ARN))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrRegion), plan.Region))
 	if resp.Diagnostics.HasError() {
 		return
 	}
