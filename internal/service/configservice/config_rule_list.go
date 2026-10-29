@@ -11,71 +11,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/configservice/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_config_config_rule")
 func newConfigRuleResourceAsListResource() inttypes.ListResourceForSDK {
-	l := configRuleListResource{}
-	l.SetResourceSchema(resourceConfigRule())
-	return &l
-}
+	return framework.NewSDKListResource(resourceConfigRule(), framework.SDKListSpec[awstypes.ConfigRule, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.ConfigRule, error], diag.Diagnostics) {
+			var input configservice.DescribeConfigRulesInput
 
-var _ list.ListResource = &configRuleListResource{}
-
-type configRuleListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *configRuleListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := l.Meta().ConfigServiceClient(ctx)
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		var input configservice.DescribeConfigRulesInput
-		for item, err := range listConfigRules(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			name := aws.ToString(item.ConfigRuleName)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
-
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(name)
-			rd.Set(names.AttrName, name)
-
-			if request.IncludeResource {
-				if err := resourceConfigRuleFlatten(ctx, &item, rd); err != nil {
-					tflog.Error(ctx, "Flattening ConfigService Config Rule", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			result.DisplayName = aws.ToString(item.ConfigRuleName)
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			return listConfigRules(ctx, c.ConfigServiceClient(ctx), &input), nil
+		},
+		ID: func(r awstypes.ConfigRule, _ framework.RegionQuery) string {
+			return aws.ToString(r.ConfigRuleName)
+		},
+		Flatten:     resourceConfigRuleFlatten,
+		DisplayName: func(r awstypes.ConfigRule) string { return aws.ToString(r.ConfigRuleName) },
+	})
 }
 
 func listConfigRules(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigRulesInput) iter.Seq2[awstypes.ConfigRule, error] {
