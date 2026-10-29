@@ -37,8 +37,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var clusterPolicyIdentifierRegex = regexache.MustCompile(`^[a-z0-9]{26}$`)
-
 type clusterPolicyResource struct {
 	framework.ResourceWithModel[clusterPolicyResourceModel]
 	framework.WithTimeouts
@@ -74,7 +72,7 @@ func (r *clusterPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(clusterPolicyIdentifierRegex, "must be a valid Aurora DSQL cluster identifier"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9]{26}$`), "must be a valid Aurora DSQL cluster identifier"),
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
