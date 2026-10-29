@@ -683,6 +683,9 @@ func TestValidServicePrincipal(t *testing.T) {
 		"ec2.amazonaws.com",
 		"s3.amazonaws.com",
 		"ec2.amazon.com",
+		// China partition (.cn) principals. Accepted via internal/types.IsServicePrincipal.
+		"ec2.amazonaws.com.cn",
+		"s3.amazonaws.com.cn",
 		// Label-count boundaries: 1-4 prefix labels are allowed.
 		"a.amazonaws.com",
 		"a.b.c.d.amazonaws.com",
@@ -711,11 +714,6 @@ func TestValidServicePrincipal(t *testing.T) {
 		"123456789012",
 		// Too many prefix labels (the quantifier allows at most 4).
 		"a.b.c.d.e.amazonaws.com",
-		// China partition (.cn) principals. This implementation does NOT
-		// currently accept them, unlike internal/types.IsServicePrincipal.
-		// These will move to validNames when verify delegates to internal/types.
-		"ec2.amazonaws.com.cn",
-		"s3.amazonaws.com.cn",
 	}
 	for _, v := range invalidNames {
 		_, errors := ValidServicePrincipal(v, "arn")
