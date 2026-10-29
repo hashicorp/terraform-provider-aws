@@ -1510,7 +1510,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceClusterFlatten(ctx, conn, dbc, d); err != nil {
+	if err := resourceClusterFlatten(ctx, meta.(*conns.AWSClient), dbc, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -2380,7 +2380,9 @@ func flattenServerlessV2ScalingConfigurationInfo(apiObject *types.ServerlessV2Sc
 	return tfMap
 }
 
-func resourceClusterFlatten(ctx context.Context, conn *rds.Client, dbc *types.DBCluster, d *schema.ResourceData) error {
+func resourceClusterFlatten(ctx context.Context, c *conns.AWSClient, dbc *types.DBCluster, d *schema.ResourceData) error {
+	conn := c.RDSClient(ctx)
+
 	d.Set(names.AttrAllocatedStorage, dbc.AllocatedStorage)
 	clusterARN := aws.ToString(dbc.DBClusterArn)
 	d.Set(names.AttrARN, clusterARN)

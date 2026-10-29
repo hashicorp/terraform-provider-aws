@@ -10,103 +10,36 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_cloudwatch_log_subscription_filter")
 func newSubscriptionFilterResourceAsListResource() inttypes.ListResourceForSDK {
-	l := subscriptionFilterListResource{}
-	l.SetResourceSchema(resourceSubscriptionFilter())
-	return &l
-}
+	return framework.NewSDKListResource(resourceSubscriptionFilter(), framework.SDKListSpec[awstypes.SubscriptionFilter, listSubscriptionFilterModel]{
+		ConfigSchema: listSubscriptionFilterConfigSchema,
+		Items: func(ctx context.Context, c *conns.AWSClient, query listSubscriptionFilterModel) (iter.Seq2[awstypes.SubscriptionFilter, error], diag.Diagnostics) {
+			input := cloudwatchlogs.DescribeSubscriptionFiltersInput{
+				LogGroupName: fwflex.StringFromFramework(ctx, query.LogGroupName),
+			}
 
-var _ list.ListResource = &subscriptionFilterListResource{}
-
-type subscriptionFilterListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *subscriptionFilterListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			names.AttrLogGroupName: listschema.StringAttribute{
-				Required:    true,
-				Description: "Name of the log group.",
-			},
+			return listSubscriptionFilters(ctx, c.LogsClient(ctx), &input), nil
 		},
-	}
-}
-
-func (l *subscriptionFilterListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := l.Meta().LogsClient(ctx)
-
-	var query listSubscriptionFilterModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	logGroupName := fwflex.StringValueFromFramework(ctx, query.LogGroupName)
-
-	tflog.Info(ctx, "Listing Resources", map[string]any{
-		logging.ResourceAttributeKey(names.AttrLogGroupName): logGroupName,
+		// The resource ID is the log group name, which comes from the query
+		// rather than the item.
+		ID: func(_ awstypes.SubscriptionFilter, query listSubscriptionFilterModel) string {
+			return subscriptionFilterCreateResourceID(query.LogGroupName.ValueString())
+		},
+		Flatten:     resourceSubscriptionFilterFlatten,
+		DisplayName: func(sf awstypes.SubscriptionFilter) string { return aws.ToString(sf.FilterName) },
 	})
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		input := cloudwatchlogs.DescribeSubscriptionFiltersInput{
-			LogGroupName: aws.String(logGroupName),
-		}
-		for item, err := range listSubscriptionFilters(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			logGroupName, name := aws.ToString(item.LogGroupName), aws.ToString(item.FilterName)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
-
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(subscriptionFilterCreateResourceID(logGroupName))
-			rd.Set(names.AttrLogGroupName, logGroupName)
-			rd.Set(names.AttrName, name)
-
-			if request.IncludeResource {
-				if err := resourceSubscriptionFilterFlatten(ctx, &item, rd); err != nil {
-					tflog.Error(ctx, "Reading CloudWatch Logs Subscription Filter", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			result.DisplayName = name
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
 }
 
 type listSubscriptionFilterModel struct {
@@ -116,4 +49,15 @@ type listSubscriptionFilterModel struct {
 
 func listSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.SubscriptionFilter, error] {
 	return tfiter.ConcatValuesWithError(listSubscriptionFilterPages(ctx, conn, input, optFns...))
+}
+
+func listSubscriptionFilterConfigSchema(_ context.Context) listschema.Schema {
+	return listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			names.AttrLogGroupName: listschema.StringAttribute{
+				Required:    true,
+				Description: "Name of the log group.",
+			},
+		},
+	}
 }

@@ -11,75 +11,29 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_db_instance")
 func newInstanceResourceAsListResource() inttypes.ListResourceForSDK {
-	l := instanceListResource{}
-	l.SetResourceSchema(resourceInstance())
-	return &l
-}
+	return framework.NewSDKListResource(resourceInstance(), framework.SDKListSpec[awstypes.DBInstance, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.DBInstance, error], diag.Diagnostics) {
+			var input rds.DescribeDBInstancesInput
 
-var _ list.ListResource = &instanceListResource{}
-
-type instanceListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *instanceListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.RDSClient(ctx)
-
-	tflog.Info(ctx, "Listing RDS DB Instances")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		input := &rds.DescribeDBInstancesInput{}
-		for item, err := range listDBInstances(ctx, conn, input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			identifier := aws.ToString(item.DBInstanceIdentifier)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrIdentifier), identifier)
-
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(aws.ToString(item.DbiResourceId))
-			rd.Set(names.AttrIdentifier, identifier)
-
-			if request.IncludeResource {
-				if err := resourceInstanceFlatten(ctx, awsClient, &item, rd); err != nil {
-					tflog.Error(ctx, "Flattening RDS DB Instance", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			result.DisplayName = identifier
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			return listDBInstances(ctx, c.RDSClient(ctx), &input), nil
+		},
+		// The resource ID is immutable, but identity and display use the
+		// user-facing identifier.
+		ID: func(v awstypes.DBInstance, _ framework.RegionQuery) string {
+			return aws.ToString(v.DbiResourceId)
+		},
+		Flatten:     resourceInstanceFlatten,
+		DisplayName: func(v awstypes.DBInstance) string { return aws.ToString(v.DBInstanceIdentifier) },
+	})
 }
 
 func listDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeDBInstancesInput) iter.Seq2[awstypes.DBInstance, error] {

@@ -188,7 +188,7 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceSubscriptionFilterFlatten(ctx, subscriptionFilter, d); err != nil {
+	if err := resourceSubscriptionFilterFlatten(ctx, meta.(*conns.AWSClient), subscriptionFilter, d); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -217,7 +217,7 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceSubscriptionFilterFlatten(_ context.Context, subscriptionFilter *awstypes.SubscriptionFilter, d *schema.ResourceData) error { //nolint:unparam
+func resourceSubscriptionFilterFlatten(_ context.Context, _ *conns.AWSClient, subscriptionFilter *awstypes.SubscriptionFilter, d *schema.ResourceData) error { //nolint:unparam
 	d.Set("apply_on_transformed_logs", subscriptionFilter.ApplyOnTransformedLogs)
 	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
 	d.Set("distribution", subscriptionFilter.Distribution)
