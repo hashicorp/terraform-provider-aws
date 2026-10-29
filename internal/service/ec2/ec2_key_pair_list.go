@@ -11,66 +11,25 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @SDKListResource("aws_key_pair")
 func newKeyPairResourceAsListResource() inttypes.ListResourceForSDK {
-	l := keyPairListResource{}
-	l.SetResourceSchema(resourceKeyPair())
-	return &l
-}
+	return framework.NewSDKListResource(resourceKeyPair(), framework.SDKListSpec[awstypes.KeyPairInfo, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.KeyPairInfo, error], diag.Diagnostics) {
+			var input ec2.DescribeKeyPairsInput
 
-var _ list.ListResource = &keyPairListResource{}
-
-type keyPairListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *keyPairListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := l.Meta().EC2Client(ctx)
-
-	tflog.Info(ctx, "Listing resources")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		for item, err := range listKeyPairs(ctx, conn, &ec2.DescribeKeyPairsInput{}) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			keyName := aws.ToString(item.KeyName)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("key_name"), keyName)
-
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(keyName)
-			rd.Set("key_name", keyName)
-
-			if request.IncludeResource {
-				resourceKeyPairFlatten(ctx, l.Meta(), &item, rd)
-			}
-
-			result.DisplayName = keyName
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			return listKeyPairs(ctx, c.EC2Client(ctx), &input), nil
+		},
+		ID: func(kp awstypes.KeyPairInfo, _ framework.RegionQuery) string {
+			return aws.ToString(kp.KeyName)
+		},
+		Flatten: resourceKeyPairFlatten,
+	})
 }
 
 func listKeyPairs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeKeyPairsInput) iter.Seq2[awstypes.KeyPairInfo, error] {
