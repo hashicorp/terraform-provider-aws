@@ -182,11 +182,7 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	uri := aws.ToString(output.LocationUri)
-	globalID, err := globalIDFromLocationURI(aws.ToString(output.LocationUri))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	subdirectory, err := subdirectoryFromLocationURI(aws.ToString(output.LocationUri))
+	globalID, subdirectory, err := parseLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
