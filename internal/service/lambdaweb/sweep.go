@@ -87,7 +87,7 @@ func sweepFunctionRevisions(ctx context.Context, client *conns.AWSClient) ([]swe
 				return nil, smarterr.NewError(err)
 			}
 
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newFunctionEndpointResource, client,
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newFunctionRevisionResource, client,
 				sweepfw.NewAttribute("function_name", functionName),
 				sweepfw.NewAttribute("revision_id", aws.ToString(v.RevisionId))),
 			)
