@@ -10,7 +10,7 @@ description: |-
 
 Manages an Amazon Bedrock Data Automation Project. A project defines the standard output that Amazon Bedrock Data Automation extracts from files and the blueprints it uses for custom output.
 
-~> **NOTE:** Amazon Bedrock Data Automation fills in default settings for every modality of `standard_output_configuration` and `override_configuration`. Terraform manages only the modalities you configure. Within a configured modality, configure every block the service would otherwise fill in, or Terraform shows the service defaults as differences. Changes made outside Terraform to modalities that aren't configured aren't detected.
+~> **NOTE:** Amazon Bedrock Data Automation fills in default values for settings in `standard_output_configuration` and `override_configuration` that you don't set. Terraform keeps only the blocks and arguments you set in those two configurations, so the service defaults don't appear in state. Changes made outside Terraform to settings you haven't set aren't detected.
 
 ## Example Usage
 
