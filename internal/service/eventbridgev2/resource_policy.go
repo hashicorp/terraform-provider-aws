@@ -5,6 +5,8 @@ package eventbridgev2
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,7 +25,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	// The resource policy API can take up to a minute to return a new event bus or policy.
+	resourcePolicyPropagationTimeout = 1 * time.Minute
+
+	// The revision ID that only matches when the event bus has no policy.
+	revisionIDNoPolicy = "NO_POLICY"
 )
 
 // @FrameworkResource("aws_eventbridgev2_resource_policy", name="Resource Policy")
@@ -73,13 +84,31 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 
 	arn := fwflex.StringValueFromFramework(ctx, plan.ResourceARN)
 	input := eventbridgev2.PutResourcePolicyInput{
-		PolicyDocument: fwflex.StringFromFramework(ctx, plan.Policy),
-		ResourceArn:    aws.String(arn),
+		// Fail instead of overwriting a policy that is already attached to the event bus.
+		ExpectedRevisionId: aws.String(revisionIDNoPolicy),
+		PolicyDocument:     fwflex.StringFromFramework(ctx, plan.Policy),
+		ResourceArn:        aws.String(arn),
 	}
 
-	out, err := conn.PutResourcePolicy(ctx, &input)
-	if err != nil {
+	_, err := tfresource.RetryWhenIsA[*eventbridgev2.PutResourcePolicyOutput, *awstypes.ResourceNotFoundException](ctx, resourcePolicyPropagationTimeout, func(ctx context.Context) (*eventbridgev2.PutResourcePolicyOutput, error) {
+		return conn.PutResourcePolicy(ctx, &input)
+	})
+	if err != nil && !errs.IsA[*awstypes.ConflictException](err) {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+		return
+	}
+
+	// A new policy can take time to be returned. Reading it back also resolves a conflict, which a retry of this
+	// request's own earlier attempt can cause, from a conflict with a policy that was already attached.
+	out, findErr := tfresource.RetryWhenNotFound(ctx, resourcePolicyPropagationTimeout, func(ctx context.Context) (*eventbridgev2.GetResourcePolicyOutput, error) {
+		return findResourcePolicyByARN(ctx, conn, arn)
+	})
+	if err != nil && (findErr != nil || !verify.PolicyStringsEquivalent(aws.ToString(out.PolicyDocument), aws.ToString(input.PolicyDocument))) {
+		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("event bus already has a resource policy, import it to manage it with Terraform: %w", err), smerr.ID, arn)
+		return
+	}
+	if findErr != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, findErr, smerr.ID, arn)
 		return
 	}
 
@@ -129,7 +158,9 @@ func (r *resourcePolicyResource) Update(ctx context.Context, req resource.Update
 		ResourceArn:    aws.String(arn),
 	}
 
-	out, err := conn.PutResourcePolicy(ctx, &input)
+	out, err := tfresource.RetryWhenIsA[*eventbridgev2.PutResourcePolicyOutput, *awstypes.ResourceNotFoundException](ctx, resourcePolicyPropagationTimeout, func(ctx context.Context) (*eventbridgev2.PutResourcePolicyOutput, error) {
+		return conn.PutResourcePolicy(ctx, &input)
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return

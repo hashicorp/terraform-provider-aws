@@ -19,6 +19,8 @@ EventBridge evaluates both policies when it authorizes a caller from another acc
 
 -> **Note:** This resource manages the customer-managed (`default`) policy only. The `AWS_RAM` policy is managed exclusively by AWS RAM.
 
+~> **Note:** Creating this resource fails if the event bus already has a customer-managed policy, for example one set in the console. [Import](#import) the existing policy to manage it with Terraform.
+
 ## Example Usage
 
 ### Grant Another Account Access to Subscribe
