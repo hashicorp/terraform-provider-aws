@@ -5,96 +5,34 @@ package kms
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_kms_alias")
 func aliasResourceAsListResource() inttypes.ListResourceForSDK {
-	l := aliasListResource{}
-	l.SetResourceSchema(resourceAlias())
-	return &l
-}
+	return framework.NewSDKListResource(resourceAlias(), framework.SDKListSpec[awstypes.AliasListEntry, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.AliasListEntry, error], diag.Diagnostics) {
+			var input kms.ListAliasesInput
 
-type aliasListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *aliasListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.KMSClient(ctx)
-
-	tflog.Info(ctx, "Listing KMS aliases")
-	stream.Results = func(yield func(list.ListResult) bool) {
-		var input kms.ListAliasesInput
-		for item, err := range listAliases(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			id := aws.ToString(item.AliasName)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
-
-			result := request.NewListResult(ctx)
-
-			rd := l.ResourceData()
-			rd.SetId(id)
-
-			diags := resourceAliasFlatten(ctx, rd, &item)
-			if diags.HasError() || rd.Id() == "" {
-				// Resource can't be read or is logically deleted.
-				// Log and continue.
-				tflog.Error(ctx, "Reading KMS alias", map[string]any{
-					names.AttrID: id,
-					"diags":      sdkdiag.DiagnosticsString(diags),
-				})
-				continue
-			}
-
-			result.DisplayName = id
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			return listAliases(ctx, c.KMSClient(ctx), &input), nil
+		},
+		ID: func(a awstypes.AliasListEntry, _ framework.RegionQuery) string {
+			return aws.ToString(a.AliasName)
+		},
+		Flatten: resourceAliasFlatten,
+	})
 }
 
 func listAliases(ctx context.Context, conn *kms.Client, input *kms.ListAliasesInput) iter.Seq2[awstypes.AliasListEntry, error] {
-	return func(yield func(awstypes.AliasListEntry, error) bool) {
-		pages := kms.NewListAliasesPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.AliasListEntry{}, fmt.Errorf("listing KMS Aliases resources: %w", err))
-				return
-			}
-
-			for _, item := range page.Aliases {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
+	return tfiter.PageItems[kms.Options](ctx, "listing KMS Aliases resources", kms.NewListAliasesPaginator(conn, input),
+		func(o *kms.ListAliasesOutput) []awstypes.AliasListEntry { return o.Aliases })
 }
