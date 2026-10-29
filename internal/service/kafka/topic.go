@@ -31,12 +31,14 @@ import (
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_msk_topic", name="Topic")
+// @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
 // @IdentityAttribute("cluster_arn")
 // @ImportIDHandler(topicImportID)
@@ -96,6 +98,8 @@ func (r *topicResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					int64planmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -136,6 +140,12 @@ func (r *topicResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	out, err := waitTopicCreated(ctx, conn, clusterARN, topicName, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, topicName)
+		return
+	}
+
+	// CreateTopic does not accept tags, so tag the topic once it exists.
+	if err := createTags(ctx, conn, aws.ToString(out.TopicArn), getTagsIn(ctx)); err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, topicName)
 		return
 	}
@@ -466,6 +476,8 @@ type topicResourceModel struct {
 	ConfigsActual     types.String         `tfsdk:"configs_actual" autoflex:"-"`
 	PartitionCount    types.Int64          `tfsdk:"partition_count"`
 	ReplicationFactor types.Int64          `tfsdk:"replication_factor"`
+	Tags              tftags.Map           `tfsdk:"tags"`
+	TagsAll           tftags.Map           `tfsdk:"tags_all"`
 	Timeouts          timeouts.Value       `tfsdk:"timeouts"`
 	TopicARN          types.String         `tfsdk:"arn"`
 	TopicName         types.String         `tfsdk:"name"`

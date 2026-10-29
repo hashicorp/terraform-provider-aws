@@ -4,6 +4,7 @@ resource "aws_msk_topic" "test" {
   cluster_arn        = aws_msk_cluster.test.arn
   partition_count    = 2
   replication_factor = 2
+{{- template "tags" . }}
 }
 
 resource "aws_msk_cluster" "test" {
