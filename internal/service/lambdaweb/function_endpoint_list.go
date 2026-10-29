@@ -61,7 +61,6 @@ func (l *functionEndpointListResource) List(ctx context.Context, request list.Li
 		logging.ResourceAttributeKey("function_name"): functionName,
 	})
 
-	// TIP: -- 4. Get information about a resource from AWS
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := lambdaweb.ListWebFunctionEndpointsInput{
 			FunctionName: aws.String(functionName),
