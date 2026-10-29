@@ -405,6 +405,15 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			),
 		},
 		{
+			Factory:  newBucketCORSConfigurationResourceAsListResource,
+			TypeName: "aws_s3_bucket_cors_configuration",
+			Name:     "Bucket CORS Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrBucket, true),
+				inttypes.WithVersion(1),
+			),
+		},
+		{
 			Factory:  newBucketLoggingResourceAsListResource,
 			TypeName: "aws_s3_bucket_logging",
 			Name:     "Bucket Logging",
