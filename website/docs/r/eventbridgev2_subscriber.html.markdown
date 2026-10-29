@@ -122,7 +122,6 @@ resource "aws_eventbridgev2_subscriber" "example" {
 The following arguments are required:
 
 * `event_bus_arn` - (Required) ARN of the event bus the subscriber receives events from. Can be an event bus shared with this account through AWS RAM. Changing this value creates a new resource.
-* `filter_configuration` - (Required) Filters that select which events are delivered. See [`filter_configuration` Block](#filter_configuration-block) below.
 * `invoke_configuration` - (Required) Configuration of how the subscriber invokes its target. See [`invoke_configuration` Block](#invoke_configuration-block) below.
 * `name` - (Required) Name of the subscriber. Must start with an alphanumeric character and contain only alphanumeric characters, periods (`.`), hyphens (`-`), and underscores (`_`). Changing this value creates a new resource.
 
@@ -130,6 +129,7 @@ The following arguments are optional:
 
 * `batch_configuration` - (Optional) Batching configuration. If omitted, the service defaults are applied and not tracked. See [`batch_configuration` Block](#batch_configuration-block) below.
 * `description` - (Optional) Description of the subscriber.
+* `filter_configuration` - (Optional) Filters that select which events are delivered. If omitted, all events are delivered. See [`filter_configuration` Block](#filter_configuration-block) below.
 * `log_configuration` - (Optional) Logging configuration. If omitted, the service defaults are applied and not tracked. See [`log_configuration` Block](#log_configuration-block) below.
 * `on_failure_configuration` - (Optional) Destination for events that could not be delivered. See [`on_failure_configuration` Block](#on_failure_configuration-block) below.
 * `point_in_time_configuration` - (Optional) Point in time from which delivery starts. Only applicable when `starting_position` is `POINT_IN_TIME`. Changing this value creates a new resource. See [`point_in_time_configuration` Block](#point_in_time_configuration-block) below.

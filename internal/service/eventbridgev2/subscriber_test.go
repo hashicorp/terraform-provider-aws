@@ -206,6 +206,7 @@ func TestAccEventBridgeV2Subscriber_update(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("batch_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("filter_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invoke_configuration").AtSliceIndex(0).AtMapKey("sqs_parameters"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_failure_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -216,10 +217,14 @@ func TestAccEventBridgeV2Subscriber_update(t *testing.T) {
 	})
 }
 
-// testAccCheckSubscriberServiceDefaults checks that removed batch and log configurations were reverted to the service defaults.
-// They are not tracked in state when unconfigured, so they must be checked against the API response.
+// testAccCheckSubscriberServiceDefaults checks that removed filter, batch, and log configurations were reverted to the service defaults.
+// Batch and log configurations are not tracked in state when unconfigured, so they must be checked against the API response.
 func testAccCheckSubscriberServiceDefaults(v *eventbridgev2.DescribeSubscriberOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		if c := v.FilterConfiguration; c != nil && len(c.Filters) > 0 {
+			return fmt.Errorf("filter_configuration has %d filters, want none", len(c.Filters))
+		}
+
 		if c := v.BatchConfiguration; c != nil && aws.ToInt32(c.MaxBatchSize) == 5 {
 			return fmt.Errorf("batch_configuration.max_batch_size = %d, want service default", aws.ToInt32(c.MaxBatchSize))
 		}
@@ -326,13 +331,6 @@ func testAccSubscriberConfig_basic(rName string) string {
 resource "aws_eventbridgev2_subscriber" "test" {
   name          = %[1]q
   event_bus_arn = aws_eventbridgev2_event_bus.test.arn
-
-  filter_configuration {
-    filter {
-      scope   = "METADATA"
-      pattern = jsonencode({ source = ["example"] })
-    }
-  }
 
   invoke_configuration {
     role_arn   = aws_iam_role.test.arn

@@ -5,6 +5,7 @@ package eventbridgev2
 
 import (
 	"context"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -37,6 +38,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// How long to wait for a new subscriber to be returned with its name.
+const subscriberPropagationTimeout = 1 * time.Minute
 
 // @FrameworkResource("aws_eventbridgev2_subscriber", name="Subscriber")
 // @Tags(identifierAttribute="arn")
@@ -168,8 +172,6 @@ func (r *subscriberResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"filter_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[filterConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -580,14 +582,27 @@ func (r *subscriberResource) Create(ctx context.Context, req resource.CreateRequ
 
 	arn := aws.ToString(out.SubscriberArn)
 
-	// Subscribers are provisioned synchronously, so read back the full configuration immediately.
-	output, err := findSubscriberByARN(ctx, conn, arn)
+	// Subscribers are provisioned synchronously, but right after creation the subscriber can briefly be returned
+	// without its name, and with "null" in the name part of its ARN.
+	output, err := tfresource.RetryWhenNotFound(ctx, subscriberPropagationTimeout, func(ctx context.Context) (*eventbridgev2.DescribeSubscriberOutput, error) {
+		out, err := findSubscriberByARN(ctx, conn, arn)
+		if err != nil {
+			return nil, err
+		}
+
+		if aws.ToString(out.Name) == "" {
+			return nil, &retry.NotFoundError{Message: "subscriber name not yet available"}
+		}
+
+		return out, nil
+	})
 	if err != nil {
 		// Taint the resource.
 		resp.State.SetAttribute(ctx, path.Root(names.AttrARN), arn)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return
 	}
+	output.SubscriberArn = aws.String(arn)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flattenConfigured(ctx, output, plan, &plan))
 	if resp.Diagnostics.HasError() {
@@ -654,6 +669,9 @@ func (r *subscriberResource) Update(ctx context.Context, req resource.UpdateRequ
 		// An empty configuration reverts to the service defaults.
 		if plan.Description.IsNull() && !state.Description.IsNull() {
 			input.Description = aws.String("")
+		}
+		if input.FilterConfiguration == nil && state.FilterConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			input.FilterConfiguration = &awstypes.FilterConfiguration{}
 		}
 		if input.BatchConfiguration == nil && state.BatchConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
 			input.BatchConfiguration = &awstypes.BatchConfiguration{}
@@ -733,6 +751,10 @@ func (r *subscriberResource) flatten(ctx context.Context, out *eventbridgev2.Des
 	// The service returns an empty on-failure configuration once it has been cleared.
 	if c := out.OnFailureConfiguration; c != nil && aws.ToString(c.Arn) == "" {
 		out.OnFailureConfiguration = nil
+	}
+	// A filter configuration without filters means no filter.
+	if c := out.FilterConfiguration; c != nil && len(c.Filters) == 0 {
+		out.FilterConfiguration = nil
 	}
 
 	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, out, data, fwflex.WithFieldNamePrefix("Subscriber")))
