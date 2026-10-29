@@ -57,7 +57,7 @@ func (l *tenantDatabaseListResource) List(ctx context.Context, request list.List
 	conn := l.Meta().RDSClient(ctx)
 
 	input := rds.DescribeTenantDatabasesInput{
-		DBInstanceIdentifier: fwflex.StringFromFramework(ctx, query.DBInstanceIdentifier),
+		DBInstanceIdentifier: query.DBInstanceIdentifier.ValueStringPointer(),
 	}
 
 	tflog.Info(ctx, "Listing Resources", map[string]any{
