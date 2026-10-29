@@ -113,7 +113,7 @@ The following arguments are optional:
 
 ### `data_automation_library_configuration` Block
 
-* `library` - (Optional) Library to use. Can be specified multiple times. See [`library` Block](#library-block) below.
+* `library` - (Optional) Library to use. Only one library is supported. See [`library` Block](#library-block) below.
 
 ### `library` Block
 

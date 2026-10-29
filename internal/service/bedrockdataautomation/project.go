@@ -230,6 +230,9 @@ func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest
 					Blocks: map[string]schema.Block{
 						"library": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[dataAutomationLibraryItemModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"library_arn": schema.StringAttribute{
