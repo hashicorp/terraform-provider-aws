@@ -100,18 +100,21 @@ func (r *capacityManagerSettingsResource) Read(ctx context.Context, request reso
 	conn := r.Meta().EC2Client(ctx)
 
 	output, err := findCapacityManagerAttributes(ctx, conn)
-	switch {
-	case retry.NotFound(err):
-		// Capacity Manager reports an error when it is disabled.
+	if retry.NotFound(err) {
+		// Disabled is a valid configured state (enabled = false), so keep the resource in state instead of removing it.
 		data.Enabled = types.BoolValue(false)
 		data.OrganizationsAccess = types.BoolValue(false)
-	case err != nil:
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+		return
+	}
+
+	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
-	default:
-		data.Enabled = types.BoolValue(output.CapacityManagerStatus == awstypes.CapacityManagerStatusEnabled)
-		data.OrganizationsAccess = types.BoolValue(aws.ToBool(output.OrganizationsAccess))
 	}
+
+	data.Enabled = types.BoolValue(output.CapacityManagerStatus == awstypes.CapacityManagerStatusEnabled)
+	data.OrganizationsAccess = types.BoolValue(aws.ToBool(output.OrganizationsAccess))
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
