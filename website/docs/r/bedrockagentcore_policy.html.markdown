@@ -41,14 +41,18 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the policy.
+* `enforcement_mode` - (Optional) Enforcement mode for the policy. Run the policy in `LOG_ONLY` mode to collect data on how it affects your application, then switch to `ACTIVE` to enforce it. Valid values: `ACTIVE`, `LOG_ONLY`. Defaults to `ACTIVE`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `validation_mode` - (Optional) Controls whether validation findings cause policy creation or update to fail. Valid values: `FAIL_ON_ANY_FINDINGS`, `IGNORE_ALL_FINDINGS`. Defaults to `FAIL_ON_ANY_FINDINGS`.
 
 ### `definition` Block
 
-The `definition` configuration block supports the following arguments:
+The `definition` configuration block supports exactly one of the following arguments:
 
-* `cedar` - (Required) Inline Cedar policy. See [`cedar` Block](#cedar-block) for details.
+* `cedar` - (Optional) Inline Cedar policy. See [`cedar` Block](#cedar-block) for details.
+* `policy` - (Optional) AgentCore policy statement, which supports plain Cedar policies as well as guardrail definitions. See [`policy` Block](#policy-block) for details.
+
+~> **Note:** Changing the definition type (from `cedar` to `policy` or vice versa) forces a new resource to be created, because the API does not permit changing a policy's type in place. Editing the `statement` within the same type is applied in place.
 
 ### `cedar` Block
 
@@ -56,10 +60,19 @@ The `cedar` configuration block supports the following arguments:
 
 * `statement` - (Required) Cedar policy statement.
 
+### `policy` Block
+
+The `policy` configuration block supports the following arguments:
+
+* `statement` - (Required) Body of the AgentCore policy statement. Contains the policy logic, which can be a Cedar policy or a guardrail definition.
+
+~> **Note:** The API also accepts a `policyGeneration` definition that references a previously generated policy asset. The service resolves that reference into a concrete `cedar` or `policy` statement when the policy is created, so the generated form is never returned on read. Because it cannot round-trip in Terraform state, it is intentionally not exposed as a configurable argument; use the `cedar` or `policy` block with the resolved statement instead.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `enforcement_mode` - Enforcement mode applied to the Policy.
 * `policy_arn` - ARN of the Policy.
 * `policy_id` - Identifier of the Policy.
 
