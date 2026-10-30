@@ -21,6 +21,7 @@ var (
 	ValidSecretNamePrefix = validSecretNamePrefix
 
 	SecretVersionForceNewCustomDiffInner = secretVersionForceNewCustomDiffInner
+	IsKMSKeyCreatingError                = isKMSKeyCreatingError
 	IsKMSKeyUnavailable                  = isKMSKeyUnavailable
 	IsSecretVersionSuperseded            = isSecretVersionSuperseded
 )

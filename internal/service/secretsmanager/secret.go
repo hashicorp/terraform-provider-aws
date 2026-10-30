@@ -172,6 +172,12 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta any)
 			if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "scheduled for deletion") || errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "was deleted") {
 				return true, err
 			}
+			// AWS KMS is eventually consistent: Secrets Manager can still see a newly created key
+			// (e.g. a multi-Region replica) as Creating after KMS DescribeKey reports it Enabled.
+			// PreconditionNotMetException: arn:aws:kms:...:key/mrk-... is creating.
+			if isKMSKeyCreatingError(err) {
+				return true, err
+			}
 			return false, err
 		},
 	)
