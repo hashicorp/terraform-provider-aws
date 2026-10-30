@@ -14,6 +14,7 @@ var (
 	ResourceRepository                    = resourceRepository
 	ResourceRepositoryCreationTemplate    = resourceRepositoryCreationTemplate
 	ResourceRepositoryPolicy              = resourceRepositoryPolicy
+	ResourceSigningConfiguration          = newSigningConfigurationResource
 
 	FindAccountSettingByName                         = findAccountSettingByName
 	FindLifecyclePolicyByRepositoryName              = findLifecyclePolicyByRepositoryName
@@ -25,4 +26,5 @@ var (
 	FindRepositoryByName                             = findRepositoryByName
 	FindRepositoryCreationTemplateByRepositoryPrefix = findRepositoryCreationTemplateByRepositoryPrefix
 	FindRepositoryPolicyByRepositoryName             = findRepositoryPolicyByRepositoryName
+	FindSigningConfiguration                         = findSigningConfiguration
 )
