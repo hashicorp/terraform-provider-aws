@@ -30,9 +30,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -54,6 +56,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	defaultHarnessHookLambdaTimeoutSeconds = 60
 )
 
 // @FrameworkResource("aws_bedrockagentcore_harness", name="Harness")
@@ -274,6 +280,28 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 								},
 							},
 						},
+					},
+				},
+			},
+			"hook": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessHookModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(20),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("after_invocation"),
+							path.MatchRelative().AtName("after_tool_call"),
+							path.MatchRelative().AtName("before_invocation"),
+							path.MatchRelative().AtName("before_tool_call"),
+						),
+					},
+					Blocks: map[string]schema.Block{
+						"after_invocation":  harnessHookConfigurationBlock(ctx),
+						"after_tool_call":   harnessHookConfigurationBlock(ctx),
+						"before_invocation": harnessHookConfigurationBlock(ctx),
+						"before_tool_call":  harnessHookConfigurationBlock(ctx),
 					},
 				},
 			},
@@ -871,6 +899,106 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 	}
 }
 
+func harnessHookConfigurationBlock(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[harnessHookConfigurationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrName: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 64),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]+$`), "Valid characters are a-z, A-Z, 0-9, _ (underscore), and - (hyphen)."),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				names.AttrTarget: schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[harnessHookTargetModel](ctx),
+					Validators: []validator.List{
+						listvalidator.IsRequired(),
+						listvalidator.SizeAtLeast(1),
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							tfobjectvalidator.ExactlyOneOfChildren(
+								path.MatchRelative().AtName("eventbridge"),
+								path.MatchRelative().AtName("lambda"),
+								path.MatchRelative().AtName("sns"),
+							),
+						},
+						Blocks: map[string]schema.Block{
+							"eventbridge": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[harnessHookEventBridgeTargetModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										names.AttrARN: schema.StringAttribute{
+											CustomType: fwtypes.ARNType,
+											Required:   true,
+										},
+									},
+								},
+							},
+							"lambda": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[harnessHookLambdaTargetModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									// failure_mode and timeout_seconds default to the API defaults instead of being
+									// plain Optional+Computed, so that removing either argument restores the default.
+									// Otherwise a removed failure_mode = "allow" would keep the hook failing open.
+									Attributes: map[string]schema.Attribute{
+										names.AttrARN: schema.StringAttribute{
+											CustomType: fwtypes.ARNType,
+											Required:   true,
+										},
+										"failure_mode": schema.StringAttribute{
+											CustomType: fwtypes.StringEnumType[awstypes.HarnessHookFailureMode](),
+											Optional:   true,
+											Computed:   true,
+											Default:    stringdefault.StaticString(string(awstypes.HarnessHookFailureModeDeny)),
+										},
+										"timeout_seconds": schema.Int32Attribute{
+											Optional: true,
+											Computed: true,
+											Default:  int32default.StaticInt32(defaultHarnessHookLambdaTimeoutSeconds),
+											Validators: []validator.Int32{
+												int32validator.Between(1, 900),
+											},
+										},
+									},
+								},
+							},
+							"sns": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[harnessHookSNSTargetModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										names.AttrARN: schema.StringAttribute{
+											CustomType: fwtypes.ARNType,
+											Required:   true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r *harnessResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var config, data harnessResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &config))
@@ -1070,6 +1198,12 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 			input.Memory = &awstypes.UpdatedHarnessMemoryConfiguration{
 				OptionalValue: nil,
 			}
+		}
+
+		// Omitting hooks retains the existing hooks; an empty list removes them. Check the plan
+		// rather than the config, which ignores lifecycle.ignore_changes during apply.
+		if !state.Hooks.IsNull() && plan.Hooks.IsNull() {
+			input.Hooks = []awstypes.HarnessHook{}
 		}
 
 		_, err := conn.UpdateHarness(ctx, &input)
@@ -1309,6 +1443,7 @@ type harnessResourceModel struct {
 	ExecutionRoleARN        fwtypes.ARN                                                          `tfsdk:"execution_role_arn"`
 	HarnessID               types.String                                                         `tfsdk:"harness_id"`
 	HarnessName             types.String                                                         `tfsdk:"harness_name"`
+	Hooks                   fwtypes.ListNestedObjectValueOf[harnessHookModel]                    `tfsdk:"hook"`
 	MaxIterations           types.Int32                                                          `tfsdk:"max_iterations"`
 	MaxTokens               types.Int32                                                          `tfsdk:"max_tokens"`
 	Memory                  fwtypes.ListNestedObjectValueOf[harnessMemoryConfigurationModel]     `tfsdk:"memory"`
@@ -2407,4 +2542,230 @@ func (m *harnessManagedMemoryConfigurationModel) flattenEnriched(ctx context.Con
 	}
 
 	return diags
+}
+
+// Hook union.
+
+type harnessHookModel struct {
+	AfterInvocation  fwtypes.ListNestedObjectValueOf[harnessHookConfigurationModel] `tfsdk:"after_invocation"`
+	AfterToolCall    fwtypes.ListNestedObjectValueOf[harnessHookConfigurationModel] `tfsdk:"after_tool_call"`
+	BeforeInvocation fwtypes.ListNestedObjectValueOf[harnessHookConfigurationModel] `tfsdk:"before_invocation"`
+	BeforeToolCall   fwtypes.ListNestedObjectValueOf[harnessHookConfigurationModel] `tfsdk:"before_tool_call"`
+}
+
+var (
+	_ fwflex.Expander  = harnessHookModel{}
+	_ fwflex.Flattener = &harnessHookModel{}
+)
+
+func (m *harnessHookModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.HarnessHookMemberAfterInvocation:
+		var model harnessHookConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.AfterInvocation, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case awstypes.HarnessHookMemberAfterToolCall:
+		var model harnessHookConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.AfterToolCall, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case awstypes.HarnessHookMemberBeforeInvocation:
+		var model harnessHookConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.BeforeInvocation, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case awstypes.HarnessHookMemberBeforeToolCall:
+		var model harnessHookConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.BeforeToolCall, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("harnessHookModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m harnessHookModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.AfterInvocation.IsNull():
+		model, d := m.AfterInvocation.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessHookMemberAfterInvocation
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		return &r, diags
+
+	case !m.AfterToolCall.IsNull():
+		model, d := m.AfterToolCall.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessHookMemberAfterToolCall
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		return &r, diags
+
+	case !m.BeforeInvocation.IsNull():
+		model, d := m.BeforeInvocation.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessHookMemberBeforeInvocation
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		return &r, diags
+
+	case !m.BeforeToolCall.IsNull():
+		model, d := m.BeforeToolCall.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessHookMemberBeforeToolCall
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type harnessHookConfigurationModel struct {
+	Name   types.String                                            `tfsdk:"name"`
+	Target fwtypes.ListNestedObjectValueOf[harnessHookTargetModel] `tfsdk:"target"`
+}
+
+// Hook target union.
+
+type harnessHookTargetModel struct {
+	EventBridge fwtypes.ListNestedObjectValueOf[harnessHookEventBridgeTargetModel] `tfsdk:"eventbridge"`
+	Lambda      fwtypes.ListNestedObjectValueOf[harnessHookLambdaTargetModel]      `tfsdk:"lambda"`
+	SNS         fwtypes.ListNestedObjectValueOf[harnessHookSNSTargetModel]         `tfsdk:"sns"`
+}
+
+var (
+	_ fwflex.Expander  = harnessHookTargetModel{}
+	_ fwflex.Flattener = &harnessHookTargetModel{}
+)
+
+func (m *harnessHookTargetModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.HarnessHookTargetMemberEventBridge:
+		var model harnessHookEventBridgeTargetModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.EventBridge, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case awstypes.HarnessHookTargetMemberLambda:
+		var model harnessHookLambdaTargetModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.Lambda, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	case awstypes.HarnessHookTargetMemberSns:
+		var model harnessHookSNSTargetModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		var d diag.Diagnostics
+		m.SNS, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		smerr.AddEnrich(ctx, &diags, d)
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("harnessHookTargetModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
+}
+
+func (m harnessHookTargetModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	switch {
+	case !m.EventBridge.IsNull():
+		model, d := m.EventBridge.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessHookTargetMemberEventBridge
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		return &r, diags
+
+	case !m.Lambda.IsNull():
+		model, d := m.Lambda.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessHookTargetMemberLambda
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		return &r, diags
+
+	case !m.SNS.IsNull():
+		model, d := m.SNS.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.HarnessHookTargetMemberSns
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, model, &r.Value))
+		return &r, diags
+	}
+
+	return nil, diags
+}
+
+type harnessHookEventBridgeTargetModel struct {
+	ARN fwtypes.ARN `tfsdk:"arn"`
+}
+
+type harnessHookLambdaTargetModel struct {
+	ARN            fwtypes.ARN                                         `tfsdk:"arn"`
+	FailureMode    fwtypes.StringEnum[awstypes.HarnessHookFailureMode] `tfsdk:"failure_mode"`
+	TimeoutSeconds types.Int32                                         `tfsdk:"timeout_seconds"`
+}
+
+type harnessHookSNSTargetModel struct {
+	ARN fwtypes.ARN `tfsdk:"arn"`
 }

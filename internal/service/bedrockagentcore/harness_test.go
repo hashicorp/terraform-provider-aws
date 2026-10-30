@@ -97,6 +97,7 @@ func TestAccBedrockAgentCoreHarness_basic(t *testing.T) {
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrExecutionRoleARN), "aws_iam_role.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_id"), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+`-[a-zA-Z0-9]{10}$`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("harness_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hook"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_iterations"), knownvalue.Int32Exact(75)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_tokens"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("memory"), knownvalue.ListSizeExact(0)),
@@ -848,6 +849,225 @@ func TestAccBedrockAgentCoreHarness_skill(t *testing.T) {
 							names.AttrURI: knownvalue.NotNull(),
 						})}),
 					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreHarness_hook(t *testing.T) {
+	ctx := acctest.Context(t)
+	var harness awstypes.Harness
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_harness.test"
+	expectedHooks := knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			"after_invocation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+				names.AttrName: knownvalue.StringExact("record_invocation"),
+				names.AttrTarget: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					"eventbridge": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNExact("events", "event-bus/"+rName),
+					})}),
+					"lambda": knownvalue.ListSizeExact(0),
+					"sns":    knownvalue.ListSizeExact(0),
+				})}),
+			})}),
+			"after_tool_call":   knownvalue.ListSizeExact(0),
+			"before_invocation": knownvalue.ListSizeExact(0),
+			"before_tool_call":  knownvalue.ListSizeExact(0),
+		}),
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			"after_invocation":  knownvalue.ListSizeExact(0),
+			"after_tool_call":   knownvalue.ListSizeExact(0),
+			"before_invocation": knownvalue.ListSizeExact(0),
+			"before_tool_call": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+				names.AttrName: knownvalue.StringExact("validate_tool_call"),
+				names.AttrTarget: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					"eventbridge": knownvalue.ListSizeExact(0),
+					"lambda": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrARN:     tfknownvalue.RegionalARNExact("lambda", "function:"+rName),
+						"failure_mode":    tfknownvalue.StringExact(awstypes.HarnessHookFailureModeAllow),
+						"timeout_seconds": knownvalue.Int32Exact(5),
+					})}),
+					"sns": knownvalue.ListSizeExact(0),
+				})}),
+			})}),
+		}),
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			"after_invocation": knownvalue.ListSizeExact(0),
+			"after_tool_call": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+				names.AttrName: knownvalue.StringExact("record_tool_result"),
+				names.AttrTarget: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					"eventbridge": knownvalue.ListSizeExact(0),
+					"lambda":      knownvalue.ListSizeExact(0),
+					"sns": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNExact("sns", rName),
+					})}),
+				})}),
+			})}),
+			"before_invocation": knownvalue.ListSizeExact(0),
+			"before_tool_call":  knownvalue.ListSizeExact(0),
+		}),
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			"after_invocation": knownvalue.ListSizeExact(0),
+			"after_tool_call":  knownvalue.ListSizeExact(0),
+			"before_invocation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+				names.AttrName: knownvalue.StringExact("validate_request"),
+				names.AttrTarget: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+					"eventbridge": knownvalue.ListSizeExact(0),
+					"lambda": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrARN:     tfknownvalue.RegionalARNExact("lambda", "function:"+rName),
+						"failure_mode":    tfknownvalue.StringExact(awstypes.HarnessHookFailureModeDeny),
+						"timeout_seconds": knownvalue.Int32Exact(60),
+					})}),
+					"sns": knownvalue.ListSizeExact(0),
+				})}),
+			})}),
+			"before_tool_call": knownvalue.ListSizeExact(0),
+		}),
+	})
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckHarness(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHarnessDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/hook/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hook"), expectedHooks),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/hook/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "harness_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "harness_id",
+				ImportStateVerifyIgnore:              []string{names.AttrEnvironment, "memory"},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/hook.ignore_changes/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hook"), expectedHooks),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/hook.update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("hook").AtSliceIndex(1).AtMapKey("before_tool_call").AtSliceIndex(0).AtMapKey(names.AttrTarget).AtSliceIndex(0).AtMapKey("lambda").AtSliceIndex(0).AtMapKey("failure_mode"), tfknownvalue.StringExact(awstypes.HarnessHookFailureModeDeny)),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hook"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"after_invocation": knownvalue.ListSizeExact(0),
+							"after_tool_call":  knownvalue.ListSizeExact(0),
+							"before_invocation": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrName: knownvalue.StringExact("validate_request"),
+								names.AttrTarget: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"eventbridge": knownvalue.ListSizeExact(0),
+									"lambda": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										names.AttrARN:     tfknownvalue.RegionalARNExact("lambda", "function:"+rName),
+										"failure_mode":    tfknownvalue.StringExact(awstypes.HarnessHookFailureModeDeny),
+										"timeout_seconds": knownvalue.Int32Exact(60),
+									})}),
+									"sns": knownvalue.ListSizeExact(0),
+								})}),
+							})}),
+							"before_tool_call": knownvalue.ListSizeExact(0),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"after_invocation":  knownvalue.ListSizeExact(0),
+							"after_tool_call":   knownvalue.ListSizeExact(0),
+							"before_invocation": knownvalue.ListSizeExact(0),
+							"before_tool_call": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrName: knownvalue.StringExact("validate_tool_call"),
+								names.AttrTarget: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"eventbridge": knownvalue.ListSizeExact(0),
+									"lambda": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+										names.AttrARN:     tfknownvalue.RegionalARNExact("lambda", "function:"+rName),
+										"failure_mode":    tfknownvalue.StringExact(awstypes.HarnessHookFailureModeDeny),
+										"timeout_seconds": knownvalue.Int32Exact(10),
+									})}),
+									"sns": knownvalue.ListSizeExact(0),
+								})}),
+							})}),
+						}),
+					})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/hook.none/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hook"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Harness/hook/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHarnessExists(ctx, t, resourceName, &harness),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("hook"), expectedHooks),
 				},
 			},
 		},
