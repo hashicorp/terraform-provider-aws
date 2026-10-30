@@ -1,0 +1,7 @@
+```release-note:new-action
+aws_agentregistry_submit_registry_record_for_approval
+```
+
+```release-note:new-action
+aws_agentregistry_update_registry_record_status
+```
