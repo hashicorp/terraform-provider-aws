@@ -10,7 +10,7 @@ var (
 	ResourceAMIFromInstance                               = resourceAMIFromInstance
 	ResourceAMILaunchPermission                           = resourceAMILaunchPermission
 	ResourceAvailabilityZoneGroup                         = resourceAvailabilityZoneGroup
-	ResourceCapacityManagerSettings                       = newCapacityManagerSettingsResource
+	ResourceCapacityManager                               = newCapacityManagerResource
 	ResourceCapacityReservation                           = resourceCapacityReservation
 	ResourceCarrierGateway                                = resourceCarrierGateway
 	ResourceClientVPNAuthorizationRule                    = resourceClientVPNAuthorizationRule

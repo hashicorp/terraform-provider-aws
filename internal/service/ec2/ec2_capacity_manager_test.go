@@ -20,34 +20,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2CapacityManagerSettings_serial(t *testing.T) {
+func TestAccEC2CapacityManager_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(*testing.T){
-		acctest.CtBasic:        testAccEC2CapacityManagerSettings_basic,
-		"update":               testAccEC2CapacityManagerSettings_update,
-		"organizationsAccess":  testAccEC2CapacityManagerSettings_organizationsAccess,
-		"invalidConfiguration": testAccEC2CapacityManagerSettings_invalidConfiguration,
-		"Identity":             testAccEC2CapacityManagerSettings_identitySerial,
+		acctest.CtBasic:        testAccEC2CapacityManager_basic,
+		"update":               testAccEC2CapacityManager_update,
+		"organizationsAccess":  testAccEC2CapacityManager_organizationsAccess,
+		"invalidConfiguration": testAccEC2CapacityManager_invalidConfiguration,
+		"Identity":             testAccEC2CapacityManager_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccEC2CapacityManagerSettings_basic(t *testing.T) {
+func testAccEC2CapacityManager_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_ec2_capacity_manager_settings.test"
+	resourceName := "aws_ec2_capacity_manager.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapacityManagerSettingsDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCapacityManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityManagerSettingsConfig_basic(true),
+				Config: testAccCapacityManagerConfig_basic(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityManagerSettingsExists(ctx, t, resourceName),
+					testAccCheckCapacityManagerExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "organizations_access", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRegion),
@@ -65,28 +65,28 @@ func testAccEC2CapacityManagerSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccEC2CapacityManagerSettings_update(t *testing.T) {
+func testAccEC2CapacityManager_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_ec2_capacity_manager_settings.test"
+	resourceName := "aws_ec2_capacity_manager.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapacityManagerSettingsDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCapacityManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityManagerSettingsConfig_basic(false),
+				Config: testAccCapacityManagerConfig_basic(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityManagerSettingsDisabled(ctx, t),
+					testAccCheckCapacityManagerDisabled(ctx, t),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "organizations_access", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccCapacityManagerSettingsConfig_basic(true),
+				Config: testAccCapacityManagerConfig_basic(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityManagerSettingsExists(ctx, t, resourceName),
+					testAccCheckCapacityManagerExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -96,9 +96,9 @@ func testAccEC2CapacityManagerSettings_update(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccCapacityManagerSettingsConfig_basic(false),
+				Config: testAccCapacityManagerConfig_basic(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityManagerSettingsDisabled(ctx, t),
+					testAccCheckCapacityManagerDisabled(ctx, t),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -111,9 +111,9 @@ func testAccEC2CapacityManagerSettings_update(t *testing.T) {
 	})
 }
 
-func testAccEC2CapacityManagerSettings_organizationsAccess(t *testing.T) {
+func testAccEC2CapacityManager_organizationsAccess(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_ec2_capacity_manager_settings.test"
+	resourceName := "aws_ec2_capacity_manager.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -123,20 +123,20 @@ func testAccEC2CapacityManagerSettings_organizationsAccess(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapacityManagerSettingsDestroy(ctx, t),
+		CheckDestroy:             testAccCheckCapacityManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityManagerSettingsConfig_organizationsAccess(true, true),
+				Config: testAccCapacityManagerConfig_organizationsAccess(true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityManagerSettingsExists(ctx, t, resourceName),
+					testAccCheckCapacityManagerExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "organizations_access", acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccCapacityManagerSettingsConfig_organizationsAccess(true, false),
+				Config: testAccCapacityManagerConfig_organizationsAccess(true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityManagerSettingsExists(ctx, t, resourceName),
+					testAccCheckCapacityManagerExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "organizations_access", acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -149,7 +149,7 @@ func testAccEC2CapacityManagerSettings_organizationsAccess(t *testing.T) {
 	})
 }
 
-func testAccEC2CapacityManagerSettings_invalidConfiguration(t *testing.T) {
+func testAccEC2CapacityManager_invalidConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -158,14 +158,14 @@ func testAccEC2CapacityManagerSettings_invalidConfiguration(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCapacityManagerSettingsConfig_organizationsAccess(false, true),
+				Config:      testAccCapacityManagerConfig_organizationsAccess(false, true),
 				ExpectError: regexache.MustCompile(`organizations_access cannot be true when enabled is false`),
 			},
 		},
 	})
 }
 
-func testAccCheckCapacityManagerSettingsExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+func testAccCheckCapacityManagerExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -187,7 +187,7 @@ func testAccCheckCapacityManagerSettingsExists(ctx context.Context, t *testing.T
 	}
 }
 
-func testAccCheckCapacityManagerSettingsDisabled(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckCapacityManagerDisabled(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
@@ -209,21 +209,21 @@ func testAccCheckCapacityManagerSettingsDisabled(ctx context.Context, t *testing
 	}
 }
 
-func testAccCheckCapacityManagerSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
-	return testAccCheckCapacityManagerSettingsDisabled(ctx, t)
+func testAccCheckCapacityManagerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return testAccCheckCapacityManagerDisabled(ctx, t)
 }
 
-func testAccCapacityManagerSettingsConfig_basic(enabled bool) string {
+func testAccCapacityManagerConfig_basic(enabled bool) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_capacity_manager_settings" "test" {
+resource "aws_ec2_capacity_manager" "test" {
   enabled = %[1]t
 }
 `, enabled)
 }
 
-func testAccCapacityManagerSettingsConfig_organizationsAccess(enabled, organizationsAccess bool) string {
+func testAccCapacityManagerConfig_organizationsAccess(enabled, organizationsAccess bool) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_capacity_manager_settings" "test" {
+resource "aws_ec2_capacity_manager" "test" {
   enabled              = %[1]t
   organizations_access = %[2]t
 }

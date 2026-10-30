@@ -21,21 +21,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_ec2_capacity_manager_settings", name="Capacity Manager Settings")
+// @FrameworkResource("aws_ec2_capacity_manager", name="Capacity Manager")
 // @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 // @Testing(generator=false)
-func newCapacityManagerSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &capacityManagerSettingsResource{}, nil
+func newCapacityManagerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &capacityManagerResource{}, nil
 }
 
-type capacityManagerSettingsResource struct {
-	framework.ResourceWithModel[capacityManagerSettingsResourceModel]
+type capacityManagerResource struct {
+	framework.ResourceWithModel[capacityManagerResourceModel]
 	framework.WithImportByIdentity
 }
 
-func (r *capacityManagerSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *capacityManagerResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrEnabled: schema.BoolAttribute{
@@ -50,8 +50,8 @@ func (r *capacityManagerSettingsResource) Schema(ctx context.Context, request re
 	}
 }
 
-func (r *capacityManagerSettingsResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	var data capacityManagerSettingsResourceModel
+func (r *capacityManagerResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data capacityManagerResourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -70,8 +70,8 @@ func (r *capacityManagerSettingsResource) ValidateConfig(ctx context.Context, re
 	}
 }
 
-func (r *capacityManagerSettingsResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data capacityManagerSettingsResourceModel
+func (r *capacityManagerResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data capacityManagerResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
@@ -79,7 +79,7 @@ func (r *capacityManagerSettingsResource) Create(ctx context.Context, request re
 
 	conn := r.Meta().EC2Client(ctx)
 
-	if err := updateCapacityManagerSettings(ctx, conn, &data); err != nil {
+	if err := updateCapacityManager(ctx, conn, &data); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err)
 		return
 	}
@@ -90,8 +90,8 @@ func (r *capacityManagerSettingsResource) Create(ctx context.Context, request re
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
-func (r *capacityManagerSettingsResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data capacityManagerSettingsResourceModel
+func (r *capacityManagerResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data capacityManagerResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
@@ -119,8 +119,8 @@ func (r *capacityManagerSettingsResource) Read(ctx context.Context, request reso
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
-func (r *capacityManagerSettingsResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var new, old capacityManagerSettingsResourceModel
+func (r *capacityManagerResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old capacityManagerResourceModel
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
 	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
@@ -141,7 +141,7 @@ func (r *capacityManagerSettingsResource) Update(ctx context.Context, request re
 		}
 		new.OrganizationsAccess = types.BoolValue(aws.ToBool(output.OrganizationsAccess))
 	} else if !new.Enabled.Equal(old.Enabled) {
-		if err := updateCapacityManagerSettings(ctx, conn, &new); err != nil {
+		if err := updateCapacityManager(ctx, conn, &new); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err)
 			return
 		}
@@ -150,7 +150,7 @@ func (r *capacityManagerSettingsResource) Update(ctx context.Context, request re
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
-func (r *capacityManagerSettingsResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *capacityManagerResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
 	// Removing the resource disables EC2 Capacity Manager.
@@ -161,8 +161,8 @@ func (r *capacityManagerSettingsResource) Delete(ctx context.Context, request re
 	}
 }
 
-// updateCapacityManagerSettings enables or disables EC2 Capacity Manager to match data.
-func updateCapacityManagerSettings(ctx context.Context, conn *ec2.Client, data *capacityManagerSettingsResourceModel) error {
+// updateCapacityManager enables or disables EC2 Capacity Manager to match data.
+func updateCapacityManager(ctx context.Context, conn *ec2.Client, data *capacityManagerResourceModel) error {
 	if data.Enabled.ValueBool() {
 		input := ec2.EnableCapacityManagerInput{
 			OrganizationsAccess: data.OrganizationsAccess.ValueBoolPointer(),
@@ -189,7 +189,7 @@ func updateCapacityManagerSettings(ctx context.Context, conn *ec2.Client, data *
 	return nil
 }
 
-type capacityManagerSettingsResourceModel struct {
+type capacityManagerResourceModel struct {
 	framework.WithRegionModel
 	Enabled             types.Bool   `tfsdk:"enabled"`
 	ID                  types.String `tfsdk:"id"`

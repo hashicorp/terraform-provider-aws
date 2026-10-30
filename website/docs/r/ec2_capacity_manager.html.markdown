@@ -1,12 +1,12 @@
 ---
 subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
-page_title: "AWS: aws_ec2_capacity_manager_settings"
+page_title: "AWS: aws_ec2_capacity_manager"
 description: |-
   Manages EC2 Capacity Manager settings for the current AWS account.
 ---
 
-# Resource: aws_ec2_capacity_manager_settings
+# Resource: aws_ec2_capacity_manager
 
 Manages [EC2 Capacity Manager](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/capacity-manager.html) settings for the current AWS account. EC2 Capacity Manager monitors, analyzes, and helps manage EC2 capacity usage across On-Demand Instances, Spot Instances, and Capacity Reservations.
 
@@ -19,7 +19,7 @@ Capacity Manager can be enabled in only one Region per account (the home Region)
 ### Basic Usage
 
 ```terraform
-resource "aws_ec2_capacity_manager_settings" "example" {
+resource "aws_ec2_capacity_manager" "example" {
   enabled = true
 }
 ```
@@ -29,7 +29,7 @@ resource "aws_ec2_capacity_manager_settings" "example" {
 To aggregate data from all accounts in an AWS Organization, enable Organizations access from the management account (or a delegated administrator account):
 
 ```terraform
-resource "aws_ec2_capacity_manager_settings" "example" {
+resource "aws_ec2_capacity_manager" "example" {
   enabled              = true
   organizations_access = true
 }
@@ -47,7 +47,7 @@ resource "aws_organizations_delegated_administrator" "example" {
   service_principal = "ec2.capacitymanager.amazonaws.com"
 }
 
-resource "aws_ec2_capacity_manager_settings" "example" {
+resource "aws_ec2_capacity_manager" "example" {
   provider = aws.delegated
 
   enabled              = true
@@ -75,13 +75,13 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_ec2_capacity_manager_settings.example
+  to = aws_ec2_capacity_manager.example
   identity = {
     region = "us-west-2"
   }
 }
 
-resource "aws_ec2_capacity_manager_settings" "example" {
+resource "aws_ec2_capacity_manager" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
@@ -97,7 +97,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_ec2_capacity_manager_settings.example
+  to = aws_ec2_capacity_manager.example
   id = "us-west-2"
 }
 ```
@@ -105,5 +105,5 @@ import {
 Using `terraform import`, import EC2 Capacity Manager settings using the region name. For example:
 
 ```console
-% terraform import aws_ec2_capacity_manager_settings.example us-west-2
+% terraform import aws_ec2_capacity_manager.example us-west-2
 ```
