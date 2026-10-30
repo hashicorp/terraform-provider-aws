@@ -20,13 +20,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccQuickSightAccountCustomPermission_Identity_basic(t *testing.T) {
+func testAccQuickSightAccountCustomPermission_identitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:  testAccQuickSightAccountCustomPermission_Identity_basic,
+		"RegionOverride": testAccQuickSightAccountCustomPermission_Identity_regionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccQuickSightAccountCustomPermission_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_quicksight_account_custom_permission.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -104,13 +115,13 @@ func TestAccQuickSightAccountCustomPermission_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightAccountCustomPermission_Identity_regionOverride(t *testing.T) {
+func testAccQuickSightAccountCustomPermission_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_quicksight_account_custom_permission.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
