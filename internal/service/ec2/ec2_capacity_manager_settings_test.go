@@ -119,6 +119,7 @@ func testAccEC2CapacityManagerSettings_organizationsAccess(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "ec2.capacitymanager.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
