@@ -81,10 +81,6 @@ const (
 	environmentTierTypeStandard = "Standard"
 )
 
-var (
-	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d{1,2})?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
-)
-
 // @SDKResource("aws_elastic_beanstalk_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
 func resourceEnvironment() *schema.Resource {
@@ -359,7 +355,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 	if cname != "" {
 		var cnamePrefix string
 
-		if cnamePrefixMatch := environmentCNAMERegex.FindStringSubmatch(cname); len(cnamePrefixMatch) > 1 {
+		if cnamePrefixMatch := regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d{1,2})?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`).FindStringSubmatch(cname); len(cnamePrefixMatch) > 1 {
 			cnamePrefix = cnamePrefixMatch[1]
 		}
 
