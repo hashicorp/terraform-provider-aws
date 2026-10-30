@@ -3302,7 +3302,7 @@ func TestBucketNamespace(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		if got, want := tfs3.AccountRegionalBucketNameRegex.MatchString(tc.BucketName), tc.Expect; got != want {
+		if got, want := tfs3.AccountRegionalBucketNameRegex().MatchString(tc.BucketName), tc.Expect; got != want {
 			t.Errorf("MatchString(%q) = %v, want %v", tc.BucketName, got, want)
 		}
 	}
