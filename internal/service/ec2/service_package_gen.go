@@ -67,6 +67,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newTransitGatewayAttachmentNATConfigurationDataSource,
+			TypeName: "aws_ec2_transit_gateway_attachment_nat_configuration",
+			Name:     "Transit Gateway Attachment NAT Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newSpotDataFeedSubscriptionDataSource,
 			TypeName: "aws_spot_datafeed_subscription",
 			Name:     "Spot Data Feed Subscription Data Source",
@@ -207,6 +213,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newTransitGatewayAttachmentNATConfigurationResource,
+			TypeName: "aws_ec2_transit_gateway_attachment_nat_configuration",
+			Name:     "Transit Gateway Attachment NAT Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrTransitGatewayAttachmentID, true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
