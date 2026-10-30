@@ -28,20 +28,22 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-<<<<<<< HEAD
+			Factory:  newAdminAccountResource,
+			TypeName: "aws_networksecuritymanager_admin_account",
+			Name:     "Admin Account",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("admin_account_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newDeploymentResource,
 			TypeName: "aws_networksecuritymanager_deployment",
 			Name:     "Deployment",
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentity(),
-=======
-			Factory:  newAdminAccountResource,
-			TypeName: "aws_networksecuritymanager_admin_account",
-			Name:     "Admin Account",
-			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("admin_account_id", true)),
->>>>>>> afeca37479e (New Resource: aws_networksecuritymanager_admin_account)
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -95,6 +97,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newAdminAccountResourceAsListResource,
+			TypeName: "aws_networksecuritymanager_admin_account",
+			Name:     "Admin Account",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("admin_account_id", true)),
+		},
 		{
 			Factory:  newDeploymentResourceAsListResource,
 			TypeName: "aws_networksecuritymanager_deployment",

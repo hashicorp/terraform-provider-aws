@@ -17,6 +17,7 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_networksecuritymanager_admin_account", sweepAdminAccounts)
 	awsv2.Register("aws_networksecuritymanager_deployment", sweepDeployments)
 	// A policy or scope cannot be deleted while a deployment uses it.
 	awsv2.Register("aws_networksecuritymanager_policy", sweepPolicies, "aws_networksecuritymanager_deployment")
@@ -130,6 +131,24 @@ func sweepScopes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 				framework.NewAttribute(names.AttrARN, scopeBaseARN(aws.ToString(v.ScopeArn)))),
 			)
 		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepAdminAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input networksecuritymanager.ListAdminAccountsInput
+	conn := client.NetworkSecurityManagerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	for v, err := range listAdminAccounts(ctx, conn, &input) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		sweepResources = append(sweepResources, framework.NewSweepResource(newAdminAccountResource, client,
+			framework.NewAttribute("admin_account_id", aws.ToString(v.AccountId))),
+		)
 	}
 
 	return sweepResources, nil

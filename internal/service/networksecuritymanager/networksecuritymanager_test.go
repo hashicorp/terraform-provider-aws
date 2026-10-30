@@ -11,7 +11,10 @@ import (
 
 // An AWS account can be set as a Network Security Manager administrator only
 // once, and the acceptance tests all use the current (Organizations
-// management) account, so they must run serially.
+// management) account, so they must run serially. Each test case creates and
+// removes the administrator account, and the service rejects setting it again
+// for a while after a removal, so related checks are grouped into as few test
+// cases as possible.
 func TestAccNetworkSecurityManager_serial(t *testing.T) {
 	t.Parallel()
 
@@ -20,12 +23,9 @@ func TestAccNetworkSecurityManager_serial(t *testing.T) {
 			acctest.CtBasic:      testAccAdminAccount_basic,
 			acctest.CtDisappears: testAccAdminAccount_disappears,
 			"full":               testAccAdminAccount_full,
-			"priority":           testAccAdminAccount_priority,
-			"scopeFilter":        testAccAdminAccount_scopeFilter,
-			"firewallTypeScope":  testAccAdminAccount_firewallTypeScope,
-			"recreate":           testAccAdminAccount_recreate,
-			"validation":         testAccAdminAccount_validation,
+			"adminScope":         testAccAdminAccount_adminScope,
 			"Identity":           testAccNetworkSecurityManagerAdminAccount_identitySerial,
+			"List_basic":         testAccAdminAccount_List_basic,
 		},
 	}
 
