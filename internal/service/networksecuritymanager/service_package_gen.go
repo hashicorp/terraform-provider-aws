@@ -87,6 +87,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newAdminAccountResourceAsListResource,
+			TypeName: "aws_networksecuritymanager_admin_account",
+			Name:     "Admin Account",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("admin_account_id", true)),
+		},
+		{
 			Factory:  newPolicyResourceAsListResource,
 			TypeName: "aws_networksecuritymanager_policy",
 			Name:     "Policy",
