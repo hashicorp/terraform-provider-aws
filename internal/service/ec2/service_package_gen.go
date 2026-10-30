@@ -146,6 +146,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newCapacityManagerResource,
+			TypeName: "aws_ec2_capacity_manager",
+			Name:     "Capacity Manager",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newDefaultCreditSpecificationResource,
 			TypeName: "aws_ec2_default_credit_specification",
 			Name:     "Default Credit Specification",
