@@ -1,0 +1,1312 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Declarative resource modeling principles - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#principles-for-declarative-resource-modeling" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Declarative resource modeling principles
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-service/" class="md-nav__link">
+        Add a New AWS Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-resource/" class="md-nav__link">
+        Add a New Resource Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-datasource/" class="md-nav__link">
+        Add a New Data Source Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Add a New Ephemeral Resource Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-function/" class="md-nav__link">
+        Add a New Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-list-resource/" class="md-nav__link">
+        Add a New List Resource Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-a-new-region/" class="md-nav__link">
+        Add a New AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-resource-identity-support/" class="md-nav__link">
+        Add Resource Identity Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../add-import-support/" class="md-nav__link">
+        Add Resource Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../end-user-documentation/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acc-test-generation/" class="md-nav__link">
+        Generated Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ai-usage/" class="md-nav__link">
+        AI Usage
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="false">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../breaking-changes/" class="md-nav__link">
+        Breaking Changes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../enhanced-region-support/" class="md-nav__link">
+        Enhanced Region Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../finders-and-listers/" class="md-nav__link">
+        Finders and Listers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../go-for-contributors/" class="md-nav__link">
+        Go Conventions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../go-vcr/" class="md-nav__link">
+        Go-VCR
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../github-actions-caching/" class="md-nav__link">
+        GitHub Actions Caching
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resource-identity/" class="md-nav__link">
+        Resource Identity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../list-resources/" class="md-nav__link">
+        List Resources
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    Decision
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    Background
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-principles" class="md-nav__link">
+    The principles
+  </a>
+  
+    <nav class="md-nav" aria-label="The principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#0-eliminate-first" class="md-nav__link">
+    0. Eliminate first
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1-model-the-resource-not-our-code" class="md-nav__link">
+    1. Model the resource, not our code
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-one-fact-one-authority" class="md-nav__link">
+    2. One fact, one authority
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-prefer-typed-go" class="md-nav__link">
+    3. Prefer typed Go
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-shared-over-generated" class="md-nav__link">
+    4. Shared over generated
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-bind-behavior-dont-encode-it" class="md-nav__link">
+    5. Bind behavior, don't encode it
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-new-surface-pays-rent" class="md-nav__link">
+    6. New surface pays rent
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    Consequences
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+<h1 id="principles-for-declarative-resource-modeling">Principles for Declarative Resource Modeling<a class="headerlink" href="#principles-for-declarative-resource-modeling" title="Permanent link">#</a></h1>
+<p><strong>Summary:</strong> Principles for when a fact about a resource is written as data instead of code, what form that data takes, and what it must justify to be added.<br />
+<strong>Created</strong>: 2026-10-08<br />
+<strong>Author</strong>: <a href="https://github.com/YakDriver">@YakDriver</a>  </p>
+<hr />
+<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">#</a></h2>
+<p>Any fact about a resource that we write as data instead of code (registration, tags, identity, test settings) has to clear these:</p>
+<ol>
+<li><strong>Eliminate first.</strong> Dissolve, derive, or default a fact before giving it syntax.</li>
+<li><strong>Model the resource, not our code.</strong> A model holds durable facts about the resource, or fills a slot every peer resource has.</li>
+<li><strong>One fact, one authority.</strong> Every other copy is generated from it or checked against it.</li>
+<li><strong>Prefer typed Go.</strong> References to code are checked by the compiler, never strings.</li>
+<li><strong>Shared over generated.</strong> Write common behavior once. Generate only when static types require it or it's clearly simpler.</li>
+<li><strong>Bind behavior, don't encode it.</strong> A model names a Go function. The algorithm stays in Go.</li>
+<li><strong>New surface pays rent.</strong> A new field answers five questions before it's added.</li>
+</ol>
+<p>These govern what gets added and how proposals to change the syntax are judged. Nothing that exists today has to migrate.</p>
+<p><strong>A step has to stand alone.</strong> Most of these principles refuse something, so used as a checklist they can block every change. A change doesn't have to reach the end state. It has to leave the provider better even if everything planned after it is abandoned. One that only pays off once later work lands is a down payment, and "a step in the right direction" is how most <code>@Testing</code> keys got added. Principle 6 still charges rent for whatever a step adds.</p>
+<h2 id="background">Background<a class="headerlink" href="#background" title="Permanent link">#</a></h2>
+<p>Annotations arrived in 2023 as four bare markers. By October 2026 there were 25 marker kinds on about 7,000 lines, and about half the growth since 2024 was <code>@Testing</code>. Each addition was defensible on its own. Nothing asked whether it had earned its place, and <em>a new syntax won't ask either</em>.</p>
+<p>In this provider the Go code is the resource. Metadata describes what the provider and its generators need and can't read from the code. <a href="https://github.com/hashicorp/terraform-provider-awscc"><code>terraform-provider-awscc</code></a> works the other way: it's generated from CloudFormation schemas, so the spec has to carry everything. Where the spec can't (CloudFormation doesn't expose defaults consistently), awscc marks optional values <code>Computed</code> and stops detecting drift on values a practitioner omits.</p>
+<p>Case studies of how other systems model resources declaratively, and the provider measurements behind these principles, are in <a href="https://github.com/YakDriver/declarative-modeling">YakDriver/declarative-modeling</a>.</p>
+<h2 id="the-principles">The principles<a class="headerlink" href="#the-principles" title="Permanent link">#</a></h2>
+<h3 id="0-eliminate-first">0. Eliminate first<a class="headerlink" href="#0-eliminate-first" title="Permanent link">#</a></h3>
+<p>A fact can be <em>dissolved</em> (its consumer becomes generic and stops needing it), <em>derived</em> (computed from an existing authority), or <em>defaulted</em> (written only where it differs). Then there's nothing to author, review, or let go stale.</p>
+<div class="highlight"><pre><span></span><code><span class="nx">Check</span><span class="p">:</span><span class="w"> </span><span class="nx">testAccCheckThingExists</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">v</span><span class="p">)</span><span class="w">       </span><span class="c1">// v&#39;s type is authored separately</span>
+<span class="nx">Check</span><span class="p">:</span><span class="w"> </span><span class="nx">acctest</span><span class="p">.</span><span class="nx">CheckExists</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceName</span><span class="p">,</span><span class="w"> </span><span class="nx">findThingByID</span><span class="p">)</span><span class="w"> </span><span class="c1">// the type follows from the finder</span>
+</code></pre></div>
+<p>A derivation that's wrong has to fail loudly, at compile or generate time. A heuristic that's silently wrong some of the time is worse than an authored value, because the authored value at least gets reviewed. A default has to be the value whose mistakes show. Absence should mean "this test runs," never "this test is skipped," since nobody notices a skipped test.</p>
+<ul>
+<li>Upjet derives everything it can from the Terraform schema and asks for input only on what's left (<a href="https://github.com/crossplane/upjet/blob/main/docs/configuring-a-resource.md">docs</a>).</li>
+<li>Magic Modules fills defaults centrally and omits them when writing YAML, so authored files shrink as defaults are added.</li>
+<li>Here, region: the default is real code, and 43 of 2,696 resources declare it. The generated registration still writes the value out, so what shrinks is the authored surface.</li>
+</ul>
+<h3 id="1-model-the-resource-not-our-code">1. Model the resource, not our code<a class="headerlink" href="#1-model-the-resource-not-our-code" title="Permanent link">#</a></h3>
+<p>The test: is the fact still true if we rewrite the Go? Type name, taggability, and identity are. A factory's name, the Go type a finder returns, and whether tests skip a scenario aren't. Bind implementation details by checked reference (principle 3). Test policy belongs with the tests.</p>
+<p>A fact also qualifies if it fills a slot every peer has. A list resource's operation can be modeled because every list resource has one, so a shared implementation can serve them. A flag that makes one resource behave differently from its peers doesn't qualify.</p>
+<ul>
+<li>CloudFormation's schema describes resource shape, and the handlers stay code (<a href="https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/resource-type-schema.html">schema</a>).</li>
+<li>Ours, negative: <code>@ArnFormat(attribute=...)</code> and <code>@IdentityAttribute(testNotNull=...)</code> are test-only keys on markers that otherwise describe production behavior.</li>
+</ul>
+<h3 id="2-one-fact-one-authority">2. One fact, one authority<a class="headerlink" href="#2-one-fact-one-authority" title="Permanent link">#</a></h3>
+<p>Each fact has one owner, either the model or the implementation. <em>Model</em> means data with no control flow. <em>Implementation</em> means code that acts. A <code>resource.Spec{…}</code> literal is model and <code>findThingByID</code> is implementation, and both are Go. Splitting facts between the two is normal. The defect is a single fact owned in two places with nothing to notice when they disagree.</p>
+<div class="highlight"><pre><span></span><code>model says  foo.Bar    finder returns  *foo.Bar    test repeats  foo.Bar
+</code></pre></div>
+<p>A hand-maintained index or registry of facts that already live elsewhere is that same defect. Generate it instead.</p>
+<ul>
+<li>Pulumi's AWS schema is generated by bridging this provider, so it's a projection of the provider and not a second authority.</li>
+<li>Ours, negative: <code>@Testing(existsType=...)</code> restates, as a string, the type the finder already returns, about 500 times.</li>
+</ul>
+<h3 id="3-prefer-typed-go">3. Prefer typed Go<a class="headerlink" href="#3-prefer-typed-go" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nx">factory</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;newThingResource&quot;</span><span class="w"> </span><span class="c1">// rename the function and this is silently wrong</span>
+<span class="nx">Factory</span><span class="p">:</span><span class="w"> </span><span class="nx">newThingResource</span><span class="w">    </span><span class="c1">// the compiler checks it, and renames carry it along</span>
+</code></pre></div>
+<p><em>Declarative</em> describes the artifact, not the language. <code>json:"name,omitempty"</code> is Go, and nobody calls it implementation. A resource model also never leaves the repository. Practitioner configuration has to be a text format because it crosses a process boundary, but a model doesn't cross one, so serializing it just gives up the compiler. A serialized format earns its place when the data names no Go symbols and is bulk data read by many consumers, the way <code>names_data.hcl</code> is.</p>
+<ul>
+<li>Kubernetes <code>controller-gen</code> silently ignores <code>validation:enum</code> (it should be <code>Enum</code>). A <a href="https://ahmet.im/blog/crd-generation-pitfalls/">production write-up</a> concludes that markers need a separate linter. Ours: <code>@Testing(tagsTests=false)</code> in <code>elasticache/reserved_cache_node.go</code> has been wrong since March 2023, because the key is <code>tagsTest</code>. It's the only unrecognized key in the tree, and nothing has reported it in the three and a half years since.</li>
+<li>Protobuf got lint and <a href="https://buf.build/docs/breaking/">breaking-change detection</a> from Buf more than a decade after the format existed, and it took a company to build them. A new format means building a new toolchain.</li>
+<li>Caveat: Upjet's configuration is typed Go and still carries <code>OmittedFields []string</code>. A reference to a schema attribute is still a string unless a constant exists, so use <code>names.Attr*</code>.</li>
+</ul>
+<h3 id="4-shared-over-generated">4. Shared over generated<a class="headerlink" href="#4-shared-over-generated" title="Permanent link">#</a></h3>
+<p><em>Generated</em> leaves N copies of code. <em>Shared</em> leaves one implementation plus N declarations. Shared is easier to change and harder to explain for any one resource; generated is the reverse. Prefer shared unless static types or methods need generation, or generation is clearly simpler.</p>
+<p>Merging N implementations into one exposes differences nobody chose. Pick one answer instead of turning every difference into an option.</p>
+<ul>
+<li>controller-runtime: one <code>Reconciler</code> interface serves thousands of Kubernetes controllers.</li>
+<li>ent goes the other way and generates a typed client from Go schemas, because the static types require it. Representation (principle 3) and consumer (principle 4) are separate choices.</li>
+<li><a href="https://github.com/hashicorp/terraform-provider-aws/pull/34448">PR 34448</a> tried a generic Framework base here. It was closed unmerged with no recorded reason, but declaring one resource took <code>framework.NewResource[indexResource, indexResourceModel, *indexResource]()</code>. Go generics charge for their reach at the declaration site.</li>
+</ul>
+<h3 id="5-bind-behavior-dont-encode-it">5. Bind behavior, don't encode it<a class="headerlink" href="#5-bind-behavior-dont-encode-it" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nx">Read</span><span class="p">:</span><span class="w"> </span><span class="nx">findThingByID</span><span class="w">              </span><span class="c1">// binds: checked, logic stays in Go</span>
+<span class="nx">read_function</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;findThingByID&quot;</span><span class="w">  </span><span class="c1">// encodes: unchecked, resolved by convention</span>
+</code></pre></div>
+<p>Retries, waiters, pagination, and import each mix data (target states, retryable error codes, token fields, ID format) with an algorithm (polling, predicates, loops, parsing). Model the data and keep the algorithm in Go. A declaration that carries closures doing real work has turned back into implementation.</p>
+<ul>
+<li>Upjet binds per-resource behavior as Go closures (<code>SetIdentifierArgumentFn</code>), with no string indirection.</li>
+<li>Magic Modules covers behavior with about 90 resource fields, plus <code>custom_code</code> injection, plus a <a href="https://googlecloudplatform.github.io/magic-modules/develop/custom-code/">handwritten escape hatch</a>. That's what a spec looks like when it tries to hold the algorithm.</li>
+</ul>
+<h3 id="6-new-surface-pays-rent">6. New surface pays rent<a class="headerlink" href="#6-new-surface-pays-rent" title="Permanent link">#</a></h3>
+<p>The change that adds a field answers:</p>
+<ul>
+<li><strong>Authority:</strong> who owns it, and what keeps every other copy correct?</li>
+<li><strong>Consumers:</strong> what reads it? If only one thing does, should the fact live there instead?</li>
+<li><strong>Validation:</strong> what rejects a bad value, and when?</li>
+<li><strong>Failure mode:</strong> what happens if it's missing, misspelled, or stale? "Nothing" is only acceptable when absence is a safe default (principle 0).</li>
+<li>
+<p><strong>Lifetime:</strong> is it permanent, compatibility history, or temporary, and how will we know when to remove it?</p>
+</li>
+<li>
+<p>Magic Modules validates its YAML against a schema and still has eleven <code>exclude_*</code> opt-outs and a field whose source comment reads <code>1 instance used</code>. A schema catches malformed values, not unneeded ones.</p>
+</li>
+<li>Ours: in October 2026, <code>@Testing</code> had 53 keys, and 13 were used once.</li>
+<li>Upjet v2 has users apply the same configuration to two provider objects during a migration, and its docs concede the duplication. Migration facts outlive the migration unless something says when they end.</li>
+</ul>
+<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">#</a></h2>
+<ul>
+<li>Principle 6 adds friction for anyone adding metadata. That's intended, but the questions need to be in the contributor guide, not only in review comments.</li>
+<li>A serialized format that refers to Go symbols contradicts principle 3, so a proposal for one has to argue against principle 3 directly.</li>
+<li>Some facts fail principle 0 only because the tooling (a generic consumer, a derivation that fails loudly) doesn't exist yet. Record them that way rather than treating them as settled.</li>
+</ul>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      IBM Corp.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
