@@ -88,6 +88,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#region).
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `configuration` Block
 
@@ -111,6 +112,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the network connector.
 * `latest_version` - Number of the connector's latest version. Each configuration change creates a new immutable version.
 * `latest_version_arn` - Version-qualified ARN of the connector's latest version. Use it for `service_config.egress_network_connector_arn` on an `aws_lambdaweb_function_revision` resource.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
