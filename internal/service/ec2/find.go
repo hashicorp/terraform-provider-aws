@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -108,17 +109,17 @@ func findCapacityManagerAttributes(ctx context.Context, conn *ec2.Client) (*ec2.
 
 	// Capacity Manager returns an error, not a disabled status, when it isn't enabled.
 	if tfawserr.ErrCodeEquals(err, errCodeCapacityManagerDisabled) {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
-		}
+		})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil
