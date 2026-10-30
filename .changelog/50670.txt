@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_quicksight_account_custom_permission
+```
+
+```release-note:new-list-resource
+aws_quicksight_account_custom_permission
+```
