@@ -113,13 +113,13 @@ func TestExpandFlattenLaunchTemplateOverridesImageID(t *testing.T) {
 	t.Parallel()
 
 	tfMap := map[string]any{
-		"image_id":             "ami-0123456789abcdef0",
+		"image_id":             "ami-0123456789abcdef0", //lintignore:AWSAT002
 		names.AttrInstanceType: "p6-b300.48xlarge",
 	}
 
 	got := tfautoscaling.ExpandLaunchTemplateOverrides(tfMap, false)
 	want := awstypes.LaunchTemplateOverrides{
-		ImageId:      aws.String("ami-0123456789abcdef0"),
+		ImageId:      aws.String("ami-0123456789abcdef0"), //lintignore:AWSAT002
 		InstanceType: aws.String("p6-b300.48xlarge"),
 	}
 
@@ -143,7 +143,7 @@ func TestExpandStartInstanceRefreshInput(t *testing.T) {
 		LaunchTemplate: &awstypes.LaunchTemplate{
 			LaunchTemplateSpecification: launchTemplate,
 			Overrides: []awstypes.LaunchTemplateOverrides{{
-				ImageId:      aws.String("ami-0123456789abcdef0"),
+				ImageId:      aws.String("ami-0123456789abcdef0"), //lintignore:AWSAT002
 				InstanceType: aws.String("p6-b300.48xlarge"),
 			}},
 		},
