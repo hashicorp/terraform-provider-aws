@@ -26,6 +26,9 @@ var (
 	FindTrafficSourceAttachmentByThreePartKey = findTrafficSourceAttachmentByThreePartKey
 
 	ExpandCapacityReservationSpecification = expandCapacityReservationSpecification
+	ExpandLaunchTemplateOverrides          = expandLaunchTemplateOverrides
+	ExpandStartInstanceRefreshInput        = expandStartInstanceRefreshInput
+	FlattenLaunchTemplateOverrides         = flattenLaunchTemplateOverrides
 
 	InstanceHealthStatusHealthy = instanceHealthStatusHealthy
 	TagResourceTypeGroup        = tagResourceTypeGroup
