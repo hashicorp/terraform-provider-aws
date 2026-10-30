@@ -23,12 +23,10 @@ const (
 	versionStringRegexpPattern         = "^" + versionStringRegexpInternalPattern + "$"
 )
 
-var versionStringRegexp = regexache.MustCompile(versionStringRegexpPattern)
-
 func validMemcachedVersionString(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if !versionStringRegexp.MatchString(value) {
+	if !regexache.MustCompile(versionStringRegexpPattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%s: must be a version string matching <major>.<minor>.<patch>", k))
 	}
 
