@@ -313,6 +313,72 @@ func testAccPolicy_resourceTagLogicalOperator(t *testing.T) {
 	})
 }
 
+func testAccPolicy_resourceTagRepeatedKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_resourceTagRepeatedKey(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "exclude_resource_tags", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "resource_tag_logical_operator", "OR"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tag.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_tag.*", map[string]string{
+						names.AttrKey:   acctest.CtKey1,
+						names.AttrValue: acctest.CtValue1,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_tag.*", map[string]string{
+						names.AttrKey:   acctest.CtKey1,
+						names.AttrValue: acctest.CtValue2,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_update_token", "delete_all_policy_resources"},
+			},
+			{
+				Config: testAccPolicyConfig_resourceTagRepeatedKeyEmptyValue(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtValue2, acctest.CtKey2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "resource_tag_logical_operator", "OR"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tag.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_tag.*", map[string]string{
+						names.AttrKey:   acctest.CtKey2,
+						names.AttrValue: "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "0"),
+				),
+			},
+			{
+				Config: testAccPolicyConfig_resourceTags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "resource_tag.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", acctest.CtValue1),
+				),
+			},
+		},
+	})
+}
+
 func testAccPolicy_alb(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -803,6 +869,68 @@ resource "aws_fms_policy" "test" {
   depends_on = [aws_fms_admin_account.test]
 }
 `, rName, tagKey1, tagValue1))
+}
+
+func testAccPolicyConfig_resourceTagRepeatedKey(rName, tagKey, tagValue1, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags         = true
+  name                          = %[1]q
+  remediation_enabled           = false
+  resource_tag_logical_operator = "OR"
+  resource_type_list            = ["AWS::EC2::SecurityGroup"]
+
+  security_service_policy_data {
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
+  }
+
+  resource_tag {
+    key   = %[2]q
+    value = %[3]q
+  }
+
+  resource_tag {
+    key   = %[2]q
+    value = %[4]q
+  }
+
+  depends_on = [aws_fms_admin_account.test]
+}
+`, rName, tagKey, tagValue1, tagValue2))
+}
+
+func testAccPolicyConfig_resourceTagRepeatedKeyEmptyValue(rName, tagKey1, tagValue1, tagValue2, tagKey2 string) string {
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags         = true
+  name                          = %[1]q
+  remediation_enabled           = false
+  resource_tag_logical_operator = "OR"
+  resource_type_list            = ["AWS::EC2::SecurityGroup"]
+
+  security_service_policy_data {
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
+  }
+
+  resource_tag {
+    key   = %[2]q
+    value = %[3]q
+  }
+
+  resource_tag {
+    key   = %[2]q
+    value = %[4]q
+  }
+
+  resource_tag {
+    key = %[5]q
+  }
+
+  depends_on = [aws_fms_admin_account.test]
+}
+`, rName, tagKey1, tagValue1, tagValue2, tagKey2))
 }
 
 func testAccPolicyConfig_alb(rName string) string {

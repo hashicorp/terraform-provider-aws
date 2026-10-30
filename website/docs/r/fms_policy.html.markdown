@@ -50,6 +50,42 @@ resource "aws_wafregional_rule_group" "example" {
 }
 ```
 
+### Repeated Tag Keys
+
+Use `resource_tag` blocks when the same tag key must appear more than once. This example covers every resource that is untagged or has an unexpected value for `waf-profile`:
+
+```terraform
+resource "aws_fms_policy" "untagged" {
+  name                          = "FMS-Policy-Untagged"
+  exclude_resource_tags         = true
+  remediation_enabled           = true
+  resource_tag_logical_operator = "OR"
+  resource_type_list            = ["AWS::ApiGateway::Stage", "AWS::ElasticLoadBalancingV2::LoadBalancer"]
+
+  resource_tag {
+    key   = "waf-profile"
+    value = "standard"
+  }
+
+  resource_tag {
+    key   = "waf-profile"
+    value = "strict"
+  }
+
+  security_service_policy_data {
+    type = "WAFV2"
+
+    managed_service_data = jsonencode({
+      type                              = "WAFV2"
+      preProcessRuleGroups              = []
+      postProcessRuleGroups             = []
+      defaultAction                     = { type = "BLOCK" }
+      overrideCustomerWebACLAssociation = true
+    })
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -58,18 +94,24 @@ This resource supports the following arguments:
 * `delete_unused_fm_managed_resources` - (Optional) If true, Firewall Manager will automatically remove protections from resources that leave the policy scope. Defaults to `false`. More information can be found here [AWS Firewall Manager policy contents](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html)
 * `description` - (Optional) Description of the AWS Network Firewall firewall policy.
 * `exclude_map` - (Optional) Map of lists of accounts and OUs to exclude from the policy. See the [`exclude_map`](#exclude_map-block) block.
-* `exclude_resource_tags` - (Required, Forces new resource) Whether resources with the tags specified in `resource_tags` are excluded from protection. If `true`, tagged resources are not protected by this policy. If `false` and `resource_tags` are populated, resources that contain those tags are protected by this policy.
+* `exclude_resource_tags` - (Required, Forces new resource) Whether resources with the tags specified in `resource_tags` or `resource_tag` are excluded from protection. If `true`, tagged resources are not protected by this policy. If `false` and `resource_tags` or `resource_tag` are populated, resources that contain those tags are protected by this policy.
 * `include_map` - (Optional) Map of lists of accounts and OUs to include in the policy. See the [`include_map`](#include_map-block) block.
 * `name` - (Required, Forces new resource) Friendly name of the AWS Firewall Manager Policy.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `remediation_enabled` - (Optional) Whether the policy is automatically applied to resources that already exist in the account.
 * `resource_set_ids` - (Optional) Set of resource set IDs associated with the policy.
 * `resource_tag_logical_operator` - (Optional) Controls how multiple resource tags are combined: with AND, so that a resource must have all tags to be included or excluded, or OR, so that a resource must have at least one tag. The valid values are `AND` and `OR`.
-* `resource_tags` - (Optional) Map of resource tags that, if present, filter protections on resources based on `exclude_resource_tags`.
+* `resource_tag` - (Optional) Resource tag that, if present, filters protections on resources based on `exclude_resource_tags`. Unlike `resource_tags`, the same key can be specified more than once. Up to 50 can be specified. Conflicts with `resource_tags`. See the [`resource_tag`](#resource_tag-block) block.
+* `resource_tags` - (Optional) Map of resource tags that, if present, filter protections on resources based on `exclude_resource_tags`. Conflicts with `resource_tag`.
 * `resource_type` - (Optional) Resource type to protect. Conflicts with `resource_type_list`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values.
 * `resource_type_list` - (Optional) List of resource types to protect. Conflicts with `resource_type`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values. Lists with only one element are not supported, instead use `resource_type`.
 * `security_service_policy_data` - (Required) Objects to include in Security Service Policy Data. See the [`security_service_policy_data`](#security_service_policy_data-block) block.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `resource_tag` Block
+
+* `key` - (Required) Tag key.
+* `value` - (Optional) Tag value. Firewall Manager matches the value exactly, so an empty or omitted value matches only resources whose tag value is empty.
 
 ### `exclude_map` Block
 
@@ -171,3 +213,5 @@ Using `terraform import`, import Firewall Manager policies using the policy ID. 
 ```console
 % terraform import aws_fms_policy.example 5be49585-a7e3-4c49-dde1-a179fe4a619a
 ```
+
+When a policy is imported, its resource tags are read into `resource_tags`, or into `resource_tag` if any tag key appears more than once.

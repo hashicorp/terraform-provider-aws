@@ -193,7 +193,32 @@ func resourcePolicy() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
-				names.AttrResourceTags: tftags.TagsSchema(),
+				"resource_tag": {
+					Type:          schema.TypeSet,
+					Optional:      true,
+					MaxItems:      50,
+					ConflictsWith: []string{names.AttrResourceTags},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							names.AttrValue: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 256),
+							},
+						},
+					},
+				},
+				names.AttrResourceTags: {
+					Type:          schema.TypeMap,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"resource_tag"},
+				},
 				names.AttrResourceType: {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -380,8 +405,18 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrName, policy.PolicyName)
 	d.Set("policy_update_token", policy.PolicyUpdateToken)
 	d.Set("remediation_enabled", policy.RemediationEnabled)
-	if err := d.Set(names.AttrResourceTags, flattenResourceTags(policy.ResourceTags)); err != nil {
-		diags = sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
+	// A tag key can appear more than once in ResourceTags, which resource_tags (a map) can't represent.
+	// Use resource_tag when it's already in use, or when the policy has repeated keys (e.g. on import).
+	if v, ok := d.Get("resource_tag").(*schema.Set); (ok && v.Len() > 0) || hasDuplicateResourceTagKeys(policy.ResourceTags) {
+		if err := d.Set("resource_tag", flattenResourceTagList(policy.ResourceTags)); err != nil {
+			diags = sdkdiag.AppendErrorf(diags, "setting resource_tag: %s", err)
+		}
+		d.Set(names.AttrResourceTags, nil)
+	} else {
+		d.Set("resource_tag", nil)
+		if err := d.Set(names.AttrResourceTags, flattenResourceTags(policy.ResourceTags)); err != nil {
+			diags = sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
+		}
 	}
 	d.Set("resource_tag_logical_operator", policy.ResourceTagLogicalOperator)
 	d.Set(names.AttrResourceType, policy.ResourceType)
@@ -495,14 +530,19 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 		apiObject.PolicyUpdateToken = aws.String(d.Get("policy_update_token").(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
+	if v, ok := d.GetOk("resource_tag"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.ResourceTags = expandResourceTagList(v.(*schema.Set).List())
+	} else if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
 		for k, v := range flex.ExpandStringValueMap(v.(map[string]any)) {
 			apiObject.ResourceTags = append(apiObject.ResourceTags, awstypes.ResourceTag{
 				Key:   aws.String(k),
 				Value: aws.String(v),
 			})
-			apiObject.ResourceTagLogicalOperator = awstypes.ResourceTagLogicalOperator(d.Get("resource_tag_logical_operator").(string))
 		}
+	}
+
+	if len(apiObject.ResourceTags) > 0 {
+		apiObject.ResourceTagLogicalOperator = awstypes.ResourceTagLogicalOperator(d.Get("resource_tag_logical_operator").(string))
 	}
 
 	tfMap := d.Get("security_service_policy_data").([]any)[0].(map[string]any)
@@ -863,6 +903,59 @@ func flattenThirdPartyFirewallPolicy(apiObject *awstypes.ThirdPartyFirewallPolic
 	tfMap["firewall_deployment_model"] = apiObject.FirewallDeploymentModel
 
 	return []any{tfMap}
+}
+
+func expandResourceTagList(tfList []any) []awstypes.ResourceTag {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.ResourceTag
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, awstypes.ResourceTag{
+			Key:   aws.String(tfMap[names.AttrKey].(string)),
+			Value: aws.String(tfMap[names.AttrValue].(string)),
+		})
+	}
+
+	return apiObjects
+}
+
+func flattenResourceTagList(apiObjects []awstypes.ResourceTag) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]any{
+			names.AttrKey:   aws.ToString(apiObject.Key),
+			names.AttrValue: aws.ToString(apiObject.Value),
+		})
+	}
+
+	return tfList
+}
+
+func hasDuplicateResourceTagKeys(apiObjects []awstypes.ResourceTag) bool {
+	keys := make(map[string]struct{}, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		k := aws.ToString(apiObject.Key)
+		if _, ok := keys[k]; ok {
+			return true
+		}
+		keys[k] = struct{}{}
+	}
+
+	return false
 }
 
 func flattenResourceTags(apiObjects []awstypes.ResourceTag) map[string]any {
