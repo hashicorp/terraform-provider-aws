@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_kms_key_policy: Fix perpetual `key_id` diff when `key_id` is configured as a key ARN
+```
