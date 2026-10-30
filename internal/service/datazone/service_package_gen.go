@@ -78,6 +78,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newEnvironmentBlueprintResource,
+			TypeName: "aws_datazone_environment_blueprint",
+			Name:     "Environment Blueprint",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_identifier", true),
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      environmentBlueprintImportID{},
+			},
+		},
+		{
 			Factory:  newEnvironmentBlueprintConfigurationResource,
 			TypeName: "aws_datazone_environment_blueprint_configuration",
 			Name:     "Environment Blueprint Configuration",

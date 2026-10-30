@@ -20,8 +20,10 @@ func RegisterSweepers() {
 	awsv2.Register("aws_datazone_domain", sweepDomains,
 		"aws_datazone_project",
 		"aws_datazone_environment_profile",
+		"aws_datazone_environment_blueprint",
 	)
 	awsv2.Register("aws_datazone_environment", sweepEnvironments)
+	awsv2.Register("aws_datazone_environment_blueprint", sweepEnvironmentBlueprints)
 	awsv2.Register("aws_datazone_environment_profile", sweepEnvironmentProfiles)
 	awsv2.Register("aws_datazone_project", sweepProjects,
 		"aws_datazone_environment",
@@ -177,6 +179,45 @@ func sweepProjects(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 						framework.NewAttribute(names.AttrID, v.Id),
 						framework.NewAttribute("domain_identifier", domainID),
 						framework.NewAttribute("skip_deletion_check", true), // Automatically delete associated Glossaries
+					))
+				}
+			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepEnvironmentBlueprints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.DataZoneClient(ctx)
+	var sweepResources []sweep.Sweepable
+	var input datazone.ListDomainsInput
+
+	domainPages := datazone.NewListDomainsPaginator(conn, &input)
+	for domainPages.HasMorePages() {
+		domainPage, err := domainPages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, d := range domainPage.Items {
+			domainID := aws.ToString(d.Id)
+			blueprintInput := datazone.ListEnvironmentBlueprintsInput{
+				DomainIdentifier: aws.String(domainID),
+				Managed:          aws.Bool(false), // custom blueprints only; managed ones cannot be deleted
+			}
+
+			blueprintPages := datazone.NewListEnvironmentBlueprintsPaginator(conn, &blueprintInput)
+			for blueprintPages.HasMorePages() {
+				blueprintPage, err := blueprintPages.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, b := range blueprintPage.Items {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newEnvironmentBlueprintResource, client,
+						framework.NewAttribute(names.AttrID, aws.ToString(b.Id)),
+						framework.NewAttribute("domain_identifier", domainID),
 					))
 				}
 			}
