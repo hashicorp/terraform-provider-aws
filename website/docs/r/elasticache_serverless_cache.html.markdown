@@ -85,6 +85,31 @@ resource "aws_elasticache_serverless_cache" "example" {
 }
 ```
 
+### Valkey Serverless with Public Endpoint
+
+```terraform
+resource "aws_elasticache_serverless_cache" "example" {
+  engine               = "valkey"
+  name                 = "example"
+  major_engine_version = "9"
+
+  connection_type = "public"
+
+  # Public endpoints require IAM authentication and have no VPC, so no subnet_ids/security_group_ids.
+  user_group_id = "default.iam-user-group"
+
+  cache_usage_limits {
+    data_storage {
+      maximum = 10
+      unit    = "GB"
+    }
+    ecpu_per_second {
+      maximum = 5000
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -96,6 +121,7 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cache_usage_limits` - (Optional) Sets the cache usage limits for storage and ElastiCache Processing Units for the cache. See [`cache_usage_limits` Block](#cache_usage_limits-block) for details.
+* `connection_type` - (Optional, Forces new resource) Connectivity option for the cache. Valid values are `vpc` (reachable only from within a VPC) and `public` (reachable over the internet, `valkey` only). Defaults to `vpc`. A `public` endpoint requires `engine` `valkey` with `major_engine_version` `9` or later, requires IAM authentication over TLS 1.3, and is created without `subnet_ids` or `security_group_ids`. These `public` requirements are enforced by AWS and are not validated by the provider, so an invalid combination fails at apply time with the AWS API error rather than during `plan`. This value cannot be changed after creation.
 * `daily_snapshot_time` - (Optional) The daily time that snapshots will be created from the new serverless cache. Only supported for engine types `"redis"` or `"valkey"`. Defaults to `0`.
 * `description` - (Optional) User-provided description for the serverless cache. The default is NULL.
 * `kms_key_id` - (Optional) ARN of the customer managed key for encrypting the data at rest. If no KMS key is provided, a default service key is used.

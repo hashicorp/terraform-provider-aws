@@ -701,6 +701,56 @@ func TestAccElastiCacheServerlessCache_networkType(t *testing.T) {
 	})
 }
 
+// TestAccElastiCacheServerlessCache_connectionType creates a public-endpoint Valkey cache (Valkey 9.0+ and IAM auth are AWS-enforced) and asserts connection_type forces replacement.
+func TestAccElastiCacheServerlessCache_connectionType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_serverless_cache.test"
+	var v awstypes.ServerlessCache
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessCacheConfig_connectionType(rName, string(awstypes.ConnectionTypePublic)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", string(awstypes.ConnectionTypePublic)),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", "default.iam-user-group"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccServerlessCacheConfig_connectionType(rName, string(awstypes.ConnectionTypeVpc)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", string(awstypes.ConnectionTypeVpc)),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", "default.iam-user-group"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheServerlessCache_valkeyMajorEngineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1137,6 +1187,21 @@ resource "aws_elasticache_serverless_cache" "test" {
   subnet_ids   = aws_subnet.test[*].id
 }
 `, rName, networkType))
+}
+
+func testAccServerlessCacheConfig_connectionType(rName, connectionType string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  engine               = "valkey"
+  name                 = %[1]q
+  major_engine_version = "9" # public endpoints require Valkey 9.0+
+
+  connection_type = %[2]q
+
+  # Public endpoints mandate IAM auth (system-managed group) and have no VPC, hence no subnet_ids/security_group_ids.
+  user_group_id = "default.iam-user-group"
+}
+`, rName, connectionType)
 }
 
 func testAccServerlessCacheConfig_engine(rName, engine string) string {
