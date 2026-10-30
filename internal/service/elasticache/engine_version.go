@@ -54,14 +54,10 @@ const (
 	valkeyVersionRegexpPattern = `^[7-9]\.[[:digit:]]+$`
 )
 
-var (
-	valkeyVersionRegexp = regexache.MustCompile(valkeyVersionRegexpPattern)
-)
-
 func validValkeyVersionString(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if !valkeyVersionRegexp.MatchString(value) {
+	if !regexache.MustCompile(valkeyVersionRegexpPattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%s: %s is invalid. For Valkey use <major>.<minor>.", k, value))
 	}
 
