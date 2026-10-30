@@ -91,6 +91,7 @@ var (
 	ResourceTrafficMirrorFilterRule                       = resourceTrafficMirrorFilterRule
 	ResourceTrafficMirrorSession                          = resourceTrafficMirrorSession
 	ResourceTrafficMirrorTarget                           = resourceTrafficMirrorTarget
+	ResourceTransitGatewayAttachmentNATConfiguration      = newTransitGatewayAttachmentNATConfigurationResource
 	ResourceTransitGatewayConnect                         = resourceTransitGatewayConnect
 	ResourceTransitGatewayDefaultRouteTableAssociation    = newTransitGatewayDefaultRouteTableAssociationResource
 	ResourceTransitGatewayDefaultRouteTablePropagation    = newTransitGatewayDefaultRouteTablePropagationResource
@@ -244,6 +245,7 @@ var (
 	FindTrafficMirrorFilterRuleByTwoPartKey                     = findTrafficMirrorFilterRuleByTwoPartKey
 	FindTrafficMirrorSessionByID                                = findTrafficMirrorSessionByID
 	FindTrafficMirrorTargetByID                                 = findTrafficMirrorTargetByID
+	FindTransitGatewayAttachmentNATConfigurationByID            = findTransitGatewayAttachmentNATConfigurationByID
 	FindTransitGatewayByID                                      = findTransitGatewayByID
 	FindTransitGatewayConnectByID                               = findTransitGatewayConnectByID
 	FindTransitGatewayConnectPeerByID                           = findTransitGatewayConnectPeerByID
@@ -322,12 +324,14 @@ var (
 	StopEBSVolumeAttachmentInstance                             = stopVolumeAttachmentInstance
 	StopInstance                                                = stopInstance
 	SubnetMigrateState                                          = subnetMigrateState
+	TransitGatewayNATRulesMatch                                 = transitGatewayNATRulesMatch
 	UnsuccessfulItemError                                       = unsuccessfulItemError
 	UnsuccessfulItemsError                                      = unsuccessfulItemsError
 	UpdateTags                                                  = updateTags
 	VPCDHCPOptionsAssociationParseResourceID                    = vpcDHCPOptionsAssociationParseResourceID
 	VPCMigrateState                                             = vpcMigrateState
 	VPNGatewayRoutePropagationParseID                           = vpnGatewayRoutePropagationParseID
+	ValidateTransitGatewayNATRules                              = validateTransitGatewayNATRules
 	WaitVolumeAttachmentCreated                                 = waitVolumeAttachmentCreated
 	FindGuardDutyVPCEndpoints                                   = findGuardDutyVPCEndpoints
 	FindGuardDutySecurityGroupsForVPC                           = findGuardDutySecurityGroupsForVPC
@@ -335,7 +339,8 @@ var (
 )
 
 type (
-	GroupIdentifier = groupIdentifier
-	IPProtocol      = ipProtocol
-	TunnelInfo      = tunnelInfo
+	GroupIdentifier            = groupIdentifier
+	IPProtocol                 = ipProtocol
+	TransitGatewayNATRuleModel = transitGatewayNATRuleModel
+	TunnelInfo                 = tunnelInfo
 )
