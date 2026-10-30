@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_iam_service_linked_role: Fix `custom_suffix` being set from default role names that contain an underscore (e.g. `AWSServiceRoleForHealth_Organizations`), which forced replacement on every plan
-```

@@ -58,6 +58,13 @@ func TestServiceLinkedRoleParseResourceID(t *testing.T) {
 			CustomSuffix: "DynamoDBTable",
 			ErrCount:     0,
 		},
+		{
+			Input:        "arn:aws:iam::123456789012:role/aws-service-role/health.amazonaws.com/AWSServiceRoleForHealth_Organizations", //lintignore:AWSAT005
+			ServiceName:  "health.amazonaws.com",
+			RoleName:     "AWSServiceRoleForHealth_Organizations",
+			CustomSuffix: "Organizations",
+			ErrCount:     0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -261,6 +268,67 @@ func TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc(t *testing.T) {
 				ImportStateVerify: true,
 				// The default role name contains an underscore, so import derives custom_suffix from it.
 				ImportStateVerifyIgnore: []string{"custom_suffix"},
+				ImportStateCheck: func(s []*terraform.InstanceState) error {
+					if len(s) != 1 {
+						return fmt.Errorf("expected 1 state: %#v", s)
+					}
+
+					if got := s[0].Attributes["custom_suffix"]; got != "CustomResource" {
+						return fmt.Errorf("expected custom_suffix to be CustomResource, received: %q", got)
+					}
+
+					return nil
+				},
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/50326
+func TestAccIAMServiceLinkedRole_CustomSuffix_underscoreInDefaultName(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_iam_service_linked_role.test"
+	awsServiceName := "health.amazonaws.com"
+	name := "AWSServiceRoleForHealth_Organizations"
+	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceLinkedRoleConfig_basic(awsServiceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceLinkedRoleExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("role%s%s", path, name)),
+					resource.TestCheckResourceAttr(resourceName, "custom_suffix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The default role name contains an underscore, so import derives custom_suffix from it.
+				ImportStateVerifyIgnore: []string{"custom_suffix"},
+				ImportStateCheck: func(s []*terraform.InstanceState) error {
+					if len(s) != 1 {
+						return fmt.Errorf("expected 1 state: %#v", s)
+					}
+
+					if got := s[0].Attributes["custom_suffix"]; got != "Organizations" {
+						return fmt.Errorf("expected custom_suffix to be Organizations, received: %q", got)
+					}
+
+					return nil
+				},
 			},
 		},
 	})
