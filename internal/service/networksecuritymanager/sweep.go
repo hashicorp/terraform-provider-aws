@@ -17,8 +17,31 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_networksecuritymanager_policy", sweepPolicies)
 	awsv2.Register("aws_networksecuritymanager_rule", sweepRules)
 	awsv2.Register("aws_networksecuritymanager_scope", sweepScopes)
+}
+
+func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input networksecuritymanager.ListPoliciesInput
+	conn := client.NetworkSecurityManagerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := networksecuritymanager.NewListPoliciesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Policies {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newPolicyResource, client,
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.PolicyArn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
