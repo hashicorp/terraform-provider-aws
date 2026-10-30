@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"maps"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -1956,6 +1958,157 @@ func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
 			got := tfdynamodb.CheckIfGSIRecreateAttributesChanged(tc.Old, tc.New, tc.OldAttrTypes, tc.NewAttrTypes)
 			if got != tc.Expected {
 				t.Errorf("expected %v, got %v", tc.Expected, got)
+			}
+		})
+	}
+}
+
+func TestPartitionReplicaRemovals(t *testing.T) {
+	t.Parallel()
+
+	disassociate, remove := tfdynamodb.PartitionReplicaRemovals([]any{
+		map[string]any{"region_name": endpoints.UsEast2RegionID},
+		map[string]any{"region_name": endpoints.UsWest1RegionID},
+		map[string]any{"region_name": endpoints.EuWest1RegionID},
+	}, []string{endpoints.UsEast2RegionID, endpoints.ApSouth1RegionID})
+
+	if diff := cmp.Diff(disassociate, []map[string]any{
+		{"region_name": endpoints.UsEast2RegionID},
+	}); diff != "" {
+		t.Errorf("disassociate: unexpected diff (+want, -got): %s", diff)
+	}
+	if diff := cmp.Diff(remove, []any{
+		map[string]any{"region_name": endpoints.UsWest1RegionID},
+		map[string]any{"region_name": endpoints.EuWest1RegionID},
+	}); diff != "" {
+		t.Errorf("remove: unexpected diff (+want, -got): %s", diff)
+	}
+}
+
+func TestReplicaRegionsIn(t *testing.T) {
+	t.Parallel()
+
+	got := tfdynamodb.ReplicaRegionsIn([]any{
+		map[string]any{"region_name": endpoints.UsWest1RegionID},
+		map[string]any{"region_name": endpoints.EuWest1RegionID},
+		map[string]any{"region_name": endpoints.UsEast2RegionID},
+	}, []string{endpoints.UsEast2RegionID, endpoints.UsWest1RegionID, endpoints.ApSouth1RegionID})
+
+	if diff := cmp.Diff(got, []string{endpoints.UsEast2RegionID, endpoints.UsWest1RegionID}); diff != "" {
+		t.Errorf("unexpected diff (+want, -got): %s", diff)
+	}
+}
+
+func TestCheckReplicasUnprotected(t *testing.T) {
+	t.Parallel()
+
+	if err := tfdynamodb.CheckReplicasUnprotected([]map[string]any{
+		{"region_name": endpoints.UsEast2RegionID, "disassociation_protection_enabled": false},
+	}); err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+
+	err := tfdynamodb.CheckReplicasUnprotected([]map[string]any{
+		{"region_name": endpoints.UsWest1RegionID, "disassociation_protection_enabled": true},
+		{"region_name": endpoints.UsEast2RegionID, "disassociation_protection_enabled": false},
+		{"region_name": endpoints.EuWest1RegionID, "disassociation_protection_enabled": true},
+	})
+	if want := fmt.Sprintf("the replicas in [%s %s] are in disassociate_replica_regions and have disassociation protection enabled", endpoints.EuWest1RegionID, endpoints.UsWest1RegionID); err == nil || !regexache.MustCompile(regexp.QuoteMeta(want)).MatchString(err.Error()) {
+		t.Errorf("expected error containing %q, got %v", want, err)
+	}
+}
+
+func TestValidateReplicaDisassociation(t *testing.T) {
+	t.Parallel()
+
+	replica := func(region string, protected bool) map[string]any {
+		return map[string]any{
+			"region_name":                       region,
+			"consistency_mode":                  string(awstypes.MultiRegionConsistencyEventual),
+			"disassociation_protection_enabled": protected,
+		}
+	}
+	strong := func(region string) map[string]any {
+		return map[string]any{
+			"region_name":                       region,
+			"consistency_mode":                  string(awstypes.MultiRegionConsistencyStrong),
+			"disassociation_protection_enabled": false,
+		}
+	}
+
+	testCases := map[string]struct {
+		old, new  []any
+		regions   []string
+		wantError string
+	}{
+		"removed with protection disabled": {
+			old:     []any{replica(endpoints.UsEast2RegionID, false), replica(endpoints.UsWest1RegionID, true)},
+			new:     []any{replica(endpoints.UsWest1RegionID, true)},
+			regions: []string{endpoints.UsEast2RegionID},
+		},
+		"removed with protection enabled": {
+			old:       []any{replica(endpoints.UsEast2RegionID, true), replica(endpoints.UsWest1RegionID, true)},
+			new:       []any{replica(endpoints.UsWest1RegionID, true)},
+			regions:   []string{endpoints.UsEast2RegionID},
+			wantError: fmt.Sprintf("replica (%s) is in disassociate_replica_regions and has disassociation protection enabled", endpoints.UsEast2RegionID),
+		},
+		"removed with protection enabled and not listed": {
+			old: []any{replica(endpoints.UsEast2RegionID, true)},
+			new: []any{},
+		},
+		"listed and kept with protection enabled": {
+			old:     []any{replica(endpoints.UsEast2RegionID, true)},
+			new:     []any{replica(endpoints.UsEast2RegionID, true)},
+			regions: []string{endpoints.UsEast2RegionID},
+		},
+		"listed and replaced in the same Region": {
+			old: []any{replica(endpoints.UsEast2RegionID, true)},
+			new: []any{map[string]any{
+				"region_name":                       endpoints.UsEast2RegionID,
+				"consistency_mode":                  string(awstypes.MultiRegionConsistencyEventual),
+				"disassociation_protection_enabled": true,
+				names.AttrKMSKeyARN:                 "new-key",
+			}},
+			regions: []string{endpoints.UsEast2RegionID},
+		},
+		"listed strong consistency replica": {
+			new:       []any{strong(endpoints.UsEast2RegionID)},
+			regions:   []string{endpoints.UsEast2RegionID},
+			wantError: fmt.Sprintf("replica (%s): disassociation is not supported when consistency_mode is STRONG", endpoints.UsEast2RegionID),
+		},
+		"removed strong consistency replica": {
+			old:       []any{strong(endpoints.UsEast2RegionID)},
+			new:       []any{},
+			regions:   []string{endpoints.UsEast2RegionID},
+			wantError: fmt.Sprintf("replica (%s): disassociation is not supported when consistency_mode is STRONG", endpoints.UsEast2RegionID),
+		},
+		"strong consistency replica not listed": {
+			new: []any{strong(endpoints.UsEast2RegionID)},
+		},
+		"table Region listed": {
+			new:       []any{replica(endpoints.UsEast2RegionID, true)},
+			regions:   []string{endpoints.UsWest2RegionID},
+			wantError: fmt.Sprintf("disassociate_replica_regions cannot include the table's Region (%s)", endpoints.UsWest2RegionID),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			err := tfdynamodb.ValidateReplicaDisassociation(testCase.old, testCase.new, testCase.regions, endpoints.UsWest2RegionID)
+
+			if testCase.wantError == "" {
+				if err != nil {
+					t.Fatalf("unexpected error: %s", err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("expected error containing %q, got none", testCase.wantError)
+			}
+			if !regexache.MustCompile(regexp.QuoteMeta(testCase.wantError)).MatchString(err.Error()) {
+				t.Errorf("expected error containing %q, got %q", testCase.wantError, err)
 			}
 		})
 	}
@@ -5148,26 +5301,28 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.AlternateRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNThirdRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.ThirdRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNThirdRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNThirdRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.ThirdRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNThirdRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 					})),
 				},
@@ -5195,26 +5350,28 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.AlternateRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNThirdRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.ThirdRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNThirdRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNThirdRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.ThirdRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNThirdRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 					})),
 				},
@@ -5265,15 +5422,16 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.AlternateRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 					})),
 					streamLabelExpectChangeWhenRecreated.AddStateValue(resourceName, tfjsonpath.New("replica").AtSliceIndex(0).AtMapKey("stream_label")),
@@ -5312,15 +5470,16 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrARN:                 tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
-							"consistency_mode":            knownvalue.StringExact("EVENTUAL"),
-							"deletion_protection_enabled": knownvalue.Bool(false),
-							names.AttrKMSKeyARN:           knownvalue.StringExact(""),
-							"point_in_time_recovery":      knownvalue.Bool(false),
-							names.AttrPropagateTags:       knownvalue.Bool(false),
-							"region_name":                 knownvalue.StringExact(acctest.AlternateRegion()),
-							names.AttrStreamARN:           tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-							"stream_label":                knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
+							names.AttrARN:                       tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":                  knownvalue.StringExact("EVENTUAL"),
+							"deletion_protection_enabled":       knownvalue.Bool(false),
+							"disassociation_protection_enabled": knownvalue.Bool(true),
+							names.AttrKMSKeyARN:                 knownvalue.StringExact(""),
+							"point_in_time_recovery":            knownvalue.Bool(false),
+							names.AttrPropagateTags:             knownvalue.Bool(false),
+							"region_name":                       knownvalue.StringExact(acctest.AlternateRegion()),
+							names.AttrStreamARN:                 tfknownvalue.RegionalARNAlternateRegionRegexp("dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+							"stream_label":                      knownvalue.StringRegexp(regexache.MustCompile(`^` + streamLabelRegex + `$`)),
 						}),
 					})),
 					streamLabelExpectChangeWhenRecreated.AddStateValue(resourceName, tfjsonpath.New("replica").AtSliceIndex(0).AtMapKey("stream_label")),
@@ -8177,6 +8336,246 @@ func TestAccDynamoDBTable_Replica_deletionProtection(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_Replica_disassociationProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Set on create for one replica; the other uses the default (enabled).
+				Config: testAccTableConfig_replicaDisassociationProtection(rName, acctest.CtFalse, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.AlternateRegion(),
+						"disassociation_protection_enabled": acctest.CtFalse,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.ThirdRegion(),
+						"disassociation_protection_enabled": acctest.CtTrue,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_replicaDisassociationProtection(rName, acctest.CtTrue, acctest.CtFalse),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.AlternateRegion(),
+						"disassociation_protection_enabled": acctest.CtTrue,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.ThirdRegion(),
+						"disassociation_protection_enabled": acctest.CtFalse,
+					}),
+				),
+			},
+			{
+				// Removing the argument restores the default (enabled).
+				Config: testAccTableConfig_replicaDisassociationProtection(rName, "", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.AlternateRegion(),
+						"disassociation_protection_enabled": acctest.CtTrue,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.ThirdRegion(),
+						"disassociation_protection_enabled": acctest.CtTrue,
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_Replica_disassociate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	const (
+		unprotected = "disassociation_protection_enabled = false"
+		noReplica   = "-"
+	)
+	alternate := []string{"alternate"}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckTableDestroy(ctx, t),
+			testAccCheckDisassociatedTablesDestroy(ctx, t, rName, acctest.AlternateRegion(), acctest.ThirdRegion()),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaDisassociate(rName, alternate, "", "", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "disassociate_replica_regions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "disassociate_replica_regions.*", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.AlternateRegion(),
+						"disassociation_protection_enabled": acctest.CtTrue,
+					}),
+				),
+			},
+			{
+				// DynamoDB refuses to disassociate a protected replica, so the plan fails
+				// before any change is made.
+				Config:      testAccTableConfig_replicaDisassociate(rName, alternate, noReplica, "", ""),
+				ExpectError: regexache.MustCompile(`is in disassociate_replica_regions and has disassociation protection enabled`),
+			},
+			{
+				// Replacing the table would disassociate the replica and then fail to
+				// recreate it, so the plan fails.
+				Config:      testAccTableConfig_replicaDisassociate(rName, alternate, "", "", testAccTableConfig_replicaDisassociateRangeKey),
+				ExpectError: regexache.MustCompile(`this change replaces the table, which would disassociate the replicas in`),
+			},
+			{
+				Config: testAccTableConfig_replicaDisassociate(rName, alternate, unprotected, "", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.AlternateRegion(),
+						"disassociation_protection_enabled": acctest.CtFalse,
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Protection is enabled out of band after the plan, so DynamoDB rejects the
+				// disassociation during apply.
+				Config: testAccTableConfig_replicaDisassociate(rName, alternate, noReplica, "", ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						testAccSetDisassociationProtectionBeforeApply(ctx, t, rName, acctest.AlternateRegion(), true),
+					},
+				},
+				ExpectError: regexache.MustCompile(`disassociate protection enabled`),
+			},
+			{
+				// The failed apply kept disassociate_replica_regions, so once protection is
+				// disabled again, the same configuration disassociates the replica instead of
+				// deleting it. With three replicas, the removed replica becomes a single-Region
+				// table and the other two remain a global table.
+				PreConfig: func() {
+					if err := testAccSetDisassociationProtection(ctx, t, rName, acctest.AlternateRegion(), false); err != nil {
+						t.Fatal(err)
+					}
+				},
+				Config: testAccTableConfig_replicaDisassociate(rName, alternate, noReplica, "", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name": acctest.ThirdRegion(),
+					}),
+					testAccCheckTableDisassociated(ctx, t, rName, acctest.AlternateRegion()),
+					testAccCheckReplicaHasPeers(ctx, t, rName, acctest.ThirdRegion(), acctest.Region()),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccTableConfig_replicaDisassociate(rName, []string{"alternate", "third"}, noReplica, unprotected, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "disassociate_replica_regions.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.ThirdRegion(),
+						"disassociation_protection_enabled": acctest.CtFalse,
+					}),
+				),
+			},
+			{
+				// With two replicas, both tables become single-Region tables.
+				Config: testAccTableConfig_replicaDisassociate(rName, []string{"alternate", "third"}, noReplica, noReplica, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+					testAccCheckTableDisassociated(ctx, t, rName, acctest.ThirdRegion()),
+					testAccCheckTableDisassociated(ctx, t, rName, acctest.Region()),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_Replica_disassociateOnDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		// Destroying the table disassociates the listed replica and deletes the other one.
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckTableDestroy(ctx, t),
+			testAccCheckTableNotInRegion(ctx, t, rName, acctest.ThirdRegion()),
+			testAccCheckDisassociatedTablesDestroy(ctx, t, rName, acctest.AlternateRegion()),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaDisassociate(rName, []string{"alternate"}, "disassociation_protection_enabled = false", "", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckTypeSetElemAttr(resourceName, "disassociate_replica_regions.*", acctest.AlternateRegion()),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":                       acctest.AlternateRegion(),
+						"disassociation_protection_enabled": acctest.CtFalse,
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_restoreBackupARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -8992,6 +9391,137 @@ func testAccCheckTableDestroy(ctx context.Context, t *testing.T) resource.TestCh
 
 		return nil
 	}
+}
+
+// testAccCheckTableDisassociated checks that the table in region is ACTIVE and lists no
+// replica in another Region.
+func testAccCheckTableDisassociated(ctx context.Context, t *testing.T, tableName, region string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		output, err := testAccFindTableInRegion(ctx, t, tableName, region)
+		if err != nil {
+			return err
+		}
+
+		if output.TableStatus != awstypes.TableStatusActive {
+			return fmt.Errorf("DynamoDB Table %s (%s) status is %s, want %s", tableName, region, output.TableStatus, awstypes.TableStatusActive)
+		}
+
+		for _, v := range output.Replicas {
+			if aws.ToString(v.RegionName) != region {
+				return fmt.Errorf("DynamoDB Table %s (%s) still lists replica %s", tableName, region, aws.ToString(v.RegionName))
+			}
+		}
+
+		return nil
+	}
+}
+
+// testAccCheckReplicaHasPeers checks that the table in region lists a replica in each of peers.
+func testAccCheckReplicaHasPeers(ctx context.Context, t *testing.T, tableName, region string, peers ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		output, err := testAccFindTableInRegion(ctx, t, tableName, region)
+		if err != nil {
+			return err
+		}
+
+		for _, peer := range peers {
+			if tfdynamodb.ReplicaForRegion(output.Replicas, peer) == nil {
+				return fmt.Errorf("DynamoDB Table %s (%s) does not list replica %s", tableName, region, peer)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTableNotInRegion(ctx context.Context, t *testing.T, tableName, region string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, err := testAccFindTableInRegion(ctx, t, tableName, region)
+
+		if retry.NotFound(err) {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("DynamoDB Table %s (%s) still exists", tableName, region)
+	}
+}
+
+// testAccCheckDisassociatedTablesDestroy checks that the single-Region table that each
+// disassociation left in regions still exists, then deletes it.
+func testAccCheckDisassociatedTablesDestroy(ctx context.Context, t *testing.T, tableName string, regions ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
+		var result []error
+
+		for _, region := range regions {
+			if err := testAccCheckTableDisassociated(ctx, t, tableName, region)(s); err != nil {
+				result = append(result, err)
+			}
+
+			_, err := conn.DeleteTable(ctx, &dynamodb.DeleteTableInput{TableName: aws.String(tableName)}, func(o *dynamodb.Options) {
+				o.Region = region
+			})
+			if err != nil && !tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+				result = append(result, fmt.Errorf("deleting DynamoDB Table %s (%s): %w", tableName, region, err))
+			}
+		}
+
+		return errors.Join(result...)
+	}
+}
+
+func testAccFindTableInRegion(ctx context.Context, t *testing.T, tableName, region string) (*awstypes.TableDescription, error) {
+	conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
+
+	return tfdynamodb.FindTableByName(ctx, conn, tableName, func(o *dynamodb.Options) {
+		o.Region = region
+	})
+}
+
+// testAccSetDisassociationProtection sets disassociation protection on the replica in region
+// outside Terraform and waits for the change.
+func testAccSetDisassociationProtection(ctx context.Context, t *testing.T, tableName, region string, enabled bool) error {
+	conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
+	optFn := func(o *dynamodb.Options) { o.Region = region }
+
+	input := dynamodb.UpdateTableInput{
+		TableName:                       aws.String(tableName),
+		DisassociationProtectionEnabled: aws.Bool(enabled),
+	}
+	if _, err := conn.UpdateTable(ctx, &input, optFn); err != nil {
+		return fmt.Errorf("setting DynamoDB Table %s (%s) disassociation protection: %w", tableName, region, err)
+	}
+
+	for deadline := time.Now().Add(5 * time.Minute); time.Now().Before(deadline); time.Sleep(5 * time.Second) {
+		output, err := testAccFindTableInRegion(ctx, t, tableName, region)
+		if err != nil {
+			return err
+		}
+		if output.TableStatus == awstypes.TableStatusActive && aws.ToBool(output.DisassociationProtectionEnabled) == enabled {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("timed out waiting for DynamoDB Table %s (%s) disassociation protection to be %t", tableName, region, enabled)
+}
+
+// testAccSetDisassociationProtectionBeforeApply is a plan check that changes disassociation
+// protection after the plan is created. The test framework applies the saved plan without a
+// refresh, so the provider sends requests that were planned against the earlier setting.
+func testAccSetDisassociationProtectionBeforeApply(ctx context.Context, t *testing.T, tableName, region string, enabled bool) plancheck.PlanCheck {
+	return setDisassociationProtectionPlanCheck(func() error {
+		return testAccSetDisassociationProtection(ctx, t, tableName, region, enabled)
+	})
+}
+
+type setDisassociationProtectionPlanCheck func() error
+
+func (f setDisassociationProtectionPlanCheck) CheckPlan(_ context.Context, _ plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	resp.Error = f()
 }
 
 func testAccCheckInitialTableExists(ctx context.Context, t *testing.T, n string, v *awstypes.TableDescription) resource.TestCheckFunc {
@@ -12901,6 +13431,111 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, deletionProtection))
+}
+
+// testAccTableConfig_replicaDisassociationProtection sets disassociation_protection_enabled on
+// the alternate-region and third-region replicas. An empty value omits the argument.
+func testAccTableConfig_replicaDisassociationProtection(rName, alternate, third string) string {
+	argument := func(v string) string {
+		if v == "" {
+			return ""
+		}
+		return fmt.Sprintf("disassociation_protection_enabled = %s", v)
+	}
+
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+  replica {
+    region_name = data.aws_region.alternate.name
+    %[2]s
+  }
+  replica {
+    region_name = data.aws_region.third.name
+    %[3]s
+  }
+}
+`, rName, argument(alternate), argument(third)))
+}
+
+// testAccTableConfig_replicaDisassociateRangeKey adds a range key, which replaces the table.
+const testAccTableConfig_replicaDisassociateRangeKey = `
+  range_key = "TestTableRangeKey"
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+`
+
+// testAccTableConfig_replicaDisassociate configures replicas in the alternate and third
+// Regions. regions names the provider aliases ("alternate", "third") whose Regions are listed
+// in disassociate_replica_regions; an empty list omits the argument. The alternate and third
+// arguments are placed in the replica blocks; "-" omits the block. extra is added to the
+// table's arguments.
+func testAccTableConfig_replicaDisassociate(rName string, regions []string, alternate, third, extra string) string {
+	block := func(provider, arguments string) string {
+		if arguments == "-" {
+			return ""
+		}
+		return fmt.Sprintf(`
+  replica {
+    region_name = data.aws_region.%[1]s.region
+    %[2]s
+  }
+`, provider, arguments)
+	}
+
+	disassociate := ""
+	if len(regions) > 0 {
+		references := make([]string, 0, len(regions))
+		for _, provider := range regions {
+			references = append(references, fmt.Sprintf("data.aws_region.%s.region", provider))
+		}
+		disassociate = fmt.Sprintf("disassociate_replica_regions = [%s]", strings.Join(references, ", "))
+	}
+
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  %[2]s
+  %[3]s
+  %[4]s
+  %[5]s
+}
+`, rName, disassociate, extra, block("alternate", alternate), block("third", third)))
 }
 
 func testAccTableConfig_lsi(rName, lsiName string) string {

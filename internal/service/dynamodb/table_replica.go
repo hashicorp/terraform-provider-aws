@@ -49,7 +49,21 @@ func resourceTableReplica() *schema.Resource {
 		DeleteWithoutTimeout: resourceTableReplicaDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				// DynamoDB does not store disassociate_on_destroy.
+				rd.Set("disassociate_on_destroy", false)
+
+				return []*schema.ResourceData{rd}, nil
+			},
+		},
+
+		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+			// Replacing the replica disassociates it, and DynamoDB cannot then create a replica
+			// of the same table in this Region while the single-Region table exists.
+			if o, _ := diff.GetChange("disassociate_on_destroy"); diff.Id() != "" && o.(bool) && diff.HasChanges("global_table_arn", names.AttrKMSKeyARN, "table_class_override") {
+				return errors.New("this change replaces the replica, and disassociate_on_destroy is true in state. Set disassociate_on_destroy to false and apply before making this change")
+			}
+			return nil
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -65,6 +79,16 @@ func resourceTableReplica() *schema.Resource {
 					Computed: true,
 				},
 				"deletion_protection_enabled": { // direct to replica
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"disassociate_on_destroy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"disassociation_protection_enabled": { // direct to replica
 					Type:     schema.TypeBool,
 					Optional: true,
 					Computed: true,
@@ -294,6 +318,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 
 	d.Set(names.AttrARN, table.TableArn)
 	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
+	d.Set("disassociation_protection_enabled", table.DisassociationProtectionEnabled)
 
 	if table.SSEDescription != nil && table.SSEDescription.KMSMasterKeyArn != nil {
 		d.Set(names.AttrKMSKeyARN, table.SSEDescription.KMSMasterKeyArn)
@@ -420,6 +445,31 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
+	// * disassociation_protection_enabled
+	// DynamoDB enables disassociation protection on every new replica, so on create the value
+	// is sent only when it is set in configuration. DynamoDB rejects a request that changes it
+	// together with any other setting, so it is sent in its own request.
+	updateDisassociationProtection := d.HasChange("disassociation_protection_enabled")
+	if v := d.GetRawConfig().GetAttr("disassociation_protection_enabled"); d.IsNewResource() && v.IsKnown() && !v.IsNull() {
+		updateDisassociationProtection = true
+	}
+
+	if updateDisassociationProtection {
+		log.Printf("[DEBUG] Updating DynamoDB Table Replica disassociation protection: %v", d.Get("disassociation_protection_enabled").(bool))
+
+		input := dynamodb.UpdateTableInput{
+			TableName:                       aws.String(tableName),
+			DisassociationProtectionEnabled: aws.Bool(d.Get("disassociation_protection_enabled").(bool)),
+		}
+		if _, err := conn.UpdateTable(ctx, &input); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
+		}
+
+		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), replicaPropagationDelay, optFn); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceTableReplicaRead(ctx, d, meta)...)
 }
 
@@ -437,6 +487,15 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 	// now main table region.
 	optFn := func(o *dynamodb.Options) {
 		o.Region = mainRegion
+	}
+
+	if d.Get("disassociate_on_destroy").(bool) {
+		log.Printf("[DEBUG] Disassociating DynamoDB Table replica: %s", d.Id())
+		if err := disassociateReplica(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutDelete), optFn); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTableReplica, d.Id(), err)
+		}
+
+		return diags
 	}
 
 	input := &dynamodb.UpdateTableInput{
