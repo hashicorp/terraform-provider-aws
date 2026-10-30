@@ -1,0 +1,40 @@
+[
+  {
+    "service": "mocktagsnohandlers",
+    "resource_type": "aws_mocktagsnohandlers_foo",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFoo",
+    "location": "internal/service/mocktagsnohandlers/foo.go:25",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mocktagsnohandlers/foo.go:48",
+      "sdk_calls": [
+        "mocktagsnohandlers.CreateFoo",
+        "mocktagsnohandlers.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mocktagsnohandlers/foo.go:69",
+      "sdk_calls": [
+        "mocktagsnohandlers.DescribeFoo"
+      ]
+    },
+    "update": {
+      "expr": "resourceFooUpdate",
+      "location": "internal/service/mocktagsnohandlers/foo.go:93",
+      "sdk_calls": [
+        "mocktagsnohandlers.DescribeFoo",
+        "mocktagsnohandlers.UpdateFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mocktagsnohandlers/foo.go:111",
+      "sdk_calls": [
+        "mocktagsnohandlers.DeleteFoo"
+      ]
+    },
+    "tags": {}
+  }
+]

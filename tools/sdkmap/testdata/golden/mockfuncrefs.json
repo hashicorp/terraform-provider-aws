@@ -1,0 +1,106 @@
+[
+  {
+    "service": "mockfuncrefs",
+    "resource_type": "aws_mockfuncrefs_call_expression",
+    "plugin_type": "SDKv2",
+    "expr": "resourceCallExpression",
+    "location": "internal/service/mockfuncrefs/call_expression.go:23",
+    "create": {
+      "expr": "resourceCallExpressionPut(...)",
+      "location": "internal/service/mockfuncrefs/call_expression.go:48",
+      "sdk_calls": [
+        "mockfuncrefs.GetFooConfiguration",
+        "mockfuncrefs.PutFooConfiguration"
+      ]
+    },
+    "read": {
+      "expr": "resourceCallExpressionRead",
+      "location": "internal/service/mockfuncrefs/call_expression.go:72",
+      "sdk_calls": [
+        "mockfuncrefs.GetFooConfiguration"
+      ]
+    },
+    "update": {
+      "expr": "resourceCallExpressionPut(...)",
+      "location": "internal/service/mockfuncrefs/call_expression.go:48",
+      "sdk_calls": [
+        "mockfuncrefs.GetFooConfiguration",
+        "mockfuncrefs.PutFooConfiguration"
+      ]
+    },
+    "delete": {
+      "expr": "resourceCallExpressionDelete",
+      "location": "internal/service/mockfuncrefs/call_expression.go:94",
+      "sdk_calls": [
+        "mockfuncrefs.DeleteFooConfiguration"
+      ]
+    }
+  },
+  {
+    "service": "mockfuncrefs",
+    "resource_type": "aws_mockfuncrefs_method_value",
+    "plugin_type": "SDKv2",
+    "expr": "resourceMethodValue",
+    "location": "internal/service/mockfuncrefs/method_value.go:23",
+    "create": {
+      "expr": "h.Upsert",
+      "sdk_calls": [
+        "mockfuncrefs.GetFooAttribute",
+        "mockfuncrefs.SetFooAttribute"
+      ]
+    },
+    "read": {
+      "expr": "h.Read",
+      "sdk_calls": [
+        "mockfuncrefs.GetFooAttribute"
+      ]
+    },
+    "update": {
+      "expr": "h.Upsert",
+      "sdk_calls": [
+        "mockfuncrefs.GetFooAttribute",
+        "mockfuncrefs.SetFooAttribute"
+      ]
+    },
+    "delete": {
+      "expr": "h.Delete",
+      "sdk_calls": [
+        "mockfuncrefs.DeleteFooAttribute"
+      ]
+    }
+  },
+  {
+    "service": "mockfuncrefs",
+    "resource_type": "aws_mockfuncrefs_noop",
+    "plugin_type": "SDKv2",
+    "expr": "resourceNoopDelete",
+    "location": "internal/service/mockfuncrefs/noop_delete.go:18",
+    "create": {
+      "expr": "resourceNoopDeleteUpsert",
+      "location": "internal/service/mockfuncrefs/noop_delete.go:36",
+      "sdk_calls": [
+        "mockfuncrefs.GetAccountSettings",
+        "mockfuncrefs.SetAccountSettings"
+      ]
+    },
+    "read": {
+      "expr": "resourceNoopDeleteRead",
+      "location": "internal/service/mockfuncrefs/noop_delete.go:57",
+      "sdk_calls": [
+        "mockfuncrefs.GetAccountSettings"
+      ]
+    },
+    "update": {
+      "expr": "resourceNoopDeleteUpsert",
+      "location": "internal/service/mockfuncrefs/noop_delete.go:36",
+      "sdk_calls": [
+        "mockfuncrefs.GetAccountSettings",
+        "mockfuncrefs.SetAccountSettings"
+      ]
+    },
+    "delete": {
+      "expr": "schema.NoopContext",
+      "sdk_calls": []
+    }
+  }
+]
