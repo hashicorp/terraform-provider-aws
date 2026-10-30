@@ -4001,6 +4001,100 @@ func TestAccWAFV2WebACL_monetize(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_associationConfigChallengeJavascriptSDKInjection(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_associationConfigChallengeJavascriptSDKInjection(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "association_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.challenge_javascript_sdk_injection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.challenge_javascript_sdk_injection.0.cloudfront.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+			{
+				Config: testAccWebACLConfig_associationConfigChallengeJavascriptSDKInjectionRequestBody(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "association_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.challenge_javascript_sdk_injection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.challenge_javascript_sdk_injection.0.cloudfront.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.cloudfront.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.cloudfront.0.default_size_inspection_limit", "KB_64"),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_associationConfigChallengeJavascriptSDKInjectionDisabled(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "association_config.#", "0"),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_associationConfigChallengeJavascriptSDKInjection(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "association_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.challenge_javascript_sdk_injection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.challenge_javascript_sdk_injection.0.cloudfront.#", "1"),
+				),
+			},
+			{
+				// The qualifying rule group and the setting must be removed in the same update.
+				Config: testAccWebACLConfig_associationConfigChallengeJavascriptSDKInjectionRemovedWithRuleGroup(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "association_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_associationConfigChallengeJavascriptSDKInjectionNoQualifyingRuleGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWebACLConfig_associationConfigChallengeJavascriptSDKInjectionNoQualifyingRuleGroup(webACLName),
+				ExpectError: regexache.MustCompile(`ChallengeJavascriptSdkInjection requires at least one qualifying AWS Managed Rule Group`),
+			},
+		},
+	})
+}
+
 func testAccCheckWebACLDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
@@ -8062,6 +8156,214 @@ resource "aws_wafv2_web_acl" "test" {
       metric_name                = "monetize-api"
       sampled_requests_enabled   = false
     }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_associationConfigChallengeJavascriptSDKInjection(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesBotControlRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_bot_control_rule_set {
+            inspection_level = "TARGETED"
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  association_config {
+    challenge_javascript_sdk_injection {
+      cloudfront {}
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_associationConfigChallengeJavascriptSDKInjectionRequestBody(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesBotControlRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_bot_control_rule_set {
+            inspection_level = "TARGETED"
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  association_config {
+    challenge_javascript_sdk_injection {
+      cloudfront {}
+    }
+
+    request_body {
+      cloudfront {
+        default_size_inspection_limit = "KB_64"
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_associationConfigChallengeJavascriptSDKInjectionDisabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesBotControlRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_bot_control_rule_set {
+            inspection_level = "TARGETED"
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_associationConfigChallengeJavascriptSDKInjectionNoQualifyingRuleGroup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  association_config {
+    challenge_javascript_sdk_injection {
+      cloudfront {}
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_associationConfigChallengeJavascriptSDKInjectionRemovedWithRuleGroup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
   }
 
   visibility_config {
