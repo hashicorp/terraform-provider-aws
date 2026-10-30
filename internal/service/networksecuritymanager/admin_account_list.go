@@ -75,6 +75,10 @@ func (l *adminAccountListResource) List(ctx context.Context, request list.ListRe
 				result.DisplayName = adminAccountID
 			})
 
+			if result.Diagnostics.HasError() {
+				yield(list.ListResult{Diagnostics: result.Diagnostics})
+				return
+			}
 			if !yield(result) {
 				return
 			}
