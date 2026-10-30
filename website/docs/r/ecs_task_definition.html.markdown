@@ -223,12 +223,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `cpu` - (Optional) Number of CPU units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
+* `cpu` - (Optional) Number of CPU units used by the task. Can be expressed as an integer in CPU units (e.g., `1024`) or as a string in vCPUs (e.g., `1 vCPU`); ECS converts vCPU values to CPU units on registration. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `enable_fault_injection` - (Optional) Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Default is `false`.
 * `ephemeral_storage` - (Optional) Amount of ephemeral storage to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate. See [Ephemeral Storage](#ephemeral_storage-block).
 * `execution_role_arn` - (Optional) ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `ipc_mode` - (Optional) IPC resource namespace to be used for the containers in the task. Valid values: `host`, `task`, `none`.
-* `memory` - (Optional) Amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
+* `memory` - (Optional) Amount (in MiB) of memory used by the task. Can be expressed as an integer in MiB (e.g., `2048`) or as a string in GB (e.g., `2 GB`); ECS converts GB values to MiB on registration. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `network_mode` - (Optional) Docker networking mode to use for the containers in the task. Valid values: `awsvpc`, `bridge`, `host`, and `none`.
 * `pid_mode` - (Optional) Process namespace to use for the containers in the task. Valid values: host`, `task`.
 * `placement_constraints` - (Optional) Configuration block for rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`. [Detailed below](#placement_constraints-block).
