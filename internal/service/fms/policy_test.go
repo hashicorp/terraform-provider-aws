@@ -6,9 +6,15 @@ package fms_test
 import (
 	"context"
 	"fmt"
+	"maps"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +23,83 @@ import (
 	tffms "github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestExpandPolicyResourceTags(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		testName            string
+		raw                 map[string]any
+		wantTags            []awstypes.ResourceTag
+		wantLogicalOperator awstypes.ResourceTagLogicalOperator
+	}{
+		{
+			testName: "no tags",
+			raw: map[string]any{
+				"resource_tag_logical_operator": "OR",
+			},
+		},
+		{
+			testName: "resource_tags map",
+			raw: map[string]any{
+				names.AttrResourceTags: map[string]any{
+					acctest.CtKey1: acctest.CtValue1,
+				},
+				"resource_tag_logical_operator": "OR",
+			},
+			wantTags: []awstypes.ResourceTag{
+				{Key: aws.String(acctest.CtKey1), Value: aws.String(acctest.CtValue1)},
+			},
+			wantLogicalOperator: awstypes.ResourceTagLogicalOperatorOr,
+		},
+		{
+			testName: "resource_tag blocks with repeated key",
+			raw: map[string]any{
+				"resource_tag": []any{
+					map[string]any{names.AttrKey: acctest.CtKey1, names.AttrValue: acctest.CtValue1},
+					map[string]any{names.AttrKey: acctest.CtKey1, names.AttrValue: acctest.CtValue2},
+					map[string]any{names.AttrKey: acctest.CtKey2},
+				},
+				"resource_tag_logical_operator": "OR",
+			},
+			wantTags: []awstypes.ResourceTag{
+				{Key: aws.String(acctest.CtKey1), Value: aws.String(acctest.CtValue1)},
+				{Key: aws.String(acctest.CtKey1), Value: aws.String(acctest.CtValue2)},
+				{Key: aws.String(acctest.CtKey2), Value: aws.String("")},
+			},
+			wantLogicalOperator: awstypes.ResourceTagLogicalOperatorOr,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			raw := map[string]any{
+				"exclude_resource_tags": true,
+				names.AttrName:          acctest.CtName,
+				"security_service_policy_data": []any{map[string]any{
+					names.AttrType:         "WAFV2",
+					"managed_service_data": `{"type":"WAFV2"}`,
+				}},
+			}
+			maps.Copy(raw, testCase.raw)
+			d := schema.TestResourceDataRaw(t, tffms.ResourcePolicy().SchemaMap(), raw)
+
+			got := tffms.ExpandPolicy(d)
+
+			sortTags := cmpopts.SortSlices(func(a, b awstypes.ResourceTag) bool {
+				return aws.ToString(a.Key)+"="+aws.ToString(a.Value) < aws.ToString(b.Key)+"="+aws.ToString(b.Value)
+			})
+			if diff := cmp.Diff(testCase.wantTags, got.ResourceTags, sortTags, cmpopts.IgnoreUnexported(awstypes.ResourceTag{}), cmpopts.EquateEmpty()); diff != "" {
+				t.Errorf("unexpected ResourceTags diff (-want +got):\n%s", diff)
+			}
+			if got, want := got.ResourceTagLogicalOperator, testCase.wantLogicalOperator; got != want {
+				t.Errorf("ResourceTagLogicalOperator = %q, want %q", got, want)
+			}
+		})
+	}
+}
 
 func testAccPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)

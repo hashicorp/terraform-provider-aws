@@ -14,6 +14,8 @@ Provides a resource to create an AWS Firewall Manager policy. You need to be usi
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_fms_policy" "example" {
   name                  = "FMS-Policy-Example"
@@ -100,8 +102,8 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `remediation_enabled` - (Optional) Whether the policy is automatically applied to resources that already exist in the account.
 * `resource_set_ids` - (Optional) Set of resource set IDs associated with the policy.
-* `resource_tag_logical_operator` - (Optional) Controls how multiple resource tags are combined: with AND, so that a resource must have all tags to be included or excluded, or OR, so that a resource must have at least one tag. The valid values are `AND` and `OR`.
 * `resource_tag` - (Optional) Resource tag that, if present, filters protections on resources based on `exclude_resource_tags`. Unlike `resource_tags`, the same key can be specified more than once. Up to 50 can be specified. Conflicts with `resource_tags`. See the [`resource_tag`](#resource_tag-block) block.
+* `resource_tag_logical_operator` - (Optional) Controls how multiple resource tags are combined: with AND, so that a resource must have all tags to be included or excluded, or OR, so that a resource must have at least one tag. The valid values are `AND` and `OR`.
 * `resource_tags` - (Optional) Map of resource tags that, if present, filter protections on resources based on `exclude_resource_tags`. Conflicts with `resource_tag`.
 * `resource_type` - (Optional) Resource type to protect. Conflicts with `resource_type_list`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values.
 * `resource_type_list` - (Optional) List of resource types to protect. Conflicts with `resource_type`. See the [FMS API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html#fms-Type-Policy-ResourceType) for more information about supported values. Lists with only one element are not supported, instead use `resource_type`.

@@ -407,7 +407,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("remediation_enabled", policy.RemediationEnabled)
 	// A tag key can appear more than once in ResourceTags, which resource_tags (a map) can't represent.
 	// Use resource_tag when it's already in use, or when the policy has repeated keys (e.g. on import).
-	if v, ok := d.Get("resource_tag").(*schema.Set); (ok && v.Len() > 0) || hasDuplicateResourceTagKeys(policy.ResourceTags) {
+	if d.Get("resource_tag").(*schema.Set).Len() > 0 || hasDuplicateResourceTagKeys(policy.ResourceTags) {
 		if err := d.Set("resource_tag", flattenResourceTagList(policy.ResourceTags)); err != nil {
 			diags = sdkdiag.AppendErrorf(diags, "setting resource_tag: %s", err)
 		}
