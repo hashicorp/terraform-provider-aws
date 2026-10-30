@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lb_listener: Add `client_secret_wo` and `client_secret_wo_version` arguments to the `default_action.authenticate_oidc` configuration block
+```
+
+```release-note:enhancement
+resource/aws_lb_listener_rule: Add `client_secret_wo` and `client_secret_wo_version` arguments to the `action.authenticate_oidc` configuration block
+```
