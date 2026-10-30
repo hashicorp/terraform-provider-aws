@@ -105,7 +105,7 @@ func dataSourceInstance() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							names.AttrTags: tftags.TagsSchemaComputed(),
+							names.AttrTags: tftags.TagsSchemaComputedOnly(),
 							names.AttrThroughput: {
 								Type:     schema.TypeInt,
 								Computed: true,
@@ -196,7 +196,7 @@ func dataSourceInstance() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"instance_tags": tftags.TagsSchemaComputed(),
+				"instance_tags": tftags.TagsSchemaOptionalComputed(),
 				names.AttrInstanceType: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -347,7 +347,7 @@ func dataSourceInstance() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							names.AttrTags: tftags.TagsSchemaComputed(),
+							names.AttrTags: tftags.TagsSchemaComputedOnly(),
 							names.AttrThroughput: {
 								Type:     schema.TypeInt,
 								Computed: true,
@@ -387,7 +387,7 @@ func dataSourceInstance() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"tenancy": {
 					Type:     schema.TypeString,
 					Computed: true,

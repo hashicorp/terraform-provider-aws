@@ -51,7 +51,7 @@ func dataSourceDataSet() *schema.Resource {
 				"physical_table_map":                     quicksightschema.DataSetPhysicalTableMapSchemaDataSourceSchema(),
 				"row_level_permission_data_set":          quicksightschema.DataSetRowLevelPermissionDataSetSchemaDataSourceSchema(),
 				"row_level_permission_tag_configuration": quicksightschema.DataSetRowLevelPermissionTagConfigurationSchemaDataSourceSchema(),
-				names.AttrTags:                           tftags.TagsSchemaComputed(),
+				names.AttrTags:                           tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}

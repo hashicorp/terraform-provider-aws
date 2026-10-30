@@ -43,7 +43,7 @@ func dataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrFilter: customFiltersSchema(),
-				names.AttrTags:   tftags.TagsSchemaComputed(),
+				names.AttrTags:   tftags.TagsSchemaOptionalComputed(),
 				names.AttrTransitGatewayID: {
 					Type:     schema.TypeString,
 					Optional: true,

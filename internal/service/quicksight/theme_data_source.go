@@ -56,7 +56,7 @@ func dataSourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"version_description": {
 					Type:     schema.TypeString,
 					Computed: true,

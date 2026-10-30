@@ -57,7 +57,7 @@ func dataSourceTransitGatewayAttachment() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				names.AttrTransitGatewayAttachmentID: {
 					Type:     schema.TypeString,
 					Optional: true,

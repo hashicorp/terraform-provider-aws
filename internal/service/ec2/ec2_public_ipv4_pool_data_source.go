@@ -61,7 +61,7 @@ func dataSourcePublicIPv4Pool() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"total_address_count": {
 					Type:     schema.TypeInt,
 					Computed: true,

@@ -113,7 +113,7 @@ func dataSourceQuickConnect() *schema.Resource {
 					Computed:     true,
 					ExactlyOneOf: []string{"quick_connect_id", names.AttrName},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}

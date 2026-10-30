@@ -49,7 +49,7 @@ func dataSourceIPAMPools() *schema.Resource {
 								Type:     schema.TypeInt,
 								Computed: true,
 							},
-							"allocation_resource_tags": tftags.TagsSchemaComputed(),
+							"allocation_resource_tags": tftags.TagsSchemaComputedOnly(),
 							names.AttrARN: {
 								Type:     schema.TypeString,
 								Computed: true,
@@ -98,7 +98,7 @@ func dataSourceIPAMPools() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							names.AttrTags: tftags.TagsSchemaComputed(),
+							names.AttrTags: tftags.TagsSchemaComputedOnly(),
 						},
 					},
 				},

@@ -53,7 +53,7 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"ami_tags": tftags.TagsSchemaComputed(),
+										"ami_tags": tftags.TagsSchemaComputedOnly(),
 										names.AttrDescription: {
 											Type:     schema.TypeString,
 											Computed: true,
@@ -281,7 +281,7 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}

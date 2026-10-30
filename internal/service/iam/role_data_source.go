@@ -77,7 +77,7 @@ func dataSourceRole() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"unique_id": {
 					Type:     schema.TypeString,
 					Computed: true,

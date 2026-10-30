@@ -67,7 +67,7 @@ func dataSourceReportDefinition() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"time_unit": {
 					Type:     schema.TypeString,
 					Computed: true,

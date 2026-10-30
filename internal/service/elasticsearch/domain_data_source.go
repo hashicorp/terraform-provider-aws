@@ -314,7 +314,7 @@ func dataSourceDomain() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"vpc_options": {
 					Type:     schema.TypeList,
 					Computed: true,

@@ -68,7 +68,7 @@ func dataSourceSecurityProfile() *schema.Resource {
 					Computed:     true,
 					ExactlyOneOf: []string{"security_profile_id", names.AttrName},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}

@@ -46,7 +46,7 @@ func dataSourceOpenIDConnectProvider() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"thumbprint_list": {
 					Type:     schema.TypeList,
 					Computed: true,
