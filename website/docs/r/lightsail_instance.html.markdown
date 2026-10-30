@@ -78,7 +78,8 @@ The following arguments are optional:
 * `key_pair_name` - (Optional) Name of your key pair. Created in the Lightsail console (cannot use `aws_key_pair` at this time).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `user_data` - (Optional) Single lined launch script as a string to configure server with additional user data.
+* `user_data` - (Optional) Single lined launch script as a string to configure server with additional user data. If the `user_data_replace_on_change` is set then updates to this field will trigger a destroy and recreate.
+* `user_data_replace_on_change` - (Optional) When used in combination with `user_data` this will trigger a destroy and recreate when set to `true`. Defaults to `false` if not set.
 
 ### `add_on`
 
