@@ -14,8 +14,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -56,7 +58,9 @@ var (
 	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#account-regional-naming.
 	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#region-code-format.
 	// e.g. example-123456789012-us-west-2-an.
-	accountRegionalBucketNameRegex = regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)-an$`)
+	accountRegionalBucketNameRegex = sync.OnceValue(func() *regexp.Regexp {
+		return regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)-an$`)
+	})
 )
 
 func isGeneralPurposeBucket(bucket string) bool {
@@ -1877,7 +1881,7 @@ func bucketWebsiteEndpointAndDomain(bucket, region string) (string, string) {
 }
 
 func bucketNamespace(bucket string) types.BucketNamespace {
-	if accountRegionalBucketNameRegex.MatchString(bucket) {
+	if accountRegionalBucketNameRegex().MatchString(bucket) {
 		return types.BucketNamespaceAccountRegional
 	}
 	return types.BucketNamespaceGlobal
@@ -3172,11 +3176,11 @@ func validBucketName(bucket, region string, ns types.BucketNamespace) error {
 
 	switch ns {
 	case types.BucketNamespaceAccountRegional:
-		if !accountRegionalBucketNameRegex.MatchString(bucket) {
+		if !accountRegionalBucketNameRegex().MatchString(bucket) {
 			return fmt.Errorf("%s is not an account-regional namespace bucket", bucket)
 		}
 	default:
-		if accountRegionalBucketNameRegex.MatchString(bucket) {
+		if accountRegionalBucketNameRegex().MatchString(bucket) {
 			return fmt.Errorf("%s is an account-regional namespace bucket", bucket)
 		}
 	}
