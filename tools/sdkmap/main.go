@@ -4,6 +4,8 @@
 // sdkmap walks internal/service/* and reports every resource annotated with @SDKResource,
 // along with the functions it uses for CRUD, CustomizeDiff, and custom import,
 // the AWS SDK client methods each of those functions calls, and those the tags interceptor calls.
+// It reports every data source annotated with @SDKDataSource in the same way, but only for its
+// Read function and the tags interceptor's ListTags.
 //
 // Annotations are recognized using the same rules as the service package generator
 // (internal/generate/servicepackage), except that build constraints are honored when selecting a
@@ -36,6 +38,12 @@ const (
 	servicePathPrefix = "github.com/hashicorp/terraform-provider-aws/internal/service/"
 )
 
+// The annotations that register a factory function's Terraform types.
+const (
+	annotationSDKResource   = "SDKResource"
+	annotationSDKDataSource = "SDKDataSource"
+)
+
 var (
 	// These mirror internal/generate/servicepackage.
 	annotationRegexp = regexp.MustCompile(`^//\s*@([0-9A-Za-z]+)(\(([^)]*)\))?\s*$`)
@@ -51,7 +59,14 @@ const (
 	pluginTypeSDKv2 pluginType = "SDKv2"
 )
 
-// resource is a resource and the functions that implement it.
+// sdkMap is the output: every resource and data source found.
+type sdkMap struct {
+	Resources   []resource   `json:"resources"`
+	DataSources []dataSource `json:"dataSources"`
+}
+
+// resource is a resource and the functions that implement it. A data source is analyzed as a
+// resource, then written as a dataSource, which keeps only its Read function and Tags.
 type resource struct {
 	Service      string     `json:"service"`
 	ResourceType string     `json:"resource_type"`
@@ -77,8 +92,26 @@ type resource struct {
 	Tags *resourceTags `json:"tags,omitempty"`
 }
 
-// funcRef is a reference to a function from a resource's schema.Resource, or to a service package
-// method.
+// dataSource is a data source and the function that reads it.
+type dataSource struct {
+	Service        string     `json:"service"`
+	DataSourceType string     `json:"data_source_type"`
+	PluginType     pluginType `json:"plugin_type"`
+
+	// Expr is the factory function annotated with @SDKDataSource.
+	Expr string `json:"expr"`
+	// Location is where Expr is declared, as "<file>:<line>" relative to the repository root.
+	Location string `json:"location"`
+
+	Read *funcRef `json:"read,omitempty"`
+
+	// Tags is nil unless the data source is annotated with @Tags(identifierAttribute=...). Its
+	// Update is always nil: the tags interceptor only lists a data source's tags.
+	Tags *resourceTags `json:"tags,omitempty"`
+}
+
+// funcRef is a reference to a function from a resource's or data source's schema.Resource, or to a
+// service package method.
 type funcRef struct {
 	// Expr is the reference as written, e.g. "resourceObjectCreate" or "schema.NoopContext".
 	Expr string `json:"expr"`
@@ -102,17 +135,18 @@ type funcRef struct {
 }
 
 // resourceTags holds the service package methods through which the tags interceptor lists and
-// updates a resource's tags around its CRUD functions.
+// updates a resource's tags around its CRUD functions, or lists a data source's tags after Read.
 //
 // Where the methods branch on @Tags(resourceType=...), e.g. in IAM and S3, with a switch on a
 // variable named resourceType, only the branch for the resource's type is analyzed. Otherwise, the
 // SDK calls for every resource type that shares them are included.
 type resourceTags struct {
 	// List is the service package's ListTags, called after Create, Read, and Update if they don't
-	// set tags themselves, and after Update if tags_all isn't known until apply.
+	// set tags themselves, and after Update if tags_all isn't known until apply. For a data source,
+	// it is called after Read if Read doesn't set tags itself.
 	List *funcRef `json:"list,omitempty"`
 
-	// Update is the service package's UpdateTags, called during Update.
+	// Update is the service package's UpdateTags, called during Update. It is nil for a data source.
 	Update *funcRef `json:"update,omitempty"`
 }
 
@@ -127,19 +161,30 @@ func main() {
 		log.Fatal(err)
 	}
 
-	resources := []resource{}
-	for _, pkg := range a.servicePackages() {
-		resources = append(resources, a.findSDKResources(pkg)...)
-	}
+	m := a.mapPackages(a.servicePackages())
 
-	data, err := json.MarshalIndent(resources, "", "  ")
+	data, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		log.Fatal(err)
 	}
 	if err := os.WriteFile(*out, append(data, '\n'), 0o644); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("found %d @SDKResource resources in %d packages, wrote %s", len(resources), len(a.services), *out)
+	log.Printf("found %d @SDKResource resources and %d @SDKDataSource data sources in %d packages, wrote %s", len(m.Resources), len(m.DataSources), len(a.services), *out)
+}
+
+// mapPackages returns the resources and data sources in pkgs, in order.
+func (a *analyzer) mapPackages(pkgs []*servicePackage) sdkMap {
+	// The slices are non-nil, so that none found are written as [] rather than null.
+	m := sdkMap{
+		Resources:   []resource{},
+		DataSources: []dataSource{},
+	}
+	for _, pkg := range pkgs {
+		m.Resources = append(m.Resources, a.findSDKResources(pkg)...)
+		m.DataSources = append(m.DataSources, a.findSDKDataSources(pkg)...)
+	}
+	return m
 }
 
 // analyzer holds the parsed source shared by every resource.
@@ -181,7 +226,7 @@ type servicePackage struct {
 	interfaces map[string][]string
 	// fieldTypes maps struct type names to their field names to the fields' types.
 	fieldTypes map[string]map[string]string
-	// factories holds the functions annotated with @SDKResource.
+	// factories holds the functions annotated with @SDKResource or @SDKDataSource.
 	factories map[ast.Node]bool
 }
 
@@ -299,8 +344,10 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 			case *ast.FuncDecl:
 				if d.Recv == nil {
 					pkg.decls[d.Name.Name] = d
-					if typeNames, _, _ := parseAnnotations(d.Doc); len(typeNames) > 0 {
-						pkg.factories[d] = true
+					for _, annotation := range []string{annotationSDKResource, annotationSDKDataSource} {
+						if typeNames, _, _ := parseAnnotations(d.Doc, annotation); len(typeNames) > 0 {
+							pkg.factories[d] = true
+						}
 					}
 					continue
 				}
@@ -345,6 +392,30 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 
 // findSDKResources returns the resources annotated with @SDKResource in pkg.
 func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
+	return a.findSDKFactories(pkg, annotationSDKResource)
+}
+
+// findSDKDataSources returns the data sources annotated with @SDKDataSource in pkg. Terraform only
+// reads a data source, so any other functions its schema.Resource sets are dropped.
+func (a *analyzer) findSDKDataSources(pkg *servicePackage) []dataSource {
+	var dataSources []dataSource
+	for _, r := range a.findSDKFactories(pkg, annotationSDKDataSource) {
+		dataSources = append(dataSources, dataSource{
+			Service:        r.Service,
+			DataSourceType: r.ResourceType,
+			PluginType:     r.PluginType,
+			Expr:           r.Expr,
+			Location:       r.Location,
+			Read:           r.Read,
+			Tags:           r.Tags,
+		})
+	}
+	return dataSources
+}
+
+// findSDKFactories returns the resources or data sources whose factory functions in pkg are
+// annotated with annotation, @SDKResource or @SDKDataSource. Data sources are returned as resources.
+func (a *analyzer) findSDKFactories(pkg *servicePackage, annotation string) []resource {
 	var resources []resource
 
 	for _, file := range pkg.files {
@@ -353,7 +424,7 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 			if !ok || fn.Recv != nil {
 				continue
 			}
-			typeNames, tagged, tagsResourceType := parseAnnotations(fn.Doc)
+			typeNames, tagged, tagsResourceType := parseAnnotations(fn.Doc, annotation)
 			if len(typeNames) == 0 {
 				continue
 			}
@@ -373,7 +444,7 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 				log.Printf("%s: no AWS SDK calls found for %s", r.Location, r.Expr)
 			}
 			if tagged {
-				r.Tags = a.newResourceTags(pkg, tagsResourceType)
+				r.Tags = a.newResourceTags(pkg, tagsResourceType, annotation)
 			}
 			r.logWarnings()
 
@@ -388,10 +459,10 @@ func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
 	return resources
 }
 
-// parseAnnotations returns the type names from a function's @SDKResource annotations, whether its
-// @Tags annotation means the tags interceptor lists and updates its tags, and the resource type
-// that the tags interceptor passes to them.
-func parseAnnotations(doc *ast.CommentGroup) (typeNames []string, tagged bool, tagsResourceType string) {
+// parseAnnotations returns the type names from a function's annotations named annotation, e.g.
+// @SDKResource, whether its @Tags annotation means the tags interceptor manages its tags, and the
+// resource type that the tags interceptor passes to the service package's tag methods.
+func parseAnnotations(doc *ast.CommentGroup, annotation string) (typeNames []string, tagged bool, tagsResourceType string) {
 	if doc == nil {
 		return nil, false, ""
 	}
@@ -402,7 +473,7 @@ func parseAnnotations(doc *ast.CommentGroup) (typeNames []string, tagged bool, t
 			continue
 		}
 		switch name, args := m[1], m[3]; name {
-		case "SDKResource":
+		case annotation:
 			// The type name is the first argument that is not of the form key=value.
 			for arg := range strings.SplitSeq(args, ",") {
 				arg = strings.TrimSpace(arg)
@@ -568,8 +639,10 @@ func (a *analyzer) newFuncRef(pkg *servicePackage, expr ast.Expr, varTypes map[s
 
 // newResourceTags returns the service package's ListTags and UpdateTags, through which the tags
 // interceptor lists and updates the tags of a resource around its CRUD functions. resourceType is
-// the resource's @Tags resourceType, which the tags interceptor passes to them, or empty.
-func (a *analyzer) newResourceTags(pkg *servicePackage, resourceType string) *resourceTags {
+// the resource's @Tags resourceType, which the tags interceptor passes to them, or empty. For a data
+// source, whose factory is annotated with @SDKDataSource, only ListTags is returned: the tags
+// interceptor lists its tags after Read, and never updates them.
+func (a *analyzer) newResourceTags(pkg *servicePackage, resourceType, annotation string) *resourceTags {
 	newRef := func(name string) *funcRef {
 		m, ok := pkg.methods["servicePackage"][name]
 		if !ok {
@@ -587,10 +660,11 @@ func (a *analyzer) newResourceTags(pkg *servicePackage, resourceType string) *re
 		return ref
 	}
 
-	return &resourceTags{
-		List:   newRef("ListTags"),
-		Update: newRef("UpdateTags"),
+	tags := &resourceTags{List: newRef("ListTags")}
+	if annotation != annotationSDKDataSource {
+		tags.Update = newRef("UpdateTags")
 	}
+	return tags
 }
 
 // location returns where node is, as "<file>:<line>" relative to the repository root.
@@ -628,9 +702,9 @@ func (a *analyzer) newCallFinder() *callFinder {
 }
 
 // find returns the sorted set of AWS SDK client methods reachable from node, e.g. a declaration or
-// a function reference from a resource's schema.Resource, and the sorted warnings about AWS SDK
-// clients passed to functions that aren't analyzed. varTypes holds the types of variables in scope
-// at node, e.g. from factoryVarTypes, and may be nil.
+// a function reference from a resource's or data source's schema.Resource, and the sorted warnings
+// about AWS SDK clients passed to functions that aren't analyzed. varTypes holds the types of
+// variables in scope at node, e.g. from factoryVarTypes, and may be nil.
 func (f *callFinder) find(pkg *servicePackage, node ast.Node, varTypes map[string]string) (calls, warnings []string) {
 	v := f.newVisitor(pkg, node)
 	maps.Copy(v.varTypes, varTypes)
@@ -643,9 +717,9 @@ func (f *callFinder) find(pkg *servicePackage, node ast.Node, varTypes map[strin
 	return calls, slices.Sorted(maps.Keys(f.warnings))
 }
 
-// factoryVarTypes returns the types of the variables declared in the body of a resource's factory
-// function, outside any nested function, so that the functions it references can use them, e.g. a
-// method value such as h.Upsert.
+// factoryVarTypes returns the types of the variables declared in the body of a resource's or data
+// source's factory function, outside any nested function, so that the functions it references can
+// use them, e.g. a method value such as h.Upsert.
 func (a *analyzer) factoryVarTypes(pkg *servicePackage, factory *ast.FuncDecl) map[string]string {
 	v := (&callFinder{analyzer: a}).newVisitor(pkg, factory)
 	for _, stmt := range factory.Body.List {
@@ -664,8 +738,8 @@ func (a *analyzer) factoryVarTypes(pkg *servicePackage, factory *ast.FuncDecl) m
 }
 
 // follow walks a declaration in pkg, once.
-// Resource factory functions aren't followed: calling one, e.g. resourceStack().SchemaMap(),
-// returns the resource's schema.Resource without calling any of its functions.
+// Resource and data source factory functions aren't followed: calling one, e.g.
+// resourceStack().SchemaMap(), returns its schema.Resource without calling any of its functions.
 func (f *callFinder) follow(pkg *servicePackage, decl ast.Node) {
 	if decl == nil || f.visited[decl] || pkg.factories[decl] {
 		return

@@ -20,7 +20,7 @@ import (
 // testdataRoot is the root of a fixture shaped like the provider repository. See testdata/README.md.
 const testdataRoot = "testdata"
 
-// goldenDir holds the golden files that TestFindSDKResources compares results with.
+// goldenDir holds the golden files that TestMapPackages compares results with.
 var goldenDir = filepath.Join(testdataRoot, "golden")
 
 var update = flag.Bool("update", false, "update the golden files in "+goldenDir)
@@ -46,7 +46,7 @@ func TestParsePackageInvalidDir(t *testing.T) {
 	}
 }
 
-func TestFindSDKResources(t *testing.T) {
+func TestMapPackages(t *testing.T) {
 	t.Parallel()
 
 	a, err := load(testdataRoot)
@@ -54,8 +54,8 @@ func TestFindSDKResources(t *testing.T) {
 		t.Fatalf("load(%q): %s", testdataRoot, err)
 	}
 
-	// The resources found in each service package are compared with the golden file
-	// testdata/golden/<pkg>.json. See testdata/README.md.
+	// The resources and data sources found in each service package are compared with the golden
+	// file testdata/golden/<pkg>.json. See testdata/README.md.
 	testCases := map[string]struct {
 		pkg string
 	}{
@@ -70,6 +70,9 @@ func TestFindSDKResources(t *testing.T) {
 		},
 		"CustomizeDiff": {
 			pkg: "mockcustomizediff",
+		},
+		"data sources": {
+			pkg: "mockdatasource",
 		},
 		"function references": {
 			pkg: "mockfuncrefs",
@@ -129,13 +132,16 @@ func TestFindSDKResources(t *testing.T) {
 				t.Fatalf("service package %s not loaded", testCase.pkg)
 			}
 
-			resources := a.findSDKResources(pkg)
+			m := a.mapPackages([]*servicePackage{pkg})
 
 			// Order isn't asserted.
-			slices.SortFunc(resources, func(x, y resource) int {
+			slices.SortFunc(m.Resources, func(x, y resource) int {
 				return strings.Compare(x.ResourceType, y.ResourceType)
 			})
-			got, err := json.MarshalIndent(resources, "", "  ")
+			slices.SortFunc(m.DataSources, func(x, y dataSource) int {
+				return strings.Compare(x.DataSourceType, y.DataSourceType)
+			})
+			got, err := json.MarshalIndent(m, "", "  ")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -151,10 +157,10 @@ func TestFindSDKResources(t *testing.T) {
 
 			want, err := os.ReadFile(goldenFile)
 			if err != nil {
-				t.Fatalf("reading golden file: %s; to create it, run go test -run TestFindSDKResources -update", err)
+				t.Fatalf("reading golden file: %s; to create it, run go test -run TestMapPackages -update", err)
 			}
 			if line, gotLine, wantLine, ok := firstDifference(got, want); ok {
-				t.Errorf("findSDKResources(%s) differs from %s at line %d:\n got: %s\nwant: %s\nIf the change is intended, run go test -run TestFindSDKResources -update", testCase.pkg, goldenFile, line, gotLine, wantLine)
+				t.Errorf("mapPackages(%s) differs from %s at line %d:\n got: %s\nwant: %s\nIf the change is intended, run go test -run TestMapPackages -update", testCase.pkg, goldenFile, line, gotLine, wantLine)
 			}
 		})
 	}
@@ -176,15 +182,19 @@ func TestParseAnnotations(t *testing.T) {
 
 	testCases := map[string]struct {
 		doc                  []string // nil means the function has no doc comment.
+		annotation           string
 		wantTypeNames        []string
 		wantTagged           bool
 		wantTagsResourceType string
 	}{
-		"no doc": {},
+		"no doc": {
+			annotation: annotationSDKResource,
+		},
 		"no annotations": {
 			doc: []string{
 				"// resourceBucket returns the aws_s3_bucket resource.",
 			},
+			annotation: annotationSDKResource,
 		},
 		"unrelated annotations": {
 			doc: []string{
@@ -192,76 +202,90 @@ func TestParseAnnotations(t *testing.T) {
 				"// @Region(global=true)",
 				`// @ArnIdentity(identityDuplicateAttributes="id")`,
 			},
+			annotation: annotationSDKResource,
 		},
 		"quoted type name": {
 			doc: []string{
 				`// @SDKResource("aws_s3_bucket", name="Bucket")`,
 			},
+			annotation:    annotationSDKResource,
 			wantTypeNames: []string{"aws_s3_bucket"},
 		},
 		"unquoted type name": {
 			doc: []string{
 				"// @SDKResource(aws_s3_bucket, name=Bucket)",
 			},
+			annotation:    annotationSDKResource,
 			wantTypeNames: []string{"aws_s3_bucket"},
 		},
 		"named argument before type name": {
 			doc: []string{
 				`// @SDKResource(name="Bucket", "aws_s3_bucket")`,
 			},
+			annotation:    annotationSDKResource,
 			wantTypeNames: []string{"aws_s3_bucket"},
 		},
 		"no space after comment marker": {
 			doc: []string{
 				`//@SDKResource("aws_s3_bucket", name="Bucket")`,
 			},
+			annotation:    annotationSDKResource,
 			wantTypeNames: []string{"aws_s3_bucket"},
 		},
 		"trailing whitespace": {
 			doc: []string{
 				"// @SDKResource(\"aws_s3_bucket\", name=\"Bucket\")  \t",
 			},
+			annotation:    annotationSDKResource,
 			wantTypeNames: []string{"aws_s3_bucket"},
 		},
 		"text after annotation": {
 			doc: []string{
 				`// @SDKResource("aws_s3_bucket", name="Bucket") is the bucket resource.`,
 			},
+			annotation: annotationSDKResource,
 		},
 		"annotation without arguments": {
 			doc: []string{
 				"// @SDKResource",
 			},
+			annotation: annotationSDKResource,
 		},
 		"annotation with empty arguments": {
 			doc: []string{
 				"// @SDKResource()",
 			},
+			annotation: annotationSDKResource,
 		},
 		"annotation with only named arguments": {
 			doc: []string{
 				`// @SDKResource(name="Bucket")`,
 			},
+			annotation: annotationSDKResource,
 		},
 		"type name without aws prefix": {
 			doc: []string{
 				`// @SDKResource("s3_bucket", name="Bucket")`,
 			},
+			annotation: annotationSDKResource,
 		},
 		"type name with uppercase letters": {
 			doc: []string{
 				`// @SDKResource("aws_S3_bucket", name="Bucket")`,
 			},
+			annotation: annotationSDKResource,
 		},
 		"type name with trailing underscore": {
 			doc: []string{
 				`// @SDKResource("aws_s3_bucket_", name="Bucket")`,
 			},
+			annotation: annotationSDKResource,
 		},
 		"invalid first positional argument": {
 			doc: []string{
 				`// @SDKResource("s3_bucket", "aws_s3_bucket", name="Bucket")`,
 			},
+			annotation: annotationSDKResource,
 		},
 		"annotations among other comments": {
 			doc: []string{
@@ -271,6 +295,7 @@ func TestParseAnnotations(t *testing.T) {
 				"// @Region(global=false)",
 				`// @SDKResource("aws_lb", name="Load Balancer")`,
 			},
+			annotation:    annotationSDKResource,
 			wantTypeNames: []string{"aws_alb", "aws_lb"},
 		},
 		"tags with identifier attribute and resource type": {
@@ -278,6 +303,7 @@ func TestParseAnnotations(t *testing.T) {
 				`// @SDKResource("aws_s3_object", name="Object")`,
 				`// @Tags(identifierAttribute="arn", resourceType="Object")`,
 			},
+			annotation:           annotationSDKResource,
 			wantTypeNames:        []string{"aws_s3_object"},
 			wantTagged:           true,
 			wantTagsResourceType: "Object",
@@ -287,6 +313,7 @@ func TestParseAnnotations(t *testing.T) {
 				`// @SDKResource("aws_s3_object", name="Object")`,
 				`// @Tags(resourceType="Object", identifierAttribute="arn")`,
 			},
+			annotation:           annotationSDKResource,
 			wantTypeNames:        []string{"aws_s3_object"},
 			wantTagged:           true,
 			wantTagsResourceType: "Object",
@@ -296,6 +323,7 @@ func TestParseAnnotations(t *testing.T) {
 				`// @SDKResource("aws_codebuild_project", name="Project")`,
 				"// @Tags",
 			},
+			annotation:    annotationSDKResource,
 			wantTypeNames: []string{"aws_codebuild_project"},
 		},
 		"tags with only resource type": {
@@ -303,6 +331,7 @@ func TestParseAnnotations(t *testing.T) {
 				`// @SDKResource("aws_s3_object", name="Object")`,
 				`// @Tags(resourceType="Object")`,
 			},
+			annotation:           annotationSDKResource,
 			wantTypeNames:        []string{"aws_s3_object"},
 			wantTagsResourceType: "Object",
 		},
@@ -312,6 +341,7 @@ func TestParseAnnotations(t *testing.T) {
 				`// @Tags(identifierAttribute="arn", resourceType="Object")`,
 				`// @Tags(resourceType="ObjectCopy")`,
 			},
+			annotation:           annotationSDKResource,
 			wantTypeNames:        []string{"aws_s3_object"},
 			wantTagged:           true,
 			wantTagsResourceType: "ObjectCopy",
@@ -322,6 +352,7 @@ func TestParseAnnotations(t *testing.T) {
 				`// @Tags(identifierAttribute="bucket")`,
 				"// @Tags",
 			},
+			annotation:    annotationSDKResource,
 			wantTypeNames: []string{"aws_s3_bucket"},
 			wantTagged:    true,
 		},
@@ -329,7 +360,59 @@ func TestParseAnnotations(t *testing.T) {
 			doc: []string{
 				`// @Tags(identifierAttribute="arn")`,
 			},
+			annotation: annotationSDKResource,
 			wantTagged: true,
+		},
+		"data source": {
+			doc: []string{
+				`// @SDKDataSource("aws_s3_bucket", name="Bucket")`,
+			},
+			annotation:    annotationSDKDataSource,
+			wantTypeNames: []string{"aws_s3_bucket"},
+		},
+		"data source with several type names": {
+			doc: []string{
+				`// @SDKDataSource("aws_alb", name="Load Balancer")`,
+				`// @SDKDataSource("aws_lb", name="Load Balancer")`,
+			},
+			annotation:    annotationSDKDataSource,
+			wantTypeNames: []string{"aws_alb", "aws_lb"},
+		},
+		"data source with tags": {
+			doc: []string{
+				`// @SDKDataSource("aws_s3_object", name="Object")`,
+				`// @Tags(identifierAttribute="arn", resourceType="Object")`,
+			},
+			annotation:           annotationSDKDataSource,
+			wantTypeNames:        []string{"aws_s3_object"},
+			wantTagged:           true,
+			wantTagsResourceType: "Object",
+		},
+		"data source with invalid type name": {
+			doc: []string{
+				`// @SDKDataSource("s3_bucket", name="Bucket")`,
+			},
+			annotation: annotationSDKDataSource,
+		},
+		"data source annotation for resources": {
+			doc: []string{
+				`// @SDKDataSource("aws_s3_bucket", name="Bucket")`,
+			},
+			annotation: annotationSDKResource,
+		},
+		"resource annotation for data sources": {
+			doc: []string{
+				`// @SDKResource("aws_s3_bucket", name="Bucket")`,
+				`// @Tags(identifierAttribute="bucket")`,
+			},
+			annotation: annotationSDKDataSource,
+			wantTagged: true,
+		},
+		"framework data source annotation for data sources": {
+			doc: []string{
+				`// @FrameworkDataSource("aws_s3_bucket", name="Bucket")`,
+			},
+			annotation: annotationSDKDataSource,
 		},
 	}
 
@@ -337,7 +420,7 @@ func TestParseAnnotations(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			gotTypeNames, gotTagged, gotTagsResourceType := parseAnnotations(toCommentGroup(testCase.doc))
+			gotTypeNames, gotTagged, gotTagsResourceType := parseAnnotations(toCommentGroup(testCase.doc), testCase.annotation)
 
 			if !slices.Equal(gotTypeNames, testCase.wantTypeNames) {
 				t.Errorf("type names = %q, want %q", gotTypeNames, testCase.wantTypeNames)

@@ -1,0 +1,45 @@
+{
+  "resources": [],
+  "dataSources": [
+    {
+      "service": "mockdatasource",
+      "data_source_type": "aws_mockdatasource_bar",
+      "plugin_type": "SDKv2",
+      "expr": "dataSourceBar",
+      "location": "internal/service/mockdatasource/bar_data_source.go:15",
+      "read": {
+        "expr": "func literal",
+        "location": "internal/service/mockdatasource/bar_data_source.go:17",
+        "sdk_calls": []
+      }
+    },
+    {
+      "service": "mockdatasource",
+      "data_source_type": "aws_mockdatasource_foo",
+      "plugin_type": "SDKv2",
+      "expr": "dataSourceFoo",
+      "location": "internal/service/mockdatasource/foo_data_source.go:21",
+      "read": {
+        "expr": "dataSourceFooRead",
+        "location": "internal/service/mockdatasource/foo_data_source.go:38",
+        "sdk_calls": [
+          "mockdatasource.ListFoos"
+        ]
+      }
+    },
+    {
+      "service": "mockdatasource",
+      "data_source_type": "aws_mockdatasource_legacy_foo",
+      "plugin_type": "SDKv2",
+      "expr": "dataSourceFoo",
+      "location": "internal/service/mockdatasource/foo_data_source.go:21",
+      "read": {
+        "expr": "dataSourceFooRead",
+        "location": "internal/service/mockdatasource/foo_data_source.go:38",
+        "sdk_calls": [
+          "mockdatasource.ListFoos"
+        ]
+      }
+    }
+  ]
+}
