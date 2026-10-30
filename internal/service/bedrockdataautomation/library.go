@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -165,6 +166,14 @@ func (r *libraryResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	arn := aws.ToString(out.LibraryArn)
+	// Save the ARN and Region so that a failed read leaves a tainted resource rather than an orphan.
+	plan.ARN = fwflex.StringValueToFramework(ctx, arn)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrARN), plan.ARN))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrRegion), plan.Region))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// The create response doesn't include the library.
 	library, err := findLibraryByARN(ctx, conn, arn)
 	if err != nil {
