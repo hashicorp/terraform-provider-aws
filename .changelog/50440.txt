@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_eventbridgev2_subscriber
+```
+
+```release-note:new-list-resource
+aws_eventbridgev2_subscriber
+```
