@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -57,6 +58,13 @@ func TestServiceLinkedRoleParseResourceID(t *testing.T) {
 			CustomSuffix: "DynamoDBTable",
 			ErrCount:     0,
 		},
+		{
+			Input:        "arn:aws:iam::123456789012:role/aws-service-role/health.amazonaws.com/AWSServiceRoleForHealth_Organizations", //lintignore:AWSAT005
+			ServiceName:  "health.amazonaws.com",
+			RoleName:     "AWSServiceRoleForHealth_Organizations",
+			CustomSuffix: "Organizations",
+			ErrCount:     0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -76,6 +84,79 @@ func TestServiceLinkedRoleParseResourceID(t *testing.T) {
 		if customSuffix != tc.CustomSuffix {
 			t.Fatalf("expected custom suffix %q to be %q", customSuffix, tc.CustomSuffix)
 		}
+	}
+}
+
+func TestServiceLinkedRoleReadCustomSuffix(t *testing.T) {
+	t.Parallel()
+
+	const (
+		healthARN      = "arn:aws:iam::123456789012:role/aws-service-role/health.amazonaws.com/AWSServiceRoleForHealth_Organizations"           //lintignore:AWSAT005
+		autoScalingARN = "arn:aws:iam::123456789012:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling_custom-suffix" //lintignore:AWSAT005
+	)
+
+	testCases := map[string]struct {
+		state    *terraformsdk.InstanceState
+		derived  string
+		expected string
+	}{
+		"import, default name with underscore": {
+			state:    &terraformsdk.InstanceState{ID: healthARN},
+			derived:  "Organizations",
+			expected: "Organizations",
+		},
+		"import, custom suffix": {
+			state:    &terraformsdk.InstanceState{ID: autoScalingARN},
+			derived:  "custom-suffix",
+			expected: "custom-suffix",
+		},
+		"refresh, no custom suffix, default name with underscore": {
+			state: &terraformsdk.InstanceState{
+				ID: healthARN,
+				Attributes: map[string]string{
+					names.AttrID:       healthARN,
+					"aws_service_name": "health.amazonaws.com",
+				},
+			},
+			derived:  "Organizations",
+			expected: "",
+		},
+		"refresh, custom suffix": {
+			state: &terraformsdk.InstanceState{
+				ID: autoScalingARN,
+				Attributes: map[string]string{
+					names.AttrID:       autoScalingARN,
+					"aws_service_name": "autoscaling.amazonaws.com",
+					"custom_suffix":    "custom-suffix",
+				},
+			},
+			derived:  "custom-suffix",
+			expected: "custom-suffix",
+		},
+		"refresh, prior state value is kept": {
+			state: &terraformsdk.InstanceState{
+				ID: healthARN,
+				Attributes: map[string]string{
+					names.AttrID:       healthARN,
+					"aws_service_name": "health.amazonaws.com",
+					"custom_suffix":    "Organizations",
+				},
+			},
+			derived:  "Organizations",
+			expected: "Organizations",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			d := tfiam.ResourceServiceLinkedRole().Data(tc.state)
+
+			if got := tfiam.ServiceLinkedRoleReadCustomSuffix(d, tc.derived); got != tc.expected {
+				t.Errorf("ServiceLinkedRoleReadCustomSuffix() = %q, want %q", got, tc.expected)
+			}
+		})
 	}
 }
 
@@ -177,7 +258,7 @@ func TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("role/aws-service-role/%s/%s", awsServiceName, name)),
-					resource.TestCheckResourceAttr(resourceName, "custom_suffix", "CustomResource"),
+					resource.TestCheckResourceAttr(resourceName, "custom_suffix", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 				),
 			},
@@ -185,6 +266,69 @@ func TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// The default role name contains an underscore, so import derives custom_suffix from it.
+				ImportStateVerifyIgnore: []string{"custom_suffix"},
+				ImportStateCheck: func(s []*terraform.InstanceState) error {
+					if len(s) != 1 {
+						return fmt.Errorf("expected 1 state: %#v", s)
+					}
+
+					if got := s[0].Attributes["custom_suffix"]; got != "CustomResource" {
+						return fmt.Errorf("expected custom_suffix to be CustomResource, received: %q", got)
+					}
+
+					return nil
+				},
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/50326
+func TestAccIAMServiceLinkedRole_CustomSuffix_underscoreInDefaultName(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_iam_service_linked_role.test"
+	awsServiceName := "health.amazonaws.com"
+	name := "AWSServiceRoleForHealth_Organizations"
+	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceLinkedRoleConfig_basic(awsServiceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceLinkedRoleExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("role%s%s", path, name)),
+					resource.TestCheckResourceAttr(resourceName, "custom_suffix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The default role name contains an underscore, so import derives custom_suffix from it.
+				ImportStateVerifyIgnore: []string{"custom_suffix"},
+				ImportStateCheck: func(s []*terraform.InstanceState) error {
+					if len(s) != 1 {
+						return fmt.Errorf("expected 1 state: %#v", s)
+					}
+
+					if got := s[0].Attributes["custom_suffix"]; got != "Organizations" {
+						return fmt.Errorf("expected custom_suffix to be Organizations, received: %q", got)
+					}
+
+					return nil
+				},
 			},
 		},
 	})

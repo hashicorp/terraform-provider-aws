@@ -74,6 +74,7 @@ var (
 	RoleNameSessionFromARN            = roleNameSessionFromARN
 	RolePolicyParseID                 = rolePolicyParseID
 	ServiceLinkedRoleParseResourceID  = serviceLinkedRoleParseResourceID
+	ServiceLinkedRoleReadCustomSuffix = serviceLinkedRoleReadCustomSuffix
 	SESSMTPPasswordFromSecretKeySigV4 = sesSMTPPasswordFromSecretKeySigV4
 )
 
