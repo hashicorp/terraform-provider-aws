@@ -482,25 +482,11 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 	awsClient := meta.(*conns.AWSClient)
 	conn := awsClient.LakeFormationClient(ctx)
 
-	var input lakeformation.ListPermissionsInput
-
-	principalIdentifier := d.Get(names.AttrPrincipal).(string)
-	if includePrincipalIdentifierInList(principalIdentifier, awsClient.AccountID(ctx)) {
-		principal := awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(principalIdentifier),
-		}
-		input.Principal = &principal
-	}
-
-	if v, ok := d.GetOk(names.AttrCatalogID); ok {
-		input.CatalogId = aws.String(v.(string))
-	}
-
-	populateResourceForRead(&input, d)
+	input := listPermissionsInput(d)
 
 	filter := permissionsFilter(d)
 
-	permissions, err := waitPermissionsReady(ctx, conn, &input, filter)
+	permissions, err := waitPermissionsReady(ctx, conn, input, filter)
 
 	if !d.IsNewResource() {
 		if errs.IsA[*awstypes.EntityNotFoundException](err) {
@@ -777,6 +763,24 @@ func populateResourceForCreate(input *lakeformation.GrantPermissionsInput, d *sc
 	} else {
 		input.Resource = expandResource(d)
 	}
+}
+
+// listPermissionsInput returns the ListPermissions input used to read the resource.
+//
+// The principal is deliberately not part of the input. Listing with a principal makes Lake Formation
+// fold permissions held by IAM_ALLOWED_PRINCIPALS on the same resource (typically ALL) into the
+// principal's own, which is then stored in state and causes a permanent diff and a failed revoke.
+// The principal is matched client-side by the filter instead.
+func listPermissionsInput(d *schema.ResourceData) *lakeformation.ListPermissionsInput {
+	var input lakeformation.ListPermissionsInput
+
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
+		input.CatalogId = aws.String(v.(string))
+	}
+
+	populateResourceForRead(&input, d)
+
+	return &input
 }
 
 func populateResourceForRead(input *lakeformation.ListPermissionsInput, d *schema.ResourceData) {
