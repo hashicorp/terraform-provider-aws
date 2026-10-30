@@ -227,7 +227,7 @@ func (r *adminAccountResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenAdminAccount(ctx, output, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -256,7 +256,7 @@ func (r *adminAccountResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenAdminAccount(ctx, output, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -305,7 +305,7 @@ func (r *adminAccountResource) Update(ctx context.Context, req resource.UpdateRe
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flattenAdminAccount(ctx, output, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -369,7 +369,7 @@ func expandPutAdminAccountInput(ctx context.Context, data *adminAccountResourceM
 	return &input, diags
 }
 
-func flattenAdminAccount(ctx context.Context, output *awstypes.AdminAccountDetails, data *adminAccountResourceModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
+func (r *adminAccountResource) flatten(ctx context.Context, output *awstypes.AdminAccountDetails, data *adminAccountResourceModel) diag.Diagnostics {
 	// The response does not always echo AdminAccount; the argument is kept
 	// from configuration or import.
 	return flex.Flatten(ctx, output, data)
@@ -385,6 +385,12 @@ func findAdminAccountByID(ctx context.Context, conn *networksecuritymanager.Clie
 		return nil, err
 	}
 
+	return findAdminAccountDetailsByID(ctx, conn, adminAccountID)
+}
+
+// findAdminAccountDetailsByID reads an administrator account that is known to
+// be listed by ListAdminAccounts.
+func findAdminAccountDetailsByID(ctx context.Context, conn *networksecuritymanager.Client, adminAccountID string) (*awstypes.AdminAccountDetails, error) {
 	input := networksecuritymanager.GetAdminAccountInput{
 		AccountId: aws.String(adminAccountID),
 	}
@@ -416,19 +422,14 @@ func findAdminAccountByID(ctx context.Context, conn *networksecuritymanager.Clie
 }
 
 func findAdminAccountSummaryByID(ctx context.Context, conn *networksecuritymanager.Client, adminAccountID string) (*awstypes.AdminAccountSummary, error) {
-	input := networksecuritymanager.ListAdminAccountsInput{}
-
-	pages := networksecuritymanager.NewListAdminAccountsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	var input networksecuritymanager.ListAdminAccountsInput
+	for v, err := range listAdminAccounts(ctx, conn, &input) {
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
 
-		for _, v := range page.AdminAccounts {
-			if aws.ToString(v.AccountId) == adminAccountID {
-				return &v, nil
-			}
+		if aws.ToString(v.AccountId) == adminAccountID {
+			return &v, nil
 		}
 	}
 

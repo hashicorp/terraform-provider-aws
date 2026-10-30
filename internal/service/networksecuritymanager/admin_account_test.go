@@ -70,6 +70,53 @@ func testAccAdminAccount_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "admin_account_id",
 			},
+			// priority is updated in place through PutAdminAccount; 1 and 10 are the bounds.
+			{
+				Config: testAccAdminAccountConfig_basic(10),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAdminAccountExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(10)),
+				},
+			},
+			{
+				Config: testAccAdminAccountConfig_basic(5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAdminAccountExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(5)),
+				},
+			},
+			// Delete then set the same administrator account again immediately: the API
+			// rejects PutAdminAccount for a while after a removal, which Create retries.
+			{
+				Taint:  []string{resourceName},
+				Config: testAccAdminAccountConfig_basic(5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAdminAccountExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(5)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.AdminAccountStatusOnboarded)),
+				},
+			},
 		},
 	})
 }
@@ -172,65 +219,15 @@ func testAccAdminAccount_full(t *testing.T) {
 	})
 }
 
-// priority is updated in place through PutAdminAccount; 1 and 10 are the bounds.
-func testAccAdminAccount_priority(t *testing.T) {
+// Every scope_filter union member and firewall_type_scope combination, and the
+// transitions between them. One test case, so the administrator account is
+// created and removed only once.
+func testAccAdminAccount_adminScope(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v awstypes.AdminAccountDetails
-	resourceName := "aws_networksecuritymanager_admin_account.test"
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAdminAccountConfig_basic(1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAdminAccountExists(ctx, t, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(1)),
-				},
-			},
-			{
-				Config: testAccAdminAccountConfig_basic(10),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAdminAccountExists(ctx, t, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(10)),
-				},
-			},
-			{
-				Config: testAccAdminAccountConfig_basic(5),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAdminAccountExists(ctx, t, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(5)),
-				},
-			},
-		},
-	})
-}
-
-// Every scope_filter union member, and the transitions between them.
-func testAccAdminAccount_scopeFilter(t *testing.T) {
-	ctx := acctest.Context(t)
 	var v awstypes.AdminAccountDetails
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_admin_account.test"
@@ -256,6 +253,14 @@ func testAccAdminAccount_scopeFilter(t *testing.T) {
 			"organizational_units": knownvalue.SetSizeExact(1),
 		}),
 	})
+	firewallTypeScopeCheck := func(allEnabled knownvalue.Check, firewallTypes knownvalue.Check) statecheck.StateCheck {
+		return statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("admin_scope").AtSliceIndex(0).AtMapKey("firewall_type_scope"), knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectExact(map[string]knownvalue.Check{
+				"all_firewall_types_enabled": allEnabled,
+				"firewall_types":             firewallTypes,
+			}),
+		}))
+	}
 	updateCheck := resource.ConfigPlanChecks{
 		PreApply: []plancheck.PlanCheck{
 			plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -338,55 +343,13 @@ func testAccAdminAccount_scopeFilter(t *testing.T) {
 					scopeFilterCheck(knownvalue.Bool(true), knownvalue.ListSizeExact(0), knownvalue.ListSizeExact(0)),
 				},
 			},
-			// admin_scope removed entirely
-			{
-				Config: testAccAdminAccountConfig_basic(1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAdminAccountExists(ctx, t, resourceName, &v),
-				),
-				ConfigPlanChecks: updateCheck,
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("admin_scope"), knownvalue.ListSizeExact(0)),
-				},
-			},
-		},
-	})
-}
-
-// Every firewall_type_scope combination.
-func testAccAdminAccount_firewallTypeScope(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.AdminAccountDetails
-	resourceName := "aws_networksecuritymanager_admin_account.test"
-
-	firewallTypeScopeCheck := func(allEnabled knownvalue.Check, firewallTypes knownvalue.Check) statecheck.StateCheck {
-		return statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("admin_scope").AtSliceIndex(0).AtMapKey("firewall_type_scope"), knownvalue.ListExact([]knownvalue.Check{
-			knownvalue.ObjectExact(map[string]knownvalue.Check{
-				"all_firewall_types_enabled": allEnabled,
-				"firewall_types":             firewallTypes,
-			}),
-		}))
-	}
-	updateCheck := resource.ConfigPlanChecks{
-		PreApply: []plancheck.PlanCheck{
-			plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-		},
-	}
-
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx, t),
-		Steps: []resource.TestStep{
+			// firewall_type_scope added
 			{
 				Config: testAccAdminAccountConfig_firewallTypes(`"WAF"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAdminAccountExists(ctx, t, resourceName, &v),
 				),
+				ConfigPlanChecks: updateCheck,
 				ConfigStateChecks: []statecheck.StateCheck{
 					firewallTypeScopeCheck(knownvalue.Null(), knownvalue.SetExact([]knownvalue.Check{
 						tfknownvalue.StringExact(awstypes.PolicyFirewallTypeWaf),
@@ -445,56 +408,27 @@ func testAccAdminAccount_firewallTypeScope(t *testing.T) {
 					firewallTypeScopeCheck(knownvalue.Bool(false), knownvalue.Null()),
 				},
 			},
-		},
-	})
-}
-
-// Delete then set the same administrator account again immediately: the API
-// rejects PutAdminAccount for a while after a removal, which Create retries.
-func testAccAdminAccount_recreate(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.AdminAccountDetails
-	resourceName := "aws_networksecuritymanager_admin_account.test"
-
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx, t),
-		Steps: []resource.TestStep{
+			// admin_scope removed entirely
 			{
 				Config: testAccAdminAccountConfig_basic(1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAdminAccountExists(ctx, t, resourceName, &v),
 				),
-			},
-			{
-				Taint:  []string{resourceName},
-				Config: testAccAdminAccountConfig_basic(1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAdminAccountExists(ctx, t, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-					},
-				},
+				ConfigPlanChecks: updateCheck,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.AdminAccountStatusOnboarded)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("admin_scope"), knownvalue.ListSizeExact(0)),
 				},
 			},
 		},
 	})
 }
 
-// Plan-time validation: nothing is created.
-func testAccAdminAccount_validation(t *testing.T) {
+// Plan-time validation: nothing is created, so unlike the other tests this one
+// does not have to be serialized.
+func TestAccNetworkSecurityManagerAdminAccount_validation(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -630,36 +564,29 @@ resource "aws_organizations_aws_service_access" "test" {
 }
 
 func testAccAdminAccountConfig_basic(priority int) string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), fmt.Sprintf(`
+	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = %[1]d
 }
-`, priority))
+`, priority), testAccAdminAccountConfig_base())
 }
 
 func testAccAdminAccountConfig_accountID(accountID string) string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), fmt.Sprintf(`
+	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
   admin_account_id = %[1]q
   priority         = 1
 }
-`, accountID))
+`, accountID), testAccAdminAccountConfig_base())
 }
 
 func testAccAdminAccountConfig_full(rName string) string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), fmt.Sprintf(`
-data "aws_organizations_organization" "current" {}
-
-resource "aws_organizations_organizational_unit" "test" {
-  name      = %[1]q
-  parent_id = data.aws_organizations_organization.current.roots[0].id
-}
-
+	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
@@ -686,11 +613,18 @@ resource "aws_networksecuritymanager_admin_account" "test" {
     delete = "20m"
   }
 }
-`, rName))
+
+data "aws_organizations_organization" "current" {}
+
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = data.aws_organizations_organization.current.roots[0].id
+}
+`, rName), testAccAdminAccountConfig_base())
 }
 
 func testAccAdminAccountConfig_scopeFilterIncludeAll() string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), `
+	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
@@ -703,11 +637,11 @@ resource "aws_networksecuritymanager_admin_account" "test" {
     }
   }
 }
-`)
+`, testAccAdminAccountConfig_base())
 }
 
 func testAccAdminAccountConfig_scopeFilterIncludeOnlyAccounts() string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), `
+	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
@@ -722,18 +656,11 @@ resource "aws_networksecuritymanager_admin_account" "test" {
     }
   }
 }
-`)
+`, testAccAdminAccountConfig_base())
 }
 
 func testAccAdminAccountConfig_scopeFilterIncludeOnlyOUs(rName string) string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), fmt.Sprintf(`
-data "aws_organizations_organization" "current" {}
-
-resource "aws_organizations_organizational_unit" "test" {
-  name      = %[1]q
-  parent_id = data.aws_organizations_organization.current.roots[0].id
-}
-
+	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
@@ -748,11 +675,18 @@ resource "aws_networksecuritymanager_admin_account" "test" {
     }
   }
 }
-`, rName))
+
+data "aws_organizations_organization" "current" {}
+
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = data.aws_organizations_organization.current.roots[0].id
+}
+`, rName), testAccAdminAccountConfig_base())
 }
 
 func testAccAdminAccountConfig_scopeFilterExcludeOnlyAccounts() string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), `
+	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
@@ -767,11 +701,11 @@ resource "aws_networksecuritymanager_admin_account" "test" {
     }
   }
 }
-`)
+`, testAccAdminAccountConfig_base())
 }
 
 func testAccAdminAccountConfig_scopeFilterTwoMembers() string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), `
+	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
@@ -788,11 +722,11 @@ resource "aws_networksecuritymanager_admin_account" "test" {
     }
   }
 }
-`)
+`, testAccAdminAccountConfig_base())
 }
 
 func testAccAdminAccountConfig_scopeFilterEmpty() string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), `
+	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
@@ -803,11 +737,11 @@ resource "aws_networksecuritymanager_admin_account" "test" {
     scope_filter {}
   }
 }
-`)
+`, testAccAdminAccountConfig_base())
 }
 
 func testAccAdminAccountConfig_scopeFilterIncludeAllFalse() string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), `
+	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
@@ -820,11 +754,11 @@ resource "aws_networksecuritymanager_admin_account" "test" {
     }
   }
 }
-`)
+`, testAccAdminAccountConfig_base())
 }
 
 func testAccAdminAccountConfig_firewallTypes(firewallTypes string) string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), fmt.Sprintf(`
+	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
@@ -841,11 +775,11 @@ resource "aws_networksecuritymanager_admin_account" "test" {
     }
   }
 }
-`, firewallTypes))
+`, firewallTypes), testAccAdminAccountConfig_base())
 }
 
 func testAccAdminAccountConfig_allFirewallTypesEnabled(enabled bool) string {
-	return acctest.ConfigCompose(testAccAdminAccountConfig_base(), fmt.Sprintf(`
+	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
   depends_on = [aws_organizations_aws_service_access.test]
 
@@ -862,5 +796,5 @@ resource "aws_networksecuritymanager_admin_account" "test" {
     }
   }
 }
-`, enabled))
+`, enabled), testAccAdminAccountConfig_base())
 }
