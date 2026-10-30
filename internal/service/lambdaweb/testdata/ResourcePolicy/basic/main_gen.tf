@@ -12,8 +12,8 @@ resource "aws_lambdaweb_resource_policy" "test" {
       Principal = {
         AWS = data.aws_caller_identity.current.account_id
       }
-      Action   = "lambda:InvokeWebFunction"
-      Resource = aws_lambdaweb_function.test.arn
+      Action   = "lambda:InvokeWebFunctionEndpoint"
+      Resource = "${aws_lambdaweb_function.test.arn}/endpoint/default"
     }]
   })
 }

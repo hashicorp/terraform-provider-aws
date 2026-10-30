@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -76,8 +77,8 @@ func TestAccLambdaWebFunctionEndpoint_basic(t *testing.T) {
 						knownvalue.StringExact(acctest.Region()),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("revision_weight"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListSizeExact(0)),
 				},
 			},
 			{
@@ -268,6 +269,100 @@ func TestAccLambdaWebFunctionEndpoint_scalingConfigPlusThrottleConfig(t *testing
 					})})),
 				},
 			},
+			{
+				// Removing the blocks clears the limits: the API keeps the
+				// current value when the field is omitted, so the update has
+				// to send an empty object.
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+					testAccCheckFunctionEndpointNoLimits(&endpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/scaling_config+throttle_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:    config.StringVariable(rName),
+					"max_environments": config.IntegerVariable(5),
+					"rate_limit":       config.IntegerVariable(300),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"max_environments": knownvalue.Int64Exact(5),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"rate_limit": knownvalue.Int64Exact(300),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/scaling_config+throttle_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:    config.StringVariable(rName),
+					"max_environments": config.IntegerVariable(5),
+					"rate_limit":       config.IntegerVariable(400),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"max_environments": knownvalue.Int64Exact(5),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"rate_limit": knownvalue.Int64Exact(400),
+					})})),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FunctionEndpoint/scaling_config+throttle_config/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:    config.StringVariable(rName),
+					"max_environments": config.IntegerVariable(6),
+					"rate_limit":       config.IntegerVariable(400),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionEndpointExists(ctx, t, resourceName, &endpoint),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scaling_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"max_environments": knownvalue.Int64Exact(6),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"rate_limit": knownvalue.Int64Exact(400),
+					})})),
+				},
+			},
 		},
 	})
 }
@@ -359,6 +454,18 @@ func TestAccLambdaWebFunctionEndpoint_perRegion(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckFunctionEndpointNoLimits(v *lambdaweb.GetWebFunctionEndpointOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if v.ScalingConfig != nil && v.ScalingConfig.MaxEnvironments != nil {
+			return fmt.Errorf("Lambda Web Function Endpoint still has max_environments %d", aws.ToInt32(v.ScalingConfig.MaxEnvironments))
+		}
+		if v.ThrottleConfig != nil && v.ThrottleConfig.RateLimit != nil {
+			return fmt.Errorf("Lambda Web Function Endpoint still has rate_limit %d", aws.ToInt32(v.ThrottleConfig.RateLimit))
+		}
+		return nil
+	}
 }
 
 func testAccCheckFunctionEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {

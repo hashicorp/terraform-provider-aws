@@ -27,8 +27,8 @@ resource "aws_lambdaweb_resource_policy" "example" {
         Sid       = "AllowCloudFront"
         Effect    = "Allow"
         Principal = { Service = "cloudfront.amazonaws.com" }
-        Action    = "lambda:InvokeWebFunction"
-        Resource  = aws_lambdaweb_function.example.arn
+        Action    = "lambda:InvokeWebFunctionEndpoint"
+        Resource  = aws_lambdaweb_function_endpoint.example.arn
         Condition = {
           StringEquals = {
             "aws:SourceArn" = aws_cloudfront_distribution.example.arn

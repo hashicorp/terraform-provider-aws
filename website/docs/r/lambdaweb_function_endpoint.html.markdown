@@ -144,8 +144,8 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
 * `regions` - (Optional) Regions the endpoint spans. The maximum number of Regions per endpoint is a service quota, enforced by the API. Required for `MultiRegion` and `PerRegion` endpoints: specify at least one Region other than the home Region, which is added automatically. For `HomeRegion` endpoints, omit this argument or specify only the home Region. Changing this forces a new resource.
 * `revision_weight` - (Optional) Traffic routing. Required when `auto_deployment_mode` is `Disabled` and must be omitted when `LatestRevision`. One or two entries; weights must sum to 100. [See below](#revision_weight-block). When a new revision is rolled on the function, update these weights to shift traffic to it — with `auto_deployment_mode = "Disabled"` traffic never moves automatically.
-* `scaling_config` - (Optional) Scaling limits for the endpoint. When unset, the service applies account-level defaults and reports no value. [See below](#scaling_config-block).
-* `throttle_config` - (Optional) Request throttling for the endpoint. When unset, the service applies account-level defaults and reports no value. [See below](#throttle_config-block).
+* `scaling_config` - (Optional) Scaling limits for the endpoint. When unset, the endpoint has no `max_environments` limit; removing the block clears a previously set limit. [See below](#scaling_config-block).
+* `throttle_config` - (Optional) Request throttling for the endpoint. When unset, the endpoint has no `rate_limit`; removing the block clears a previously set limit. [See below](#throttle_config-block).
 
 ### `revision_weight` Block
 
@@ -164,7 +164,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the endpoint in the format `arn:aws:lambda:{region}:{account}:web-function/{function_name}|{endpoint_name}`.
+* `arn` - ARN of the endpoint in the format `arn:aws:lambda:{region}:{account}:web-function/{function_name}/endpoint/{endpoint_name}`.
 * `domain_name` - HTTPS domain name of the endpoint. Empty for `PerRegion` endpoints, which only expose `regional_domain_names`.
 * `regional_domain_names` - Map of Region to that Region's independent domain name.
 
