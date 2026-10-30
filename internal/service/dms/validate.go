@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validEndpointID(v any, k string) (ws []string, es []error) {
@@ -78,6 +80,35 @@ func validReplicationTaskID(v any, k string) (ws []string, es []error) {
 	}
 	if strings.HasSuffix(val, "-") {
 		es = append(es, fmt.Errorf("%q must not end in a hyphen", k))
+	}
+
+	return
+}
+
+// validSecretsManagerSecretID validates a Secrets Manager secret identifier as
+// accepted by the DMS SecretsManagerSecretId parameter: a full ARN, a partial
+// ARN, or the friendly name of the secret.
+func validSecretsManagerSecretID(v any, k string) (ws []string, es []error) {
+	val, ok := v.(string)
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	// Like verify.ValidARN, allow an empty value.
+	if val == "" {
+		return
+	}
+
+	if arn.IsARN(val) {
+		return verify.ValidARN(v, k)
+	}
+
+	if len(val) > 512 {
+		es = append(es, fmt.Errorf("%q must be at most 512 characters, got %d", k, len(val)))
+	}
+	if !regexache.MustCompile(`^[0-9A-Za-z/_+=.@-]+$`).MatchString(val) {
+		es = append(es, fmt.Errorf("%q must be a valid ARN or a secret name containing only alphanumeric characters and /_+=.@- special characters", k))
 	}
 
 	return

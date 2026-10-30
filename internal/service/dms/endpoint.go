@@ -15,6 +15,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/go-cty/cty"
@@ -813,7 +814,7 @@ func resourceEndpoint() *schema.Resource {
 				"secrets_manager_arn": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					ValidateFunc:  verify.ValidARN,
+					ValidateFunc:  validSecretsManagerSecretID,
 					RequiredWith:  []string{"secrets_manager_access_role_arn"},
 					ConflictsWith: []string{names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort},
 				},
@@ -1627,7 +1628,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1642,7 +1643,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1683,7 +1684,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1697,7 +1698,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 
 			// ASM and TDE passwords aren't returned in API. Propagate state values.
 			tfMap := flattenOracleSettings(v)
@@ -1726,7 +1727,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1740,7 +1741,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1751,7 +1752,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1762,7 +1763,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set(names.AttrPort, v.Port)
 			d.Set(names.AttrDatabaseName, v.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", v.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", v.SecretsManagerSecretId)
+			setSecretsManagerSecretID(d, v.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -2678,6 +2679,53 @@ func flattenOracleSettings(apiObject *awstypes.OracleSettings) map[string]any {
 	}
 
 	return tfMap
+}
+
+// setSecretsManagerSecretID sets secrets_manager_arn from the value returned by
+// the API. If the API returns the full ARN of the secret that the identifier
+// already in state (a friendly name or partial ARN) refers to, the state value is
+// kept so that configuring a friendly name or partial ARN does not cause a
+// perpetual diff.
+//
+// This is done on read rather than with a DiffSuppressFunc: a partial ARN or
+// name that itself ends in a hyphen and six characters (e.g. "db-source") is
+// syntactically indistinguishable from a full ARN, so comparing two configured
+// identifiers could suppress a change to a different secret. A value returned
+// as a full ARN by the API always carries the random suffix.
+func setSecretsManagerSecretID(d *schema.ResourceData, apiValue *string) {
+	v := aws.ToString(apiValue)
+	if old := d.Get("secrets_manager_arn").(string); old != "" && old != v && secretsManagerSecretIDMatchesFullARN(v, old) {
+		v = old
+	}
+	d.Set("secrets_manager_arn", v)
+}
+
+// secretsManagerSecretIDMatchesFullARN returns whether fullARN is a complete
+// Secrets Manager secret ARN that refers to the secret identified by id
+// (a friendly name or a partial ARN without the random suffix).
+func secretsManagerSecretIDMatchesFullARN(fullARN, id string) bool {
+	parsedARN, err := arn.Parse(fullARN)
+	if err != nil || parsedARN.Service != "secretsmanager" {
+		return false
+	}
+
+	name, ok := strings.CutPrefix(parsedARN.Resource, "secret:")
+	if !ok {
+		return false
+	}
+
+	// Secrets Manager appends a hyphen and six random characters to the secret name.
+	const suffixLen = len("-abcdef")
+	if len(name) <= suffixLen || name[len(name)-suffixLen] != '-' {
+		return false
+	}
+	name = name[:len(name)-suffixLen]
+
+	if arn.IsARN(id) {
+		return id == strings.TrimSuffix(fullARN, parsedARN.Resource)+"secret:"+name
+	}
+
+	return id == name
 }
 
 func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.ResourceData) bool {
