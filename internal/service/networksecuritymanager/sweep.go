@@ -21,22 +21,18 @@ func RegisterSweepers() {
 }
 
 func sweepScopes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := networksecuritymanager.ListScopesInput{}
+	var input networksecuritymanager.ListScopesInput
 	conn := client.NetworkSecurityManagerClient(ctx)
 	var sweepResources []sweep.Sweepable
 
-	pages := networksecuritymanager.NewListScopesPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	for v, err := range listScopes(ctx, conn, &input) {
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
 
-		for _, v := range page.Scopes {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newScopeResource, client,
-				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.ScopeArn))),
-			)
-		}
+		sweepResources = append(sweepResources, sweepfw.NewSweepResource(newScopeResource, client,
+			sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.ScopeArn))),
+		)
 	}
 
 	return sweepResources, nil
