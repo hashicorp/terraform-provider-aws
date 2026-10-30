@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `replica.disassociation_protection_enabled` argument
+```
+
+```release-note:enhancement
+resource/aws_dynamodb_table_replica: Add `disassociation_protection_enabled` argument
+```
