@@ -6,6 +6,7 @@ package networksecuritymanager
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -51,6 +52,12 @@ func newRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) 
 // saved on top of a published rule, or a rule created unpublished, can only be
 // read, updated, published or deleted through the DRAFT-qualified ARN.
 const ruleDraftQualifier = ":DRAFT"
+
+// The first Network Security Manager resource created in an account onboards the
+// account, and a create issued while that is still in flight fails with a
+// ConflictException. Terraform applies independent resources in parallel, so a
+// first apply that declares more than one rule hits this.
+const ruleOnboardingTimeout = 5 * time.Minute
 
 type ruleResource struct {
 	framework.ResourceWithModel[ruleResourceModel]
@@ -146,7 +153,14 @@ func (r *ruleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateRule(ctx, &input)
+	// Retry only the onboarding conflict: any other ConflictException (a
+	// duplicate name, for instance) is a real error and must surface.
+	output, err := tfresource.RetryWhenIsAErrorMessageContains[*networksecuritymanager.CreateRuleOutput, *awstypes.ConflictException](ctx, ruleOnboardingTimeout,
+		func(ctx context.Context) (*networksecuritymanager.CreateRuleOutput, error) {
+			return conn.CreateRule(ctx, &input)
+		},
+		"already onboarded",
+	)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return

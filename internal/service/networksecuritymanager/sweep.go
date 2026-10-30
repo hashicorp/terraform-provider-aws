@@ -21,22 +21,18 @@ func RegisterSweepers() {
 }
 
 func sweepRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := networksecuritymanager.ListRulesInput{}
+	var input networksecuritymanager.ListRulesInput
 	conn := client.NetworkSecurityManagerClient(ctx)
 	var sweepResources []sweep.Sweepable
 
-	pages := networksecuritymanager.NewListRulesPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	for v, err := range listRules(ctx, conn, &input) {
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
 
-		for _, v := range page.Rules {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newRuleResource, client,
-				sweepfw.NewAttribute(names.AttrARN, ruleBaseARN(aws.ToString(v.RuleArn)))),
-			)
-		}
+		sweepResources = append(sweepResources, sweepfw.NewSweepResource(newRuleResource, client,
+			sweepfw.NewAttribute(names.AttrARN, ruleBaseARN(aws.ToString(v.RuleArn)))),
+		)
 	}
 
 	return sweepResources, nil
