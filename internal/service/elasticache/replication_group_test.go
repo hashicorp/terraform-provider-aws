@@ -4557,6 +4557,136 @@ func TestAccElastiCacheReplicationGroup_SlowLog_Redis5ToValkey7(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_LogDeliveryConfiguration_applyImmediatelyFalse_Redis(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_logDeliveryApplyImmediately(rName, "redis", "7.1", "text", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						names.AttrDestination: rName,
+						"destination_type":    "cloudwatch-logs",
+						"log_format":          "text",
+						"log_type":            "slow-log",
+					}),
+				),
+			},
+			{
+				// Applied immediately even with apply_immediately = false; the empty plan confirms no perpetual diff.
+				Config: testAccReplicationGroupConfig_logDeliveryApplyImmediately(rName, "redis", "7.1", names.AttrJSON, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						names.AttrDestination: rName,
+						"destination_type":    "cloudwatch-logs",
+						"log_format":          names.AttrJSON,
+						"log_type":            "slow-log",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				// Removing the block is also a log delivery modification, so it too applies immediately.
+				Config: testAccReplicationGroupConfig_logDeliveryApplyImmediatelyRemoved(rName, "redis", "7.1", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_LogDeliveryConfiguration_applyImmediatelyFalse_Valkey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_logDeliveryApplyImmediately(rName, "valkey", "7.2", "text", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						names.AttrDestination: rName,
+						"destination_type":    "cloudwatch-logs",
+						"log_format":          "text",
+						"log_type":            "slow-log",
+					}),
+				),
+			},
+			{
+				// Applied immediately even with apply_immediately = false; the empty plan confirms no perpetual diff.
+				Config: testAccReplicationGroupConfig_logDeliveryApplyImmediately(rName, "valkey", "7.2", names.AttrJSON, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_delivery_configuration.*", map[string]string{
+						names.AttrDestination: rName,
+						"destination_type":    "cloudwatch-logs",
+						"log_format":          names.AttrJSON,
+						"log_type":            "slow-log",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				// Removing the block is also a log delivery modification, so it too applies immediately.
+				Config: testAccReplicationGroupConfig_logDeliveryApplyImmediatelyRemoved(rName, "valkey", "7.2", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckReplicationGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -5083,6 +5213,55 @@ resource "aws_elasticache_replication_group" "test" {
   }
 }
 `, rName, engine, engineVersion)
+}
+
+func testAccReplicationGroupConfig_logDeliveryApplyImmediately(rName, engine, engineVersion, logFormat string, applyImmediately bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name              = "%[1]s"
+  retention_in_days = 7
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.small"
+  port                       = 6379
+  apply_immediately          = %[5]t
+  engine                     = %[2]q
+  engine_version             = %[3]q
+  cluster_mode               = "disabled"
+  transit_encryption_enabled = true
+
+  log_delivery_configuration {
+    destination      = aws_cloudwatch_log_group.test.name
+    destination_type = "cloudwatch-logs"
+    log_format       = %[4]q
+    log_type         = "slow-log"
+  }
+}
+`, rName, engine, engineVersion, logFormat, applyImmediately)
+}
+
+func testAccReplicationGroupConfig_logDeliveryApplyImmediatelyRemoved(rName, engine, engineVersion string, applyImmediately bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name              = "%[1]s"
+  retention_in_days = 7
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.small"
+  port                       = 6379
+  apply_immediately          = %[4]t
+  engine                     = %[2]q
+  engine_version             = %[3]q
+  cluster_mode               = "disabled"
+  transit_encryption_enabled = true
+}
+`, rName, engine, engineVersion, applyImmediately)
 }
 
 func testAccReplicationGroupConfig_clusterModeWithNumNodeGroups(rName string, engine string, engineVersion string, numNodeGroups int) string {
