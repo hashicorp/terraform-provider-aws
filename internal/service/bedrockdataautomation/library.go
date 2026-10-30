@@ -200,6 +200,10 @@ func (r *libraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
 	out, err := findLibraryByARN(ctx, conn, arn)
+	// Tags can't be read from a library that is being deleted, so treat it as gone.
+	if err == nil && out.Status == awstypes.DataAutomationLibraryStatusDeleting {
+		err = &retry.NotFoundError{Message: "library is being deleted"}
+	}
 	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
