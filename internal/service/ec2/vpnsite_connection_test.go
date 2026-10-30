@@ -1958,6 +1958,43 @@ func TestAccSiteVPNConnection_preSharedKeyStorage(t *testing.T) {
 	})
 }
 
+func TestAccSiteVPNConnection_preSharedKeyStorageTunnelPreSharedKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn1, vpn2 awstypes.VpnConnection
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConnectionConfig_preSharedKeyStorageTunnelPreSharedKeys(rName, rBgpAsn, "tunnel1presharedkey", "tunnel2presharedkey"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, t, resourceName, &vpn1),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "SecretsManager"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "tunnel1presharedkey"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_preshared_key", "tunnel2presharedkey"),
+				),
+			},
+			{
+				Config: testAccVPNConnectionConfig_preSharedKeyStorageTunnelPreSharedKeys(rName, rBgpAsn, "tunnel1presharedkeyupdated", "tunnel2presharedkey"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, t, resourceName, &vpn2),
+					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "SecretsManager"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "tunnel1presharedkeyupdated"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_preshared_key", "tunnel2presharedkey"),
+				),
+			},
+			// NOTE: Import has no configuration, so keys stay REDACTED; TestAccSiteVPNConnection_preSharedKeyStorage covers it.
+		},
+	})
+}
+
 func testAccCheckVPNConnectionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
@@ -3027,6 +3064,35 @@ resource "aws_vpn_connection" "test" {
   }
 }
 `, rName, rBgpAsn, useTransitGateway)
+}
+
+func testAccVPNConnectionConfig_preSharedKeyStorageTunnelPreSharedKeys(rName string, rBgpAsn int, tunnel1PresharedKey, tunnel2PresharedKey string) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id        = aws_vpn_gateway.test.id
+  customer_gateway_id   = aws_customer_gateway.test.id
+  type                  = "ipsec.1"
+  preshared_key_storage = "SecretsManager"
+  tunnel1_preshared_key = %[3]q
+  tunnel2_preshared_key = %[4]q
+}
+`, rName, rBgpAsn, tunnel1PresharedKey, tunnel2PresharedKey)
 }
 
 func testAccVPNConnectionConfig_preSharedKeyStorage(rName string, rBgpAsn int, preSharedKeyStorage string) string {
