@@ -455,6 +455,59 @@ resource "aws_wafv2_web_acl" "example" {
 }
 ```
 
+### Automatic Challenge SDK Integration for CloudFront
+
+```terraform
+resource "aws_wafv2_web_acl" "example" {
+  name  = "challenge-sdk-injection-example"
+  scope = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "bot-control"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesBotControlRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_bot_control_rule_set {
+            inspection_level = "TARGETED"
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "bot-control"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  association_config {
+    challenge_javascript_sdk_injection {
+      cloudfront {}
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -481,7 +534,16 @@ This resource supports the following arguments:
 
 The `association_config` block supports the following arguments:
 
+* `challenge_javascript_sdk_injection` - (Optional) Has your protected Amazon CloudFront distributions insert the AWS WAF challenge JavaScript SDK into the HTML responses that they return. Applicable only when `scope` is set to `CLOUDFRONT`. See [`challenge_javascript_sdk_injection`](#challenge_javascript_sdk_injection-block) below for details.
 * `request_body` - (Optional) Customizes the request body that your protected resource forward to AWS WAF for inspection. See [`request_body`](#request_body-block) below for details.
+
+### `challenge_javascript_sdk_injection` Block
+
+The `challenge_javascript_sdk_injection` block supports the following arguments:
+
+* `cloudfront` - (Required) Empty configuration block that turns on automatic SDK integration for the Amazon CloudFront distributions that the web ACL protects. Removing the `challenge_javascript_sdk_injection` block turns it off.
+
+The web ACL must contain at least one qualifying managed rule group: `AWSManagedRulesBotControlRuleSet` with `inspection_level` set to `TARGETED`, `AWSManagedRulesATPRuleSet`, or `AWSManagedRulesACFPRuleSet`. If you remove the last qualifying rule group, or change the Bot Control inspection level to `COMMON`, remove this block in the same apply. For more information, see [Automatic SDK integration for CloudFront distributions](https://docs.aws.amazon.com/waf/latest/developerguide/waf-challenge-javascript-sdk-injection.html).
 
 ### `custom_response_body` Block
 

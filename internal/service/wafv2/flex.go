@@ -112,6 +112,10 @@ func expandAssociationConfig(l []any) *awstypes.AssociationConfig {
 	configuration := &awstypes.AssociationConfig{}
 
 	m := l[0].(map[string]any)
+	if v, ok := m["challenge_javascript_sdk_injection"].([]any); ok {
+		configuration.ChallengeJavascriptSdkInjection = expandChallengeJavascriptSDKInjection(v)
+	}
+
 	if v, ok := m["request_body"]; ok {
 		inner := v.([]any)
 		if len(inner) == 0 || inner[0] == nil {
@@ -130,6 +134,21 @@ func expandAssociationConfig(l []any) *awstypes.AssociationConfig {
 				}
 			}
 		}
+	}
+
+	return configuration
+}
+
+func expandChallengeJavascriptSDKInjection(l []any) map[string]awstypes.ChallengeJavascriptSdkInjectionConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configuration := make(map[string]awstypes.ChallengeJavascriptSdkInjectionConfig)
+
+	m := l[0].(map[string]any)
+	if v, ok := m["cloudfront"].([]any); ok && len(v) > 0 {
+		configuration[string(awstypes.AssociatedResourceTypeCloudfront)] = awstypes.ChallengeJavascriptSdkInjectionConfig{}
 	}
 
 	return configuration
@@ -2240,25 +2259,43 @@ func flattenAssociationConfig(config *awstypes.AssociationConfig) any {
 	if config == nil {
 		return associationConfig
 	}
-	if config.RequestBody == nil {
+	if config.RequestBody == nil && len(config.ChallengeJavascriptSdkInjection) == 0 {
 		return associationConfig
 	}
 
-	requestBodyConfig := map[string]any{}
-	for _, resourceType := range awstypes.AssociatedResourceType.Values("") {
-		if requestBodyAssociatedResourceTypeConfig, ok := config.RequestBody[string(resourceType)]; ok {
-			requestBodyConfig[strings.ToLower(string(resourceType))] = []map[string]any{{
-				"default_size_inspection_limit": requestBodyAssociatedResourceTypeConfig.DefaultSizeInspectionLimit,
-			}}
+	m := map[string]any{}
+
+	if len(config.ChallengeJavascriptSdkInjection) > 0 {
+		m["challenge_javascript_sdk_injection"] = flattenChallengeJavascriptSDKInjection(config.ChallengeJavascriptSdkInjection)
+	}
+
+	if config.RequestBody != nil {
+		requestBodyConfig := map[string]any{}
+		for _, resourceType := range awstypes.AssociatedResourceType.Values("") {
+			if requestBodyAssociatedResourceTypeConfig, ok := config.RequestBody[string(resourceType)]; ok {
+				requestBodyConfig[strings.ToLower(string(resourceType))] = []map[string]any{{
+					"default_size_inspection_limit": requestBodyAssociatedResourceTypeConfig.DefaultSizeInspectionLimit,
+				}}
+			}
+		}
+		m["request_body"] = []map[string]any{
+			requestBodyConfig,
 		}
 	}
-	associationConfig = append(associationConfig, map[string]any{
-		"request_body": []map[string]any{
-			requestBodyConfig,
-		},
-	})
+
+	associationConfig = append(associationConfig, m)
 
 	return associationConfig
+}
+
+func flattenChallengeJavascriptSDKInjection(config map[string]awstypes.ChallengeJavascriptSdkInjectionConfig) []any {
+	m := map[string]any{}
+
+	if _, ok := config[string(awstypes.AssociatedResourceTypeCloudfront)]; ok {
+		m["cloudfront"] = make([]map[string]any, 1)
+	}
+
+	return []any{m}
 }
 
 func flattenChallenge(a *awstypes.ChallengeAction) []any {
