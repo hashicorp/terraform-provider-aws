@@ -195,6 +195,7 @@ This data source exports the following attributes in addition to the arguments a
 ### `durable_config` Block
 
 * `execution_timeout` - Maximum execution time in seconds for the durable function.
+* `kms_key_arn` - ARN of the KMS key used to encrypt the durable function's execution state.
 * `retention_period` - Number of days to retain the function's execution state.
 
 ### `environment` Block

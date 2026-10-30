@@ -38,6 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `status_reason` - Short, human-readable string to provide additional details about the current status of the compute environment.
 * `tags` - Key-value map of resource tags
 * `type` - Type of the compute environment (for example, `MANAGED` or `UNMANAGED`).
+* `unmanaged_vcpus` - Number of vCPUs for an unmanaged compute environment. This parameter is only used for fair-share scheduling to ensure that each compute environment has the correct number of vCPUs when it is used in a fair-share job queue. Only valid when `type` is `UNMANAGED`.
 * `update_policy` - Infrastructure update policy for the compute environment.
 
 ### `update_policy` Block
