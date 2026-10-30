@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_securityir_membership
+```
+
+```release-note:new-list-resource
+aws_securityir_membership
+```
