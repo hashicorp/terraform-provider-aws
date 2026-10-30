@@ -159,6 +159,18 @@ func testAccFilter_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.not_matches.0", "us-*"),
 				),
 			},
+			{
+				Config: testAccFilterConfig_withoutRank(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.matches.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.matches.0", "us-*"),
+					resource.TestCheckResourceAttrSet(resourceName, "rank"),
+				),
+			},
 		},
 	})
 }
@@ -381,6 +393,27 @@ resource "aws_guardduty_filter" "test" {
     criterion {
       field       = "region"
       not_matches = ["us-*"]
+    }
+  }
+}
+
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}
+`
+}
+
+func testAccFilterConfig_withoutRank() string {
+	return `
+resource "aws_guardduty_filter" "test" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "test-filter"
+  action      = "ARCHIVE"
+
+  finding_criteria {
+    criterion {
+      field   = "region"
+      matches = ["us-*"]
     }
   }
 }
