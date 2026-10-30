@@ -246,6 +246,7 @@ The following arguments are optional:
 * `enable_execute_command` - (Optional) Whether to enable Amazon ECS Exec for the tasks within the service.
 * `force_delete` - (Optional) Enable to delete a service even if it wasn't scaled down to zero tasks. It's only necessary to use this if the service uses the `REPLICA` scheduling strategy.
 * `force_new_deployment` - (Optional) Enable to force a new task deployment of the service. This can be used to update tasks to use a newer Docker image with same image/tag combination (e.g., `myimage:latest`), roll Fargate tasks onto a newer platform version, or immediately deploy `ordered_placement_strategy` and `placement_constraints` updates.
+* `gateway_connector` - (Optional) Connects the service to an [`aws_ecs_gateway`](ecs_gateway.html) ingress path. The gateway must be associated with the service's cluster using [`aws_ecs_gateway_cluster_association`](ecs_gateway_cluster_association.html), and the service must use the `awsvpc` network mode. At most one connector is supported. See [`gateway_connector` Block](#gateway_connector-block) below.
 * `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
 * `iam_role` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
 * `launch_type` - (Optional) Launch type on which to run your service. The valid values are `EC2`, `FARGATE`, and `EXTERNAL`. Defaults to `EC2`. Conflicts with `capacity_provider_strategy`.
@@ -289,6 +290,27 @@ The `volume_configuration` configuration block supports the following:
 * `port_name` - (Required) Name of the port for a target group associated with the VPC Lattice configuration.
 * `role_arn` - (Required) ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
 * `target_group_arn` - (Required) Full ARN of the target group or groups associated with the VPC Lattice configuration.
+
+### `gateway_connector` Block
+
+`gateway_connector` supports the following:
+
+* `filters` - (Optional) Limits which gateways associated with the cluster route traffic to the service.
+    * `access_types` - (Optional) Gateway access types to accept traffic from. Valid values: `PUBLIC`, `PRIVATE`.
+* `health_check` - (Optional) Health check that the gateway uses for the service's tasks. Arguments that are not configured use the values chosen by Amazon ECS. Changing the health check fails on services that use the `ROLLING` deployment strategy.
+    * `healthy_threshold_count` - (Optional) Consecutive successful checks before a target is considered healthy.
+    * `interval_seconds` - (Optional) Approximate time between health checks, in seconds.
+    * `matcher` - (Optional) Codes that indicate a healthy response.
+        * `grpc_code` - (Optional) gRPC codes.
+        * `http_code` - (Optional) HTTP codes, for example `200` or `200-299`.
+    * `path` - (Optional) Destination path for health check requests.
+    * `port` - (Optional) Port used for health checks.
+    * `protocol` - (Optional) Protocol used for health checks. Valid values: `HTTP`, `HTTPS`.
+    * `timeout_seconds` - (Optional) Time without a response after which a check fails, in seconds.
+    * `unhealthy_threshold_count` - (Optional) Consecutive failed checks before a target is considered unhealthy.
+* `port_name` - (Required) Name of the port mapping in the task definition that receives gateway traffic.
+
+~> **NOTE:** Reading `gateway_connector` back from AWS requires the `ecs:DescribeServiceRevisions` permission. The call is only made when `gateway_connector` is configured, so the argument is not populated when importing a service.
 
 ### `managed_ebs_volume` Block
 
