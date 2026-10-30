@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_event_endpoint: Fix `CREATE_FAILED` errors when the `role_arn` role's permissions have not yet propagated
+```
