@@ -199,7 +199,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the created ElastiCache Cluster.
 * `engine_version_actual` - Because ElastiCache pulls the latest minor or patch for a version, this attribute returns the running version of the cache engine.
 * `cache_nodes` - List of node objects including `id`, `address`, `port` and `availability_zone`.
-* `cluster_address` - (Memcached only) DNS name of the cache cluster without the port appended.
+* `cluster_address` - (Memcached and Redis) DNS name of the cache cluster without the port appended.
 * `configuration_endpoint` - (Memcached only) Configuration endpoint to allow host discovery.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

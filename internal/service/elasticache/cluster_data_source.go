@@ -197,6 +197,8 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 		d.Set("cluster_address", clusterAddress)
 		d.Set("configuration_endpoint", fmt.Sprintf("%s:%d", clusterAddress, port))
 		d.Set(names.AttrPort, port)
+	} else if len(cluster.CacheNodes) > 0 {
+		d.Set("cluster_address", cluster.CacheNodes[0].Endpoint.Address)
 	}
 	d.Set("cluster_id", cluster.CacheClusterId)
 	d.Set(names.AttrEngine, cluster.Engine)
