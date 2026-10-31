@@ -68,6 +68,7 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `kms_key_arn` - (Optional, Forces new resource) ARN of the CMK that should be used for the AWS KMS encryption. This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`. **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
+* `consistency_mode` - (Optional, Forces new resource) Consistency mode for the replica. Valid values are `EVENTUAL` and `STRONG`. Default is `EVENTUAL`.
 * `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the table replica.
 * `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the table replica. Default is `false`.
 * `table_class_override` - (Optional, Forces new resource) Storage class of the table replica. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`. If not used, the table replica will use the same class as the global table.
