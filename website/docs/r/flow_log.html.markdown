@@ -319,7 +319,7 @@ This resource supports the following arguments:
 * `destination_options` - (Optional) Destination options for a flow log. More details below.
 * `eni_id` - (Optional) Elastic Network Interface ID to attach to.
 * `iam_role_arn` - (Optional) ARN of the IAM role used to post flow logs. Corresponds to `DeliverLogsPermissionArn` in the [AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateFlowLogs.html).
-* `log_destination` - (Optional) ARN of the logging destination.
+* `log_destination` - (Optional) ARN of the logging destination. For S3 bucket optionally includes subfolder path (e.g., `arn:aws:s3:::mybucket/prefix`).
 * `log_destination_type` - (Optional) Logging destination type. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`.
 * `log_format` - (Optional) Fields to include in the flow log record. Accepted format example: `"$${interface-id} $${srcaddr} $${dstaddr} $${srcport} $${dstport}"`.
 * `max_aggregation_interval` - (Optional) Maximum interval of time during which a flow of packets is captured and aggregated into a flow log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10 minutes). Default: `600`. When `transit_gateway_id` or `transit_gateway_attachment_id` is specified, `max_aggregation_interval` *must* be 60 seconds (1 minute).
