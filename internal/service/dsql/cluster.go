@@ -465,7 +465,9 @@ func waitClusterCreated(ctx context.Context, conn *dsql.Client, id string, timeo
 func waitClusterUpdated(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ClusterStatusUpdating),
-		Target:  enum.Slice(awstypes.ClusterStatusActive),
+		// Idle and inactive (scaled-to-zero) clusters apply updates without waking, so they never return to ACTIVE.
+		// Multi-Region clusters stay in PENDING_SETUP until peering completes.
+		Target:  enum.Slice(awstypes.ClusterStatusActive, awstypes.ClusterStatusIdle, awstypes.ClusterStatusInactive, awstypes.ClusterStatusPendingSetup),
 		Refresh: statusCluster(conn, id),
 		Timeout: timeout,
 	}
