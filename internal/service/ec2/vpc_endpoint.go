@@ -105,11 +105,12 @@ func resourceVPCEndpoint() *schema.Resource {
 								Optional: true,
 							},
 							"private_dns_preference": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Computed:     true,
-								ForceNew:     true,
-								ValidateFunc: validation.StringInSlice([]string{"ALL_DOMAINS", "VERIFIED_DOMAINS_ONLY", "VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS", "SPECIFIED_DOMAINS_ONLY"}, false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
+								ValidateFunc:     validation.StringInSlice([]string{"ALL_DOMAINS", "VERIFIED_DOMAINS_ONLY", "VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS", "SPECIFIED_DOMAINS_ONLY"}, true),
 							},
 							"private_dns_specified_domains": {
 								Type:     schema.TypeSet,
@@ -714,7 +715,7 @@ func flattenDNSOptions(apiObject *awstypes.DnsOptions) map[string]any {
 	}
 
 	if v := apiObject.PrivateDnsPreference; v != nil {
-		tfMap["private_dns_preference"] = aws.ToString(v)
+		tfMap["private_dns_preference"] = strings.ToUpper(aws.ToString(v))
 	}
 
 	if v := apiObject.PrivateDnsSpecifiedDomains; v != nil {
