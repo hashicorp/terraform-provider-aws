@@ -91,6 +91,50 @@ func TestQueueNameFromURL(t *testing.T) {
 	}
 }
 
+func TestQueueContinuousTargetOccurrence(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name                     string
+		AssumeNoPropagationDelay bool
+		DefaultOccurrence        int
+		Expected                 int
+	}{
+		{
+			Name:              "create default on real AWS",
+			DefaultOccurrence: tfsqs.QueueAttributesPropagatedContinuousTargetOccurrence,
+			Expected:          tfsqs.QueueAttributesPropagatedContinuousTargetOccurrence,
+		},
+		{
+			Name:              "delete default on real AWS",
+			DefaultOccurrence: tfsqs.QueueDeletedContinuousTargetOccurrence,
+			Expected:          tfsqs.QueueDeletedContinuousTargetOccurrence,
+		},
+		{
+			Name:                     "create collapsed when no propagation delay",
+			AssumeNoPropagationDelay: true,
+			DefaultOccurrence:        tfsqs.QueueAttributesPropagatedContinuousTargetOccurrence,
+			Expected:                 1,
+		},
+		{
+			Name:                     "delete collapsed when no propagation delay",
+			AssumeNoPropagationDelay: true,
+			DefaultOccurrence:        tfsqs.QueueDeletedContinuousTargetOccurrence,
+			Expected:                 1,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfsqs.QueueContinuousTargetOccurrence(testCase.AssumeNoPropagationDelay, testCase.DefaultOccurrence); got != testCase.Expected {
+				t.Errorf("got %d, expected %d", got, testCase.Expected)
+			}
+		})
+	}
+}
+
 func TestAccSQSQueue_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var queueAttributes map[types.QueueAttributeName]string
