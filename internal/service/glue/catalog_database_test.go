@@ -557,3 +557,73 @@ resource "aws_glue_catalog_database" "test" {
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
+
+func TestCatalogDatabaseParseResourceID(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name              string
+		id                string
+		expectedCatalogID string
+		expectedName      string
+		expectError       bool
+	}{
+		{
+			name:              "simple account ID",
+			id:                "123456789012:my_database",
+			expectedCatalogID: "123456789012",
+			expectedName:      "my_database",
+		},
+		{
+			name:              "compound S3 Tables catalog ID",
+			id:                "123456789012:s3tablescatalog/my-bucket:my_database",
+			expectedCatalogID: "123456789012:s3tablescatalog/my-bucket",
+			expectedName:      "my_database",
+		},
+		{
+			name:        "no separator",
+			id:          "my_database",
+			expectError: true,
+		},
+		{
+			name:        "trailing separator",
+			id:          "123456789012:",
+			expectError: true,
+		},
+		{
+			name:        "empty string",
+			id:          "",
+			expectError: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			catalogID, name, err := tfglue.CatalogDatabaseParseResourceID(tc.id)
+
+			if tc.expectError {
+				if err == nil {
+					t.Fatalf("expected error for id %q, got catalogID=%q name=%q", tc.id, catalogID, name)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error for id %q: %s", tc.id, err)
+			}
+			if catalogID != tc.expectedCatalogID {
+				t.Errorf("catalogID: got %q, want %q", catalogID, tc.expectedCatalogID)
+			}
+			if name != tc.expectedName {
+				t.Errorf("name: got %q, want %q", name, tc.expectedName)
+			}
+
+			roundTripped := tfglue.CatalogDatabaseCreateResourceID(catalogID, name)
+			if roundTripped != tc.id {
+				t.Errorf("round-trip: got %q, want %q", roundTripped, tc.id)
+			}
+		})
+	}
+}
