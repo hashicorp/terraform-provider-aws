@@ -4,6 +4,7 @@
 package backup
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -68,6 +70,8 @@ func RegisterSweepers() {
 		Name: "aws_backup_vault_policy",
 		F:    sweepVaultPolicies,
 	})
+
+	awsv2.Register("aws_backup_tiering_configuration", sweepTieringConfigurations)
 
 	resource.AddTestSweepers("aws_backup_vault", &resource.Sweeper{
 		Name: "aws_backup_vault",
@@ -353,6 +357,28 @@ func sweepRestoreTestingSelections(region string) error {
 	}
 
 	return nil
+}
+
+func sweepTieringConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.BackupClient(ctx)
+	var input backup.ListTieringConfigurationsInput
+	var sweepResources []sweep.Sweepable
+
+	pages := backup.NewListTieringConfigurationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.TieringConfigurations {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newTieringConfigurationResource, client,
+				framework.NewAttribute(names.AttrName, aws.ToString(v.TieringConfigurationName))))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepVaultLockConfigurations(region string) error {
