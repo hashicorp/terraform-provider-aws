@@ -328,15 +328,27 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
+	// replication_task_arn is empty in state when create fails after the task exists (e.g. on start)
+	// and destroy runs without a refresh, so look up the ARN.
+	task, err := findReplicationTaskByID(ctx, conn, d.Id())
+
+	if retry.NotFound(err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Task (%s): %s", d.Id(), err)
+	}
+
 	if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting DMS Replication Task: %s", d.Id())
 	input := dms.DeleteReplicationTaskInput{
-		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
+		ReplicationTaskArn: task.ReplicationTaskArn,
 	}
-	_, err := conn.DeleteReplicationTask(ctx, &input)
+	_, err = conn.DeleteReplicationTask(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags

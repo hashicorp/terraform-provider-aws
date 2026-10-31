@@ -486,6 +486,24 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 	})
 }
 
+func TestAccDMSReplicationTask_startReplicationTask_createFailure(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccReplicationTaskConfig_startFailure(rName),
+				ExpectError: regexache.MustCompile(`starting\s+DMS\s+Replication\s+Task|waiting\s+for\s+DMS\s+Replication\s+Task\s+\(\S+\)\s+start`),
+			},
+		},
+	})
+}
+
 func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1055,6 +1073,36 @@ resource "aws_dms_replication_instance" "test" {
   vpc_security_group_ids       = [aws_security_group.test.id]
 }
 `, rName, startTask, ruleName))
+}
+
+func testAccReplicationTaskConfig_startFailure(rName string) string {
+	return acctest.ConfigCompose(testAccReplicationTaskConfig_base(rName), fmt.Sprintf(`
+resource "aws_dms_replication_task" "test" {
+  replication_task_id      = %[1]q
+  migration_type           = "full-load"
+  replication_instance_arn = aws_dms_replication_instance.test.replication_instance_arn
+  source_endpoint_arn      = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn      = aws_dms_endpoint.target.endpoint_arn
+  table_mappings = jsonencode(
+    {
+      "rules" = [
+        {
+          "rule-type" = "selection",
+          "rule-id"   = "1",
+          "rule-name" = "1",
+          "object-locator" = {
+            "schema-name" = "%%",
+            "table-name"  = "%%"
+          },
+          "rule-action" = "include"
+        }
+      ]
+    }
+  )
+
+  start_replication_task = true
+}
+`, rName))
 }
 
 func testAccReplicationTaskConfig_s3ToRDS(rName string) string {
