@@ -70,23 +70,20 @@ func (r *resourceBaseline) Schema(ctx context.Context, _ resource.SchemaRequest,
 			},
 			"baseline_version": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
-			"operation_identifier": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+		},
+		"operation_identifier": schema.StringAttribute{
+			Computed: true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"target_identifier": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+		},
+		names.AttrTags:    tftags.TagsAttribute(),
+		names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		"target_identifier": schema.StringAttribute{
+			Required: true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
 			},
 		},
 		Blocks: map[string]schema.Block{
