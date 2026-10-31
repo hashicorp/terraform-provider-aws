@@ -63,7 +63,6 @@ func resourcePhoneNumber() *schema.Resource {
 				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 500),
 				},
 				"phone_number": {
@@ -206,7 +205,9 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	// Description is the only field that can be updated via UpdatePhoneNumberMetadata
+	// and is non destructive as opposed to UpdatePhoneNumber
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, names.AttrDescription) {
 		input := connect.UpdatePhoneNumberInput{
 			ClientToken:   aws.String(create.UUID(ctx)),
 			PhoneNumberId: aws.String(d.Id()),
@@ -221,6 +222,17 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if _, err := waitPhoneNumberUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Phone Number (%s) update: %s", d.Id(), err)
+		}
+	} else if d.HasChange(names.AttrDescription) {
+		input := connect.UpdatePhoneNumberMetadataInput{
+			PhoneNumberId:          aws.String(d.Id()),
+			PhoneNumberDescription: aws.String(d.Get(names.AttrDescription).(string)),
+		}
+
+		_, err := conn.UpdatePhoneNumberMetadata(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Connect Phone Number Description (%s): %s", d.Id(), err)
 		}
 	}
 

@@ -82,6 +82,48 @@ func testAccPhoneNumber_description(t *testing.T) {
 	})
 }
 
+func testAccPhoneNumber_updateDescription(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ClaimedPhoneNumberSummary
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	description := "example description"
+	newDescription := "new description"
+	resourceName := "aws_connect_phone_number.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPhoneNumberConfig_description(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPhoneNumberConfig_description(rName, newDescription),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, newDescription),
+				),
+			},
+		},
+	})
+}
+
 func testAccPhoneNumber_prefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ClaimedPhoneNumberSummary
