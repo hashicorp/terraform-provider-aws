@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,6 +49,7 @@ const (
 )
 
 // @SDKResource("aws_elasticache_global_replication_group", name="Global Replication Group")
+// @Tags(identifierAttribute="arn")
 func resourceGlobalReplicationGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalReplicationGroupCreate,
@@ -200,6 +202,8 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 					Required:     true,
 					ValidateFunc: validateReplicationGroupID,
 				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"transit_encryption_enabled": {
 					Type:     schema.TypeBool,
 					Computed: true,
@@ -284,11 +288,13 @@ func paramGroupNameRequiresEngineOrMajorVersionUpgrade(diff sdkv2.ResourceDiffer
 func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	id := d.Get("global_replication_group_id_suffix").(string)
 	input := &elasticache.CreateGlobalReplicationGroupInput{
 		GlobalReplicationGroupIdSuffix: aws.String(id),
 		PrimaryReplicationGroupId:      aws.String(d.Get("primary_replication_group_id").(string)),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("global_replication_group_description"); ok {
@@ -296,6 +302,13 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	output, err := conn.CreateGlobalReplicationGroup(ctx, input)
+
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		input.Tags = nil
+
+		output, err = conn.CreateGlobalReplicationGroup(ctx, input)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Global Replication Group (%s): %s", id, err)
@@ -307,6 +320,20 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Global Replication Group (%s) create: %s", d.Id(), err)
+	}
+
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, aws.ToString(globalReplicationGroup.ARN), tags)
+
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+			return append(diags, resourceGlobalReplicationGroupRead(ctx, d, meta)...)
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ElastiCache Global Replication Group (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	if v, ok := d.GetOk("automatic_failover_enabled"); ok {
