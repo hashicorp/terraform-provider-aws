@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_account_primary_contact: Fix import of member account contacts producing spurious plan diff
+```
