@@ -235,6 +235,76 @@ func TestPoolValidateSenderIdentity(t *testing.T) {
 	}
 }
 
+func TestPoolOriginationIdentityISOCountryCode(t *testing.T) {
+	t.Parallel()
+
+	const (
+		senderIDARN  = "arn:aws:sms-voice:us-east-1:111122223333:sender-id/EXAMPLE/CH" // lintignore:AWSAT003,AWSAT005
+		shortARN     = "arn:aws:sms-voice:us-east-1:111122223333:sender-id/EXAMPLE"    // lintignore:AWSAT003,AWSAT005
+		phoneARN     = "arn:aws:sms-voice:us-east-1:111122223333:phone-number/abc"     // lintignore:AWSAT003,AWSAT005
+		malformedARN = "not-an-arn"
+	)
+
+	testCases := []struct {
+		TestName    string
+		IdentityARN string
+		PoolISOCC   *string
+		Want        *string
+	}{
+		{
+			TestName:    "sender_id_uses_arn_country",
+			IdentityARN: senderIDARN,
+			PoolISOCC:   nil,
+			Want:        aws.String("CH"),
+		},
+		{
+			TestName:    "sender_id_arn_country_wins",
+			IdentityARN: senderIDARN,
+			PoolISOCC:   aws.String("US"),
+			Want:        aws.String("CH"),
+		},
+		{
+			TestName:    "phone_number_uses_pool_country",
+			IdentityARN: phoneARN,
+			PoolISOCC:   aws.String("US"),
+			Want:        aws.String("US"),
+		},
+		{
+			TestName:    "phone_number_without_pool_country",
+			IdentityARN: phoneARN,
+			PoolISOCC:   nil,
+			Want:        nil,
+		},
+		{
+			TestName:    "sender_id_missing_country_segment",
+			IdentityARN: shortARN,
+			PoolISOCC:   aws.String("US"),
+			Want:        aws.String("US"),
+		},
+		{
+			TestName:    "malformed_arn_uses_pool_country",
+			IdentityARN: malformedARN,
+			PoolISOCC:   aws.String("US"),
+			Want:        aws.String("US"),
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfpinpointsmsvoicev2.OriginationIdentityISOCountryCode(testCase.IdentityARN, testCase.PoolISOCC)
+
+			if (got == nil) != (testCase.Want == nil) {
+				t.Fatalf("got %v, want %v", got, testCase.Want)
+			}
+			if got != nil && aws.ToString(got) != aws.ToString(testCase.Want) {
+				t.Errorf("got %q, want %q", aws.ToString(got), aws.ToString(testCase.Want))
+			}
+		})
+	}
+}
+
 func TestAccPinpointSMSVoiceV2Pool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.PoolInformation
@@ -654,7 +724,7 @@ func TestAccPinpointSMSVoiceV2Pool_OriginationIdentities(t *testing.T) {
 // Sorting origination identities lexicographically by ARN is predictable for sender-ids only.
 // phone-number ARNs are fully computed by AWS. Therefore, the ordering of phone number resources
 // are NOT anchored across test runs. For deterministic ordering we should use sender ids
-// instead (once the resource is available).
+// instead.
 func TestAccPinpointSMSVoiceV2Pool_OriginationIdentities_replaceSeed(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool awstypes.PoolInformation
@@ -684,6 +754,68 @@ func TestAccPinpointSMSVoiceV2Pool_OriginationIdentities_replaceSeed(t *testing.
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identities"), knownvalue.SetSizeExact(1)),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("origination_identities").AtSliceIndex(0), "aws_pinpointsmsvoicev2_phone_number.update", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
+
+// A pool whose identities span more than one country cannot set iso_country_code, since the
+// attribute is single-valued and RequiresReplace. AssociateOriginationIdentity rejects a
+// sender ID ARN without a per-call IsoCountryCode
+// (ValidationException Reason="INVALID_ARN" Fields="senderId"), so this test associates and
+// disassociates sender IDs from two different countries against a pool with no
+// iso_country_code set, on both the Create and Update paths.
+func TestAccPinpointSMSVoiceV2Pool_OriginationIdentities_multipleCountries(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.PoolInformation
+	senderIDName := testAccRandomSenderID(t)
+	resourceName := "aws_pinpointsmsvoicev2_pool.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPool(ctx, t)
+			testAccPreCheckSenderID(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckPoolDestroy(ctx, t),
+			testAccCheckSenderIDDestroy(ctx, t),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPoolConfig_OriginationIdentities_multipleCountries(senderIDName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPoolExists(ctx, t, resourceName, &pool),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("iso_country_code"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identities"), knownvalue.SetSizeExact(2)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPoolConfig_OriginationIdentities_multipleCountries_gbOnly(senderIDName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPoolExists(ctx, t, resourceName, &pool),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identities"), knownvalue.SetSizeExact(1)),
+				},
+			},
+			{
+				Config: testAccPoolConfig_OriginationIdentities_multipleCountries(senderIDName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPoolExists(ctx, t, resourceName, &pool),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origination_identities"), knownvalue.SetSizeExact(2)),
 				},
 			},
 		},
@@ -1187,6 +1319,61 @@ resource "aws_pinpointsmsvoicev2_phone_number" "update" {
   number_capabilities = ["SMS"]
 }
 `
+}
+
+// testAccPoolConfig_OriginationIdentities_multipleCountries associates sender IDs from two
+// different countries with a pool that has no iso_country_code set, since the attribute is
+// single-valued and can't represent a pool spanning countries.
+func testAccPoolConfig_OriginationIdentities_multipleCountries(senderID string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_sender_id" "test" {
+  sender_id        = %[1]q
+  iso_country_code = "GB"
+  message_types    = ["TRANSACTIONAL"]
+}
+
+resource "aws_pinpointsmsvoicev2_sender_id" "alternate_country" {
+  sender_id        = %[1]q
+  iso_country_code = "DE"
+  message_types    = ["TRANSACTIONAL"]
+}
+
+resource "aws_pinpointsmsvoicev2_pool" "test" {
+  # iso_country_code intentionally unset: the identities span two countries and the attribute
+  # is single-valued and RequiresReplace.
+  message_type = "TRANSACTIONAL"
+  origination_identities = [
+    aws_pinpointsmsvoicev2_sender_id.test.arn,
+    aws_pinpointsmsvoicev2_sender_id.alternate_country.arn,
+  ]
+}
+`, senderID)
+}
+
+// testAccPoolConfig_OriginationIdentities_multipleCountries_gbOnly drops the "DE" sender ID
+// from testAccPoolConfig_OriginationIdentities_multipleCountries, exercising the
+// disassociate path for a cross-country sender ID against a pool with no iso_country_code.
+func testAccPoolConfig_OriginationIdentities_multipleCountries_gbOnly(senderID string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpointsmsvoicev2_sender_id" "test" {
+  sender_id        = %[1]q
+  iso_country_code = "GB"
+  message_types    = ["TRANSACTIONAL"]
+}
+
+resource "aws_pinpointsmsvoicev2_sender_id" "alternate_country" {
+  sender_id        = %[1]q
+  iso_country_code = "DE"
+  message_types    = ["TRANSACTIONAL"]
+}
+
+resource "aws_pinpointsmsvoicev2_pool" "test" {
+  message_type = "TRANSACTIONAL"
+  origination_identities = [
+    aws_pinpointsmsvoicev2_sender_id.test.arn,
+  ]
+}
+`, senderID)
 }
 
 func testAccPoolConfig_SharedRoutesEnabled(enabled bool) string {
