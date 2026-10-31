@@ -121,6 +121,7 @@ This data source exports the following attributes in addition to the arguments a
     * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
 * `software_update_options` - Software update options for the domain
     * `auto_software_update_enabled` - Enabled or disabled.
+    * `use_latest_service_software_for_blue_green` - Whether the domain uses the latest available service software during a blue/green deployment.
 * `tags` - Tags assigned to the domain.
 * `vpc_options` - VPC Options for private OpenSearch domains.
     * `availability_zones` - Availability zones used by the domain.
