@@ -488,8 +488,12 @@ func TestAccCloudWatchMetricAlarm_metricQueryExpressionLength(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccMetricAlarmConfig_metricQueryExpression(rName, expression2048),
-				PlanOnly: true,
+				Config: testAccMetricAlarmConfig_metricQueryExpression(rName, expression2048),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
