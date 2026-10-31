@@ -81,6 +81,9 @@ func (r *resourceAssociationResource) Schema(ctx context.Context, req resource.S
 				Computed:   true,
 				CustomType: types.StringType,
 				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrResourceType: schema.StringAttribute{
 				Computed: true,

@@ -80,7 +80,7 @@ func TestAccRoute53ProfilesResourceAssociation_firewallRuleGroup(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAssociationConfig_firewallRuleGroup(rName),
+				Config: testAccResourceAssociationConfig_firewallRuleGroup(rName, 102),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAssociationExists(ctx, t, resourceName, &resourceAssociation),
 				),
@@ -90,6 +90,17 @@ func TestAccRoute53ProfilesResourceAssociation_firewallRuleGroup(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccResourceAssociationConfig_firewallRuleGroup(rName, 103),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceAssociationExists(ctx, t, resourceName, &resourceAssociation),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -306,7 +317,7 @@ resource "aws_route53profiles_resource_association" "test" {
 `, rName)
 }
 
-func testAccResourceAssociationConfig_firewallRuleGroup(rName string) string {
+func testAccResourceAssociationConfig_firewallRuleGroup(rName string, priority int) string {
 	return fmt.Sprintf(`
 resource "aws_route53profiles_profile" "test" {
   name = %[1]q
@@ -320,9 +331,9 @@ resource "aws_route53profiles_resource_association" "test" {
   name                = %[1]q
   profile_id          = aws_route53profiles_profile.test.id
   resource_arn        = aws_route53_resolver_firewall_rule_group.test.arn
-  resource_properties = jsonencode({ "priority" = 102 })
+  resource_properties = jsonencode({ "priority" = %[2]d })
 }
-`, rName)
+`, rName, priority)
 }
 
 func testAccResourceAssociationConfig_resolverRule(rName string) string {
