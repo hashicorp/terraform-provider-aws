@@ -45,6 +45,12 @@ func resourceFleet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(180 * time.Minute),
+			Update: schema.DefaultTimeout(180 * time.Minute),
+			Delete: schema.DefaultTimeout(180 * time.Minute),
+		},
+
 		CustomizeDiff: resourceFleetCustDiff,
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -320,7 +326,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.SetId(aws.ToString(outputRaw.(*appstream.CreateFleetOutput).Fleet.Name))
 
-	if err := startFleet(ctx, conn, d.Id()); err != nil {
+	if err := startFleet(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -396,7 +402,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		if shouldStop {
-			if err := stopFleet(ctx, conn, d.Id()); err != nil {
+			if err := stopFleet(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -472,7 +478,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		if shouldStop {
-			if err := startFleet(ctx, conn, d.Id()); err != nil {
+			if err := startFleet(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -486,7 +492,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
 	log.Printf("[DEBUG] Stopping AppStream Fleet: %s", d.Id())
-	err := stopFleet(ctx, conn, d.Id())
+	err := stopFleet(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -525,7 +531,7 @@ func resourceFleetCustDiff(_ context.Context, diff *schema.ResourceDiff, meta an
 	return nil
 }
 
-func startFleet(ctx context.Context, conn *appstream.Client, id string) error {
+func startFleet(ctx context.Context, conn *appstream.Client, id string, timeout time.Duration) error {
 	input := appstream.StartFleetInput{
 		Name: aws.String(id),
 	}
@@ -536,14 +542,14 @@ func startFleet(ctx context.Context, conn *appstream.Client, id string) error {
 		return fmt.Errorf("starting AppStream Fleet (%s): %w", id, err)
 	}
 
-	if _, err := waitFleetRunning(ctx, conn, id); err != nil {
+	if _, err := waitFleetRunning(ctx, conn, id, timeout); err != nil {
 		return fmt.Errorf("waiting for AppStream Fleet (%s) start: %w", id, err)
 	}
 
 	return nil
 }
 
-func stopFleet(ctx context.Context, conn *appstream.Client, id string) error {
+func stopFleet(ctx context.Context, conn *appstream.Client, id string, timeout time.Duration) error {
 	input := appstream.StopFleetInput{
 		Name: aws.String(id),
 	}
@@ -554,7 +560,7 @@ func stopFleet(ctx context.Context, conn *appstream.Client, id string) error {
 		return fmt.Errorf("stopping AppStream Fleet (%s): %w", id, err)
 	}
 
-	if _, err := waitFleetStopped(ctx, conn, id); err != nil {
+	if _, err := waitFleetStopped(ctx, conn, id, timeout); err != nil {
 		return fmt.Errorf("waiting for AppStream Fleet (%s) stop: %w", id, err)
 	}
 
@@ -621,10 +627,7 @@ func statusFleet(conn *appstream.Client, id string) retry.StateRefreshFunc {
 	}
 }
 
-func waitFleetRunning(ctx context.Context, conn *appstream.Client, id string) (*awstypes.Fleet, error) { //nolint:unparam
-	const (
-		timeout = 180 * time.Minute
-	)
+func waitFleetRunning(ctx context.Context, conn *appstream.Client, id string, timeout time.Duration) (*awstypes.Fleet, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FleetStateStarting),
 		Target:  enum.Slice(awstypes.FleetStateRunning),
@@ -643,10 +646,7 @@ func waitFleetRunning(ctx context.Context, conn *appstream.Client, id string) (*
 	return nil, err
 }
 
-func waitFleetStopped(ctx context.Context, conn *appstream.Client, id string) (*awstypes.Fleet, error) { //nolint:unparam
-	const (
-		timeout = 180 * time.Minute
-	)
+func waitFleetStopped(ctx context.Context, conn *appstream.Client, id string, timeout time.Duration) (*awstypes.Fleet, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FleetStateStopping),
 		Target:  enum.Slice(awstypes.FleetStateStopped),
