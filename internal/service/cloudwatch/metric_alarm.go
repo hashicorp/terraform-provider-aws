@@ -57,6 +57,51 @@ func resourceMetricAlarm() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
+				"action_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"alarm_tags_propagation": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										"excluded_tag_keys": {
+											Type:          schema.TypeSet,
+											Optional:      true,
+											MinItems:      1,
+											MaxItems:      50,
+											ConflictsWith: []string{"action_configuration.0.alarm_tags_propagation.0.included_tag_keys"},
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
+										},
+										"included_tag_keys": {
+											Type:          schema.TypeSet,
+											Optional:      true,
+											MinItems:      1,
+											MaxItems:      50,
+											ConflictsWith: []string{"action_configuration.0.alarm_tags_propagation.0.excluded_tag_keys"},
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 128),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				"actions_enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -586,6 +631,11 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 	}
 
 	// Set common fields for both PromQL and traditional alarms.
+	// PutMetricAlarm overwrites the whole alarm, so when the block is omitted the computed value from state is resent to keep settings made outside Terraform.
+	if v, ok := d.GetOk("action_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ActionConfiguration = expandActionConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("alarm_actions"); ok && v.(*schema.Set).Len() > 0 {
 		apiObject.AlarmActions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -683,6 +733,23 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 	}
 
 	return apiObject
+}
+
+func flattenActionConfiguration(apiObject *awstypes.ActionConfiguration) []any {
+	if apiObject == nil || apiObject.AlarmTagsPropagation == nil {
+		return nil
+	}
+
+	alarmTagsPropagation := apiObject.AlarmTagsPropagation
+	tfMap := map[string]any{
+		"alarm_tags_propagation": []any{map[string]any{
+			names.AttrEnabled:   aws.ToBool(alarmTagsPropagation.Enabled),
+			"excluded_tag_keys": alarmTagsPropagation.ExcludedTagKeys,
+			"included_tag_keys": alarmTagsPropagation.IncludedTagKeys,
+		}},
+	}
+
+	return []any{tfMap}
 }
 
 func flattenEvaluationCriteria(apiObject awstypes.EvaluationCriteria) []any {
@@ -884,6 +951,34 @@ func expandMetricAlarmMetricsMetric(tfMap map[string]any) *awstypes.MetricStat {
 	return apiObject
 }
 
+func expandActionConfiguration(tfMap map[string]any) *awstypes.ActionConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ActionConfiguration{}
+
+	if v, ok := tfMap["alarm_tags_propagation"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+
+		alarmTagsPropagation := &awstypes.AlarmTagsPropagation{
+			Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
+		}
+
+		if v, ok := tfMap["excluded_tag_keys"].(*schema.Set); ok && v.Len() > 0 {
+			alarmTagsPropagation.ExcludedTagKeys = flex.ExpandStringValueSet(v)
+		}
+
+		if v, ok := tfMap["included_tag_keys"].(*schema.Set); ok && v.Len() > 0 {
+			alarmTagsPropagation.IncludedTagKeys = flex.ExpandStringValueSet(v)
+		}
+
+		apiObject.AlarmTagsPropagation = alarmTagsPropagation
+	}
+
+	return apiObject
+}
+
 func expandEvaluationCriteria(tfMap map[string]any) awstypes.EvaluationCriteria {
 	if tfMap == nil {
 		return nil
@@ -967,6 +1062,9 @@ func expandMetricAlarmDimensions(tfMap map[string]any) []awstypes.Dimension {
 }
 
 func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm *awstypes.MetricAlarm) error {
+	if err := d.Set("action_configuration", flattenActionConfiguration(alarm.ActionConfiguration)); err != nil {
+		return smarterr.NewError(fmt.Errorf("setting action_configuration: %w", err))
+	}
 	d.Set("actions_enabled", alarm.ActionsEnabled)
 	d.Set("alarm_actions", alarm.AlarmActions)
 	d.Set("alarm_description", alarm.AlarmDescription)
@@ -1044,6 +1142,7 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 
 type metricAlarmResourceModel struct {
 	framework.WithRegionModel
+	ActionConfiguration               fwtypes.ListNestedObjectValueOf[actionConfigurationModel] `tfsdk:"action_configuration"`
 	ActionsEnabled                    types.Bool                                                `tfsdk:"actions_enabled"`
 	AlarmActions                      fwtypes.SetOfString                                       `tfsdk:"alarm_actions"`
 	AlarmDescription                  types.String                                              `tfsdk:"alarm_description"`
@@ -1072,6 +1171,16 @@ type metricAlarmResourceModel struct {
 	TreatMissingData                  types.String                                              `tfsdk:"treat_missing_data"`
 	Unit                              fwtypes.StringEnum[awstypes.StandardUnit]                 `tfsdk:"unit"`
 	WarmUpConfiguration               fwtypes.ListNestedObjectValueOf[warmUpConfigurationModel] `tfsdk:"warm_up_configuration"`
+}
+
+type actionConfigurationModel struct {
+	AlarmTagsPropagation fwtypes.ListNestedObjectValueOf[alarmTagsPropagationModel] `tfsdk:"alarm_tags_propagation"`
+}
+
+type alarmTagsPropagationModel struct {
+	Enabled         types.Bool          `tfsdk:"enabled"`
+	ExcludedTagKeys fwtypes.SetOfString `tfsdk:"excluded_tag_keys"`
+	IncludedTagKeys fwtypes.SetOfString `tfsdk:"included_tag_keys"`
 }
 
 type evaluationCriteriaModel struct {
