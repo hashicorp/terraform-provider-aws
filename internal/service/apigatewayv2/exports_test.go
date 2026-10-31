@@ -13,6 +13,7 @@ var (
 	ResourceIntegration         = resourceIntegration
 	ResourceIntegrationResponse = resourceIntegrationResponse
 	ResourceModel               = resourceModel
+	ResourcePortalProduct       = newPortalProductResource
 	ResourceRoute               = resourceRoute
 	ResourceRouteResponse       = resourceRouteResponse
 	ResourceRoutingRule         = newRoutingRuleResource
@@ -28,6 +29,7 @@ var (
 	FindIntegrationResponseByThreePartKey = findIntegrationResponseByThreePartKey
 	FindIntegrations                      = findIntegrations
 	FindModelByTwoPartKey                 = findModelByTwoPartKey
+	FindPortalProductByID                 = findPortalProductByID
 	FindRouteByTwoPartKey                 = findRouteByTwoPartKey
 	FindRouteResponseByThreePartKey       = findRouteResponseByThreePartKey
 	FindRoutes                            = findRoutes
