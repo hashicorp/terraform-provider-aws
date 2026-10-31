@@ -75,6 +75,7 @@ var (
 	RolePolicyParseID                 = rolePolicyParseID
 	ServiceLinkedRoleParseResourceID  = serviceLinkedRoleParseResourceID
 	SESSMTPPasswordFromSecretKeySigV4 = sesSMTPPasswordFromSecretKeySigV4
+	SplitPolicyDocument               = splitPolicyDocument
 )
 
 type (
