@@ -8,6 +8,4 @@ var (
 	ResourceRule = newRuleResource
 
 	FindRuleByARN = findRuleByARN
-
-	RuleConfigurationEquivalent = ruleConfigurationEquivalent
 )
