@@ -76,6 +76,11 @@ func dataSourceCertificate() *schema.Resource {
 					Optional: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
+				"subject_alternative_names": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				names.AttrTags: {
 					Type:         schema.TypeMap,
 					Optional:     true,
@@ -225,6 +230,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, matchedCertificate.CertificateArn)
 	d.Set(names.AttrDomain, matchedCertificate.DomainName)
 	d.Set(names.AttrStatus, matchedCertificate.Status)
+	d.Set("subject_alternative_names", matchedCertificate.SubjectAlternativeNames)
 
 	return diags
 }
