@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_quicksight_dashboard: Fix `Invalid address to set` errors when reading a `definition` containing `line_chart_visual` `missing_data_configuration` or `contribution_analysis_defaults` `contributor_dimensions`
+```
+
+```release-note:bug
+resource/aws_quicksight_analysis: Fix `Invalid address to set` errors when reading a `definition` containing `line_chart_visual` `missing_data_configuration` or `contribution_analysis_defaults` `contributor_dimensions`
+```
+
+```release-note:bug
+resource/aws_quicksight_template: Fix `Invalid address to set` errors when reading a `definition` containing `line_chart_visual` `missing_data_configuration` or `contribution_analysis_defaults` `contributor_dimensions`
+```
+
+```release-note:bug
+data-source/aws_quicksight_analysis: Fix `Invalid address to set` errors when reading a `definition` containing `line_chart_visual` `missing_data_configuration` or `contribution_analysis_defaults` `contributor_dimensions`
+```
