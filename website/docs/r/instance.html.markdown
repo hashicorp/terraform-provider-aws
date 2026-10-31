@@ -457,6 +457,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the instance.
 * `capacity_reservation_specification` - Capacity reservation specification of the instance.
+* `launch_time` - Time the instance was launched.
 * `id` - ID of the instance.
 * `instance_state` - State of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 * `outpost_arn` - ARN of the Outpost the instance is assigned to.
