@@ -28,6 +28,8 @@ var (
 	ResourceProxy                               = resourceProxy
 	ResourceProxyDefaultTargetGroup             = resourceProxyDefaultTargetGroup
 	ResourceProxyEndpoint                       = resourceProxyEndpoint
+	ResourceProxyPolicyAttachment               = resourceProxyPolicyAttachment
+	ResourceProxySecret                         = resourceProxySecret
 	ResourceProxyTarget                         = resourceProxyTarget
 	ResourceReservedInstance                    = resourceReservedInstance
 	ResourceShardGroup                          = newShardGroupResource
@@ -50,6 +52,7 @@ var (
 	FindDBParameterGroupByName                 = findDBParameterGroupByName
 	FindDBProxyByName                          = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
+	FindDBProxyRoleName                        = findDBProxyRoleName
 	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
 	FindDBShardGroupByID                       = findDBShardGroupByID
 	FindDBSnapshotByID                         = findDBSnapshotByID
@@ -63,6 +66,7 @@ var (
 	FindIntegrationByARN                       = findIntegrationByARN
 	FindOptionGroupByName                      = findOptionGroupByName
 	FindReservedDBInstanceByID                 = findReservedDBInstanceByID
+	FindRolePolicyForProxy                     = findRolePolicyForProxy
 	IntegrationIDFromARN                       = integrationIDFromARN
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
