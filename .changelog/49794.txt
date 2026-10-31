@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_organizations_account: Increase default `delete` timeout from 10 minutes to 30 minutes to avoid spurious timeouts caused by AWS Organizations `DescribeAccount` eventual consistency during account closure
+```
