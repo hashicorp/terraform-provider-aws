@@ -59,3 +59,47 @@ This resource exports the following attributes in addition to the arguments abov
 * `name` - The name to identify the Group Membership
 * `users` - list of IAM User names
 * `group` - IAM Group name
+
+## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_group_membership.team
+  identity = {
+    name  = "tf-testing-group-membership"
+    group = "test-group"
+  }
+}
+
+resource "aws_iam_group_membership" "team" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name identifying the IAM Group Membership.
+* `group` (String) IAM Group name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Group Memberships using the `name` and `group` separated by a forward slash (`/`). For example:
+
+```terraform
+import {
+  to = aws_iam_group_membership.team
+  id = "tf-testing-group-membership/test-group"
+}
+```
+
+Using `terraform import`, import IAM Group Memberships using the `name` and `group` separated by a forward slash (`/`). For example:
+
+```console
+% terraform import aws_iam_group_membership.team tf-testing-group-membership/test-group
+```
