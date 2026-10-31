@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -41,6 +42,11 @@ func resourceApp() *schema.Resource {
 		DeleteWithoutTimeout: resourceAppDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -161,7 +167,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	d.SetId(appArn)
 
-	if _, err := waitAppInService(ctx, conn, domainID, userProfileOrSpaceName, appType, appName); err != nil {
+	if _, err := waitAppInService(ctx, conn, domainID, userProfileOrSpaceName, appType, appName, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "create SageMaker AI App (%s): waiting for completion: %s", d.Id(), err)
 	}
 
@@ -247,7 +253,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		}
 	}
 
-	if _, err := waitAppDeleted(ctx, conn, domainID, userProfileOrSpaceName, appType, appName); err != nil {
+	if _, err := waitAppDeleted(ctx, conn, domainID, userProfileOrSpaceName, appType, appName, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI App (%s) to delete: %s", d.Id(), err)
 	}
 
