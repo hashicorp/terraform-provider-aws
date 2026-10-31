@@ -32,6 +32,8 @@ var (
 	WaitCacheClusterAvailable            = waitCacheClusterAvailable
 	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
 
+	AvailableEngineVersionStrings                     = availableEngineVersionStrings
+	DefaultCacheParameterGroupFamily                  = defaultCacheParameterGroupFamily
 	DeleteCacheCluster                                = deleteCacheCluster
 	DiffVersion                                       = diffVersion
 	EmptyDescription                                  = emptyDescription
@@ -40,6 +42,8 @@ var (
 	EngineValkey                                      = engineValkey
 	EngineVersionForceNewOnDowngrade                  = engineVersionForceNewOnDowngrade
 	EngineVersionIsDowngrade                          = engineVersionIsDowngrade
+	EngineVersionMatches                              = engineVersionMatches
+	FindAvailableCacheEngineVersion                   = findAvailableCacheEngineVersion
 	GlobalReplicationGroupRegionPrefixFormat          = globalReplicationGroupRegionPrefixFormat
 	NormalizeEngineVersion                            = normalizeEngineVersion
 	ParamGroupNameRequiresEngineOrMajorVersionUpgrade = paramGroupNameRequiresEngineOrMajorVersionUpgrade

@@ -295,6 +295,50 @@ func TestAccElastiCacheCluster_ParameterGroupName_default(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheCluster_EngineVersion_unavailable(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterConfig_parameterGroupName(rName, "redis", "7.9", "default.redis7"),
+				ExpectError: regexache.MustCompile(`engine_version "7.9" is not available for engine "redis"`),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheCluster_EngineVersion_incompatibleParameterGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterConfig_parameterGroupName(rName, "redis", "7.0", "default.redis6.x"),
+				ExpectError: regexache.MustCompile(`engine_version "7.0" is not compatible with parameter_group_name "default.redis6.x"`),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheCluster_ipDiscovery(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
