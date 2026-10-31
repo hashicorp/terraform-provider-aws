@@ -338,6 +338,36 @@ func TestAccSSMDocument_Permission_change(t *testing.T) {
 	})
 }
 
+func TestAccSSMDocument_Permission_ramShare(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssm_document.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentConfig_ramShare(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocumentExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "permissions.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSSMDocument_params(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -886,6 +916,27 @@ resource "aws_ssm_document" "test" {
 DOC
 }
 `, rName, ids)
+}
+
+func testAccDocumentConfig_ramShare(rName string) string {
+	return acctest.ConfigCompose(testAccDocumentConfig_basic(rName), fmt.Sprintf(`
+data "aws_organizations_organization" "test" {}
+
+resource "aws_ram_resource_share" "test" {
+  name                      = %[1]q
+  allow_external_principals = false
+}
+
+resource "aws_ram_resource_association" "test" {
+  resource_arn       = aws_ssm_document.test.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+resource "aws_ram_principal_association" "test" {
+  principal          = data.aws_organizations_organization.test.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+`, rName))
 }
 
 func testAccDocumentConfig_param(rName string) string {
