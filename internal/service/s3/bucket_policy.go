@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -77,7 +79,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta a
 	if d.IsNewResource() {
 		d.SetId(bucket)
 
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
+		_, err = waitBucketPolicyFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (string, error) {
 			return findBucketPolicy(ctx, conn, bucket)
 		})
 
@@ -154,6 +156,14 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return diags
+}
+
+// bucketPolicyFoundCount is the number of consecutive successful reads
+// required after PutBucketPolicy before the create is considered consistent.
+const bucketPolicyFoundCount = 3
+
+func waitBucketPolicyFound(ctx context.Context, timeout time.Duration, find func(context.Context) (string, error), opts ...backoff.Option) (string, error) {
+	return retry.Op(find).UntilFoundN(bucketPolicyFoundCount)(ctx, timeout, opts...)
 }
 
 func findBucketPolicy(ctx context.Context, conn *s3.Client, bucket string) (string, error) {
