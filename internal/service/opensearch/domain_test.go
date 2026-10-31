@@ -246,6 +246,164 @@ func TestFlattenServerlessVectorAcceleration(t *testing.T) {
 	}
 }
 
+func TestValidateAndSanitizeAIMLOptions(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name                 string
+		aimlOptions          *awstypes.AIMLOptionsInput
+		engineVersion        string
+		expectedError        bool
+		expectVectorAccelNil bool
+	}{
+		{
+			name:                 "nil options",
+			aimlOptions:          nil,
+			engineVersion:        "OpenSearch_2.19",
+			expectedError:        false,
+			expectVectorAccelNil: true,
+		},
+		{
+			name: "nil serverless vector acceleration",
+			aimlOptions: &awstypes.AIMLOptionsInput{
+				S3VectorsEngine: &awstypes.S3VectorsEngine{
+					Enabled: aws.Bool(true),
+				},
+			},
+			engineVersion:        "OpenSearch_2.19",
+			expectedError:        false,
+			expectVectorAccelNil: true,
+		},
+		{
+			name: "OpenSearch 2.19 with serverless vector acceleration disabled gets sanitized",
+			aimlOptions: &awstypes.AIMLOptionsInput{
+				S3VectorsEngine: &awstypes.S3VectorsEngine{
+					Enabled: aws.Bool(true),
+				},
+				ServerlessVectorAcceleration: &awstypes.ServerlessVectorAcceleration{
+					Enabled: aws.Bool(false),
+				},
+			},
+			engineVersion:        "OpenSearch_2.19",
+			expectedError:        false,
+			expectVectorAccelNil: true,
+		},
+		{
+			name: "OpenSearch 2.19 with serverless vector acceleration enabled returns error",
+			aimlOptions: &awstypes.AIMLOptionsInput{
+				ServerlessVectorAcceleration: &awstypes.ServerlessVectorAcceleration{
+					Enabled: aws.Bool(true),
+				},
+			},
+			engineVersion: "OpenSearch_2.19",
+			expectedError: true,
+		},
+		{
+			name: "OpenSearch 1.3 with serverless vector acceleration disabled gets sanitized",
+			aimlOptions: &awstypes.AIMLOptionsInput{
+				ServerlessVectorAcceleration: &awstypes.ServerlessVectorAcceleration{
+					Enabled: aws.Bool(false),
+				},
+			},
+			engineVersion:        "OpenSearch_1.3",
+			expectedError:        false,
+			expectVectorAccelNil: true,
+		},
+		{
+			name: "OpenSearch 3.1 with serverless vector acceleration enabled is preserved",
+			aimlOptions: &awstypes.AIMLOptionsInput{
+				ServerlessVectorAcceleration: &awstypes.ServerlessVectorAcceleration{
+					Enabled: aws.Bool(true),
+				},
+			},
+			engineVersion:        "OpenSearch_3.1",
+			expectedError:        false,
+			expectVectorAccelNil: false,
+		},
+		{
+			name: "OpenSearch 3.1 with serverless vector acceleration disabled is preserved",
+			aimlOptions: &awstypes.AIMLOptionsInput{
+				ServerlessVectorAcceleration: &awstypes.ServerlessVectorAcceleration{
+					Enabled: aws.Bool(false),
+				},
+			},
+			engineVersion:        "OpenSearch_3.1",
+			expectedError:        false,
+			expectVectorAccelNil: false,
+		},
+		{
+			name: "OpenSearch 3.5 with serverless vector acceleration enabled is preserved",
+			aimlOptions: &awstypes.AIMLOptionsInput{
+				ServerlessVectorAcceleration: &awstypes.ServerlessVectorAcceleration{
+					Enabled: aws.Bool(true),
+				},
+			},
+			engineVersion:        "OpenSearch_3.5",
+			expectedError:        false,
+			expectVectorAccelNil: false,
+		},
+		{
+			name: "Elasticsearch 7.10 with serverless vector acceleration disabled gets sanitized",
+			aimlOptions: &awstypes.AIMLOptionsInput{
+				ServerlessVectorAcceleration: &awstypes.ServerlessVectorAcceleration{
+					Enabled: aws.Bool(false),
+				},
+			},
+			engineVersion:        "Elasticsearch_7.10",
+			expectedError:        false,
+			expectVectorAccelNil: true,
+		},
+		{
+			name: "Elasticsearch 7.10 with serverless vector acceleration enabled returns error",
+			aimlOptions: &awstypes.AIMLOptionsInput{
+				ServerlessVectorAcceleration: &awstypes.ServerlessVectorAcceleration{
+					Enabled: aws.Bool(true),
+				},
+			},
+			engineVersion: "Elasticsearch_7.10",
+			expectedError: true,
+		},
+		{
+			name: "empty engine version does not error or modify",
+			aimlOptions: &awstypes.AIMLOptionsInput{
+				ServerlessVectorAcceleration: &awstypes.ServerlessVectorAcceleration{
+					Enabled: aws.Bool(false),
+				},
+			},
+			engineVersion:        "",
+			expectedError:        false,
+			expectVectorAccelNil: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := tfopensearch.ValidateAndSanitizeAIMLOptions(tc.aimlOptions, tc.engineVersion)
+			if tc.expectedError {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			if tc.aimlOptions != nil {
+				if tc.expectVectorAccelNil && tc.aimlOptions.ServerlessVectorAcceleration != nil {
+					t.Errorf("expected ServerlessVectorAcceleration to be nil, got: %+v", tc.aimlOptions.ServerlessVectorAcceleration)
+				}
+				if !tc.expectVectorAccelNil && tc.aimlOptions.ServerlessVectorAcceleration == nil {
+					t.Errorf("expected ServerlessVectorAcceleration to be preserved, got nil")
+				}
+			}
+		})
+	}
+}
+
 func TestAccOpenSearchDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
