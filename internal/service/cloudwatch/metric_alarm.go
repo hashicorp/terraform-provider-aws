@@ -631,7 +631,6 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 	}
 
 	// Set common fields for both PromQL and traditional alarms.
-	// PutMetricAlarm overwrites the whole alarm, so when the block is omitted the computed value from state is resent to keep settings made outside Terraform.
 	if v, ok := d.GetOk("action_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.ActionConfiguration = expandActionConfiguration(v.([]any)[0].(map[string]any))
 	}

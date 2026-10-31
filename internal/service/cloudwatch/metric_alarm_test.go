@@ -765,7 +765,7 @@ func TestAccCloudWatchMetricAlarm_ActionConfiguration_allTags(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionConfigurationAllTags(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
-					testAccCheckMetricAlarmAlarmTagsPropagationEnabled(&alarm, false),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, false),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtFalse),
 				),
@@ -848,7 +848,7 @@ func TestAccCloudWatchMetricAlarm_ActionConfiguration_disabled(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionConfigurationAllTags(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
-					testAccCheckMetricAlarmAlarmTagsPropagationEnabled(&alarm, false),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, false),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtFalse),
 				),
@@ -878,14 +878,14 @@ func TestAccCloudWatchMetricAlarm_ActionConfiguration_omitted(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionConfigurationNone(rName, 80),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
-					testAccCheckMetricAlarmAlarmTagsPropagationEnabled(&alarm, false),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, false),
 				),
 			},
 			{
 				Config: testAccMetricAlarmConfig_actionConfigurationAllTags(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
-					testAccCheckMetricAlarmAlarmTagsPropagationEnabled(&alarm, true),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, true),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtTrue),
 				),
@@ -899,7 +899,7 @@ func TestAccCloudWatchMetricAlarm_ActionConfiguration_omitted(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
-					testAccCheckMetricAlarmAlarmTagsPropagationEnabled(&alarm, true),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, true),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtTrue),
 				),
@@ -909,7 +909,7 @@ func TestAccCloudWatchMetricAlarm_ActionConfiguration_omitted(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionConfigurationNone(rName, 90),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
-					testAccCheckMetricAlarmAlarmTagsPropagationEnabled(&alarm, true),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, true),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "threshold", "90"),
 				),
@@ -996,7 +996,7 @@ func testAccCheckMetricAlarmExists(ctx context.Context, t *testing.T, n string, 
 	}
 }
 
-func testAccCheckMetricAlarmAlarmTagsPropagationEnabled(v *types.MetricAlarm, want bool) resource.TestCheckFunc {
+func testAccCheckMetricAlarmTagsPropagationEnabled(v *types.MetricAlarm, want bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var got bool
 		if c := v.ActionConfiguration; c != nil && c.AlarmTagsPropagation != nil {
