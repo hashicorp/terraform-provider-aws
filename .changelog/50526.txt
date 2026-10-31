@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_replication_instance: Fix `InvalidParameterValueException: The parameter ReplicationInstanceArn must be provided and must not be blank` errors on destroy when an earlier create failed while waiting for the instance
+```
