@@ -66,6 +66,7 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 							resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
 							resource.TestCheckResourceAttrPair(resourceName, "core_network_id", coreNetworkResourceName, names.AttrID),
 							resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
+							resource.TestCheckResourceAttr(resourceName, "nat_gateway_support", string(awstypes.NatGatewaySupportStateDisabled)),
 							resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, "options.0.dns_support", acctest.CtTrue),
@@ -584,6 +585,36 @@ func TestAccNetworkManagerVPCAttachment_routingPolicyLabelUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCAttachmentExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerVPCAttachment_natGatewaySupport(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.VpcAttachment
+	resourceName := "aws_networkmanager_vpc_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAttachmentNATConfigurationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCAttachmentExists(ctx, t, resourceName, &v),
+				),
+			},
+			{
+				// The attachment is read before the NAT configuration is applied; refresh to pick up its NAT state.
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_support", string(awstypes.NatGatewaySupportStateEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "nat_system_route_support", acctest.CtTrue),
 				),
 			},
 		},
