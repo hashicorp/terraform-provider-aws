@@ -84,7 +84,7 @@ func (r *ruleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"rule_type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.RuleType](),
 				Required:   true,
 			},
