@@ -1,0 +1,3 @@
+```release-note:bug
+service/ec2: Improve error message for recently deregistered AMIs
+```
