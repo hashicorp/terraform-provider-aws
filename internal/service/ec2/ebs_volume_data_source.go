@@ -42,6 +42,10 @@ func dataSourceEBSVolume() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"availability_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrCreateTime: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -146,6 +150,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.SetId(aws.ToString(volume.VolumeId))
 	d.Set(names.AttrARN, ebsVolumeARN(ctx, c, d.Id()))
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
+	d.Set("availability_zone_id", volume.AvailabilityZoneId)
 	d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339))
 	d.Set(names.AttrEncrypted, volume.Encrypted)
 	d.Set(names.AttrIOPS, volume.Iops)
