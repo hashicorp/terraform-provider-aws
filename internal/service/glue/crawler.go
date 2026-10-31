@@ -469,6 +469,11 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta any
 				return tfresource.RetryableError(err)
 			}
 
+			// InvalidInputException: Error trying to retrieve security config, error message: The security token included in the request is invalid.
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Error trying to retrieve security config") {
+				return tfresource.RetryableError(err)
+			}
+
 			return tfresource.NonRetryableError(err)
 		}
 		return nil
@@ -610,6 +615,11 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 				// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
 				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "SQS queue") && errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "does not exist or the role provided does not have access to it") {
+					return tfresource.RetryableError(err)
+				}
+
+				// InvalidInputException: Error trying to retrieve security config, error message: The security token included in the request is invalid.
+				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Error trying to retrieve security config") {
 					return tfresource.RetryableError(err)
 				}
 
