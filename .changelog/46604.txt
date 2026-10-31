@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_subnet: Fix `DependencyViolation` error when deleting a subnet that is associated with a Transit Gateway VPC attachment
+```
