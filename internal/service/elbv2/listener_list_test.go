@@ -160,6 +160,7 @@ func TestAccELBV2Listener_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("routing_http_response_strict_transport_security_header_value"), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("routing_http_response_x_content_type_options_header_value"), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("routing_http_response_x_frame_options_header_value"), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("send_tcp_reset_on_idle_timeout_enabled"), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("ssl_policy"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
