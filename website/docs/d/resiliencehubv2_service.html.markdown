@@ -33,6 +33,13 @@ This data source exports the following attributes in addition to the arguments a
 
 * `associated_system` - Systems associated with the service. See [`associated_system` Block](#associated_system-block) below.
 * `description` - Description of the service.
+* `dev_ops_agent_connected_at` - Timestamp (RFC 3339) when the service successfully connected to the AWS DevOps Agent Agent Space.
+* `dev_ops_agent_operator_app_url` - URL of the DevOps Agent Operator App for the linked Agent Space. Present when `dev_ops_agent_status` is `CONNECTED`.
+* `dev_ops_agent_region` - AWS Region of the linked Agent Space.
+* `dev_ops_agent_space_arn` - ARN of the linked AWS DevOps Agent Agent Space.
+* `dev_ops_agent_space_id` - Identifier of the linked Agent Space.
+* `dev_ops_agent_status` - Connection status of the AWS DevOps Agent integration. Valid values: `CONNECTING`, `CONNECTED`, `DISCONNECTED`, `FAILED`.
+* `dev_ops_agent_status_reason` - Human-readable explanation of the current connection status. Present when `dev_ops_agent_status` is `FAILED`.
 * `kms_key_id` - KMS key ARN.
 * `name` - Name of the service.
 * `permission_model` - Permission model configuration. See [`permission_model` Block](#permission_model-block) below.
