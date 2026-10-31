@@ -259,6 +259,45 @@ func TestAccEKSCapability_ArgoCD_rbac(t *testing.T) {
 	})
 }
 
+func TestAccEKSCapability_ArgoCD_endpointPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var capability awstypes.Capability
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_capability.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapabilityDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapabilityConfig_argoCDEndpointPrefix(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCapabilityExists(ctx, t, resourceName, &capability),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.argo_cd.0.endpoint_prefix", rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccCapabilityImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
 func testAccCapabilityImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrClusterName, "capability_name")
 }
@@ -426,6 +465,32 @@ resource "aws_eks_capability" "test" {
   depends_on = [aws_iam_role_policy_attachment.capability]
 }
 `, rName))
+}
+
+func testAccCapabilityConfig_argoCDEndpointPrefix(rName, endpointPrefix string) string {
+	return acctest.ConfigCompose(testAccCapabilityConfig_base(rName), fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_eks_capability" "test" {
+  cluster_name              = aws_eks_cluster.test.name
+  capability_name           = %[1]q
+  type                      = "ARGOCD"
+  role_arn                  = aws_iam_role.capability.arn
+  delete_propagation_policy = "RETAIN"
+
+  configuration {
+    argo_cd {
+      aws_idc {
+        idc_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+      }
+
+      endpoint_prefix = %[2]q
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.capability]
+}
+`, rName, endpointPrefix))
 }
 
 func testAccCapabilityConfig_argoCDRBAC1(rName, userID, groupName string) string {
