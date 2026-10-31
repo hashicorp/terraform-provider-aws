@@ -89,6 +89,19 @@ func (r *topicResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			"partition_count": schema.Int64Attribute{
 				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplaceIf(
+						func(ctx context.Context, req planmodifier.Int64Request, resp *int64planmodifier.RequiresReplaceIfFuncResponse) {
+							if req.StateValue.IsUnknown() || req.StateValue.IsNull() ||
+								req.PlanValue.IsUnknown() || req.PlanValue.IsNull() {
+								return
+							}
+							resp.RequiresReplace = req.PlanValue.ValueInt64() < req.StateValue.ValueInt64()
+						},
+						"Force replacement if partition_count is reduced.",
+						"Force replacement if `partition_count` is reduced.",
+					),
+				},
 			},
 			"replication_factor": schema.Int64Attribute{
 				Required: true,
@@ -471,9 +484,7 @@ type topicResourceModel struct {
 	TopicName         types.String         `tfsdk:"name"`
 }
 
-var (
-	_ inttypes.ImportIDParser = topicImportID{}
-)
+var _ inttypes.ImportIDParser = topicImportID{}
 
 type topicImportID struct{}
 
@@ -482,7 +493,6 @@ func (topicImportID) Parse(id string) (string, map[string]any, error) {
 		topicIDParts = 2
 	)
 	parts, err := intflex.ExpandResourceId(id, topicIDParts, true)
-
 	if err != nil {
 		return "", nil, err
 	}
