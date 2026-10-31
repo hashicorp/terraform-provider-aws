@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -22,9 +23,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// managedPrefixListMaxEntriesPerRequest is the maximum number of entries accepted by
+// CreateManagedPrefixList's Entries and ModifyManagedPrefixList's AddEntries/RemoveEntries.
+const managedPrefixListMaxEntriesPerRequest = 100
 
 // @SDKResource("aws_ec2_managed_prefix_list", name="Managed Prefix List")
 // @Tags(identifierAttribute="id")
@@ -116,8 +122,13 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePrefixList),
 	}
 
+	// Entries in excess of the per-request maximum are added after creation.
+	var remainingEntries []awstypes.AddPrefixListEntry
+
 	if v, ok := d.GetOk("entry"); ok && v.(*schema.Set).Len() > 0 {
-		input.Entries = expandAddPrefixListEntries(v.(*schema.Set).List())
+		entries := expandAddPrefixListEntries(v.(*schema.Set).List())
+		n := min(len(entries), managedPrefixListMaxEntriesPerRequest)
+		input.Entries, remainingEntries = entries[:n], entries[n:]
 	}
 
 	output, err := conn.CreateManagedPrefixList(ctx, input)
@@ -128,8 +139,16 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.ToString(output.PrefixList.PrefixListId))
 
-	if _, err := waitManagedPrefixListCreated(ctx, conn, d.Id()); err != nil {
+	pl, err := waitManagedPrefixListCreated(ctx, conn, d.Id())
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Managed Prefix List (%s) create: %s", d.Id(), err)
+	}
+
+	if len(remainingEntries) > 0 {
+		if _, err := modifyManagedPrefixListEntries(ctx, conn, d.Id(), nil, pl.Version, remainingEntries, nil); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating EC2 Managed Prefix List (%s) entries: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceManagedPrefixListRead(ctx, d, meta)...)
@@ -199,29 +218,14 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "max_entries") {
-		input := &ec2.ModifyManagedPrefixListInput{
-			PrefixListId: aws.String(d.Id()),
-		}
-
-		input.PrefixListName = aws.String(d.Get(names.AttrName).(string))
-		currentVersion := int64(d.Get(names.AttrVersion).(int))
-		wait := false
+		name := aws.String(d.Get(names.AttrName).(string))
+		currentVersion := aws.Int64(int64(d.Get(names.AttrVersion).(int)))
 
 		oldAttr, newAttr := d.GetChange("entry")
 		os := oldAttr.(*schema.Set)
 		ns := newAttr.(*schema.Set)
-
-		if addEntries := ns.Difference(os); addEntries.Len() > 0 {
-			input.AddEntries = expandAddPrefixListEntries(addEntries.List())
-			input.CurrentVersion = aws.Int64(currentVersion)
-			wait = true
-		}
-
-		if removeEntries := os.Difference(ns); removeEntries.Len() > 0 {
-			input.RemoveEntries = expandRemovePrefixListEntries(removeEntries.List())
-			input.CurrentVersion = aws.Int64(currentVersion)
-			wait = true
-		}
+		addEntries := expandAddPrefixListEntries(ns.Difference(os).List())
+		removeEntries := expandRemovePrefixListEntries(os.Difference(ns).List())
 
 		// Prevent the following error on description-only updates:
 		//   InvalidParameterValue: Request cannot contain Cidr #.#.#.#/# in both AddPrefixListEntries and RemovePrefixListEntries
@@ -230,67 +234,42 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 		// Therefore it seems we must issue two ModifyManagedPrefixList calls,
 		// one with a collection of all description-only removals and the
 		// second one will add them all back.
-		if len(input.AddEntries) > 0 && len(input.RemoveEntries) > 0 {
-			descriptionOnlyRemovals := []awstypes.RemovePrefixListEntry{}
-			removals := []awstypes.RemovePrefixListEntry{}
-
-			for _, removeEntry := range input.RemoveEntries {
-				inAddAndRemove := false
-
-				for _, addEntry := range input.AddEntries {
-					if aws.ToString(addEntry.Cidr) == aws.ToString(removeEntry.Cidr) {
-						inAddAndRemove = true
-						break
-					}
-				}
-
-				if inAddAndRemove {
-					descriptionOnlyRemovals = append(descriptionOnlyRemovals, removeEntry)
-				} else {
-					removals = append(removals, removeEntry)
-				}
+		if len(addEntries) > 0 && len(removeEntries) > 0 {
+			addedCIDRs := tfslices.ApplyToAll(addEntries, func(v awstypes.AddPrefixListEntry) string {
+				return aws.ToString(v.Cidr)
+			})
+			isDescriptionOnlyRemoval := func(v awstypes.RemovePrefixListEntry) bool {
+				return slices.Contains(addedCIDRs, aws.ToString(v.Cidr))
 			}
 
-			if len(descriptionOnlyRemovals) > 0 {
-				removeInput := ec2.ModifyManagedPrefixListInput{
-					CurrentVersion: input.CurrentVersion,
-					PrefixListId:   aws.String(d.Id()),
-					RemoveEntries:  descriptionOnlyRemovals,
-				}
-				_, err := conn.ModifyManagedPrefixList(ctx, &removeInput)
+			if descriptionOnlyRemovals := tfslices.Filter(removeEntries, isDescriptionOnlyRemoval); len(descriptionOnlyRemovals) > 0 {
+				version, err := modifyManagedPrefixListEntries(ctx, conn, d.Id(), nil, currentVersion, nil, descriptionOnlyRemovals)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
 				}
 
-				managedPrefixList, err := waitManagedPrefixListModified(ctx, conn, d.Id())
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Managed Prefix List (%s) update: %s", d.Id(), err)
-				}
-
-				input.CurrentVersion = managedPrefixList.Version
-			}
-
-			if len(removals) > 0 {
-				input.RemoveEntries = removals
-			} else {
-				// Prevent this error if RemoveEntries is list with no elements after removals:
+				currentVersion = version
+				// Prevent this error if RemoveEntries is a list with no elements after removals:
 				//   InvalidRequest: The request received was invalid.
-				input.RemoveEntries = nil
+				removeEntries = tfslices.Filter(removeEntries, func(v awstypes.RemovePrefixListEntry) bool {
+					return !isDescriptionOnlyRemoval(v)
+				})
 			}
 		}
 
-		_, err := conn.ModifyManagedPrefixList(ctx, input)
+		if len(addEntries) == 0 && len(removeEntries) == 0 {
+			// Renaming a prefix list doesn't create a new version.
+			input := ec2.ModifyManagedPrefixListInput{
+				PrefixListId:   aws.String(d.Id()),
+				PrefixListName: name,
+			}
 
-		if err != nil {
+			if _, err := conn.ModifyManagedPrefixList(ctx, &input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
+			}
+		} else if _, err := modifyManagedPrefixListEntries(ctx, conn, d.Id(), name, currentVersion, addEntries, removeEntries); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
-		}
-
-		if wait {
-			if _, err := waitManagedPrefixListModified(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Managed Prefix List (%s) update: %s", d.Id(), err)
-			}
 		}
 	}
 
@@ -349,6 +328,48 @@ func updateMaxEntry(ctx context.Context, conn *ec2.Client, id string, maxEntries
 	}
 
 	return nil
+}
+
+// modifyManagedPrefixListEntries adds and removes prefix list entries, splitting the work
+// across as many requests as needed to stay within the API's per-request entry maximum.
+// Removals are paired with additions so that the number of entries never exceeds MaxEntries.
+// It returns the prefix list's version after the last modification.
+func modifyManagedPrefixListEntries(ctx context.Context, conn *ec2.Client, id string, name *string, currentVersion *int64, addEntries []awstypes.AddPrefixListEntry, removeEntries []awstypes.RemovePrefixListEntry) (*int64, error) {
+	addBatches := slices.Collect(slices.Chunk(addEntries, managedPrefixListMaxEntriesPerRequest))
+	removeBatches := slices.Collect(slices.Chunk(removeEntries, managedPrefixListMaxEntriesPerRequest))
+
+	for i := range max(len(addBatches), len(removeBatches)) {
+		input := ec2.ModifyManagedPrefixListInput{
+			CurrentVersion: currentVersion,
+			PrefixListId:   aws.String(id),
+		}
+
+		if i == 0 {
+			input.PrefixListName = name
+		}
+
+		if i < len(addBatches) {
+			input.AddEntries = addBatches[i]
+		}
+
+		if i < len(removeBatches) {
+			input.RemoveEntries = removeBatches[i]
+		}
+
+		if _, err := conn.ModifyManagedPrefixList(ctx, &input); err != nil {
+			return nil, err
+		}
+
+		pl, err := waitManagedPrefixListModified(ctx, conn, id)
+
+		if err != nil {
+			return nil, fmt.Errorf("waiting for EC2 Managed Prefix List (%s) update: %w", id, err)
+		}
+
+		currentVersion = pl.Version
+	}
+
+	return currentVersion, nil
 }
 
 func expandAddPrefixListEntry(tfMap map[string]any) awstypes.AddPrefixListEntry {
