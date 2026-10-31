@@ -10,13 +10,28 @@ description: |-
 
 Manages a Microsoft Azure Blob Storage Location within AWS DataSync.
 
-~> **NOTE:** The DataSync Agents must be available before creating this resource.
+~> **NOTE:** DataSync Agents are required when using agent-based configurations. For agentless configurations, omit the `agent_arns` argument.
 
 ## Example Usage
+
+### Agent-Based Configuration
 
 ```terraform
 resource "aws_datasync_location_azure_blob" "example" {
   agent_arns          = [aws_datasync_agent.example.arn]
+  authentication_type = "SAS"
+  container_url       = "https://myaccount.blob.core.windows.net/mycontainer"
+
+  sas_configuration {
+    token = "sp=r&st=2023-12-20T14:54:52Z&se=2023-12-20T22:54:52Z&spr=https&sv=2021-06-08&sr=c&sig=aBBKDWQvyuVcTPH9EBp%2FXTI9E%2F%2Fmq171%2BZU178wcwqU%3D"
+  }
+}
+```
+
+### Agentless Configuration
+
+```terraform
+resource "aws_datasync_location_azure_blob" "example" {
   authentication_type = "SAS"
   container_url       = "https://myaccount.blob.core.windows.net/mycontainer"
 
@@ -32,7 +47,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_tier` - (Optional) The access tier that you want your objects or files transferred into. Valid values: `HOT`, `COOL` and `ARCHIVE`. Default: `HOT`.
-* `agent_arns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
+* `agent_arns` - (Optional) A list of DataSync Agent ARNs with which this location will be associated. If omitted, the location will be created as an agentless configuration.
 * `authentication_type` - (Required) The authentication method DataSync uses to access your Azure Blob Storage. Valid values: `SAS`.
 * `blob_type` - (Optional) The type of blob that you want your objects or files to be when transferring them into Azure Blob Storage. Valid values: `BLOB`. Default: `BLOB`.
 * `container_url` - (Required) The URL of the Azure Blob Storage container involved in your transfer.
