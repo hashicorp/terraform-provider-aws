@@ -23,6 +23,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_sagemaker_app_image_config", sweepAppImagesConfig)
 	awsv2.Register("aws_sagemaker_app", sweepApps)
 	awsv2.Register("aws_sagemaker_code_repository", sweepCodeRepositories)
+	awsv2.Register("aws_sagemaker_compute_quota", sweepComputeQuotas)
 	awsv2.Register("aws_sagemaker_domain", sweepDomains,
 		"aws_efs_mount_target",
 		"aws_efs_file_system",
