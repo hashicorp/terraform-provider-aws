@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_transfer_server: Add `proxy_config.sftp_mode` to support SFTP PROXY protocol v2
+```

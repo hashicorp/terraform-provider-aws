@@ -1032,6 +1032,44 @@ func testAccServer_protocolDetails(t *testing.T) {
 	})
 }
 
+func testAccServer_proxyConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var s awstypes.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerConfig_proxyConfig(rName, awstypes.ProxyModeProxyProtocolV2Enforced),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, t, resourceName, &s),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.proxy_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.proxy_config.0.sftp_mode", string(awstypes.ProxyModeProxyProtocolV2Enforced)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccServerConfig_proxyConfig(rName, awstypes.ProxyModeNone),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, t, resourceName, &s),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.proxy_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_details.0.proxy_config.0.sftp_mode", string(awstypes.ProxyModeNone)),
+				),
+			},
+		},
+	})
+}
+
 func testAccServer_s3StorageOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var s awstypes.DescribedServer
@@ -2320,6 +2358,29 @@ resource "aws_transfer_server" "test" {
   }
 }
 `, passive_ip, set_stat_option, tls_session_resumption_mode)
+}
+
+func testAccServerConfig_proxyConfig(rName string, sftpMode awstypes.ProxyMode) string {
+	return acctest.ConfigCompose(testAccServerConfig_vpcBase(rName), fmt.Sprintf(`
+resource "aws_transfer_server" "test" {
+  endpoint_type = "VPC"
+
+  endpoint_details {
+    subnet_ids = [aws_subnet.test.id]
+    vpc_id     = aws_vpc.test.id
+  }
+
+  protocol_details {
+    proxy_config {
+      sftp_mode = %[2]q
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, sftpMode))
 }
 
 func testAccServerConfig_rootCA(domain string) string {
