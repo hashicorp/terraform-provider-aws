@@ -286,6 +286,36 @@ func TestAccRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 	})
 }
 
+func TestAccRDSClusterInstance_multipleInstancesParallelCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2, v3 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName1 := "aws_rds_cluster_instance.test.0"
+	resourceName2 := "aws_rds_cluster_instance.test.1"
+	resourceName3 := "aws_rds_cluster_instance.test.2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_multipleInstancesParallelCreate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, t, resourceName1, &v1),
+					testAccCheckClusterInstanceExists(ctx, t, resourceName2, &v2),
+					testAccCheckClusterInstanceExists(ctx, t, resourceName3, &v3),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSClusterInstance_az(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1269,6 +1299,29 @@ resource "aws_db_parameter_group" "test" {
     value        = "32767"
     apply_method = "pending-reboot"
   }
+}
+`, rName))
+}
+
+func testAccClusterInstanceConfig_multipleInstancesParallelCreate(rName string) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false), fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "mustbeeightcharacters"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  count = 3
+
+  identifier         = "${aws_rds_cluster.test.cluster_identifier}-${count.index}"
+  engine             = data.aws_rds_engine_version.default.engine
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
 `, rName))
 }
