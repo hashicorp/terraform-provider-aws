@@ -43,6 +43,9 @@ func resourceObjectCopy() *schema.Resource {
 		DeleteWithoutTimeout: resourceObjectCopyDelete,
 
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+			if err := validateObjectEventHold(d); err != nil {
+				return err
+			}
 			if ignoreProviderDefaultTags(ctx, d) {
 				return d.SetNew(names.AttrTagsAll, d.Get(names.AttrTags))
 			}
@@ -259,6 +262,27 @@ func resourceObjectCopy() *schema.Resource {
 					Optional:         true,
 					ValidateDiagFunc: enum.Validate[types.MetadataDirective](),
 				},
+				"object_lock_event_hold": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					RequiredWith:     []string{"object_lock_mode"},
+					ValidateDiagFunc: enum.Validate[types.ObjectLockEventHold](),
+				},
+				"object_lock_event_hold_duration_days": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validation.IntBetween(1, 36500),
+					ConflictsWith: []string{"object_lock_event_hold_duration_years"},
+				},
+				"object_lock_event_hold_duration_years": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validation.IntBetween(1, 100),
+					ConflictsWith: []string{"object_lock_event_hold_duration_days"},
+				},
 				"object_lock_legal_hold_status": {
 					Type:             schema.TypeString,
 					Optional:         true,
@@ -272,10 +296,13 @@ func resourceObjectCopy() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.ObjectLockMode](),
 				},
 				"object_lock_retain_until_date": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.IsRFC3339Time,
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					// The date is in the re-copy trigger list, so without this an
+					// advancing date under a hold would copy the object forever.
+					ValidateFunc:     validation.IsRFC3339Time,
+					DiffSuppressFunc: suppressEventHoldRetainUntilDrift,
 				},
 				"override_provider": {
 					Type:     schema.TypeList,
@@ -424,6 +451,9 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrKMSKeyID, output.SSEKMSKeyId)
 	d.Set("last_modified", flattenObjectDate(output.LastModified))
 	d.Set("metadata", output.Metadata)
+	d.Set("object_lock_event_hold", output.ObjectLockEventHold)
+	d.Set("object_lock_event_hold_duration_days", output.ObjectLockEventHoldDurationDays)
+	d.Set("object_lock_event_hold_duration_years", output.ObjectLockEventHoldDurationYears)
 	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", output.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenObjectDate(output.ObjectLockRetainUntilDate))
@@ -477,6 +507,9 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		names.AttrKMSKeyID,
 		"metadata",
 		"metadata_directive",
+		"object_lock_event_hold",
+		"object_lock_event_hold_duration_days",
+		"object_lock_event_hold_duration_years",
 		"object_lock_legal_hold_status",
 		"object_lock_mode",
 		"object_lock_retain_until_date",
@@ -646,6 +679,17 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		input.MetadataDirective = types.MetadataDirective(v.(string))
 	}
 
+	if v, ok := d.GetOk("object_lock_event_hold"); ok {
+		input.ObjectLockEventHold = types.ObjectLockEventHold(v.(string))
+	}
+
+	if input.ObjectLockEventHold == types.ObjectLockEventHoldOn {
+		if ehd := expandObjectEventHoldDuration(d); ehd != nil {
+			input.ObjectLockEventHoldDurationDays = ehd.Days
+			input.ObjectLockEventHoldDurationYears = ehd.Years
+		}
+	}
+
 	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
 		input.ObjectLockLegalHoldStatus = types.ObjectLockLegalHoldStatus(v.(string))
 	}
@@ -654,8 +698,14 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		input.ObjectLockMode = types.ObjectLockMode(v.(string))
 	}
 
-	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
-		input.ObjectLockRetainUntilDate = expandObjectDate(v.(string))
+	if v, state := configuredString(d.GetRawConfig(), "object_lock_retain_until_date"); state == attrSet {
+		input.ObjectLockRetainUntilDate = expandObjectDate(v)
+	} else if input.ObjectLockEventHold == "" {
+		// Outside an event hold the stored date is stable, so resending it is
+		// preserved. Under a hold it is a moving value and would be stale here.
+		if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
+			input.ObjectLockRetainUntilDate = expandObjectDate(v.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("request_payer"); ok {
