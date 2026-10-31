@@ -248,6 +248,11 @@ func resourceTrail() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(3, 128),
 				},
+				"recursive_logging": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
 				names.AttrS3BucketName: {
 					Type:     schema.TypeString,
 					Required: true,
@@ -306,6 +311,10 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v := d.GetRawConfig().GetAttr("recursive_logging"); v.IsKnown() && !v.IsNull() {
+		input.RecursiveLogging = aws.Bool(v.True())
 	}
 
 	if v, ok := d.GetOk(names.AttrS3KeyPrefix); ok {
@@ -392,6 +401,7 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("is_organization_trail", trail.IsOrganizationTrail)
 	d.Set(names.AttrKMSKeyID, trail.KmsKeyId)
 	d.Set(names.AttrName, trail.Name)
+	d.Set("recursive_logging", trail.RecursiveLogging)
 	d.Set(names.AttrS3BucketName, trail.S3BucketName)
 	d.Set(names.AttrS3KeyPrefix, trail.S3KeyPrefix)
 	d.Set(names.AttrSNSTopicARN, trail.SnsTopicARN)
@@ -490,6 +500,10 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		if d.HasChange(names.AttrKMSKeyID) {
 			input.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyID).(string))
+		}
+
+		if d.HasChange("recursive_logging") {
+			input.RecursiveLogging = aws.Bool(d.Get("recursive_logging").(bool))
 		}
 
 		if d.HasChange(names.AttrS3BucketName) {
