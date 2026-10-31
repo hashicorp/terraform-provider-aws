@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Read `enable_global_write_forwarding` and `enable_local_write_forwarding` from the API. This removes the diff after an import and lets Terraform find drift on these attributes
+```
