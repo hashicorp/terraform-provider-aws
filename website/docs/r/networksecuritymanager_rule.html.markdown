@@ -21,7 +21,7 @@ resource "aws_networksecuritymanager_rule" "example" {
   name          = "example"
   description   = "Allow requests that match no other rule"
   firewall_type = "WAF"
-  rule_type     = "CONFIGURATION"
+  type          = "CONFIGURATION"
   configuration = jsonencode({
     DefaultAction = {
       Allow = {}
@@ -34,10 +34,10 @@ resource "aws_networksecuritymanager_rule" "example" {
 
 The following arguments are required:
 
-* `configuration` - (Required) Firewall configuration of the rule, as a JSON document. The structure depends on `firewall_type` and `rule_type`. For an AWS WAF `CONFIGURATION` rule, provide a single web ACL setting, such as `DefaultAction` or `VisibilityConfig`. For an AWS WAF `INSPECTION` rule, provide an AWS WAF rule group. For details, see [Writing rule configurations](https://docs.aws.amazon.com/network-security-manager/latest/devguide/what-is.html) in the AWS Network Security Manager Developer Guide.
+* `configuration` - (Required) Firewall configuration of the rule, as a JSON document. The structure depends on `firewall_type` and `type`. For an AWS WAF `CONFIGURATION` rule, provide a single web ACL setting, such as `DefaultAction` or `VisibilityConfig`. For an AWS WAF `INSPECTION` rule, provide an AWS WAF rule group. For details, see [Writing rule configurations](https://docs.aws.amazon.com/network-security-manager/latest/devguide/what-is.html) in the AWS Network Security Manager Developer Guide.
 * `firewall_type` - (Required, Forces new resource) Firewall type of the rule. Valid values: `WAF`.
 * `name` - (Required, Forces new resource) Name of the rule.
-* `rule_type` - (Required) Type of the rule. `CONFIGURATION` rules contain firewall settings and `INSPECTION` rules contain rule groups. Valid values: `CONFIGURATION`, `INSPECTION`.
+* `type` - (Required) Type of the rule. `CONFIGURATION` rules contain firewall settings and `INSPECTION` rules contain rule groups. Valid values: `CONFIGURATION`, `INSPECTION`.
 
 The following arguments are optional:
 
