@@ -1792,7 +1792,11 @@ func steadyEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn s
 		case replicationTaskStatusRunning, replicationTaskStatusFailed, replicationTaskStatusReady, replicationTaskStatusStopped:
 			continue
 		case replicationTaskStatusCreating, replicationTaskStatusDeleting, replicationTaskStatusModifying, replicationTaskStatusStopping, replicationTaskStatusStarting:
-			if _, err := waitReplicationTaskSteady(ctx, conn, rtID); err != nil {
+			waitCtx, cancel := context.WithTimeout(ctx, endpointReplicationTaskTimeout)
+			_, err := waitReplicationTaskSteady(waitCtx, conn, rtID)
+			cancel()
+
+			if err != nil {
 				return err
 			}
 		}
@@ -1817,7 +1821,9 @@ func stopEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn str
 		rtID := aws.ToString(task.ReplicationTaskIdentifier)
 		switch aws.ToString(task.Status) {
 		case replicationTaskStatusRunning:
-			err := stopReplicationTask(ctx, conn, rtID)
+			stopCtx, cancel := context.WithTimeout(ctx, endpointReplicationTaskTimeout)
+			err := stopReplicationTask(stopCtx, conn, rtID)
+			cancel()
 
 			if err != nil {
 				return stoppedTasks, err
@@ -1861,7 +1867,11 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 			return fmt.Errorf("waiting until test connection succeeds: %w", err)
 		}
 
-		if err := startReplicationTask(ctx, conn, aws.ToString(task.ReplicationTaskIdentifier)); err != nil {
+		startCtx, cancel := context.WithTimeout(ctx, endpointReplicationTaskTimeout)
+		err = startReplicationTask(startCtx, conn, aws.ToString(task.ReplicationTaskIdentifier))
+		cancel()
+
+		if err != nil {
 			return fmt.Errorf("starting replication task: %w", err)
 		}
 	}
