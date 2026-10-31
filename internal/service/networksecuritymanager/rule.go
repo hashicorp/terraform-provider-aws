@@ -105,7 +105,6 @@ func (r *ruleResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input networksecuritymanager.CreateRuleInput
-	// The API's name, description and ARN fields are prefixed with "Rule".
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Rule")))
 	if resp.Diagnostics.HasError() {
 		return
