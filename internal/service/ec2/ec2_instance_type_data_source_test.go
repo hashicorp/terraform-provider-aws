@@ -94,6 +94,30 @@ func TestAccEC2InstanceTypeDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccEC2InstanceTypeDataSource_enaQueueCapabilities(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_ec2_instance_type.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceTypeDataSourceConfig_enaQueueCapabilities,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceType, "c6i.4xlarge"),
+					resource.TestCheckResourceAttr(dataSourceName, "network_cards.#", "1"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "network_cards.0.additional_flexible_network_interfaces"),
+					resource.TestCheckResourceAttr(dataSourceName, "network_cards.0.default_ena_queue_count_per_interface", "8"),
+					resource.TestCheckResourceAttr(dataSourceName, "network_cards.0.maximum_ena_queue_count", "64"),
+					resource.TestCheckResourceAttr(dataSourceName, "network_cards.0.maximum_ena_queue_count_per_interface", "16"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2InstanceTypeDataSource_metal(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type.test"
@@ -233,6 +257,12 @@ func TestAccEC2InstanceTypeDataSource_media_accelerator(t *testing.T) {
 		},
 	})
 }
+
+const testAccInstanceTypeDataSourceConfig_enaQueueCapabilities = `
+data "aws_ec2_instance_type" "test" {
+  instance_type = "c6i.4xlarge"
+}
+`
 
 const testAccInstanceTypeDataSourceConfig_basic = `
 data "aws_ec2_instance_type" "test" {
