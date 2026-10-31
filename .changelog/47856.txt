@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iam_role: Fix `force_detach_policies=false` incorrectly detaching externally managed policies before role deletion
+```
