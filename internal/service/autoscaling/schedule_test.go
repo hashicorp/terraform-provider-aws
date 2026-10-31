@@ -115,6 +115,38 @@ func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingSchedule_startTimeRecalculated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ScheduledUpdateGroupAction
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_schedule.test"
+	startTime1 := time.Now().UTC().Add(2 * time.Hour).Truncate(time.Minute)
+	startTime2 := startTime1.Add(time.Hour)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduleConfig_recurrenceWithStartTimeUnspecified(rName, startTime1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleStartTime(ctx, t, resourceName, startTime1),
+				),
+			},
+			{
+				Config: testAccScheduleConfig_recurrenceWithStartTimeUnspecified(rName, startTime2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScheduleExists(ctx, t, resourceName, &v),
+					testAccCheckScheduleStartTime(ctx, t, resourceName, startTime2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ScheduledUpdateGroupAction
@@ -215,6 +247,27 @@ func testAccCheckScheduleExists(ctx context.Context, t *testing.T, n string, v *
 	}
 }
 
+func testAccCheckScheduleStartTime(ctx context.Context, t *testing.T, n string, want time.Time) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).AutoScalingClient(ctx)
+		sa, err := tfautoscaling.FindScheduleByTwoPartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		if got := aws.ToTime(sa.StartTime); !got.Equal(want) {
+			return fmt.Errorf("expected start_time to be %s, got %s", want, got)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckScheduleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).AutoScalingClient(ctx)
@@ -277,6 +330,33 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
+func testAccScheduleConfig_launchTemplateBase(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  name               = %[1]q
+  min_size           = 0
+  max_size           = 0
+  force_delete       = true
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = "$Latest"
+  }
+}
+`, rName))
+}
+
 func testAccScheduleConfig_basic(rName1, rName2, startTime, endTime string) string {
 	return acctest.ConfigCompose(testAccScheduleConfig_base(rName1), fmt.Sprintf(`
 resource "aws_autoscaling_schedule" "test" {
@@ -302,7 +382,21 @@ resource "aws_autoscaling_schedule" "test" {
   time_zone              = "Pacific/Tahiti"
   autoscaling_group_name = aws_autoscaling_group.test.name
 }
+
 `, rName))
+}
+
+func testAccScheduleConfig_recurrenceWithStartTimeUnspecified(rName string, startTime time.Time) string {
+	return acctest.ConfigCompose(testAccScheduleConfig_launchTemplateBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_schedule" "test" {
+  scheduled_action_name  = %[1]q
+  min_size               = 0
+  max_size               = 1
+  desired_capacity       = 0
+  recurrence             = %[2]q
+  autoscaling_group_name = aws_autoscaling_group.test.name
+}
+`, rName, fmt.Sprintf("%d %d * * *", startTime.Minute(), startTime.Hour())))
 }
 
 func testAccScheduleConfig_zeroValues(rName, startTime, endTime string) string {
