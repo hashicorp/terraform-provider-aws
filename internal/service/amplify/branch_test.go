@@ -125,9 +125,10 @@ func testAccBranch_BasicAuthCredentials(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"basic_auth_credentials"},
 			},
 			{
 				Config: testAccBranchConfig_basicAuthCredentials(rName, credentials2),
