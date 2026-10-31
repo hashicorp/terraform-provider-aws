@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -732,6 +733,228 @@ func TestAccCloudWatchMetricAlarm_evaluationWindow(t *testing.T) {
 	})
 }
 
+func TestAccCloudWatchMetricAlarm_ActionConfiguration_allTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var alarm types.MetricAlarm
+	resourceName := "aws_cloudwatch_metric_alarm.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationAllTags(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.excluded_tag_keys.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationAllTags(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, false),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudWatchMetricAlarm_ActionConfiguration_tagKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	var alarm types.MetricAlarm
+	resourceName := "aws_cloudwatch_metric_alarm.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName, true, "Severity"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.excluded_tag_keys.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.*", "Team"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.*", "Severity"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationExcludedTagKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.excluded_tag_keys.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.excluded_tag_keys.*", "CostCenter"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationAllTags(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.excluded_tag_keys.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudWatchMetricAlarm_ActionConfiguration_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var alarm types.MetricAlarm
+	resourceName := "aws_cloudwatch_metric_alarm.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationAllTags(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, false),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName, true, "Severity"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, true),
+				),
+			},
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName, false, "Severity"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, false),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.*", "Team"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.*", "Severity"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName, false, "CostCenter"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, false),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.*", "Team"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.*", "CostCenter"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCloudWatchMetricAlarm_ActionConfiguration_omitted(t *testing.T) {
+	ctx := acctest.Context(t)
+	var alarm types.MetricAlarm
+	resourceName := "aws_cloudwatch_metric_alarm.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationNone(rName, 80),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, false),
+				),
+			},
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationAllTags(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, true),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationNone(rName, 80),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, true),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				// An unrelated update must not drop the existing setting.
+				Config: testAccMetricAlarmConfig_actionConfigurationNone(rName, 90),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, true),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "threshold", "90"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/47624.
 func TestAccCloudWatchMetricAlarm_metricNameUnknown(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -800,6 +1023,20 @@ func testAccCheckMetricAlarmExists(ctx context.Context, t *testing.T, n string, 
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckMetricAlarmTagsPropagationEnabled(v *types.MetricAlarm, want bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var got bool
+		if c := v.ActionConfiguration; c != nil && c.AlarmTagsPropagation != nil {
+			got = aws.ToBool(c.AlarmTagsPropagation.Enabled)
+		}
+		if got != want {
+			return fmt.Errorf("CloudWatch Metric Alarm %s alarm tags propagation enabled = %t, want %t", aws.ToString(v.AlarmName), got, want)
+		}
 
 		return nil
 	}
@@ -1410,6 +1647,126 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   }
 }
 `, rName, timezone)
+}
+
+func testAccMetricAlarmConfig_actionConfigurationNone(rName string, threshold int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name          = %[1]q
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 120
+  statistic           = "Average"
+  threshold           = %[2]d
+
+  dimensions = {
+    InstanceId = "i-abcd1234"
+  }
+
+  tags = {
+    Team       = "platform"
+    Severity   = "high"
+    CostCenter = "1234"
+  }
+}
+`, rName, threshold)
+}
+
+func testAccMetricAlarmConfig_actionConfigurationAllTags(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name          = %[1]q
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 120
+  statistic           = "Average"
+  threshold           = 80
+
+  dimensions = {
+    InstanceId = "i-abcd1234"
+  }
+
+  action_configuration {
+    alarm_tags_propagation {
+      enabled = %[2]t
+    }
+  }
+
+  tags = {
+    Team       = "platform"
+    Severity   = "high"
+    CostCenter = "1234"
+  }
+}
+`, rName, enabled)
+}
+
+func testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName string, enabled bool, tagKey string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name          = %[1]q
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 120
+  statistic           = "Average"
+  threshold           = 80
+
+  dimensions = {
+    InstanceId = "i-abcd1234"
+  }
+
+  action_configuration {
+    alarm_tags_propagation {
+      enabled           = %[2]t
+      included_tag_keys = ["Team", "%[3]s"]
+    }
+  }
+
+  tags = {
+    Team       = "platform"
+    Severity   = "high"
+    CostCenter = "1234"
+  }
+}
+`, rName, enabled, tagKey)
+}
+
+func testAccMetricAlarmConfig_actionConfigurationExcludedTagKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name          = %[1]q
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 120
+  statistic           = "Average"
+  threshold           = 80
+
+  dimensions = {
+    InstanceId = "i-abcd1234"
+  }
+
+  action_configuration {
+    alarm_tags_propagation {
+      enabled           = true
+      excluded_tag_keys = ["CostCenter"]
+    }
+  }
+
+  tags = {
+    Team       = "platform"
+    Severity   = "high"
+    CostCenter = "1234"
+  }
+}
+`, rName)
 }
 
 func testAccMetricAlarmConfig_metricNameUnknown(rName string) string {
