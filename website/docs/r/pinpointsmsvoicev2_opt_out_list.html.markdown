@@ -35,14 +35,31 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import opt-out lists using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_pinpointsmsvoicev2_opt_out_list.example
-  id = "example-opt-out-list"
+  identity = {
+    name = "example-opt-out-list"
+  }
+}
+
+resource "aws_pinpointsmsvoicev2_opt_out_list" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the opt-out list.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 Using `terraform import`, import opt-out lists using the `name`. For example:
 
