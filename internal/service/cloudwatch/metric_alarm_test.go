@@ -6,6 +6,7 @@ package cloudwatch_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -444,6 +445,51 @@ func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TC(:0.5)"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCloudWatchMetricAlarm_metricQueryExpressionLength(t *testing.T) {
+	ctx := acctest.Context(t)
+	var alarm types.MetricAlarm
+	resourceName := "aws_cloudwatch_metric_alarm.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	expression1025 := testAccMetricAlarmExpressionOfLength(1025)
+	expression2048 := testAccMetricAlarmExpressionOfLength(2048)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricAlarmConfig_metricQueryExpression(rName, expression1025),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
+						names.AttrID:         "m1",
+						names.AttrExpression: expression1025,
+					}),
+				),
+			},
+			{
+				Config: testAccMetricAlarmConfig_metricQueryExpression(rName, expression2048),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
+						names.AttrID:         "m1",
+						names.AttrExpression: expression2048,
+					}),
+				),
+			},
+			{
+				Config:   testAccMetricAlarmConfig_metricQueryExpression(rName, expression2048),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -1058,6 +1104,33 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   }
 }
 `, rName)
+}
+
+// testAccMetricAlarmExpressionOfLength returns a valid Metrics Insights query of exactly n characters.
+func testAccMetricAlarmExpressionOfLength(n int) string {
+	const prefix = "SELECT MAX(MillisBehindLatest) FROM SCHEMA(\"foo\", Operation, ShardId) WHERE Operation = '"
+	const suffix = "'"
+	return prefix + strings.Repeat("a", n-len(prefix)-len(suffix)) + suffix
+}
+
+func testAccMetricAlarmConfig_metricQueryExpression(rName, expression string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name          = %[1]q
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 3
+  datapoints_to_alarm = 3
+  threshold           = 30000
+  treat_missing_data  = "breaching"
+
+  metric_query {
+    id          = "m1"
+    expression  = %[2]q
+    period      = 60
+    return_data = true
+  }
+}
+`, rName, expression)
 }
 
 func testAccMetricAlarmConfig_metricQueryExpressionQuery(rName string) string {
