@@ -410,6 +410,11 @@ func testAccRegisteredDomainConfig_contactsUpdated(domainName string) string {
 resource "aws_route53domains_registered_domain" "test" {
   domain_name = %[1]q
 
+  consent {
+	currency = "USD"
+	max_price = 1.00
+  }
+
   admin_contact {
     address_line_1    = "101 2nd St #700"
     city              = "San Francisco"
