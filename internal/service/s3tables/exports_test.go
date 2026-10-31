@@ -4,21 +4,23 @@
 package s3tables
 
 var (
-	ResourceNamespace              = newNamespaceResource
-	ResourceTable                  = newTableResource
-	ResourceTableBucket            = newTableBucketResource
-	ResourceTableBucketPolicy      = newTableBucketPolicyResource
-	ResourceTableBucketReplication = newTableBucketReplicationResource
-	ResourceTablePolicy            = newTablePolicyResource
-	ResourceTableReplication       = newTableReplicationResource
+	ResourceNamespace                       = newNamespaceResource
+	ResourceTable                           = newTableResource
+	ResourceTableBucket                     = newTableBucketResource
+	ResourceTableBucketMetricsConfiguration = newTableBucketMetricsConfigurationResource
+	ResourceTableBucketPolicy               = newTableBucketPolicyResource
+	ResourceTableBucketReplication          = newTableBucketReplicationResource
+	ResourceTablePolicy                     = newTablePolicyResource
+	ResourceTableReplication                = newTableReplicationResource
 
-	FindNamespaceByTwoPartKey       = findNamespaceByTwoPartKey
-	FindTableByThreePartKey         = findTableByThreePartKey
-	FindTableBucketByARN            = findTableBucketByARN
-	FindTableBucketPolicyByARN      = findTableBucketPolicyByARN
-	FindTableBucketReplicationByARN = findTableBucketReplicationByARN
-	FindTablePolicyByThreePartKey   = findTablePolicyByThreePartKey
-	FindTableReplicationByARN       = findTableReplicationByARN
+	FindNamespaceByTwoPartKey                = findNamespaceByTwoPartKey
+	FindTableByThreePartKey                  = findTableByThreePartKey
+	FindTableBucketByARN                     = findTableBucketByARN
+	FindTableBucketMetricsConfigurationByARN = findTableBucketMetricsConfigurationByARN
+	FindTableBucketPolicyByARN               = findTableBucketPolicyByARN
+	FindTableBucketReplicationByARN          = findTableBucketReplicationByARN
+	FindTablePolicyByThreePartKey            = findTablePolicyByThreePartKey
+	FindTableReplicationByARN                = findTableReplicationByARN
 
 	TableIDFromTableARN = tableIDFromTableARN
 )
