@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,6 +17,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmquicksetup/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -78,7 +80,7 @@ func (r *configurationManagerResource) Schema(ctx context.Context, request resou
 		},
 		Blocks: map[string]schema.Block{
 			"configuration_definition": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[configurationDefinitionModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[configurationDefinitionModel](ctx, fwtypes.WithSemanticEqualityFunc(configurationDefinitionSemanticEqualityFunc)),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
@@ -123,6 +125,78 @@ func (r *configurationManagerResource) Schema(ctx context.Context, request resou
 			}),
 		},
 	}
+}
+
+func configurationDefinitionSemanticEqualityFunc(ctx context.Context, oldValue, newValue fwtypes.NestedCollectionValue[configurationDefinitionModel]) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	oldDefinitions, d := oldValue.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	newDefinitions, d := newValue.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	if len(oldDefinitions) != len(newDefinitions) {
+		return false, diags
+	}
+
+	for i, oldDefinition := range oldDefinitions {
+		newDefinition := newDefinitions[i]
+		if !oldDefinition.ID.Equal(newDefinition.ID) ||
+			!oldDefinition.LocalDeploymentAdministrationRoleARN.Equal(newDefinition.LocalDeploymentAdministrationRoleARN) ||
+			!oldDefinition.LocalDeploymentExecutionRoleName.Equal(newDefinition.LocalDeploymentExecutionRoleName) ||
+			!oldDefinition.Type.Equal(newDefinition.Type) ||
+			!oldDefinition.TypeVersion.Equal(newDefinition.TypeVersion) {
+			return false, diags
+		}
+
+		if oldDefinition.Parameters.IsNull() || oldDefinition.Parameters.IsUnknown() ||
+			newDefinition.Parameters.IsNull() || newDefinition.Parameters.IsUnknown() {
+			if !oldDefinition.Parameters.Equal(newDefinition.Parameters) {
+				return false, diags
+			}
+
+			continue
+		}
+
+		var oldParameters, newParameters map[string]string
+		diags.Append(oldDefinition.Parameters.ElementsAs(ctx, &oldParameters, false)...)
+		diags.Append(newDefinition.Parameters.ElementsAs(ctx, &newParameters, false)...)
+		if diags.HasError() {
+			return false, diags
+		}
+
+		if !configurationManagerParametersEqual(oldParameters, newParameters) {
+			return false, diags
+		}
+	}
+
+	return true, diags
+}
+
+func configurationManagerParametersEqual(oldParameters, newParameters map[string]string) bool {
+	if maps.Equal(oldParameters, newParameters) {
+		return true
+	}
+
+	oldParameters = maps.Clone(oldParameters)
+	newParameters = maps.Clone(newParameters)
+	for _, key := range []string{"OutputBucketRegion", "OutputS3BucketName", "OutputS3KeyPrefix"} {
+		if oldParameters[key] == "" {
+			delete(oldParameters, key)
+		}
+		if newParameters[key] == "" {
+			delete(newParameters, key)
+		}
+	}
+
+	return maps.Equal(oldParameters, newParameters)
 }
 
 func (r *configurationManagerResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
