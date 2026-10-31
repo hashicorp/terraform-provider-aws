@@ -164,6 +164,24 @@ resource "aws_lakeformation_permissions" "test" {
 }
 ```
 
+### Grant Permissions For An LF-Tag Expression
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_lakeformation_permissions" "example" {
+  principal = aws_iam_role.example.arn
+
+  permissions                   = ["DESCRIBE"]
+  permissions_with_grant_option = ["DESCRIBE"]
+
+  lf_tag_expression {
+    catalog_id = data.aws_caller_identity.current.account_id
+    name       = aws_lakeformation_lf_tag_expression.example.name
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -180,6 +198,7 @@ One of the following is required:
 * `data_location` - (Optional) Configuration block for a data location resource. Detailed below.
 * `database` - (Optional) Configuration block for a database resource. Detailed below.
 * `lf_tag` - (Optional) Configuration block for an LF-tag resource. Detailed below.
+* `lf_tag_expression` - (Optional) Configuration block for an LF-Tag expression resource. Detailed below.
 * `lf_tag_policy` - (Optional) Configuration block for an LF-tag policy resource. Detailed below.
 * `table` - (Optional) Configuration block for a table resource. Detailed below.
 * `table_with_columns` - (Optional) Configuration block for a table with columns resource. Detailed below.
@@ -223,6 +242,16 @@ The following arguments are required:
 
 * `key` - (Required) The key-name for the tag.
 * `values` - (Required) A list of possible values an attribute can take.
+
+The following argument is optional:
+
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
+
+### lf_tag_expression
+
+The following argument is required:
+
+* `name` - (Required) Name of the LF-Tag expression.
 
 The following argument is optional:
 
