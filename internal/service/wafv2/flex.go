@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -579,9 +581,19 @@ func expandByteMatchStatement(l []any) *awstypes.ByteMatchStatement {
 		FieldToMatch:                expandFieldToMatch(m["field_to_match"].([]any)),
 		PositionalConstraint:        awstypes.PositionalConstraint(m["positional_constraint"].(string)),
 		PreParseTextTransformations: expandPreParseTextTransformations(m[attrPreParseTextTransformation].(*schema.Set).List()),
-		SearchString:                []byte(m["search_string"].(string)),
+		SearchString:                expandSearchString(m),
 		TextTransformations:         expandTextTransformations(m[attrTextTransformation].(*schema.Set).List()),
 	}
+}
+
+func expandSearchString(m map[string]any) []byte {
+	if v, ok := m["search_string_base64"].(string); ok && v != "" {
+		// Validated at plan time; a value that was unknown then and is not base64 is left for the API to reject.
+		b, _ := inttypes.Base64Decode(v)
+		return b
+	}
+
+	return []byte(m["search_string"].(string))
 }
 
 func expandFieldToMatch(l []any) *awstypes.FieldToMatch {
@@ -2490,11 +2502,90 @@ func flattenByteMatchStatement(b *awstypes.ByteMatchStatement) any {
 		"field_to_match":               flattenFieldToMatch(b.FieldToMatch),
 		"positional_constraint":        b.PositionalConstraint,
 		attrPreParseTextTransformation: flattenPreParseTextTransformations(b.PreParseTextTransformations),
-		"search_string":                string(b.SearchString),
 		attrTextTransformation:         flattenTextTransformations(b.TextTransformations),
 	}
 
+	// A Terraform string holds only UTF-8 text. Any other value, such as the raw digest
+	// that the MD5 and SHA256 text transformations produce, is kept in base64.
+	if utf8.Valid(b.SearchString) {
+		m["search_string"] = string(b.SearchString)
+	} else {
+		m["search_string_base64"] = inttypes.Base64Encode(b.SearchString)
+	}
+
 	return []any{m}
+}
+
+// preferSearchStringBase64 reads a value back as search_string_base64 wherever prior (the rules
+// in state or plan) set search_string_base64 for the byte_match_statement in the same place: the
+// same rule name and the same path within the rule. A UTF-8 value configured in base64 then stays
+// in base64, while the same bytes set as search_string elsewhere stay in search_string.
+func preferSearchStringBase64(rules any, prior []any) {
+	paths := make(map[string]struct{})
+	walkRuleByteMatchStatements(prior, func(path string, m map[string]any) {
+		if v, ok := m["search_string_base64"].(string); ok && v != "" {
+			paths[path] = struct{}{}
+		}
+	})
+
+	if len(paths) == 0 {
+		return
+	}
+
+	walkRuleByteMatchStatements(rules, func(path string, m map[string]any) {
+		if _, ok := paths[path]; !ok {
+			return
+		}
+		if v, ok := m["search_string"].(string); ok && v != "" {
+			delete(m, "search_string")
+			m["search_string_base64"] = inttypes.Base64Encode([]byte(v))
+		}
+	})
+}
+
+// walkRuleByteMatchStatements calls f for every byte_match_statement block in rules, at any
+// nesting depth, with a path made of the rule name and the position of the block in the rule.
+// Rule names are unique within a web ACL or rule group.
+func walkRuleByteMatchStatements(rules any, f func(string, map[string]any)) {
+	var tfList []any
+	switch rules := rules.(type) {
+	case []any:
+		tfList = rules
+	case []map[string]any:
+		for _, m := range rules {
+			tfList = append(tfList, m)
+		}
+	}
+
+	for _, v := range tfList {
+		if rule, ok := v.(map[string]any); ok {
+			name, _ := rule[names.AttrName].(string)
+			walkByteMatchStatements(rule["statement"], name+"/statement", f)
+		}
+	}
+}
+
+func walkByteMatchStatements(v any, path string, f func(string, map[string]any)) {
+	switch v := v.(type) {
+	case []any:
+		for i, e := range v {
+			walkByteMatchStatements(e, path+"."+strconv.Itoa(i), f)
+		}
+	case map[string]any:
+		for k, e := range v {
+			if k != "byte_match_statement" {
+				walkByteMatchStatements(e, path+"."+k, f)
+				continue
+			}
+			if l, ok := e.([]any); ok {
+				for i, e := range l {
+					if m, ok := e.(map[string]any); ok {
+						f(path+"."+k+"."+strconv.Itoa(i), m)
+					}
+				}
+			}
+		}
+	}
 }
 
 func flattenFieldToMatch(f *awstypes.FieldToMatch) any {
