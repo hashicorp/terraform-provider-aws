@@ -129,6 +129,35 @@ func TestAccAthenaPreparedStatement_update(t *testing.T) {
 	})
 }
 
+func TestAccAthenaPreparedStatement_heredoc(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
+	resourceName := "aws_athena_prepared_statement.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AthenaEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPreparedStatementDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPreparedStatementConfig_heredoc(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPreparedStatementExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckPreparedStatementDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).AthenaClient(ctx)
@@ -196,6 +225,21 @@ resource "aws_athena_prepared_statement" "test" {
   workgroup       = aws_athena_workgroup.test.name
 }
 `, rName, condition))
+}
+
+func testAccPreparedStatementConfig_heredoc(rName string) string {
+	return acctest.ConfigCompose(testAccPreparedStatementConfig_base(rName), fmt.Sprintf(`
+resource "aws_athena_prepared_statement" "test" {
+  name            = %[1]q
+  query_statement = <<-EOT
+    SELECT
+      -- comment
+      *
+    FROM ${aws_athena_database.test.name} WHERE x = ?
+  EOT
+  workgroup       = aws_athena_workgroup.test.name
+}
+`, rName))
 }
 
 func testAccPreparedStatementConfig_update(rName, condition, description string) string {
