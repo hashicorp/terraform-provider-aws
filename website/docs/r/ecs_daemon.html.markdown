@@ -66,6 +66,7 @@ This resource supports the following arguments:
 
 * `capacity_provider_arns` - (Required) Set of capacity provider ARNs to use for the daemon.
 * `cluster_arn` - (Optional, Forces new resource) ARN of the ECS cluster where the daemon will run.
+* `critical` - (Optional) Whether the daemon is critical. When `true`, a daemon task failure stops the other tasks on the container instance and blocks instance registration. When `false`, a daemon task failure doesn't affect other tasks on the instance and doesn't block instance registration. Defaults to `true`.
 * `daemon_task_definition_arn` - (Required) ARN of the daemon task definition to use for the daemon. Drift is not detected on this attribute because the API may report a stale revision while a deployment is in progress.
 * `deployment_configuration` - (Optional) Configuration for daemon deployments. See [Deployment Configuration](#deployment_configuration-block) below.
 * `enable_ecs_managed_tags` - (Optional, Write-only) Whether to enable Amazon ECS managed tags for the tasks within the daemon.
