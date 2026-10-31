@@ -74,4 +74,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-You cannot import this resource.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight User using the AWS account ID, namespace, and user name separated by `/`. For example:
+
+```terraform
+import {
+  to = aws_quicksight_user.example
+  id = "123456789012/default/reader1"
+}
+```
+
+Using `terraform import`, import QuickSight User using the AWS account ID, namespace, and user name separated by `/`. For example:
+
+```console
+% terraform import aws_quicksight_user.example 123456789012/default/reader1
+```
