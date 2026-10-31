@@ -130,7 +130,7 @@ func resourceVaultPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 	_, err := conn.DeleteBackupVaultAccessPolicy(ctx, &input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, errMessageVaultNotFound) {
 		return diags
 	}
 
