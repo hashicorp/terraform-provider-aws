@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -103,6 +104,11 @@ func resourceApplication() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"application_level_digest_resolution": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
 							"image_uri": {
 								Type:     schema.TypeString,
 								Required: true,
@@ -448,6 +454,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("image_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.ImageConfiguration = expandImageConfiguration(v.([]any)[0].(map[string]any))
+		input.ImageConfiguration.ApplicationLevelDigestResolution = imageConfigDigestResolutionFromRawConfig(d)
 	}
 
 	if v, ok := d.GetOk("initial_capacity"); ok && v.(*schema.Set).Len() > 0 {
@@ -592,6 +599,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("image_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.ImageConfiguration = expandImageConfiguration(v.([]any)[0].(map[string]any))
+			input.ImageConfiguration.ApplicationLevelDigestResolution = imageConfigDigestResolutionFromRawConfig(d)
 		}
 
 		if v, ok := d.GetOk("initial_capacity"); ok && v.(*schema.Set).Len() > 0 {
@@ -978,6 +986,28 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 	return tfMap
 }
 
+// imageConfigDigestResolutionFromRawConfig returns the user-configured value of
+// application_level_digest_resolution, or nil if the user omitted the field.
+// TypeBool zero-value (false) is indistinguishable from "unset" in d.Get(), so
+// we consult the raw HCL config to determine whether the user explicitly wrote
+// the attribute. Passing nil to the API causes it to use its version-specific
+// default (true for EMR ≤7.13, false for EMR ≥7.14).
+func imageConfigDigestResolutionFromRawConfig(d *schema.ResourceData) *bool {
+	rawImgCfg := d.GetRawConfig().GetAttr("image_configuration")
+	if !rawImgCfg.IsKnown() || rawImgCfg.IsNull() || rawImgCfg.LengthInt() == 0 {
+		return nil
+	}
+	firstItem := rawImgCfg.Index(cty.NumberIntVal(0))
+	if !firstItem.IsKnown() || firstItem.IsNull() {
+		return nil
+	}
+	v := firstItem.GetAttr("application_level_digest_resolution")
+	if v.IsNull() || !v.IsKnown() {
+		return nil
+	}
+	return aws.Bool(v.True())
+}
+
 func expandImageConfiguration(tfMap map[string]any) *types.ImageConfigurationInput {
 	if tfMap == nil {
 		return nil
@@ -997,15 +1027,15 @@ func flattenImageConfiguration(apiObject *types.ImageConfiguration) []any {
 		return nil
 	}
 
-	var tfList []any
-
-	if v := apiObject.ImageUri; v != nil {
-		tfList = append(tfList, map[string]any{
-			"image_uri": aws.ToString(v),
-		})
+	tfMap := map[string]any{
+		"image_uri": aws.ToString(apiObject.ImageUri),
 	}
 
-	return tfList
+	if v := apiObject.ApplicationLevelDigestResolution; v != nil {
+		tfMap["application_level_digest_resolution"] = aws.ToBool(v)
+	}
+
+	return []any{tfMap}
 }
 
 func expandInitialCapacity(tfMap *schema.Set) map[string]types.InitialCapacityConfig {

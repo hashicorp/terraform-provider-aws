@@ -207,6 +207,7 @@ This resource supports the following arguments:
 
 #### image_configuration Arguments
 
+* `application_level_digest_resolution` - (Optional) Whether the custom image URI is resolved to a digest at application start time (`true`) or at workload submission time (`false`). When `true`, all workloads use the same image digest until the application restarts. Defaults to `true` for EMR releases 7.13 and earlier; defaults to `false` for EMR releases 7.14 and later.
 * `image_uri` - (Required) The image URI.
 
 #### initial_capacity_config Arguments
