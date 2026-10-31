@@ -9,6 +9,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -215,10 +217,19 @@ func resourceTrail() *schema.Resource {
 					Default:  true,
 				},
 				"insight_selector": {
-					Type:     schema.TypeSet,
+					Type:     schema.TypeList,
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"event_categories": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[types.SourceEventCategory](),
+								},
+							},
 							"insight_type": {
 								Type:             schema.TypeString,
 								Required:         true,
@@ -875,7 +886,7 @@ func flattenAdvancedEventSelectorFieldSelector(configured []types.AdvancedFieldS
 
 func setInsightSelectors(ctx context.Context, conn *cloudtrail.Client, d *schema.ResourceData) error {
 	input := &cloudtrail.PutInsightSelectorsInput{
-		InsightSelectors: expandInsightSelector(d.Get("insight_selector").(*schema.Set).List()),
+		InsightSelectors: expandInsightSelector(d.Get("insight_selector").([]any)),
 		TrailName:        aws.String(d.Id()),
 	}
 
@@ -895,6 +906,11 @@ func expandInsightSelector(configured []any) []types.InsightSelector {
 		is := types.InsightSelector{
 			InsightType: types.InsightType(data["insight_type"].(string)),
 		}
+
+		if v, ok := data["event_categories"].(*schema.Set); ok && v.Len() > 0 {
+			is.EventCategories = flex.ExpandStringyValueSet[types.SourceEventCategory](v)
+		}
+
 		insightSelectors = append(insightSelectors, is)
 	}
 
@@ -907,9 +923,16 @@ func flattenInsightSelector(configured []types.InsightSelector) []map[string]any
 	for _, raw := range configured {
 		item := make(map[string]any)
 		item["insight_type"] = raw.InsightType
+		item["event_categories"] = flex.FlattenStringyValueSet(raw.EventCategories)
 
 		insightSelectors = append(insightSelectors, item)
 	}
+
+	// The API does not guarantee an order. Sort so the list is stable and does not
+	// produce a diff on refresh.
+	slices.SortFunc(insightSelectors, func(a, b map[string]any) int {
+		return strings.Compare(string(a["insight_type"].(types.InsightType)), string(b["insight_type"].(types.InsightType)))
+	})
 
 	return insightSelectors
 }
