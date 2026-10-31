@@ -5,9 +5,20 @@ package ssoadmin_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsretry "github.com/aws/aws-sdk-go-v2/aws/retry"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	smithy "github.com/aws/smithy-go"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -39,6 +50,32 @@ func TestAccSSOAdminPermissionSet_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSOAdminPermissionSet_duplicateName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssoadmin_permission_set.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionSetConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSOAdminPermissionSetExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				Config:      testAccPermissionSetConfig_duplicateName(rName),
+				ExpectError: regexache.MustCompile(`ConflictException: PermissionSet with name .* already exists`),
 			},
 		},
 	})
@@ -337,6 +374,15 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
+func testAccPermissionSetConfig_duplicateName(rName string) string {
+	return testAccPermissionSetConfig_basic(rName) + fmt.Sprintf(`
+resource "aws_ssoadmin_permission_set" "duplicate" {
+  name         = %[1]q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+}
+`, rName)
+}
+
 func testAccPermissionSetConfig_updateDescription(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
@@ -468,4 +514,117 @@ resource "aws_ssoadmin_permission_set_inline_policy" "test" {
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
 }
 `, rName)
+}
+
+func TestPermissionSetRetryer(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name             string
+		errorCode        string
+		message          string
+		expectedAttempts int
+		expectedError    bool
+	}{
+		{
+			name:             "duplicate permission set",
+			errorCode:        "ConflictException",
+			message:          "PermissionSet with name test already exists.",
+			expectedAttempts: 1,
+			expectedError:    true,
+		},
+		{
+			name:             "permission set conflict without duplicate",
+			errorCode:        "ConflictException",
+			message:          "PermissionSet with name test is being updated.",
+			expectedAttempts: 2,
+		},
+		{
+			name:             "conflict for another resource",
+			errorCode:        "ConflictException",
+			message:          "Another resource already exists.",
+			expectedAttempts: 2,
+		},
+		{
+			name:             "throttling with duplicate message",
+			errorCode:        "ThrottlingException",
+			message:          "PermissionSet with name test already exists.",
+			expectedAttempts: 2,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			attempts := 0
+			cfg := aws.Config{
+				Region:      "us-east-1", //lintignore:AWSAT003
+				Credentials: aws.AnonymousCredentials{},
+				Retryer: func() aws.Retryer {
+					return awsretry.NewStandard(func(o *awsretry.StandardOptions) {
+						o.MaxAttempts = 2
+						o.Backoff = awsretry.BackoffDelayerFunc(func(int, error) (time.Duration, error) {
+							return 0, nil
+						})
+					})
+				},
+				HTTPClient: smithyhttp.ClientDoFunc(func(request *http.Request) (*http.Response, error) {
+					attempts++
+					statusCode := http.StatusOK
+					body := `{}`
+					headers := http.Header{"Content-Type": []string{"application/x-amz-json-1.1"}}
+					if attempts == 1 {
+						statusCode = http.StatusBadRequest
+						headers.Set("X-Amzn-ErrorType", testCase.errorCode)
+						body = fmt.Sprintf(`{"Message":%q}`, testCase.message)
+					}
+					return &http.Response{
+						StatusCode: statusCode,
+						Header:     headers,
+						Body:       io.NopCloser(strings.NewReader(body)),
+						Request:    request,
+					}, nil
+				}),
+			}
+			ctx := t.Context()
+			factory, ok := tfssoadmin.ServicePackage(ctx).(interface {
+				NewClient(context.Context, map[string]any) (*ssoadmin.Client, error)
+			})
+			if !ok {
+				t.Fatal("SSO Admin service package has no client factory")
+			}
+			conn, err := factory.NewClient(ctx, map[string]any{
+				"aws_sdkv2_config": &cfg,
+				names.AttrEndpoint: "",
+				names.AttrRegion:   cfg.Region,
+			})
+			if err != nil {
+				t.Fatalf("creating SSO Admin client: %s", err)
+			}
+
+			_, err = conn.CreatePermissionSet(ctx, &ssoadmin.CreatePermissionSetInput{
+				InstanceArn: aws.String("arn:aws:sso:::instance/ssoins-1234567890123456"), //lintignore:AWSAT005
+				Name:        aws.String("test"),
+			})
+
+			if testCase.expectedError {
+				apiErr, ok := errors.AsType[smithy.APIError](err)
+				if !ok {
+					t.Fatalf("expected API error, got %v", err)
+				}
+				if got, want := apiErr.ErrorCode(), testCase.errorCode; got != want {
+					t.Errorf("error code = %q, want %q", got, want)
+				}
+				if got, want := apiErr.ErrorMessage(), testCase.message; got != want {
+					t.Errorf("error message = %q, want %q", got, want)
+				}
+			} else if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			if got, want := attempts, testCase.expectedAttempts; got != want {
+				t.Errorf("attempts = %d, want %d", got, want)
+			}
+		})
+	}
 }
