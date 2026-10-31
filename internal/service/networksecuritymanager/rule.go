@@ -389,7 +389,7 @@ type ruleResourceModel struct {
 	Description   types.String                                  `tfsdk:"description"`
 	FirewallType  fwtypes.StringEnum[awstypes.RuleFirewallType] `tfsdk:"firewall_type"`
 	Name          types.String                                  `tfsdk:"name"`
-	RuleType      fwtypes.StringEnum[awstypes.RuleType]         `tfsdk:"rule_type"`
 	Tags          tftags.Map                                    `tfsdk:"tags"`
 	TagsAll       tftags.Map                                    `tfsdk:"tags_all"`
+	Type          fwtypes.StringEnum[awstypes.RuleType]         `tfsdk:"type"`
 }
