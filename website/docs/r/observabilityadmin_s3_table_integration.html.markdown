@@ -17,46 +17,57 @@ For more information, see the [CloudWatch Logs S3 Tables integration documentati
 ### Basic Integration with AES256 Encryption
 
 ```terraform
-resource "aws_iam_role" "example" {
-  name = "example-s3-table-integration"
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "logs.amazonaws.com"
-      }
-    }]
-  })
+data "aws_iam_policy_document" "cloudwatch_logs_s3_tables_integration_trust" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["logs.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:*"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "cloudwatch_logs_s3_tables_integration_permissions" {
+  statement {
+    effect    = "Allow"
+    actions   = ["logs:integrateWithS3Table"]
+    resources = ["arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+}
+
+resource "aws_iam_role" "example" {
+  name = "s3-table-integration-example"
+
+  assume_role_policy = data.aws_iam_policy_document.cloudwatch_logs_s3_tables_integration_trust.json
 }
 
 resource "aws_iam_role_policy" "example" {
   role = aws_iam_role.example.name
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3tables:CreateTableBucket",
-          "s3tables:ListTableBuckets",
-          "s3tables:GetTableBucket",
-          "s3tables:CreateNamespace",
-          "s3tables:GetNamespace",
-          "s3tables:ListNamespaces",
-          "s3tables:CreateTable",
-          "s3tables:GetTable",
-          "s3tables:ListTables",
-          "s3tables:PutTableData",
-          "s3tables:GetTableData",
-        ]
-        Resource = "*"
-      },
-    ]
-  })
+  policy = data.aws_iam_policy_document.cloudwatch_logs_s3_tables_integration_permissions.json
 }
 
 resource "aws_observabilityadmin_s3_table_integration" "example" {
@@ -161,9 +172,22 @@ import {
   id = "arn:aws:observabilityadmin:us-east-1:123456789012:s3-table-integration/example-id"
 }
 ```
+To retrieve the integration ARN (it is not shown in the AWS console), use the AWS CLI:
+
+```console
+$ aws observabilityadmin list-s3-table-integrations
+{
+    "IntegrationSummaries": [
+        {
+            "Arn": "arn:aws:observabilityadmin:us-east-1:123456789012:s3tableintegration/example-id",
+            "Status": "ACTIVE"
+        }
+    ]
+}
+```
 
 Using `terraform import`, import CloudWatch Observability Admin S3 Table Integrations using the `arn`. For example:
 
 ```console
-% terraform import aws_observabilityadmin_s3_table_integration.example arn:aws:observabilityadmin:us-east-1:123456789012:s3-table-integration/example-id
+% terraform import aws_observabilityadmin_s3_table_integration.example arn:aws:observabilityadmin:us-east-1:123456789012:s3tableintegration/example-id
 ```
