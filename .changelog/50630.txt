@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_wafv2_ip_set: Reduce planning time for large IP sets by hashing normalized CIDRs and comparing individual addresses. Equivalent IPv6 spellings are treated as one set member
+```
