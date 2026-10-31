@@ -139,6 +139,8 @@ This resource supports the following arguments:
 * `resources` - (Optional) Array of strings that either contain ARNs or match patterns of resources to assign to a backup plan.
 * `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan. See [below](#selection_tag-block) for details.
 
+~> **NOTE:** The `resources` and `selection_tag` arguments are evaluated using **OR** logic, not AND. A resource is included in the backup selection if it matches `resources` **or** `selection_tag`. When `resources` contains a wildcard such as `"*"` or a service-scoped wildcard like `"arn:aws:s3:::*"`, all matching resources are selected regardless of any `selection_tag` filters. To select resources by tags only, omit wildcard values from `resources` or use `not_resources` to exclude specific resources instead.
+
 ### `selection_tag` Block
 
 The `selection_tag` configuration block supports the following attributes:
