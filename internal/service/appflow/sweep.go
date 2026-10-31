@@ -36,6 +36,7 @@ func sweepInstanceProfile(ctx context.Context, client *conns.AWSClient) ([]sweep
 			d := r.Data(nil)
 			d.SetId(aws.ToString(flow.FlowArn))
 			d.Set(names.AttrName, flow.FlowName)
+			d.Set(names.AttrForceDelete, true)
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}

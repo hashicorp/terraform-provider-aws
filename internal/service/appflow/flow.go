@@ -56,6 +56,11 @@ func resourceFlow() *schema.Resource {
 					Optional:     true,
 					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\w!@#\-.?,\s]*`), "must contain only alphanumeric, underscore (_), exclamation point (!), at sign (@), number sign (#), hyphen (-), period (.), question mark (?), comma (,), and whitespace characters"),
 				},
+				names.AttrForceDelete: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
 				"destination_flow_config": {
 					Type:     schema.TypeList,
 					Required: true,
@@ -1449,7 +1454,8 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	log.Printf("[INFO] Deleting AppFlow Flow: %s", d.Get(names.AttrName))
 	input := appflow.DeleteFlowInput{
-		FlowName: aws.String(d.Get(names.AttrName).(string)),
+		FlowName:    aws.String(d.Get(names.AttrName).(string)),
+		ForceDelete: d.Get(names.AttrForceDelete).(bool),
 	}
 	_, err := conn.DeleteFlow(ctx, &input)
 
