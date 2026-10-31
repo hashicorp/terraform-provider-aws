@@ -5,7 +5,7 @@ resource "aws_networksecuritymanager_rule" "test" {
   name          = var.rName
   description   = var.description
   firewall_type = "WAF"
-  rule_type     = "CONFIGURATION"
+  type          = "CONFIGURATION"
   configuration = var.configuration
 }
 
