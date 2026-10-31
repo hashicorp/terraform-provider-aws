@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_user_pool_client: Fix `InvalidParameterException: Invalid range for token validity` when removing `token_validity_units` block from a resource that was configured with non-default units (e.g. `minutes`) and explicit validity integers
+```
