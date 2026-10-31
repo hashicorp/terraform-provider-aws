@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_pinpointsmsvoicev2_phone_number: Fix `number_type` to support SHORT_CODE and prevent creation attempts with clear error message
+```
