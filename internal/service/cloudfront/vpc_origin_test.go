@@ -45,6 +45,7 @@ func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_origin_endpoint_config.0.arn"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.http_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.https_port", "8443"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.ip_address_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.origin_protocol_policy", "http-only"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.origin_ssl_protocols.#", "1"),
@@ -117,6 +118,7 @@ func TestAccCloudFrontVPCOrigin_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_origin_endpoint_config.0.arn"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.http_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.https_port", "8443"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.ip_address_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.origin_protocol_policy", "http-only"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.origin_ssl_protocols.#", "1"),
@@ -135,11 +137,65 @@ func TestAccCloudFrontVPCOrigin_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_origin_endpoint_config.0.arn"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.http_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.https_port", "8443"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.ip_address_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.origin_protocol_policy", "https-only"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.origin_ssl_protocols.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.origin_ssl_protocols.0.items.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.origin_ssl_protocols.0.quantity", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontVPCOrigin_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpcOrigin awstypes.VpcOrigin
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_vpc_origin.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCOriginDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCOriginConfig_ipAddressType(rName, "dualstack"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCOriginExists(ctx, t, resourceName, &vpcOrigin),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.ip_address_type", "dualstack"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"etag"},
+			},
+			{
+				Config: testAccVPCOriginConfig_ipAddressType(rName, "ipv4"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCOriginExists(ctx, t, resourceName, &vpcOrigin),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.ip_address_type", "ipv4"),
+				),
+			},
+			{
+				Config: testAccVPCOriginConfig_ipAddressType(rName, "dualstack"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCOriginExists(ctx, t, resourceName, &vpcOrigin),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.ip_address_type", "dualstack"),
 				),
 			},
 		},
@@ -278,4 +334,57 @@ resource "aws_cloudfront_vpc_origin" "test" {
   }
 }
 `, rName))
+}
+
+func testAccVPCOriginConfig_ipAddressType(rName, ipAddressType string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  ip_address_type = "dualstack"
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_cloudfront_vpc_origin" "test" {
+  vpc_origin_endpoint_config {
+    name                   = %[1]q
+    arn                    = aws_lb.test.arn
+    http_port              = 80
+    https_port             = 443
+    ip_address_type        = %[2]q
+    origin_protocol_policy = "http-only"
+
+    origin_ssl_protocols {
+      items    = ["TLSv1.2"]
+      quantity = 1
+    }
+  }
+}
+`, rName, ipAddressType))
 }
