@@ -100,6 +100,36 @@ func TestAccVPCEndpointSubnetAssociation_multiple(t *testing.T) {
 	})
 }
 
+func TestAccVPCEndpointSubnetAssociation_multipleParallelDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName0 := "aws_vpc_endpoint_subnet_association.test.0"
+	resourceName1 := "aws_vpc_endpoint_subnet_association.test.1"
+	resourceName2 := "aws_vpc_endpoint_subnet_association.test.2"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointSubnetAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointSubnetAssociationConfig_multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, t, resourceName0),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, t, resourceName1),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, t, resourceName2),
+				),
+			},
+			// Apply the base config (no associations) to destroy all three in parallel.
+			// Without OperationInProgress retry this reliably fails on at least one association.
+			{
+				Config: testAccVPCEndpointSubnetAssociationConfig_base(rName),
+			},
+		},
+	})
+}
+
 func testAccCheckVPCEndpointSubnetAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
