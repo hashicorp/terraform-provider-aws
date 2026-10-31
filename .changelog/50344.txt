@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_ecr_repository: Add `fetch_most_recent_image_tags` argument to skip the `DescribeImages` call used to populate `most_recent_image_tags`
+```

@@ -41,6 +41,30 @@ func TestAccECRRepositoryDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccECRRepositoryDataSource_skipMostRecentImageTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecr_repository.test"
+	dataSourceName := "data.aws_ecr_repository.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryDataSourceConfig_skipMostRecentImageTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "repository_url", dataSourceName, "repository_url"),
+					resource.TestCheckResourceAttr(dataSourceName, "fetch_most_recent_image_tags", acctest.CtFalse),
+					resource.TestCheckResourceAttr(dataSourceName, "most_recent_image_tags.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECRRepositoryDataSource_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -127,6 +151,19 @@ resource "aws_ecr_repository" "test" {
 
 data "aws_ecr_repository" "test" {
   name = aws_ecr_repository.test.name
+}
+`, rName)
+}
+
+func testAccRepositoryDataSourceConfig_skipMostRecentImageTags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = %q
+}
+
+data "aws_ecr_repository" "test" {
+  name                         = aws_ecr_repository.test.name
+  fetch_most_recent_image_tags = false
 }
 `, rName)
 }
