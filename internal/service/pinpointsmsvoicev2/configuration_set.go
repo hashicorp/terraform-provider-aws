@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -106,6 +107,23 @@ func (r *configurationSetResource) Create(ctx context.Context, request resource.
 	// Set values for unknowns.
 	data.ConfigurationSetARN = fwflex.StringToFramework(ctx, output.ConfigurationSetArn)
 	data.setID()
+	response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+
+	// CreateConfigurationSet doesn't accept the defaults, so set them separately.
+	if !data.DefaultSenderID.IsNull() {
+		if err := setDefaultSenderID(ctx, conn, name, data.DefaultSenderID.ValueString()); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("setting default sender ID for End User Messaging SMS Configuration Set (%s) to %s", name, data.DefaultSenderID.ValueString()), err.Error())
+
+			return
+		}
+	}
+	if !data.DefaultMessageType.IsNull() {
+		if err := setDefaultMessageType(ctx, conn, name, data.DefaultMessageType.ValueEnum()); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("setting default message type for End User Messaging SMS Configuration Set (%s) to %s", name, data.DefaultMessageType.ValueString()), err.Error())
+
+			return
+		}
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
