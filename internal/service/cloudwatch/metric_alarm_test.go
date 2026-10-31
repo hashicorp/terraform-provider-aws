@@ -787,7 +787,7 @@ func TestAccCloudWatchMetricAlarm_ActionConfiguration_tagKeys(t *testing.T) {
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName),
+				Config: testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName, true, "Severity"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
@@ -851,6 +851,38 @@ func TestAccCloudWatchMetricAlarm_ActionConfiguration_disabled(t *testing.T) {
 					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, false),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName, true, "Severity"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, true),
+				),
+			},
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName, false, "Severity"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, false),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.*", "Team"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.*", "Severity"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName, false, "CostCenter"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					testAccCheckMetricAlarmTagsPropagationEnabled(&alarm, false),
+					resource.TestCheckResourceAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.*", "Team"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "action_configuration.0.alarm_tags_propagation.0.included_tag_keys.*", "CostCenter"),
 				),
 			},
 			{
@@ -1673,7 +1705,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName, enabled)
 }
 
-func testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName string) string {
+func testAccMetricAlarmConfig_actionConfigurationIncludedTagKeys(rName string, enabled bool, tagKey string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name          = %[1]q
@@ -1691,8 +1723,8 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 
   action_configuration {
     alarm_tags_propagation {
-      enabled           = true
-      included_tag_keys = ["Team", "Severity"]
+      enabled           = %[2]t
+      included_tag_keys = ["Team", "%[3]s"]
     }
   }
 
@@ -1702,7 +1734,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     CostCenter = "1234"
   }
 }
-`, rName)
+`, rName, enabled, tagKey)
 }
 
 func testAccMetricAlarmConfig_actionConfigurationExcludedTagKeys(rName string) string {

@@ -743,8 +743,8 @@ func flattenActionConfiguration(apiObject *awstypes.ActionConfiguration) []any {
 	tfMap := map[string]any{
 		"alarm_tags_propagation": []any{map[string]any{
 			names.AttrEnabled:   aws.ToBool(alarmTagsPropagation.Enabled),
-			"excluded_tag_keys": alarmTagsPropagation.ExcludedTagKeys,
-			"included_tag_keys": alarmTagsPropagation.IncludedTagKeys,
+			"excluded_tag_keys": flex.FlattenStringValueSet(alarmTagsPropagation.ExcludedTagKeys),
+			"included_tag_keys": flex.FlattenStringValueSet(alarmTagsPropagation.IncludedTagKeys),
 		}},
 	}
 
