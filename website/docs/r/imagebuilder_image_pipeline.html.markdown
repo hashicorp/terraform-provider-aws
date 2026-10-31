@@ -79,6 +79,7 @@ The following arguments are optional:
 * `execution_role` - (Optional) ARN of the service-linked role to be used by Image Builder to [execute workflows](https://docs.aws.amazon.com/imagebuilder/latest/userguide/manage-image-workflows.html).
 * `image_recipe_arn` - (Optional) ARN of the image recipe.
 * `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
+* `image_tags` - (Optional) Map of tags to apply to images produced by the pipeline.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `logging_configuration` - (Optional) Configuration block with logging configuration. Detailed below.
 * `schedule` - (Optional) Configuration block with schedule settings. Detailed below.

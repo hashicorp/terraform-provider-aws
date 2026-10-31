@@ -130,6 +130,7 @@ func resourceImagePipeline() *schema.Resource {
 						},
 					},
 				},
+				"image_tags": tftags.TagsSchema(),
 				"image_tests_configuration": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -299,6 +300,10 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("image_tags"); ok {
+		input.ImageTags = flex.ExpandStringValueMap(v.(map[string]any))
+	}
+
 	if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]any)[0].(map[string]any))
 	}
@@ -372,6 +377,7 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
+	d.Set("image_tags", imagePipeline.ImageTags)
 	if imagePipeline.ImageTestsConfiguration != nil {
 		if err := d.Set("image_tests_configuration", []any{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting image tests configuration: %s", err)
@@ -437,6 +443,10 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]any)[0].(map[string]any))
+		}
+
+		if v, ok := d.GetOk("image_tags"); ok {
+			input.ImageTags = flex.ExpandStringValueMap(v.(map[string]any))
 		}
 
 		if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
