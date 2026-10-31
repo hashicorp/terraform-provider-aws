@@ -13,6 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -139,6 +140,21 @@ func TestAccODBNetworkPeeringConnection_withARN(t *testing.T) {
 	vpcName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.vpcNamePrefix)
 	odbNetName := acctest.RandomWithPrefix(t, oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
 	resourceName := "aws_odb_network_peering_connection.test"
+	arnConfig := oracleDBNwkPeeringTestResource.basicConfigWithARN(vpcName, odbNetName, odbPeeringDisplayName)
+	arnTaggedConfig := strings.Replace(arnConfig, `"env" = "dev"`, `"env" = "prod"`, 1)
+	idConfig := oracleDBNwkPeeringTestResource.basicConfigWithID(vpcName, odbNetName, odbPeeringDisplayName)
+	idTaggedConfig := strings.Replace(idConfig, `"env" = "dev"`, `"env" = "prod"`, 1)
+	idTaggedTimeoutConfig := strings.Replace(idTaggedConfig, "  peer_network_id = aws_vpc.test.id\n", "  peer_network_id = aws_vpc.test.id\n  timeouts {\n    update = \"1h\"\n  }\n", 1)
+	differentNetworkConfig := oracleDBNwkPeeringTestResource.basicConfigWithNetworkReference(vpcName, odbNetName, odbPeeringDisplayName, "odb_network_id", `"odbnet_different"`)
+	arnAttributeConfig := oracleDBNwkPeeringTestResource.basicConfigWithARNAttribute(vpcName, odbNetName, odbPeeringDisplayName)
+	arnAttributeTaggedConfig := strings.Replace(arnAttributeConfig, `"env" = "dev"`, `"env" = "prod"`, 1)
+	var originalPeeringID string
+	checkPeeringIDUnchanged := resource.TestCheckResourceAttrWith(resourceName, names.AttrID, func(value string) error {
+		if value != originalPeeringID {
+			return fmt.Errorf("peering connection ID changed from %q to %q", originalPeeringID, value)
+		}
+		return nil
+	})
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -150,17 +166,105 @@ func TestAccODBNetworkPeeringConnection_withARN(t *testing.T) {
 		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: oracleDBNwkPeeringTestResource.basicConfigWithARN(vpcName, odbNetName, odbPeeringDisplayName),
+				Config: arnConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkPeeringConnectionExists(ctx, t, resourceName, &odbPeeringResource),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, func(value string) error {
+						originalPeeringID = value
+						return nil
+					}),
+					resource.TestCheckResourceAttrPair(resourceName, "odb_network_id", "aws_odb_network.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: arnConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config: idConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "odb_network_id", "aws_odb_network.test", names.AttrID),
+					checkPeeringIDUnchanged,
+				),
+			},
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
+			{
+				Config:             differentNetworkConfig,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				Config: arnTaggedConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "odb_network_id", "aws_odb_network.test", names.AttrARN),
+					checkPeeringIDUnchanged,
+					resource.TestCheckResourceAttr(resourceName, "tags.env", "prod"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.env", "prod"),
+				),
+			},
+			{
+				Config: arnTaggedConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				Config: arnAttributeTaggedConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"odb_network_id"},
+			},
+			{
+				Config: idTaggedTimeoutConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "odb_network_id", "aws_odb_network.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "timeouts.update", "1h"),
+					checkPeeringIDUnchanged,
+				),
+			},
+			{
+				Config: idTaggedTimeoutConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -539,6 +643,23 @@ resource "aws_odb_network_peering_connection" "test" {
 }
 
 func (oracleDBNwkPeeringResourceTest) basicConfigWithARN(vpcName, odbNetName, odbPeeringName string) string {
+	return oracleDBNwkPeeringTestResource.basicConfigWithNetworkReference(vpcName, odbNetName, odbPeeringName, "odb_network_id", "aws_odb_network.test.arn")
+}
+
+func (oracleDBNwkPeeringResourceTest) basicConfigWithID(vpcName, odbNetName, odbPeeringName string) string {
+	return oracleDBNwkPeeringTestResource.basicConfigWithNetworkReference(vpcName, odbNetName, odbPeeringName, "odb_network_id", "aws_odb_network.test.id")
+}
+
+func (oracleDBNwkPeeringResourceTest) basicConfigWithARNAttribute(vpcName, odbNetName, odbPeeringName string) string {
+	return oracleDBNwkPeeringTestResource.basicConfigWithNetworkReference(vpcName, odbNetName, odbPeeringName, "odb_network_arn", "aws_odb_network.test.arn")
+}
+
+func (oracleDBNwkPeeringResourceTest) basicConfigWithNetworkReference(vpcName, odbNetName, odbPeeringName, networkAttribute, networkReference string) string {
+	availabilityZoneID := "use1-az6"
+	if acctest.Region() == endpoints.UsWest2RegionID {
+		availabilityZoneID = "usw2-az3"
+	}
+
 	return fmt.Sprintf(`
 
 resource "aws_vpc" "test" {
@@ -550,7 +671,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_odb_network" "test" {
   display_name         = %[2]q
-  availability_zone_id = "use1-az6"
+  availability_zone_id = %[4]q
   client_subnet_cidr   = "10.2.0.0/24"
   backup_subnet_cidr   = "10.2.1.0/24"
   s3_access            = "DISABLED"
@@ -559,13 +680,13 @@ resource "aws_odb_network" "test" {
 
 resource "aws_odb_network_peering_connection" "test" {
   display_name    = %[3]q
-  odb_network_id  = aws_odb_network.test.arn
+  %[5]s           = %[6]s
   peer_network_id = aws_vpc.test.id
   tags = {
     "env" = "dev"
   }
 }
-`, vpcName, odbNetName, odbPeeringName)
+`, vpcName, odbNetName, odbPeeringName, availabilityZoneID, networkAttribute, networkReference)
 }
 
 func (oracleDBNwkPeeringResourceTest) basicConfigNoTag(vpcName, odbNetName, odbPeeringName string) string {
