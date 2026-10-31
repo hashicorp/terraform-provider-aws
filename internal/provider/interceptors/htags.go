@@ -101,6 +101,19 @@ func (h HTags) ListTags(ctx context.Context, sp conns.ServicePackage, c taggingA
 func (h HTags) UpdateTags(ctx context.Context, sp conns.ServicePackage, c taggingAWSClient, identifier string, oldTags, newTags any) error {
 	var err error
 
+	// Filter both sides so enabling the block cannot remove existing creation-only tags.
+	if tags, ok := tftags.FromContext(ctx); ok && tags.IgnoreConfig.HasIgnoreUpdates() {
+		oldTags = tftags.New(ctx, oldTags).IgnoreUpdatesConfig(tags.IgnoreConfig)
+		newTags = tftags.New(ctx, newTags).IgnoreUpdatesConfig(tags.IgnoreConfig)
+		// Tag propagation waiters must exclude the same tags as the update request.
+		ignore := *tags.IgnoreConfig
+		ignore.Keys = ignore.Keys.Merge(ignore.UpdateKeys)
+		ignore.KeyPrefixes = ignore.KeyPrefixes.Merge(ignore.UpdateKeyPrefixes)
+		ctx = tftags.NewContext(ctx, tags.DefaultConfig, &ignore, tags.TagPolicyConfig)
+		updateTags, _ := tftags.FromContext(ctx)
+		updateTags.TagsIn = tags.TagsIn
+	}
+
 	resourceType := h.unwrap().ResourceType()
 	if v, ok := sp.(tftags.ServiceTagUpdater); ok {
 		err = v.UpdateTags(ctx, c, identifier, oldTags, newTags)

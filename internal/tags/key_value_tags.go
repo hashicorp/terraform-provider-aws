@@ -65,6 +65,9 @@ type DefaultConfig struct {
 type IgnoreConfig struct {
 	Keys        KeyValueTags
 	KeyPrefixes KeyValueTags
+	// UpdateKeys and UpdateKeyPrefixes are applied on reads and updates, but not creation.
+	UpdateKeys        KeyValueTags
+	UpdateKeyPrefixes KeyValueTags
 }
 
 // TagPolicyConfig contains options related to organizational tagging policies.
@@ -149,6 +152,44 @@ func (tags KeyValueTags) IgnoreConfig(config *IgnoreConfig) KeyValueTags {
 	result = result.Ignore(config.Keys)
 
 	return result
+}
+
+// HasIgnoreUpdates reports whether any tags are managed only during creation.
+func (c *IgnoreConfig) HasIgnoreUpdates() bool {
+	return c != nil && (len(c.UpdateKeys) > 0 || len(c.UpdateKeyPrefixes) > 0)
+}
+
+// MatchesUpdate reports whether a key is configured to be managed only during creation.
+func (c *IgnoreConfig) MatchesUpdate(key string) bool {
+	if c == nil {
+		return false
+	}
+	if _, ok := c.UpdateKeys[key]; ok {
+		return true
+	}
+	for prefix := range c.UpdateKeyPrefixes {
+		if strings.HasPrefix(key, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+// PreserveUpdatesConfig preserves current AWS values for creation-only tags, including their absence.
+func (tags KeyValueTags) PreserveUpdatesConfig(config *IgnoreConfig, current KeyValueTags) KeyValueTags {
+	if !config.HasIgnoreUpdates() {
+		return tags
+	}
+	return tags.IgnoreUpdatesConfig(config).Merge(current.Removed(current.IgnoreUpdatesConfig(config)))
+}
+
+// IgnoreUpdatesConfig removes tags configured to be managed only during creation.
+func (tags KeyValueTags) IgnoreUpdatesConfig(config *IgnoreConfig) KeyValueTags {
+	if config == nil {
+		return tags
+	}
+
+	return tags.IgnorePrefixes(config.UpdateKeyPrefixes).Ignore(config.UpdateKeys)
 }
 
 // IgnoreElasticbeanstalk returns non-AWS and non-Elasticbeanstalk tag keys.

@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Add `ignore_tag_updates` configuration block to set default tags during resource creation without updating them on subsequent applies
+```

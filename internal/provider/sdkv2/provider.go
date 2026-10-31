@@ -126,6 +126,28 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Description: "URL of a proxy to use for HTTPS requests when accessing the AWS API. " +
 						"Can also be set using the `HTTPS_PROXY` or `https_proxy` environment variables.",
 				},
+				"ignore_tag_updates": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					MaxItems:    1,
+					Description: "Configuration block with settings to set resource tags during creation and ignore subsequent updates.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"keys": {
+								Type:        schema.TypeSet,
+								Optional:    true,
+								Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.StringIsNotEmpty},
+								Description: "Resource tag keys to manage only during creation.",
+							},
+							"key_prefixes": {
+								Type:        schema.TypeSet,
+								Optional:    true,
+								Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.StringIsNotEmpty},
+								Description: "Resource tag key prefixes to manage only during creation.",
+							},
+						},
+					},
+				},
 				"ignore_tags": {
 					Type:        schema.TypeList,
 					Optional:    true,
@@ -486,6 +508,10 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		config.IgnoreTagsConfig = expandIgnoreTags(ctx, nil)
 	}
 
+	if v, ok := d.GetOk("ignore_tag_updates"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		config.IgnoreTagsConfig = expandIgnoreTagUpdates(ctx, v.([]any)[0].(map[string]any), config.IgnoreTagsConfig)
+	}
+
 	tagCfg, dg := expandTagPolicyConfig(cty.GetAttrPath("tag_policy_compliance"), d.Get("tag_policy_compliance").(string))
 	diags = append(diags, dg...)
 	if dg.HasError() {
@@ -712,7 +738,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After | Finally,
 					why:         Create | Read | Update,
-					interceptor: resourceTransparentTagging(resource.Tags),
+					interceptor: resourceTransparentTagging(resource.Tags, r),
 				})
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before,
@@ -1134,6 +1160,19 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreC
 	}
 
 	return ignoreConfig
+}
+
+func expandIgnoreTagUpdates(ctx context.Context, tfMap map[string]any, config *tftags.IgnoreConfig) *tftags.IgnoreConfig {
+	if config == nil {
+		config = &tftags.IgnoreConfig{}
+	}
+	if v, ok := tfMap["keys"].(*schema.Set); ok {
+		config.UpdateKeys = tftags.New(ctx, v.List())
+	}
+	if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
+		config.UpdateKeyPrefixes = tftags.New(ctx, v.List())
+	}
+	return config
 }
 
 func expandTagPolicyConfig(path cty.Path, severity string) (*tftags.TagPolicyConfig, diag.Diagnostics) {
