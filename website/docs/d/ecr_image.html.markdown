@@ -39,3 +39,4 @@ This data source exports the following attributes in addition to the arguments a
 * `image_size_in_bytes` - Size, in bytes, of the image in the repository.
 * `image_tags` - List of tags associated with this image.
 * `image_uri` - The URI for the specific image version specified by `image_tag` or `image_digest`.
+* `image_uri_dualstack` - The dual-stack (IPv6-compatible) URI for the specific image version. Uses the `dkr-ecr.<region>.on.aws` endpoint format.

@@ -60,6 +60,10 @@ func dataSourceImage() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"image_uri_dualstack": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrMostRecent: {
 					Type:          schema.TypeBool,
 					Optional:      true,
@@ -159,6 +163,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("image_size_in_bytes", imageDetail.ImageSizeInBytes)
 	d.Set("image_tags", imageDetail.ImageTags)
 	d.Set("image_uri", fmt.Sprintf("%s@%s", aws.ToString(repository.RepositoryUri), aws.ToString(imageDetail.ImageDigest)))
+	d.Set("image_uri_dualstack", fmt.Sprintf("%s@%s", repositoryURIDualStack(aws.ToString(repository.RepositoryUri)), aws.ToString(imageDetail.ImageDigest)))
 	d.Set("registry_id", imageDetail.RegistryId)
 	d.Set(names.AttrRepositoryName, imageDetail.RepositoryName)
 

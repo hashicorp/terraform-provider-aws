@@ -98,6 +98,10 @@ func dataSourceRepository() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"repository_url_dualstack": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},
@@ -139,6 +143,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrName, repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
+	d.Set("repository_url_dualstack", repositoryURIDualStack(aws.ToString(repository.RepositoryUri)))
 
 	imageDetails, err := findImageDetails(ctx, conn, &ecr.DescribeImagesInput{
 		RepositoryName: repository.RepositoryName,
