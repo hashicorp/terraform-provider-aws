@@ -40,6 +40,7 @@ var (
 	FindConnectionLAGAssociation          = findConnectionLAGAssociation
 	FindGatewayAssociationByID            = findGatewayAssociationByID
 	FindGatewayAssociationProposalByID    = findGatewayAssociationProposalByID
+	FlattenCanonicalRouteFilterPrefixes   = flattenCanonicalRouteFilterPrefixes
 	FindGatewayByID                       = findGatewayByID
 	FindHostedConnectionByID              = findHostedConnectionByID
 	FindLagByID                           = findLagByID
