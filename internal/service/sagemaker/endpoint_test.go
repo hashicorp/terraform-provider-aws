@@ -90,6 +90,52 @@ func TestAccSageMakerEndpoint_endpointConfigName(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerEndpoint_retainAllVariantProperties(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "retain_all_variant_properties", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "exclude_retained_variant_properties.#", "0"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_retainAllVariantProperties(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "retain_all_variant_properties", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "exclude_retained_variant_properties.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "exclude_retained_variant_properties.*", map[string]string{
+						"variant_property_type": "DesiredInstanceCount",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// These are update-only arguments not returned by the API.
+				ImportStateVerifyIgnore: []string{"retain_all_variant_properties", "retain_deployment_config", "exclude_retained_variant_properties"},
+			},
+		},
+	})
+}
+
 func TestAccSageMakerEndpoint_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -621,6 +667,33 @@ resource "aws_sagemaker_endpoint_configuration" "test2" {
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test2.name
   name                 = %[1]q
+}
+`, rName))
+}
+
+func testAccEndpointConfig_retainAllVariantProperties(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_endpointConfiguration_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test2" {
+  name = "%[1]s-updated"
+
+  production_variants {
+    initial_instance_count = 1
+    initial_variant_weight = 1
+    instance_type          = "ml.t2.medium"
+    model_name             = aws_sagemaker_model.test.name
+    variant_name           = "variant-1"
+  }
+}
+
+resource "aws_sagemaker_endpoint" "test" {
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.test2.name
+  name                 = %[1]q
+
+  retain_all_variant_properties = true
+
+  exclude_retained_variant_properties {
+    variant_property_type = "DesiredInstanceCount"
+  }
 }
 `, rName))
 }
