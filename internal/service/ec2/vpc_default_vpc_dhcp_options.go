@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -83,7 +84,7 @@ func resourceDefaultVPCDHCPOptions() *schema.Resource {
 	}
 }
 
-func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -109,6 +110,16 @@ func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(aws.ToString(dhcpOptions.DhcpOptionsId))
+
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
+	newTags := keyValueTags(ctx, getTagsIn(ctx))
+	oldTags := keyValueTags(ctx, dhcpOptions.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
+
+	if !oldTags.Equal(newTags) {
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		}
+	}
 
 	return append(diags, resourceVPCDHCPOptionsUpdate(ctx, d, meta)...)
 }
