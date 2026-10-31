@@ -9,9 +9,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
@@ -27,6 +30,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+type serviceQuotaDefaultReader interface {
+	GetAWSDefaultServiceQuota(context.Context, *servicequotas.GetAWSDefaultServiceQuotaInput, ...func(*servicequotas.Options)) (*servicequotas.GetAWSDefaultServiceQuotaOutput, error)
+}
+
+type serviceQuotaReader interface {
+	GetServiceQuota(context.Context, *servicequotas.GetServiceQuotaInput, ...func(*servicequotas.Options)) (*servicequotas.GetServiceQuotaOutput, error)
+}
+
+type serviceQuotaRequestReader interface {
+	GetRequestedServiceQuotaChange(context.Context, *servicequotas.GetRequestedServiceQuotaChangeInput, ...func(*servicequotas.Options)) (*servicequotas.GetRequestedServiceQuotaChangeOutput, error)
+}
+
+type serviceQuotaRequestHistoryReader interface {
+	ListRequestedServiceQuotaChangeHistoryByQuota(context.Context, *servicequotas.ListRequestedServiceQuotaChangeHistoryByQuotaInput, ...func(*servicequotas.Options)) (*servicequotas.ListRequestedServiceQuotaChangeHistoryByQuotaOutput, error)
+}
+
+type serviceQuotaWaitClient interface {
+	serviceQuotaReader
+	serviceQuotaRequestReader
+}
+
+type serviceQuotaIncreaseClient interface {
+	serviceQuotaWaitClient
+	serviceQuotaRequestHistoryReader
+	RequestServiceQuotaIncrease(context.Context, *servicequotas.RequestServiceQuotaIncreaseInput, ...func(*servicequotas.Options)) (*servicequotas.RequestServiceQuotaIncreaseOutput, error)
+}
+
 // @SDKResource("aws_servicequotas_service_quota", name="Service Quota")
 func resourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
@@ -37,6 +67,11 @@ func resourceServiceQuota() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -136,6 +171,22 @@ func resourceServiceQuota() *schema.Resource {
 				names.AttrValue: {
 					Type:     schema.TypeFloat,
 					Required: true,
+					DiffSuppressFunc: func(_, old, new string, d *schema.ResourceData) bool {
+						if !d.Get("wait_for_fulfillment").(bool) {
+							return false
+						}
+						applied, err := strconv.ParseFloat(old, 64)
+						if err != nil {
+							return false
+						}
+						requested, err := strconv.ParseFloat(new, 64)
+						return err == nil && applied >= requested
+					},
+				},
+				"wait_for_fulfillment": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
 			}
 		},
@@ -145,6 +196,11 @@ func resourceServiceQuota() *schema.Resource {
 func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
+	if d.Get("wait_for_fulfillment").(bool) {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, d.Timeout(schema.TimeoutCreate))
+		defer cancel()
+	}
 
 	serviceCode, quotaCode := d.Get("service_code").(string), d.Get("quota_code").(string)
 
@@ -169,23 +225,17 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 	id := serviceQuotaCreateResourceID(serviceCode, quotaCode)
 	value := d.Get(names.AttrValue).(float64)
 
-	if value < quotaValue {
+	if value < quotaValue && !d.Get("wait_for_fulfillment").(bool) {
 		return sdkdiag.AppendErrorf(diags, "requesting Service Quotas Service Quota (%s) with value less than current", id)
 	}
 
 	if value > quotaValue {
-		input := servicequotas.RequestServiceQuotaIncreaseInput{
-			DesiredValue: aws.Float64(value),
-			QuotaCode:    aws.String(quotaCode),
-			ServiceCode:  aws.String(serviceCode),
-		}
-
-		output, err := conn.RequestServiceQuotaIncrease(ctx, &input)
-		if err != nil {
+		if err := increaseServiceQuota(ctx, conn, d, serviceCode, quotaCode, value, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "requesting Service Quotas Service Quota (%s) increase: %s", id, err)
 		}
-
-		d.Set("request_id", output.RequestedQuota.Id)
+	} else if d.Get("wait_for_fulfillment").(bool) {
+		d.Set("request_id", "")
+		d.Set("request_status", "")
 	}
 
 	d.SetId(id)
@@ -254,13 +304,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 		case err != nil:
 			return sdkdiag.AppendErrorf(diags, "reading Service Quotas Requested Service Quota Change (%s): %s", requestID, err)
 		default:
-			d.Set("request_status", output.Status)
-			switch output.Status {
-			case awstypes.RequestStatusApproved, awstypes.RequestStatusCaseClosed, awstypes.RequestStatusDenied:
-				d.Set("request_id", "")
-			case awstypes.RequestStatusCaseOpened, awstypes.RequestStatusPending:
-				d.Set(names.AttrValue, output.DesiredValue)
-			}
+			refreshServiceQuotaRequest(d, output)
 		}
 	}
 
@@ -270,31 +314,166 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
+	if d.Get("wait_for_fulfillment").(bool) {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, d.Timeout(schema.TimeoutUpdate))
+		defer cancel()
+	}
 
 	serviceCode, quotaCode, err := serviceQuotaParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := servicequotas.RequestServiceQuotaIncreaseInput{
-		DesiredValue: aws.Float64(d.Get(names.AttrValue).(float64)),
-		QuotaCode:    aws.String(quotaCode),
-		ServiceCode:  aws.String(serviceCode),
-	}
-
-	output, err := conn.RequestServiceQuotaIncrease(ctx, &input)
-
-	if errs.IsAErrorMessageContains[*awstypes.ResourceAlreadyExistsException](err, "Only one open service quota increase request is allowed per quota") {
-		return sdkdiag.AppendWarningf(diags, "resource service quota %s already exists", d.Id())
-	}
-
+	defaultQuota, err := findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Service Quotas default Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
+	}
+
+	quotaValue := aws.ToFloat64(defaultQuota.Value)
+
+	serviceQuota, err := findServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
+
+	switch {
+	case retry.NotFound(err):
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading Service Quotas Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
+	default:
+		quotaValue = aws.ToFloat64(serviceQuota.Value)
+	}
+
+	requestedValue := d.Get(names.AttrValue).(float64)
+
+	if requestedValue < quotaValue && !d.Get("wait_for_fulfillment").(bool) {
+		return sdkdiag.AppendErrorf(diags, "updating Service Quotas Service Quota (%s) with value (%f) less than current (%f)", d.Id(), requestedValue, quotaValue)
+	}
+
+	if requestedValue <= quotaValue {
+		tflog.Info(ctx, "Service Quota value already satisfied, skipping increase request", map[string]any{
+			"service_code":    serviceCode,
+			"quota_code":      quotaCode,
+			"current_value":   quotaValue,
+			"requested_value": requestedValue,
+		})
+		if d.Get("wait_for_fulfillment").(bool) {
+			d.Set("request_id", "")
+			d.Set("request_status", "")
+		}
+
+		return append(diags, resourceServiceQuotaRead(ctx, d, meta)...)
+	}
+
+	if err := increaseServiceQuota(ctx, conn, d, serviceCode, quotaCode, requestedValue, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if !d.Get("wait_for_fulfillment").(bool) && errs.IsAErrorMessageContains[*awstypes.ResourceAlreadyExistsException](err, "Only one open service quota increase request is allowed per quota") {
+			return sdkdiag.AppendWarningf(diags, "resource service quota %s already exists", d.Id())
+		}
 		return sdkdiag.AppendErrorf(diags, "requesting Service Quotas Service Quota (%s) increase: %s", d.Id(), err)
 	}
 
-	d.Set("request_id", output.RequestedQuota.Id)
-
 	return append(diags, resourceServiceQuotaRead(ctx, d, meta)...)
+}
+
+func refreshServiceQuotaRequest(d *schema.ResourceData, request *awstypes.RequestedServiceQuotaChange) {
+	d.Set("request_status", request.Status)
+	if d.Get("wait_for_fulfillment").(bool) {
+		switch request.Status {
+		case awstypes.RequestStatusDenied, awstypes.RequestStatusNotApproved, awstypes.RequestStatusInvalidRequest:
+			d.Set("request_id", "")
+		default:
+			// Refresh has the applied value, not the configured target. Apply can finish
+			// at a lower configured target, but refresh must not discard a pending wait.
+			if request.DesiredValue != nil && d.Get(names.AttrValue).(float64) >= aws.ToFloat64(request.DesiredValue) {
+				d.Set("request_id", "")
+			}
+		}
+		return
+	}
+
+	switch request.Status {
+	case awstypes.RequestStatusApproved, awstypes.RequestStatusCaseClosed, awstypes.RequestStatusDenied:
+		d.Set("request_id", "")
+	case awstypes.RequestStatusCaseOpened, awstypes.RequestStatusPending:
+		d.Set(names.AttrValue, request.DesiredValue)
+	}
+}
+
+func increaseServiceQuota(ctx context.Context, conn serviceQuotaIncreaseClient, d *schema.ResourceData, serviceCode, quotaCode string, value float64, timeout time.Duration) error {
+	wait := d.Get("wait_for_fulfillment").(bool)
+	var request *awstypes.RequestedServiceQuotaChange
+	if wait {
+		if requestID := d.Get("request_id").(string); requestID != "" {
+			var err error
+			request, err = findRequestedServiceQuotaChangeByID(ctx, conn, requestID)
+			if err != nil && !retry.NotFound(err) {
+				return smarterr.NewError(err)
+			}
+			if request != nil {
+				switch request.Status {
+				case awstypes.RequestStatusDenied, awstypes.RequestStatusNotApproved, awstypes.RequestStatusInvalidRequest:
+					request = nil
+				case awstypes.RequestStatusApproved, awstypes.RequestStatusCaseClosed:
+					if request.DesiredValue != nil && aws.ToFloat64(request.DesiredValue) < value {
+						request = nil
+					}
+				}
+			}
+			if request == nil {
+				d.Set("request_id", "")
+				d.Set("request_status", "")
+			}
+		}
+		if request == nil {
+			var err error
+			request, err = findServiceQuotaRequestByQuota(ctx, conn, serviceCode, quotaCode, value)
+			if err != nil && !retry.NotFound(err) {
+				return smarterr.NewError(err)
+			}
+		}
+	}
+
+	if request == nil {
+		input := servicequotas.RequestServiceQuotaIncreaseInput{
+			DesiredValue: aws.Float64(value),
+			QuotaCode:    aws.String(quotaCode),
+			ServiceCode:  aws.String(serviceCode),
+		}
+		output, err := conn.RequestServiceQuotaIncrease(ctx, &input)
+		if wait && errs.IsAErrorMessageContains[*awstypes.ResourceAlreadyExistsException](err, "Only one open service quota increase request is allowed per quota") {
+			request, err = findServiceQuotaRequestByQuota(ctx, conn, serviceCode, quotaCode, value)
+		} else if err == nil && output != nil {
+			request = output.RequestedQuota
+		}
+		if err != nil {
+			return smarterr.NewError(err)
+		}
+	}
+	if request == nil || aws.ToString(request.Id) == "" {
+		return smarterr.Errorf("response did not include a request ID")
+	}
+	if wait {
+		if code := aws.ToString(request.ServiceCode); code != "" && code != serviceCode {
+			return smarterr.Errorf("request (%s) belongs to another service", aws.ToString(request.Id))
+		}
+		if code := aws.ToString(request.QuotaCode); code != "" && code != quotaCode {
+			return smarterr.Errorf("request (%s) belongs to another quota", aws.ToString(request.Id))
+		}
+	}
+
+	d.SetId(serviceQuotaCreateResourceID(serviceCode, quotaCode))
+	d.Set("request_id", request.Id)
+	d.Set("request_status", request.Status)
+	if !wait {
+		return nil
+	}
+	if request.DesiredValue == nil || aws.ToFloat64(request.DesiredValue) < value {
+		return smarterr.Errorf("existing request (%s) does not request the configured quota value (%f)", aws.ToString(request.Id), value)
+	}
+	if err := waitServiceQuotaFulfilled(ctx, conn, serviceCode, quotaCode, aws.ToString(request.Id), value, timeout); err != nil {
+		return smarterr.Errorf("waiting for request (%s) to be fulfilled: %w", aws.ToString(request.Id), err)
+	}
+	d.Set("request_id", "")
+	d.Set("request_status", "")
+	return nil
 }
 
 const serviceQuotaResourceIDSeparator = "/"
@@ -316,7 +495,7 @@ func serviceQuotaParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaCode string) (*awstypes.ServiceQuota, error) {
+func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn serviceQuotaDefaultReader, serviceCode, quotaCode string) (*awstypes.ServiceQuota, error) {
 	input := servicequotas.GetAWSDefaultServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),
 		ServiceCode: aws.String(serviceCode),
@@ -324,9 +503,7 @@ func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn 
 	output, err := conn.GetAWSDefaultServiceQuota(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
-		}
+		return nil, &retry.NotFoundError{LastError: err}
 	}
 
 	if err != nil {
@@ -340,7 +517,7 @@ func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn 
 	return output.Quota, nil
 }
 
-func findServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaCode string) (*awstypes.ServiceQuota, error) {
+func findServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn serviceQuotaReader, serviceCode, quotaCode string) (*awstypes.ServiceQuota, error) {
 	input := servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),
 		ServiceCode: aws.String(serviceCode),
@@ -349,13 +526,11 @@ func findServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn *servic
 	return findServiceQuota(ctx, conn, &input)
 }
 
-func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *servicequotas.GetServiceQuotaInput) (*awstypes.ServiceQuota, error) {
+func findServiceQuota(ctx context.Context, conn serviceQuotaReader, input *servicequotas.GetServiceQuotaInput) (*awstypes.ServiceQuota, error) {
 	output, err := conn.GetServiceQuota(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
-		}
+		return nil, &retry.NotFoundError{LastError: err}
 	}
 
 	if err != nil {
@@ -377,7 +552,7 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 	return output.Quota, nil
 }
 
-func findRequestedServiceQuotaChangeByID(ctx context.Context, conn *servicequotas.Client, requestID string) (*awstypes.RequestedServiceQuotaChange, error) {
+func findRequestedServiceQuotaChangeByID(ctx context.Context, conn serviceQuotaRequestReader, requestID string) (*awstypes.RequestedServiceQuotaChange, error) {
 	input := servicequotas.GetRequestedServiceQuotaChangeInput{
 		RequestId: aws.String(requestID),
 	}
@@ -385,13 +560,11 @@ func findRequestedServiceQuotaChangeByID(ctx context.Context, conn *servicequota
 	return findRequestedServiceQuotaChange(ctx, conn, &input)
 }
 
-func findRequestedServiceQuotaChange(ctx context.Context, conn *servicequotas.Client, input *servicequotas.GetRequestedServiceQuotaChangeInput) (*awstypes.RequestedServiceQuotaChange, error) {
+func findRequestedServiceQuotaChange(ctx context.Context, conn serviceQuotaRequestReader, input *servicequotas.GetRequestedServiceQuotaChangeInput) (*awstypes.RequestedServiceQuotaChange, error) {
 	output, err := conn.GetRequestedServiceQuotaChange(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
-		}
+		return nil, &retry.NotFoundError{LastError: err}
 	}
 
 	if err != nil {
@@ -403,6 +576,59 @@ func findRequestedServiceQuotaChange(ctx context.Context, conn *servicequotas.Cl
 	}
 
 	return output.RequestedQuota, nil
+}
+
+func findServiceQuotaRequestByQuota(ctx context.Context, conn serviceQuotaRequestHistoryReader, serviceCode, quotaCode string, value float64) (*awstypes.RequestedServiceQuotaChange, error) {
+	input := servicequotas.ListRequestedServiceQuotaChangeHistoryByQuotaInput{
+		QuotaCode:   aws.String(quotaCode),
+		ServiceCode: aws.String(serviceCode),
+	}
+	var latest *awstypes.RequestedServiceQuotaChange
+	for {
+		if err := ctx.Err(); err != nil {
+			return nil, smarterr.NewError(err)
+		}
+		output, err := conn.ListRequestedServiceQuotaChangeHistoryByQuota(ctx, &input)
+
+		if errs.IsA[*awstypes.NoSuchResourceException](err) {
+			return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
+		}
+
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		if output == nil {
+			return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+		}
+
+		for i := range output.RequestedQuotas {
+			request := &output.RequestedQuotas[i]
+
+			switch request.Status {
+			case awstypes.RequestStatusCaseOpened, awstypes.RequestStatusPending:
+				return request, nil
+			case awstypes.RequestStatusApproved, awstypes.RequestStatusCaseClosed:
+				if aws.ToFloat64(request.DesiredValue) >= value && (latest == nil || aws.ToTime(request.Created).After(aws.ToTime(latest.Created))) {
+					latest = request
+				}
+			}
+		}
+
+		if output.NextToken == nil || aws.ToString(output.NextToken) == "" {
+			break
+		}
+
+		if aws.ToString(output.NextToken) == aws.ToString(input.NextToken) {
+			return nil, smarterr.Errorf("quota request history returned a repeated pagination token")
+		}
+		input.NextToken = output.NextToken
+	}
+	if latest != nil {
+		return latest, nil
+	}
+
+	return nil, smarterr.NewError(&retry.NotFoundError{})
 }
 
 func flattenMetricInfo(apiObject *awstypes.MetricInfo) []any {
@@ -432,4 +658,84 @@ func flattenMetricInfo(apiObject *awstypes.MetricInfo) []any {
 	})
 
 	return tfList
+}
+
+func statusServiceQuotaFulfillment(conn serviceQuotaWaitClient, serviceCode, quotaCode, requestID string, value float64) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		quota, state, err := statusServiceQuotaValue(conn, serviceCode, quotaCode, value)(ctx)
+		if err != nil || state == "updated" {
+			return quota, state, smarterr.NewError(err)
+		}
+		output, err := findRequestedServiceQuotaChangeByID(ctx, conn, requestID)
+
+		if retry.NotFound(err) {
+			return quota, "pending", nil
+		}
+
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		switch output.Status {
+		case awstypes.RequestStatusDenied:
+			return output, "", smarterr.Errorf("service quota increase request was denied")
+		case awstypes.RequestStatusNotApproved:
+			return output, "", smarterr.Errorf("service quota increase request was not approved")
+		case awstypes.RequestStatusInvalidRequest:
+			return output, "", smarterr.Errorf("service quota increase request was invalid")
+		case awstypes.RequestStatusPending, awstypes.RequestStatusCaseOpened, awstypes.RequestStatusApproved, awstypes.RequestStatusCaseClosed:
+		default:
+			return output, "", smarterr.Errorf("unexpected quota request status (%s)", output.Status)
+		}
+
+		return output, "pending", nil
+	}
+}
+
+func waitServiceQuotaFulfilled(ctx context.Context, conn serviceQuotaWaitClient, serviceCode, quotaCode, requestID string, requestedValue float64, timeout time.Duration) error {
+	waitCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{"pending"},
+		Target:     []string{"updated"},
+		Refresh:    statusServiceQuotaFulfillment(conn, serviceCode, quotaCode, requestID, requestedValue),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(waitCtx)
+	return smarterr.NewError(err)
+}
+
+func statusServiceQuotaValue(conn serviceQuotaReader, serviceCode, quotaCode string, targetValue float64) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		serviceQuota, err := findServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
+
+		if retry.NotFound(err) {
+			tflog.Debug(ctx, "Quota value not yet available", map[string]any{
+				"service_code": serviceCode,
+				"quota_code":   quotaCode,
+			})
+			return nil, "pending", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		currentValue := aws.ToFloat64(serviceQuota.Value)
+		tflog.Debug(ctx, "Checking quota value", map[string]any{
+			"service_code":  serviceCode,
+			"quota_code":    quotaCode,
+			"current_value": currentValue,
+			"target_value":  targetValue,
+		})
+
+		if currentValue >= targetValue {
+			return serviceQuota, "updated", nil
+		}
+
+		return serviceQuota, "pending", nil
+	}
 }
