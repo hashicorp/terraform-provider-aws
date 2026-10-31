@@ -92,8 +92,8 @@ The following arguments are optional:
 
 The `routing_configuration` configuration block supports the following arguments:
 
-* `agent_version` - (Optional) Version of the agent with which the alias is associated.
-* `provisioned_throughput` - (Optional) ARN of the Provisioned Throughput assigned to the agent alias.
+* `agent_version` - (Required) Version of the agent with which the alias is associated.
+* `provisioned_throughput` - (Required) ARN of the Provisioned Throughput assigned to the agent alias. Must be specified when `routing_configuration` is used.
 
 ## Attribute Reference
 
