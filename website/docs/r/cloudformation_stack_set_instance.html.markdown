@@ -81,14 +81,31 @@ resource "aws_cloudformation_stack_set_instance" "example" {
 }
 ```
 
+### Example Deployment to a Single Organizations Account
+
+A stack set with the `SERVICE_MANAGED` permission model does not accept `account_id` when creating stack instances. To target one account, name the account and an organizational unit that contains it, and filter with `INTERSECTION`. The resource ID records the account ID, so the instance is read, updated and deleted by account.
+
+```terraform
+resource "aws_cloudformation_stack_set_instance" "example" {
+  deployment_targets {
+    organizational_unit_ids = [aws_organizations_organizational_unit.example.id]
+    accounts                = [aws_organizations_account.example.id]
+    account_filter_type     = "INTERSECTION"
+  }
+
+  stack_set_instance_region = "us-east-1"
+  stack_set_name            = aws_cloudformation_stack_set.example.name
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `stack_set_name` - (Required) Name of the StackSet.
-* `account_id` - (Optional) Target AWS Account ID to create a Stack based on the StackSet. Defaults to current account.
+* `account_id` - (Optional) Target AWS Account ID to create a Stack based on the StackSet. Defaults to current account. Only valid for stack sets with the `SELF_MANAGED` permission model; for `SERVICE_MANAGED` stack sets use `deployment_targets` (see [Example Deployment to a Single Organizations Account](#example-deployment-to-a-single-organizations-account)).
 * `call_as` - (Optional) Specifies whether you are acting as an account administrator in the organization's management account or as a delegated administrator in a member account. Valid values: `SELF` (default), `DELEGATED_ADMIN`.
-* `deployment_targets` - (Optional) AWS Organizations accounts to which StackSets deploys. StackSets doesn't deploy stack instances to the organization management account, even if the organization management account is in your organization or in an OU in your organization. Drift detection is not possible for this argument. See [deployment_targets](#deployment_targets-argument-reference) below.
+* `deployment_targets` - (Optional) AWS Organizations accounts to which StackSets deploys. StackSets doesn't deploy stack instances to the organization management account, even if the organization management account is in your organization or in an OU in your organization. Drift detection is not possible for this argument. Changing it forces a new resource, except that after import (when it is not yet in state) a block that selects exactly the imported stack instance(s) is accepted without replacement. See [deployment_targets](#deployment_targets-argument-reference) below.
 * `operation_preferences` - (Optional) Preferences for how AWS CloudFormation performs a stack set operation.
 * `parameter_overrides` - (Optional) Key-value map of input parameters to override from the StackSet for this Instance.
 * `region` - (Optional, **Deprecated**) Target AWS Region to create a Stack based on the StackSet. Defaults to current region. Use `stack_set_instance_region` instead.
@@ -120,7 +137,7 @@ The `operation_preferences` configuration block supports the following arguments
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier for the resource. If `deployment_targets` is set, this is a comma-delimited string combining stack set name, organizational unit IDs (`/`-delimited), and region (ie. `mystack,ou-123/ou-456,us-east-1`). Otherwise, this is a comma-delimited string combining stack set name, AWS account ID, and region (ie. `mystack,123456789012,us-east-1`).
+* `id` - Unique identifier for the resource. If `deployment_targets` is set and does not select exactly one account (one entry in `accounts`, `account_filter_type` set to `INTERSECTION`, and no `accounts_url`), this is a comma-delimited string combining stack set name, organizational unit IDs (`/`-delimited), and region (ie. `mystack,ou-123/ou-456,us-east-1`). Otherwise, this is a comma-delimited string combining stack set name, AWS account ID, and region (ie. `mystack,123456789012,us-east-1`).
 * `organizational_unit_id` - Organization root ID or organizational unit (OU) ID in which the stack is deployed.
 * `stack_id` - Stack identifier.
 * `stack_instance_summaries` - List of stack instances created from an organizational unit deployment target. This will only be populated when `deployment_targets` is set. See [`stack_instance_summaries`](#stack_instance_summaries-attribute-reference).
