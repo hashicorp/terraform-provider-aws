@@ -39,7 +39,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networksecuritymanager;networksecuritymanager.GetRuleOutput")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheckRule")
-// @Testing(identityRegionOverrideTest=false)
 func newRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &ruleResource{}, nil
 }
