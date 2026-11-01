@@ -29,7 +29,6 @@ var checkRuleARN knownvalue.Check = tfknownvalue.RegionalARNRegexp("network-secu
 
 func TestAccNetworkSecurityManagerRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
@@ -48,7 +47,7 @@ func TestAccNetworkSecurityManagerRule_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -82,7 +81,6 @@ func TestAccNetworkSecurityManagerRule_basic(t *testing.T) {
 
 func TestAccNetworkSecurityManagerRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
@@ -101,7 +99,7 @@ func TestAccNetworkSecurityManagerRule_disappears(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworksecuritymanager.ResourceRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -120,7 +118,6 @@ func TestAccNetworkSecurityManagerRule_disappears(t *testing.T) {
 // string; the post-apply empty plan verifies that this is not reported as drift.
 func TestAccNetworkSecurityManagerRule_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 	const (
@@ -145,7 +142,7 @@ func TestAccNetworkSecurityManagerRule_update(t *testing.T) {
 					"configuration": config.StringVariable(configuration1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -165,7 +162,7 @@ func TestAccNetworkSecurityManagerRule_update(t *testing.T) {
 					"configuration": config.StringVariable(configuration2),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -186,7 +183,6 @@ func TestAccNetworkSecurityManagerRule_update(t *testing.T) {
 
 func TestAccNetworkSecurityManagerRule_descriptionRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 
@@ -207,7 +203,7 @@ func TestAccNetworkSecurityManagerRule_descriptionRemoved(t *testing.T) {
 					"configuration": config.StringVariable(`{"DefaultAction":{"Allow":{}}}`),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("initial")),
@@ -219,7 +215,7 @@ func TestAccNetworkSecurityManagerRule_descriptionRemoved(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -237,7 +233,7 @@ func TestAccNetworkSecurityManagerRule_descriptionRemoved(t *testing.T) {
 	})
 }
 
-func testAccCheckRuleExists(ctx context.Context, t *testing.T, n string, v *networksecuritymanager.GetRuleOutput) resource.TestCheckFunc {
+func testAccCheckRuleExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -246,14 +242,9 @@ func testAccCheckRuleExists(ctx context.Context, t *testing.T, n string, v *netw
 
 		conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
 
-		output, err := tfnetworksecuritymanager.FindRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
-		if err != nil {
-			return err
-		}
+		_, err := tfnetworksecuritymanager.FindRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-		*v = *output
-
-		return nil
+		return err
 	}
 }
 
