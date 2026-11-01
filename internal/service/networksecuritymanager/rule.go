@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -145,18 +146,9 @@ func (r *ruleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Rule")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state), smerr.ID, arn)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	if state.Configuration.IsNull() && out.Configuration != nil {
-		configuration, err := tfsmithy.DocumentToJSONString(out.Configuration)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
-			return
-		}
-		state.Configuration = fwtypes.NewSmithyJSONValue(configuration, document.NewLazyDocument)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
@@ -257,6 +249,28 @@ func findRuleByARN(ctx context.Context, conn *networksecuritymanager.Client, arn
 	}
 
 	return out, nil
+}
+
+func (r *ruleResource) flatten(ctx context.Context, out *networksecuritymanager.GetRuleOutput, data *ruleResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, out, data, fwflex.WithFieldNamePrefix("Rule")))
+	if diags.HasError() {
+		return diags
+	}
+
+	// The configuration is not flattened because the service returns its numbers as strings.
+	// Set it from the response when it is missing (for example, during import or listing).
+	if data.Configuration.IsNull() && out.Configuration != nil {
+		configuration, err := tfsmithy.DocumentToJSONString(out.Configuration)
+		if err != nil {
+			smerr.AddError(ctx, &diags, err)
+			return diags
+		}
+		data.Configuration = fwtypes.NewSmithyJSONValue(configuration, document.NewLazyDocument)
+	}
+
+	return diags
 }
 
 type ruleResourceModel struct {
