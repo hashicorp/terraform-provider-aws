@@ -8,7 +8,6 @@ package networksecuritymanager_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,7 +22,6 @@ import (
 func TestAccNetworkSecurityManagerRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -48,7 +46,7 @@ func TestAccNetworkSecurityManagerRule_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -94,7 +92,7 @@ func TestAccNetworkSecurityManagerRule_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -144,7 +142,7 @@ func TestAccNetworkSecurityManagerRule_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -187,7 +185,7 @@ func TestAccNetworkSecurityManagerRule_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -220,7 +218,6 @@ func TestAccNetworkSecurityManagerRule_tags(t *testing.T) {
 func TestAccNetworkSecurityManagerRule_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -245,7 +242,7 @@ func TestAccNetworkSecurityManagerRule_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -291,7 +288,6 @@ func TestAccNetworkSecurityManagerRule_Tags_null(t *testing.T) {
 func TestAccNetworkSecurityManagerRule_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -314,7 +310,7 @@ func TestAccNetworkSecurityManagerRule_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -350,7 +346,6 @@ func TestAccNetworkSecurityManagerRule_Tags_emptyMap(t *testing.T) {
 func TestAccNetworkSecurityManagerRule_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -373,7 +368,7 @@ func TestAccNetworkSecurityManagerRule_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -396,7 +391,7 @@ func TestAccNetworkSecurityManagerRule_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -439,7 +434,6 @@ func TestAccNetworkSecurityManagerRule_Tags_addOnUpdate(t *testing.T) {
 func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -464,7 +458,7 @@ func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_onCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -507,7 +501,7 @@ func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_onCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -540,7 +534,6 @@ func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_onCreate(t *testing.T) {
 func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -565,7 +558,7 @@ func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_OnUpdate_add(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -597,7 +590,7 @@ func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_OnUpdate_add(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -647,7 +640,7 @@ func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_OnUpdate_add(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -690,7 +683,6 @@ func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_OnUpdate_add(t *testing.T) 
 func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -715,7 +707,7 @@ func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_OnUpdate_replace(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -746,7 +738,7 @@ func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_OnUpdate_replace(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -789,7 +781,6 @@ func TestAccNetworkSecurityManagerRule_Tags_EmptyTag_OnUpdate_replace(t *testing
 func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -815,7 +806,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -861,7 +852,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -909,7 +900,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -951,7 +942,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -985,7 +976,6 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_providerOnly(t *testing.
 func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1013,7 +1003,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_nonOverlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1069,7 +1059,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_nonOverlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1124,7 +1114,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_nonOverlapping(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1158,7 +1148,6 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_nonOverlapping(t *testin
 func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1186,7 +1175,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_overlapping(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1241,7 +1230,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_overlapping(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1300,7 +1289,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_overlapping(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1347,7 +1336,6 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_overlapping(t *testing.T
 func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1372,7 +1360,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_updateToProviderOnly(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1405,7 +1393,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_updateToProviderOnly(t *
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1446,7 +1434,6 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_updateToProviderOnly(t *
 func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1472,7 +1459,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_updateToResourceOnly(t *
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1500,7 +1487,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_updateToResourceOnly(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1544,7 +1531,6 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_updateToResourceOnly(t *
 func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1572,7 +1558,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_emptyResourceTag(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1619,7 +1605,6 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_emptyResourceTag(t *test
 func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1645,7 +1630,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_emptyProviderOnlyTag(t *
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1686,7 +1671,6 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_emptyProviderOnlyTag(t *
 func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1714,7 +1698,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_nullOverlappingResourceT
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1764,7 +1748,6 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_nullOverlappingResourceT
 func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1792,7 +1775,7 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_nullNonOverlappingResour
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1844,7 +1827,6 @@ func TestAccNetworkSecurityManagerRule_Tags_DefaultTags_nullNonOverlappingResour
 func TestAccNetworkSecurityManagerRule_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1867,7 +1849,7 @@ func TestAccNetworkSecurityManagerRule_Tags_ComputedTag_onCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1908,7 +1890,6 @@ func TestAccNetworkSecurityManagerRule_Tags_ComputedTag_onCreate(t *testing.T) {
 func TestAccNetworkSecurityManagerRule_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -1933,7 +1914,7 @@ func TestAccNetworkSecurityManagerRule_Tags_ComputedTag_OnUpdate_add(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1965,7 +1946,7 @@ func TestAccNetworkSecurityManagerRule_Tags_ComputedTag_OnUpdate_add(t *testing.
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2014,7 +1995,6 @@ func TestAccNetworkSecurityManagerRule_Tags_ComputedTag_OnUpdate_add(t *testing.
 func TestAccNetworkSecurityManagerRule_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -2039,7 +2019,7 @@ func TestAccNetworkSecurityManagerRule_Tags_ComputedTag_OnUpdate_replace(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2069,7 +2049,7 @@ func TestAccNetworkSecurityManagerRule_Tags_ComputedTag_OnUpdate_replace(t *test
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2110,7 +2090,6 @@ func TestAccNetworkSecurityManagerRule_Tags_ComputedTag_OnUpdate_replace(t *test
 func TestAccNetworkSecurityManagerRule_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -2142,7 +2121,7 @@ func TestAccNetworkSecurityManagerRule_Tags_IgnoreTags_Overlap_defaultTag(t *tes
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2191,7 +2170,7 @@ func TestAccNetworkSecurityManagerRule_Tags_IgnoreTags_Overlap_defaultTag(t *tes
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2240,7 +2219,7 @@ func TestAccNetworkSecurityManagerRule_Tags_IgnoreTags_Overlap_defaultTag(t *tes
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2279,7 +2258,6 @@ func TestAccNetworkSecurityManagerRule_Tags_IgnoreTags_Overlap_defaultTag(t *tes
 func TestAccNetworkSecurityManagerRule_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -2309,7 +2287,7 @@ func TestAccNetworkSecurityManagerRule_Tags_IgnoreTags_Overlap_resourceTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2367,7 +2345,7 @@ func TestAccNetworkSecurityManagerRule_Tags_IgnoreTags_Overlap_resourceTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2424,7 +2402,7 @@ func TestAccNetworkSecurityManagerRule_Tags_IgnoreTags_Overlap_resourceTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

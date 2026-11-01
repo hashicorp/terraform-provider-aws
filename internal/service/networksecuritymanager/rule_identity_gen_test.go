@@ -8,7 +8,6 @@ package networksecuritymanager_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,7 +22,6 @@ import (
 func TestAccNetworkSecurityManagerRule_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetRuleOutput
 	resourceName := "aws_networksecuritymanager_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -46,7 +44,7 @@ func TestAccNetworkSecurityManagerRule_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v),
+					testAccCheckRuleExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
