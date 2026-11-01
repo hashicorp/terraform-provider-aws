@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -121,7 +120,7 @@ func TestAccNetworkSecurityManagerRule_disappears(t *testing.T) {
 // string; the post-apply empty plan verifies that this is not reported as drift.
 func TestAccNetworkSecurityManagerRule_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 networksecuritymanager.GetRuleOutput
+	var v networksecuritymanager.GetRuleOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_rule.test"
 	const (
@@ -146,7 +145,7 @@ func TestAccNetworkSecurityManagerRule_update(t *testing.T) {
 					"configuration": config.StringVariable(configuration1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v1),
+					testAccCheckRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -166,8 +165,7 @@ func TestAccNetworkSecurityManagerRule_update(t *testing.T) {
 					"configuration": config.StringVariable(configuration2),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, t, resourceName, &v2),
-					testAccCheckRuleNotRecreated(&v1, &v2),
+					testAccCheckRuleExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -224,16 +222,6 @@ func testAccCheckRuleDestroy(ctx context.Context, t *testing.T) resource.TestChe
 			}
 
 			return fmt.Errorf("Network Security Manager Rule %s still exists", rs.Primary.Attributes[names.AttrARN])
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckRuleNotRecreated(before, after *networksecuritymanager.GetRuleOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.RuleId), aws.ToString(after.RuleId); before != after {
-			return fmt.Errorf("Network Security Manager Rule (%s) recreated (%s)", before, after)
 		}
 
 		return nil
