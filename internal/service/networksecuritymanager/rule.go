@@ -37,7 +37,6 @@ import (
 // @FrameworkResource("aws_networksecuritymanager_rule", name="Rule")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networksecuritymanager;networksecuritymanager.GetRuleOutput")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheckRule")
 // @Testing(identityRegionOverrideTest=false)
