@@ -4,10 +4,7 @@
 package networksecuritymanager
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"math/big"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -16,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -31,6 +27,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -120,7 +117,7 @@ func (r *ruleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenRule(ctx, out, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Rule")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -149,9 +146,18 @@ func (r *ruleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenRule(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, fwflex.WithFieldNamePrefix("Rule")))
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if state.Configuration.IsNull() && out.Configuration != nil {
+		configuration, err := tfsmithy.DocumentToJSONString(out.Configuration)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+			return
+		}
+		state.Configuration = fwtypes.NewSmithyJSONValue(configuration, document.NewLazyDocument)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
@@ -201,7 +207,7 @@ func (r *ruleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flattenRule(ctx, out, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Rule")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -255,136 +261,10 @@ func findRuleByARN(ctx context.Context, conn *networksecuritymanager.Client, arn
 	return out, nil
 }
 
-// flattenRule flattens a CreateRule, GetRule or UpdateRule response into the model.
-//
-// The service returns every numeric value in a rule configuration as a string
-// (for example "ImmunityTime": 300 is read back as "ImmunityTime": "300") while
-// rejecting strings on input. When the returned configuration only differs from
-// the model's value in that way, the model's value is kept so that the planned
-// configuration does not appear to have changed.
-func flattenRule(ctx context.Context, apiObject any, data *ruleResourceModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
-	prior := data.Configuration
-
-	diags := fwflex.Flatten(ctx, apiObject, data, fwflex.WithFieldNamePrefix("Rule"))
-	if diags.HasError() {
-		return diags
-	}
-
-	if prior.IsNull() || prior.IsUnknown() || data.Configuration.IsNull() {
-		return diags
-	}
-
-	if ruleConfigurationEquivalent(prior.ValueString(), data.Configuration.ValueString()) {
-		data.Configuration = prior
-	}
-
-	return diags
-}
-
-// ruleConfigurationEquivalent reports whether two JSON documents are equal,
-// treating a JSON number and a string containing the same decimal number as equal.
-// Invalid JSON is never equivalent.
-func ruleConfigurationEquivalent(a, b string) bool {
-	va, err := decodeJSONUseNumber(a)
-	if err != nil {
-		return false
-	}
-	vb, err := decodeJSONUseNumber(b)
-	if err != nil {
-		return false
-	}
-
-	return jsonValuesEquivalent(va, vb)
-}
-
-func decodeJSONUseNumber(s string) (any, error) {
-	dec := json.NewDecoder(bytes.NewReader([]byte(s)))
-	dec.UseNumber()
-
-	var v any
-	if err := dec.Decode(&v); err != nil {
-		return nil, err
-	}
-
-	return v, nil
-}
-
-func jsonValuesEquivalent(a, b any) bool {
-	switch a := a.(type) {
-	case map[string]any:
-		b, ok := b.(map[string]any)
-		if !ok || len(a) != len(b) {
-			return false
-		}
-		for k, va := range a {
-			vb, ok := b[k]
-			if !ok || !jsonValuesEquivalent(va, vb) {
-				return false
-			}
-		}
-		return true
-
-	case []any:
-		b, ok := b.([]any)
-		if !ok || len(a) != len(b) {
-			return false
-		}
-		for i := range a {
-			if !jsonValuesEquivalent(a[i], b[i]) {
-				return false
-			}
-		}
-		return true
-
-	case json.Number:
-		return jsonNumberEquivalent(a, b)
-
-	case string:
-		if n, ok := b.(json.Number); ok {
-			return jsonNumberEquivalent(n, a)
-		}
-		b, ok := b.(string)
-		return ok && a == b
-
-	case bool:
-		b, ok := b.(bool)
-		return ok && a == b
-
-	case nil:
-		return b == nil
-	}
-
-	return false
-}
-
-// jsonNumberEquivalent reports whether v is a JSON number, or a string, with the same numeric value as n.
-func jsonNumberEquivalent(n json.Number, v any) bool {
-	var s string
-	switch v := v.(type) {
-	case json.Number:
-		s = v.String()
-	case string:
-		s = v
-	default:
-		return false
-	}
-
-	x, ok := new(big.Rat).SetString(n.String())
-	if !ok {
-		return false
-	}
-	y, ok := new(big.Rat).SetString(s)
-	if !ok {
-		return false
-	}
-
-	return x.Cmp(y) == 0
-}
-
 type ruleResourceModel struct {
 	framework.WithRegionModel
 	ARN           types.String                                  `tfsdk:"arn"`
-	Configuration fwtypes.SmithyJSON[document.Interface]        `tfsdk:"configuration"`
+	Configuration fwtypes.SmithyJSON[document.Interface]        `tfsdk:"configuration" autoflex:",noflatten"`
 	Description   types.String                                  `tfsdk:"description"`
 	FirewallType  fwtypes.StringEnum[awstypes.RuleFirewallType] `tfsdk:"firewall_type"`
 	Name          types.String                                  `tfsdk:"name"`
