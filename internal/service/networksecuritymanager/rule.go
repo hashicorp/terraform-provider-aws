@@ -196,7 +196,6 @@ func (r *ruleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		}
 
 		input.ClientToken = aws.String(create.UniqueId(ctx))
-		// Always publish so that a Terraform-managed rule never carries a dangling draft.
 		input.IsPublished = aws.Bool(true)
 		input.RuleIdentifier = aws.String(arn)
 		input.UpdateToken = current.UpdateToken
