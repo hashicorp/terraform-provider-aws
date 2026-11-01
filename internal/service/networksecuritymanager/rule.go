@@ -182,9 +182,14 @@ func (r *ruleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		}
 
 		var input networksecuritymanager.UpdateRuleInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Rule")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, append(diff.IgnoredFieldNamesOpts(), fwflex.WithFieldNamePrefix("Rule"))...))
 		if resp.Diagnostics.HasError() {
 			return
+		}
+
+		// An omitted description leaves the current one in place, so clear it explicitly.
+		if plan.Description.IsNull() && !state.Description.IsNull() {
+			input.RuleDescription = aws.String("")
 		}
 
 		input.ClientToken = aws.String(create.UniqueId(ctx))
@@ -198,10 +203,12 @@ func (r *ruleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
+		description := plan.Description
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Rule")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		plan.Description = normalizeDescription(description, plan.Description)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -255,10 +262,12 @@ func findRuleByARN(ctx context.Context, conn *networksecuritymanager.Client, arn
 func (r *ruleResource) flatten(ctx context.Context, out *networksecuritymanager.GetRuleOutput, data *ruleResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	description := data.Description
 	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, out, data, fwflex.WithFieldNamePrefix("Rule")))
 	if diags.HasError() {
 		return diags
 	}
+	data.Description = normalizeDescription(description, data.Description)
 
 	// The configuration is not flattened because the service returns its numbers as strings.
 	// Set it from the response when it is missing (for example, during import or listing).
@@ -272,6 +281,15 @@ func (r *ruleResource) flatten(ctx context.Context, out *networksecuritymanager.
 	}
 
 	return diags
+}
+
+// normalizeDescription keeps a null description null when the service returns
+// an empty one, which it does after the description has been cleared.
+func normalizeDescription(prior, current types.String) types.String {
+	if prior.IsNull() && current.ValueString() == "" {
+		return types.StringNull()
+	}
+	return current
 }
 
 type ruleResourceModel struct {
