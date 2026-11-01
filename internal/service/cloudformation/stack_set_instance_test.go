@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -255,6 +256,30 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, t, resourceName, stackInstanceSummaries),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackSetInstance_DeploymentTargets_accountIDServiceManaged(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationEndpointID, "organizations"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccStackSetInstanceConfig_accountIDServiceManaged(rName),
+				ExpectError: regexache.MustCompile(`uses the SERVICE_MANAGED permission model, which does not accept account_id`),
 			},
 		},
 	})
@@ -947,6 +972,17 @@ resource "aws_cloudformation_stack_set_instance" "test" {
     accounts                = [data.aws_organizations_organization.test.non_master_accounts[0].id]
   }
 
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
+}
+
+func testAccStackSetInstanceConfig_accountIDServiceManaged(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  account_id     = data.aws_organizations_organization.test.non_master_accounts[0].id
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
 `)
