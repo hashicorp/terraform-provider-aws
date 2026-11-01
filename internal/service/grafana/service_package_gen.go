@@ -49,6 +49,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Tags:     inttypes.ResourceTagsInline(),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  dataSourceWorkspaces,
+			TypeName: "aws_grafana_workspaces",
+			Name:     "Workspaces",
+		},
 	}
 }
 
