@@ -81,12 +81,12 @@ func (r *ruleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.RuleType](),
 				Required:   true,
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
