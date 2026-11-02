@@ -8,7 +8,6 @@ package servicecatalog_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -2446,8 +2445,5 @@ func TestAccServiceCatalogProduct_Tags_IgnoreTags_Overlap_resourceTag(t *testing
 }
 
 func expectFullProductResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrID,
-		ResourceType:        "Product",
-	}), knownValue)
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsTypeAndAttribute("Product", names.AttrID), knownValue)
 }

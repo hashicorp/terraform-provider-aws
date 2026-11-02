@@ -152,21 +152,21 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags to assign to the broker. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user` - (Optional) Configuration block for broker users. For `engine_type` of `RabbitMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 
-### configuration
+### `configuration` Block
 
 The following arguments are optional:
 
 * `id` - (Optional) Configuration ID.
 * `revision` - (Optional) Revision of the Configuration.
 
-### encryption_options
+### `encryption_options` Block
 
 The following arguments are optional:
 
 * `kms_key_id` - (Optional) ARN of KMS CMK to use for encryption at rest. Requires setting `use_aws_owned_key` to `false`. To perform drift detection when AWS-managed CMKs or customer-managed CMKs are in use, this value must be configured.
 * `use_aws_owned_key` - (Optional) Whether to enable an AWS-owned KMS CMK not in your account. Defaults to `true`. Setting to `false` without configuring `kms_key_id` creates an AWS-managed CMK aliased to `aws/mq` in your account.
 
-### ldap_server_metadata
+### `ldap_server_metadata` Block
 
 The following arguments are optional:
 
@@ -182,14 +182,14 @@ The following arguments are optional:
 * `user_search_matching` - (Optional) Search criteria for users.
 * `user_search_subtree` - (Optional) Whether the directory search scope is the entire sub-tree.
 
-### logs
+### `logs` Block
 
 The following arguments are optional:
 
 * `audit` - (Optional) Whether to enable audit logging. Only possible for `engine_type` of `ActiveMQ`. Logs user management actions via JMX or ActiveMQ Web Console. Defaults to `false`.
 * `general` - (Optional) Whether to enable general logging via CloudWatch. Defaults to `false`.
 
-### maintenance_window_start_time
+### `maintenance_window_start_time` Block
 
 The following arguments are required:
 
@@ -197,7 +197,7 @@ The following arguments are required:
 * `time_of_day` - (Required) Time, in 24-hour format, e.g., `02:00`.
 * `time_zone` - (Required) Time zone in either the Country/City format or the UTC offset format, e.g., `CET`.
 
-### user
+### `user` Block
 
 The following arguments are required:
 
@@ -216,28 +216,31 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the broker.
 * `id` - Unique ID that Amazon MQ generates for the broker.
-* `instances` - List of information about allocated brokers (both active & standby).
-    * `instances.0.console_url` - URL of the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) or the [RabbitMQ Management UI](https://www.rabbitmq.com/management.html#external-monitoring) depending on `engine_type`.
-    * `instances.0.ip_address` - IP Address of the broker.
-    * `instances.0.endpoints` - Broker's wire-level protocol endpoints referenceable e.g., as `instances.0.endpoints.0`. Known endpoints are returned in the deterministic order below, based on protocol prefix and port number; any additional endpoint types introduced in the future are appended afterward in the order returned by the API.
-        * For `ActiveMQ`:
-            * `instances.0.endpoints.0` - `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
-            * `instances.0.endpoints.1` - `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
-            * `instances.0.endpoints.2` - `stomp+ssl://broker-id.mq.us-west-2.amazonaws.com:61614`
-            * `instances.0.endpoints.3` - `mqtt+ssl://broker-id.mq.us-west-2.amazonaws.com:8883`
-            * `instances.0.endpoints.4` - `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
-        * For `RabbitMQ` prior to version 4.2:
-            * `instances.0.endpoints.0` - `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
-        * For `RabbitMQ` 4.2 and later, an additional [Prometheus metrics](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/rabbitmq-prometheus-metrics.html) endpoint is appended after the AMQP endpoint to keep `instances.0.endpoints.0` stable across versions:
-            * `instances.0.endpoints.0` - `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
-            * `instances.0.endpoints.1` - `https://broker-id.mq.us-west-2.amazonaws.com:16001`
+* `instances` - List of information about allocated brokers (both active & standby). See [`instances` Block](#instances-block) for details.
 * `pending_data_replication_mode` - Data replication mode that will be applied after reboot.
-* `shared_resources` - List of resources shared with the broker via `resource_share_arns`. Only populated for `engine_type` of `RabbitMQ`.
-    * `shared_resources.0.dns_names` - DNS names through which the broker reaches the shared resource.
-    * `shared_resources.0.resource_arn` - ARN of the shared resource.
-    * `shared_resources.0.status` - Status of the shared resource.
-    * `shared_resources.0.type` - Type of the shared resource, either `RESOURCE_SHARE` or `RESOURCE`.
+* `shared_resources` - List of resources shared with the broker via `resource_share_arns`. Only populated for `engine_type` of `RabbitMQ`. See [`shared_resources` Block](#shared_resources-block) for details.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### `instances` Block
+
+Known endpoints are returned in the deterministic order described below, based on protocol prefix and port number; any additional endpoint types introduced in the future are appended afterward in the order returned by the API.
+
+For `ActiveMQ`, `endpoints` are returned in this order: `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`, `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`, `stomp+ssl://broker-id.mq.us-west-2.amazonaws.com:61614`, `mqtt+ssl://broker-id.mq.us-west-2.amazonaws.com:8883`, then `wss://broker-id.mq.us-west-2.amazonaws.com:61619`.
+
+For `RabbitMQ` prior to version 4.2, a single endpoint is returned: `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`.
+
+For `RabbitMQ` 4.2 and later, an additional [Prometheus metrics](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/rabbitmq-prometheus-metrics.html) endpoint is appended after the AMQP endpoint to keep `instances.0.endpoints.0` stable across versions: `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`, then `https://broker-id.mq.us-west-2.amazonaws.com:16001`.
+
+* `console_url` - URL of the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) or the [RabbitMQ Management UI](https://www.rabbitmq.com/management.html#external-monitoring) depending on `engine_type`.
+* `endpoints` - Broker's wire-level protocol endpoints, referenceable e.g., as `instances.0.endpoints.0`.
+* `ip_address` - IP Address of the broker.
+
+### `shared_resources` Block
+
+* `dns_names` - DNS names through which the broker reaches the shared resource.
+* `resource_arn` - ARN of the shared resource.
+* `status` - Status of the shared resource.
+* `type` - Type of the shared resource, either `RESOURCE_SHARE` or `RESOURCE`.
 
 ## Timeouts
 
@@ -249,7 +252,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MQ Brokers using their broker id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MQ Brokers using their broker ID. For example:
 
 ```terraform
 import {
@@ -258,7 +261,7 @@ import {
 }
 ```
 
-Using `terraform import`, import MQ Brokers using their broker id. For example:
+Using `terraform import`, import MQ Brokers using their broker ID. For example:
 
 ```console
 % terraform import aws_mq_broker.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

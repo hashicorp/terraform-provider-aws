@@ -38,27 +38,27 @@ resource "aws_prometheus_query_logging_configuration" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `destination` - (Required) Configuration block for the logging destinations. See [`destinations`](#destinations).
-* `workspace_id` - (Required) The ID of the AMP workspace for which to configure query logging.
+* `destination` - (Required) Configuration block for the logging destinations. See [`destination` Block](#destination-block).
+* `workspace_id` - (Required) ID of the AMP workspace for which to configure query logging.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `destination`
+### `destination` Block
 
-* `cloudwatch_logs` - (Required) Configuration block for CloudWatch Logs destination. See [`cloudwatch_logs`](#cloudwatch_logs).
-* `filters` - (Required) A list of filter configurations that specify which logs should be sent to the destination. See [`filters`](#filters).
+* `cloudwatch_logs` - (Required) Configuration block for CloudWatch Logs destination. See [`cloudwatch_logs` Block](#cloudwatch_logs-block).
+* `filters` - (Required) List of filter configurations that specify which logs should be sent to the destination. See [`filters` Block](#filters-block).
 
-#### `cloudwatch_logs`
+#### `cloudwatch_logs` Block
 
-* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which query logs will be sent. The ARN must end with `:*`
+* `log_group_arn` - (Required) ARN of the CloudWatch log group to which query logs will be sent. The ARN must end with `:*`
 
-#### `filters`
+#### `filters` Block
 
-* `qsp_threshold` - (Required) The Query Samples Processed (QSP) threshold above which queries will be logged. Queries processing more samples than this threshold will be captured in logs.
+* `qsp_threshold` - (Required) Query Samples Processed (QSP) threshold above which queries will be logged. Queries processing more samples than this threshold will be captured in logs.
 
 ## Attribute Reference
 

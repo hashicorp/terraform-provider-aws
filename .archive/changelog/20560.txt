@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_config_organization_conformance_pack: Add configurable timeouts
-```

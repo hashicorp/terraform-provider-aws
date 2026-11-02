@@ -8,7 +8,7 @@ type finderOptions[T any] struct {
 	returnFirstMatch bool
 }
 
-func NewFinderOptions[T any](optFns ...FinderOptionsFunc[T]) finderOptions[T] {
+func newFinderOptions[T any](optFns ...FinderOptionsFunc[T]) finderOptions[T] {
 	var opts finderOptions[T]
 	for _, fn := range optFns {
 		fn(&opts)

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_connect_security_profile: add `permissions` attribute to read
-```

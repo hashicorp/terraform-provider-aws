@@ -153,6 +153,14 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"versioned_hub_content_arn": schema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
+				Computed:    true,
+				Description: "ARN of the hub content reference, including the version suffix.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -241,6 +249,7 @@ func (r *hubContentReferenceResource) flatten(ctx context.Context, output *sagem
 	data.HubContentArn = fwflex.StringToFrameworkARN(ctx, stripARNVersion(output.HubContentArn))
 	data.MinVersion = fwflex.StringToFramework(ctx, output.ReferenceMinVersion)
 	data.SageMakerPublicHubContentArn = fwflex.StringToFrameworkARN(ctx, stripARNVersion(output.SageMakerPublicHubContentArn))
+	data.VersionedHubContentARN = fwflex.StringToFrameworkARN(ctx, output.HubContentArn)
 
 	return diags
 }
@@ -355,12 +364,16 @@ func (hubContentReferenceImportID) Parse(id string) (string, map[string]any, err
 }
 
 func findHubContentByName(ctx context.Context, conn *sagemaker.Client, hubName, hubContentName string, contentType awstypes.HubContentType) (*sagemaker.DescribeHubContentOutput, error) {
-	input := &sagemaker.DescribeHubContentInput{
+	input := sagemaker.DescribeHubContentInput{
 		HubName:        aws.String(hubName),
 		HubContentName: aws.String(hubContentName),
 		HubContentType: contentType,
 	}
 
+	return findHubContent(ctx, conn, &input)
+}
+
+func findHubContent(ctx context.Context, conn *sagemaker.Client, input *sagemaker.DescribeHubContentInput) (*sagemaker.DescribeHubContentOutput, error) {
 	output, err := conn.DescribeHubContent(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
@@ -393,4 +406,5 @@ type hubContentReferenceResourceModel struct {
 	Tags                         tftags.Map                                    `tfsdk:"tags"`
 	TagsAll                      tftags.Map                                    `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                `tfsdk:"timeouts"`
+	VersionedHubContentARN       fwtypes.ARN                                   `tfsdk:"versioned_hub_content_arn"`
 }

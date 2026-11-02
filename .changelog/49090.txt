@@ -1,7 +1,0 @@
-```release-note:new-list-resource
-aws_eks_access_entry
-```
-
-```release-note:new-data-source
-aws_eks_access_policies
-```

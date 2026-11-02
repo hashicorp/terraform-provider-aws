@@ -300,6 +300,58 @@ func TestTestSkipIfEmpty(t *testing.T) {
 	})
 }
 
+func TestTestSkipIfNotTrue(t *testing.T) {
+	envVar := "TESTENVVAR_SKIPIFNOTTRUE"
+
+	t.Run("missing", func(t *testing.T) { //nolint:paralleltest
+		mockT := &testingiface.RuntimeT{}
+
+		os.Unsetenv(envVar)
+
+		SkipIfNotTrue(mockT, envVar, "")
+
+		if !mockT.Skipped() {
+			t.Fatal("expected to skip")
+		}
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		mockT := &testingiface.RuntimeT{}
+
+		t.Setenv(envVar, "")
+
+		SkipIfNotTrue(mockT, envVar, "")
+
+		if !mockT.Skipped() {
+			t.Fatal("expected to skip")
+		}
+	})
+
+	t.Run("false", func(t *testing.T) {
+		mockT := &testingiface.RuntimeT{}
+
+		t.Setenv(envVar, "0")
+
+		SkipIfNotTrue(mockT, envVar, "")
+
+		if !mockT.Skipped() {
+			t.Fatal("expected to skip")
+		}
+	})
+
+	t.Run("true", func(t *testing.T) {
+		mockT := &testingiface.RuntimeT{}
+
+		t.Setenv(envVar, "1")
+
+		SkipIfNotTrue(mockT, envVar, "")
+
+		if mockT.Skipped() {
+			t.Fatal("expected not to skip")
+		}
+	})
+}
+
 func testingifaceRecover() {
 	r := recover()
 

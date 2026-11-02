@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lambda_invocation: Set new computed value for `result` attribute when changing `input` attribute, for lifecycle scope "CRUD"
-```

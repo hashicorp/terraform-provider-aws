@@ -19,6 +19,9 @@ type whenNotEquals[T ~string] struct {
 }
 
 func (w whenNotEquals[T]) Eval(_ context.Context, v attr.Value) bool {
+	if v.IsNull() {
+		return false
+	}
 	return !v.Equal(types.StringValue(string(w.value)))
 }
 

@@ -31,21 +31,9 @@ type jobDefinitionListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type jobDefinitionListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.BatchClient(ctx)
-
-	var query jobDefinitionListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	var input batch.DescribeJobDefinitionsInput
 

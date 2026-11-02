@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Additional fixes to allow setting endpoints with non-standard, legacy keys.
-```

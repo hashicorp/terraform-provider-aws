@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ecs_capacity_provider: Add `managed_scaling` block `instance_warmup_period` argument
-```

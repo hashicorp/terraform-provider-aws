@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_account_primary_contact: Correct plan-time validation of `phone_number`
-```

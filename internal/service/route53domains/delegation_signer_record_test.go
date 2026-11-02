@@ -8,14 +8,78 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53domains "github.com/hashicorp/terraform-provider-aws/internal/service/route53domains"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// TestDelegationSignerDigest verifies RFC 4034 compliant digest generation
+func TestDelegationSignerDigest(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Valid RFC 4034 digest generation", func(t *testing.T) {
+		t.Parallel()
+		domainName := "example.com"
+		var (
+			flags, algorithm int32 = 257, 13
+		)
+		publicKey := "AwEAAazJ1O4G2F9O7lYvRjWp1A5MvXk1zY7B2C4D5E6F7G8H9I0J"
+
+		digest := tfroute53domains.DelegationSignerDigest(domainName, flags, algorithm, publicKey)
+
+		if len(digest) != 64 {
+			t.Errorf("Expected 64-char hex digest, got %d chars: %s", len(digest), digest)
+		}
+
+		for _, ch := range digest {
+			if !((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F')) {
+				t.Errorf("Digest contains non-hex character: %c", ch)
+			}
+		}
+	})
+
+	t.Run("Domain case insensitivity (RFC 4034)", func(t *testing.T) {
+		t.Parallel()
+
+		domainLower := "example.com"
+		domainUpper := "EXAMPLE.COM"
+		var (
+			flags, algorithm int32 = 257, 13
+		)
+		publicKey := "AwEAAazJ1O4G2F9O7lYvRjWp1A5MvXk1zY7B2C4D5E6F7G8H9I0J"
+
+		digestLower := tfroute53domains.DelegationSignerDigest(domainLower, flags, algorithm, publicKey)
+		digestUpper := tfroute53domains.DelegationSignerDigest(domainUpper, flags, algorithm, publicKey)
+
+		if digestLower != digestUpper {
+			t.Errorf("Domain case sensitivity violation.\nLower: %s\nUpper: %s", digestLower, digestUpper)
+		}
+	})
+
+	t.Run("Invalid Base64 public key graceful handling", func(t *testing.T) {
+		t.Parallel()
+
+		domainName := "example.com"
+		var (
+			flags, algorithm int32 = 257, 13
+		)
+		invalidKey := "not_valid_base64!!!"
+
+		digest := tfroute53domains.DelegationSignerDigest(domainName, flags, algorithm, invalidKey)
+
+		if len(digest) == 0 {
+			t.Errorf("Digest should not be empty even with invalid key")
+		}
+	})
+}
 
 func testAccDelegationSignerRecord_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -30,17 +94,34 @@ func testAccDelegationSignerRecord_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDelegationSignerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegationSignerAssociationConfig_basic(domainName, publicKey),
+				ConfigDirectory: config.StaticDirectory("testdata/DelegationSignerRecord/basic/"),
+				ConfigVariables: config.Variables{
+					"domain_name": config.StringVariable(domainName),
+					"public_key":  config.StringVariable(publicKey),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegationSignerAssociationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "dnssec_key_id"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dnssec_key_id"), knownvalue.NotNull()),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccDelegationSignerAssociationImportStateIDFunc(ctx, resourceName),
+				ConfigDirectory: config.StaticDirectory("testdata/DelegationSignerRecord/basic/"),
+				ConfigVariables: config.Variables{
+					"domain_name": config.StringVariable(domainName),
+					"public_key":  config.StringVariable(publicKey),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrDomainName,
+				ImportStateIdFunc:                    testAccDelegationSignerAssociationImportStateIDFunc(ctx, resourceName),
 			},
 		},
 	})
@@ -59,7 +140,11 @@ func testAccDelegationSignerRecord_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDelegationSignerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegationSignerAssociationConfig_basic(domainName, publicKey),
+				ConfigDirectory: config.StaticDirectory("testdata/DelegationSignerRecord/basic/"),
+				ConfigVariables: config.Variables{
+					"domain_name": config.StringVariable(domainName),
+					"public_key":  config.StringVariable(publicKey),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegationSignerAssociationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfroute53domains.ResourceDelegationSignerRecord, resourceName),
@@ -83,11 +168,11 @@ func testAccCheckDelegationSignerAssociationDestroy(ctx context.Context, t *test
 		conn := acctest.ProviderMeta(ctx, t).Route53DomainsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_route53domains_ds_association" {
+			if rs.Type != "aws_route53domains_delegation_signer_record" {
 				continue
 			}
 
-			_, err := tfroute53domains.FindDNSSECKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["dnssec_key_id"])
+			_, err := tfroute53domains.FindDNSSECKeyByDomainNameAndKeyID(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["dnssec_key_id"])
 
 			if retry.NotFound(err) {
 				continue
@@ -113,33 +198,12 @@ func testAccCheckDelegationSignerAssociationExists(ctx context.Context, t *testi
 
 		conn := acctest.ProviderMeta(ctx, t).Route53DomainsClient(ctx)
 
-		_, err := tfroute53domains.FindDNSSECKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["dnssec_key_id"])
+		_, err := tfroute53domains.FindDNSSECKeyByDomainNameAndKeyID(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["dnssec_key_id"])
 
 		return err
 	}
 }
 
 func testAccDelegationSignerAssociationImportStateIDFunc(_ context.Context, n string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["dnssec_key_id"]), nil
-	}
-}
-
-func testAccDelegationSignerAssociationConfig_basic(domainName string, publicKey string) string {
-	return fmt.Sprintf(`
-resource "aws_route53domains_delegation_signer_record" "test" {
-  domain_name = %[1]q
-
-  signing_attributes {
-    algorithm  = 13
-    flags      = 257
-    public_key = %[2]q
-  }
-}
-`, domainName, publicKey)
+	return acctest.AttrsImportStateIdFunc(n, ",", names.AttrDomainName, "signing_attributes.0.flags", "signing_attributes.0.algorithm", "signing_attributes.0.public_key")
 }

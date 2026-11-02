@@ -9,6 +9,7 @@ import (
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/mailmanager/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -17,7 +18,101 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_mailmanager_archive", sweepArchives)
+	awsv2.Register("aws_mailmanager_relay", sweepRelays)
+	awsv2.Register("aws_mailmanager_ingress_point", sweepIngressPoints)
+	awsv2.Register("aws_mailmanager_rule_set", sweepRuleSets)
 	awsv2.Register("aws_mailmanager_traffic_policy", sweepTrafficPolicies)
+}
+
+func sweepArchives(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input mailmanager.ListArchivesInput
+	conn := client.MailManagerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := mailmanager.NewListArchivesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Archives {
+			if v.ArchiveState == awstypes.ArchiveStatePendingDeletion {
+				continue
+			}
+			sweepResources = append(sweepResources, framework.NewSweepResource(newArchiveResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.ArchiveId)),
+			))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepIngressPoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.MailManagerClient(ctx)
+	var input mailmanager.ListIngressPointsInput
+	var sweepResources []sweep.Sweepable
+
+	pages := mailmanager.NewListIngressPointsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.IngressPoints {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newIngressPointResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.IngressPointId)),
+			))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepRuleSets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.MailManagerClient(ctx)
+	var input mailmanager.ListRuleSetsInput
+	var sweepResources []sweep.Sweepable
+
+	pages := mailmanager.NewListRuleSetsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+		for _, v := range page.RuleSets {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newRuleSetResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.RuleSetId)),
+			))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepRelays(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input mailmanager.ListRelaysInput
+	conn := client.MailManagerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := mailmanager.NewListRelaysPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Relays {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newRelayResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.RelayId)),
+			))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepTrafficPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

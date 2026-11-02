@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_vpclattice_service_network_resource_association: Add `private_dns_enabled` argument
-```

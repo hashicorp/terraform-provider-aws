@@ -8,7 +8,7 @@ description: |-
 
 # List Resource: aws_autoscaling_group
 
-Lists Auto Scaling Group resources.
+Lists Auto Scaling group resources.
 
 ## Example Usage
 

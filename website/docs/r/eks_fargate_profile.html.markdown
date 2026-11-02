@@ -55,7 +55,7 @@ The following arguments are required:
 
 * `cluster_name` - (Required) Name of the EKS Cluster.
 * `fargate_profile_name` - (Required) Name of the EKS Fargate Profile.
-* `pod_execution_role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Fargate Profile.
+* `pod_execution_role_arn` - (Required) ARN of the IAM Role that provides permissions for the EKS Fargate Profile.
 * `selector` - (Required) Configuration block(s) for selecting Kubernetes Pods to execute with this EKS Fargate Profile. Detailed below.
 * `subnet_ids` - (Required) Identifiers of private EC2 Subnets to associate with the EKS Fargate Profile. These subnets must have the following resource tag: `kubernetes.io/cluster/CLUSTER_NAME` (where `CLUSTER_NAME` is replaced with the name of the EKS Cluster).
 
@@ -79,7 +79,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the EKS Fargate Profile.
+* `arn` - ARN of the EKS Fargate Profile.
 * `id` - EKS Cluster name and EKS Fargate Profile name separated by a colon (`:`).
 * `status` - Status of the EKS Fargate Profile.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

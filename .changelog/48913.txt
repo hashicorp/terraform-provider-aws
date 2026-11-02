@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_flow_log: Add `tag_field_specification` configuration block
-```

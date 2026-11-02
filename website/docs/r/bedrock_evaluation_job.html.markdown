@@ -10,7 +10,7 @@ description: |-
 
 Manages an Amazon Bedrock evaluation job. An evaluation job assesses model or knowledge base performance using either automated metrics or human workers.
 
-~> Amazon Bedrock does not support permanently deleting an evaluation job. Destroying this resource stops the job (if it is still running) using the [StopEvaluationJob](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_StopEvaluationJob.html) API, then removes it from Terraform state. Set `skip_destroy` to leave the job in its current state instead.
+~> **Note:** Amazon Bedrock does not support permanently deleting an evaluation job. Destroying this resource stops the job (if it is still running) using the [StopEvaluationJob](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_StopEvaluationJob.html) API, then removes it from Terraform state. Set `skip_destroy` to leave the job in its current state instead.
 
 ## Example Usage
 
@@ -80,16 +80,24 @@ The `evaluation_config` block supports the following arguments. Exactly one of `
 The `automated` block supports the following arguments:
 
 * `custom_metric_config` - (Optional) Configuration for custom metrics to compute for the evaluation job. See [`custom_metric_config` Block](#custom_metric_config-block) below.
-* `dataset_metric_config` - (Required) One or more configurations for the prompt datasets and metrics to use. See [`dataset_metric_config` Block](#dataset_metric_config-block) below.
+* `dataset_metric_config` - (Required) One or more configurations for the prompt datasets and metrics to use. See [`evaluation_config.automated.dataset_metric_config` Block](#evaluation_configautomateddataset_metric_config-block) below.
 * `evaluator_model_config` - (Optional) Configuration for the evaluator (judge) model. Required for automated jobs that use an LLM-as-judge metric, or that evaluate a knowledge base. See [`evaluator_model_config` Block](#evaluator_model_config-block) below.
 
-### `dataset_metric_config` Block
+### `evaluation_config.automated.dataset_metric_config` Block
 
-The `dataset_metric_config` block, used by both the `automated` and `human` blocks, supports the following arguments:
+The `dataset_metric_config` block supports the following arguments:
 
 * `dataset` - (Required) Prompt dataset to use. See [`dataset` Block](#dataset-block) below.
 * `metric_names` - (Required) Names of the metrics to use for the evaluation job.
-* `task_type` - (Required) Type of task to evaluate. Common values are `Summarization`, `Classification`, `QuestionAndAnswer`, `Generation`, and `Custom`. Use `General` for automated evaluation jobs that use a judge model (`evaluator_model_config`).
+* `task_type` - (Required) Type of task to evaluate. Valid values: `Summarization`, `Classification`, `QuestionAndAnswer`, `Generation`, `Custom`.
+
+### `evaluation_config.human.dataset_metric_config` Block
+
+The `dataset_metric_config` block supports the following arguments:
+
+* `dataset` - (Required) Prompt dataset to use. See [`dataset` Block](#dataset-block) below.
+* `metric_names` - (Required) Names of the metrics to use for the evaluation job.
+* `task_type` - (Required) Type of task to evaluate. Valid values: `Summarization`, `Classification`, `QuestionAndAnswer`, `Generation`, `Custom`.
 
 ### `dataset` Block
 
@@ -156,7 +164,7 @@ The `value` block supports the following arguments. Exactly one of `float_value`
 The `human` block supports the following arguments:
 
 * `custom_metric` - (Optional) One or more custom metrics for your human workers to use. See [`evaluation_config.human.custom_metric` Block](#evaluation_confighumancustom_metric-block) below.
-* `dataset_metric_config` - (Required) One or more configurations for the prompt datasets and metrics to use. See [`dataset_metric_config` Block](#dataset_metric_config-block) above.
+* `dataset_metric_config` - (Required) One or more configurations for the prompt datasets and metrics to use. See [`evaluation_config.human.dataset_metric_config` Block](#evaluation_confighumandataset_metric_config-block) below.
 * `human_workflow_config` - (Optional) Configuration for the human workflow. See [`human_workflow_config` Block](#human_workflow_config-block) below.
 
 ### `evaluation_config.human.custom_metric` Block
@@ -290,6 +298,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `job_type` - Whether the evaluation job is automated or human-based.
 * `last_modified_time` - Date and time the evaluation job was last modified.
 * `status` - Current status of the evaluation job.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -319,7 +328,7 @@ resource "aws_bedrock_evaluation_job" "example" {
 
 #### Required
 
-- `job_arn` (String) ARN of the evaluation job.
+* `job_arn` (String) ARN of the evaluation job.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Evaluation Job using the `job_arn`. For example:
 

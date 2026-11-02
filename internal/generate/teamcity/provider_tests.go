@@ -27,8 +27,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		acceptanceTestsScriptFile = `.teamcity/scripts/provider_tests/acceptance_tests.sh`
-		unitTestsScriptFile       = `.teamcity/scripts/provider_tests/unit_tests.sh`
+		acceptanceTestsScriptFile = `.teamcity/scripts/provider_tests/tests.sh`
 	)
 	g := common.NewGenerator()
 
@@ -56,8 +55,6 @@ func main() {
 	}
 
 	generator.generate(acceptanceTestsScriptFile, acceptanceTestsTmpl)
-
-	generator.generate(unitTestsScriptFile, unitTestsTmpl)
 }
 
 type generator struct {
@@ -82,8 +79,5 @@ func (g generator) generate(filename, template string) {
 	}
 }
 
-//go:embed acceptance_tests.tmpl
+//go:embed tests.tmpl
 var acceptanceTestsTmpl string
-
-//go:embed unit_tests.tmpl
-var unitTestsTmpl string

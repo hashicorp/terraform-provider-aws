@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_sagemaker_model: Add `container.model_package_name` and `primary_container.model_package_name` arguments
-```

@@ -34,7 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `date_created` - Date the component was created.
 * `description` - Description of the component.
 * `encrypted` - Encryption status of the component.
-* `kms_key_id` - ARN of the Key Management Service (KMS) Key used to encrypt the component.
+* `kms_key_id` - ARN of the KMS Key used to encrypt the component.
 * `name` - Name of the component.
 * `owner` - Owner of the component.
 * `platform` - Platform of the component.

@@ -32,9 +32,9 @@ func newBucketPolicyResourceAsListResource() inttypes.ListResourceForSDK {
 	)
 }
 
-var _ bucketPropertyListHandlerSDK = bucketPolicyListHandler{}
+var _ bucketPropertyListHandler = bucketPolicyListHandler{}
 
-func newBucketPolicyListHandler(lister listResourceSDK) bucketPropertyListHandlerSDK {
+func newBucketPolicyListHandler(lister listResourceSDK) bucketPropertyListHandler {
 	return bucketPolicyListHandler{
 		baseBucketPropertyListHandlerSDK: newBaseBucketPropertyListHandlerSDK(lister),
 	}

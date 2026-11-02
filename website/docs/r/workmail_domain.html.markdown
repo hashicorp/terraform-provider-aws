@@ -37,9 +37,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `is_default` - Whether this domain is the default mail domain for the organization.
 * `is_test_domain` - Whether this is the auto-provisioned test domain.
 * `ownership_verification_status` - Domain ownership verification status. Values: `PENDING`, `VERIFIED`, `FAILED`.
-* `records` - List of DNS records required for domain verification. See [`records`](#records) below.
+* `records` - List of DNS records required for domain verification. See [`records` Block](#records-block) below.
 
-### `records`
+### `records` Block
 
 Each `records` block exports the following:
 

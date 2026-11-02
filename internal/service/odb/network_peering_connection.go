@@ -41,6 +41,7 @@ import (
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_odb_network_peering_connection", name="Network Peering Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newResourceNetworkPeeringConnection(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceNetworkPeeringConnection{}
 
@@ -214,7 +215,7 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 		odbNetwork = plan.OdbNetworkId
 	}
 	//Validation : check is there any peer cidr for removal
-	if len(plan.PeerNetworkCidrs.Elements()) > 0 {
+	if plan.PeerNetworkCidrs.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
 		err := errors.New("during creation add / removal of peer network cidr is not supported")
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameNetworkPeeringConnection, plan.DisplayName.ValueString(), err),

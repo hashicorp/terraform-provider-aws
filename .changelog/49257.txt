@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_mailmanager_rule_set
+```
+
+```release-note:new-list-resource
+aws_mailmanager_rule_set
+```

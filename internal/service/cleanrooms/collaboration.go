@@ -383,10 +383,10 @@ func flattenDataEncryptionMetadata(dataEncryptionMetadata *types.DataEncryptionM
 		return nil
 	}
 	m := map[string]any{}
-	m["preserve_nulls"] = aws.Bool(*dataEncryptionMetadata.PreserveNulls)
-	m["allow_clear_text"] = aws.Bool(*dataEncryptionMetadata.AllowCleartext)
-	m["allow_joins_on_columns_with_different_names"] = aws.Bool(*dataEncryptionMetadata.AllowJoinsOnColumnsWithDifferentNames)
-	m["allow_duplicates"] = aws.Bool(*dataEncryptionMetadata.AllowDuplicates)
+	m["preserve_nulls"] = dataEncryptionMetadata.PreserveNulls
+	m["allow_clear_text"] = dataEncryptionMetadata.AllowCleartext
+	m["allow_joins_on_columns_with_different_names"] = dataEncryptionMetadata.AllowJoinsOnColumnsWithDifferentNames
+	m["allow_duplicates"] = dataEncryptionMetadata.AllowDuplicates
 	return []any{m}
 }
 

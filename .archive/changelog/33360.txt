@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_iot_topic_rule: Fix `InvalidParameter` errors on Update with Kafka destinations
-```

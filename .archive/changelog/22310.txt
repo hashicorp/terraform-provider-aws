@@ -1,3 +1,0 @@
-```release-note:new-data-source
-aws_ses_active_receipt_rule_set
-```

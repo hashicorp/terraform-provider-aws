@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudwatch_event_rule: Do not retry on `LimitExceededException`
-```

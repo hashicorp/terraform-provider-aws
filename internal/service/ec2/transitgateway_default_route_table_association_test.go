@@ -76,6 +76,7 @@ func testAccTransitGatewayDefaultRouteTableAssociation_disappears(t *testing.T, 
 				Config: testAccTransitgatewayDefaultRouteTableAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayDefaultRouteTableAssociationExists(ctx, t, resourceName, &transitgateway),
+					// nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action -- Default route table association is a sub-resource/attribute of the Transit Gateway; "disappearing" it reverts to the original default route table, so the plan is an update, not a create.
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayDefaultRouteTableAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,7 +85,7 @@ func testAccTransitGatewayDefaultRouteTableAssociation_disappears(t *testing.T, 
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},

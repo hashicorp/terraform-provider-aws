@@ -53,25 +53,24 @@ EOF
 
 The following arguments are required:
 
-* `description` - (Required) Description of the application.
 * `engine_type` - (Required) Engine type must be `microfocus | bluage`.
 * `name` - (Required) Unique identifier of the application.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `definition` - (Optional) The application definition for this application. You can specify either inline JSON or an S3 bucket location.
+* `definition` - (Optional) Application definition for this application. You can specify either inline JSON or an S3 bucket location.
+* `description` - (Optional) Description of the application.
 * `kms_key_id` - (Optional) KMS Key to use for the Application.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role_arn` - (Optional) ARN of role for application to use to access AWS resources.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### definition
+### `definition` Block
 
 This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `content` - (Optional) JSON application definition. Either this or `s3_location` must be specified.
 * `s3_location` - (Optional) Location of the application definition in S3. Either this or `content` must be specified.
 
@@ -79,10 +78,10 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `application_id` - Id of the Application.
+* `application_id` - ID of the Application.
 * `arn` - ARN of the Application.
 * `current_version` - Current version of the application deployed.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

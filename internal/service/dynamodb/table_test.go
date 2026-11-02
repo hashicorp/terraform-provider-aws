@@ -8509,7 +8509,7 @@ func TestAccDynamoDBTable_importTable(t *testing.T) {
 
 func TestAccDynamoDBTable_warmThroughput(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf, confDecreasedThroughput awstypes.TableDescription
+	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -8564,20 +8564,37 @@ func TestAccDynamoDBTable_warmThroughput(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "4300"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_warmThroughput_decreaseError(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_warmThroughput(rName, 6, 6, 12100, 4100),
+				Config: testAccTableConfig_warmThroughput(rName, 5, 5, 12200, 4200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, t, resourceName, &confDecreasedThroughput),
-					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
-					resource.TestCheckResourceAttr(resourceName, "warm_throughput.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.read_units_per_second", "12100"),
-					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "4100"),
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.read_units_per_second", "12200"),
+					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "4200"),
 				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
-					},
-				},
+			},
+			{
+				Config:      testAccTableConfig_warmThroughput(rName, 5, 5, 12100, 4200),
+				ExpectError: regexache.MustCompile(`warm_throughput\.0\.read_units_per_second cannot be decreased \(current value: 12200, requested value: 12100\)`),
+			},
+			{
+				Config:      testAccTableConfig_warmThroughput(rName, 5, 5, 12200, 4100),
+				ExpectError: regexache.MustCompile(`warm_throughput\.0\.write_units_per_second cannot be decreased \(current value: 4200, requested value: 4100\)`),
 			},
 		},
 	})

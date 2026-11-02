@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_codebuild_webhook: Only update `build_type` if a value is specified
-```

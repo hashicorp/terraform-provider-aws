@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_subnet: Protect against errors when `availability_zone_id` is not supported in a partition (e.g., ISO)
-```

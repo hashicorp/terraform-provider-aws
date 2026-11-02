@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudcontrolapi_resource: Add retry handling for Cloud Control `ThrottlingException` errors
+```

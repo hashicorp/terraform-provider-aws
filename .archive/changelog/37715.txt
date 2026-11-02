@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_vpc_endpoint: Restore pre-v5.51.0 default of `false` for `private_dns_enabled`
-```

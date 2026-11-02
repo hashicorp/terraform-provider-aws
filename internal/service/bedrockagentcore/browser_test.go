@@ -291,82 +291,6 @@ func TestAccBedrockAgentCoreBrowser_disappears(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentCoreBrowser_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var browser bedrockagentcorecontrol.GetBrowserOutput
-	rName := testAccRandomBrowserName(t)
-	resourceName := "aws_bedrockagentcore_browser.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckBrowser(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrowserDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBrowserConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "browser_id"),
-				ImportStateVerifyIdentifierAttribute: "browser_id",
-			},
-			{
-				Config: testAccBrowserConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-			{
-				Config: testAccBrowserConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserExists(ctx, t, resourceName, &browser),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-		},
-	})
-}
-
 func TestAccBedrockAgentCoreBrowser_networkConfiguration_vpc(t *testing.T) {
 	acctest.Skip(t, "ENIs of type \"agentic_ai\" remain")
 	ctx := acctest.Context(t)
@@ -543,39 +467,6 @@ resource "aws_bedrockagentcore_browser" "test" {
   }
 }
 `, rName, bucketName)
-}
-
-func testAccBrowserConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_browser" "test" {
-  name = %[1]q
-
-  network_configuration {
-    network_mode = "PUBLIC"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tag1Key, tag1Value)
-}
-
-func testAccBrowserConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagentcore_browser" "test" {
-  name = %[1]q
-
-  network_configuration {
-    network_mode = "PUBLIC"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
 func testAccBrowserConfig_networkConfiguration_vpc(rName string) string {

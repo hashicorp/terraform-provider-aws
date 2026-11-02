@@ -55,7 +55,7 @@ The following arguments are optional:
 * `placement` - (Optional) Configuration block with placement settings that define where the instances that are launched from your image will run. Detailed below.
 * `resource_tags` - (Optional) Key-value map of resource tags to assign to infrastructure created by the configuration.
 * `security_group_ids` - (Optional) Set of EC2 Security Group identifiers.
-* `sns_topic_arn` - (Optional) Amazon Resource Name (ARN) of SNS Topic.
+* `sns_topic_arn` - (Optional) ARN of SNS Topic.
 * `subnet_id` - (Optional) EC2 Subnet identifier. Also requires `security_group_ids` argument.
 * `tags` - (Optional) Key-value map of resource tags to assign to the configuration. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `terminate_instance_on_failure` - (Optional) Enable if the instance should be terminated when the pipeline fails. Defaults to `false`.
@@ -99,8 +99,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the configuration.
-* `arn` - Amazon Resource Name (ARN) of the configuration.
+* `id` - ARN of the configuration.
+* `arn` - ARN of the configuration.
 * `date_created` - Date when the configuration was created.
 * `date_updated` - Date when the configuration was updated.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -126,9 +126,9 @@ resource "aws_imagebuilder_infrastructure_configuration" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Image Builder infrastructure configuration.
+- `arn` (String) ARN of the Image Builder infrastructure configuration.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_infrastructure_configuration` using the Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_infrastructure_configuration` using the ARN. For example:
 
 ```terraform
 import {
@@ -137,7 +137,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_imagebuilder_infrastructure_configuration` using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_imagebuilder_infrastructure_configuration` using the ARN. For example:
 
 ```console
 % terraform import aws_imagebuilder_infrastructure_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:infrastructure-configuration/example

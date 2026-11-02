@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -126,7 +125,7 @@ func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					stringvalidator.LengthBetween(0, 1000),
 				},
 			},
-			"encryption_config": framework.ResourceOptionalComputedListOfObjectsAttribute[encryptionConfigModel](ctx, 1, nil, listplanmodifier.RequiresReplace(), listplanmodifier.UseStateForUnknown()),
+			"encryption_config": framework.ResourceOptionalComputedForceNewSingleNestedObjectAttribute[encryptionConfigModel](ctx),
 			names.AttrID:        framework.IDAttribute(),
 			names.AttrKMSKeyARN: schema.StringAttribute{
 				Description: "The ARN of the Amazon Web Services KMS key used to encrypt the collection.",
@@ -173,7 +172,7 @@ func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					enum.FrameworkValidate[awstypes.CollectionType](),
 				},
 			},
-			"vector_options": framework.ResourceOptionalComputedListOfObjectsAttribute[vectorOptionsModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"vector_options": framework.ResourceOptionalComputedSingleNestedObjectAttribute[vectorOptionsModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{

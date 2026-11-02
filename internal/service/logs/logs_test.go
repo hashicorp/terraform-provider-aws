@@ -36,6 +36,12 @@ func TestAccLogs_serial(t *testing.T) {
 			"List_includeResource": testAccS3TableIntegrationSource_List_includeResource,
 			"List_regionOverride":  testAccS3TableIntegrationSource_List_regionOverride,
 		},
+		"StorageTierPolicy": {
+			acctest.CtBasic:      testAccLogsStorageTierPolicy_basic,
+			acctest.CtDisappears: testAccLogsStorageTierPolicy_disappears,
+			"update":             testAccLogsStorageTierPolicy_update,
+			"Identity":           testAccLogsStorageTierPolicy_identitySerial,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

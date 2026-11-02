@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_fms_admin_account: Fix `panic: runtime error: invalid memory address or nil pointer dereference`
-```

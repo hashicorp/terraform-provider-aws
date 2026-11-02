@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ec2_transit_gateway: Add support to modify `amazon_side_asn` argument
-```

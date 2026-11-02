@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_glue_catalog_table: Add `target_table` argument
-```

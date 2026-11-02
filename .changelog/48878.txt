@@ -1,3 +1,0 @@
-```release-note:new-list-resource
-aws_cloudwatch_log_stream
-```

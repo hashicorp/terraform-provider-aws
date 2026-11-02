@@ -57,6 +57,35 @@ func TestCheckAPICallNotMade(t *testing.T) {
 	}
 }
 
+func TestCheckAPICallCountAtMost(t *testing.T) {
+	t.Parallel()
+
+	rec := apicall.NewRecorder()
+	rec.Record("Pinpoint", "GetApp", nil)
+	rec.Record("Pinpoint", "GetApp", nil)
+
+	// No calls
+	if err := CheckAPICallCountAtMost(rec, nil, "Pinpoint", "GetApplicationSettings", 1)(nil); err != nil {
+		t.Errorf("expected pass, got: %v", err)
+	}
+	// Under limit
+	if err := CheckAPICallCountAtMost(rec, nil, "Pinpoint", "GetApp", 3)(nil); err != nil {
+		t.Errorf("expected pass, got: %v", err)
+	}
+	// At limit
+	if err := CheckAPICallCountAtMost(rec, nil, "Pinpoint", "GetApp", 2)(nil); err != nil {
+		t.Errorf("expected pass, got: %v", err)
+	}
+	// Over limit
+	err := CheckAPICallCountAtMost(rec, nil, "Pinpoint", "GetApp", 1)(nil)
+	if err == nil {
+		t.Fatal("expected failure for recorded call")
+	}
+	if !strings.Contains(err.Error(), "Pinpoint.GetApp") {
+		t.Errorf("error missing service.operation: %v", err)
+	}
+}
+
 // TestCheckAPICall_PointerCursorMidFlight exercises the PreConfig pattern:
 // the test author declares the cursor variable, builds the Check slice
 // referencing &cursor, and only later (in PreConfig) populates *cursor.

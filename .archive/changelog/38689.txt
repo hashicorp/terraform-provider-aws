@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ec2_capacity_block_reservation: Fix error during apply for missing `created_date` attribute
-```

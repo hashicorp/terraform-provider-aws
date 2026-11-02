@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_default_security_group: Add Resource Identity support
+```
+
+```release-note:new-list-resource
+aws_default_security_group
+```

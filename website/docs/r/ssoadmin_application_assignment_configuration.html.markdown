@@ -60,7 +60,7 @@ resource "aws_ssoadmin_application_assignment_configuration" "example" {
 
 #### Required
 
-- `application_arn` (String) Amazon Resource Name (ARN) of the SSO application.
+- `application_arn` (String) ARN of the SSO application.
 
 #### Optional
 

@@ -1,3 +1,0 @@
-```release-note:bug
-data-source/aws_mq_broker: Correct type for `logs.audit` attribute
-```

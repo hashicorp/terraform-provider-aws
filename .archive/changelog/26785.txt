@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ssm_parameter: Allow parameter overwrite on create
-```

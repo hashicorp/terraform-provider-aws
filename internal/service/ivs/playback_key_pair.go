@@ -27,7 +27,7 @@ import (
 // @SDKResource("aws_ivs_playback_key_pair", name="Playback Key Pair")
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivs/types;awstypes.PlaybackKeyPair")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivs/types;awstypes;awstypes.PlaybackKeyPair")
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(serialize=true)
 // @Testing(generator=false)

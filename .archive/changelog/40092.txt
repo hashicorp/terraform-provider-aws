@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_networkfirewall_logging_configuration: Correctly manage all configured `logging_configuration.log_destination_config`s
-```
