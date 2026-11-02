@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"strings"
 	"time"
 
@@ -52,33 +53,11 @@ func resourceIPSet() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				"addresses": {
-					Type:     schema.TypeSet,
-					Optional: true,
-					MaxItems: 10000,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						if d.GetRawPlan().GetAttr("addresses").IsWhollyKnown() {
-							o, n := d.GetChange("addresses")
-							oldAddresses := o.(*schema.Set).List()
-							newAddresses := n.(*schema.Set).List()
-							if len(oldAddresses) == len(newAddresses) {
-								for _, ov := range oldAddresses {
-									hasAddress := false
-									for _, nv := range newAddresses {
-										if inttypes.CIDRBlocksEqual(ov.(string), nv.(string)) {
-											hasAddress = true
-											break
-										}
-									}
-									if !hasAddress {
-										return false
-									}
-								}
-								return true
-							}
-						}
-						return false
-					},
+					Type:             schema.TypeSet,
+					Optional:         true,
+					MaxItems:         10000,
+					Elem:             &schema.Schema{Type: schema.TypeString},
+					DiffSuppressFunc: suppressEquivalentIPSetAddresses,
 				},
 				names.AttrARN: {
 					Type:     schema.TypeString,
@@ -307,4 +286,56 @@ func (ipSetImportID) Parse(id string) (string, map[string]any, error) {
 	}
 
 	return idParts[0], result, nil
+}
+
+func suppressEquivalentIPSetAddresses(k, old, new string, d *schema.ResourceData) bool {
+	// SDKv2 calls this once per set element, including unchanged ones. Their diff is a no-op,
+	// so skip the whole-set comparison for them to avoid O(n^2) work on large sets.
+	if old == new {
+		return false
+	}
+
+	if !d.GetRawPlan().GetAttr("addresses").IsWhollyKnown() {
+		return false
+	}
+
+	o, n := d.GetChange("addresses")
+
+	return ipSetAddressesEquivalent(o.(*schema.Set).List(), n.(*schema.Set).List())
+}
+
+func ipSetAddressesEquivalent(oldAddresses, newAddresses []any) bool {
+	if len(oldAddresses) != len(newAddresses) {
+		return false
+	}
+
+	newKeys := make(map[string]struct{}, len(newAddresses))
+	for _, v := range newAddresses {
+		if key, ok := cidrBlockEqualityKey(v.(string)); ok {
+			newKeys[key] = struct{}{}
+		}
+	}
+
+	for _, v := range oldAddresses {
+		key, ok := cidrBlockEqualityKey(v.(string))
+		if !ok {
+			return false
+		}
+		if _, ok := newKeys[key]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+// cidrBlockEqualityKey returns a key such that two CIDR blocks have the same key
+// if and only if inttypes.CIDRBlocksEqual reports them as equal.
+func cidrBlockEqualityKey(cidr string) (string, bool) {
+	ip, ipNet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return "", false
+	}
+
+	return ip.String() + "|" + ipNet.String(), true
 }
