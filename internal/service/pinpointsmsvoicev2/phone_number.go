@@ -47,7 +47,12 @@ import (
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_phone_number", name="Phone Number")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.70.0")
+// @Testing(preCheck="testAccPreCheckPhoneNumber")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes;awstypes.PhoneNumberInformation")
+// @Testing(importIgnore="wait_for_active")
 func newPhoneNumberResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &phoneNumberResource{}
 
@@ -60,7 +65,7 @@ func newPhoneNumberResource(context.Context) (resource.ResourceWithConfigure, er
 
 type phoneNumberResource struct {
 	framework.ResourceWithModel[phoneNumberResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
