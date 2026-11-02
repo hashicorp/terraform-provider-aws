@@ -32,6 +32,10 @@ The following arguments are required:
 * `channel_arn` - (Required) ARN of the channel to associate with the managed notification.
 * `managed_notification_arn` - (Required) ARN of the managed notification to associate the channel with.
 
+The following arguments are optional:
+
+* `sensitive_events_subscribed` - (Optional) Whether to subscribe to sensitive events. Defaults to `false`.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
