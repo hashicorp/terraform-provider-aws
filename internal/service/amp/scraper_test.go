@@ -290,6 +290,23 @@ func TestAccAMPScraper_openSearchExporter(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccScraperConfig_openSearchExporterRemoved(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exporter"), knownvalue.ListSizeExact(0)),
+				},
+			},
 		},
 	})
 }
@@ -801,7 +818,7 @@ EOT
 `, rName))
 }
 
-func testAccScraperConfig_openSearchExporter(rName, domainName string) string {
+func testAccScraperConfig_openSearchExporterBase(rName, domainName string) string {
 	return acctest.ConfigCompose(testAccScraperConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name    = %[2]q
@@ -838,7 +855,11 @@ POLICY
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+`, rName, domainName))
+}
 
+func testAccScraperConfig_openSearchExporter(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_openSearchExporterBase(rName, domainName), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
   alias = %[1]q
 
@@ -868,7 +889,39 @@ EOT
     }
   }
 }
-`, rName, domainName))
+`, rName))
+}
+
+func testAccScraperConfig_openSearchExporterRemoved(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_openSearchExporterBase(rName, domainName), fmt.Sprintf(`
+resource "aws_prometheus_scraper" "test" {
+  alias = %[1]q
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 60s
+scrape_configs:
+  - job_name: 'test-service'
+    dns_sd_configs:
+      - names: ['test-service.%[1]s.local']
+        type: A
+        port: 80
+EOT
+
+  source {
+    vpc {
+      security_group_ids = [aws_security_group.test.id]
+      subnet_ids         = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.test.arn
+    }
+  }
+}
+`, rName))
 }
 
 func testAccScraperConfig_baseVPC(rName string) string {

@@ -418,6 +418,11 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 			input.Destination = nil
 		}
 
+		// UpdateScraper keeps the existing exporter when Exporters is omitted. An empty list removes it.
+		if len(input.Exporters) == 0 && old.Exporters.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			input.Exporters = []awstypes.ExporterConfiguration{}
+		}
+
 		_, err := conn.UpdateScraper(ctx, &input)
 
 		if err != nil {
