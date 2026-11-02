@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkterraform "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -275,7 +276,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/40675.
-func TestAccCloudFormationStackSetInstance_DeploymentTargets_importedAccountID(t *testing.T) {
+func TestAccCloudFormationStackSetInstance_DeploymentTargets_adoptedByAccountID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackInstance1, stackInstance2 awstypes.StackInstance
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1562,9 +1563,9 @@ func TestStackSetInstanceDiff_importedDeploymentTargets(t *testing.T) {
 				"call_as":                   "SELF",
 				"deployment_targets.#":      "0",
 				"organizational_unit_id":    ouID,
-				names.AttrRegion:            "us-east-1",
+				names.AttrRegion:            endpoints.UsEast1RegionID,
 				"retain_stack":              acctest.CtTrue,
-				"stack_set_instance_region": "us-east-1",
+				"stack_set_instance_region": endpoints.UsEast1RegionID,
 				"stack_set_name":            "example",
 			},
 		}
@@ -1579,7 +1580,7 @@ func TestStackSetInstanceDiff_importedDeploymentTargets(t *testing.T) {
 		}
 		return sdkterraform.NewResourceConfigRaw(map[string]any{
 			"stack_set_name":            "example",
-			"stack_set_instance_region": "us-east-1",
+			"stack_set_instance_region": endpoints.UsEast1RegionID,
 			"retain_stack":              true,
 			"deployment_targets":        []any{dt},
 		})
@@ -1591,21 +1592,21 @@ func TestStackSetInstanceDiff_importedDeploymentTargets(t *testing.T) {
 		wantReplace bool
 	}{
 		"imported account ID, equivalent single account INTERSECTION": {
-			state:  state("example,"+testStackSetInstanceAccount1+",us-east-1", testStackSetInstanceAccount1, testStackSetInstanceOU1),
+			state:  state("example,"+testStackSetInstanceAccount1+","+endpoints.UsEast1RegionID, testStackSetInstanceAccount1, testStackSetInstanceOU1),
 			config: config([]any{testStackSetInstanceOU1}, []any{testStackSetInstanceAccount1}, "INTERSECTION"),
 		},
 		"imported account ID, different account": {
-			state:       state("example,"+testStackSetInstanceAccount1+",us-east-1", testStackSetInstanceAccount1, testStackSetInstanceOU1),
+			state:       state("example,"+testStackSetInstanceAccount1+","+endpoints.UsEast1RegionID, testStackSetInstanceAccount1, testStackSetInstanceOU1),
 			config:      config([]any{testStackSetInstanceOU1}, []any{testStackSetInstanceAccount2}, "INTERSECTION"),
 			wantReplace: true,
 		},
 		"imported account ID, different OU": {
-			state:       state("example,"+testStackSetInstanceAccount1+",us-east-1", testStackSetInstanceAccount1, testStackSetInstanceOU1),
+			state:       state("example,"+testStackSetInstanceAccount1+","+endpoints.UsEast1RegionID, testStackSetInstanceAccount1, testStackSetInstanceOU1),
 			config:      config([]any{testStackSetInstanceOU2}, []any{testStackSetInstanceAccount1}, "INTERSECTION"),
 			wantReplace: true,
 		},
 		"imported OU IDs, equivalent multi-OU target": {
-			state:  state("example,"+testStackSetInstanceOU1+"/"+testStackSetInstanceOU2+",us-east-1", "", ""),
+			state:  state("example,"+testStackSetInstanceOU1+"/"+testStackSetInstanceOU2+","+endpoints.UsEast1RegionID, "", ""),
 			config: config([]any{testStackSetInstanceOU2, testStackSetInstanceOU1}, nil, ""),
 		},
 	}
