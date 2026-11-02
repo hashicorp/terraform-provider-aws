@@ -3,12 +3,12 @@ subcategory: "End User Messaging SMS"
 layout: "aws"
 page_title: "AWS: aws_pinpointsmsvoicev2_phone_number"
 description: |-
-  Lists End User Messaging SMS Phone Number resources.
+  Lists End User Messaging SMS Phone Numbers.
 ---
 
 # List Resource: aws_pinpointsmsvoicev2_phone_number
 
-Lists End User Messaging SMS Phone Number resources.
+Lists End User Messaging SMS Phone Numbers.
 
 ## Example Usage
 
