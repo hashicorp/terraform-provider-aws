@@ -10,8 +10,11 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
@@ -39,6 +42,9 @@ func TestAccNotificationsManagedNotificationAdditionalChannelAssociation_basic(t
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckManagedNotificationAdditionalChannelAssociationExists(ctx, t, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sensitive_events_subscribed"), knownvalue.Bool(false)),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -78,6 +84,61 @@ func TestAccNotificationsManagedNotificationAdditionalChannelAssociation_disappe
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccNotificationsManagedNotificationAdditionalChannelAssociation_sensitiveEventsSubscribed(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName(t))
+	resourceName := "aws_notifications_managed_notification_additional_channel_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedNotificationAdditionalChannelAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccManagedNotificationAdditionalChannelAssociationConfig_sensitiveEventsSubscribed(rName, rEmailAddress, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckManagedNotificationAdditionalChannelAssociationExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sensitive_events_subscribed"), knownvalue.Bool(true)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "channel_arn",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "managed_notification_arn", "channel_arn"),
+			},
+			{
+				Config: testAccManagedNotificationAdditionalChannelAssociationConfig_sensitiveEventsSubscribed(rName, rEmailAddress, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckManagedNotificationAdditionalChannelAssociationExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sensitive_events_subscribed"), knownvalue.Bool(false)),
 				},
 			},
 		},
@@ -140,4 +201,22 @@ resource "aws_notifications_managed_notification_additional_channel_association"
   managed_notification_arn = "arn:${data.aws_partition.current.partition}:notifications::${data.aws_caller_identity.current.account_id}:managed-notification-configuration/category/AWS-Health/sub-category/Security"
 }
 `, rName, rEmailAddress)
+}
+
+func testAccManagedNotificationAdditionalChannelAssociationConfig_sensitiveEventsSubscribed(rName, rEmailAddress string, sensitiveEventsSubscribed bool) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_notificationscontacts_email_contact" "test" {
+  name          = %[1]q
+  email_address = %[2]q
+}
+
+resource "aws_notifications_managed_notification_additional_channel_association" "test" {
+  channel_arn                 = aws_notificationscontacts_email_contact.test.arn
+  managed_notification_arn    = "arn:${data.aws_partition.current.partition}:notifications::${data.aws_caller_identity.current.account_id}:managed-notification-configuration/category/AWS-Health/sub-category/Security"
+  sensitive_events_subscribed = %[3]t
+}
+`, rName, rEmailAddress, sensitiveEventsSubscribed)
 }
