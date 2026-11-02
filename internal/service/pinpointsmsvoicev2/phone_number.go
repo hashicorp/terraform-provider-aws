@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -316,7 +317,7 @@ func (r *phoneNumberResource) Read(ctx context.Context, request resource.ReadReq
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	response.Diagnostics.Append(data.flatten(ctx, out)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -482,6 +483,14 @@ type phoneNumberResourceModel struct {
 	TwoWayEnabled             types.Bool                                         `tfsdk:"two_way_channel_enabled"`
 	TwoWayChannelRole         fwtypes.ARN                                        `tfsdk:"two_way_channel_role"`
 	WaitForActive             types.Bool                                         `tfsdk:"wait_for_active" autoflex:"-"`
+}
+
+func (model *phoneNumberResourceModel) flatten(ctx context.Context, out *awstypes.PhoneNumberInformation) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(fwflex.Flatten(ctx, out, model)...)
+
+	return diags
 }
 
 func findPhoneNumberByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) (*awstypes.PhoneNumberInformation, error) {
