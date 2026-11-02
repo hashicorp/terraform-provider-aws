@@ -13,6 +13,16 @@ Manages an AWS QuickSight Account Custom Permission.
 ## Example Usage
 
 ```terraform
+resource "aws_quicksight_custom_permissions" "example" {
+  custom_permissions_name = "example-permissions"
+
+  capabilities {
+    create_and_update_datasets     = "DENY"
+    create_and_update_data_sources = "DENY"
+    export_to_pdf                  = "DENY"
+  }
+}
+
 resource "aws_quicksight_account_custom_permission" "example" {
   custom_permissions_name = aws_quicksight_custom_permissions.example.custom_permissions_name
 }
@@ -59,19 +69,19 @@ resource "aws_quicksight_account_custom_permission" "example" {
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
-* `region` (String) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight Account Custom Permission using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight Account Custom Permission using the AWS account ID. For example:
 
 ```terraform
 import {
   to = aws_quicksight_account_custom_permission.example
-  id = "account_custom_permission-id-012345678900"
+  id = "012345678900"
 }
 ```
 
-Using `terraform import`, import QuickSight Account Custom Permission using the `example_id_arg`. For example:
+Using `terraform import`, import QuickSight Account Custom Permission using the AWS account ID. For example:
 
 ```console
-% terraform import aws_quicksight_account_custom_permission.example account_custom_permission-id-012345678900
+% terraform import aws_quicksight_account_custom_permission.example 012345678900
 ```
