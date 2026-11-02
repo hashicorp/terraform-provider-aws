@@ -289,8 +289,6 @@ func (ipSetImportID) Parse(id string) (string, map[string]any, error) {
 }
 
 func suppressEquivalentIPSetAddresses(k, old, new string, d *schema.ResourceData) bool {
-	// SDKv2 calls this once per set element, including unchanged ones. Their diff is a no-op,
-	// so skip the whole-set comparison for them to avoid O(n^2) work on large sets.
 	if old == new {
 		return false
 	}
@@ -329,8 +327,6 @@ func ipSetAddressesEquivalent(oldAddresses, newAddresses []any) bool {
 	return true
 }
 
-// cidrBlockEqualityKey returns a key such that two CIDR blocks have the same key
-// if and only if inttypes.CIDRBlocksEqual reports them as equal.
 func cidrBlockEqualityKey(cidr string) (string, bool) {
 	ip, ipNet, err := net.ParseCIDR(cidr)
 	if err != nil {
