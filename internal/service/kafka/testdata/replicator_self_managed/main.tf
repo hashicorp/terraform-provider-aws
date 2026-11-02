@@ -24,9 +24,20 @@ variable "name_prefix" {
   default = "tf-msk-replicator-test"
 }
 
+// MSK retires Kafka versions for new clusters over time: CreateCluster rejects a version it no
+// longer offers with "Standard instance types are not supported for Kafka version <v>" and lists
+// the versions it still accepts. Check that list before changing this.
 variable "kafka_version" {
   type    = string
-  default = "3.6.0"
+  default = "3.8.x"
+}
+
+// The Apache Kafka release whose CLI the bastion installs, used only to read the source
+// cluster's cluster.id. MSK's version strings (3.9.x) are not Apache release numbers, so this
+// is separate from kafka_version; any release whose kafka-cluster.sh supports the cluster works.
+variable "kafka_cli_version" {
+  type    = string
+  default = "3.8.1"
 }
 
 data "aws_availability_zones" "available" {
@@ -318,9 +329,9 @@ resource "aws_instance" "bastion" {
 
     dnf install -y java-17-amazon-corretto-headless tar gzip jq
 
-    curl -fsSL "https://archive.apache.org/dist/kafka/${var.kafka_version}/kafka_2.13-${var.kafka_version}.tgz" -o /tmp/kafka.tgz # nosemgrep:ci.semgrep.domain-names.domain-names-tf
+    curl -fsSL "https://archive.apache.org/dist/kafka/${var.kafka_cli_version}/kafka_2.13-${var.kafka_cli_version}.tgz" -o /tmp/kafka.tgz # nosemgrep:ci.semgrep.domain-names.domain-names-tf
     tar xzf /tmp/kafka.tgz -C /opt
-    ln -sfn "/opt/kafka_2.13-${var.kafka_version}" /opt/kafka
+    ln -sfn "/opt/kafka_2.13-${var.kafka_cli_version}" /opt/kafka
 
     cat > /opt/cluster-id.sh <<'SCRIPT'
     #!/bin/bash
