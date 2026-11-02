@@ -41,21 +41,50 @@ var validAccountAlias = validation.All(
 	},
 )
 
-var validOpenIDURL = validation.All(
-	validation.IsURLWithHTTPS,
-	func(v any, k string) (ws []string, es []error) {
-		value := v.(string)
-		u, err := url.Parse(value)
-		if err != nil {
-			// validation.IsURLWithHTTPS will already have returned an error for an invalid URL
-			return
-		}
-		if len(u.Query()) > 0 {
-			es = append(es, fmt.Errorf("%q cannot contain query parameters per the OIDC standard", k))
-		}
+// validOpenIDURL validates an OpenID Connect URL. It accepts URLs both with
+// and without the https:// scheme prefix. AWS returns OIDC provider URLs
+// without the scheme, so the provider must accept both forms to support
+// import and data source lookups after state refresh.
+var validOpenIDURL = func(v any, k string) (ws []string, es []error) {
+	value, ok := v.(string)
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %q to be string", k))
 		return
-	},
-)
+	}
+
+	if value == "" {
+		es = append(es, fmt.Errorf("expected %q url to not be empty", k))
+		return
+	}
+
+	// If the URL has no scheme, prepend https:// for parsing.
+	urlToParse := value
+	if !strings.HasPrefix(value, "https://") && !strings.Contains(value, "://") {
+		urlToParse = "https://" + value
+	}
+
+	u, err := url.Parse(urlToParse)
+	if err != nil {
+		es = append(es, fmt.Errorf("expected %q to be a valid url, got %v: %+v", k, value, err))
+		return
+	}
+
+	if u.Host == "" {
+		es = append(es, fmt.Errorf("expected %q to have a host, got %v", k, value))
+		return
+	}
+
+	if u.Scheme != "https" {
+		es = append(es, fmt.Errorf("expected %q to have a url with schema of: \"https\", got %v", k, value))
+		return
+	}
+
+	if len(u.Query()) > 0 {
+		es = append(es, fmt.Errorf("%q cannot contain query parameters per the OIDC standard", k))
+	}
+
+	return
+}
 
 var validRolePolicyRole = validation.All(
 	validation.StringLenBetween(1, 128),

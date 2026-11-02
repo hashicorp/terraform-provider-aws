@@ -82,6 +82,18 @@ func TestValidOpenIDURL(t *testing.T) {
 			Value: "https://good.test",
 		},
 		{
+			Value: "token.actions.githubusercontent.com",
+		},
+		{
+			Value: "oidc.eks.eu-central-1.amazonaws.com/id/XXXXXXXXXXXXXXXXXXX",
+		},
+		{
+			Value: "accounts.google.com",
+		},
+		{
+			Value: "api.bitbucket.org/2.0/workspaces/myorg/pipelines-config/identity/oidc",
+		},
+		{
 			Value:    "http://wrong.scheme.test",
 			ErrCount: 1,
 		},
@@ -97,13 +109,17 @@ func TestValidOpenIDURL(t *testing.T) {
 			Value:    "https://no-queries.test/?query=param",
 			ErrCount: 1,
 		},
+		{
+			Value:    "",
+			ErrCount: 1,
+		},
 	}
 
 	for _, tc := range cases {
 		_, errors := validOpenIDURL(tc.Value, names.AttrURL)
 
 		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %d of OpenID URL validation errors, got %d", tc.ErrCount, len(errors))
+			t.Fatalf("%q: Expected %d of OpenID URL validation errors, got %d: %v", tc.Value, tc.ErrCount, len(errors), errors)
 		}
 	}
 }
