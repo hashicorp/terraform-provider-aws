@@ -29,6 +29,7 @@ func TestAccQuickSight_serial(t *testing.T) {
 			acctest.CtBasic:      testAccAccountCustomPermission_basic,
 			acctest.CtDisappears: testAccAccountCustomPermission_disappears,
 			"update":             testAccAccountCustomPermission_update,
+			"Identity":           testAccQuickSightAccountCustomPermission_identitySerial,
 		},
 		"AccountSettings": {
 			acctest.CtBasic: testAccAccountSettings_basic,

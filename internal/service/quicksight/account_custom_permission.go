@@ -26,6 +26,8 @@ import (
 
 // @FrameworkResource("aws_quicksight_account_custom_permission", name="Account Custom Permission")
 // @IdentityAttribute("aws_account_id")
+// @Testing(identityRegionOverrideTest=false)
+// @Testing(importStateIdAttribute="aws_account_id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 func newAccountCustomPermissionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
