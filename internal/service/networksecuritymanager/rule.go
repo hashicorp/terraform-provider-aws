@@ -259,8 +259,11 @@ func findRuleByARN(ctx context.Context, conn *networksecuritymanager.Client, arn
 	if retry.NotFound(err) {
 		return findRuleByIdentifier(ctx, conn, arn)
 	}
+	if err != nil {
+		return nil, err
+	}
 
-	return out, err
+	return out, nil
 }
 
 func findRuleByIdentifier(ctx context.Context, conn *networksecuritymanager.Client, identifier string) (*networksecuritymanager.GetRuleOutput, error) {
