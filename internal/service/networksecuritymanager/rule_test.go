@@ -59,6 +59,7 @@ func TestAccNetworkSecurityManagerRule_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.StringExact(`{"DefaultAction":{"Allow":{}}}`)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("firewall_type"), tfknownvalue.StringExact(awstypes.RuleFirewallTypeWaf)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.RuleTypeConfiguration)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -229,6 +230,77 @@ func TestAccNetworkSecurityManagerRule_descriptionRemoved(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 				},
 			},
+		},
+	})
+}
+
+// is_published drives the DRAFT/ACTIVE lifecycle. The rule is created as a draft,
+// published in place, and finally given a pending draft on top of the published
+// version, so that destroy removes both.
+func TestAccNetworkSecurityManagerRule_isPublished(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networksecuritymanager_rule.test"
+	const (
+		configuration1 = `{"DefaultAction":{"Allow":{}}}`
+		configuration2 = `{"DefaultAction":{"Block":{}}}`
+	)
+
+	step := func(isPublished bool, configuration string, action plancheck.ResourceActionType) resource.TestStep {
+		return resource.TestStep{
+			ConfigDirectory: config.StaticDirectory("testdata/Rule/is_published/"),
+			ConfigVariables: config.Variables{
+				acctest.CtRName: config.StringVariable(rName),
+				"is_published":  config.BoolVariable(isPublished),
+				"configuration": config.StringVariable(configuration),
+			},
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckRuleExists(ctx, t, resourceName),
+			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, action),
+				},
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectEmptyPlan(),
+				},
+			},
+			ConfigStateChecks: []statecheck.StateCheck{
+				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkRuleARN),
+				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.StringExact(configuration)),
+				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(isPublished)),
+			},
+		}
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckRule(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Created as a draft.
+			step(false, configuration1, plancheck.ResourceActionCreate),
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Rule/is_published/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"is_published":  config.BoolVariable(false),
+					"configuration": config.StringVariable(configuration1),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			// DRAFT -> ACTIVE: the draft itself is published.
+			step(true, configuration1, plancheck.ResourceActionUpdate),
+			// ACTIVE -> DRAFT: a draft is saved on top of the published version.
+			step(false, configuration2, plancheck.ResourceActionUpdate),
 		},
 	})
 }

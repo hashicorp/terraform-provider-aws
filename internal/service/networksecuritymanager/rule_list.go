@@ -45,7 +45,8 @@ func (l *ruleListResource) List(ctx context.Context, request list.ListRequest, s
 				return
 			}
 
-			arn := aws.ToString(item.RuleArn)
+			// A draft is listed with its DRAFT-qualified ARN.
+			arn := ruleBaseARN(aws.ToString(item.RuleArn))
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
 			var rule *networksecuritymanager.GetRuleOutput

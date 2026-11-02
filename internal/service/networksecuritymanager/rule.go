@@ -5,6 +5,7 @@ package networksecuritymanager
 
 import (
 	"context"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -43,6 +45,11 @@ func newRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) 
 	return &ruleResource{}, nil
 }
 
+// ruleDraftQualifier is the ARN qualifier of a rule's pending draft. A rule created
+// unpublished, or a draft saved on top of a published rule, can only be read,
+// updated, published or deleted through the DRAFT-qualified ARN.
+const ruleDraftQualifier = ":DRAFT"
+
 type ruleResource struct {
 	framework.ResourceWithModel[ruleResourceModel]
 	framework.WithImportByIdentity
@@ -68,6 +75,13 @@ func (r *ruleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"is_published": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
@@ -107,7 +121,6 @@ func (r *ruleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	input.ClientToken = aws.String(create.UniqueId(ctx))
-	input.IsPublished = aws.Bool(true)
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateRule(ctx, &input)
@@ -116,7 +129,7 @@ func (r *ruleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Rule")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, (*networksecuritymanager.GetRuleOutput)(out), &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -191,8 +204,9 @@ func (r *ruleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		}
 
 		input.ClientToken = aws.String(create.UniqueId(ctx))
-		input.IsPublished = aws.Bool(true)
-		input.RuleIdentifier = aws.String(arn)
+		// IsPublished is required on every update, not only when it changes.
+		input.IsPublished = fwflex.BoolFromFramework(ctx, plan.IsPublished)
+		input.RuleIdentifier = aws.String(ruleIdentifier(arn, current.Status))
 		input.UpdateToken = current.UpdateToken
 
 		out, err := conn.UpdateRule(ctx, &input)
@@ -201,12 +215,10 @@ func (r *ruleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
-		description := plan.Description
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Rule")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, (*networksecuritymanager.GetRuleOutput)(out), &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		plan.Description = normalizeDescription(description, plan.Description)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -222,22 +234,38 @@ func (r *ruleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	conn := r.Meta().NetworkSecurityManagerClient(ctx)
 
 	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
-	input := networksecuritymanager.DeleteRuleInput{
-		RuleIdentifier: aws.String(arn),
-	}
-	_, err := conn.DeleteRule(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return
-	}
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
-		return
+
+	// A published rule with a pending draft cannot be deleted until the draft is,
+	// and a rule that was never published exists only as a draft.
+	for _, identifier := range []string{arn + ruleDraftQualifier, arn} {
+		input := networksecuritymanager.DeleteRuleInput{
+			RuleIdentifier: aws.String(identifier),
+		}
+		_, err := conn.DeleteRule(ctx, &input)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			continue
+		}
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+			return
+		}
 	}
 }
 
+// findRuleByARN returns the version of the rule that an update acts on:
+// the pending draft when there is one, otherwise the published rule.
 func findRuleByARN(ctx context.Context, conn *networksecuritymanager.Client, arn string) (*networksecuritymanager.GetRuleOutput, error) {
+	out, err := findRuleByIdentifier(ctx, conn, arn+ruleDraftQualifier)
+	if retry.NotFound(err) {
+		return findRuleByIdentifier(ctx, conn, arn)
+	}
+
+	return out, err
+}
+
+func findRuleByIdentifier(ctx context.Context, conn *networksecuritymanager.Client, identifier string) (*networksecuritymanager.GetRuleOutput, error) {
 	input := networksecuritymanager.GetRuleInput{
-		RuleIdentifier: aws.String(arn),
+		RuleIdentifier: aws.String(identifier),
 	}
 
 	out, err := conn.GetRule(ctx, &input)
@@ -257,6 +285,20 @@ func findRuleByARN(ctx context.Context, conn *networksecuritymanager.Client, arn
 	return out, nil
 }
 
+// ruleBaseARN strips the DRAFT qualifier, so that the rule is always identified
+// by the ARN it keeps across publication.
+func ruleBaseARN(arn string) string {
+	return strings.TrimSuffix(arn, ruleDraftQualifier)
+}
+
+func ruleIdentifier(arn string, status awstypes.EntityStatus) string {
+	if status == awstypes.EntityStatusDraft {
+		return arn + ruleDraftQualifier
+	}
+
+	return arn
+}
+
 func (r *ruleResource) flatten(ctx context.Context, out *networksecuritymanager.GetRuleOutput, data *ruleResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -266,6 +308,8 @@ func (r *ruleResource) flatten(ctx context.Context, out *networksecuritymanager.
 		return diags
 	}
 	data.Description = normalizeDescription(description, data.Description)
+	data.ARN = fwflex.StringValueToFramework(ctx, ruleBaseARN(aws.ToString(out.RuleArn)))
+	data.IsPublished = types.BoolValue(out.Status != awstypes.EntityStatusDraft)
 
 	// The configuration is not flattened because the service returns its numbers as strings.
 	// Set it from the response when it is missing (for example, during import or listing).
@@ -296,6 +340,7 @@ type ruleResourceModel struct {
 	Configuration fwtypes.SmithyJSON[document.Interface]        `tfsdk:"configuration" autoflex:",noflatten"`
 	Description   types.String                                  `tfsdk:"description"`
 	FirewallType  fwtypes.StringEnum[awstypes.RuleFirewallType] `tfsdk:"firewall_type"`
+	IsPublished   types.Bool                                    `tfsdk:"is_published"`
 	Name          types.String                                  `tfsdk:"name"`
 	Tags          tftags.Map                                    `tfsdk:"tags"`
 	TagsAll       tftags.Map                                    `tfsdk:"tags_all"`

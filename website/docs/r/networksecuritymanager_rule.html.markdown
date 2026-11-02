@@ -42,6 +42,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the rule.
+* `is_published` - (Optional) Whether to publish the rule. When `true`, the rule is saved in the published (`ACTIVE`) state. When `false`, it is saved as a draft (`DRAFT`); for a published rule, the draft is saved on top of the published version. Defaults to `true`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#region).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

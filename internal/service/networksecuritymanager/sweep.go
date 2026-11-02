@@ -34,7 +34,7 @@ func sweepRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 
 		for _, v := range page.Rules {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newRuleResource, client,
-				framework.NewAttribute(names.AttrARN, aws.ToString(v.RuleArn))),
+				framework.NewAttribute(names.AttrARN, ruleBaseARN(aws.ToString(v.RuleArn)))),
 			)
 		}
 	}
