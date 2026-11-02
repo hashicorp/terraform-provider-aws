@@ -4,7 +4,6 @@
 package wafv2
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -61,20 +60,5 @@ func TestIPSetAddressesEquivalent(t *testing.T) {
 				t.Errorf("ipSetAddressesEquivalent() = %t, want %t", got, testCase.want)
 			}
 		})
-	}
-}
-
-func BenchmarkIPSetAddressesEquivalent(b *testing.B) {
-	const n = 10000
-
-	oldAddresses := make([]any, n)
-	newAddresses := make([]any, n)
-	for i := range n {
-		oldAddresses[i] = fmt.Sprintf("10.%d.%d.0/24", i/256, i%256)
-		newAddresses[n-1-i] = oldAddresses[i]
-	}
-
-	for b.Loop() {
-		ipSetAddressesEquivalent(oldAddresses, newAddresses)
 	}
 }
