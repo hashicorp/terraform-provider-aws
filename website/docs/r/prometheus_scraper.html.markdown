@@ -195,6 +195,72 @@ EOT
 }
 ```
 
+### Kafka Exporter
+
+The scraper collects consumer-group metrics from an Amazon MSK provisioned cluster. The cluster must use IAM authentication and be in the same account and Region as the scraper. For supported broker types and Apache Kafka versions, see the user guide linked below. The scraper must use a `vpc` source in the cluster's VPC, and its security group must be able to reach the cluster's IAM broker endpoints on port 9098. The scrape configuration must include a job named `kafka-exporter`.
+
+The scraper collects no Kafka metrics until an MSK cluster policy grants the scraper's service-linked role (`role_arn`) access to the cluster. An `aws_msk_cluster_policy` resource manages the cluster's whole policy, so include any statements that the cluster already has. To remove the exporter, remove the `exporter` block and the `kafka-exporter` job from `scrape_configuration`. See [Collect Amazon MSK consumer-group metrics](https://docs.aws.amazon.com/prometheus/latest/userguide/prom-msk-kafka-exporter.html) for details.
+
+```terraform
+resource "aws_prometheus_scraper" "example" {
+  source {
+    vpc {
+      security_group_ids = [aws_security_group.example.id]
+      subnet_ids         = [aws_subnet.example1.id, aws_subnet.example2.id]
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.example.arn
+    }
+  }
+
+  exporter {
+    kafka {
+      cluster_arn           = aws_msk_cluster.example.arn
+      consumer_group_filter = "^payments.*$"
+      topic_filter          = "^orders.*$"
+    }
+  }
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+scrape_configs:
+  - job_name: kafka-exporter
+EOT
+}
+
+resource "aws_msk_cluster_policy" "example" {
+  cluster_arn = aws_msk_cluster.example.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { AWS = aws_prometheus_scraper.example.role_arn }
+        Action    = "kafka-cluster:Connect"
+        Resource  = aws_msk_cluster.example.arn
+      },
+      {
+        Effect    = "Allow"
+        Principal = { AWS = aws_prometheus_scraper.example.role_arn }
+        Action    = "kafka-cluster:DescribeTopic"
+        Resource  = "${replace(aws_msk_cluster.example.arn, ":cluster/", ":topic/")}/*"
+      },
+      {
+        Effect    = "Allow"
+        Principal = { AWS = aws_prometheus_scraper.example.role_arn }
+        Action    = "kafka-cluster:DescribeGroup"
+        Resource  = "${replace(aws_msk_cluster.example.arn, ":cluster/", ":group/")}/*"
+      },
+    ]
+  })
+}
+```
+
 ### Use default EKS scraper configuration
 
 You can use the data source `aws_prometheus_default_scraper_configuration` to use a
@@ -362,7 +428,18 @@ The `vpc` configuration block supports the following arguments:
 
 The `exporter` configuration block supports the following arguments:
 
-* `opensearch` - (Required) Configuration block for an OpenSearch exporter. See [`opensearch` Block](#opensearch-block) for details.
+* `kafka` - (Optional) Configuration block for an Amazon MSK Kafka exporter. See [`kafka` Block](#kafka-block) for details.
+* `opensearch` - (Optional) Configuration block for an OpenSearch exporter. See [`opensearch` Block](#opensearch-block) for details.
+
+Exactly one of `kafka` or `opensearch` must be specified.
+
+### `kafka` Block
+
+The `kafka` configuration block supports the following arguments:
+
+* `cluster_arn` - (Required) ARN of the Amazon MSK provisioned cluster. MSK Serverless clusters are not supported.
+* `consumer_group_filter` - (Optional) Anchored RE2 regular expression that selects the consumer groups to monitor. It must start with `^` and end with `$`. Valid length is between `1` and `256` characters. If omitted, all consumer groups are selected.
+* `topic_filter` - (Optional) Anchored RE2 regular expression that selects the topics to monitor. It must start with `^` and end with `$`. Valid length is between `1` and `256` characters. If omitted, all topics are selected.
 
 ### `opensearch` Block
 

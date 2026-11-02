@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/aws/aws-sdk-go-v2/service/amp/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -279,6 +280,7 @@ func TestAccAMPScraper_openSearchExporter(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exporter"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"kafka": knownvalue.ListSizeExact(0),
 						"opensearch": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"domain_arn": knownvalue.NotNull(),
 						})}),
@@ -305,6 +307,129 @@ func TestAccAMPScraper_openSearchExporter(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exporter"), knownvalue.ListSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccAMPScraper_kafkaExporter(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var scraper types.ScraperDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper.test"
+	clusterResourceName := "aws_msk_cluster.test"
+	kafkaPath := tfjsonpath.New("exporter").AtSliceIndex(0).AtMapKey("kafka").AtSliceIndex(0)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScraperConfig_kafkaExporter(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exporter"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"kafka": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"cluster_arn":           knownvalue.NotNull(),
+							"consumer_group_filter": knownvalue.Null(),
+							"topic_filter":          knownvalue.Null(),
+						})}),
+						"opensearch": knownvalue.ListSizeExact(0),
+					})})),
+					statecheck.CompareValuePairs(resourceName, kafkaPath.AtMapKey("cluster_arn"), clusterResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScraperConfig_kafkaExporterFilters(rName, "^orders.*$", "^payments.*$"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, kafkaPath.AtMapKey("consumer_group_filter"), knownvalue.StringExact("^payments.*$")),
+					statecheck.ExpectKnownValue(resourceName, kafkaPath.AtMapKey("topic_filter"), knownvalue.StringExact("^orders.*$")),
+					statecheck.CompareValuePairs(resourceName, kafkaPath.AtMapKey("cluster_arn"), clusterResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccScraperConfig_kafkaExporter(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, kafkaPath.AtMapKey("consumer_group_filter"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, kafkaPath.AtMapKey("topic_filter"), knownvalue.Null()),
+				},
+			},
+			{
+				Config: testAccScraperConfig_kafkaExporterNone(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("exporter"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				Config: testAccScraperConfig_kafkaExporter(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, kafkaPath.AtMapKey("cluster_arn"), clusterResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
 		},
@@ -900,6 +1025,136 @@ resource "aws_prometheus_scraper" "test" {
   scrape_configuration = <<EOT
 global:
   scrape_interval: 60s
+scrape_configs:
+  - job_name: 'test-service'
+    dns_sd_configs:
+      - names: ['test-service.%[1]s.local']
+        type: A
+        port: 80
+EOT
+
+  source {
+    vpc {
+      security_group_ids = [aws_security_group.test.id]
+      subnet_ids         = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.test.arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccScraperConfig_kafkaExporterBase(rName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "3.8.x"
+  number_of_broker_nodes = 2
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.test[*].id
+    instance_type   = "kafka.t3.small"
+    security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+  }
+
+  client_authentication {
+    sasl {
+      iam = true
+    }
+  }
+}
+`, rName))
+}
+
+func testAccScraperConfig_kafkaExporter(rName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_kafkaExporterBase(rName), fmt.Sprintf(`
+resource "aws_prometheus_scraper" "test" {
+  alias = %[1]q
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+scrape_configs:
+  - job_name: kafka-exporter
+EOT
+
+  source {
+    vpc {
+      security_group_ids = [aws_security_group.test.id]
+      subnet_ids         = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.test.arn
+    }
+  }
+
+  exporter {
+    kafka {
+      cluster_arn = aws_msk_cluster.test.arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccScraperConfig_kafkaExporterFilters(rName, topicFilter, consumerGroupFilter string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_kafkaExporterBase(rName), fmt.Sprintf(`
+resource "aws_prometheus_scraper" "test" {
+  alias = %[1]q
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
+scrape_configs:
+  - job_name: kafka-exporter
+EOT
+
+  source {
+    vpc {
+      security_group_ids = [aws_security_group.test.id]
+      subnet_ids         = aws_subnet.test[*].id
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.test.arn
+    }
+  }
+
+  exporter {
+    kafka {
+      cluster_arn           = aws_msk_cluster.test.arn
+      consumer_group_filter = %[3]q
+      topic_filter          = %[2]q
+    }
+  }
+}
+`, rName, topicFilter, consumerGroupFilter))
+}
+
+func testAccScraperConfig_kafkaExporterNone(rName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_kafkaExporterBase(rName), fmt.Sprintf(`
+resource "aws_prometheus_scraper" "test" {
+  alias = %[1]q
+
+  scrape_configuration = <<EOT
+global:
+  scrape_interval: 30s
 scrape_configs:
   - job_name: 'test-service'
     dns_sd_configs:

@@ -1,3 +1,7 @@
+```release-note:enhancement
+resource/aws_prometheus_scraper: Add `exporter.kafka` configuration block
+```
+
 ```release-note:bug
 resource/aws_prometheus_scraper: Fix removing the `exporter` configuration block not removing the exporter from the scraper, which caused a persistent diff
 ```
