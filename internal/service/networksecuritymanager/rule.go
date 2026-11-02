@@ -39,7 +39,6 @@ import (
 // @ArnIdentity
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheckRule")
-// @Testing(identityRegionOverrideTest=false)
 func newRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &ruleResource{}, nil
 }
