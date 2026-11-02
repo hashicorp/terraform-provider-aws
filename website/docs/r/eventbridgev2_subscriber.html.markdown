@@ -326,6 +326,7 @@ The `jsonata_configuration` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the subscriber.
+* `bus_name` - Name of the event bus the subscriber is attached to.
 * `creation_time` - Time the subscriber was created, in RFC3339 format.
 * `last_modified_time` - Time the subscriber was last modified, in RFC3339 format.
 * `revoked` - Whether the event bus owner has revoked the subscriber.

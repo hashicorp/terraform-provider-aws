@@ -60,6 +60,7 @@ func TestAccEventBridgeV2Subscriber_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkSubscriberARN(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("batch_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("bus_name"), busResourceName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreationTime), knownvalue.NotNull()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("event_bus_arn"), busResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("invoke_configuration").AtSliceIndex(0).AtMapKey(names.AttrTargetARN), queueResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),

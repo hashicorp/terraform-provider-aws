@@ -5,6 +5,7 @@ package eventbridgev2
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -67,6 +68,12 @@ func (r *subscriberResource) Schema(ctx context.Context, req resource.SchemaRequ
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"bus_name": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrCreationTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -767,6 +774,11 @@ func (r *subscriberResource) flatten(ctx context.Context, out *eventbridgev2.Des
 		data.Description = types.StringNull()
 	}
 
+	// The service doesn't return the bus name, so take it from the event bus ARN (...:event-busv2/<name>/<id>).
+	_, busResource, _ := strings.Cut(aws.ToString(out.EventBusArn), ":event-busv2/")
+	busName, _, _ := strings.Cut(busResource, "/")
+	data.BusName = fwflex.StringValueToFrameworkLegacy(ctx, busName)
+
 	return diags
 }
 
@@ -870,6 +882,7 @@ type subscriberResourceModel struct {
 	framework.WithRegionModel
 	ARN                      types.String                                                   `tfsdk:"arn"`
 	BatchConfiguration       fwtypes.ListNestedObjectValueOf[batchConfigurationModel]       `tfsdk:"batch_configuration"`
+	BusName                  types.String                                                   `tfsdk:"bus_name"`
 	CreationTime             timetypes.RFC3339                                              `tfsdk:"creation_time"`
 	Description              types.String                                                   `tfsdk:"description"`
 	EventBusARN              fwtypes.ARN                                                    `tfsdk:"event_bus_arn"`
