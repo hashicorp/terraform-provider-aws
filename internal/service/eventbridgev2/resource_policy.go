@@ -146,21 +146,28 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 func (r *resourcePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().EventBridgeV2Client(ctx)
 
-	var plan resourcePolicyResourceModel
+	var plan, state resourcePolicyResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	arn := fwflex.StringValueFromFramework(ctx, plan.ResourceARN)
 	input := eventbridgev2.PutResourcePolicyInput{
-		PolicyDocument: fwflex.StringFromFramework(ctx, plan.Policy),
-		ResourceArn:    aws.String(arn),
+		// Fail instead of overwriting a policy that was changed outside Terraform since it was last read.
+		ExpectedRevisionId: fwflex.StringFromFramework(ctx, state.RevisionID),
+		PolicyDocument:     fwflex.StringFromFramework(ctx, plan.Policy),
+		ResourceArn:        aws.String(arn),
 	}
 
 	out, err := tfresource.RetryWhenIsA[*eventbridgev2.PutResourcePolicyOutput, *awstypes.ResourceNotFoundException](ctx, resourcePolicyPropagationTimeout, func(ctx context.Context) (*eventbridgev2.PutResourcePolicyOutput, error) {
 		return conn.PutResourcePolicy(ctx, &input)
 	})
+	if errs.IsA[*awstypes.ConflictException](err) {
+		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("resource policy was changed outside Terraform, refresh and apply again: %w", err), smerr.ID, arn)
+		return
+	}
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 		return

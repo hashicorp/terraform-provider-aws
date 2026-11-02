@@ -6,6 +6,7 @@ package eventbridgev2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -172,6 +173,41 @@ func TestAccEventBridgeV2ResourcePolicy_existingPolicy(t *testing.T) {
 	})
 }
 
+func TestAccEventBridgeV2ResourcePolicy_changedOutsideTerraform(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridgev2.GetResourcePolicyOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eventbridgev2_resource_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourcePolicyConfig_basic(rName, "events:PutEvents"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourcePolicyExists(ctx, t, resourceName, &v),
+				),
+			},
+			// The policy changes between plan and apply, so the update fails instead of overwriting it.
+			{
+				Config: testAccResourcePolicyConfig_basic(rName, "events:PutRawEvents"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						resourcePolicyChangedOutsideTerraform{t: t, v: &v},
+					},
+				},
+				ExpectError: regexache.MustCompile(`resource policy was changed outside Terraform`),
+			},
+		},
+	})
+}
+
 func TestAccEventBridgeV2ResourcePolicy_crossAccountSubscriber(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridgev2.GetResourcePolicyOutput
@@ -303,6 +339,22 @@ func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, n strin
 
 		return nil
 	}
+}
+
+// resourcePolicyChangedOutsideTerraform is a plan check that changes the policy after the plan is made.
+type resourcePolicyChangedOutsideTerraform struct {
+	t *testing.T
+	v *eventbridgev2.GetResourcePolicyOutput
+}
+
+func (c resourcePolicyChangedOutsideTerraform) CheckPlan(ctx context.Context, _ plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	conn := acctest.ProviderMeta(ctx, c.t).EventBridgeV2Client(ctx)
+
+	input := eventbridgev2.PutResourcePolicyInput{
+		PolicyDocument: aws.String(strings.Replace(aws.ToString(c.v.PolicyDocument), "events:PutEvents", "events:PutRawEvents", 1)),
+		ResourceArn:    c.v.ResourceArn,
+	}
+	_, resp.Error = conn.PutResourcePolicy(ctx, &input)
 }
 
 func testAccResourcePolicyConfig_basic(rName, action string) string {

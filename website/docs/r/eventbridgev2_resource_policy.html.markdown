@@ -21,6 +21,8 @@ EventBridge evaluates both policies when it authorizes a caller from another acc
 
 ~> **Note:** Creating this resource fails if the event bus already has a customer-managed policy, for example one set in the console. [Import](#import) the existing policy to manage it with Terraform.
 
+~> **Note:** Updating this resource fails if the policy was changed outside Terraform after it was last read. Run `terraform apply` again to refresh the policy and update it.
+
 ## Example Usage
 
 ### Grant Another Account Access to Subscribe
