@@ -6,6 +6,7 @@ package kafka_test
 import (
 	"context"
 	"fmt"
+	"maps"
 	"math/rand/v2"
 	"reflect"
 	"slices"
@@ -2048,9 +2049,7 @@ func TestReplicatorClusterIdentifierExactlyOneOf(t *testing.T) {
 			} {
 				delete(replicationInfo, key)
 			}
-			for key, value := range testCase.identifiers {
-				replicationInfo[key] = value
-			}
+			maps.Copy(replicationInfo, testCase.identifiers)
 
 			diags := tfkafka.ResourceReplicator().Validate(tfterraform.NewResourceConfigRaw(raw))
 

@@ -24,17 +24,17 @@ variable "name_prefix" {
   default = "tf-msk-replicator-test"
 }
 
-// MSK retires Kafka versions for new clusters over time: CreateCluster rejects a version it no
-// longer offers with "Standard instance types are not supported for Kafka version <v>" and lists
-// the versions it still accepts. Check that list before changing this.
+# MSK retires Kafka versions for new clusters over time: CreateCluster rejects a version it no
+# longer offers with "Standard instance types are not supported for Kafka version <v>" and lists
+# the versions it still accepts. Check that list before changing this.
 variable "kafka_version" {
   type    = string
   default = "3.8.x"
 }
 
-// The Apache Kafka release whose CLI the bastion installs, used only to read the source
-// cluster's cluster.id. MSK's version strings (3.9.x) are not Apache release numbers, so this
-// is separate from kafka_version; any release whose kafka-cluster.sh supports the cluster works.
+# The Apache Kafka release whose CLI the bastion installs, used only to read the source
+# cluster's cluster.id. MSK's version strings (3.9.x) are not Apache release numbers, so this
+# is separate from kafka_version; any release whose kafka-cluster.sh supports the cluster works.
 variable "kafka_cli_version" {
   type    = string
   default = "3.8.1"
