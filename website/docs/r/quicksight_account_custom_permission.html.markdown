@@ -17,9 +17,8 @@ resource "aws_quicksight_custom_permissions" "example" {
   custom_permissions_name = "example-permissions"
 
   capabilities {
-    create_and_update_datasets     = "DENY"
-    create_and_update_data_sources = "DENY"
-    export_to_pdf                  = "DENY"
+    print_reports    = "DENY"
+    share_dashboards = "DENY"
   }
 }
 
