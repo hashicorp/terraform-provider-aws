@@ -35,6 +35,7 @@ import (
 
 // @FrameworkResource("aws_iot_billing_group", name="Billing Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newBillingGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &billingGroupResource{}
 

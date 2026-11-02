@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_iot_authorizer", name="Authorizer")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthorizerCreate,

@@ -32,6 +32,7 @@ import (
 
 // @SDKResource("aws_iot_policy", name="Policy")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,

@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_iot_role_alias", name="Role Alias")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceRoleAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleAliasCreate,
