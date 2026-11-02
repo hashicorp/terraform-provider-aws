@@ -53,6 +53,7 @@ import (
 // @Testing(preCheck="testAccPreCheckPhoneNumber")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes;awstypes.PhoneNumberInformation")
 // @Testing(importIgnore="wait_for_active")
+// @Testing(generator=false)
 func newPhoneNumberResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &phoneNumberResource{}
 
