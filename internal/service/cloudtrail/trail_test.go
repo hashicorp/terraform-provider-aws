@@ -496,13 +496,6 @@ func testAccTrail_recursiveLogging(t *testing.T) {
 		CheckDestroy:             testAccCheckTrailDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudTrailConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrailExists(ctx, t, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "recursive_logging", acctest.CtTrue),
-				),
-			},
-			{
 				Config: testAccCloudTrailConfig_recursiveLogging(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, t, resourceName, &trail),
@@ -510,7 +503,7 @@ func testAccTrail_recursiveLogging(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
 			},
@@ -528,6 +521,30 @@ func testAccTrail_recursiveLogging(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccCloudTrailConfig_recursiveLogging(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, t, resourceName, &trail),
+					resource.TestCheckResourceAttr(resourceName, "recursive_logging", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccCloudTrailConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, t, resourceName, &trail),
+					resource.TestCheckResourceAttr(resourceName, "recursive_logging", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
