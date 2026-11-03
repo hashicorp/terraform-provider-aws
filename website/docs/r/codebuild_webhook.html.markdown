@@ -107,8 +107,8 @@ This resource supports the following arguments:
 
 ### scope_configuration
 
-* `name` - (Required) The name of either the enterprise or organization.
-* `scope` - (Required) The type of scope for a GitHub webhook. Valid values for this parameter are: `GITHUB_ORGANIZATION`, `GITHUB_GLOBAL`.
+* `name` - (Required) Name of the enterprise, organization, or GitLab group.
+* `scope` - (Required) Scope of the webhook. Valid values: `GITHUB_ORGANIZATION`, `GITHUB_GLOBAL`, `GITLAB_GROUP`.
 * `domain` - (Optional) The domain of the GitHub Enterprise organization. Required if your project's source type is GITHUB_ENTERPRISE.
 
 ### pull_request_build_policy
