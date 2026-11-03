@@ -360,6 +360,112 @@ resource "aws_s3_bucket_lifecycle_configuration" "versioning-bucket-config" {
 }
 ```
 
+### Creating a Lifecycle Configuration for a bucket with Object Lock
+
+This configuration tiers each record type on its own schedule using tag-scoped rules, expires noncurrent versions, cleans up incomplete multipart uploads, and pairs the lifecycle configuration with an [`aws_s3_bucket_object_lock_configuration`](s3_bucket_object_lock_configuration.html.markdown) resource.
+
+~> Amazon S3 does not allow `abort_incomplete_multipart_upload` in a rule whose `filter` uses object tags. Specify it in a separate rule, as shown below. See [Lifecycle configuration elements](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html) in the Amazon S3 User Guide.
+
+~> Lifecycle rules keep running on objects protected by Object Lock and can still add delete markers, but a locked object version cannot be permanently deleted by a Lifecycle expiration action. If `noncurrent_version_expiration` elapses while a version is still within its retention period, Amazon S3 retains that version until the retention period ends. See [Object Lock considerations](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-managing.html) in the Amazon S3 User Guide.
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket              = "example-records-archive"
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    default_retention {
+      mode  = "COMPLIANCE"
+      years = 1
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.example]
+
+  bucket = aws_s3_bucket.example.id
+
+  # Reclaim storage from uploads that never completed. This rule cannot use a
+  # tag filter, so it is scoped to the whole bucket.
+  rule {
+    id     = "abort-incomplete-uploads"
+    status = "Enabled"
+
+    filter {}
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+
+  rule {
+    id     = "financial-records"
+    status = "Enabled"
+
+    filter {
+      tag {
+        key   = "record-type"
+        value = "financial"
+      }
+    }
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 90
+      storage_class = "DEEP_ARCHIVE"
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 730
+    }
+  }
+
+  rule {
+    id     = "audit-logs"
+    status = "Enabled"
+
+    filter {
+      tag {
+        key   = "record-type"
+        value = "audit-log"
+      }
+    }
+
+    transition {
+      days          = 60
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 180
+      storage_class = "DEEP_ARCHIVE"
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 730
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -390,6 +496,8 @@ The `rule` configuration block supports the following arguments:
 * `transition` - (Optional) Set of configuration blocks that specify when an Amazon S3 object transitions to a specified storage class. [See below](#transition-block).
 
 ### `abort_incomplete_multipart_upload` Block
+
+~> Amazon S3 does not allow this action in a rule whose `filter` uses object tags. See [Lifecycle configuration elements](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html) in the Amazon S3 User Guide.
 
 The `abort_incomplete_multipart_upload` configuration block supports the following arguments:
 
