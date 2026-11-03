@@ -508,6 +508,11 @@ func testAccTrail_recursiveLogging(t *testing.T) {
 					testAccCheckTrailExists(ctx, t, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "recursive_logging", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -520,6 +525,11 @@ func testAccTrail_recursiveLogging(t *testing.T) {
 					testAccCheckTrailExists(ctx, t, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "recursive_logging", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
