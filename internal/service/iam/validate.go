@@ -49,12 +49,12 @@ var validOpenIDURL = func(v any, k string) (ws []string, es []error) {
 	value, ok := v.(string)
 	if !ok {
 		es = append(es, fmt.Errorf("expected type of %q to be string", k))
-		return
+		return ws, es
 	}
 
 	if value == "" {
 		es = append(es, fmt.Errorf("expected %q url to not be empty", k))
-		return
+		return ws, es
 	}
 
 	// If the URL has no scheme, prepend https:// for parsing.
@@ -65,25 +65,25 @@ var validOpenIDURL = func(v any, k string) (ws []string, es []error) {
 
 	u, err := url.Parse(urlToParse)
 	if err != nil {
-		es = append(es, fmt.Errorf("expected %q to be a valid url, got %v: %+v", k, value, err))
-		return
+		es = append(es, fmt.Errorf("expected %q to be a valid url, got %v: %w", k, value, err))
+		return ws, es
 	}
 
 	if u.Host == "" {
 		es = append(es, fmt.Errorf("expected %q to have a host, got %v", k, value))
-		return
+		return ws, es
 	}
 
 	if u.Scheme != "https" {
 		es = append(es, fmt.Errorf("expected %q to have a url with schema of: \"https\", got %v", k, value))
-		return
+		return ws, es
 	}
 
 	if len(u.Query()) > 0 {
 		es = append(es, fmt.Errorf("%q cannot contain query parameters per the OIDC standard", k))
 	}
 
-	return
+	return ws, es
 }
 
 var validRolePolicyRole = validation.All(

@@ -82,16 +82,16 @@ func TestValidOpenIDURL(t *testing.T) {
 			Value: "https://good.test",
 		},
 		{
-			Value: "token.actions.githubusercontent.com",
+			Value: "oidc.actions.test",
 		},
 		{
-			Value: "oidc.eks.eu-central-1.amazonaws.com/id/XXXXXXXXXXXXXXXXXXX",
+			Value: "oidc.eks.eu-central-1.amazonaws.com/id/XXXXXXXXXXXXXXXXXXX", //lintignore:AWSAT003
 		},
 		{
 			Value: "accounts.google.com",
 		},
 		{
-			Value: "api.bitbucket.org/2.0/workspaces/myorg/pipelines-config/identity/oidc",
+			Value: "api.provider.test/2.0/workspaces/myorg/pipelines-config/identity/oidc",
 		},
 		{
 			Value:    "http://wrong.scheme.test",
