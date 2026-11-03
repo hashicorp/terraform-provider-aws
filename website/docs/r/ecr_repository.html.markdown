@@ -59,8 +59,8 @@ This resource supports the following arguments:
 
 ### encryption_configuration
 
-* `encryption_type` - (Optional) The encryption type to use for the repository. Valid values are `AES256` or `KMS`. Defaults to `AES256`.
-* `kms_key` - (Optional) The ARN of the KMS key to use when `encryption_type` is `KMS`. If not specified, uses the default AWS managed key for ECR.
+* `encryption_type` - (Optional) Encryption type to use for the repository. Valid values are `AES256`, `KMS`, and `KMS_DSSE`. Defaults to `AES256`.
+* `kms_key` - (Optional) ARN of the KMS key to use when `encryption_type` is `KMS` or `KMS_DSSE`. If not specified, uses the default AWS managed key for ECR.
 
 ### image_tag_mutability_exclusion_filter
 
