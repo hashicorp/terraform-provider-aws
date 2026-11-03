@@ -1250,6 +1250,52 @@ func TestAccARCRegionSwitchPlan_lambdaEventSourceMapping(t *testing.T) {
 	})
 }
 
+func TestAccARCRegionSwitchPlan_customActionLambdaPayload(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_customActionLambdaPayload(rName, "customValue1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.custom_action_lambda_config.*.lambda.*", map[string]string{
+						names.AttrARN: fmt.Sprintf("arn:aws:lambda:%s:123456789012:function:test-function", acctest.Region()),
+						"payload":     `{"customParam1":"customValue1","customParam2":2}`,
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+			{
+				Config: testAccPlanConfig_customActionLambdaPayload(rName, "customValue2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.custom_action_lambda_config.*.lambda.*", map[string]string{
+						names.AttrARN: fmt.Sprintf("arn:aws:lambda:%s:123456789012:function:test-function", acctest.Region()),
+						"payload":     `{"customParam1":"customValue2","customParam2":2}`,
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccARCRegionSwitchPlan_reportConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
@@ -3133,6 +3179,61 @@ resource "aws_arcregionswitch_plan" "test" {
   }
 }
 `, rName, acctest.Region(), acctest.AlternateRegion())
+}
+
+func testAccPlanConfig_customActionLambdaPayload(rName, payloadValue string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[2]q, %[3]q]
+  primary_region    = %[2]q
+
+  workflow {
+    workflow_target_action = "activate"
+
+    step {
+      name                 = "custom-lambda-step"
+      execution_block_type = "CustomActionLambda"
+
+      custom_action_lambda_config {
+        region_to_run          = "activatingRegion"
+        retry_interval_minutes = 5.0
+        timeout_minutes        = 30
+
+        lambda {
+          arn     = "arn:aws:lambda:%[2]s:123456789012:function:test-function"
+          payload = jsonencode({
+            customParam1 = %[4]q
+            customParam2 = 2
+          })
+        }
+        lambda {
+          arn = "arn:aws:lambda:%[3]s:123456789012:function:test-function"
+        }
+      }
+    }
+  }
+}
+`, rName, acctest.Region(), acctest.AlternateRegion(), payloadValue)
 }
 
 func testAccPlanConfig_reportConfiguration(rName string) string {
