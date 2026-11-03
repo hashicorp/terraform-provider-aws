@@ -79,6 +79,13 @@ func (l *scopeListResource) List(ctx context.Context, request list.ListRequest, 
 			})
 
 			if result.Diagnostics.HasError() {
+				// The scope can be deleted after it is listed, which fails reading its tags.
+				if request.IncludeResource {
+					if _, err := findScopeByARN(ctx, conn, arn); retry.NotFound(err) {
+						continue
+					}
+				}
+
 				yield(list.ListResult{Diagnostics: result.Diagnostics})
 				return
 			}
