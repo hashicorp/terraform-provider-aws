@@ -81,7 +81,7 @@ The `cross_channel_behavior` block supports the following arguments:
 
 The `queue_configs` block supports the following arguments:
 
-* `channel` - (Required) Specifies the channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `VOICE`, `CHAT`, `TASK`.
+* `channel` - (Required) Channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `VOICE`, `CHAT`, `TASK`, and `EMAIL`.
 * `delay` - (Required) Specifies the delay, in seconds, that a contact should be in the queue before they are routed to an available agent
 * `priority` - (Required) Specifies the order in which contacts are to be handled for the queue.
 * `queue_id` - (Required) Specifies the identifier for the queue.
