@@ -54,6 +54,9 @@ func newScopeResource(_ context.Context) (resource.ResourceWithConfigure, error)
 // updated, published or deleted through the DRAFT-qualified ARN.
 const scopeDraftQualifier = ":DRAFT"
 
+// scopeMaxExpressionOperands is the maximum number of operands of an and or or expression.
+const scopeMaxExpressionOperands = 20
+
 type scopeResource struct {
 	framework.ResourceWithModel[scopeResourceModel]
 	framework.WithImportByIdentity
@@ -207,10 +210,10 @@ func resourceSetBlock(ctx context.Context) schema.ListNestedBlock {
 					NestedObject: schema.NestedBlockObject{
 						Blocks: map[string]schema.Block{
 							// The operands of and, not and or are criteria: the service rejects an operator nested under another operator.
-							"and":      criteriaBlock(ctx, 20),
+							"and":      criteriaBlock(ctx, scopeMaxExpressionOperands),
 							"criteria": criteriaBlock(ctx, 1),
 							"not":      criteriaBlock(ctx, 1),
-							"or":       criteriaBlock(ctx, 20),
+							"or":       criteriaBlock(ctx, scopeMaxExpressionOperands),
 						},
 					},
 				},
