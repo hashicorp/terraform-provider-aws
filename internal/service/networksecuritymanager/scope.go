@@ -5,6 +5,7 @@ package networksecuritymanager
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"slices"
 	"strings"
@@ -14,10 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -33,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -114,9 +119,19 @@ func (r *scopeResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 								}, "Adding or removing account_filter forces replacement.", "Adding or removing `account_filter` forces replacement."),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.ExactlyOneOfChildren(
+										path.MatchRelative().AtName("exclude"),
+										path.MatchRelative().AtName("include"),
+										path.MatchRelative().AtName("include_all"),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									"include_all": schema.BoolAttribute{
 										Optional: true,
+										Validators: []validator.Bool{
+											boolvalidator.Equals(true),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -145,9 +160,15 @@ func (r *scopeResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 								}, "Changing between global and regional resource types forces replacement.", "Changing between global and regional resource types forces replacement."),
 							},
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									exactlyOneOfChildrenValidator{names: []string{"exclude", "include", "include_all"}},
+								},
 								Attributes: map[string]schema.Attribute{
 									"include_all": schema.BoolAttribute{
 										Optional: true,
+										Validators: []validator.Bool{
+											boolvalidator.Equals(true),
+										},
 									},
 									names.AttrResourceType: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.ScopeResourceType](),
@@ -208,6 +229,9 @@ func resourceSetBlock(ctx context.Context) schema.ListNestedBlock {
 						listvalidator.SizeAtMost(1),
 					},
 					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							exactlyOneOfChildrenValidator{names: []string{"and", "criteria", "not", "or"}},
+						},
 						Blocks: map[string]schema.Block{
 							// The operands of and, not and or are criteria: the service rejects an operator nested under another operator.
 							"and":      criteriaBlock(ctx, scopeMaxExpressionOperands),
@@ -229,6 +253,9 @@ func criteriaBlock(ctx context.Context, maxItems int) schema.ListNestedBlock {
 			listvalidator.SizeAtMost(maxItems),
 		},
 		NestedObject: schema.NestedBlockObject{
+			Validators: []validator.Object{
+				exactlyOneOfChildrenValidator{names: []string{"alb_config", names.AttrTags}},
+			},
 			Attributes: map[string]schema.Attribute{
 				names.AttrTags: schema.MapAttribute{
 					CustomType: fwtypes.MapOfStringType,
@@ -461,6 +488,43 @@ func hasGlobalResourceType(resourceScopes []resourceScopeModel) bool {
 	return slices.ContainsFunc(resourceScopes, func(v resourceScopeModel) bool {
 		return v.ResourceType.ValueEnum() == awstypes.ScopeResourceTypeCfd
 	})
+}
+
+// exactlyOneOfChildrenValidator reads the children from the object's own value. Path-based
+// validators such as ExactlyOneOf find no siblings below resource_scope: the validator path
+// identifies the set element by an fwtypes.ObjectValueOf value, which never equals the
+// basetypes.ObjectValue that path matching builds from the config.
+type exactlyOneOfChildrenValidator struct {
+	names []string
+}
+
+func (v exactlyOneOfChildrenValidator) Description(context.Context) string {
+	return fmt.Sprintf("exactly one of %s must be set", strings.Join(v.names, ", "))
+}
+
+func (v exactlyOneOfChildrenValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (v exactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	var count int
+	for _, name := range v.names {
+		value := req.ConfigValue.Attributes()[name]
+		if value.IsUnknown() {
+			return
+		}
+		if !value.IsNull() {
+			count++
+		}
+	}
+
+	if count != 1 {
+		resp.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(req.Path, v.Description(ctx)))
+	}
 }
 
 func (r *scopeResource) flatten(ctx context.Context, out *networksecuritymanager.GetScopeOutput, data *scopeResourceModel) diag.Diagnostics {
