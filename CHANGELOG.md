@@ -10,15 +10,18 @@ FEATURES:
 * **New List Resource:** `aws_lambdaweb_function` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
 * **New List Resource:** `aws_lambdaweb_function_endpoint` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
 * **New List Resource:** `aws_lambdaweb_function_revision` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
+* **New List Resource:** `aws_networksecuritymanager_rule` ([#50734](https://github.com/hashicorp/terraform-provider-aws/issues/50734))
 * **New List Resource:** `aws_rds_tenant_database` ([#50605](https://github.com/hashicorp/terraform-provider-aws/issues/50605))
 * **New List Resource:** `aws_s3_bucket_cors_configuration` ([#50680](https://github.com/hashicorp/terraform-provider-aws/issues/50680))
 * **New Resource:** `aws_bedrockdataautomation_blueprint` ([#50695](https://github.com/hashicorp/terraform-provider-aws/issues/50695))
 * **New Resource:** `aws_bedrockdataautomation_library` ([#50727](https://github.com/hashicorp/terraform-provider-aws/issues/50727))
 * **New Resource:** `aws_bedrockdataautomation_project` ([#50725](https://github.com/hashicorp/terraform-provider-aws/issues/50725))
+* **New Resource:** `aws_ec2_capacity_manager` ([#48336](https://github.com/hashicorp/terraform-provider-aws/issues/48336))
 * **New Resource:** `aws_lambdaweb_function` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
 * **New Resource:** `aws_lambdaweb_function_endpoint` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
 * **New Resource:** `aws_lambdaweb_function_revision` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
 * **New Resource:** `aws_lambdaweb_resource_policy` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
+* **New Resource:** `aws_networksecuritymanager_rule` ([#50734](https://github.com/hashicorp/terraform-provider-aws/issues/50734))
 * **New Resource:** `aws_rds_tenant_database` ([#50605](https://github.com/hashicorp/terraform-provider-aws/issues/50605))
 
 ENHANCEMENTS:
