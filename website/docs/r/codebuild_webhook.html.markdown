@@ -88,7 +88,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `project_name` - (Required) The name of the build project.
-* `build_type` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.
+* `build_type` - (Optional) Type of build this webhook triggers. Valid values: `BUILD`, `BUILD_BATCH`, `RUNNER_BUILDKITE_BUILD`. `RUNNER_BUILDKITE_BUILD` is available only for `NO_SOURCE` projects configured for Buildkite runner builds.
 * `manual_creation` - (Optional) If true, CodeBuild doesn't create a webhook in GitHub and instead returns `payload_url` and `secret` values for the webhook. The `payload_url` and `secret` values in the output can be used to manually create a webhook within GitHub.
 * `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filter_group` over `branch_filter`.
 * `filter_group` - (Optional) Information about the webhook's trigger. See [filter_group](#filter_group) for details.
