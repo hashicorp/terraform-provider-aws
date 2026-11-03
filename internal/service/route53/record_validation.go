@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -46,8 +46,8 @@ func validateTXTRecordStringSegments(value string) error {
 	// Terraform. Each segment between the quote-space-quote boundaries maps to
 	// an individual quoted string in the Route 53 API and is subject to the
 	// 255-character limit.
-	segments := strings.Split(value, "\" \"")
-	for _, seg := range segments {
+	segments := strings.SplitSeq(value, "\" \"")
+	for seg := range segments {
 		if len(seg) > 255 {
 			return fmt.Errorf(
 				"TXT record value contains a string segment longer than 255 characters (%d): "+
