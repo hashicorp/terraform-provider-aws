@@ -32,6 +32,7 @@ var (
 	FlattenTableItemAttributes                   = flattenTableItemAttributes
 	ListTags                                     = listTags
 	RegionFromARN                                = regionFromARN
+	SameAccountReplicaDescriptions               = sameAccountReplicaDescriptions
 	ReplicaForRegion                             = replicaForRegion
 	TableNameFromARN                             = tableNameFromARN
 	TableReplicaParseResourceID                  = tableReplicaParseResourceID

@@ -37,3 +37,12 @@ func tableNameFromARN(rn string) (string, error) {
 
 	return strings.TrimPrefix(parsedARN.Resource, "table/"), nil
 }
+
+func accountIDFromARN(rn string) (string, error) {
+	parsedARN, err := arn.Parse(rn)
+	if err != nil {
+		return "", err
+	}
+
+	return parsedARN.AccountID, nil
+}

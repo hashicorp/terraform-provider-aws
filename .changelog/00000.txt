@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `global_table_source_arn` argument to support creating a replica of a multi-account global table
+```
+
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `global_table_settings_replication_mode` argument
+```
+
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `resource_policy` argument
+```
+
+```release-note:bug
+resource/aws_dynamodb_table: Exclude replicas of a multi-account global table that are in other accounts from `replica`
+```
