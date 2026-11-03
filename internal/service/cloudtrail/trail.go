@@ -313,6 +313,7 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
+	// Server-side default is "true", so avoid sending a zero value when unset.
 	if v := d.GetRawConfig().GetAttr("recursive_logging"); v.IsKnown() && !v.IsNull() {
 		input.RecursiveLogging = aws.Bool(v.True())
 	}
