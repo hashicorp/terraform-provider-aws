@@ -423,6 +423,11 @@ func resourceInstance() *schema.Resource {
 					Optional:      true,
 					ConflictsWith: []string{names.AttrPassword, "password_wo"},
 				},
+				"master_user_authentication_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.MasterUserAuthenticationType](),
+				},
 				"master_user_secret": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -1012,6 +1017,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			requiresModifyDbInstance = true
 		}
 
+		if v, ok := d.GetOk("master_user_authentication_type"); ok {
+			modifyDbInstanceInput.MasterUserAuthenticationType = types.MasterUserAuthenticationType(v.(string))
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 			modifyDbInstanceInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			requiresModifyDbInstance = true
@@ -1126,6 +1136,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if v, ok := d.GetOk("manage_master_user_password"); ok {
 			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("master_user_authentication_type"); ok {
+			modifyDbInstanceInput.MasterUserAuthenticationType = types.MasterUserAuthenticationType(v.(string))
+			requiresModifyDbInstance = true
 		}
 
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
@@ -1352,6 +1367,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if v, ok := d.GetOk("manage_master_user_password"); ok {
 			modifyDbInstanceInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("master_user_authentication_type"); ok {
+			modifyDbInstanceInput.MasterUserAuthenticationType = types.MasterUserAuthenticationType(v.(string))
 			requiresModifyDbInstance = true
 		}
 
@@ -1606,6 +1626,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			requiresModifyDbInstance = true
 		}
 
+		if v, ok := d.GetOk("master_user_authentication_type"); ok {
+			modifyDbInstanceInput.MasterUserAuthenticationType = types.MasterUserAuthenticationType(v.(string))
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 			modifyDbInstanceInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			requiresModifyDbInstance = true
@@ -1805,6 +1830,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if v, ok := d.GetOk("manage_master_user_password"); ok {
 			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("master_user_authentication_type"); ok {
+			input.MasterUserAuthenticationType = types.MasterUserAuthenticationType(v.(string))
 		}
 
 		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
@@ -2683,6 +2712,13 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 	if d.HasChange("manage_master_user_password") {
 		needsModify = true
 		input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
+	}
+
+	if d.HasChange("master_user_authentication_type") {
+		if v, ok := d.GetOk("master_user_authentication_type"); ok {
+			needsModify = true
+			input.MasterUserAuthenticationType = types.MasterUserAuthenticationType(v.(string))
+		}
 	}
 
 	if d.HasChange("master_user_secret_kms_key_id") {
