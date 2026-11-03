@@ -328,7 +328,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
-			return append(diags, resourceGlobalReplicationGroupRead(ctx, d, meta)...)
+			err = nil
 		}
 
 		if err != nil {
