@@ -64,7 +64,7 @@ The `configuration` block supports the following:
 
 The `transformation_configuration` block supports the following:
 
-* `actions` - (Required) Actions of an Object Lambda Access Point configuration. Valid values: `GetObject`.
+* `actions` - (Required) Actions of an Object Lambda Access Point configuration. Valid values: `GetObject`, `HeadObject`, `ListObjects`, `ListObjectsV2`.
 * `content_transformation` - (Required) Content transformation of an Object Lambda Access Point configuration. See [`content_transformation` Block](#content_transformation-block) below for more details.
 
 ### `content_transformation` Block
