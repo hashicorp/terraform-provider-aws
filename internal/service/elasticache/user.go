@@ -297,9 +297,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 			}
 		}
 
-		_, err := conn.ModifyUser(ctx, input)
-
-		if err != nil {
+		// Retry ModifyUser while the user is transiently "modifying" (InvalidUserState): https://github.com/hashicorp/terraform-provider-aws/issues/49726.
+		if _, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidUserStateFault](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			return conn.ModifyUser(ctx, input)
+		}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ElastiCache User (%s): %s", d.Id(), err)
 		}
 
