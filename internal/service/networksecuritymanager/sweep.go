@@ -18,6 +18,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_networksecuritymanager_rule", sweepRules)
+	awsv2.Register("aws_networksecuritymanager_scope", sweepScopes)
 }
 
 func sweepRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -35,6 +36,28 @@ func sweepRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 		for _, v := range page.Rules {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newRuleResource, client,
 				framework.NewAttribute(names.AttrARN, ruleBaseARN(aws.ToString(v.RuleArn)))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepScopes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input networksecuritymanager.ListScopesInput
+	conn := client.NetworkSecurityManagerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := networksecuritymanager.NewListScopesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Scopes {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newScopeResource, client,
+				framework.NewAttribute(names.AttrARN, scopeBaseARN(aws.ToString(v.ScopeArn)))),
 			)
 		}
 	}
