@@ -3220,7 +3220,7 @@ resource "aws_arcregionswitch_plan" "test" {
         timeout_minutes        = 30
 
         lambda {
-          arn     = "arn:aws:lambda:%[2]s:123456789012:function:test-function"
+          arn = "arn:aws:lambda:%[2]s:123456789012:function:test-function"
           payload = jsonencode({
             customParam1 = %[4]q
             customParam2 = 2

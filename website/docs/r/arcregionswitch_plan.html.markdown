@@ -102,7 +102,7 @@ resource "aws_arcregionswitch_plan" "complex" {
         timeout_minutes        = 30
 
         lambda {
-          arn     = aws_lambda_function.example.arn
+          arn = aws_lambda_function.example.arn
           payload = jsonencode({
             customParam1 = "customValue1"
             customParam2 = "customValue2"
