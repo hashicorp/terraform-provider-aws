@@ -884,8 +884,16 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
+	inputAuthorizerConfiguration, inputDiags := withCustomClaimMatchValuesWO(ctx, request.Config, data.AuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, inputDiags)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	inputData := data
+	inputData.AuthorizerConfiguration = inputAuthorizerConfiguration
+
 	var input bedrockagentcorecontrol.CreateHarnessInput
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, inputData, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -982,7 +990,7 @@ func (r *harnessResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+	authorizerConfiguration, d := preserveAuthorizerConfiguration(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -1026,7 +1034,7 @@ func (r *harnessResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
+	authorizerConfiguration, d := preserveAuthorizerConfiguration(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -1056,8 +1064,16 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 
 	if diff.HasChanges() {
 		harnessID := fwflex.StringValueFromFramework(ctx, plan.HarnessID)
+		inputAuthorizerConfiguration, inputDiags := withCustomClaimMatchValuesWO(ctx, request.Config, plan.AuthorizerConfiguration)
+		smerr.AddEnrich(ctx, &response.Diagnostics, inputDiags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		inputData := plan
+		inputData.AuthorizerConfiguration = inputAuthorizerConfiguration
+
 		var input bedrockagentcorecontrol.UpdateHarnessInput
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, inputData, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -1086,10 +1102,18 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 
 		environmentIsConfigured := config.Environment.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
 		memoryIsConfigured := config.Memory.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0
+		plannedAuthorizerConfiguration := plan.AuthorizerConfiguration
 		smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, harness, &plan, environmentIsConfigured, memoryIsConfigured))
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		authorizerConfiguration, d := preserveAuthorizerConfiguration(ctx, plan.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		plan.AuthorizerConfiguration = authorizerConfiguration
 	} else {
 		// Copy computed attributes during tag-only updates
 		plan.EnvironmentVariables = state.EnvironmentVariables
