@@ -228,7 +228,7 @@ The `code_configuration_values` block supports the following arguments:
 
 * `build_command` - (Optional) Command App Runner runs to build your application.
 * `port` - (Optional) Port that your application listens to in the container. Defaults to `"8080"`.
-* `runtime` - (Required) Runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `PYTHON_3`, `NODEJS_12`, `NODEJS_14`, `NODEJS_16`, `CORRETTO_8`, `CORRETTO_11`, `GO_1`, `DOTNET_6`, `PHP_81`, `RUBY_31`.
+* `runtime` - (Required) Runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `PYTHON_3`, `PYTHON_311`, `NODEJS_12`, `NODEJS_14`, `NODEJS_16`, `NODEJS_18`, `NODEJS_22`, `CORRETTO_8`, `CORRETTO_11`, `GO_1`, `DOTNET_6`, `PHP_81`, `RUBY_31`. See [App Runner managed platforms](https://docs.aws.amazon.com/apprunner/latest/dg/service-source-code.html#service-source-code.managed-platforms) for runtime support and availability.
 * `runtime_environment_secrets` - (Optional) Secrets and parameters available to your service as environment variables. A map of key/value pairs, where the key is the desired name of the Secret in the environment (i.e. it does not have to match the name of the secret in Secrets Manager or SSM Parameter Store), and the value is the ARN of the secret from AWS Secrets Manager or the ARN of the parameter in AWS SSM Parameter Store.
 * `runtime_environment_variables` - (Optional) Environment variables available to your running App Runner service. A map of key/value pairs. Keys with a prefix of `AWSAPPRUNNER` are reserved for system use and aren't valid.
 * `start_command` - (Optional) Command App Runner runs to start your application.
