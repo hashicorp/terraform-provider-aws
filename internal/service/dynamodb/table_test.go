@@ -9044,7 +9044,7 @@ func TestAccDynamoDBTable_multiAccountGlobalTable(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, t, sourceResourceName, &source),
 					resource.TestCheckResourceAttr(sourceResourceName, "global_table_settings_replication_mode", "ENABLED"),
 					resource.TestCheckResourceAttr(sourceResourceName, "replica.#", "0"),
-					resource.TestCheckResourceAttrSet(replicaResourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(replicaResourceName, names.AttrARN, "dynamodb", "table/"+rName),
 					resource.TestCheckResourceAttr(replicaResourceName, "billing_mode", "PAY_PER_REQUEST"),
 					resource.TestCheckResourceAttrPair(replicaResourceName, "global_table_source_arn", sourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(replicaResourceName, "global_table_settings_replication_mode", "ENABLED"),
