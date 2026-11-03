@@ -55,7 +55,7 @@ This resource supports the following arguments:
 
 The `configuration` block supports the following:
 
-* `allowed_features` - (Optional) Allowed features. Valid values: `GetObject-Range`, `GetObject-PartNumber`.
+* `allowed_features` - (Optional) Allowed features. Valid values: `GetObject-Range`, `GetObject-PartNumber`, `HeadObject-Range`, `HeadObject-PartNumber`.
 * `cloud_watch_metrics_enabled` - (Optional) Whether or not the CloudWatch metrics configuration is enabled.
 * `supporting_access_point` - (Required) Standard access point associated with the Object Lambda Access Point.
 * `transformation_configuration` - (Required) List of transformation configurations for the Object Lambda Access Point. See [`transformation_configuration` Block](#transformation_configuration-block) below for more details.
