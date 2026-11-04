@@ -34,6 +34,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
+		{
+			Factory:  newTransitGatewayRouteTableAttachmentDataSource,
+			TypeName: "aws_networkmanager_transit_gateway_route_table_attachment",
+			Name:     "Transit Gateway Route Table Attachment",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
 	}
 }
 
