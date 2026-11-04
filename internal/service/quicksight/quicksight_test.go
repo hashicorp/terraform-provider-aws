@@ -26,10 +26,13 @@ func TestAccQuickSight_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AccountCustomPermission": {
-			acctest.CtBasic:      testAccAccountCustomPermission_basic,
-			acctest.CtDisappears: testAccAccountCustomPermission_disappears,
-			"update":             testAccAccountCustomPermission_update,
-			"Identity":           testAccQuickSightAccountCustomPermission_identitySerial,
+			acctest.CtBasic:        testAccAccountCustomPermission_basic,
+			acctest.CtDisappears:   testAccAccountCustomPermission_disappears,
+			"update":               testAccAccountCustomPermission_update,
+			"Identity":             testAccQuickSightAccountCustomPermission_identitySerial,
+			"List_basic":           testAccAccountCustomPermission_List_basic,
+			"List_includeResource": testAccAccountCustomPermission_List_includeResource,
+			"List_regionOverride":  testAccAccountCustomPermission_List_regionOverride,
 		},
 		"AccountSettings": {
 			acctest.CtBasic: testAccAccountSettings_basic,
