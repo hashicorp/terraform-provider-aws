@@ -34,6 +34,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
+		{
+			Factory:  newSiteToSiteVPNAttachmentDataSource,
+			TypeName: "aws_networkmanager_site_to_site_vpn_attachment",
+			Name:     "Site To Site VPN Attachment",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
 	}
 }
 
