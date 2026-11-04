@@ -44,7 +44,7 @@ resource "aws_networksecuritymanager_policy" "example" {
 resource "aws_networksecuritymanager_policy" "example" {
   name          = "baseline-shield"
   firewall_type = "SHIELD_ADVANCED"
-  priority      = 1
+  priority      = 2
 
   configuration {
     remediation_enabled = true
@@ -60,7 +60,7 @@ The following arguments are required:
 * `configuration` - (Required) Settings that control the policy's behavior. See [`configuration`](#configuration-block) below.
 * `firewall_type` - (Required) Firewall type of the policy. Valid values: `WAF`, `SHIELD_ADVANCED`. Changing this value forces a new resource.
 * `name` - (Required) Name of the policy. Changing this value forces a new resource.
-* `priority` - (Required) Priority of the policy. A lower number indicates a higher priority. Minimum value of `1`.
+* `priority` - (Required) Priority of the policy. A lower number indicates a higher priority. Minimum value of `1`. Must be unique across policies in the AWS account.
 
 The following arguments are optional:
 
@@ -69,6 +69,8 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `template_or_rule` - (Optional) Ordered list of templates and rules to associate with the policy. For `WAF` policies, specify 1 to 100 entries, of which at most 2 can be templates. Must be omitted for `SHIELD_ADVANCED` policies. See [`template_or_rule`](#template_or_rule-block) below.
+
+~> **Note:** A rule or template referenced by a published policy cannot be deleted. Configure [`create_before_destroy`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#create_before_destroy) on referenced rule and template resources so that a replacement is associated with the policy before the old resource is deleted.
 
 ### `configuration` Block
 

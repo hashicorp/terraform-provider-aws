@@ -18,7 +18,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_networksecuritymanager_policy", sweepPolicies)
-	awsv2.Register("aws_networksecuritymanager_rule", sweepRules)
+	awsv2.Register("aws_networksecuritymanager_rule", sweepRules, "aws_networksecuritymanager_policy")
 	awsv2.Register("aws_networksecuritymanager_scope", sweepScopes)
 }
 
