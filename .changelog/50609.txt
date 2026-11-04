@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_timestreaminfluxdb_db_cluster: Allow `maintenance_schedule` to be set on InfluxDB v2 clusters
+```
