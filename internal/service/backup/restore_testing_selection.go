@@ -114,11 +114,6 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
-					int64planmodifier.RequiresReplaceIf(
-						validationWindowHoursChangedToZero,
-						"The AWS SDK omits a zero ValidationWindowHours, so an update cannot set it to 0.",
-						"The AWS SDK omits a zero `ValidationWindowHours`, so an update cannot set it to `0`.",
-					),
 				},
 			},
 		},
@@ -197,16 +192,6 @@ func (r *restoreTestingSelectionResource) Create(ctx context.Context, request re
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Backup Restore Testing Selection (%s)", name), err.Error())
-
-		return
-	}
-
-	// The SDK omits a zero ValidationWindowHours, so a configured 0 relies on the AWS default.
-	if v := data.ValidationWindowHours; !v.IsNull() && !v.IsUnknown() && v.ValueInt64() == 0 && restoreTestingSelection.ValidationWindowHours != 0 {
-		response.Diagnostics.AddError(
-			fmt.Sprintf("creating Backup Restore Testing Selection (%s)", name),
-			fmt.Sprintf("validation_window_hours is 0 in configuration but AWS stored %d", restoreTestingSelection.ValidationWindowHours),
-		)
 
 		return
 	}
@@ -427,12 +412,4 @@ type protectedResourceConditionsModel struct {
 type keyValueModel struct {
 	Key   types.String `tfsdk:"key"`
 	Value types.String `tfsdk:"value"`
-}
-
-func validationWindowHoursChangedToZero(ctx context.Context, request planmodifier.Int64Request, response *int64planmodifier.RequiresReplaceIfFuncResponse) {
-	if request.StateValue.IsNull() || request.PlanValue.IsNull() || request.PlanValue.IsUnknown() {
-		return
-	}
-
-	response.RequiresReplace = request.StateValue.ValueInt64() != 0 && request.PlanValue.ValueInt64() == 0
 }

@@ -161,7 +161,7 @@ func TestAccBackupRestoreTestingSelection_validationWindowHoursZero(t *testing.T
 				Config: testAccRestoreTestingSelectionConfig_validationWindowHours(rName, 0),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
