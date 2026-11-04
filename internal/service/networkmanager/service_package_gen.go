@@ -34,6 +34,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
+		{
+			Factory:  newDirectConnectGatewayAttachmentDataSource,
+			TypeName: "aws_networkmanager_dx_gateway_attachment",
+			Name:     "Direct Connect Gateway Attachment",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
 	}
 }
 
