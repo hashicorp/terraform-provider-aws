@@ -188,6 +188,46 @@ func (r *scopeResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 }
 
+// ValidateConfig rejects resource_scope blocks that repeat a resource_type. The service keys
+// resource scopes by resource type, so all but one of them would be silently dropped.
+func (r *scopeResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data scopeResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	scopeConfiguration, d := data.ScopeConfiguration.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() || scopeConfiguration == nil {
+		return
+	}
+
+	resourceScopes, d := scopeConfiguration.ResourceScope.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	seen := make(map[awstypes.ScopeResourceType]bool, len(resourceScopes))
+	for _, v := range resourceScopes {
+		if v.ResourceType.IsNull() || v.ResourceType.IsUnknown() {
+			continue
+		}
+
+		resourceType := v.ResourceType.ValueEnum()
+		if seen[resourceType] {
+			smerr.AddOne(ctx, &resp.Diagnostics, diag.NewAttributeErrorDiagnostic(
+				path.Root("scope_configuration").AtListIndex(0).AtName("resource_scope"),
+				"Duplicate resource_type",
+				fmt.Sprintf("Each resource_scope must have a different resource_type, but %q is configured more than once.", resourceType),
+			))
+			return
+		}
+		seen[resourceType] = true
+	}
+}
+
 func accountSetBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[accountSetModel](ctx),

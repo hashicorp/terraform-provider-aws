@@ -389,7 +389,8 @@ func TestAccNetworkSecurityManagerScope_resourceSet(t *testing.T) {
 	})
 }
 
-// Each union in scope_configuration requires exactly one of its members, and include_all can only be true.
+// Each union in scope_configuration requires exactly one of its members, include_all can only be true,
+// and each resource_scope needs a different resource_type.
 func TestAccNetworkSecurityManagerScope_validation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -418,6 +419,7 @@ func TestAccNetworkSecurityManagerScope_validation(t *testing.T) {
 			step("account_filter_include_all_and_include", invalidCombination),
 			step("resource_scope_none", invalidCombination),
 			step("resource_scope_include_all_and_include", invalidCombination),
+			step("resource_scope_duplicate_type", `Duplicate resource_type`),
 			step("include_all_false", `Invalid Attribute Value Match`),
 			step("expression_criteria_and_or", invalidCombination),
 			step("criteria_alb_config_and_tags", invalidCombination),
