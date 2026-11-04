@@ -339,6 +339,10 @@ func (r *serverlessCacheResource) Create(ctx context.Context, request resource.C
 	// Set values for unknowns.
 	data.setID()
 
+	// Set 'id' and 'region' so as to taint the resource.
+	response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID)
+	response.State.SetAttribute(ctx, path.Root(names.AttrRegion), data.Region)
+
 	output, err := waitServerlessCacheAvailable(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) create", data.ID.ValueString()), err.Error())
