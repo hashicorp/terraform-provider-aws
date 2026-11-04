@@ -2926,3 +2926,64 @@ func testKeyValueTagsVerifyMap(t *testing.T, got map[string]string, want map[str
 		}
 	}
 }
+
+func TestKeyValueTagsIgnoreUpdatesConfig(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	tags := New(ctx, map[string]string{"CreatedOn": "original", "created:by": "terraform", "Name": "example", "external": "value"})
+	config := &IgnoreConfig{
+		Keys:              New(ctx, []string{"external"}),
+		UpdateKeys:        New(ctx, []string{"CreatedOn"}),
+		UpdateKeyPrefixes: New(ctx, []string{"created:"}),
+	}
+	want := New(ctx, map[string]string{"Name": "example", "external": "value"})
+	if got := tags.IgnoreUpdatesConfig(config); !got.Equal(want) {
+		t.Fatalf("update tags = %v, want %v", got, want)
+	}
+	if got := tags.IgnoreConfig(config); !got.Equal(New(ctx, map[string]string{"CreatedOn": "original", "created:by": "terraform", "Name": "example"})) {
+		t.Fatalf("tracked tags = %v", got)
+	}
+	if got := tags.IgnoreUpdatesConfig(nil); !got.Equal(tags) {
+		t.Fatal("nil config changed tags")
+	}
+	if len(tags) != 4 {
+		t.Fatal("filter mutated input tags")
+	}
+}
+
+func TestKeyValueTagsPreserveUpdatesConfig(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	config := &IgnoreConfig{UpdateKeys: New(ctx, []string{"CreatedOn"}), UpdateKeyPrefixes: New(ctx, []string{"created:"})}
+	tags := New(ctx, map[string]string{"CreatedOn": "new", "created:by": "new", "Name": "new"})
+	current := New(ctx, map[string]string{"CreatedOn": "original", "created:by": "original", "Name": "old", "external": "value"})
+	want := New(ctx, map[string]string{"CreatedOn": "original", "created:by": "original", "Name": "new"})
+	if got := tags.PreserveUpdatesConfig(config, current); !got.Equal(want) {
+		t.Fatalf("replacement tags = %v, want %v", got, want)
+	}
+	if got := tags.PreserveUpdatesConfig(config, nil); !got.Equal(New(ctx, map[string]string{"Name": "new"})) {
+		t.Fatalf("missing creation tags were restored: %v", got)
+	}
+	if got := tags.PreserveUpdatesConfig(nil, current); !got.Equal(tags) {
+		t.Fatal("nil configuration changed tags")
+	}
+}
+
+func TestIgnoreConfigMatchesUpdate(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	config := &IgnoreConfig{UpdateKeys: New(ctx, []string{"CreatedOn"}), UpdateKeyPrefixes: New(ctx, []string{"created:"})}
+	for _, key := range []string{"CreatedOn", "created:by", "created:"} {
+		if !config.MatchesUpdate(key) {
+			t.Errorf("key %q did not match", key)
+		}
+	}
+	for _, key := range []string{"Name", "CreatedOnExtra", "created", ""} {
+		if config.MatchesUpdate(key) {
+			t.Errorf("key %q unexpectedly matched", key)
+		}
+	}
+	if (*IgnoreConfig)(nil).MatchesUpdate("CreatedOn") || (&IgnoreConfig{}).MatchesUpdate("CreatedOn") {
+		t.Fatal("unconfigured update keys unexpectedly matched")
+	}
+}

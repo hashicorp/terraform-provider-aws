@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -1220,4 +1221,80 @@ output "stack_output" {
   value = format("%%s:%%s", %[2]q, aws_cloudformation_stack.test.outputs[%[2]q])
 }
 `, rName, name, value)
+}
+
+func TestAccCloudFormationStack_ignoreTagUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stack awstypes.Stack
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack.test"
+	check := resource.ComposeAggregateTestCheckFunc(
+		testAccCheckStackExists(ctx, t, resourceName, &stack),
+		func(_ *terraform.State) error {
+			for _, tag := range stack.Tags {
+				if aws.ToString(tag.Key) == "CreatedOn" && aws.ToString(tag.Value) == "a" {
+					return nil
+				}
+			}
+			return fmt.Errorf("stack creation tag changed or disappeared: %v", stack.Tags)
+		},
+		resource.TestCheckResourceAttr("data.aws_cloudformation_stack.test", "tags.CreatedOn", "a"),
+		resource.TestCheckNoResourceAttr(resourceName, "tags_all.CreatedOn"),
+	)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{Config: testAccStackConfig_ignoreTagUpdates(rName, "a", "a"), Check: check},
+			{
+				Config:           testAccStackConfig_ignoreTagUpdates(rName, "b", "a"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()}},
+			},
+			{Config: testAccStackConfig_ignoreTagUpdates(rName, "b", "b"), Check: check},
+		},
+	})
+}
+
+func testAccStackConfig_ignoreTagUpdates(rName, createdOn, value string) string {
+	// Provider configuration is required to exercise creation-only default tags.
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  default_tags {
+    tags = {
+      CreatedOn = %[2]q
+    }
+  }
+  ignore_tag_updates {
+    keys = ["CreatedOn"]
+  }
+}
+
+resource "aws_cloudformation_stack" "test" {
+  name = %[1]q
+  parameters = {
+    Value = %[3]q
+  }
+  template_body = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+    Parameters               = { Value = { Type = "String" } }
+    Resources = {
+      Parameter = {
+        Type = "AWS::SSM::Parameter"
+        Properties = {
+          Name  = %[1]q
+          Type  = "String"
+          Value = { Ref = "Value" }
+        }
+      }
+    }
+  })
+}
+
+data "aws_cloudformation_stack" "test" {
+  name = aws_cloudformation_stack.test.name
+}
+`, rName, createdOn, value)
 }

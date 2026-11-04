@@ -11,6 +11,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -305,6 +307,28 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				},
 			},
 			"endpoints": endpointsBlock(),
+			"ignore_tag_updates": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				Description: "Configuration block with settings to set resource tags during creation and ignore subsequent updates.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"key_prefixes": schema.SetAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
+							Validators:  []validator.Set{setvalidator.ValueStringsAre(stringvalidator.LengthAtLeast(1))},
+							Description: "Resource tag key prefixes to manage only during creation.",
+						},
+						"keys": schema.SetAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
+							Validators:  []validator.Set{setvalidator.ValueStringsAre(stringvalidator.LengthAtLeast(1))},
+							Description: "Resource tag keys to manage only during creation.",
+						},
+					},
+				},
+			},
 			"ignore_tags": schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),

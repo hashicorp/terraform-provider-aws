@@ -23,11 +23,19 @@ import (
 // tagsResourceCRUDInterceptor implements transparent tagging on CRUD operations for resources.
 type tagsResourceCRUDInterceptor struct {
 	interceptors.HTags
+	resource *schema.Resource
+	read     schema.ReadContextFunc
 }
 
-func resourceTransparentTagging(servicePackageResourceTags inttypes.ServicePackageResourceTags) crudInterceptor {
+func resourceTransparentTagging(servicePackageResourceTags inttypes.ServicePackageResourceTags, resource *schema.Resource) crudInterceptor {
+	var read schema.ReadContextFunc
+	if resource != nil {
+		read = resource.ReadWithoutTimeout
+	}
 	return &tagsResourceCRUDInterceptor{
-		HTags: interceptors.HTags(servicePackageResourceTags),
+		HTags:    interceptors.HTags(servicePackageResourceTags),
+		resource: resource,
+		read:     read,
 	}
 }
 
@@ -53,6 +61,30 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 			// Remove system tags.
 			tags = tags.IgnoreSystem(sp.ServicePackageName())
 
+			if why == Update && c.IgnoreTagsConfig(ctx).HasIgnoreUpdates() {
+				// Read in an isolated context/state so preservation does not overwrite the plan or cache stale TagsOut.
+				readCtx := tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
+				current, _ := tftags.FromContext(readCtx)
+				if identifier := r.GetIdentifierSDKv2(ctx, d); identifier != "" {
+					if err := r.ListTags(readCtx, sp, c, identifier); err != nil {
+						return sdkdiag.AppendErrorf(diags, "reading tags to preserve creation-only tags for %s %s: %s", serviceName, resourceName, err)
+					}
+				}
+				if current.TagsOut.IsNone() && r.read != nil {
+					state, err := r.resource.ShimInstanceStateFromValue(d.GetRawState())
+					if err != nil {
+						return sdkdiag.AppendFromErr(diags, err)
+					}
+					diags = append(diags, r.read(readCtx, r.resource.Data(state), c)...)
+					if diags.HasError() {
+						return diags
+					}
+				}
+				if current.TagsOut.IsNone() {
+					return sdkdiag.AppendErrorf(diags, "cannot read current tags to preserve creation-only tags for %s %s", serviceName, resourceName)
+				}
+				tags = tags.PreserveUpdatesConfig(c.IgnoreTagsConfig(ctx), current.TagsOut.MustUnwrap().IgnoreSystem(sp.ServicePackageName()))
+			}
 			tagsInContext.TagsIn = option.Some(tags)
 
 			if why == Create {
@@ -98,10 +130,10 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 			}
 
 			// Remove any provider configured ignore_tags and system tags from those returned from the service API.
-			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx))
+			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).IgnoreUpdatesConfig(c.IgnoreTagsConfig(ctx))
 
 			// The resource's configured tags can now include duplicate tags that have been configured on the provider.
-			if err := d.Set(names.AttrTags, tags.ResolveDuplicates(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), d, names.AttrTags, nil).Map()); err != nil {
+			if err := d.Set(names.AttrTags, tags.ResolveDuplicates(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), d, names.AttrTags, nil).IgnoreUpdatesConfig(c.IgnoreTagsConfig(ctx)).Map()); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 
@@ -184,10 +216,10 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 				}
 
 				// Remove any provider configured ignore_tags and system tags from those returned from the service API.
-				toAdd := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx))
+				toAdd := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).IgnoreUpdatesConfig(c.IgnoreTagsConfig(ctx))
 
 				// The resource's configured tags can now include duplicate tags that have been configured on the provider.
-				if err := d.Set(names.AttrTags, toAdd.ResolveDuplicates(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), d, names.AttrTags, nil).Map()); err != nil {
+				if err := d.Set(names.AttrTags, toAdd.ResolveDuplicates(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), d, names.AttrTags, nil).IgnoreUpdatesConfig(c.IgnoreTagsConfig(ctx)).Map()); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 				}
 
@@ -283,7 +315,7 @@ func setTagsAll() customizeDiffInterceptor {
 				}
 
 				newTags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))
-				allTags := c.DefaultTagsConfig(ctx).MergeTags(newTags).IgnoreConfig(c.IgnoreTagsConfig(ctx))
+				allTags := c.DefaultTagsConfig(ctx).MergeTags(newTags).IgnoreConfig(c.IgnoreTagsConfig(ctx)).IgnoreUpdatesConfig(c.IgnoreTagsConfig(ctx))
 				if d.HasChange(names.AttrTags) {
 					if newTags.HasZeroValue() {
 						if err := d.SetNewComputed(names.AttrTagsAll); err != nil {

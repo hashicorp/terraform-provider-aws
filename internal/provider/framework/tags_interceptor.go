@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -78,6 +79,7 @@ func dataSourceTransparentTagging(servicePackageResourceTags inttypes.ServicePac
 type tagsResourceInterceptor struct {
 	resourceNoOpCRUDInterceptor
 	interceptors.HTags
+	readTags func(context.Context, resource.ReadRequest, *resource.ReadResponse)
 }
 
 func (r tagsResourceInterceptor) create(ctx context.Context, opts interceptorOptions[resource.CreateRequest, resource.CreateResponse]) {
@@ -112,7 +114,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, opts interceptorOpt
 		// Set values for unknowns.
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
 		// Computed tags_all include any provider configured default_tags.
-		stateTagsAll := fwflex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).Map())
+		stateTagsAll := fwflex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).IgnoreUpdatesConfig(c.IgnoreTagsConfig(ctx)).Map())
 		opts.response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 		if opts.response.Diagnostics.HasError() {
 			return
@@ -162,8 +164,26 @@ func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptio
 		response.State.GetAttribute(ctx, path.Root(names.AttrTags), &stateTags)
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
-		if v := apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).ResolveDuplicatesFramework(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), stateTags, &opts.response.Diagnostics).Map(); len(v) > 0 {
+		if v := apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).ResolveDuplicatesFramework(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), stateTags, &opts.response.Diagnostics).IgnoreUpdatesConfig(c.IgnoreTagsConfig(ctx)).Map(); len(v) > 0 {
 			stateTags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMapLegacy(ctx, v))
+		} else if c.IgnoreTagsConfig(ctx).HasIgnoreUpdates() && !stateTags.IsUnknown() {
+			elements := stateTags.Elements()
+			originalLength := len(elements)
+			for key := range elements {
+				if c.IgnoreTagsConfig(ctx).MatchesUpdate(key) {
+					delete(elements, key)
+				}
+			}
+			if len(elements) == 0 && originalLength > 0 {
+				stateTags = tftags.NewMapValueNull()
+			} else if len(elements) < originalLength {
+				var diags diag.Diagnostics
+				stateTags, diags = tftags.NewMapValue(elements)
+				opts.response.Diagnostics.Append(diags...)
+				if opts.response.Diagnostics.HasError() {
+					return
+				}
+			}
 		}
 		opts.response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
 		if opts.response.Diagnostics.HasError() {
@@ -171,7 +191,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, opts interceptorOptio
 		}
 
 		// Computed tags_all do.
-		stateTagsAll := fwflex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).Map())
+		stateTagsAll := fwflex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(c.IgnoreTagsConfig(ctx)).IgnoreUpdatesConfig(c.IgnoreTagsConfig(ctx)).Map())
 		opts.response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 		if opts.response.Diagnostics.HasError() {
 			return
@@ -208,6 +228,29 @@ func (r tagsResourceInterceptor) update(ctx context.Context, opts interceptorOpt
 		tags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags))
 		// Remove system tags.
 		tags = tags.IgnoreSystem(sp.ServicePackageName())
+		if c.IgnoreTagsConfig(ctx).HasIgnoreUpdates() {
+			readCtx := tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
+			current, _ := tftags.FromContext(readCtx)
+			if identifier := r.GetIdentifierFramework(ctx, request.State); identifier != "" {
+				if err := r.ListTags(readCtx, sp, c, identifier); err != nil {
+					opts.response.Diagnostics.AddError("Reading creation-only tags", err.Error())
+					return
+				}
+			}
+			if current.TagsOut.IsNone() && r.readTags != nil {
+				readResponse := &resource.ReadResponse{State: request.State}
+				r.readTags(readCtx, resource.ReadRequest{State: request.State, ProviderMeta: request.ProviderMeta}, readResponse)
+				opts.response.Diagnostics.Append(readResponse.Diagnostics...)
+				if opts.response.Diagnostics.HasError() {
+					return
+				}
+			}
+			if current.TagsOut.IsNone() {
+				opts.response.Diagnostics.AddError("Reading creation-only tags", "Cannot read current tags to preserve creation-only tags.")
+				return
+			}
+			tags = tags.PreserveUpdatesConfig(c.IgnoreTagsConfig(ctx), current.TagsOut.MustUnwrap().IgnoreSystem(sp.ServicePackageName()))
+		}
 		tagsInContext.TagsIn = option.Some(tags)
 
 		var oldTagsAll, newTagsAll tftags.Map
@@ -259,7 +302,7 @@ func (r tagsResourceInterceptor) modifyPlan(ctx context.Context, opts intercepto
 		}
 
 		if planTags.IsWhollyKnown() {
-			allTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreConfig(c.IgnoreTagsConfig(ctx))
+			allTags := c.DefaultTagsConfig(ctx).MergeTags(tftags.New(ctx, planTags)).IgnoreConfig(c.IgnoreTagsConfig(ctx)).IgnoreUpdatesConfig(c.IgnoreTagsConfig(ctx))
 			opts.response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root(names.AttrTagsAll), fwflex.FlattenFrameworkStringValueMapLegacy(ctx, allTags.Map()))...)
 			tflog.Info(ctx, "tagsResourceInterceptor before modify plan", map[string]any{
 				"plan tags":     planTags,
@@ -279,12 +322,13 @@ func (r tagsResourceInterceptor) modifyPlan(ctx context.Context, opts intercepto
 	}
 }
 
-func resourceTransparentTagging(servicePackageResourceTags inttypes.ServicePackageResourceTags) interface {
+func resourceTransparentTagging(servicePackageResourceTags inttypes.ServicePackageResourceTags, readTags func(context.Context, resource.ReadRequest, *resource.ReadResponse)) interface {
 	resourceCRUDInterceptor
 	resourceModifyPlanInterceptor
 } {
 	return &tagsResourceInterceptor{
-		HTags: interceptors.HTags(servicePackageResourceTags),
+		HTags:    interceptors.HTags(servicePackageResourceTags),
+		readTags: readTags,
 	}
 }
 
