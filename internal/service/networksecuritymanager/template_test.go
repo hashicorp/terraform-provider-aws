@@ -6,6 +6,7 @@ package networksecuritymanager_test
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 	"testing"
 
@@ -193,9 +194,9 @@ func TestAccNetworkSecurityManagerTemplate_description(t *testing.T) {
 
 	variables := func(description config.Variable) config.Variables {
 		return config.Variables{
-			acctest.CtRName:       config.StringVariable(rName),
-			names.AttrDescription: description,
-			"rules":               testAccTemplateRulesVariable("a"),
+			acctest.CtRName: config.StringVariable(rName),
+			"description":   description,
+			"rules":         testAccTemplateRulesVariable("a"),
 		}
 	}
 	step := func(description config.Variable, action plancheck.ResourceActionType, expected knownvalue.Check) resource.TestStep {
@@ -335,9 +336,9 @@ func TestAccNetworkSecurityManagerTemplate_updateToken(t *testing.T) {
 
 	variables := func(rules ...string) config.Variables {
 		return config.Variables{
-			acctest.CtRName:       config.StringVariable(rName),
-			names.AttrDescription: config.StringVariable("description 1"),
-			"rules":               testAccTemplateRulesVariable(rules...),
+			acctest.CtRName: config.StringVariable(rName),
+			"description":   config.StringVariable("description 1"),
+			"rules":         testAccTemplateRulesVariable(rules...),
 		}
 	}
 	publishedVariables := variables("a", "b")
@@ -536,9 +537,7 @@ func TestAccNetworkSecurityManagerTemplate_validation(t *testing.T) {
 			acctest.CtRName: config.StringVariable(rName),
 			"rule_arns":     otherAccountRuleARNs(1),
 		}
-		for k, val := range variables {
-			v[k] = val
-		}
+		maps.Copy(v, variables)
 		return resource.TestStep{
 			ConfigDirectory: config.StaticDirectory("testdata/Template/validation/"),
 			ConfigVariables: v,
@@ -563,8 +562,8 @@ func TestAccNetworkSecurityManagerTemplate_validation(t *testing.T) {
 		Steps: []resource.TestStep{
 			step(config.Variables{acctest.CtRName: config.StringVariable("-" + rName)}, true, invalidMatch),
 			step(config.Variables{acctest.CtRName: config.StringVariable(strings.Repeat("a", 129))}, true, invalidLength),
-			step(config.Variables{names.AttrDescription: config.StringVariable(strings.Repeat("a", 257))}, true, invalidLength),
-			step(config.Variables{names.AttrDescription: config.StringVariable("not # allowed")}, true, invalidMatch),
+			step(config.Variables{"description": config.StringVariable(strings.Repeat("a", 257))}, true, invalidLength),
+			step(config.Variables{"description": config.StringVariable("not # allowed")}, true, invalidMatch),
 			step(config.Variables{"firewall_type": config.StringVariable("SHIELD_ADVANCED")}, true, `Invalid String Enum Value`),
 			step(config.Variables{"no_rules": config.BoolVariable(true)}, true, invalidSize),
 			step(config.Variables{"rule_arns": otherAccountRuleARNs(51)}, true, invalidSize),
