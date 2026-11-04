@@ -18,9 +18,8 @@ const (
 )
 
 var (
-	aliasNameRegex     = regexache.MustCompile(`^` + aliasNamePattern + `$`)
-	keyIDRegex         = regexache.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `$`)
-	keyIDResourceRegex = regexache.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `)$`)
+	aliasNameRegex = regexache.MustCompile(`^` + aliasNamePattern + `$`)
+	keyIDRegex     = regexache.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `$`)
 )
 
 func validGrantName(v any, k string) (ws []string, es []error) {
