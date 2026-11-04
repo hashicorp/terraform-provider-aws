@@ -97,7 +97,7 @@ func keyAliasFromARN(s string) string {
 }
 
 func keyAliasNameFromARNResource(s string) string {
-	if aliasNameRegex.MatchString(s) {
+	if aliasNameRegex().MatchString(s) {
 		return s
 	}
 
