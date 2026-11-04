@@ -48,7 +48,7 @@ This resource supports the following arguments:
 ### `encryption_configuration` Configuration Block
 
 * `kms_key_id` - (Optional) The alias, alias ARN, key ID, or key ARN of the symmetric encryption KMS key that encrypts the data key. To specify a KMS key in a different AWS account, the customer must use the key ARN or alias ARN. For more information regarding kms_key_id, see [KeyId](https://docs.aws.amazon.com/kms/latest/APIReference/API_DescribeKey.html#API_DescribeKey_RequestParameters) in the KMS documentation.
-* `type` - (Optional) Encryption option specified for the activity. Valid values: `AWS_OWNED_KEY`, `CUSTOMER_MANAGED_KMS_KEY`.
+* `type` - (Optional) Encryption option specified for the activity. AWS requires this argument when `encryption_configuration` is specified. Valid values: `AWS_OWNED_KEY`, `CUSTOMER_MANAGED_KMS_KEY`.
 * `kms_data_key_reuse_period_seconds` - (Optional) Maximum duration for which Activities will reuse data keys. When the period expires, Activities will call GenerateDataKey. This setting only applies to customer managed KMS key and does not apply to AWS owned KMS key.
 
 ## Attribute Reference
