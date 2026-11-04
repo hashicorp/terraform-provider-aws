@@ -43,7 +43,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `attachment_type` - (Optional) Type of attachment. Allowed values are: `CONNECT`, `DIRECT_CONNECT_GATEWAY`, `SITE_TO_SITE_VPN`, `TRANSIT_GATEWAY_ROUTE_TABLE`, and `VPC`.
-* `edge_location` - (Optional) AWS Region where the edge is located. Direct Connect gateway attachments report their edge locations in `edge_locations` and aren't matched by this argument.
+* `edge_location` - (Optional) AWS Region where the edge is located. Direct Connect gateway attachments match when the Region is one of their `edge_locations`.
 * `state` - (Optional) State of the attachment. Allowed values are: `AVAILABLE`, `CREATING`, `DELETING`, `FAILED`, `PENDING_ATTACHMENT_ACCEPTANCE`, `PENDING_NETWORK_UPDATE`, `PENDING_TAG_ACCEPTANCE`, `REJECTED`, and `UPDATING`.
 * `tags` - (Optional) Map of tags that each attachment must have. An attachment matches when it has all of the given tags.
 
