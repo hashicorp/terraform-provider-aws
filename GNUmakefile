@@ -5,6 +5,7 @@ ACCTEST_TIMEOUT              ?= 360m
 BASE_REF                     ?= main
 GOFMT                        ?= $(shell $(GO_VER) env GOROOT 2>/dev/null)/bin/gofmt
 GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
+GOVULNCHECK_ARGS             ?=
 P                            ?= 20
 PKG_NAME                     ?= internal
 SEMGREP_ARGS                 ?= --error
@@ -503,6 +504,10 @@ golangci-lint5: ## [CI] golangci-lint Checks / 5 of 5
 	@golangci-lint run \
 		--config .ci/.golangci5.yml \
 		$(TEST)
+
+govulncheck: ## Run govulncheck
+	@echo "make: Running govulncheck..."
+	@govulncheck $(GOVULNCHECK_ARGS) ./...
 
 help: ## Display this help
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -v '## \[internal\]' | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-27s\033[0m %s\n", $$1, $$2}'
@@ -1200,10 +1205,6 @@ update: prereq-go ## Update dependencies
 	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 
-vulncheck: ## Run govulncheck
-	@echo "make: Running govulncheck..."
-	govulncheck ./...
-
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
 website-link-check: ## Check website links (Legacy, use caution)
@@ -1386,6 +1387,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	golangci-lint3 \
 	golangci-lint4 \
 	golangci-lint5 \
+	govulncheck \
 	help \
 	import-lint \
 	install \
@@ -1457,7 +1459,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	tools \
 	ts \
 	update \
-	vulncheck \
 	website \
 	website-link-check \
 	website-link-check-ghrc \
