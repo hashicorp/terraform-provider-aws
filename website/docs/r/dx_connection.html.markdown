@@ -95,6 +95,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `remaining` - Number of rate limiters remaining (available).
 * `total_bandwidth` - Total bandwidth allocated across all rate limiters.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `update` - (Default `10m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect connections using the connection `id`. For example:

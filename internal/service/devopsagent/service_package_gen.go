@@ -38,6 +38,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newAssetResource,
+			TypeName: "aws_devopsagent_asset",
+			Name:     "Asset",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("agent_space_id", true),
+				inttypes.StringIdentityAttribute("asset_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      assetImportID{},
+			},
+		},
 	}
 }
 
@@ -50,6 +64,16 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("agent_space_id", true)),
+		},
+		{
+			Factory:  newAssetResourceAsListResource,
+			TypeName: "aws_devopsagent_asset",
+			Name:     "Asset",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("agent_space_id", true),
+				inttypes.StringIdentityAttribute("asset_id", true),
+			}),
 		},
 	})
 }

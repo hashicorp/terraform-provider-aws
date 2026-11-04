@@ -4818,3 +4818,31 @@ rules:
             - pattern-not-regex: "^TestAccRDSData"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
+  - id: rdsdata-in-const-name
+    languages:
+      - go
+    message: Do not use "RDSData" in const name inside rdsdata package
+    paths:
+      include:
+        - "/internal/service/rdsdata"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)RDSData"
+    severity: WARNING
+  - id: rdsdata-in-var-name
+    languages:
+      - go
+    message: Do not use "RDSData" in var name inside rdsdata package
+    paths:
+      include:
+        - "/internal/service/rdsdata"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)RDSData"
+    severity: WARNING

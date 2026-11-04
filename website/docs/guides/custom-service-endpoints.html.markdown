@@ -118,6 +118,7 @@ provider "aws" {
 |Bedrock|`bedrock`|`AWS_ENDPOINT_URL_BEDROCK`|`bedrock`|
 |Bedrock Agents|`bedrockagent`|`AWS_ENDPOINT_URL_BEDROCK_AGENT`|`bedrock_agent`|
 |Bedrock AgentCore|`bedrockagentcore`|`AWS_ENDPOINT_URL_BEDROCK_AGENTCORE_CONTROL`|`bedrock_agentcore_control`|
+|Bedrock Data Automation|`bedrockdataautomation`|`AWS_ENDPOINT_URL_BEDROCK_DATA_AUTOMATION`|`bedrock_data_automation`|
 |Bedrock Runtime|`bedrockruntime`|`AWS_ENDPOINT_URL_BEDROCK_RUNTIME`|`bedrock_runtime`|
 |Billing|`billing`|`AWS_ENDPOINT_URL_BILLING`|`billing`|
 |Web Services Budgets|`budgets`|`AWS_ENDPOINT_URL_BUDGETS`|`budgets`|
@@ -322,6 +323,7 @@ provider "aws" {
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|
 |Security Hub|`securityhub`|`AWS_ENDPOINT_URL_SECURITYHUB`|`securityhub`|
+|Security Incident Response|`securityir`|`AWS_ENDPOINT_URL_SECURITY_IR`|`security_ir`|
 |Security Lake|`securitylake`|`AWS_ENDPOINT_URL_SECURITYLAKE`|`securitylake`|
 |Serverless Application Repository|`serverlessrepo`(or `serverlessapprepo` or `serverlessapplicationrepository`)|`AWS_ENDPOINT_URL_SERVERLESSAPPLICATIONREPOSITORY`|`serverlessapplicationrepository`|
 |Service Catalog|`servicecatalog`|`AWS_ENDPOINT_URL_SERVICE_CATALOG`|`service_catalog`|
