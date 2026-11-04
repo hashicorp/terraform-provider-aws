@@ -13,6 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -26,27 +28,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccTemplate_basic(t *testing.T) {
+var checkTemplateARN knownvalue.Check = tfknownvalue.RegionalARNRegexp("network-security-manager", regexache.MustCompile(`template:[0-9a-z]+$`))
+
+func TestAccNetworkSecurityManagerTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetTemplateOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_template.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTemplateConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Template/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule_arns.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "rule_arns.0", "aws_networksecuritymanager_rule.a", names.AttrARN),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -54,60 +58,56 @@ func testAccTemplate_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("network-security-manager", regexache.MustCompile(`template:[0-9a-z]+$`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("firewall_type"), tfknownvalue.StringExact(awstypes.TemplateFirewallTypeWaf)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkTemplateARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("firewall_type"), tfknownvalue.StringExact(awstypes.TemplateFirewallTypeWaf)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.EntityStatusActive)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("has_published_version"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.StringExact("1")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("template_id"), knownvalue.StringRegexp(regexache.MustCompile(`^[0-9a-z]+$`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("updated_at"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("rule_arns").AtSliceIndex(0), "aws_networksecuritymanager_rule.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arns"), knownvalue.ListSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.RegionalARNRegexp("network-security-manager", regexache.MustCompile(`template:[0-9a-z]+$`)),
-					}),
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Template/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
 }
 
-func testAccTemplate_disappears(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetTemplateOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_template.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTemplateConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Template/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworksecuritymanager.ResourceTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
@@ -117,347 +117,289 @@ func testAccTemplate_disappears(t *testing.T) {
 	})
 }
 
-// Every optional argument set on creation; the template is created as a draft
-// and destroyed while it exists only as a draft.
-func testAccTemplate_full(t *testing.T) {
+// rule_arns is an ordered list. Rules are added, reordered and removed in place,
+// and a change of order alone is an update.
+func TestAccNetworkSecurityManagerTemplate_rules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetTemplateOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_template.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTemplateConfig_full(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule_arns.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "rule_arns.0", "aws_networksecuritymanager_rule.a", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "rule_arns.1", "aws_networksecuritymanager_rule.b", names.AttrARN),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("network-security-manager", regexache.MustCompile(`template:[0-9a-z]+$`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("Managed by Terraform")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.EntityStatusDraft)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("has_published_version"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.StringExact("1")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-		},
-	})
-}
-
-// rule_arns is an ordered list: rules are added, reordered and removed in
-// place, and a change of order alone is an update that creates a new version.
-func testAccTemplate_rules(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetTemplateOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_networksecuritymanager_template.test"
-
-	rulesStep := func(ruleARNs string, version string, checks ...resource.TestCheckFunc) resource.TestStep {
+	variables := func(rules ...string) config.Variables {
+		return config.Variables{
+			acctest.CtRName: config.StringVariable(rName),
+			"rules":         testAccTemplateRulesVariable(rules...),
+		}
+	}
+	step := func(action plancheck.ResourceActionType, rules ...string) resource.TestStep {
 		return resource.TestStep{
-			Config: testAccTemplateConfig_rules(rName, ruleARNs),
+			ConfigDirectory: config.StaticDirectory("testdata/Template/update/"),
+			ConfigVariables: variables(rules...),
 			Check: resource.ComposeAggregateTestCheckFunc(
-				append([]resource.TestCheckFunc{testAccCheckTemplateExists(ctx, t, resourceName, &v)}, checks...)...,
+				testAccCheckTemplateExists(ctx, t, resourceName),
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					plancheck.ExpectResourceAction(resourceName, action),
+				},
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectEmptyPlan(),
 				},
 			},
-			ConfigStateChecks: []statecheck.StateCheck{
-				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.EntityStatusActive)),
-				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.StringExact(version)),
-			},
+			ConfigStateChecks: testAccTemplateRuleARNsChecks(resourceName, rules...),
 		}
 	}
-	importStep := resource.TestStep{
-		ResourceName:                         resourceName,
-		ImportState:                          true,
-		ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-		ImportStateVerify:                    true,
-		ImportStateVerifyIdentifierAttribute: names.AttrARN,
+	importStep := func(rules ...string) resource.TestStep {
+		return resource.TestStep{
+			ConfigDirectory:                      config.StaticDirectory("testdata/Template/update/"),
+			ConfigVariables:                      variables(rules...),
+			ResourceName:                         resourceName,
+			ImportState:                          true,
+			ImportStateVerify:                    true,
+			ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			ImportStateVerifyIdentifierAttribute: names.AttrARN,
+		}
 	}
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccTemplateConfig_rules(rName, "aws_networksecuritymanager_rule.a.arn"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule_arns.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "rule_arns.0", "aws_networksecuritymanager_rule.a", names.AttrARN),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.StringExact("1")),
-				},
-			},
+			step(plancheck.ResourceActionCreate, "a"),
 			// Add a second CONFIGURATION rule.
-			rulesStep("aws_networksecuritymanager_rule.a.arn, aws_networksecuritymanager_rule.b.arn", "2",
-				resource.TestCheckResourceAttr(resourceName, "rule_arns.#", "2"),
-				resource.TestCheckResourceAttrPair(resourceName, "rule_arns.0", "aws_networksecuritymanager_rule.a", names.AttrARN),
-				resource.TestCheckResourceAttrPair(resourceName, "rule_arns.1", "aws_networksecuritymanager_rule.b", names.AttrARN),
-			),
-			importStep,
+			step(plancheck.ResourceActionUpdate, "a", "b"),
+			importStep("a", "b"),
 			// Add an INSPECTION rule: CONFIGURATION and INSPECTION rules mix.
-			rulesStep("aws_networksecuritymanager_rule.a.arn, aws_networksecuritymanager_rule.b.arn, aws_networksecuritymanager_rule.c.arn", "3",
-				resource.TestCheckResourceAttr(resourceName, "rule_arns.#", "3"),
-				resource.TestCheckResourceAttrPair(resourceName, "rule_arns.0", "aws_networksecuritymanager_rule.a", names.AttrARN),
-				resource.TestCheckResourceAttrPair(resourceName, "rule_arns.1", "aws_networksecuritymanager_rule.b", names.AttrARN),
-				resource.TestCheckResourceAttrPair(resourceName, "rule_arns.2", "aws_networksecuritymanager_rule.c", names.AttrARN),
-			),
-			// Same rules, different order: the order is kept by the API.
-			rulesStep("aws_networksecuritymanager_rule.c.arn, aws_networksecuritymanager_rule.a.arn, aws_networksecuritymanager_rule.b.arn", "4",
-				resource.TestCheckResourceAttr(resourceName, "rule_arns.#", "3"),
-				resource.TestCheckResourceAttrPair(resourceName, "rule_arns.0", "aws_networksecuritymanager_rule.c", names.AttrARN),
-				resource.TestCheckResourceAttrPair(resourceName, "rule_arns.1", "aws_networksecuritymanager_rule.a", names.AttrARN),
-				resource.TestCheckResourceAttrPair(resourceName, "rule_arns.2", "aws_networksecuritymanager_rule.b", names.AttrARN),
-			),
-			importStep,
+			step(plancheck.ResourceActionUpdate, "a", "b", "c"),
+			// Same rules, different order: the service keeps the order.
+			step(plancheck.ResourceActionUpdate, "c", "a", "b"),
+			importStep("c", "a", "b"),
 			// Remove two rules.
-			rulesStep("aws_networksecuritymanager_rule.b.arn", "5",
-				resource.TestCheckResourceAttr(resourceName, "rule_arns.#", "1"),
-				resource.TestCheckResourceAttrPair(resourceName, "rule_arns.0", "aws_networksecuritymanager_rule.b", names.AttrARN),
-			),
+			step(plancheck.ResourceActionUpdate, "b"),
 			// Replace the only rule with another.
-			rulesStep("aws_networksecuritymanager_rule.c.arn", "6",
-				resource.TestCheckResourceAttr(resourceName, "rule_arns.#", "1"),
-				resource.TestCheckResourceAttrPair(resourceName, "rule_arns.0", "aws_networksecuritymanager_rule.c", names.AttrARN),
-			),
+			step(plancheck.ResourceActionUpdate, "c"),
 		},
 	})
 }
 
-// is_published drives the DRAFT/ACTIVE lifecycle: a draft is published in
-// place, and saving a published template as a draft creates a draft on top of
-// the published version (has_published_version) that is published again later.
-func testAccTemplate_publish(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetTemplateOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_template.test"
 
-	publishStep := func(isPublished bool, status awstypes.EntityStatus, hasPublishedVersion bool, version string) resource.TestStep {
+	variables := func(description config.Variable) config.Variables {
+		return config.Variables{
+			acctest.CtRName:       config.StringVariable(rName),
+			names.AttrDescription: description,
+			"rules":               testAccTemplateRulesVariable("a"),
+		}
+	}
+	step := func(description config.Variable, action plancheck.ResourceActionType, expected knownvalue.Check) resource.TestStep {
 		return resource.TestStep{
-			Config: testAccTemplateConfig_isPublished(rName, isPublished),
+			ConfigDirectory: config.StaticDirectory("testdata/Template/update/"),
+			ConfigVariables: variables(description),
 			Check: resource.ComposeAggregateTestCheckFunc(
-				testAccCheckTemplateExists(ctx, t, resourceName, &v),
+				testAccCheckTemplateExists(ctx, t, resourceName),
 			),
 			ConfigPlanChecks: resource.ConfigPlanChecks{
 				PreApply: []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					plancheck.ExpectResourceAction(resourceName, action),
+				},
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectEmptyPlan(),
 				},
 			},
 			ConfigStateChecks: []statecheck.StateCheck{
-				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(isPublished)),
-				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(status)),
-				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("has_published_version"), knownvalue.Bool(hasPublishedVersion)),
-				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.StringExact(version)),
-				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("network-security-manager", regexache.MustCompile(`template:[0-9a-z]+$`))),
+				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), expected),
 			},
 		}
 	}
-	importStep := resource.TestStep{
-		ResourceName:                         resourceName,
-		ImportState:                          true,
-		ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-		ImportStateVerify:                    true,
-		ImportStateVerifyIdentifierAttribute: names.AttrARN,
-	}
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
+			step(config.StringVariable("description 1"), plancheck.ResourceActionCreate, knownvalue.StringExact("description 1")),
+			step(config.StringVariable("description 2"), plancheck.ResourceActionUpdate, knownvalue.StringExact("description 2")),
 			{
-				Config: testAccTemplateConfig_isPublished(rName, false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.EntityStatusDraft)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("has_published_version"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.StringExact("1")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("network-security-manager", regexache.MustCompile(`template:[0-9a-z]+$`))),
-				},
-			},
-			importStep,
-			// Publishing a draft-only template keeps its version.
-			publishStep(true, awstypes.EntityStatusActive, false, "1"),
-			importStep,
-			// A draft on top of the published template.
-			publishStep(false, awstypes.EntityStatusDraft, true, "2"),
-			importStep,
-			publishStep(true, awstypes.EntityStatusActive, false, "2"),
-			// Destroyed with a pending draft.
-			publishStep(false, awstypes.EntityStatusDraft, true, "3"),
-		},
-	})
-}
-
-func testAccTemplate_description(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetTemplateOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_networksecuritymanager_template.test"
-
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTemplateConfig_description(rName, "description 1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("description 1")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.StringExact("1")),
-				},
-			},
-			{
-				Config: testAccTemplateConfig_description(rName, "description 2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("description 2")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.StringExact("2")),
-				},
-			},
-			{
+				ConfigDirectory:                      config.StaticDirectory("testdata/Template/update/"),
+				ConfigVariables:                      variables(config.StringVariable("description 2")),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
-			{
-				Config: testAccTemplateConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.StringExact("3")),
-				},
-			},
+			// Removing the description from the configuration clears it.
+			step(nil, plancheck.ResourceActionUpdate, knownvalue.Null()),
 		},
 	})
 }
 
-// The template is modified outside Terraform between two applies; the update
-// token is read back, so the second apply succeeds and reverts the change.
-func testAccTemplate_updateToken(t *testing.T) {
+// is_published drives the DRAFT/ACTIVE lifecycle. The template is created as a
+// draft, published in place, and given a pending draft on top of the published
+// version, which is published again; destroy then removes a pending draft too.
+func TestAccNetworkSecurityManagerTemplate_isPublished(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networksecuritymanager_template.test"
+
+	variables := func(isPublished bool, rules ...string) config.Variables {
+		return config.Variables{
+			acctest.CtRName: config.StringVariable(rName),
+			"is_published":  config.BoolVariable(isPublished),
+			"rules":         testAccTemplateRulesVariable(rules...),
+		}
+	}
+	step := func(isPublished bool, action plancheck.ResourceActionType, rules ...string) resource.TestStep {
+		return resource.TestStep{
+			ConfigDirectory: config.StaticDirectory("testdata/Template/update/"),
+			ConfigVariables: variables(isPublished, rules...),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckTemplateExists(ctx, t, resourceName),
+				testAccCheckTemplateStatus(ctx, t, resourceName, isPublished),
+			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, action),
+				},
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectEmptyPlan(),
+				},
+			},
+			ConfigStateChecks: append(testAccTemplateRuleARNsChecks(resourceName, rules...),
+				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkTemplateARN),
+				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(isPublished)),
+			),
+		}
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Created as a draft.
+			step(false, plancheck.ResourceActionCreate, "a"),
+			{
+				ConfigDirectory:                      config.StaticDirectory("testdata/Template/update/"),
+				ConfigVariables:                      variables(false, "a"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			// DRAFT -> ACTIVE: the draft itself is published.
+			step(true, plancheck.ResourceActionUpdate, "a"),
+			// ACTIVE -> DRAFT: a draft is saved on top of the published version.
+			step(false, plancheck.ResourceActionUpdate, "a", "b"),
+			{
+				ConfigDirectory:                      config.StaticDirectory("testdata/Template/update/"),
+				ConfigVariables:                      variables(false, "a", "b"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			step(true, plancheck.ResourceActionUpdate, "a", "b"),
+			// Destroyed with a pending draft.
+			step(false, plancheck.ResourceActionUpdate, "b"),
+		},
+	})
+}
+
+// The template is changed outside Terraform between applies. The update token is
+// read back before each update, so the next apply succeeds and reverts the
+// change; a draft saved outside Terraform is published back when the
+// configuration sets is_published = true.
+func TestAccNetworkSecurityManagerTemplate_updateToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v networksecuritymanager.GetTemplateOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_template.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	variables := func(rules ...string) config.Variables {
+		return config.Variables{
+			acctest.CtRName:       config.StringVariable(rName),
+			names.AttrDescription: config.StringVariable("description 1"),
+			"rules":               testAccTemplateRulesVariable(rules...),
+		}
+	}
+	publishedVariables := variables("a", "b")
+	publishedVariables["is_published"] = config.BoolVariable(true)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTemplateConfig_description(rName, "description 1"),
+				ConfigDirectory: config.StaticDirectory("testdata/Template/update/"),
+				ConfigVariables: variables("a"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExistsGet(ctx, t, resourceName, &v),
 				),
 			},
 			{
 				PreConfig: func() {
-					testAccTemplateUpdateOutOfBand(ctx, t, &v, "changed outside Terraform")
+					testAccTemplateUpdateOutOfBand(ctx, t, &v, "changed outside Terraform", true)
 				},
-				Config: testAccTemplateConfig_descriptionAndRules(rName, "description 1", "aws_networksecuritymanager_rule.a.arn, aws_networksecuritymanager_rule.b.arn"),
+				ConfigDirectory: config.StaticDirectory("testdata/Template/update/"),
+				ConfigVariables: variables("a", "b"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule_arns.#", "2"),
+					testAccCheckTemplateExistsGet(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				ConfigStateChecks: []statecheck.StateCheck{
+				ConfigStateChecks: append(testAccTemplateRuleARNsChecks(resourceName, "a", "b"),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("description 1")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.StringExact("3")),
-				},
+				),
 			},
 			{
 				PreConfig: func() {
-					// A draft saved outside Terraform on a published template
-					// is published by the next apply.
-					testAccTemplateUpdateOutOfBand(ctx, t, &v, "draft saved outside Terraform")
+					testAccTemplateUpdateOutOfBand(ctx, t, &v, "draft saved outside Terraform", false)
 				},
-				Config: testAccTemplateConfig_descriptionAndRules(rName, "description 1", "aws_networksecuritymanager_rule.a.arn, aws_networksecuritymanager_rule.b.arn"),
+				// is_published is Optional+Computed, so only an explicit true
+				// publishes a draft that was saved outside Terraform.
+				ConfigDirectory: config.StaticDirectory("testdata/Template/update/"),
+				ConfigVariables: publishedVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExistsGet(ctx, t, resourceName, &v),
+					testAccCheckTemplateStatus(ctx, t, resourceName, true),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("description 1")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.EntityStatusActive)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("has_published_version"), knownvalue.Bool(false)),
 				},
 			},
 		},
@@ -465,32 +407,41 @@ func testAccTemplate_updateToken(t *testing.T) {
 }
 
 // name cannot be changed in place.
-func testAccTemplate_replace(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_nameReplace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 networksecuritymanager.GetTemplateOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_template.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTemplateConfig_name(rName, rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Template/update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"rules":         testAccTemplateRulesVariable("a"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v1),
+					testAccCheckTemplateExistsGet(ctx, t, resourceName, &v1),
 				),
 			},
 			{
-				Config: testAccTemplateConfig_name(rName, rNameUpdated),
+				ConfigDirectory: config.StaticDirectory("testdata/Template/update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"template_name": config.StringVariable(rNameUpdated),
+					"rules":         testAccTemplateRulesVariable("a"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v2),
+					testAccCheckTemplateExistsGet(ctx, t, resourceName, &v2),
 					testAccCheckTemplateRecreated(&v1, &v2),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -506,225 +457,205 @@ func testAccTemplate_replace(t *testing.T) {
 	})
 }
 
-// Delete followed by an immediate re-creation under the same name.
-func testAccTemplate_recreate(t *testing.T) {
+// A rule that a published template references cannot be deleted. Replacing such a
+// rule therefore fails in the default order (destroy, then create) and needs
+// create_before_destroy on the rule.
+func TestAccNetworkSecurityManagerTemplate_ruleReplace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 networksecuritymanager.GetTemplateOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_networksecuritymanager_template.test"
-
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTemplateConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v1),
-				),
-			},
-			{
-				Taint:  []string{resourceName},
-				Config: testAccTemplateConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v2),
-					testAccCheckTemplateRecreated(&v1, &v2),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.EntityStatusActive)),
-				},
-			},
-		},
-	})
-}
-
-// A rule referenced by a published template cannot be deleted. Replacing such
-// a rule therefore fails in the default order (destroy, then create) and
-// requires create_before_destroy on the rule.
-func testAccTemplate_ruleReplace(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetTemplateOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_template.test"
+	ruleResourceName := "aws_networksecuritymanager_rule.a"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	variables := func(ruleName string) config.Variables {
+		return config.Variables{
+			acctest.CtRName: config.StringVariable(rName),
+			"rule_name":     config.StringVariable(ruleName),
+		}
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTemplateConfig_ruleName(rName, rName, false),
+				ConfigDirectory: config.StaticDirectory("testdata/Template/rule_replace/"),
+				ConfigVariables: variables(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "rule_arns.0", "aws_networksecuritymanager_rule.a", names.AttrARN),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 			},
 			{
-				Config:      testAccTemplateConfig_ruleName(rName, rNameUpdated, false),
-				ExpectError: regexache.MustCompile(`ConflictException: The resource is currently in use`),
+				ConfigDirectory: config.StaticDirectory("testdata/Template/rule_replace/"),
+				ConfigVariables: variables(rNameUpdated),
+				ExpectError:     regexache.MustCompile(`ConflictException: The resource is currently in use`),
 			},
 			{
-				Config: testAccTemplateConfig_ruleName(rName, rNameUpdated, true),
+				ConfigDirectory: config.StaticDirectory("testdata/Template/rule_replace_cbd/"),
+				ConfigVariables: variables(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "rule_arns.0", "aws_networksecuritymanager_rule.a", names.AttrARN),
-					resource.TestCheckResourceAttr("aws_networksecuritymanager_rule.a", names.AttrName, rNameUpdated),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_networksecuritymanager_rule.a", plancheck.ResourceActionCreateBeforeDestroy),
+						plancheck.ExpectResourceAction(ruleResourceName, plancheck.ResourceActionCreateBeforeDestroy),
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.StringExact("2")),
+					statecheck.ExpectKnownValue(ruleResourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rNameUpdated)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("rule_arns").AtSliceIndex(0), ruleResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
 		},
 	})
 }
 
-// Argument validation at plan time, and rule reference validation by the API.
-func testAccTemplate_validation(t *testing.T) {
+// Argument validation at plan time, and rule reference validation by the service.
+func TestAccNetworkSecurityManagerTemplate_validation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	fakeARN := func(n int) string {
-		return fmt.Sprintf("%q", fmt.Sprintf("arn:%s:network-security-manager:%s:123456789012:rule:tfacc%021d", acctest.Partition(), acctest.Region(), n))
+	ruleARN := func(accountID string, n int) string {
+		return fmt.Sprintf("arn:%s:network-security-manager:%s:%s:rule:tfacc%021d", acctest.Partition(), acctest.Region(), accountID, n)
 	}
-	fakeARNs := func(count int) string {
-		arns := make([]string, 0, count)
+	otherAccountRuleARNs := func(count int) config.Variable {
+		arns := make([]config.Variable, 0, count)
 		for n := range count {
-			arns = append(arns, fakeARN(n))
+			arns = append(arns, config.StringVariable(ruleARN(acctest.Ct12Digit, n)))
 		}
-		return strings.Join(arns, ", ")
+		return config.ListVariable(arns...)
 	}
+	step := func(variables config.Variables, planOnly bool, expectError string) resource.TestStep {
+		v := config.Variables{
+			acctest.CtRName: config.StringVariable(rName),
+			"rule_arns":     otherAccountRuleARNs(1),
+		}
+		for k, val := range variables {
+			v[k] = val
+		}
+		return resource.TestStep{
+			ConfigDirectory: config.StaticDirectory("testdata/Template/validation/"),
+			ConfigVariables: v,
+			PlanOnly:        planOnly,
+			ExpectError:     regexache.MustCompile(expectError),
+		}
+	}
+	const (
+		invalidLength = `Invalid Attribute Value Length`
+		invalidMatch  = `Invalid Attribute Value Match`
+		invalidSize   = `list must contain at least 1 elements and at most 50\s+elements`
+	)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
+			step(config.Variables{acctest.CtRName: config.StringVariable("-" + rName)}, true, invalidMatch),
+			step(config.Variables{acctest.CtRName: config.StringVariable(strings.Repeat("a", 129))}, true, invalidLength),
+			step(config.Variables{names.AttrDescription: config.StringVariable(strings.Repeat("a", 257))}, true, invalidLength),
+			step(config.Variables{names.AttrDescription: config.StringVariable("not # allowed")}, true, invalidMatch),
+			step(config.Variables{"firewall_type": config.StringVariable("SHIELD_ADVANCED")}, true, `Invalid String Enum Value`),
+			step(config.Variables{"no_rules": config.BoolVariable(true)}, true, invalidSize),
+			step(config.Variables{"rule_arns": otherAccountRuleARNs(51)}, true, invalidSize),
+			step(config.Variables{"rule_arns": config.ListVariable(config.StringVariable(ruleARN(acctest.Ct12Digit, 1)), config.StringVariable(ruleARN(acctest.Ct12Digit, 1)))}, true, `This attribute contains duplicate values`),
+			step(config.Variables{"rule_arns": config.ListVariable(config.StringVariable("not-an-arn"))}, true, `value must be a valid ARN`),
+			// A rule in another account is an authorization failure, not a validation one.
+			step(config.Variables{}, false, `UnauthorizedException|AccessDeniedException`),
+			// A rule that does not exist.
 			{
-				// The rule resource validates its name the same way, so the
-				// template is named on its own to exercise its own validator.
-				Config:      testAccTemplateConfig_ruleARNs("-"+rName, fakeARN(1)),
-				ExpectError: regexache.MustCompile(`must start with an alphanumeric character`),
-			},
-			{
-				Config:      testAccTemplateConfig_ruleARNs(strings.Repeat("a", 129), fakeARN(1)),
-				ExpectError: regexache.MustCompile(`string length must be between 1 and 128`),
-			},
-			{
-				Config:      testAccTemplateConfig_description(rName, strings.Repeat("a", 257)),
-				ExpectError: regexache.MustCompile(`string length must be at most 256`),
-			},
-			{
-				Config:      testAccTemplateConfig_description(rName, "not # allowed"),
-				ExpectError: regexache.MustCompile(`must contain only alphanumeric characters`),
-			},
-			{
-				Config:      testAccTemplateConfig_firewallType(rName, "SHIELD_ADVANCED"),
-				ExpectError: regexache.MustCompile(`Invalid String Enum Value`),
-			},
-			{
-				Config:      testAccTemplateConfig_ruleARNs(rName, ""),
-				ExpectError: regexache.MustCompile(`list must contain at least 1 elements and at most 50\s+elements`),
-			},
-			{
-				Config:      testAccTemplateConfig_ruleARNs(rName, fakeARNs(51)),
-				ExpectError: regexache.MustCompile(`list must contain at least 1 elements and at most 50\s+elements`),
-			},
-			{
-				Config:      testAccTemplateConfig_ruleARNs(rName, fakeARN(1)+", "+fakeARN(1)),
-				ExpectError: regexache.MustCompile(`This attribute contains duplicate values`),
-			},
-			{
-				Config:      testAccTemplateConfig_ruleARNs(rName, `"not-an-arn"`),
-				ExpectError: regexache.MustCompile(`value must be a valid ARN`),
-			},
-			{
-				// A rule in another account is an authorization failure, not a
-				// validation one.
-				Config:      testAccTemplateConfig_ruleARNs(rName, fakeARN(1)),
-				ExpectError: regexache.MustCompile(`UnauthorizedException|AccessDeniedException`),
-			},
-			{
-				// A rule that does not exist.
-				Config:      testAccTemplateConfig_missingRule(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Template/missing_rule/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ExpectError: regexache.MustCompile(`ValidationException: One or more resources referenced by this request`),
 			},
+			// A draft rule cannot be referenced.
 			{
-				// A draft rule cannot be referenced.
-				Config:      testAccTemplateConfig_draftRule(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Template/draft_rule/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ExpectError: regexache.MustCompile(`ValidationException: One or more resources referenced by this request`),
 			},
 		},
 	})
 }
 
-func testAccCheckTemplateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_networksecuritymanager_template" {
-				continue
-			}
-
-			_, err := tfnetworksecuritymanager.FindTemplateByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
-
-			if retry.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("Network Security Manager Template %s still exists", rs.Primary.Attributes[names.AttrARN])
-		}
-
-		return nil
+func testAccTemplateRulesVariable(rules ...string) config.Variable {
+	v := make([]config.Variable, 0, len(rules))
+	for _, rule := range rules {
+		v = append(v, config.StringVariable(rule))
 	}
+	return config.ListVariable(v...)
 }
 
-func testAccCheckTemplateExists(ctx context.Context, t *testing.T, n string, v *networksecuritymanager.GetTemplateOutput) resource.TestCheckFunc {
+// testAccTemplateRuleARNsChecks checks that rule_arns holds the given rules of
+// testdata/Template/update, in order.
+func testAccTemplateRuleARNsChecks(resourceName string, rules ...string) []statecheck.StateCheck {
+	checks := []statecheck.StateCheck{
+		statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arns"), knownvalue.ListSizeExact(len(rules))),
+	}
+	for i, rule := range rules {
+		checks = append(checks, statecheck.CompareValuePairs(resourceName, tfjsonpath.New("rule_arns").AtSliceIndex(i), "aws_networksecuritymanager_rule."+rule, tfjsonpath.New(names.AttrARN), compare.ValuesSame()))
+	}
+	return checks
+}
+
+func testAccCheckTemplateExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return testAccCheckTemplateExistsGet(ctx, t, n, nil)
+}
+
+// testAccCheckTemplateExistsGet also stores the template as the service returns it.
+func testAccCheckTemplateExistsGet(ctx context.Context, t *testing.T, n string, v *networksecuritymanager.GetTemplateOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
+		ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
 
-		output, err := tfnetworksecuritymanager.FindTemplateByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
-
+		out, err := tfnetworksecuritymanager.FindTemplateByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 		if err != nil {
 			return err
 		}
 
-		*v = *output
+		if v != nil {
+			*v = *out
+		}
+
+		return nil
+	}
+}
+
+// testAccCheckTemplateStatus checks the status the service reports: a published
+// template is ACTIVE, and an unpublished one has a pending DRAFT.
+func testAccCheckTemplateStatus(ctx context.Context, t *testing.T, n string, isPublished bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var v networksecuritymanager.GetTemplateOutput
+		if err := testAccCheckTemplateExistsGet(ctx, t, n, &v)(s); err != nil {
+			return err
+		}
+
+		expected := awstypes.EntityStatusActive
+		if !isPublished {
+			expected = awstypes.EntityStatusDraft
+		}
+		if v.Status != expected {
+			return fmt.Errorf("Network Security Manager Template %s status is %s, expected %s", aws.ToString(v.TemplateArn), v.Status, expected)
+		}
 
 		return nil
 	}
@@ -740,224 +671,59 @@ func testAccCheckTemplateRecreated(before, after *networksecuritymanager.GetTemp
 	}
 }
 
-// testAccTemplateUpdateOutOfBand changes the template's description through
-// the API, invalidating the update token Terraform last saw.
-func testAccTemplateUpdateOutOfBand(ctx context.Context, t *testing.T, v *networksecuritymanager.GetTemplateOutput, description string) {
+func testAccCheckTemplateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_networksecuritymanager_template" {
+				continue
+			}
+
+			ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
+			_, err := tfnetworksecuritymanager.FindTemplateByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+			if retry.NotFound(err) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Network Security Manager Template %s still exists", rs.Primary.Attributes[names.AttrARN])
+		}
+
+		return nil
+	}
+}
+
+// testAccTemplateUpdateOutOfBand changes the template's description through the
+// API, which invalidates the update token Terraform last saw.
+func testAccTemplateUpdateOutOfBand(ctx context.Context, t *testing.T, v *networksecuritymanager.GetTemplateOutput, description string, isPublished bool) {
+	t.Helper()
+
 	conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
 
 	input := networksecuritymanager.UpdateTemplateInput{
+		IsPublished:         aws.Bool(isPublished),
+		TemplateDescription: aws.String(description),
 		TemplateIdentifier:  v.TemplateArn,
 		UpdateToken:         v.UpdateToken,
-		IsPublished:         aws.Bool(v.Status != awstypes.EntityStatusDraft),
-		TemplateDescription: aws.String(description),
 	}
-	if strings.HasPrefix(description, "draft") {
-		input.IsPublished = aws.Bool(false)
-	}
-
 	if _, err := conn.UpdateTemplate(ctx, &input); err != nil {
 		t.Fatalf("updating Network Security Manager Template (%s) outside Terraform: %s", aws.ToString(v.TemplateArn), err)
 	}
 }
 
-// Three published rules: two CONFIGURATION rules and one INSPECTION rule.
-func testAccTemplateConfig_base(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_networksecuritymanager_rule" "a" {
-  name          = "%[1]s-a"
-  firewall_type = "WAF"
-  rule_type     = "CONFIGURATION"
-  configuration = jsonencode({
-    DefaultAction = {
-      Allow = {}
-    }
-  })
-}
+func testAccPreCheckTemplate(ctx context.Context, t *testing.T) {
+	conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
 
-resource "aws_networksecuritymanager_rule" "b" {
-  name          = "%[1]s-b"
-  firewall_type = "WAF"
-  rule_type     = "CONFIGURATION"
-  configuration = jsonencode({
-    VisibilityConfig = {
-      SampledRequestsEnabled   = true
-      CloudWatchMetricsEnabled = true
-      MetricName               = "tf-acc-test"
-    }
-  })
-}
+	var input networksecuritymanager.ListTemplatesInput
+	_, err := conn.ListTemplates(ctx, &input)
 
-resource "aws_networksecuritymanager_rule" "c" {
-  name          = "%[1]s-c"
-  firewall_type = "WAF"
-  rule_type     = "INSPECTION"
-  configuration = jsonencode({
-    PreProcessFirewallManagerRuleGroups = [{
-      Name = "AWSManagedRulesCommonRuleSet"
-      FirewallManagerStatement = {
-        ManagedRuleGroupStatement = {
-          VendorName = "AWS"
-          Name       = "AWSManagedRulesCommonRuleSet"
-        }
-      }
-      OverrideAction = {
-        None = {}
-      }
-      VisibilityConfig = {
-        SampledRequestsEnabled   = true
-        CloudWatchMetricsEnabled = true
-        MetricName               = "AWSManagedRulesCommonRuleSet"
-      }
-    }]
-  })
-}
-`, rName)
-}
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
 
-func testAccTemplateConfig_basic(rName string) string {
-	return testAccTemplateConfig_rules(rName, "aws_networksecuritymanager_rule.a.arn")
-}
-
-func testAccTemplateConfig_rules(rName, ruleARNs string) string {
-	return acctest.ConfigCompose(testAccTemplateConfig_base(rName), fmt.Sprintf(`
-resource "aws_networksecuritymanager_template" "test" {
-  name          = %[1]q
-  firewall_type = "WAF"
-  rule_arns     = [%[2]s]
-}
-`, rName, ruleARNs))
-}
-
-func testAccTemplateConfig_full(rName string) string {
-	return acctest.ConfigCompose(testAccTemplateConfig_base(rName), fmt.Sprintf(`
-resource "aws_networksecuritymanager_template" "test" {
-  name          = %[1]q
-  description   = "Managed by Terraform"
-  firewall_type = "WAF"
-  is_published  = false
-  rule_arns     = [aws_networksecuritymanager_rule.a.arn, aws_networksecuritymanager_rule.b.arn]
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, acctest.CtKey1, acctest.CtValue1))
-}
-
-func testAccTemplateConfig_isPublished(rName string, isPublished bool) string {
-	return acctest.ConfigCompose(testAccTemplateConfig_base(rName), fmt.Sprintf(`
-resource "aws_networksecuritymanager_template" "test" {
-  name          = %[1]q
-  firewall_type = "WAF"
-  is_published  = %[2]t
-  rule_arns     = [aws_networksecuritymanager_rule.a.arn]
-}
-`, rName, isPublished))
-}
-
-func testAccTemplateConfig_description(rName, description string) string {
-	return testAccTemplateConfig_descriptionAndRules(rName, description, "aws_networksecuritymanager_rule.a.arn")
-}
-
-func testAccTemplateConfig_descriptionAndRules(rName, description, ruleARNs string) string {
-	return acctest.ConfigCompose(testAccTemplateConfig_base(rName), fmt.Sprintf(`
-resource "aws_networksecuritymanager_template" "test" {
-  name          = %[1]q
-  description   = %[2]q
-  firewall_type = "WAF"
-  rule_arns     = [%[3]s]
-}
-`, rName, description, ruleARNs))
-}
-
-func testAccTemplateConfig_firewallType(rName, firewallType string) string {
-	return acctest.ConfigCompose(testAccTemplateConfig_base(rName), fmt.Sprintf(`
-resource "aws_networksecuritymanager_template" "test" {
-  name          = %[1]q
-  firewall_type = %[2]q
-  rule_arns     = [aws_networksecuritymanager_rule.a.arn]
-}
-`, rName, firewallType))
-}
-
-// The rules are given as literals, with no rule resource.
-func testAccTemplateConfig_ruleARNs(rName, ruleARNs string) string {
-	return fmt.Sprintf(`
-resource "aws_networksecuritymanager_template" "test" {
-  name          = %[1]q
-  firewall_type = "WAF"
-  rule_arns     = [%[2]s]
-}
-`, rName, ruleARNs)
-}
-
-func testAccTemplateConfig_missingRule(rName string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-
-resource "aws_networksecuritymanager_template" "test" {
-  name          = %[1]q
-  firewall_type = "WAF"
-  rule_arns     = ["arn:${data.aws_partition.current.partition}:network-security-manager:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:rule:tfacc000000000000000000001"]
-}
-`, rName)
-}
-
-func testAccTemplateConfig_name(rName, templateName string) string {
-	return acctest.ConfigCompose(testAccTemplateConfig_base(rName), fmt.Sprintf(`
-resource "aws_networksecuritymanager_template" "test" {
-  name          = %[1]q
-  firewall_type = "WAF"
-  rule_arns     = [aws_networksecuritymanager_rule.a.arn]
-}
-`, templateName))
-}
-
-func testAccTemplateConfig_ruleName(rName, ruleName string, createBeforeDestroy bool) string {
-	return fmt.Sprintf(`
-resource "aws_networksecuritymanager_rule" "a" {
-  name          = %[2]q
-  firewall_type = "WAF"
-  rule_type     = "CONFIGURATION"
-  configuration = jsonencode({
-    DefaultAction = {
-      Allow = {}
-    }
-  })
-
-  lifecycle {
-    create_before_destroy = %[3]t
-  }
-}
-
-resource "aws_networksecuritymanager_template" "test" {
-  name          = %[1]q
-  firewall_type = "WAF"
-  rule_arns     = [aws_networksecuritymanager_rule.a.arn]
-}
-`, rName, ruleName, createBeforeDestroy)
-}
-
-func testAccTemplateConfig_draftRule(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_networksecuritymanager_rule" "draft" {
-  name          = %[1]q
-  firewall_type = "WAF"
-  rule_type     = "CONFIGURATION"
-  is_published  = false
-  configuration = jsonencode({
-    DefaultAction = {
-      Allow = {}
-    }
-  })
-}
-
-resource "aws_networksecuritymanager_template" "test" {
-  name          = %[1]q
-  firewall_type = "WAF"
-  rule_arns     = [aws_networksecuritymanager_rule.draft.arn]
-}
-`, rName)
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }

@@ -12,7 +12,7 @@ Terraform resource for managing an AWS Network Security Manager Template. A temp
 
 `rule_arns` is ordered: the position of an `INSPECTION` rule among the template's rules is its priority in the web ACL, so changing the order of the list is an update. Only published (`ACTIVE`) rules can be referenced.
 
-~> A rule referenced by a published template cannot be deleted. When such a rule must be replaced (for example after a change of its `name` or `rule_type`), set `create_before_destroy = true` in the rule's `lifecycle` block so that the template is moved to the new rule before the old one is deleted; otherwise the apply fails with a `ConflictException`.
+~> A rule referenced by a published template cannot be deleted. When such a rule must be replaced (for example after a change of its `name` or `firewall_type`), set `create_before_destroy = true` in the rule's `lifecycle` block so that the template is moved to the new rule before the old one is deleted; otherwise the apply fails with a `ConflictException`.
 
 ## Example Usage
 
@@ -22,7 +22,7 @@ Terraform resource for managing an AWS Network Security Manager Template. A temp
 resource "aws_networksecuritymanager_rule" "default_action" {
   name          = "default-action-block"
   firewall_type = "WAF"
-  rule_type     = "CONFIGURATION"
+  type          = "CONFIGURATION"
   configuration = jsonencode({
     DefaultAction = {
       Block = {}
@@ -33,7 +33,7 @@ resource "aws_networksecuritymanager_rule" "default_action" {
 resource "aws_networksecuritymanager_rule" "common_rule_set" {
   name          = "common-rule-set"
   firewall_type = "WAF"
-  rule_type     = "INSPECTION"
+  type          = "INSPECTION"
   configuration = jsonencode({
     PreProcessFirewallManagerRuleGroups = [{
       Name = "AWSManagedRulesCommonRuleSet"
@@ -83,7 +83,7 @@ resource "aws_networksecuritymanager_template" "example" {
 resource "aws_networksecuritymanager_rule" "default_action" {
   name          = "default-action-block"
   firewall_type = "WAF"
-  rule_type     = "CONFIGURATION"
+  type          = "CONFIGURATION"
   configuration = jsonencode({
     DefaultAction = {
       Block = {}
@@ -113,7 +113,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the template, up to 256 characters.
-* `is_published` - (Optional) Whether the template is published. When `true` (the default) the template is `ACTIVE` and can be used by policies. When `false` the template is saved as a `DRAFT`; setting it to `false` on a published template saves a draft on top of the published version, which stays in use until the draft is published.
+* `is_published` - (Optional) Whether to publish the template. When `true`, the template is saved in the published (`ACTIVE`) state and can be used by policies. When `false`, it is saved as a draft (`DRAFT`); for a published template, the draft is saved on top of the published version, which stays in use until the draft is published. Defaults to `true`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#region).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -122,12 +122,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the template.
-* `has_published_version` - Whether a published version exists beneath a pending draft.
-* `status` - Status of the template. Valid values: `DRAFT`, `ACTIVE`, `DISABLED`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `template_id` - Service-generated ID of the template.
-* `updated_at` - Time when the template was last updated.
-* `version` - Version of the template. Incremented on every update.
 
 ## Import
 

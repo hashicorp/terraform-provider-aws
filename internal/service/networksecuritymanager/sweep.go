@@ -17,8 +17,10 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_networksecuritymanager_rule", sweepRules)
+	// A rule that a template references cannot be deleted.
+	awsv2.Register("aws_networksecuritymanager_rule", sweepRules, "aws_networksecuritymanager_template")
 	awsv2.Register("aws_networksecuritymanager_scope", sweepScopes)
+	awsv2.Register("aws_networksecuritymanager_template", sweepTemplates)
 }
 
 func sweepRules(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -60,6 +62,24 @@ func sweepScopes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 				framework.NewAttribute(names.AttrARN, scopeBaseARN(aws.ToString(v.ScopeArn)))),
 			)
 		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepTemplates(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input networksecuritymanager.ListTemplatesInput
+	conn := client.NetworkSecurityManagerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	for v, err := range listTemplates(ctx, conn, &input) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		sweepResources = append(sweepResources, framework.NewSweepResource(newTemplateResource, client,
+			framework.NewAttribute(names.AttrARN, templateBaseARN(aws.ToString(v.TemplateArn)))),
+		)
 	}
 
 	return sweepResources, nil

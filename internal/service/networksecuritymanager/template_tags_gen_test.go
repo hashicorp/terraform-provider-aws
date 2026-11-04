@@ -8,7 +8,6 @@ package networksecuritymanager_test
 import (
 	"testing"
 
-	networksecuritymanager "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -20,49 +19,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccNetworkSecurityManagerTemplate_tagsSerial(t *testing.T) {
-	t.Helper()
-
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:                             testAccNetworkSecurityManagerTemplate_tags,
-		"null":                                      testAccNetworkSecurityManagerTemplate_Tags_null,
-		"EmptyMap":                                  testAccNetworkSecurityManagerTemplate_Tags_emptyMap,
-		"AddOnUpdate":                               testAccNetworkSecurityManagerTemplate_Tags_addOnUpdate,
-		"EmptyTag_OnCreate":                         testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_onCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_add,
-		"EmptyTag_OnUpdate_Replace":                 testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_replace,
-		"DefaultTags_providerOnly":                  testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_onCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_add,
-		"ComputedTag_OnUpdate_Replace":              testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_defaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_resourceTag,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
-func testAccNetworkSecurityManagerTemplate_tags(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
@@ -77,7 +46,7 @@ func testAccNetworkSecurityManagerTemplate_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -123,7 +92,7 @@ func testAccNetworkSecurityManagerTemplate_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -173,7 +142,7 @@ func testAccNetworkSecurityManagerTemplate_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -216,7 +185,7 @@ func testAccNetworkSecurityManagerTemplate_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -246,20 +215,19 @@ func testAccNetworkSecurityManagerTemplate_tags(t *testing.T) {
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_null(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
@@ -274,7 +242,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -317,20 +285,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_null(t *testing.T) {
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_emptyMap(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
@@ -343,7 +310,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -376,20 +343,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_emptyMap(t *testing.T) {
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_addOnUpdate(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
@@ -402,7 +368,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -425,7 +391,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -465,20 +431,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_addOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_onCreate(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
@@ -493,7 +458,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_onCreate(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -536,7 +501,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_onCreate(t *testing.T) 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -566,20 +531,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_onCreate(t *testing.T) 
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
@@ -594,7 +558,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_add(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -626,7 +590,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_add(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -676,7 +640,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_add(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -716,20 +680,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_add(t *testing
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx, t),
@@ -744,7 +707,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_replace(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -775,7 +738,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_replace(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -815,20 +778,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_EmptyTag_OnUpdate_replace(t *tes
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -844,7 +806,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_providerOnly(t *test
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -890,7 +852,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_providerOnly(t *test
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -938,7 +900,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_providerOnly(t *test
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -980,7 +942,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_providerOnly(t *test
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1011,20 +973,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_providerOnly(t *test
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -1042,7 +1003,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nonOverlapping(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1098,7 +1059,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nonOverlapping(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1153,7 +1114,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nonOverlapping(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1184,20 +1145,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nonOverlapping(t *te
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -1215,7 +1175,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_overlapping(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1270,7 +1230,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_overlapping(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1329,7 +1289,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_overlapping(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1373,20 +1333,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_overlapping(t *testi
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -1401,7 +1360,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToProviderOnly
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1434,7 +1393,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToProviderOnly
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1472,20 +1431,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToProviderOnly
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -1501,7 +1459,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToResourceOnly
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1529,7 +1487,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToResourceOnly
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1570,20 +1528,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_updateToResourceOnly
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -1601,7 +1558,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_emptyResourceTag(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1645,20 +1602,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_emptyResourceTag(t *
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -1674,7 +1630,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_emptyProviderOnlyTag
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1712,20 +1668,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_emptyProviderOnlyTag
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -1743,7 +1698,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nullOverlappingResou
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1790,20 +1745,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nullOverlappingResou
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -1821,7 +1775,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nullNonOverlappingRe
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1870,20 +1824,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_DefaultTags_nullNonOverlappingRe
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_onCreate(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -1896,7 +1849,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_onCreate(t *testing.
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1934,20 +1887,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_onCreate(t *testing.
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -1962,7 +1914,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_add(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1994,7 +1946,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_add(t *test
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2040,20 +1992,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_add(t *test
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -2068,7 +2019,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_replace(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2098,7 +2049,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_replace(t *
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2136,20 +2087,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_ComputedTag_OnUpdate_replace(t *
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -2171,7 +2121,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_defaultTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2220,7 +2170,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_defaultTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2269,7 +2219,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_defaultTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2305,20 +2255,19 @@ func testAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_defaultTag(t 
 	})
 }
 
-func testAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
+func TestAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetTemplateOutput
 	resourceName := "aws_networksecuritymanager_template.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckRule(ctx, t)
+			testAccPreCheckTemplate(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy: testAccCheckTemplateDestroy(ctx, t),
@@ -2338,7 +2287,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_resourceTag(t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2396,7 +2345,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_resourceTag(t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2453,7 +2402,7 @@ func testAccNetworkSecurityManagerTemplate_Tags_IgnoreTags_Overlap_resourceTag(t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTemplateExists(ctx, t, resourceName, &v),
+					testAccCheckTemplateExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

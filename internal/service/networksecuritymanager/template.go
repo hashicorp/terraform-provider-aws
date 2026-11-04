@@ -5,24 +5,25 @@ package networksecuritymanager
 
 import (
 	"context"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -40,15 +41,15 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(serialize=true)
-// @Testing(preCheck="testAccPreCheckRule")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networksecuritymanager;networksecuritymanager;networksecuritymanager.GetTemplateOutput")
-// @Testing(identityRegionOverrideTest=false)
+// @Testing(preCheck="testAccPreCheckTemplate")
 func newTemplateResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &templateResource{}
-
-	return r, nil
+	return &templateResource{}, nil
 }
+
+// templateDraftQualifier is the ARN qualifier of a template's pending draft. A
+// template created unpublished, or a draft saved on top of a published template,
+// can only be read, updated, published or deleted through the DRAFT-qualified ARN.
+const templateDraftQualifier = ":DRAFT"
 
 type templateResource struct {
 	framework.ResourceWithModel[templateResourceModel]
@@ -63,7 +64,7 @@ func (r *templateResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(256),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9 _.:/=+\-@]*$`), "must contain only alphanumeric characters, spaces, and _.:/=+-@"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z _.:/=+\-@]*$`), ""),
 				},
 			},
 			"firewall_type": schema.StringAttribute{
@@ -73,22 +74,21 @@ func (r *templateResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"has_published_version": schema.BoolAttribute{
-				Computed: true,
-			},
 			"is_published": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  booldefault.StaticBool(true),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9 _.:/=+\-@]*$`), "must start with an alphanumeric character and contain only alphanumeric characters, spaces, and _.:/=+-@"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z _.:/=+\-@]*$`), ""),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			// The list is ordered: an INSPECTION rule's position among the
@@ -99,61 +99,44 @@ func (r *templateResource) Schema(ctx context.Context, req resource.SchemaReques
 				ElementType: types.StringType,
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, 50),
-					// The API returns an internal error for a duplicate rule.
+					// The service returns an internal error for a duplicate rule.
 					listvalidator.UniqueValues(),
 					listvalidator.ValueStringsAre(fwvalidators.ARN()),
 				},
 			},
-			names.AttrStatus: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.EntityStatus](),
-				Computed:   true,
-			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"template_id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			names.AttrVersion: schema.StringAttribute{
-				Computed: true,
-			},
 		},
 	}
 }
 
 func (r *templateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().NetworkSecurityManagerClient(ctx)
-
 	var plan templateResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	name := plan.Name.ValueString()
+	conn := r.Meta().NetworkSecurityManagerClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input networksecuritymanager.CreateTemplateInput
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Template")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Additional fields.
 	input.AssociatedRuleList = expandRuleReferences(ctx, plan.RuleARNs)
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateTemplate(ctx, &input)
+	out, err := conn.CreateTemplate(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenTemplate(ctx, (*networksecuritymanager.GetTemplateOutput)(output), &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, (*networksecuritymanager.GetTemplateOutput)(out), &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -162,18 +145,18 @@ func (r *templateResource) Create(ctx context.Context, req resource.CreateReques
 }
 
 func (r *templateResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().NetworkSecurityManagerClient(ctx)
-
 	var state templateResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	arn := ruleBaseARN(state.ARN.ValueString())
-	output, err := findTemplateByARN(ctx, conn, arn)
+	conn := r.Meta().NetworkSecurityManagerClient(ctx)
+
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
+	out, err := findTemplateByARN(ctx, conn, arn)
 	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -182,7 +165,7 @@ func (r *templateResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenTemplate(ctx, output, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &state), smerr.ID, arn)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -191,8 +174,6 @@ func (r *templateResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *templateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().NetworkSecurityManagerClient(ctx)
-
 	var plan, state templateResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -200,73 +181,75 @@ func (r *templateResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	arn := ruleBaseARN(state.ARN.ValueString())
+	conn := r.Meta().NetworkSecurityManagerClient(ctx)
 
-	// Every write returns a new update token and the token is required on the
-	// next update, so the current one is read back rather than kept in state:
-	// a change made outside Terraform would otherwise fail the update with a
-	// ConflictException.
-	current, err := findTemplateByARN(ctx, conn, arn)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
+
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.RuleARNs.Equal(state.RuleARNs) || !plan.Description.Equal(state.Description) || !plan.IsPublished.Equal(state.IsPublished) {
-		var input networksecuritymanager.UpdateTemplateInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Template")))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		// Additional fields.
-		// A pending draft can only be updated (or published) through its
-		// DRAFT-qualified ARN; the base ARN is rejected while a draft exists.
-		input.TemplateIdentifier = aws.String(ruleIdentifier(arn, current.Status))
-		input.UpdateToken = current.UpdateToken
-		input.AssociatedRuleList = expandRuleReferences(ctx, plan.RuleARNs)
-		if plan.Description.IsNull() {
-			// An omitted description leaves the current one in place; an
-			// empty string clears it.
-			input.TemplateDescription = aws.String("")
-		}
-
-		output, err := conn.UpdateTemplate(ctx, &input)
+	if diff.HasChanges() {
+		// Updates are guarded by the token returned from the most recent read or write.
+		current, err := findTemplateByARN(ctx, conn, arn)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
 			return
 		}
 
-		current = (*networksecuritymanager.GetTemplateOutput)(output)
-	}
+		var input networksecuritymanager.UpdateTemplateInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input, append(diff.IgnoredFieldNamesOpts(), fwflex.WithFieldNamePrefix("Template"))...))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenTemplate(ctx, current, &plan))
-	if resp.Diagnostics.HasError() {
-		return
+		// An omitted description leaves the current one in place, so clear it explicitly.
+		if plan.Description.IsNull() && !state.Description.IsNull() {
+			input.TemplateDescription = aws.String("")
+		}
+
+		// The rule list replaces the current one, so it is always sent.
+		input.AssociatedRuleList = expandRuleReferences(ctx, plan.RuleARNs)
+		input.ClientToken = aws.String(create.UniqueId(ctx))
+		// IsPublished is required on every update, not only when it changes.
+		input.IsPublished = fwflex.BoolFromFramework(ctx, plan.IsPublished)
+		input.TemplateIdentifier = aws.String(templateIdentifier(arn, current.Status))
+		input.UpdateToken = current.UpdateToken
+
+		out, err := conn.UpdateTemplate(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+			return
+		}
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, (*networksecuritymanager.GetTemplateOutput)(out), &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *templateResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().NetworkSecurityManagerClient(ctx)
-
 	var state templateResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	arn := ruleBaseARN(state.ARN.ValueString())
+	conn := r.Meta().NetworkSecurityManagerClient(ctx)
 
-	// A published template with a pending draft cannot be deleted until the
-	// draft is; a template that was never published exists only as a draft,
-	// and deleting its base ARN succeeds without removing anything.
-	for _, identifier := range []string{arn + ruleDraftQualifier, arn} {
+	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
+
+	// A published template with a pending draft cannot be deleted until the draft
+	// is, and a template that was never published exists only as a draft.
+	for _, identifier := range []string{arn + templateDraftQualifier, arn} {
 		input := networksecuritymanager.DeleteTemplateInput{
 			TemplateIdentifier: aws.String(identifier),
 		}
-
 		_, err := conn.DeleteTemplate(ctx, &input)
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			continue
@@ -278,10 +261,10 @@ func (r *templateResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-// findTemplateByARN returns the version of the template that an update would
-// act on: the pending draft when there is one, otherwise the published template.
+// findTemplateByARN returns the version of the template that an update acts on:
+// the pending draft when there is one, otherwise the published template.
 func findTemplateByARN(ctx context.Context, conn *networksecuritymanager.Client, arn string) (*networksecuritymanager.GetTemplateOutput, error) {
-	output, err := findTemplateByIdentifier(ctx, conn, arn+ruleDraftQualifier)
+	out, err := findTemplateByIdentifier(ctx, conn, arn+templateDraftQualifier)
 	if retry.NotFound(err) {
 		return findTemplateByIdentifier(ctx, conn, arn)
 	}
@@ -289,7 +272,7 @@ func findTemplateByARN(ctx context.Context, conn *networksecuritymanager.Client,
 		return nil, err
 	}
 
-	return output, nil
+	return out, nil
 }
 
 func findTemplateByIdentifier(ctx context.Context, conn *networksecuritymanager.Client, identifier string) (*networksecuritymanager.GetTemplateOutput, error) {
@@ -297,7 +280,7 @@ func findTemplateByIdentifier(ctx context.Context, conn *networksecuritymanager.
 		TemplateIdentifier: aws.String(identifier),
 	}
 
-	output, err := conn.GetTemplate(ctx, &input)
+	out, err := conn.GetTemplate(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
@@ -307,11 +290,41 @@ func findTemplateByIdentifier(ctx context.Context, conn *networksecuritymanager.
 		return nil, smarterr.NewError(err)
 	}
 
-	if output == nil {
+	if out == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
-	return output, nil
+	return out, nil
+}
+
+// templateBaseARN strips the DRAFT qualifier, so that the template is always
+// identified by the ARN it keeps across publication.
+func templateBaseARN(arn string) string {
+	return strings.TrimSuffix(arn, templateDraftQualifier)
+}
+
+func templateIdentifier(arn string, status awstypes.EntityStatus) string {
+	if status == awstypes.EntityStatusDraft {
+		return arn + templateDraftQualifier
+	}
+
+	return arn
+}
+
+func (r *templateResource) flatten(ctx context.Context, out *networksecuritymanager.GetTemplateOutput, data *templateResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	description := data.Description
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, out, data, fwflex.WithFieldNamePrefix("Template")))
+	if diags.HasError() {
+		return diags
+	}
+	data.Description = normalizeDescription(description, data.Description)
+	data.ARN = fwflex.StringValueToFramework(ctx, templateBaseARN(aws.ToString(out.TemplateArn)))
+	data.IsPublished = types.BoolValue(out.Status != awstypes.EntityStatusDraft)
+	data.RuleARNs = flattenAssociatedRules(ctx, out.AssociatedRuleList)
+
+	return diags
 }
 
 func expandRuleReferences(ctx context.Context, tfList fwtypes.ListOfARN) []awstypes.RuleReference { // nosemgrep:ci.semgrep.framework.manual-expander-functions
@@ -337,42 +350,14 @@ func flattenAssociatedRules(ctx context.Context, apiObjects []awstypes.Associate
 	return fwtypes.NewListValueOfMust[fwtypes.ARN](ctx, elems)
 }
 
-func flattenTemplate(ctx context.Context, output *networksecuritymanager.GetTemplateOutput, data *templateResourceModel) diag.Diagnostics { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
-	var diags diag.Diagnostics
-
-	// The API returns an empty description when none was set.
-	description := data.Description
-
-	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, output, data, fwflex.WithFieldNamePrefix("Template")))
-	if diags.HasError() {
-		return diags
-	}
-
-	// A draft is returned with the DRAFT-qualified ARN.
-	data.ARN = types.StringValue(ruleBaseARN(aws.ToString(output.TemplateArn)))
-	data.HasPublishedVersion = types.BoolValue(aws.ToBool(output.HasPublishedVersion))
-	data.IsPublished = types.BoolValue(output.Status != awstypes.EntityStatusDraft)
-	data.RuleARNs = flattenAssociatedRules(ctx, output.AssociatedRuleList)
-	if aws.ToString(output.TemplateDescription) == "" && (description.IsNull() || description.IsUnknown()) {
-		data.Description = types.StringNull()
-	}
-
-	return diags
-}
-
 type templateResourceModel struct {
 	framework.WithRegionModel
-	ARN                 types.String                                      `tfsdk:"arn"`
-	Description         types.String                                      `tfsdk:"description"`
-	FirewallType        fwtypes.StringEnum[awstypes.TemplateFirewallType] `tfsdk:"firewall_type"`
-	HasPublishedVersion types.Bool                                        `tfsdk:"has_published_version"`
-	IsPublished         types.Bool                                        `tfsdk:"is_published"`
-	Name                types.String                                      `tfsdk:"name"`
-	RuleARNs            fwtypes.ListOfARN                                 `tfsdk:"rule_arns" autoflex:"-"`
-	Status              fwtypes.StringEnum[awstypes.EntityStatus]         `tfsdk:"status"`
-	Tags                tftags.Map                                        `tfsdk:"tags"`
-	TagsAll             tftags.Map                                        `tfsdk:"tags_all"`
-	TemplateID          types.String                                      `tfsdk:"template_id"`
-	UpdatedAt           timetypes.RFC3339                                 `tfsdk:"updated_at"`
-	Version             types.String                                      `tfsdk:"version"`
+	ARN          types.String                                      `tfsdk:"arn"`
+	Description  types.String                                      `tfsdk:"description"`
+	FirewallType fwtypes.StringEnum[awstypes.TemplateFirewallType] `tfsdk:"firewall_type"`
+	IsPublished  types.Bool                                        `tfsdk:"is_published"`
+	Name         types.String                                      `tfsdk:"name"`
+	RuleARNs     fwtypes.ListOfARN                                 `tfsdk:"rule_arns" autoflex:"-"`
+	Tags         tftags.Map                                        `tfsdk:"tags"`
+	TagsAll      tftags.Map                                        `tfsdk:"tags_all"`
 }
