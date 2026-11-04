@@ -155,7 +155,7 @@ func dataSourceFleet() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				names.AttrVPCConfig: {
 					Type:     schema.TypeList,
 					Computed: true,

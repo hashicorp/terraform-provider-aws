@@ -99,7 +99,7 @@ func dataSourceHoursOfOperation() *schema.Resource {
 					Computed:     true,
 					ExactlyOneOf: []string{names.AttrName, "hours_of_operation_id"},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"time_zone": {
 					Type:     schema.TypeString,
 					Computed: true,

@@ -194,7 +194,7 @@ func dataSourceLoadBalancer() *schema.Resource {
 					Computed: true,
 				},
 
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 
 				"zone_id": {
 					Type:     schema.TypeString,

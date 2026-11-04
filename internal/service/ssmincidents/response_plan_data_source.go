@@ -114,7 +114,7 @@ func dataSourceResponsePlan() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"incident_tags": tftags.TagsSchemaComputed(),
+							"incident_tags": tftags.TagsSchemaComputedOnly(),
 							"notification_target": {
 								Type:     schema.TypeSet,
 								Computed: true,
@@ -166,7 +166,7 @@ func dataSourceResponsePlan() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}

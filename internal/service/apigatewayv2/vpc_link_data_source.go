@@ -43,7 +43,7 @@ func dataSourceVPCLink() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"vpc_link_id": {
 					Type:     schema.TypeString,
 					Required: true,

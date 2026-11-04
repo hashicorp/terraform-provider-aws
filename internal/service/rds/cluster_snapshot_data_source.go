@@ -107,7 +107,7 @@ func dataSourceClusterSnapshot() *schema.Resource {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				names.AttrVPCID: {
 					Type:     schema.TypeString,
 					Computed: true,

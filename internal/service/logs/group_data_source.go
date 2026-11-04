@@ -53,7 +53,7 @@ func dataSourceGroup() *schema.Resource {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}

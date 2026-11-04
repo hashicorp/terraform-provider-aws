@@ -59,7 +59,7 @@ func DataSourcePlaceIndex() *schema.Resource {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 100),
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"update_time": {
 					Type:     schema.TypeString,
 					Computed: true,

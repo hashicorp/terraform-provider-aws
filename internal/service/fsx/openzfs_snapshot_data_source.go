@@ -57,7 +57,7 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 					Optional: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"volume_id": {
 					Type:     schema.TypeString,
 					Computed: true,

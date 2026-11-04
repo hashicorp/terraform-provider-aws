@@ -59,7 +59,7 @@ func dataSourceContactFlow() *schema.Resource {
 					Computed:     true,
 					ExactlyOneOf: []string{names.AttrName, "contact_flow_id"},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				names.AttrType: {
 					Type:     schema.TypeString,
 					Optional: true,

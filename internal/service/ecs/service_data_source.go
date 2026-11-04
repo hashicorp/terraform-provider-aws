@@ -509,7 +509,7 @@ func dataSourceService() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 			}
 		},
 	}

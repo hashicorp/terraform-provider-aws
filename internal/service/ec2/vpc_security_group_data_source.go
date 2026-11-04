@@ -52,7 +52,7 @@ func dataSourceSecurityGroup() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				names.AttrVPCID: {
 					Type:     schema.TypeString,
 					Optional: true,

@@ -82,7 +82,7 @@ func dataSourceEmailIdentity() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"verification_status": {
 					Type:     schema.TypeString,
 					Computed: true,

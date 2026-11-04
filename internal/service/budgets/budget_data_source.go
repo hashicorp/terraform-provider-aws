@@ -253,7 +253,7 @@ func dataSourceBudget() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"time_period_end": {
 					Type:     schema.TypeString,
 					Computed: true,

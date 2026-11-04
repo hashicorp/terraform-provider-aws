@@ -114,7 +114,7 @@ func dataSourceUser() *schema.Resource {
 						Type: schema.TypeString,
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"user_id": {
 					Type:         schema.TypeString,
 					Optional:     true,

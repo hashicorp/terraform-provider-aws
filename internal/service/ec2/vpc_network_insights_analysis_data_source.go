@@ -83,7 +83,7 @@ func dataSourceNetworkInsightsAnalysis() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"warning_message": {
 					Type:     schema.TypeString,
 					Computed: true,

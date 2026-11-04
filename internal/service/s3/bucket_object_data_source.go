@@ -128,7 +128,7 @@ func dataSourceBucketObject() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"version_id": {
 					Type:     schema.TypeString,
 					Optional: true,

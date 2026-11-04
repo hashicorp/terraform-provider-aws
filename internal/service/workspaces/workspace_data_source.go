@@ -55,7 +55,7 @@ func dataSourceWorkspace() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				names.AttrUserName: {
 					Type:          schema.TypeString,
 					Computed:      true,

@@ -39,7 +39,7 @@ func dataSourceInstances() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				"instance_tags": tftags.TagsSchemaComputed(),
+				"instance_tags": tftags.TagsSchemaOptionalComputed(),
 				"instance_state_names": {
 					Type:     schema.TypeSet,
 					Optional: true,
