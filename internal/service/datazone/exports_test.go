@@ -7,6 +7,7 @@ package datazone
 var (
 	ResourceAssetType                         = newAssetTypeResource
 	ResourceDomain                            = newDomainResource
+	ResourceEnvironmentBlueprint              = newEnvironmentBlueprintResource
 	ResourceEnvironmentBlueprintConfiguration = newEnvironmentBlueprintConfigurationResource
 	ResourceEnvironment                       = newEnvironmentResource
 	ResourceEnvironmentProfile                = newEnvironmentProfileResource
@@ -19,6 +20,7 @@ var (
 
 	FindAssetTypeByID                                 = findAssetTypeByID
 	FindDomainByID                                    = findDomainByID
+	FindEnvironmentBlueprintByTwoPartKey              = findEnvironmentBlueprintByTwoPartKey
 	FindEnvironmentBlueprintConfigurationByTwoPartKey = findEnvironmentBlueprintConfigurationByTwoPartKey
 	FindEnvironmentByID                               = findEnvironmentByID
 	FindEnvironmentProfileByID                        = findEnvironmentProfileByID
