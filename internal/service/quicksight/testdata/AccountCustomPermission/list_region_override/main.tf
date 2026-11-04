@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_quicksight_custom_permissions" "test" {
-  region = var.region
+  region                  = var.region
   custom_permissions_name = var.rName
 
   capabilities {
@@ -13,7 +13,7 @@ resource "aws_quicksight_custom_permissions" "test" {
 
 resource "aws_quicksight_account_custom_permission" "test" {
   region = var.region
-  
+
   custom_permissions_name = aws_quicksight_custom_permissions.test.custom_permissions_name
 }
 
