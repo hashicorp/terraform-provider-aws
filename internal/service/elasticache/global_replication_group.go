@@ -203,7 +203,7 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 					ValidateFunc: validateReplicationGroupID,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaComputedOnly(),
 				"transit_encryption_enabled": {
 					Type:     schema.TypeBool,
 					Computed: true,
