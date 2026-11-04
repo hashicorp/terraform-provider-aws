@@ -33,7 +33,11 @@ import (
 )
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_configuration_set", name="Configuration Set")
+// @IdentityAttribute("name", identityDuplicateAttributes="id")
 // @Tags(identifierAttribute="arn")
+// @Testing(preIdentityVersion="v6.67.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes;awstypes.ConfigurationSetInformation")
+// @Testing(preCheck="testAccPreCheckConfigurationSet")
 // @Testing(tagsTest=false)
 func newConfigurationSetResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &configurationSetResource{}
@@ -43,7 +47,7 @@ func newConfigurationSetResource(context.Context) (resource.ResourceWithConfigur
 
 type configurationSetResource struct {
 	framework.ResourceWithModel[configurationSetResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *configurationSetResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
