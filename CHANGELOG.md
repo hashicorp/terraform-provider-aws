@@ -1,4 +1,4 @@
-## 6.72.0 (Unreleased)
+## 6.72.0 (November 4, 2026)
 
 FEATURES:
 
