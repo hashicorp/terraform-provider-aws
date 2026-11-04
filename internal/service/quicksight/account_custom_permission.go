@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -100,12 +101,16 @@ func (r *accountCustomPermissionResource) Read(ctx context.Context, req resource
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, out, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
+}
+
+func (r *accountCustomPermissionResource) flatten(ctx context.Context, out *quicksight.DescribeAccountCustomPermissionOutput, data *accountCustomPermissionResourceModel) diag.Diagnostics {
+	return flex.Flatten(ctx, out, data)
 }
 
 func (r *accountCustomPermissionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
