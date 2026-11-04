@@ -438,11 +438,30 @@ func findAdminAccountSummaryByID(ctx context.Context, conn *networksecuritymanag
 	})
 }
 
+// adminAccountStatusAccountNotOnboarded is a pseudo-status for the window in
+// which ListAdminAccounts rejects the caller's account as not onboarded. It
+// opens a few seconds after a successful PutAdminAccount when trusted access
+// for the service was enabled just before, while the service onboards the
+// organization; the administrator account is already registered.
+const adminAccountStatusAccountNotOnboarded = "ACCOUNT_NOT_ONBOARDED"
+
+const (
+	adminAccountOnboardedOccurrences  = 3
+	adminAccountOnboardedPollInterval = 5 * time.Second
+)
+
+func isAccountNotOnboardedError(err error) bool {
+	return errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "is not onboarded to Network Security Manager")
+}
+
 func statusAdminAccount(conn *networksecuritymanager.Client, adminAccountID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findAdminAccountByID(ctx, conn, adminAccountID)
 		if retry.NotFound(err) {
 			return nil, "", nil
+		}
+		if isAccountNotOnboardedError(err) {
+			return nil, adminAccountStatusAccountNotOnboarded, nil
 		}
 		if err != nil {
 			return nil, "", smarterr.NewError(err)
@@ -454,10 +473,14 @@ func statusAdminAccount(conn *networksecuritymanager.Client, adminAccountID stri
 
 func waitAdminAccountOnboarded(ctx context.Context, conn *networksecuritymanager.Client, adminAccountID string, timeout time.Duration) (*awstypes.AdminAccountDetails, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
+		Pending: []string{adminAccountStatusAccountNotOnboarded},
 		Target:  enum.Slice(awstypes.AdminAccountStatusOnboarded),
 		Refresh: statusAdminAccount(conn, adminAccountID),
 		Timeout: timeout,
+		// The not-onboarded window can open after the account is first seen
+		// as ONBOARDED, so require it to stay ONBOARDED across several polls.
+		ContinuousTargetOccurence: adminAccountOnboardedOccurrences,
+		PollInterval:              adminAccountOnboardedPollInterval,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -470,7 +493,7 @@ func waitAdminAccountOnboarded(ctx context.Context, conn *networksecuritymanager
 
 func waitAdminAccountDeleted(ctx context.Context, conn *networksecuritymanager.Client, adminAccountID string, timeout time.Duration) (*awstypes.AdminAccountDetails, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AdminAccountStatusOnboarded),
+		Pending: append(enum.Slice(awstypes.AdminAccountStatusOnboarded), adminAccountStatusAccountNotOnboarded),
 		Target:  []string{},
 		Refresh: statusAdminAccount(conn, adminAccountID),
 		Timeout: timeout,
