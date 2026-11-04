@@ -134,8 +134,8 @@ This resource exports the following attributes in addition to the arguments abov
   Has the values:
     * `global_node_group_id` - The ID of the global node group.
     * `slots` - The keyspace for this node group.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `transit_encryption_enabled` - A flag that indicates whether the encryption in transit is enabled.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
