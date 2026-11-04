@@ -28,7 +28,6 @@ import (
 
 // @SDKResource("aws_iot_thing_group", name="Thing Group")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func resourceThingGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingGroupCreate,
