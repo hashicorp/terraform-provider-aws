@@ -69,11 +69,17 @@ func (r *graphSnapshotResource) Schema(ctx context.Context, request resource.Sch
 			"kms_key_identifier": schema.StringAttribute{
 				Description: "The ID of the KMS key used to encrypt and decrypt the snapshot.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"snapshot_create_time": schema.StringAttribute{
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "The time when the snapshot was created.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"snapshot_name": schema.StringAttribute{
 				Description: "The snapshot name. Must contain from 1 to 63 lowercase letters, digits, or hyphens, begin with a letter, not end with a hyphen, not contain two consecutive hyphens, and not begin with the reserved prefix \"gs-\".",
@@ -90,10 +96,16 @@ func (r *graphSnapshotResource) Schema(ctx context.Context, request resource.Sch
 			"source_graph_id": schema.StringAttribute{
 				Description: "The ID of the Neptune Analytics graph from which the snapshot was created.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrStatus: schema.StringAttribute{
 				Description: "The current status of the snapshot.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
