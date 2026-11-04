@@ -19,7 +19,6 @@ const (
 
 var (
 	aliasNameRegex = regexache.MustCompile(`^` + aliasNamePattern + `$`)
-	keyIDRegex     = regexache.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `$`)
 )
 
 func validGrantName(v any, k string) (ws []string, es []error) {
@@ -72,7 +71,10 @@ var validateKeyOrAlias = validation.Any(
 	validateKeyAliasARN,
 )
 
-var validateKeyID = validation.StringMatch(keyIDRegex, "must be a KMS Key ID")
+var validateKeyID = validation.StringMatch(
+	regexache.MustCompile(`^`+verify.UUIDRegexPattern+`|`+multiRegionKeyIDPattern+`$`),
+	"must be a KMS Key ID",
+)
 
 func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)
