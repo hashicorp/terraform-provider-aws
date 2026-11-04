@@ -34,8 +34,8 @@ resource "aws_neptunegraph_graph_snapshot" "example" {
 This resource supports the following arguments:
 
 * `graph_identifier` - (Required) Unique identifier of the Neptune Analytics graph to snapshot. Changing this forces a new resource to be created.
-* `snapshot_name` - (Required) Name of the snapshot. Must contain from 1 to 63 lowercase letters, digits, or hyphens, begin with a letter, not end with a hyphen, not contain two consecutive hyphens, and not begin with the reserved prefix `gs-`. Changing this forces a new resource to be created.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `snapshot_name` - (Required) Name of the snapshot. Must contain from 1 to 63 lowercase letters, digits, or hyphens, begin with a letter, not end with a hyphen, not contain two consecutive hyphens, and not begin with the reserved prefix `gs-`. Changing this forces a new resource to be created.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
