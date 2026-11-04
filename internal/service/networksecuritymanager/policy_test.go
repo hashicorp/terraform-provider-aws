@@ -73,7 +73,7 @@ func TestAccNetworkSecurityManagerPolicy_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("firewall_type"), tfknownvalue.StringExact(awstypes.PolicyFirewallTypeShieldAdvanced)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_configuration"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"remediation_enabled": knownvalue.Bool(false),
 							"resources_clean_up":  knownvalue.Bool(true),
@@ -135,7 +135,7 @@ func TestAccNetworkSecurityManagerPolicy_disappears(t *testing.T) {
 }
 
 // A WAF policy that references rules created by the test. The update step changes
-// description, priority, policy_configuration and the rule list in place.
+// description, priority, configuration and the rule list in place.
 func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -178,7 +178,7 @@ func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("initial")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("firewall_type"), tfknownvalue.StringExact(awstypes.PolicyFirewallTypeWaf)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_configuration"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"remediation_enabled": knownvalue.Bool(false),
 							"resources_clean_up":  knownvalue.Bool(true),
@@ -221,8 +221,8 @@ func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_configuration").AtSliceIndex(0).AtMapKey("remediation_enabled"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_configuration").AtSliceIndex(0).AtMapKey("waf_config").AtSliceIndex(0).AtMapKey("existing_customer_web_acl_resolution"), tfknownvalue.StringExact(awstypes.ExistingCustomerWebACLResolutionRetrofit)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration).AtSliceIndex(0).AtMapKey("remediation_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration).AtSliceIndex(0).AtMapKey("waf_config").AtSliceIndex(0).AtMapKey("existing_customer_web_acl_resolution"), tfknownvalue.StringExact(awstypes.ExistingCustomerWebACLResolutionRetrofit)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(int32(priority+1))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("template_or_rule"), knownvalue.ListSizeExact(2)),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("template_or_rule").AtSliceIndex(0).AtMapKey("rule_arn"), rule1ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -314,7 +314,7 @@ func TestAccNetworkSecurityManagerPolicy_isPublished(t *testing.T) {
 			ConfigStateChecks: []statecheck.StateCheck{
 				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkPolicyARN),
 				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(isPublished)),
-				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_configuration").AtSliceIndex(0).AtMapKey("remediation_enabled"), knownvalue.Bool(remediationEnabled)),
+				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration).AtSliceIndex(0).AtMapKey("remediation_enabled"), knownvalue.Bool(remediationEnabled)),
 			},
 		}
 	}

@@ -101,7 +101,7 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"policy_configuration": schema.ListNestedBlock{
+			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[policyConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -380,11 +380,11 @@ type policyResourceModel struct {
 	framework.WithRegionModel
 	ARN                           types.String                                              `tfsdk:"arn"`
 	AssociatedTemplateAndRuleList fwtypes.ListNestedObjectValueOf[templateOrRuleModel]      `tfsdk:"template_or_rule"`
+	Configuration                 fwtypes.ListNestedObjectValueOf[policyConfigurationModel] `tfsdk:"configuration"`
 	Description                   types.String                                              `tfsdk:"description"`
 	FirewallType                  fwtypes.StringEnum[awstypes.PolicyFirewallType]           `tfsdk:"firewall_type"`
 	IsPublished                   types.Bool                                                `tfsdk:"is_published"`
 	Name                          types.String                                              `tfsdk:"name"`
-	PolicyConfiguration           fwtypes.ListNestedObjectValueOf[policyConfigurationModel] `tfsdk:"policy_configuration"`
 	Priority                      types.Int32                                               `tfsdk:"priority"`
 	Tags                          tftags.Map                                                `tfsdk:"tags"`
 	TagsAll                       tftags.Map                                                `tfsdk:"tags_all"`

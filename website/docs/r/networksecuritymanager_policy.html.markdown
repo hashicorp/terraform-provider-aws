@@ -26,7 +26,7 @@ resource "aws_networksecuritymanager_policy" "example" {
     rule_arn = aws_networksecuritymanager_rule.example.arn
   }
 
-  policy_configuration {
+  configuration {
     remediation_enabled = true
     resources_clean_up  = true
 
@@ -46,7 +46,7 @@ resource "aws_networksecuritymanager_policy" "example" {
   firewall_type = "SHIELD_ADVANCED"
   priority      = 1
 
-  policy_configuration {
+  configuration {
     remediation_enabled = true
     resources_clean_up  = true
   }
@@ -57,9 +57,9 @@ resource "aws_networksecuritymanager_policy" "example" {
 
 The following arguments are required:
 
+* `configuration` - (Required) Settings that control the policy's behavior. See [`configuration`](#configuration-block) below.
 * `firewall_type` - (Required) Firewall type of the policy. Valid values: `WAF`, `SHIELD_ADVANCED`. Changing this value forces a new resource.
 * `name` - (Required) Name of the policy. Changing this value forces a new resource.
-* `policy_configuration` - (Required) Settings that control the policy's behavior. See [`policy_configuration`](#policy_configuration-block) below.
 * `priority` - (Required) Priority of the policy. A lower number indicates a higher priority. Minimum value of `1`.
 
 The following arguments are optional:
@@ -70,7 +70,7 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `template_or_rule` - (Optional) Ordered list of templates and rules to associate with the policy. For `WAF` policies, specify 1 to 100 entries, of which at most 2 can be templates. Must be omitted for `SHIELD_ADVANCED` policies. See [`template_or_rule`](#template_or_rule-block) below.
 
-### `policy_configuration` Block
+### `configuration` Block
 
 * `remediation_enabled` - (Required) Whether to automatically remediate noncompliant resources.
 * `resources_clean_up` - (Required) Whether to automatically remove the resources the service created when they are no longer needed. The service currently only accepts `true`.

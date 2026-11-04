@@ -27,7 +27,7 @@ resource "aws_networksecuritymanager_policy" "test" {
     }
   }
 
-  policy_configuration {
+  configuration {
     remediation_enabled = var.remediation_enabled
     resources_clean_up  = true
 

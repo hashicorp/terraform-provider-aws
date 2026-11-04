@@ -7,7 +7,7 @@ resource "aws_networksecuritymanager_policy" "test" {
   priority      = parseint(substr(sha1(var.rName), 0, 6), 16) + 1
   is_published  = var.is_published
 
-  policy_configuration {
+  configuration {
     remediation_enabled = var.remediation_enabled
     resources_clean_up  = true
   }
