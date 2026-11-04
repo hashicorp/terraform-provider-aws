@@ -5,6 +5,8 @@ package kms
 
 import (
 	"fmt"
+	"regexp"
+	"sync"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -17,9 +19,9 @@ const (
 	multiRegionKeyIDPattern = `mrk-[0-9a-f]{32}`
 )
 
-var (
-	aliasNameRegex = regexache.MustCompile(`^` + aliasNamePattern + `$`)
-)
+var aliasNameRegex = sync.OnceValue(func() *regexp.Regexp {
+	return regexache.MustCompile(`^` + aliasNamePattern + `$`)
+})
 
 func validGrantName(v any, k string) (ws []string, es []error) {
 	value := v.(string)
@@ -38,7 +40,7 @@ func validGrantName(v any, k string) (ws []string, es []error) {
 func validNameForDataSource(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if !aliasNameRegex.MatchString(value) {
+	if !aliasNameRegex().MatchString(value) {
 		es = append(es, fmt.Errorf(
 			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
 	}
@@ -52,7 +54,7 @@ func validNameForResource(v any, k string) (ws []string, es []error) {
 		es = append(es, fmt.Errorf("%q cannot begin with reserved AWS CMK prefix 'alias/aws/'", k))
 	}
 
-	if !aliasNameRegex.MatchString(value) {
+	if !aliasNameRegex().MatchString(value) {
 		es = append(es, fmt.Errorf(
 			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
 	}
@@ -100,7 +102,7 @@ func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-var validateKeyAliasName = validation.StringMatch(aliasNameRegex, "must be a KMS Key Alias")
+var validateKeyAliasName = validation.StringMatch(aliasNameRegex(), "must be a KMS Key Alias")
 
 func validateKeyAliasARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)
