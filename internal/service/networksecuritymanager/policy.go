@@ -145,14 +145,14 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"rule_arn": schema.StringAttribute{
+						"rule_identifier": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 							Validators: []validator.String{
-								stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("template_arn")),
+								stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("template_identifier")),
 							},
 						},
-						"template_arn": schema.StringAttribute{
+						"template_identifier": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 						},
@@ -404,8 +404,8 @@ type wafConfigModel struct {
 // templateOrRuleModel maps to the TemplateOrRuleReference (input) and
 // AssociatedTemplateOrRule (output) unions.
 type templateOrRuleModel struct {
-	RuleARN     fwtypes.ARN `tfsdk:"rule_arn"`
-	TemplateARN fwtypes.ARN `tfsdk:"template_arn"`
+	RuleIdentifier     fwtypes.ARN `tfsdk:"rule_identifier"`
+	TemplateIdentifier fwtypes.ARN `tfsdk:"template_identifier"`
 }
 
 var (
@@ -415,13 +415,13 @@ var (
 
 func (m templateOrRuleModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
-	case !m.RuleARN.IsNull():
+	case !m.RuleIdentifier.IsNull():
 		return &awstypes.TemplateOrRuleReferenceMemberRuleIdentifier{
-			Value: m.RuleARN.ValueString(),
+			Value: m.RuleIdentifier.ValueString(),
 		}, diags
-	case !m.TemplateARN.IsNull():
+	case !m.TemplateIdentifier.IsNull():
 		return &awstypes.TemplateOrRuleReferenceMemberTemplateIdentifier{
-			Value: m.TemplateARN.ValueString(),
+			Value: m.TemplateIdentifier.ValueString(),
 		}, diags
 	}
 
@@ -431,9 +431,9 @@ func (m templateOrRuleModel) Expand(ctx context.Context) (result any, diags diag
 func (m *templateOrRuleModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
 	case awstypes.AssociatedTemplateOrRuleMemberRuleArn:
-		m.RuleARN = fwtypes.ARNValue(t.Value)
+		m.RuleIdentifier = fwtypes.ARNValue(t.Value)
 	case awstypes.AssociatedTemplateOrRuleMemberTemplateArn:
-		m.TemplateARN = fwtypes.ARNValue(t.Value)
+		m.TemplateIdentifier = fwtypes.ARNValue(t.Value)
 	}
 
 	return diags

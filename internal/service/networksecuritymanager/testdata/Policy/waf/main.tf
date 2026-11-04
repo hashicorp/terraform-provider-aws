@@ -23,7 +23,7 @@ resource "aws_networksecuritymanager_policy" "test" {
   dynamic "template_or_rule" {
     for_each = slice(aws_networksecuritymanager_rule.test[*].arn, 0, var.rule_count)
     content {
-      rule_arn = template_or_rule.value
+      rule_identifier = template_or_rule.value
     }
   }
 

@@ -23,7 +23,7 @@ resource "aws_networksecuritymanager_policy" "example" {
   priority      = 1
 
   template_or_rule {
-    rule_arn = aws_networksecuritymanager_rule.example.arn
+    rule_identifier = aws_networksecuritymanager_rule.example.arn
   }
 
   configuration {
@@ -85,8 +85,8 @@ The following arguments are optional:
 
 Exactly one of the following must be specified:
 
-* `rule_arn` - (Optional) ARN of the rule.
-* `template_arn` - (Optional) ARN of the template.
+* `rule_identifier` - (Optional) ARN of the rule.
+* `template_identifier` - (Optional) ARN of the template.
 
 ## Attribute Reference
 
