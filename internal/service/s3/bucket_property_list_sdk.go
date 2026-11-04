@@ -5,11 +5,9 @@ package s3
 
 import (
 	"context"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -20,14 +18,9 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-type bucketPropertyListHandlerSDK interface {
-	parseQuery(ctx context.Context, config tfsdk.Config) diag.Diagnostics
-	list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult]
-}
-
 var _ list.ListResource = &listResourceBaseBucketPropertySDK{}
 
-func newListResourceBaseBucketPropertySDK(resource *schema.Resource, f func(listResourceSDK) bucketPropertyListHandlerSDK) inttypes.ListResourceForSDK {
+func newListResourceBaseBucketPropertySDK(resource *schema.Resource, f func(listResourceSDK) bucketPropertyListHandler) inttypes.ListResourceForSDK {
 	l := listResourceBaseBucketPropertySDK{}
 	l.SetResourceSchema(resource)
 	l.handler = f(&l)
@@ -36,7 +29,7 @@ func newListResourceBaseBucketPropertySDK(resource *schema.Resource, f func(list
 
 type listResourceBaseBucketPropertySDK struct {
 	framework.ListResourceWithSDKv2Resource
-	handler bucketPropertyListHandlerSDK
+	handler bucketPropertyListHandler
 }
 
 func (l *listResourceBaseBucketPropertySDK) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {

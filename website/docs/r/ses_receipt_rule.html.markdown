@@ -36,79 +36,82 @@ resource "aws_ses_receipt_rule" "store" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
+* `name` - (Required) Name of the rule.
+* `rule_set_name` - (Required) Name of the rule set.
+
+The following arguments are optional:
+
+* `add_header_action` - (Optional) Configuration block for adding a header to received emails. Detailed below.
+* `after` - (Optional) Name of the rule to place this rule after.
+* `bounce_action` - (Optional) Configuration block for rejecting received emails. Detailed below.
+* `enabled` - (Optional) If true, the rule will be enabled.
+* `lambda_action` - (Optional) Configuration block for calling an AWS Lambda function. Detailed below.
+* `recipients` - (Optional) List of email addresses.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name of the rule
-* `rule_set_name` - (Required) The name of the rule set
-* `after` - (Optional) The name of the rule to place this rule after
-* `enabled` - (Optional) If true, the rule will be enabled
-* `recipients` - (Optional) A list of email addresses
-* `scan_enabled` - (Optional) If true, incoming emails will be scanned for spam and viruses
-* `tls_policy` - (Optional) `Require` or `Optional`
-* `add_header_action` - (Optional) A list of Add Header Action blocks. Documented below.
-* `bounce_action` - (Optional) A list of Bounce Action blocks. Documented below.
-* `lambda_action` - (Optional) A list of Lambda Action blocks. Documented below.
-* `s3_action` - (Optional) A list of S3 Action blocks. Documented below.
-* `sns_action` - (Optional) A list of SNS Action blocks. Documented below.
-* `stop_action` - (Optional) A list of Stop Action blocks. Documented below.
-* `workmail_action` - (Optional) A list of WorkMail Action blocks. Documented below.
+* `s3_action` - (Optional) Configuration block for storing received emails in an S3 bucket. Detailed below.
+* `scan_enabled` - (Optional) If true, incoming emails will be scanned for spam and viruses.
+* `sns_action` - (Optional) Configuration block for publishing to an SNS topic. Detailed below.
+* `stop_action` - (Optional) Configuration block for terminating the evaluation of the receipt rule set. Detailed below.
+* `tls_policy` - (Optional) `Require` or `Optional`.
+* `workmail_action` - (Optional) Configuration block for calling Amazon WorkMail. Detailed below.
 
-Add header actions support the following:
+### `add_header_action` Block
 
-* `header_name` - (Required) The name of the header to add
-* `header_value` - (Required) The value of the header to add
-* `position` - (Required) The position of the action in the receipt rule
+* `header_name` - (Required) Name of the header to add.
+* `header_value` - (Required) Value of the header to add.
+* `position` - (Required) Position of the action in the receipt rule.
 
-Bounce actions support the following:
+### `bounce_action` Block
 
-* `message` - (Required) The message to send
-* `sender` - (Required) The email address of the sender
-* `smtp_reply_code` - (Required) The RFC 5321 SMTP reply code
-* `status_code` - (Optional) The RFC 3463 SMTP enhanced status code
-* `topic_arn` - (Optional) The ARN of an SNS topic to notify
-* `position` - (Required) The position of the action in the receipt rule
+* `message` - (Required) Message to send.
+* `position` - (Required) Position of the action in the receipt rule.
+* `sender` - (Required) Email address of the sender.
+* `smtp_reply_code` - (Required) RFC 5321 SMTP reply code.
+* `status_code` - (Optional) RFC 3463 SMTP enhanced status code.
+* `topic_arn` - (Optional) ARN of an SNS topic to notify.
 
-Lambda actions support the following:
+### `lambda_action` Block
 
-* `function_arn` - (Required) The ARN of the Lambda function to invoke
-* `invocation_type` - (Optional) `Event` or `RequestResponse`
-* `topic_arn` - (Optional) The ARN of an SNS topic to notify
-* `position` - (Required) The position of the action in the receipt rule
+* `function_arn` - (Required) ARN of the Lambda function to invoke.
+* `invocation_type` - (Optional) `Event` or `RequestResponse`.
+* `position` - (Required) Position of the action in the receipt rule.
+* `topic_arn` - (Optional) ARN of an SNS topic to notify.
 
-S3 actions support the following:
+### `s3_action` Block
 
-* `bucket_name` - (Required) The name of the S3 bucket
-* `iam_role_arn` - (Optional) The ARN of the IAM role to be used by Amazon Simple Email Service while writing to the Amazon S3 bucket, optionally encrypting your mail via the provided customer managed key, and publishing to the Amazon SNS topic
-* `kms_key_arn` - (Optional) The ARN of the KMS key
-* `object_key_prefix` - (Optional) The key prefix of the S3 bucket
-* `topic_arn` - (Optional) The ARN of an SNS topic to notify
-* `position` - (Required) The position of the action in the receipt rule
+* `bucket_name` - (Required) Name of the S3 bucket.
+* `iam_role_arn` - (Optional) ARN of the IAM role to be used by Amazon Simple Email Service while writing to the Amazon S3 bucket, optionally encrypting your mail via the provided customer managed key, and publishing to the Amazon SNS topic.
+* `kms_key_arn` - (Optional) ARN of the KMS key.
+* `object_key_prefix` - (Optional) Key prefix of the S3 bucket.
+* `position` - (Required) Position of the action in the receipt rule.
+* `topic_arn` - (Optional) ARN of an SNS topic to notify.
 
-SNS actions support the following:
+### `sns_action` Block
 
-* `topic_arn` - (Required) The ARN of an SNS topic to notify
-* `position` - (Required) The position of the action in the receipt rule
-* `encoding` - (Optional) The encoding to use for the email within the Amazon SNS notification. Default value is `UTF-8`.
+* `encoding` - (Optional) Encoding to use for the email within the Amazon SNS notification. Default value is `UTF-8`.
+* `position` - (Required) Position of the action in the receipt rule.
+* `topic_arn` - (Required) ARN of an SNS topic to notify.
 
-Stop actions support the following:
+### `stop_action` Block
 
-* `scope` - (Required) The scope to apply. The only acceptable value is `RuleSet`.
-* `topic_arn` - (Optional) The ARN of an SNS topic to notify
-* `position` - (Required) The position of the action in the receipt rule
+* `position` - (Required) Position of the action in the receipt rule.
+* `scope` - (Required) Scope to apply. The only acceptable value is `RuleSet`.
+* `topic_arn` - (Optional) ARN of an SNS topic to notify.
 
-WorkMail actions support the following:
+### `workmail_action` Block
 
-* `organization_arn` - (Required) The ARN of the WorkMail organization
-* `topic_arn` - (Optional) The ARN of an SNS topic to notify
-* `position` - (Required) The position of the action in the receipt rule
+* `organization_arn` - (Required) ARN of the WorkMail organization.
+* `position` - (Required) Position of the action in the receipt rule.
+* `topic_arn` - (Optional) ARN of an SNS topic to notify.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The SES receipt rule name.
-* `arn` - The SES receipt rule ARN.
+* `arn` - SES receipt rule ARN.
+* `id` - SES receipt rule name.
 
 ## Import
 

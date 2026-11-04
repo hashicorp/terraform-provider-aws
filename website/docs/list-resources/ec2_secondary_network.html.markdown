@@ -8,7 +8,7 @@ description: |-
 
 # List Resource: aws_ec2_secondary_network
 
-Lists EC2 (Elastic Compute Cloud) Secondary Network resources.
+Lists EC2 Secondary Network resources.
 
 ## Example Usage
 

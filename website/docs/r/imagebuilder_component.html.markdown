@@ -61,7 +61,7 @@ The following arguments are optional:
 * `change_description` - (Optional) Change description of the component.
 * `data` - (Optional) Inline YAML string with data of the component. Exactly one of `data` and `uri` can be specified. Terraform will only perform drift detection of its value when present in a configuration.
 * `description` - (Optional) Description of the component.
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key used to encrypt the component.
+* `kms_key_id` - (Optional) ARN of the KMS Key used to encrypt the component.
 * `skip_destroy` - (Optional) Whether to retain the old version when the resource is destroyed or replacement is necessary. Defaults to `false`.
 * `supported_os_versions` - (Optional) Set of Operating Systems (OS) supported by the component.
 * `tags` - (Optional) Key-value map of resource tags for the component. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -73,8 +73,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Amazon Resource Name (ARN) of the component.
-* `arn` - (Required) Amazon Resource Name (ARN) of the component.
+* `id` - ARN of the component.
+* `arn` - (Required) ARN of the component.
 * `date_created` - Date the component was created.
 * `encrypted` - Encryption status of the component.
 * `owner` - Owner of the component.
@@ -83,7 +83,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_components` resources using the Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_components` resources using the ARN. For example:
 
 ```terraform
 import {
@@ -92,7 +92,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_imagebuilder_components` resources using the Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_imagebuilder_components` resources using the ARN. For example:
 
 ```console
 % terraform import aws_imagebuilder_component.example arn:aws:imagebuilder:us-east-1:123456789012:component/example/1.0.0/1

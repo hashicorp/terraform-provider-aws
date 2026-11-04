@@ -92,42 +92,51 @@ resource "aws_glue_catalog_table_optimizer" "example" {
 
 This resource supports the following arguments:
 
+* `catalog_id` - (Required) Catalog ID of the table.
+* `configuration` - (Required) Configuration block that defines the table optimizer settings. See [`configuration` Block](#configuration-block) for additional details.
+* `database_name` - (Required) Name of the database in the catalog in which the table resides.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `catalog_id` - (Required) The Catalog ID of the table.
-* `configuration` - (Required) A configuration block that defines the table optimizer settings. See [Configuration](#configuration) for additional details.
-* `database_name` - (Required) The name of the database in the catalog in which the table resides.
-* `table_name` - (Required) The name of the table.
-* `type` - (Required) The type of table optimizer. Valid values are `compaction`, `retention`, and `orphan_file_deletion`.
+* `table_name` - (Required) Name of the table.
+* `type` - (Required) Type of table optimizer. Valid values are `compaction`, `retention`, and `orphan_file_deletion`.
 
-### Configuration
+### `configuration` Block
 
-* `enabled` - (Required) Indicates whether the table optimizer is enabled.
-* `orphan_file_deletion_configuration` (Optional) - The configuration block for an orphan file deletion optimizer. See [Orphan File Deletion Configuration](#orphan-file-deletion-configuration) for additional details.
-* `retention_configuration` (Optional) - The configuration block for a snapshot retention optimizer. See [Retention Configuration](#retention-configuration) for additional details.
-* `role_arn` - (Required) The ARN of the IAM role to use for the table optimizer.
-* `compaction_configuration` (Optional) - The configuration block for a compaction optimizer. See [Compaction Configuration](#compaction-configuration) for additional details.
+* `compaction_configuration` - (Optional) Configuration block for a compaction optimizer. See [`compaction_configuration` Block](#compaction_configuration-block) for additional details.
+* `enabled` - (Required) Whether the table optimizer is enabled.
+* `orphan_file_deletion_configuration` - (Optional) Configuration block for an orphan file deletion optimizer. See [`orphan_file_deletion_configuration` Block](#orphan_file_deletion_configuration-block) for additional details.
+* `retention_configuration` - (Optional) Configuration block for a snapshot retention optimizer. See [`retention_configuration` Block](#retention_configuration-block) for additional details.
+* `role_arn` - (Required) ARN of the IAM role to use for the table optimizer.
 
-### Orphan File Deletion Configuration
+#### `compaction_configuration` Block
 
-* `iceberg_configuration` (Optional) - The configuration for an Iceberg orphan file deletion optimizer.
-    * `location` (Optional) - Specifies a directory in which to look for files. You may choose a sub-directory rather than the top-level table location. Defaults to the table's location.
-    * `orphan_file_retention_period_in_days` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
-    * `run_rate_in_hours` (Optional) - interval in hours between orphan file deletion job runs. Defaults to `24`.
+* `iceberg_configuration` - (Optional) Configuration for an Iceberg compaction optimizer. See [`configuration.compaction_configuration.iceberg_configuration` Block](#configurationcompaction_configurationiceberg_configuration-block) for additional details.
 
-### Retention Configuration
+##### `configuration.compaction_configuration.iceberg_configuration` Block
 
-* `iceberg_configuration` (Optional) - The configuration for an Iceberg snapshot retention optimizer.
-    * `clean_expired_files` (Optional) - If set to `false`, snapshots are only deleted from table metadata, and the underlying data and metadata files are not deleted. Defaults to `false`.
-    * `number_of_snapshots_to_retain` (Optional) - The number of Iceberg snapshots to retain within the retention period. Defaults to `1` or the corresponding Iceberg table configuration field if it exists.
-    * `run_rate_in_hours` (Optional) - Interval in hours between retention job runs. Defaults to `24`.
-    * `snapshot_retention_period_in_days` (Optional) - The number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exists.
+* `delete_file_threshold` - (Optional) Minimum number of deletes that must be present in a data file to make it eligible for compaction. Defaults to `1`.
+* `min_input_files` - (Optional) Minimum number of data files that must be present in a partition before compaction will actually compact files. Defaults to `100`.
+* `strategy` - (Optional) Strategy to use for compaction. Valid values are `binpack`, `sort` and `z-order` Defaults to `binpack`.
 
-### Compaction Configuration
+#### `orphan_file_deletion_configuration` Block
 
-* `iceberg_configuration` (Optional) - The configuration for an Iceberg compaction optimizer.
-    * `strategy` (Optional) - The strategy to use for compaction. Valid values are `binpack`, `sort` and `z-order` Defaults to `binpack`.
-    * `min_input_files` (Optional) - The minimum number of data files that must be present in a partition before compaction will actually compact files. Defaults to `100`.
-    * `delete_file_threshold` (Optional) - The minimum number of deletes that must be present in a data file to make it eligible for compaction. Defaults to `1`.
+* `iceberg_configuration` - (Optional) Configuration for an Iceberg orphan file deletion optimizer. See [`configuration.orphan_file_deletion_configuration.iceberg_configuration` Block](#configurationorphan_file_deletion_configurationiceberg_configuration-block) for additional details.
+
+##### `configuration.orphan_file_deletion_configuration.iceberg_configuration` Block
+
+* `location` - (Optional) Directory in which to look for files. You may choose a sub-directory rather than the top-level table location. Defaults to the table's location.
+* `orphan_file_retention_period_in_days` - (Optional) Number of days that orphan files should be retained before file deletion. Defaults to `3`.
+* `run_rate_in_hours` - (Optional) Interval in hours between orphan file deletion job runs. Defaults to `24`.
+
+#### `retention_configuration` Block
+
+* `iceberg_configuration` - (Optional) Configuration for an Iceberg snapshot retention optimizer. See [`configuration.retention_configuration.iceberg_configuration` Block](#configurationretention_configurationiceberg_configuration-block) for additional details.
+
+##### `configuration.retention_configuration.iceberg_configuration` Block
+
+* `clean_expired_files` - (Optional) If set to `false`, snapshots are only deleted from table metadata, and the underlying data and metadata files are not deleted. Defaults to `false`.
+* `number_of_snapshots_to_retain` - (Optional) Number of Iceberg snapshots to retain within the retention period. Defaults to `1` or the corresponding Iceberg table configuration field if it exists.
+* `run_rate_in_hours` - (Optional) Interval in hours between retention job runs. Defaults to `24`.
+* `snapshot_retention_period_in_days` - (Optional) Number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exists.
 
 ## Attribute Reference
 

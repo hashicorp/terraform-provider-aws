@@ -16,7 +16,7 @@ A resilience policy defines your resilience expectations through modular, compos
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_policy" "example" {
   name = "example-policy"
 
@@ -28,7 +28,7 @@ resource "aws_resiliencehubv2_policy" "example" {
 
 ### Multi-AZ with Data Recovery
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_policy" "example" {
   name        = "example-policy"
   description = "Policy with multi-AZ and data recovery targets"
@@ -55,7 +55,7 @@ resource "aws_resiliencehubv2_policy" "example" {
 
 ### Multi-Region
 
-```hcl
+```terraform
 resource "aws_resiliencehubv2_policy" "example" {
   name = "example-multi-region-policy"
 
@@ -67,6 +67,22 @@ resource "aws_resiliencehubv2_policy" "example" {
     disaster_recovery_approach = "ACTIVE_PASSIVE"
     rpo_in_minutes             = 15
     rto_in_minutes             = 30
+  }
+}
+```
+
+### With Organization Sharing Enabled
+
+Sharing is only available when the policy owner is the organization's management account or a delegated administrator.
+
+```terraform
+resource "aws_resiliencehubv2_policy" "example" {
+  name            = "example-shared-policy"
+  description     = "Baseline policy shared with member accounts"
+  sharing_enabled = true
+
+  availability_slo {
+    target = 99.9
   }
 }
 ```
@@ -86,6 +102,7 @@ The following arguments are optional:
 * `multi_az` - (Optional) Multi-AZ disaster recovery configuration. See [`multi_az` Block](#multi_az-block) below.
 * `multi_region` - (Optional) Multi-region disaster recovery configuration. See [`multi_region` Block](#multi_region-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `sharing_enabled` - (Optional) Whether the policy is shared with other member accounts of the organization. Only applicable if the policy owner is a management account or delegated administrator. Defaults to `false`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `availability_slo` Block
@@ -144,7 +161,7 @@ resource "aws_resiliencehubv2_policy" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Resilience Hub V2 Policy.
+- `arn` (String) ARN of the Resilience Hub V2 Policy.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resilience Hub V2 Policy using the `arn`. For example:
 

@@ -1,0 +1,120 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package lambdaweb
+
+import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkDataSource("aws_lambdaweb_function_endpoint", name="Function Endpoint")
+func newFunctionEndpointDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &functionEndpointDataSource{}, nil
+}
+
+type functionEndpointDataSource struct {
+	framework.DataSourceWithModel[functionEndpointDataSourceModel]
+}
+
+func (d *functionEndpointDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+			},
+			"auth_type": schema.StringAttribute{
+				Computed: true,
+			},
+			"auto_deployment_mode": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrDomainName: schema.StringAttribute{
+				Computed: true,
+			},
+			"endpoint_name": schema.StringAttribute{
+				Required: true,
+			},
+			names.AttrEndpointType: schema.StringAttribute{
+				Computed: true,
+			},
+			"function_name": schema.StringAttribute{
+				Required: true,
+			},
+			"regional_domain_names": schema.MapAttribute{
+				CustomType: fwtypes.MapOfStringType,
+				Computed:   true,
+			},
+			"regions": schema.SetAttribute{
+				CustomType: fwtypes.SetOfStringType,
+				Computed:   true,
+			},
+			"revision_weights": framework.DataSourceComputedListOfObjectAttribute[revisionWeightModel](ctx),
+			"scaling_config":   framework.DataSourceComputedListOfObjectAttribute[scalingConfigModel](ctx),
+			names.AttrState: schema.StringAttribute{
+				Computed: true,
+			},
+			"state_reason": schema.StringAttribute{
+				Computed: true,
+			},
+			"throttle_config": framework.DataSourceComputedListOfObjectAttribute[throttleConfigModel](ctx),
+		},
+	}
+}
+
+func (d *functionEndpointDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data functionEndpointDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := d.Meta().LambdaWebClient(ctx)
+
+	functionName, endpointName := fwflex.StringValueFromFramework(ctx, data.FunctionName), fwflex.StringValueFromFramework(ctx, data.EndpointName)
+	out, err := findWebFunctionEndpointByTwoPartKey(ctx, conn, functionName, endpointName)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, endpointName)
+		return
+	}
+
+	normalizeEndpoint(out)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.RegionalDomainNames = regionalDomainNames(ctx, out.RegionalEndpoints)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type functionEndpointDataSourceModel struct {
+	framework.WithRegionModel
+	AuthType            types.String                                         `tfsdk:"auth_type"`
+	AutoDeploymentMode  types.String                                         `tfsdk:"auto_deployment_mode"`
+	Description         types.String                                         `tfsdk:"description"`
+	DomainName          types.String                                         `tfsdk:"domain_name"`
+	EndpointARN         types.String                                         `tfsdk:"arn"`
+	EndpointName        types.String                                         `tfsdk:"endpoint_name"`
+	EndpointType        types.String                                         `tfsdk:"endpoint_type"`
+	FunctionName        types.String                                         `tfsdk:"function_name"`
+	RegionalDomainNames fwtypes.MapOfString                                  `tfsdk:"regional_domain_names"`
+	Regions             fwtypes.SetOfString                                  `tfsdk:"regions"`
+	RevisionWeights     fwtypes.ListNestedObjectValueOf[revisionWeightModel] `tfsdk:"revision_weights"`
+	ScalingConfig       fwtypes.ListNestedObjectValueOf[scalingConfigModel]  `tfsdk:"scaling_config"`
+	State               types.String                                         `tfsdk:"state"`
+	StateReason         types.String                                         `tfsdk:"state_reason"`
+	ThrottleConfig      fwtypes.ListNestedObjectValueOf[throttleConfigModel] `tfsdk:"throttle_config"`
+}

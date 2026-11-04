@@ -146,7 +146,7 @@ The `data_collection_options` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) for the cloud vm cluster.
+* `arn` - ARN for the cloud vm cluster.
 * `compute_model` - Compute model used when the instance is created or cloned — either ECPU or OCPU. ECPU is a virtualized compute unit; OCPU is a physical processor core with hyper-threading.
 * `created_at` - Timestamp when the VM cluster was created.
 * `disk_redundancy` - Type of redundancy for the VM cluster: NORMAL (2-way) or HIGH (3-way).

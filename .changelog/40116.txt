@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_pipes_pipe: Fix `source_parameters.self_managed_kafka_parameters.server_root_ca_certificate` being sent to the API as an empty string instead of being omitted, which caused `UpdatePipe` to fail with a `ValidationException` when the attribute was unset
+```

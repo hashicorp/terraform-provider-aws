@@ -78,7 +78,7 @@ This resource supports the following arguments:
 * `api_key_required` - (Optional) Specify if the method requires an API key
 * `authorization` - (Required) Type of authorization used for the method (`NONE`, `CUSTOM`, `AWS_IAM`, `COGNITO_USER_POOLS`)
 * `authorization_scopes` - (Optional) Authorization scopes used when the authorization is `COGNITO_USER_POOLS`
-* `authorizer_id` - (Optional) Authorizer id to be used when the authorization is `CUSTOM` or `COGNITO_USER_POOLS`
+* `authorizer_id` - (Optional) Authorizer ID to be used when the authorization is `CUSTOM` or `COGNITO_USER_POOLS`
 * `http_method` - (Required) HTTP Method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
 * `operation_name` - (Optional) Function name that will be given to the method when generating an SDK through API Gateway. If omitted, API Gateway will generate a function name based on the resource path and HTTP verb.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

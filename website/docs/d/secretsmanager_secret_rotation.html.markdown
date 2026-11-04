@@ -34,7 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `external_secret_rotation_metadata` - Metadata required by the external secret partner. See [`external_secret_rotation_metadata`](#external_secret_rotation_metadata) below.
 * `external_secret_rotation_role_arn` - ARN of the IAM role that allows Secrets Manager to rotate the secret held by a third-party partner.
 * `rotation_enabled` - Whether automatic rotation is enabled for this secret.
-* `rotation_lambda_arn` - Amazon Resource Name (ARN) of the lambda function used for rotation.
+* `rotation_lambda_arn` - ARN of the lambda function used for rotation.
 * `rotation_rules` - Configuration block for rotation rules. See [`rotation_rules`](#rotation_rules) below.
 
 ### external_secret_rotation_metadata

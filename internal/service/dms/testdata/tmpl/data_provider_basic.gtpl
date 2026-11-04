@@ -1,0 +1,16 @@
+resource "aws_dms_data_provider" "test" {
+{{- template "region" }}
+
+  engine = "postgres"
+
+  settings {
+    postgresql_settings {
+      database_name = "example"
+      port          = 5432
+      server_name   = "${var.rName}.example.com"
+      ssl_mode      = "none"
+    }
+  }
+
+{{- template "tags" . }}
+}

@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,8 +56,7 @@ func errorContains(t *testing.T, err error, expectedErr string) {
 
 func assertSTSError(t *testing.T, err error) {
 	t.Helper()
-	var stsErr STSError
-	if !errors.As(err, &stsErr) {
+	if !errs.IsA[STSError](err) {
 		t.Errorf("Expected err %[1]v to be an eks.STSError but was a %[1]T", err)
 	}
 }

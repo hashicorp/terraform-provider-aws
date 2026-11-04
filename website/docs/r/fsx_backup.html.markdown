@@ -35,7 +35,7 @@ resource "aws_fsx_backup" "example" {
 }
 
 resource "aws_fsx_windows_file_system" "example" {
-  active_directory_id = aws_directory_service_directory.eample.id
+  active_directory_id = aws_directory_service_directory.example.id
   skip_final_backup   = true
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.example1.id]
@@ -89,9 +89,9 @@ Note - One of `file_system_id` or `volume_id` can be specified. `file_system_id`
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name of the backup.
+* `arn` - ARN of the backup.
 * `id` - Identifier of the backup, e.g., `fs-12345678`
-* `kms_key_id` -  ID of the AWS Key Management Service (AWS KMS) key used to encrypt the backup of the Amazon FSx file system's data at rest.
+* `kms_key_id` -  ID of the KMS key used to encrypt the backup of the Amazon FSx file system's data at rest.
 * `owner_id` - AWS account identifier that created the file system.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - Type of the file system backup.

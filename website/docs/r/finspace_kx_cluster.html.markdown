@@ -145,7 +145,7 @@ The `cache_configurations` block supports the following arguments:
 The `savedown_storage_configuration` block supports the following arguments:
 
 * `size` - (Optional) Size of temporary storage in gigabytes. Must be between 10 and 16000.
-* `type` - (Optional) Type of writeable storage space for temporarily storing your savedown data. Valid value is `SDS01`, which represents 3000 IOPS and io2 ebs volume type.
+* `type` - (Optional) Type of writeable storage space for temporarily storing your savedown data. Valid value is `SDS01`, which represents 3000 IOPS and io2 EBS volume type.
 * `volume_name` - (Optional) Name of the kdb volume that you want to use as writeable save-down storage for clusters.
 
 ### `vpc_configuration` Block
@@ -177,7 +177,7 @@ The `tickerplant_log_configuration` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) identifier of the KX cluster.
+* `arn` - ARN identifier of the KX cluster.
 * `created_timestamp` - Timestamp at which the cluster is created in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `id` - Comma-delimited string joining environment ID and cluster name.
 * `last_modified_timestamp` - Last timestamp at which the cluster was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.

@@ -29,7 +29,7 @@ resource "aws_route53_resolver_dnssec_config" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `resource_id` - (Required) The ID of the virtual private cloud (VPC) that you're updating the DNSSEC validation status for.
+* `resource_id` - (Required) ID of the VPC that you're updating the DNSSEC validation status for.
 
 ## Attribute Reference
 
@@ -37,7 +37,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN for a configuration for DNSSEC validation.
 * `id` - The ID for a configuration for DNSSEC validation.
-* `owner_id` - The owner account ID of the virtual private cloud (VPC) for a configuration for DNSSEC validation.
+* `owner_id` - Owner account ID of the VPC for a configuration for DNSSEC validation.
 * `validation_status` - The validation status for a DNSSEC configuration. The status can be one of the following: `ENABLING`, `ENABLED`, `DISABLING` and `DISABLED`.
 
 ## Import

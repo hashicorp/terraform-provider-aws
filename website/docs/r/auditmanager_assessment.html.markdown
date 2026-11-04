@@ -64,7 +64,7 @@ The following arguments are optional:
 
 ### roles
 
-* `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM role.
+* `role_arn` - (Required) ARN of the IAM role.
 * `role_type` - (Required) Type of customer persona. For assessment creation, type must always be `PROCESS_OWNER`.
 
 ### scope
@@ -84,7 +84,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the assessment.
+* `arn` - ARN of the assessment.
 * `id` - Unique identifier for the assessment.
 * `roles_all` - Complete list of all roles with access to the assessment. This includes both roles explicitly configured via the `roles` block, and any roles which have access to all Audit Manager assessments by default.
 * `status` - Status of the assessment. Valid values are `ACTIVE` and `INACTIVE`.

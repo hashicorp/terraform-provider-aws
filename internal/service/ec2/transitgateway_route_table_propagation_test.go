@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +21,6 @@ import (
 
 func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v awstypes.TransitGatewayRouteTablePropagation
 	resourceName := "aws_ec2_transit_gateway_route_table_propagation.test"
 	transitGatewayRouteTableResourceName := "aws_ec2_transit_gateway_route_table.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -41,7 +39,7 @@ func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T, semaphore tf
 			{
 				Config: testAccTransitGatewayRouteTablePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName, &v),
+					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
@@ -59,7 +57,6 @@ func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T, semaphore tf
 
 func testAccTransitGatewayRouteTablePropagation_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v awstypes.TransitGatewayRouteTablePropagation
 	resourceName := "aws_ec2_transit_gateway_route_table_propagation.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -76,7 +73,7 @@ func testAccTransitGatewayRouteTablePropagation_disappears(t *testing.T, semapho
 			{
 				Config: testAccTransitGatewayRouteTablePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName, &v),
+					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayRouteTablePropagation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,7 +92,6 @@ func testAccTransitGatewayRouteTablePropagation_disappears(t *testing.T, semapho
 
 func testAccTransitGatewayRouteTablePropagation_attachmentChange(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v awstypes.TransitGatewayRouteTablePropagation
 	resourceName := "aws_ec2_transit_gateway_route_table_propagation.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -112,14 +108,14 @@ func testAccTransitGatewayRouteTablePropagation_attachmentChange(t *testing.T, s
 			{
 				Config: testAccTransitGatewayRouteTablePropagationConfig_attachmentChange(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName, &v),
+					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, "aws_ec2_transit_gateway_vpc_attachment.test.0", names.AttrID),
 				),
 			},
 			{
 				Config: testAccTransitGatewayRouteTablePropagationConfig_attachmentChange(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName, &v),
+					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, "aws_ec2_transit_gateway_vpc_attachment.test.1", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -138,7 +134,6 @@ func testAccTransitGatewayRouteTablePropagtion_recreatedDXGateway(t *testing.T, 
 	}
 
 	ctx := acctest.Context(t)
-	var a awstypes.TransitGatewayRouteTablePropagation
 	resourceName := "aws_ec2_transit_gateway_route_table_propagation.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBGPASN := acctest.RandIntRange(t, 4200000000, 4294967294)
@@ -156,13 +151,13 @@ func testAccTransitGatewayRouteTablePropagtion_recreatedDXGateway(t *testing.T, 
 			{
 				Config: testAccTransitGatewayRouteTablePropagationConfig_recreationByDXGateway(rName, rBGPASN, []string{"10.255.255.0/30"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName, &a),
+					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName),
 				),
 			},
 			{
 				Config: testAccTransitGatewayRouteTablePropagationConfig_recreationByDXGateway(rName, rBGPASN, []string{"10.255.255.0/30", "10.255.255.8/30"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName, &a),
+					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -174,7 +169,7 @@ func testAccTransitGatewayRouteTablePropagtion_recreatedDXGateway(t *testing.T, 
 	})
 }
 
-func testAccCheckTransitGatewayRouteTablePropagationExists(ctx context.Context, t *testing.T, n string, v *awstypes.TransitGatewayRouteTablePropagation) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteTablePropagationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -183,13 +178,9 @@ func testAccCheckTransitGatewayRouteTablePropagationExists(ctx context.Context, 
 
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-		output, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_route_table_id"], rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
-
-		if err != nil {
+		if _, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_route_table_id"], rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID]); err != nil {
 			return err
 		}
-
-		*v = *output
 
 		return nil
 	}

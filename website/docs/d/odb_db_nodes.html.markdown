@@ -3,12 +3,12 @@ subcategory: "Oracle Database@AWS"
 layout: "AWS: aws_odb_db_nodes"
 page_title: "AWS: aws_odb_db_nodes"
 description: |-
-  Terraform data source for managing db nodes linked to cloud vm cluster of Oracle Database@AWS.
+  Terraform data source for managing DB nodes linked to cloud vm cluster of Oracle Database@AWS.
 ---
 
 # Data Source: aws_odb_db_nodes
 
-Terraform data source for manging db nodes linked to cloud vm cluster of Oracle Database@AWS.
+Terraform data source for managing DB nodes linked to cloud vm cluster of Oracle Database@AWS.
 
 You can find out more about Oracle Database@AWS from [User Guide](https://docs.aws.amazon.com/odb/latest/UserGuide/what-is-odb.html).
 
@@ -41,7 +41,7 @@ This data source exports the following attributes in addition to the arguments a
 ### `db_nodes` Block
 
 * `additional_details` - Additional information about the planned maintenance.
-* `arn` - Amazon Resource Name (ARN) of the DB node.
+* `arn` - ARN of the DB node.
 * `backup_ip_id` - Oracle Cloud ID (OCID) of the backup IP address that's associated with the DB node.
 * `backup_vnic2_id` - OCID of the second backup virtual network interface card (VNIC) for the DB node.
 * `backup_vnic_id` - OCID of the backup VNIC for the DB node.

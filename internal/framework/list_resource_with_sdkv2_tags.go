@@ -5,7 +5,6 @@ package framework
 
 import (
 	"context"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,7 +17,7 @@ type ListResourceWithSDKv2Tags struct {
 	tagSpec interceptors.HTags
 }
 
-func (r *ListResourceWithSDKv2Tags) SetTagsSpec(tags unique.Handle[inttypes.ServicePackageResourceTags]) {
+func (r *ListResourceWithSDKv2Tags) SetTagsSpec(tags inttypes.ServicePackageResourceTags) {
 	r.tagSpec = interceptors.HTags(tags)
 }
 

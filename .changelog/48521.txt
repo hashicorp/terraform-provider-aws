@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `model.bedrock_model_config.api_format` and `model.openai_model_config.api_format` arguments
+```

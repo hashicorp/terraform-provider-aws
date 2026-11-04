@@ -59,7 +59,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the domain verification.
+* `arn` - ARN of the domain verification.
 * `created_at` - Date and time that the domain verification was created, in ISO-8601 format.
 * `id` - ID of the domain verification.
 * `last_verified_time` - Date and time that the domain was last successfully verified, in ISO-8601 format.

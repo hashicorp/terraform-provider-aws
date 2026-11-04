@@ -88,14 +88,14 @@ The following arguments are optional:
 * `retention_period_in_days` - (Optional) Number of days to retain metric data in the workspace.
 * `rule_query_offset_in_seconds` - (Optional) Query offset in seconds for rule evaluation. Must be between 0 and 86400 seconds.
 
-### `limits_per_label_set`
+### `limits_per_label_set` Block
 
 The `limits_per_label_set` configuration block supports the following arguments:
 
 * `label_set` - (Required) Map of label key-value pairs that identify the metrics to which the limits apply. An empty map represents the default bucket for metrics that don't match any other label set.
 * `limits` - (Required) Configuration block for the limits to apply to the specified label set. Detailed below.
 
-#### `limits`
+#### `limits` Block
 
 The `limits` configuration block supports the following arguments:
 

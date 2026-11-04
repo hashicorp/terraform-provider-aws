@@ -26,11 +26,29 @@ For more information, see the [AWS CloudWatch Observability Admin documentation]
 resource "aws_observabilityadmin_telemetry_evaluation" "example" {}
 ```
 
+### All Regions
+
+```terraform
+resource "aws_observabilityadmin_telemetry_evaluation" "example" {
+  all_regions = true
+}
+```
+
+### Specific Regions
+
+```terraform
+resource "aws_observabilityadmin_telemetry_evaluation" "example" {
+  regions = ["us-east-1", "eu-west-1"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
 
+* `all_regions` - (Optional) Whether to start telemetry evaluation in all AWS Regions where CloudWatch Observability Admin is available. The current region becomes the home region. Mutually exclusive with `regions`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `regions` - (Optional) List of AWS Regions to include in multi-region telemetry evaluation. The current region is always implicitly included. Mutually exclusive with `all_regions`.
 
 ## Attribute Reference
 

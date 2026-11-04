@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_apigatewayv2_integration: Add resource identity support
+```
+
+```release-note:new-list-resource
+aws_apigatewayv2_integration
+```

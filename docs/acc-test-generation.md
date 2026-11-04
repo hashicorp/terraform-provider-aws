@@ -20,6 +20,14 @@ To disable resource tagging tests for a specific resource or data source type, a
 @Testing(tagsTest=false)
 ```
 
+In some very rare cases, a resource or data source type supports tagging but cannot use transparent tagging.
+For example, the data source `aws_cognito_user_pool` has to manage both the standard `tags` and `tags_all` attributes as well as the deprecated `user_pool_tags`.
+Opt in to generated tagging tests by adding the following annotation to its source file:
+
+```
+@Testing(tagsTest=true)
+```
+
 To enable Resource Identity tests, add the following line:
 
 ```go
@@ -85,12 +93,14 @@ Multiple `@Testing(requireEnvVarValue)` annotations are allowed.
 
 Some resource types require alternate providers configured either for an alternate AWS account or an alternate region.
 If the test uses multiple regions, consider using the `region` attribute on resource in the alternate region instead of a separate provider instance.
+To use the `region` attribute, use the annotation `@Testing(altRegionTfVars=true)`.
+This will add the `PreCheck` function `acctest.PreCheckAlternateAccount` and set the Terraform variable `secondary_region` to the alternate region.
 
 To specify a provider instance configured for an alternate account, use the annotation `@Testing(useAlternateAccount=true)`.
-This will add the `PreCheck` function `acctest.PreCheckAlternateAccount` as well as initializing a provider instance with the alias `awsalternate`.
+This will add the `PreCheck` function `acctest.PreCheckAlternateAccount` and initialize a provider instance with the alias `awsalternate`.
 
 To specify a provider instance configured for an alternate region, use the annotation `@Testing(altRegionProvider=true)`.
-This will add the `PreCheck` function `acctest.PreCheckMultipleRegion` as well as initializing a provider instance with the alias `awsalternate`.
+This will add the `PreCheck` function `acctest.PreCheckMultipleRegion` and initialize a provider instance with the alias `awsalternate`.
 
 #### Exists and Destroy Checks
 
@@ -157,6 +167,10 @@ By default, the common name for the certificate is `example.com`.
 To override the common name, set the annotation `@Testing(tlsKeyDomain=<reference>)` to reference an existing variable.
 For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctest.RandomSubdomain()`
 and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
+
+Some acceptance tests require an SSH public key.
+This can be included by setting the annotation `@Testing(sshKeyPair=true)`.
+The Terraform variable name will be `public_key`.
 
 Some acceptance tests require a TLS ECDSA public key PEM.
 This can be included by setting the annotation `@Testing(tlsEcdsaPublicKeyPem=true)`.

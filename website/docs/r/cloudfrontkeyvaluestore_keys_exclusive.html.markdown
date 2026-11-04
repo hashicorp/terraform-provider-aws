@@ -49,7 +49,7 @@ resource "aws_cloudfrontkeyvaluestore_keys_exclusive" "example" {
 
 The following arguments are required:
 
-* `key_value_store_arn` - (Required) Amazon Resource Name (ARN) of the Key Value Store.
+* `key_value_store_arn` - (Required) ARN of the Key Value Store.
 
 The following arguments are optional:
 

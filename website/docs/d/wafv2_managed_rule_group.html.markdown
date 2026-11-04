@@ -34,14 +34,18 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `available_labels` - Labels that one or more rules in this rule group add to matching web requests. See [Labels](#labels) below for details.
+* `available_labels` - Labels that one or more rules in this rule group add to matching web requests. See [`available_labels` Block](#available_labels-block) below for details.
 * `capacity` - WCUs required for this rule group.
-* `consumed_labels` - Labels that one or more rules in this rule group match against in label match statements. See [Labels](#labels) below for details.
+* `consumed_labels` - Labels that one or more rules in this rule group match against in label match statements. See [`consumed_labels` Block](#consumed_labels-block) below for details.
 * `label_namespace` - Label namespace prefix for this rule group. All labels added by rules in this rule group have this prefix.
 * `rules` - High-level information about the rules. See [`rules` Block](#rules-block) below for details.
 * `sns_topic_arn` - ARN of the SNS topic that's used to provide notification of changes to the managed rule group.
 
-### Labels
+### `available_labels` Block
+
+* `name` - Individual label specification.
+
+### `consumed_labels` Block
 
 * `name` - Individual label specification.
 

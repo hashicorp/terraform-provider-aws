@@ -23,7 +23,7 @@ resource "aws_apprunner_deployment" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `service_arn` - (Required) Amazon Resource Name (ARN) of the App Runner service to start the deployment for.
+* `service_arn` - (Required) ARN of the App Runner service to start the deployment for.
 
 ## Attribute Reference
 
