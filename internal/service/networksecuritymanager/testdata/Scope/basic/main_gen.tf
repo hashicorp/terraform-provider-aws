@@ -7,16 +7,7 @@ resource "aws_networksecuritymanager_scope" "test" {
   scope_configuration {
     resource_scope {
       resource_type = "AWS::ElasticLoadBalancingV2::LoadBalancer::application"
-
-      include {
-        expression {
-          criteria {
-            tags = {
-              Name = var.rName
-            }
-          }
-        }
-      }
+      include_all   = true
     }
   }
 }

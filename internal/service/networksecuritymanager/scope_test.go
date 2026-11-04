@@ -60,20 +60,22 @@ func TestAccNetworkSecurityManagerScope_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scope_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"account_filter": knownvalue.ListSizeExact(0),
 							"resource_scope": knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"exclude":              knownvalue.ListSizeExact(0),
-									"include":              knownvalue.ListSizeExact(1),
-									"include_all":          knownvalue.Null(),
+									"include":              knownvalue.ListSizeExact(0),
+									"include_all":          knownvalue.Bool(true),
 									names.AttrResourceType: tfknownvalue.StringExact(awstypes.ScopeResourceTypeAlb),
 								}),
 							}),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 			},
 			{
@@ -283,6 +285,142 @@ func TestAccNetworkSecurityManagerScope_expressions(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
+		},
+	})
+}
+
+// A resource scope switches in place between include_all, include and exclude, and
+// a resource set selects resources by explicit ARN, alone or with an expression.
+func TestAccNetworkSecurityManagerScope_resourceSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networksecuritymanager_scope.test"
+	checkEIPARN := tfknownvalue.RegionalARNRegexp("ec2", regexache.MustCompile(`elastic-ip/eipalloc-[0-9a-f]+$`))
+
+	step := func(selection string, action plancheck.ResourceActionType, resourceScope map[string]knownvalue.Check) resource.TestStep {
+		resourceScope[names.AttrResourceType] = tfknownvalue.StringExact(awstypes.ScopeResourceTypeEip)
+
+		return resource.TestStep{
+			ConfigDirectory: config.StaticDirectory("testdata/Scope/resource_set/"),
+			ConfigVariables: config.Variables{
+				acctest.CtRName: config.StringVariable(rName),
+				"selection":     config.StringVariable(selection),
+			},
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckScopeExists(ctx, t, resourceName),
+			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, action),
+				},
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectEmptyPlan(),
+				},
+			},
+			ConfigStateChecks: []statecheck.StateCheck{
+				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scope_configuration").AtSliceIndex(0).AtMapKey("resource_scope"), knownvalue.SetExact([]knownvalue.Check{
+					knownvalue.ObjectExact(resourceScope),
+				})),
+			},
+		}
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScopeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			step("include_all", plancheck.ResourceActionCreate, map[string]knownvalue.Check{
+				"exclude":     knownvalue.ListSizeExact(0),
+				"include":     knownvalue.ListSizeExact(0),
+				"include_all": knownvalue.Bool(true),
+			}),
+			step("include", plancheck.ResourceActionUpdate, map[string]knownvalue.Check{
+				"exclude": knownvalue.ListSizeExact(0),
+				"include": knownvalue.ListExact([]knownvalue.Check{
+					knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"explicit_arns":      knownvalue.SetExact([]knownvalue.Check{checkEIPARN}),
+						names.AttrExpression: knownvalue.ListSizeExact(0),
+					}),
+				}),
+				"include_all": knownvalue.Null(),
+			}),
+			step("exclude", plancheck.ResourceActionUpdate, map[string]knownvalue.Check{
+				"exclude": knownvalue.ListExact([]knownvalue.Check{
+					knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"explicit_arns": knownvalue.SetExact([]knownvalue.Check{checkEIPARN}),
+						names.AttrExpression: knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"and": knownvalue.ListSizeExact(0),
+								"criteria": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"alb_config": knownvalue.ListSizeExact(0),
+										names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
+											"Name": knownvalue.StringExact(rName),
+										}),
+									}),
+								}),
+								"not": knownvalue.ListSizeExact(0),
+								"or":  knownvalue.ListSizeExact(0),
+							}),
+						}),
+					}),
+				}),
+				"include":     knownvalue.ListSizeExact(0),
+				"include_all": knownvalue.Null(),
+			}),
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Scope/resource_set/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"selection":     config.StringVariable("exclude"),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+// Each union in scope_configuration requires exactly one of its members, and include_all can only be true.
+func TestAccNetworkSecurityManagerScope_validation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	step := func(dir, expectError string) resource.TestStep {
+		return resource.TestStep{
+			ConfigDirectory: config.StaticDirectory("testdata/Scope/validation/" + dir + "/"),
+			ConfigVariables: config.Variables{
+				acctest.CtRName: config.StringVariable(rName),
+			},
+			PlanOnly:    true,
+			ExpectError: regexache.MustCompile(expectError),
+		}
+	}
+	const invalidCombination = `Invalid Attribute Combination`
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScopeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			step("account_filter_include_all_and_include", invalidCombination),
+			step("resource_scope_none", invalidCombination),
+			step("resource_scope_include_all_and_include", invalidCombination),
+			step("include_all_false", `Invalid Attribute Value Match`),
+			step("expression_criteria_and_or", invalidCombination),
+			step("criteria_alb_config_and_tags", invalidCombination),
 		},
 	})
 }

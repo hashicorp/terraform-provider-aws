@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -144,7 +145,38 @@ func TestAccNetworkSecurityManagerScope_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("scope_configuration"), knownvalue.ListSizeExact(1)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("scope_configuration"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"account_filter": knownvalue.ListSizeExact(0),
+								"resource_scope": knownvalue.SetExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"exclude": knownvalue.ListSizeExact(0),
+										"include": knownvalue.ListExact([]knownvalue.Check{
+											knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"explicit_arns": knownvalue.Null(),
+												names.AttrExpression: knownvalue.ListExact([]knownvalue.Check{
+													knownvalue.ObjectExact(map[string]knownvalue.Check{
+														"and": knownvalue.ListSizeExact(0),
+														"criteria": knownvalue.ListExact([]knownvalue.Check{
+															knownvalue.ObjectExact(map[string]knownvalue.Check{
+																"alb_config": knownvalue.ListSizeExact(0),
+																names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
+																	"Name": knownvalue.StringExact(rName),
+																}),
+															}),
+														}),
+														"not": knownvalue.ListSizeExact(0),
+														"or":  knownvalue.ListSizeExact(0),
+													}),
+												}),
+											}),
+										}),
+										"include_all":          knownvalue.Null(),
+										names.AttrResourceType: tfknownvalue.StringExact(awstypes.ScopeResourceTypeAlb),
+									}),
+								}),
+							}),
+						})),
 					}),
 				},
 			},
