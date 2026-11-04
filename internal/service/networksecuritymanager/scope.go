@@ -161,7 +161,7 @@ func (r *scopeResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 							},
 							NestedObject: schema.NestedBlockObject{
 								Validators: []validator.Object{
-									exactlyOneOfChildrenValidator{names: []string{"exclude", "include", "include_all"}},
+									exactlyOneOfValueAttributesValidator{names: []string{"exclude", "include", "include_all"}},
 								},
 								Attributes: map[string]schema.Attribute{
 									"include_all": schema.BoolAttribute{
@@ -270,7 +270,7 @@ func resourceSetBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 					NestedObject: schema.NestedBlockObject{
 						Validators: []validator.Object{
-							exactlyOneOfChildrenValidator{names: []string{"and", "criteria", "not", "or"}},
+							exactlyOneOfValueAttributesValidator{names: []string{"and", "criteria", "not", "or"}},
 						},
 						Blocks: map[string]schema.Block{
 							// The operands of and, not and or are criteria: the service rejects an operator nested under another operator.
@@ -294,7 +294,7 @@ func criteriaBlock(ctx context.Context, maxItems int) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Validators: []validator.Object{
-				exactlyOneOfChildrenValidator{names: []string{"alb_config", names.AttrTags}},
+				exactlyOneOfValueAttributesValidator{names: []string{"alb_config", names.AttrTags}},
 			},
 			Attributes: map[string]schema.Attribute{
 				names.AttrTags: schema.MapAttribute{
@@ -530,23 +530,24 @@ func hasGlobalResourceType(resourceScopes []resourceScopeModel) bool {
 	})
 }
 
-// exactlyOneOfChildrenValidator reads the children from the object's own value. Path-based
-// validators such as ExactlyOneOf find no siblings below resource_scope: the validator path
-// identifies the set element by an fwtypes.ObjectValueOf value, which never equals the
-// basetypes.ObjectValue that path matching builds from the config.
-type exactlyOneOfChildrenValidator struct {
+// exactlyOneOfValueAttributesValidator reads the named attributes from the object's own value.
+// Path-based validators such as tfobjectvalidator.ExactlyOneOfChildren find no siblings below
+// resource_scope and always fail: the validator path identifies the set element by an
+// fwtypes.ObjectValueOf value, which never equals the basetypes.ObjectValue that path matching
+// builds from the config.
+type exactlyOneOfValueAttributesValidator struct {
 	names []string
 }
 
-func (v exactlyOneOfChildrenValidator) Description(context.Context) string {
+func (v exactlyOneOfValueAttributesValidator) Description(context.Context) string {
 	return fmt.Sprintf("exactly one of %s must be set", strings.Join(v.names, ", "))
 }
 
-func (v exactlyOneOfChildrenValidator) MarkdownDescription(ctx context.Context) string {
+func (v exactlyOneOfValueAttributesValidator) MarkdownDescription(ctx context.Context) string {
 	return v.Description(ctx)
 }
 
-func (v exactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+func (v exactlyOneOfValueAttributesValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
 	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
 		return
 	}
