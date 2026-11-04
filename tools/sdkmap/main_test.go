@@ -74,6 +74,9 @@ func TestMapPackages(t *testing.T) {
 		"data sources": {
 			pkg: "mockdatasource",
 		},
+		"Framework resources": {
+			pkg: "mockframework",
+		},
 		"function references": {
 			pkg: "mockfuncrefs",
 		},
@@ -413,6 +416,42 @@ func TestParseAnnotations(t *testing.T) {
 				`// @FrameworkDataSource("aws_s3_bucket", name="Bucket")`,
 			},
 			annotation: annotationSDKDataSource,
+		},
+		"framework resource": {
+			doc: []string{
+				`// @FrameworkResource("aws_s3_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")`,
+				`// @IdentityAttribute("bucket")`,
+			},
+			annotation:    annotationFrameworkResource,
+			wantTypeNames: []string{"aws_s3_bucket_lifecycle_configuration"},
+		},
+		"framework resource with tags": {
+			doc: []string{
+				`// @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")`,
+				`// @Tags(identifierAttribute="arn", resourceType="DirectoryBucket")`,
+			},
+			annotation:           annotationFrameworkResource,
+			wantTypeNames:        []string{"aws_s3_directory_bucket"},
+			wantTagged:           true,
+			wantTagsResourceType: "DirectoryBucket",
+		},
+		"framework resource annotation for SDK resources": {
+			doc: []string{
+				`// @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")`,
+			},
+			annotation: annotationSDKResource,
+		},
+		"SDK resource annotation for framework resources": {
+			doc: []string{
+				`// @SDKResource("aws_s3_bucket", name="Bucket")`,
+			},
+			annotation: annotationFrameworkResource,
+		},
+		"framework data source annotation for framework resources": {
+			doc: []string{
+				`// @FrameworkDataSource("aws_s3_bucket", name="Bucket")`,
+			},
+			annotation: annotationFrameworkResource,
 		},
 	}
 
@@ -775,6 +814,247 @@ func TestCaseClauseFor(t *testing.T) {
 	}
 }
 
+func TestReturnedType(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		body string // The factory function's body.
+		want string
+	}{
+		"address of composite literal": {
+			body: "return &fooResource{}, nil",
+			want: "fooResource",
+		},
+		"composite literal": {
+			body: "return fooResource{}, nil",
+			want: "fooResource",
+		},
+		"variable assigned an address": {
+			body: `r := &fooResource{}
+			r.SetDefaultCreateTimeout(30 * time.Minute)
+
+			return r, nil`,
+			want: "fooResource",
+		},
+		"address of declared variable": {
+			body: `var r fooResource
+			r.self = &r
+
+			return &r, nil`,
+			want: "fooResource",
+		},
+		"call to package function": {
+			body: "return newFoo(), nil",
+			want: "fooResource",
+		},
+		"call to unknown function": {
+			body: "return framework.NewResource(), nil",
+		},
+		"nil": {
+			body: `return nil, errors.New("unsupported")`,
+		},
+		"no final return": {
+			body: "panic(\"unreachable\")",
+		},
+		"empty body": {},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			a := newTestAnalyzer()
+			pkg := mustIndexPackage(t, a, `
+type fooResource struct {
+	self *fooResource
+}
+
+func newFoo() *fooResource {
+	return &fooResource{}
+}
+
+func factory(context.Context) (resource.ResourceWithConfigure, error) {
+`+testCase.body+`
+}
+`)
+
+			if got := a.returnedType(pkg, pkg.decls["factory"].(*ast.FuncDecl)); got != testCase.want {
+				t.Errorf("returnedType() = %q, want %q", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestIsImportStatePassthrough(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		body string // The ImportState method's body.
+		want bool
+	}{
+		"passthrough": {
+			body: "resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)",
+			want: true,
+		},
+		"several passthroughs": {
+			body: `resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+			resource.ImportStatePassthroughID(ctx, path.Root(names.AttrClusterIdentifier), request, response)`,
+			want: true,
+		},
+		"passthrough with other statements": {
+			body: `resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+
+			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("prepare"), true)...)`,
+		},
+		"other call": {
+			body: "r.importState(ctx, request, response)",
+		},
+		"passthrough from other package": {
+			body: "fwresource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)",
+		},
+		"empty body": {},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			a := newTestAnalyzer()
+			pkg := mustIndexPackage(t, a, `
+func (r *fooResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+`+testCase.body+`
+}
+`)
+
+			if got := isImportStatePassthrough(pkg.methods["fooResource"]["ImportState"]); got != testCase.want {
+				t.Errorf("isImportStatePassthrough() = %t, want %t", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestMethodsOf(t *testing.T) {
+	t.Parallel()
+
+	a := newTestAnalyzer()
+	pkg := mustIndexPackage(t, a, `
+type ops interface {
+	create()
+}
+
+type base struct {
+	ops
+	framework.WithNoUpdate
+}
+
+func (*base) Create() {}
+func (*base) Read()   {}
+
+type foo struct {
+	*base
+}
+
+func (*foo) create() {}
+func (*foo) Read()   {}
+
+type bar struct {
+	base
+}
+
+func (*bar) create() {}
+
+type generic[T any] struct {
+	bar
+}
+
+type opsOnly struct {
+	ops
+}
+
+type loop struct {
+	*loop
+}
+`)
+
+	testCases := map[string]struct {
+		typ  string
+		name string
+		// want holds the methods' receiver types, sorted.
+		want []string
+	}{
+		"method": {
+			typ:  "base",
+			name: "Create",
+			want: []string{"base"},
+		},
+		"promoted from embedded pointer": {
+			typ:  "foo",
+			name: "Create",
+			want: []string{"base"},
+		},
+		"own method over promoted": {
+			typ:  "foo",
+			name: "Read",
+			want: []string{"foo"},
+		},
+		"promoted from embedded struct": {
+			typ:  "bar",
+			name: "Read",
+			want: []string{"base"},
+		},
+		"promoted through several embedded fields": {
+			typ:  "generic",
+			name: "Create",
+			want: []string{"base"},
+		},
+		"promoted from embedded interface": {
+			typ:  "base",
+			name: "create",
+			want: []string{"bar", "foo"},
+		},
+		"interface": {
+			typ:  "ops",
+			name: "create",
+			want: []string{"bar", "foo"},
+		},
+		"undeclared by interface": {
+			typ:  "ops",
+			name: "Read",
+		},
+		"undeclared by embedded interface": {
+			typ:  "opsOnly",
+			name: "Read",
+		},
+		"from embedded type in other package": {
+			typ:  "base",
+			name: "Update",
+		},
+		"embedding cycle": {
+			typ:  "loop",
+			name: "Create",
+		},
+		"unknown type": {
+			name: "Create",
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			var got []string
+			for _, m := range pkg.methodsOf(testCase.typ, testCase.name) {
+				got = append(got, resolveType(m.Recv.List[0].Type, nil))
+			}
+			slices.Sort(got)
+
+			if !slices.Equal(got, testCase.want) {
+				t.Errorf("methodsOf(%q, %q) = %q, want %q", testCase.typ, testCase.name, got, testCase.want)
+			}
+		})
+	}
+}
+
 // newTestAnalyzer returns an analyzer for testdataRoot with nothing loaded.
 func newTestAnalyzer() *analyzer {
 	return &analyzer{
@@ -784,6 +1064,19 @@ func newTestAnalyzer() *analyzer {
 		clientMethods: make(map[string]string),
 		services:      make(map[string]*servicePackage),
 	}
+}
+
+// mustIndexPackage parses src as the declarations of a service package's only file, without
+// imports, and indexes it with a, failing the test if src is invalid.
+func mustIndexPackage(t *testing.T, a *analyzer, src string) *servicePackage {
+	t.Helper()
+
+	file, err := parser.ParseFile(a.fset, "", "package p\n"+src, parser.SkipObjectResolution)
+	if err != nil {
+		t.Fatalf("parsing %q: %s", src, err)
+	}
+	a.imports[a.fset.File(file.Pos())] = make(map[string]string)
+	return a.indexPackage("p", []*ast.File{file})
 }
 
 // mustParseExpr parses a Go expression, failing the test if it is invalid.

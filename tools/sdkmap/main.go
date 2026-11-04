@@ -1,11 +1,16 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-// sdkmap walks internal/service/* and reports every resource annotated with @SDKResource,
-// along with the functions it uses for CRUD, CustomizeDiff, and custom import,
-// the AWS SDK client methods each of those functions calls, and those the tags interceptor calls.
-// It reports every data source annotated with @SDKDataSource in the same way, but only for its
-// Read function and the tags interceptor's ListTags.
+// sdkmap walks internal/service/* and reports the AWS SDK client methods called by each annotated
+// resource's and data source's functions, and by the tags interceptor on their behalf.
+//
+// For @SDKResource, it reports the CRUD, CustomizeDiff, and custom import functions set in the
+// returned schema.Resource.
+//
+// For @FrameworkResource, it reports the CRUD, ModifyPlan, and custom ImportState methods of the
+// returned resource type.
+//
+// For @SDKDataSource, it reports only the Read function, and only the tags interceptor's ListTags.
 //
 // Annotations are recognized using the same rules as the service package generator
 // (internal/generate/servicepackage), except that build constraints are honored when selecting a
@@ -40,8 +45,9 @@ const (
 
 // The annotations that register a factory function's Terraform types.
 const (
-	annotationSDKResource   = "SDKResource"
-	annotationSDKDataSource = "SDKDataSource"
+	annotationSDKResource       = "SDKResource"
+	annotationSDKDataSource     = "SDKDataSource"
+	annotationFrameworkResource = "FrameworkResource"
 )
 
 var (
@@ -56,7 +62,8 @@ var (
 type pluginType string
 
 const (
-	pluginTypeSDKv2 pluginType = "SDKv2"
+	pluginTypeSDKv2     pluginType = "SDKv2"
+	pluginTypeFramework pluginType = "Framework"
 )
 
 // sdkMap is the output: every resource and data source found.
@@ -67,6 +74,13 @@ type sdkMap struct {
 
 // resource is a resource and the functions that implement it. A data source is analyzed as a
 // resource, then written as a dataSource, which keeps only its Read function and Tags.
+//
+// For a Terraform Plugin SDKv2 resource, the functions are those set in its schema.Resource.
+//
+// For a Terraform Plugin Framework resource, they are the methods of the type its factory function
+// returns that are declared in its package, including those promoted from embedded types declared
+// there. Those it gets from an embedded type declared in another package, e.g.
+// framework.WithNoUpdate or framework.WithImportByID, are nil.
 type resource struct {
 	Service      string     `json:"service"`
 	ResourceType string     `json:"resource_type"`
@@ -82,10 +96,21 @@ type resource struct {
 	Update *funcRef `json:"update,omitempty"`
 	Delete *funcRef `json:"delete,omitempty"`
 
-	// CustomizeDiff is nil if the resource has no CustomizeDiff function.
+	// CustomizeDiff is nil if the resource has no CustomizeDiff function. It is always nil for a
+	// Terraform Plugin Framework resource.
 	CustomizeDiff *funcRef `json:"customize_diff,omitempty"`
 
-	// Import is nil if the resource has no importer or uses schema.ImportStatePassthroughContext.
+	// ModifyPlan is nil if the resource has no ModifyPlan method. It is always nil for a Terraform
+	// Plugin SDKv2 resource.
+	ModifyPlan *funcRef `json:"modify_plan,omitempty"`
+
+	// Import is a custom import function (SDKv2) or the ImportState method (Framework).
+	//
+	// For a Terraform Plugin SDKv2 resource, it is nil if the resource has no importer or uses
+	// schema.ImportStatePassthroughContext.
+	//
+	// For a Terraform Plugin Framework resource, it is nil if the resource has no ImportState
+	// method or it only calls resource.ImportStatePassthroughID.
 	Import *funcRef `json:"import,omitempty"`
 
 	// Tags is nil unless the resource is annotated with @Tags(identifierAttribute=...).
@@ -110,10 +135,11 @@ type dataSource struct {
 	Tags *resourceTags `json:"tags,omitempty"`
 }
 
-// funcRef is a reference to a function from a resource's or data source's schema.Resource, or to a
-// service package method.
+// funcRef is a reference to a function from a Terraform Plugin SDKv2 resource or data source, or to a
+// method on a Terraform Plugin Framework resource type or the service package.
 type funcRef struct {
-	// Expr is the reference as written, e.g. "resourceObjectCreate" or "schema.NoopContext".
+	// Expr is the reference as written, e.g. "resourceObjectCreate" or "schema.NoopContext", or the
+	// method expression, e.g. "(*objectResource).Create".
 	Expr string `json:"expr"`
 
 	// Location is where the function is defined, as "<file>:<line>" relative to the repository
@@ -170,7 +196,8 @@ func main() {
 	if err := os.WriteFile(*out, append(data, '\n'), 0o644); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("found %d @SDKResource resources and %d @SDKDataSource data sources in %d packages, wrote %s", len(m.Resources), len(m.DataSources), len(a.services), *out)
+	log.Printf("found %d resources and %d data sources in %d packages, wrote %s",
+		len(m.Resources), len(m.DataSources), len(a.services), *out)
 }
 
 // mapPackages returns the resources and data sources in pkgs, in order.
@@ -182,6 +209,7 @@ func (a *analyzer) mapPackages(pkgs []*servicePackage) sdkMap {
 	}
 	for _, pkg := range pkgs {
 		m.Resources = append(m.Resources, a.findSDKResources(pkg)...)
+		m.Resources = append(m.Resources, a.findFrameworkResources(pkg)...)
 		m.DataSources = append(m.DataSources, a.findSDKDataSources(pkg)...)
 	}
 	return m
@@ -226,7 +254,11 @@ type servicePackage struct {
 	interfaces map[string][]string
 	// fieldTypes maps struct type names to their field names to the fields' types.
 	fieldTypes map[string]map[string]string
-	// factories holds the functions annotated with @SDKResource or @SDKDataSource.
+	// embeds maps struct type names to the types of their embedded fields, where known, in order.
+	// Their methods are promoted to the struct type.
+	embeds map[string][]string
+	// factories holds the functions annotated with @SDKResource, @SDKDataSource, or
+	// @FrameworkResource.
 	factories map[ast.Node]bool
 }
 
@@ -334,6 +366,7 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 		methods:    make(map[string]map[string]*ast.FuncDecl),
 		interfaces: make(map[string][]string),
 		fieldTypes: make(map[string]map[string]string),
+		embeds:     make(map[string][]string),
 		factories:  make(map[ast.Node]bool),
 	}
 
@@ -344,7 +377,7 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 			case *ast.FuncDecl:
 				if d.Recv == nil {
 					pkg.decls[d.Name.Name] = d
-					for _, annotation := range []string{annotationSDKResource, annotationSDKDataSource} {
+					for _, annotation := range []string{annotationSDKResource, annotationSDKDataSource, annotationFrameworkResource} {
 						if typeNames, _, _ := parseAnnotations(d.Doc, annotation); len(typeNames) > 0 {
 							pkg.factories[d] = true
 						}
@@ -369,8 +402,12 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 						case *ast.StructType:
 							fields := make(map[string]string)
 							for _, field := range t.Fields.List {
+								typ := resolveType(field.Type, imports)
 								for _, id := range field.Names {
-									fields[id.Name] = resolveType(field.Type, imports)
+									fields[id.Name] = typ
+								}
+								if field.Names == nil && typ != "" {
+									pkg.embeds[s.Name.Name] = append(pkg.embeds[s.Name.Name], typ)
 								}
 							}
 							pkg.fieldTypes[s.Name.Name] = fields
@@ -392,14 +429,20 @@ func (a *analyzer) indexPackage(name string, files []*ast.File) *servicePackage 
 
 // findSDKResources returns the resources annotated with @SDKResource in pkg.
 func (a *analyzer) findSDKResources(pkg *servicePackage) []resource {
-	return a.findSDKFactories(pkg, annotationSDKResource)
+	return a.findFactories(pkg, annotationSDKResource)
 }
 
-// findSDKDataSources returns the data sources annotated with @SDKDataSource in pkg. Terraform only
-// reads a data source, so any other functions its schema.Resource sets are dropped.
+// findFrameworkResources returns the resources annotated with @FrameworkResource in pkg.
+func (a *analyzer) findFrameworkResources(pkg *servicePackage) []resource {
+	return a.findFactories(pkg, annotationFrameworkResource)
+}
+
+// findSDKDataSources returns the data sources annotated with @SDKDataSource in pkg.
+//
+// Data sources only Read, so all other functions are dropped.
 func (a *analyzer) findSDKDataSources(pkg *servicePackage) []dataSource {
 	var dataSources []dataSource
-	for _, r := range a.findSDKFactories(pkg, annotationSDKDataSource) {
+	for _, r := range a.findFactories(pkg, annotationSDKDataSource) {
 		dataSources = append(dataSources, dataSource{
 			Service:        r.Service,
 			DataSourceType: r.ResourceType,
@@ -413,9 +456,11 @@ func (a *analyzer) findSDKDataSources(pkg *servicePackage) []dataSource {
 	return dataSources
 }
 
-// findSDKFactories returns the resources or data sources whose factory functions in pkg are
-// annotated with annotation, @SDKResource or @SDKDataSource. Data sources are returned as resources.
-func (a *analyzer) findSDKFactories(pkg *servicePackage, annotation string) []resource {
+// findFactories returns the resources or data sources whose factory functions in pkg are
+// annotated with @SDKResource, @SDKDataSource, or @FrameworkResource.
+//
+// Data sources are returned as resources.
+func (a *analyzer) findFactories(pkg *servicePackage, annotation string) []resource {
 	var resources []resource
 
 	for _, file := range pkg.files {
@@ -435,7 +480,14 @@ func (a *analyzer) findSDKFactories(pkg *servicePackage, annotation string) []re
 				Expr:       fn.Name.Name,
 				Location:   a.location(fn),
 			}
-			if lit := returnedResource(fn); lit != nil {
+			if annotation == annotationFrameworkResource {
+				r.PluginType = pluginTypeFramework
+				if typ := a.returnedType(pkg, fn); pkg.fieldTypes[typ] != nil {
+					a.addMethodRefs(pkg, &r, typ)
+				} else {
+					log.Printf("%s: %s does not return a struct type declared in its package", r.Location, r.Expr)
+				}
+			} else if lit := returnedResource(fn); lit != nil {
 				a.addFuncRefs(pkg, &r, lit, a.factoryVarTypes(pkg, fn))
 			} else {
 				log.Printf("%s: %s does not return a schema.Resource literal", r.Location, r.Expr)
@@ -502,14 +554,68 @@ func parseAnnotations(doc *ast.CommentGroup, annotation string) (typeNames []str
 
 // returnedResource returns the &schema.Resource{...} literal returned at the end of fn, or nil.
 func returnedResource(fn *ast.FuncDecl) *ast.CompositeLit {
-	if fn.Body == nil || len(fn.Body.List) == 0 {
-		return nil
-	}
-	ret, ok := fn.Body.List[len(fn.Body.List)-1].(*ast.ReturnStmt)
-	if !ok || len(ret.Results) != 1 {
+	ret := finalReturn(fn)
+	if ret == nil || len(ret.Results) != 1 {
 		return nil
 	}
 	return schemaLiteral(ret.Results[0], "Resource")
+}
+
+// returnedType returns the type of the first value returned at the end of a factory function,
+// e.g. "objectResource" for return &objectResource{}, nil, or "" if it isn't known.
+func (a *analyzer) returnedType(pkg *servicePackage, fn *ast.FuncDecl) string {
+	ret := finalReturn(fn)
+	if ret == nil || len(ret.Results) == 0 {
+		return ""
+	}
+	v := (&callFinder{analyzer: a}).newVisitor(pkg, fn)
+	v.varTypes = a.factoryVarTypes(pkg, fn)
+	return v.typeOf(ret.Results[0])
+}
+
+// finalReturn returns the return statement at the end of fn, or nil.
+func finalReturn(fn *ast.FuncDecl) *ast.ReturnStmt {
+	if fn.Body == nil || len(fn.Body.List) == 0 {
+		return nil
+	}
+	ret, _ := fn.Body.List[len(fn.Body.List)-1].(*ast.ReturnStmt)
+	return ret
+}
+
+// addMethodRefs records the methods of a Terraform Plugin Framework resource type, typ, that are
+// declared in pkg, including those promoted from its embedded fields.
+func (a *analyzer) addMethodRefs(pkg *servicePackage, r *resource, typ string) {
+	newMethodRef := func(name string) *funcRef {
+		ms := pkg.methodsOf(typ, name)
+		if len(ms) != 1 || (name == "ImportState" && isImportStatePassthrough(ms[0])) {
+			return nil
+		}
+		return a.newMethodRef(pkg, ms[0], "")
+	}
+
+	r.Create = newMethodRef("Create")
+	r.Read = newMethodRef("Read")
+	r.Update = newMethodRef("Update")
+	r.Delete = newMethodRef("Delete")
+	r.ModifyPlan = newMethodRef("ModifyPlan")
+	r.Import = newMethodRef("ImportState")
+}
+
+// isImportStatePassthrough reports whether a Terraform Plugin Framework resource's ImportState
+// method only calls resource.ImportStatePassthroughID, once or more, the equivalent of
+// schema.ImportStatePassthroughContext.
+func isImportStatePassthrough(m *ast.FuncDecl) bool {
+	if m.Body == nil || len(m.Body.List) == 0 {
+		return false
+	}
+	return !slices.ContainsFunc(m.Body.List, func(s ast.Stmt) bool {
+		stmt, ok := s.(*ast.ExprStmt)
+		if !ok {
+			return true
+		}
+		call, ok := stmt.X.(*ast.CallExpr)
+		return !ok || !isSelector(call.Fun, "resource", "ImportStatePassthroughID")
+	})
 }
 
 // addFuncRefs records the functions referenced by the fields of a schema.Resource literal.
@@ -551,9 +657,9 @@ func (a *analyzer) addFuncRefs(pkg *servicePackage, r *resource, lit *ast.Compos
 }
 
 // ownFuncRefs returns the references to the resource's own functions that are set: CRUD,
-// CustomizeDiff, and import, but not the tags interceptor's methods.
+// CustomizeDiff, ModifyPlan, and import, but not the tags interceptor's methods.
 func (r *resource) ownFuncRefs() []*funcRef {
-	return nonNilFuncRefs(r.Create, r.Read, r.Update, r.Delete, r.CustomizeDiff, r.Import)
+	return nonNilFuncRefs(r.Create, r.Read, r.Update, r.Delete, r.CustomizeDiff, r.ModifyPlan, r.Import)
 }
 
 // funcRefs returns the resource's function references that are set, including the tags
@@ -644,20 +750,10 @@ func (a *analyzer) newFuncRef(pkg *servicePackage, expr ast.Expr, varTypes map[s
 // interceptor lists its tags after Read, and never updates them.
 func (a *analyzer) newResourceTags(pkg *servicePackage, resourceType, annotation string) *resourceTags {
 	newRef := func(name string) *funcRef {
-		m, ok := pkg.methods["servicePackage"][name]
-		if !ok {
-			return nil
+		if m, ok := pkg.methods["servicePackage"][name]; ok {
+			return a.newMethodRef(pkg, m, resourceType)
 		}
-
-		expr := types.ExprString(m.Recv.List[0].Type)
-		if strings.HasPrefix(expr, "*") {
-			expr = "(" + expr + ")"
-		}
-		ref := &funcRef{Expr: expr + "." + name, Location: a.location(m)}
-		f := a.newCallFinder()
-		f.tagsResourceType = resourceType
-		ref.SDKCalls, ref.warnings = f.find(pkg, m, nil)
-		return ref
+		return nil
 	}
 
 	tags := &resourceTags{List: newRef("ListTags")}
@@ -665,6 +761,21 @@ func (a *analyzer) newResourceTags(pkg *servicePackage, resourceType, annotation
 		tags.Update = newRef("UpdateTags")
 	}
 	return tags
+}
+
+// newMethodRef returns a reference to method m, e.g. "(*servicePackage).ListTags".
+// tagsResourceType is the resource type passed to the tags interceptor's ListTags and UpdateTags,
+// if m is one of them, or empty.
+func (a *analyzer) newMethodRef(pkg *servicePackage, m *ast.FuncDecl, tagsResourceType string) *funcRef {
+	expr := types.ExprString(m.Recv.List[0].Type)
+	if strings.HasPrefix(expr, "*") {
+		expr = "(" + expr + ")"
+	}
+	ref := &funcRef{Expr: expr + "." + m.Name.Name, Location: a.location(m)}
+	f := a.newCallFinder()
+	f.tagsResourceType = tagsResourceType
+	ref.SDKCalls, ref.warnings = f.find(pkg, m, nil)
+	return ref
 }
 
 // location returns where node is, as "<file>:<line>" relative to the repository root.
@@ -979,26 +1090,45 @@ func (v *declVisitor) typeOf(expr ast.Expr) string {
 	return ""
 }
 
-// methodsOf returns the methods named name on typ, or, if typ is an interface, on every type in pkg
-// that implements it.
+// methodsOf returns the methods named name on typ, including those promoted from its embedded
+// fields, or, if typ is an interface, on every type in pkg that implements it.
 func (pkg *servicePackage) methodsOf(typ, name string) []*ast.FuncDecl {
-	if typ == "" {
+	return pkg.methodsOfVisiting(typ, name, make(map[string]bool))
+}
+
+// methodsOfVisiting is methodsOf, without revisiting the types in visited. A promoted method is
+// taken from the first embedded field that has one, regardless of depth.
+func (pkg *servicePackage) methodsOfVisiting(typ, name string, visited map[string]bool) []*ast.FuncDecl {
+	if typ == "" || visited[typ] {
 		return nil
 	}
+	visited[typ] = true
 	if m, ok := pkg.methods[typ][name]; ok {
 		return []*ast.FuncDecl{m}
 	}
 
 	var methods []*ast.FuncDecl
 	if names, ok := pkg.interfaces[typ]; ok {
+		// A method the interface doesn't declare can't be called through it, even if every
+		// implementation has one, e.g. when the interface is embedded in a struct type.
+		if !slices.Contains(names, name) {
+			return nil
+		}
 		for _, ms := range pkg.methods {
 			implements := !slices.ContainsFunc(names, func(n string) bool { return ms[n] == nil })
 			if m, ok := ms[name]; ok && implements {
 				methods = append(methods, m)
 			}
 		}
+		return methods
 	}
-	return methods
+
+	for _, embedded := range pkg.embeds[typ] {
+		if methods := pkg.methodsOfVisiting(embedded, name, visited); len(methods) > 0 {
+			return methods
+		}
+	}
+	return nil
 }
 
 // resolveType returns the type denoted by the type expression expr: an SDK client's import path,
