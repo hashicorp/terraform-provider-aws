@@ -28,6 +28,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
+			Factory:  newConnectAttachmentDataSource,
+			TypeName: "aws_networkmanager_connect_attachment",
+			Name:     "Connect Attachment",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
+		{
 			Factory:  newCoreNetworkDataSource,
 			TypeName: "aws_networkmanager_core_network",
 			Name:     "Core Network",
