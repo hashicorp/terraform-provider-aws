@@ -10,15 +10,20 @@ FEATURES:
 * **New List Resource:** `aws_lambdaweb_function` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
 * **New List Resource:** `aws_lambdaweb_function_endpoint` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
 * **New List Resource:** `aws_lambdaweb_function_revision` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
+* **New List Resource:** `aws_networksecuritymanager_rule` ([#50734](https://github.com/hashicorp/terraform-provider-aws/issues/50734))
+* **New List Resource:** `aws_quicksight_account_custom_permission` ([#50670](https://github.com/hashicorp/terraform-provider-aws/issues/50670))
 * **New List Resource:** `aws_rds_tenant_database` ([#50605](https://github.com/hashicorp/terraform-provider-aws/issues/50605))
 * **New List Resource:** `aws_s3_bucket_cors_configuration` ([#50680](https://github.com/hashicorp/terraform-provider-aws/issues/50680))
 * **New Resource:** `aws_bedrockdataautomation_blueprint` ([#50695](https://github.com/hashicorp/terraform-provider-aws/issues/50695))
 * **New Resource:** `aws_bedrockdataautomation_library` ([#50727](https://github.com/hashicorp/terraform-provider-aws/issues/50727))
 * **New Resource:** `aws_bedrockdataautomation_project` ([#50725](https://github.com/hashicorp/terraform-provider-aws/issues/50725))
+* **New Resource:** `aws_ec2_capacity_manager` ([#48336](https://github.com/hashicorp/terraform-provider-aws/issues/48336))
 * **New Resource:** `aws_lambdaweb_function` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
 * **New Resource:** `aws_lambdaweb_function_endpoint` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
 * **New Resource:** `aws_lambdaweb_function_revision` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
 * **New Resource:** `aws_lambdaweb_resource_policy` ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
+* **New Resource:** `aws_networksecuritymanager_rule` ([#50734](https://github.com/hashicorp/terraform-provider-aws/issues/50734))
+* **New Resource:** `aws_quicksight_account_custom_permission` ([#50670](https://github.com/hashicorp/terraform-provider-aws/issues/50670))
 * **New Resource:** `aws_rds_tenant_database` ([#50605](https://github.com/hashicorp/terraform-provider-aws/issues/50605))
 
 ENHANCEMENTS:
@@ -27,10 +32,13 @@ ENHANCEMENTS:
 * data-source/aws_region: Resolve Regions not yet in the provider's Region list when `skip_region_validation` is `true` ([#50701](https://github.com/hashicorp/terraform-provider-aws/issues/50701))
 * data-source/aws_service_principal: Resolve Regions not yet in the provider's Region list when `skip_region_validation` is `true` ([#50701](https://github.com/hashicorp/terraform-provider-aws/issues/50701))
 * resource/aws_batch_compute_environment: Add `unmanaged_vcpus` argument ([#49386](https://github.com/hashicorp/terraform-provider-aws/issues/49386))
+* resource/aws_cloudtrail: Add `recursive_logging` argument ([#50580](https://github.com/hashicorp/terraform-provider-aws/issues/50580))
+* resource/aws_elasticache_global_replication_group: Add `tags` and `tags_all` attributes ([#50520](https://github.com/hashicorp/terraform-provider-aws/issues/50520))
 * resource/aws_lambdacore_network_connector: Add `latest_version` and `latest_version_arn` attributes ([#50452](https://github.com/hashicorp/terraform-provider-aws/issues/50452))
 
 BUG FIXES:
 
+* resource/aws_amplify_app: Fix `access_token` and `oauth_token` maximum length being lower than the AWS API limit ([#49642](https://github.com/hashicorp/terraform-provider-aws/issues/49642))
 * resource/aws_datasync_location_s3: Handles new error message returned for IAM eventual consistency ([#50709](https://github.com/hashicorp/terraform-provider-aws/issues/50709))
 
 ## 6.71.0 (October 28, 2026)
