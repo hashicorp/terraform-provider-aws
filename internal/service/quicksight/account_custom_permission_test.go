@@ -158,13 +158,15 @@ func testAccAccountCustomPermission_update(t *testing.T) {
 
 func testAccCheckAccountCustomPermissionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).QuickSightClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_account_custom_permission" {
 				continue
 			}
-			_, err := tfquicksight.FindAccountCustomPermissionByID(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID])
+
+			resourceCtx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(resourceCtx, t).QuickSightClient(resourceCtx)
+
+			_, err := tfquicksight.FindAccountCustomPermissionByID(resourceCtx, conn, rs.Primary.Attributes[names.AttrAWSAccountID])
 
 			if retry.NotFound(err) {
 				continue
