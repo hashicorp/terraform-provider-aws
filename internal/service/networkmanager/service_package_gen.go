@@ -34,6 +34,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
+		{
+			Factory:  newVPCAttachmentDataSource,
+			TypeName: "aws_networkmanager_vpc_attachment",
+			Name:     "VPC Attachment",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
 	}
 }
 
