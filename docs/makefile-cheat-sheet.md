@@ -209,6 +209,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |
 | `ts`<sup>M</sup> | Alias to `testacc-short` |  |  |  |
 | `update` | Update dependencies |  |  | `GO_VER` |
+| `vulncheck` | Run govulncheck |  |  |  |
 | `website`<sup>M</sup> | Run all CI website checks | ✔️ |  |  |
 | `website-link-check` | Check website links |  | ✔️ |  |
 | `website-link-check-ghrc` | Check website links with ghrc |  | ✔️ |  |
