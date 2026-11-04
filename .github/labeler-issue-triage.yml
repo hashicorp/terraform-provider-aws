@@ -110,6 +110,8 @@ service/bedrockagent:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
 service/bedrockagentcore:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagentcore_'
+service/bedrockdataautomation:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockdataautomation_'
 service/bedrockruntime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockruntime_'
 service/billing:

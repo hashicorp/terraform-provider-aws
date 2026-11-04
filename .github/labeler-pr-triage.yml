@@ -364,6 +364,12 @@ service/bedrockagentcore:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagentcore/**/*'
               - 'website/**/bedrockagentcore_*'
+service/bedrockdataautomation:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/bedrockdataautomation/**/*'
+              - 'website/**/bedrockdataautomation_*'
 service/bedrockruntime:
   - any:
       - changed-files:

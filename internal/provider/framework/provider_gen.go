@@ -264,6 +264,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// bedrockdataautomation
+
+				"bedrockdataautomation": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// bedrockruntime
 
 				"bedrockruntime": schema.StringAttribute{
