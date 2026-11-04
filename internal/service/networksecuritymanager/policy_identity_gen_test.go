@@ -8,7 +8,6 @@ package networksecuritymanager_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,7 +22,6 @@ import (
 func TestAccNetworkSecurityManagerPolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v networksecuritymanager.GetPolicyOutput
 	resourceName := "aws_networksecuritymanager_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -33,7 +31,7 @@ func TestAccNetworkSecurityManagerPolicy_Identity_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckPolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
@@ -46,7 +44,7 @@ func TestAccNetworkSecurityManagerPolicy_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -102,6 +100,129 @@ func TestAccNetworkSecurityManagerPolicy_Identity_basic(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccNetworkSecurityManagerPolicy_Identity_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_networksecuritymanager_policy.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPolicy(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+
+			// Step 2: Import command with appended "@<region>"
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+
+			// Step 3: Import command without appended "@<region>"
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ImportStateKind:                      resource.ImportCommandWithID,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+
+			// Step 4: Import block with Import ID and appended "@<region>"
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+
+			// Step 5: Import block with Import ID and no appended "@<region>"
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+
+			// Step 6: Import block with Resource Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
 			},

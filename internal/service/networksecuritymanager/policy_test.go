@@ -14,6 +14,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -28,13 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	// Until aws_networksecuritymanager_rule exists, WAF policy tests reference pre-existing published rules.
-	envVarRuleARN1 = "NETWORKSECURITYMANAGER_RULE_ARN_1"
-	envVarRuleARN2 = "NETWORKSECURITYMANAGER_RULE_ARN_2"
-)
-
-var checkPolicyARN knownvalue.Check = tfknownvalue.RegionalARNRegexp("network-security-manager", regexache.MustCompile(`policy:.+`))
+var checkPolicyARN knownvalue.Check = tfknownvalue.RegionalARNRegexp("network-security-manager", regexache.MustCompile(`policy:[0-9a-z]+$`))
 
 // Policy priorities must be unique within an account. To allow parallel tests, the test configurations
 // derive the priority from the random resource name: parseint(substr(sha1(var.rName), 0, 6), 16) + 1.
@@ -47,14 +42,13 @@ func testAccPolicyPriority(rName string) int32 {
 
 func TestAccNetworkSecurityManagerPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetPolicyOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckPolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -66,7 +60,7 @@ func TestAccNetworkSecurityManagerPolicy_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -77,6 +71,7 @@ func TestAccNetworkSecurityManagerPolicy_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkPolicyARN),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("firewall_type"), tfknownvalue.StringExact(awstypes.PolicyFirewallTypeShieldAdvanced)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -107,14 +102,13 @@ func TestAccNetworkSecurityManagerPolicy_basic(t *testing.T) {
 
 func TestAccNetworkSecurityManagerPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetPolicyOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_policy.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckPolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -126,7 +120,7 @@ func TestAccNetworkSecurityManagerPolicy_disappears(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworksecuritymanager.ResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -140,26 +134,22 @@ func TestAccNetworkSecurityManagerPolicy_disappears(t *testing.T) {
 	})
 }
 
+// A WAF policy that references rules created by the test. The update step changes
+// description, priority, policy_configuration and the rule list in place.
 func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networksecuritymanager.GetPolicyOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networksecuritymanager_policy.test"
-	ruleARN1 := acctest.SkipIfEnvVarNotSet(t, envVarRuleARN1)
-	ruleARN2 := acctest.SkipIfEnvVarNotSet(t, envVarRuleARN2)
+	rule1ResourceName := "aws_networksecuritymanager_rule.test[0]"
+	rule2ResourceName := "aws_networksecuritymanager_rule.test[1]"
 	priority := int(testAccPolicyPriority(rName))
 
-	variables := func(description string, priority int, remediationEnabled bool, resolution awstypes.ExistingCustomerWebACLResolution, ruleARNs ...string) config.Variables {
-		arns := make([]config.Variable, 0, len(ruleARNs))
-		for _, arn := range ruleARNs {
-			arns = append(arns, config.StringVariable(arn))
-		}
-
+	variables := func(description string, priority, ruleCount int, remediationEnabled bool, resolution awstypes.ExistingCustomerWebACLResolution) config.Variables {
 		return config.Variables{
 			acctest.CtRName:                        config.StringVariable(rName),
 			"description":                          config.StringVariable(description),
 			"priority":                             config.IntegerVariable(priority),
-			"rule_arns":                            config.ListVariable(arns...),
+			"rule_count":                           config.IntegerVariable(ruleCount),
 			"remediation_enabled":                  config.BoolVariable(remediationEnabled),
 			"existing_customer_web_acl_resolution": config.StringVariable(string(resolution)),
 		}
@@ -168,7 +158,7 @@ func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckPolicy(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -176,9 +166,9 @@ func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Policy/waf/"),
-				ConfigVariables: variables("initial", priority, false, awstypes.ExistingCustomerWebACLResolutionNoRemediation, ruleARN1),
+				ConfigVariables: variables("initial", priority, 1, false, awstypes.ExistingCustomerWebACLResolutionNoRemediation),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -191,7 +181,7 @@ func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"remediation_enabled": knownvalue.Bool(false),
-							"resources_clean_up":  knownvalue.Bool(false),
+							"resources_clean_up":  knownvalue.Bool(true),
 							"waf_config": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"conflict_resolution":                  tfknownvalue.StringExact(awstypes.WAFConflictResolutionOptionsMergeWhereApplicable),
@@ -201,17 +191,14 @@ func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(int32(priority))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("template_or_rule"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"rule_arn":     knownvalue.StringExact(ruleARN1),
-							"template_arn": knownvalue.Null(),
-						}),
-					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("template_or_rule"), knownvalue.ListSizeExact(1)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("template_or_rule").AtSliceIndex(0).AtMapKey("rule_arn"), rule1ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("template_or_rule").AtSliceIndex(0).AtMapKey("template_arn"), knownvalue.Null()),
 				},
 			},
 			{
 				ConfigDirectory:                      config.StaticDirectory("testdata/Policy/waf/"),
-				ConfigVariables:                      variables("initial", priority, false, awstypes.ExistingCustomerWebACLResolutionNoRemediation, ruleARN1),
+				ConfigVariables:                      variables("initial", priority, 1, false, awstypes.ExistingCustomerWebACLResolutionNoRemediation),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -220,13 +207,16 @@ func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Policy/waf/"),
-				ConfigVariables: variables("updated", priority+1, true, awstypes.ExistingCustomerWebACLResolutionRetrofit, ruleARN1, ruleARN2),
+				ConfigVariables: variables("updated", priority+1, 2, true, awstypes.ExistingCustomerWebACLResolutionRetrofit),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, t, resourceName, &v),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -235,29 +225,145 @@ func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_configuration").AtSliceIndex(0).AtMapKey("waf_config").AtSliceIndex(0).AtMapKey("existing_customer_web_acl_resolution"), tfknownvalue.StringExact(awstypes.ExistingCustomerWebACLResolutionRetrofit)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(int32(priority+1))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("template_or_rule"), knownvalue.ListSizeExact(2)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("template_or_rule").AtSliceIndex(0).AtMapKey("rule_arn"), rule1ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("template_or_rule").AtSliceIndex(1).AtMapKey("rule_arn"), rule2ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
 		},
 	})
 }
 
-func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string, v *networksecuritymanager.GetPolicyOutput) resource.TestCheckFunc {
+func TestAccNetworkSecurityManagerPolicy_descriptionRemoved(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networksecuritymanager_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPolicy(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/description/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("initial"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("initial")),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
+// is_published drives the DRAFT/ACTIVE lifecycle. The policy is created as a draft,
+// published in place, and finally given a pending draft on top of the published
+// version, so that destroy removes both.
+func TestAccNetworkSecurityManagerPolicy_isPublished(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networksecuritymanager_policy.test"
+
+	step := func(isPublished, remediationEnabled bool, action plancheck.ResourceActionType) resource.TestStep {
+		return resource.TestStep{
+			ConfigDirectory: config.StaticDirectory("testdata/Policy/is_published/"),
+			ConfigVariables: config.Variables{
+				acctest.CtRName:       config.StringVariable(rName),
+				"is_published":        config.BoolVariable(isPublished),
+				"remediation_enabled": config.BoolVariable(remediationEnabled),
+			},
+			Check: resource.ComposeAggregateTestCheckFunc(
+				testAccCheckPolicyExists(ctx, t, resourceName),
+			),
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, action),
+				},
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectEmptyPlan(),
+				},
+			},
+			ConfigStateChecks: []statecheck.StateCheck{
+				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkPolicyARN),
+				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("is_published"), knownvalue.Bool(isPublished)),
+				statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_configuration").AtSliceIndex(0).AtMapKey("remediation_enabled"), knownvalue.Bool(remediationEnabled)),
+			},
+		}
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPolicy(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Created as a draft.
+			step(false, false, plancheck.ResourceActionCreate),
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/is_published/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:       config.StringVariable(rName),
+					"is_published":        config.BoolVariable(false),
+					"remediation_enabled": config.BoolVariable(false),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			// DRAFT -> ACTIVE: the draft itself is published.
+			step(true, false, plancheck.ResourceActionUpdate),
+			// ACTIVE -> DRAFT: a draft is saved on top of the published version.
+			step(false, true, plancheck.ResourceActionUpdate),
+		},
+	})
+}
+
+func testAccCheckPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
+		ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
 
-		output, err := tfnetworksecuritymanager.FindPolicyByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
-		if err != nil {
-			return err
-		}
+		_, err := tfnetworksecuritymanager.FindPolicyByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-		*v = *output
-
-		return nil
+		return err
 	}
 }
 
@@ -285,7 +391,7 @@ func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestC
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccPreCheckPolicy(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
 
 	var input networksecuritymanager.ListPoliciesInput

@@ -10,7 +10,7 @@ description: |-
 
 Manages an AWS Network Security Manager Policy. A policy combines templates and rules with enforcement settings for a firewall type, such as AWS WAF or AWS Shield Advanced.
 
-~> **NOTE:** Terraform always publishes the policy on create and update, so a Terraform-managed policy never has a pending draft version.
+Changes to a policy are published unless `is_published` is `false`.
 
 ## Example Usage
 
@@ -23,16 +23,12 @@ resource "aws_networksecuritymanager_policy" "example" {
   priority      = 1
 
   template_or_rule {
-    template_arn = aws_networksecuritymanager_template.example.arn
-  }
-
-  template_or_rule {
     rule_arn = aws_networksecuritymanager_rule.example.arn
   }
 
   policy_configuration {
     remediation_enabled = true
-    resources_clean_up  = false
+    resources_clean_up  = true
 
     waf_config {
       conflict_resolution                  = "MERGE_WHERE_APPLICABLE"
@@ -69,6 +65,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the policy.
+* `is_published` - (Optional) Whether to publish the policy. When `true`, the policy is saved in the published (`ACTIVE`) state. When `false`, it is saved as a draft (`DRAFT`); for a published policy, the draft is saved on top of the published version. Defaults to `true`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `template_or_rule` - (Optional) Ordered list of templates and rules to associate with the policy. For `WAF` policies, specify 1 to 100 entries, of which at most 2 can be templates. Must be omitted for `SHIELD_ADVANCED` policies. See [`template_or_rule`](#template_or_rule-block) below.
@@ -76,7 +73,7 @@ The following arguments are optional:
 ### `policy_configuration` Block
 
 * `remediation_enabled` - (Required) Whether to automatically remediate noncompliant resources.
-* `resources_clean_up` - (Required) Whether to automatically remove the resources the service created when they are no longer needed. Must be `true` for `SHIELD_ADVANCED` policies.
+* `resources_clean_up` - (Required) Whether to automatically remove the resources the service created when they are no longer needed. The service currently only accepts `true`.
 * `waf_config` - (Optional) AWS WAF-specific settings. Required for `WAF` policies. See [`waf_config`](#waf_config-block) below.
 
 ### `waf_config` Block

@@ -1,6 +1,19 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_networksecuritymanager_rule" "test" {
+  count = 2
+
+  name          = "${var.rName}-${count.index}"
+  firewall_type = "WAF"
+  type          = "CONFIGURATION"
+  configuration = jsonencode({
+    DefaultAction = {
+      Allow = {}
+    }
+  })
+}
+
 resource "aws_networksecuritymanager_policy" "test" {
   name          = var.rName
   description   = var.description
@@ -8,7 +21,7 @@ resource "aws_networksecuritymanager_policy" "test" {
   priority      = var.priority
 
   dynamic "template_or_rule" {
-    for_each = var.rule_arns
+    for_each = slice(aws_networksecuritymanager_rule.test[*].arn, 0, var.rule_count)
     content {
       rule_arn = template_or_rule.value
     }
@@ -16,7 +29,7 @@ resource "aws_networksecuritymanager_policy" "test" {
 
   policy_configuration {
     remediation_enabled = var.remediation_enabled
-    resources_clean_up  = false
+    resources_clean_up  = true
 
     waf_config {
       conflict_resolution                  = "MERGE_WHERE_APPLICABLE"
@@ -26,8 +39,9 @@ resource "aws_networksecuritymanager_policy" "test" {
 }
 
 variable "rName" {
-  type     = string
-  nullable = false
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
 
 variable "description" {
@@ -40,8 +54,8 @@ variable "priority" {
   nullable = false
 }
 
-variable "rule_arns" {
-  type     = list(string)
+variable "rule_count" {
+  type     = number
   nullable = false
 }
 
