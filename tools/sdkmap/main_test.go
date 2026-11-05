@@ -77,6 +77,9 @@ func TestMapPackages(t *testing.T) {
 		"Framework resources": {
 			pkg: "mockframework",
 		},
+		"Framework data sources": {
+			pkg: "mockframeworkdatasource",
+		},
 		"function references": {
 			pkg: "mockfuncrefs",
 		},
@@ -452,6 +455,43 @@ func TestParseAnnotations(t *testing.T) {
 				`// @FrameworkDataSource("aws_s3_bucket", name="Bucket")`,
 			},
 			annotation: annotationFrameworkResource,
+		},
+		"framework data source": {
+			doc: []string{
+				`// @FrameworkDataSource("aws_s3_bucket", name="Bucket")`,
+			},
+			annotation:    annotationFrameworkDataSource,
+			wantTypeNames: []string{"aws_s3_bucket"},
+		},
+		"framework data source with several type names": {
+			doc: []string{
+				`// @FrameworkDataSource("aws_alb", name="Load Balancer")`,
+				`// @FrameworkDataSource("aws_lb", name="Load Balancer")`,
+			},
+			annotation:    annotationFrameworkDataSource,
+			wantTypeNames: []string{"aws_alb", "aws_lb"},
+		},
+		"framework data source with tags": {
+			doc: []string{
+				`// @FrameworkDataSource("aws_s3_directory_bucket", name="Directory Bucket")`,
+				`// @Tags(identifierAttribute="arn", resourceType="DirectoryBucket")`,
+			},
+			annotation:           annotationFrameworkDataSource,
+			wantTypeNames:        []string{"aws_s3_directory_bucket"},
+			wantTagged:           true,
+			wantTagsResourceType: "DirectoryBucket",
+		},
+		"framework resource annotation for framework data sources": {
+			doc: []string{
+				`// @FrameworkResource("aws_s3_bucket", name="Bucket")`,
+			},
+			annotation: annotationFrameworkDataSource,
+		},
+		"SDK data source annotation for framework data sources": {
+			doc: []string{
+				`// @SDKDataSource("aws_s3_bucket", name="Bucket")`,
+			},
+			annotation: annotationFrameworkDataSource,
 		},
 	}
 
@@ -928,6 +968,62 @@ func (r *fooResource) ImportState(ctx context.Context, request resource.ImportSt
 
 			if got := isImportStatePassthrough(pkg.methods["fooResource"]["ImportState"]); got != testCase.want {
 				t.Errorf("isImportStatePassthrough() = %t, want %t", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestAddMethodRefs(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		annotation string
+		// want holds the method expressions recorded, in the order of resource's fields.
+		want []string
+	}{
+		"framework resource": {
+			annotation: annotationFrameworkResource,
+			want: []string{
+				"(*foo).Create",
+				"(*foo).Read",
+				"(*foo).Update",
+				"(*foo).Delete",
+				"(*foo).ModifyPlan",
+				"(*foo).ImportState",
+			},
+		},
+		"framework data source": {
+			annotation: annotationFrameworkDataSource,
+			want:       []string{"(*foo).Read"},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			a := newTestAnalyzer()
+			pkg := mustIndexPackage(t, a, `
+type foo struct{}
+
+func (*foo) Create()      {}
+func (*foo) Read()        {}
+func (*foo) Update()      {}
+func (*foo) Delete()      {}
+func (*foo) ModifyPlan()  {}
+func (*foo) ImportState() {}
+`)
+
+			var r resource
+			a.addMethodRefs(pkg, &r, "foo", testCase.annotation)
+
+			var got []string
+			for _, ref := range r.ownFuncRefs() {
+				got = append(got, ref.Expr)
+			}
+
+			if !slices.Equal(got, testCase.want) {
+				t.Errorf("addMethodRefs(%s) recorded %q, want %q", testCase.annotation, got, testCase.want)
 			}
 		})
 	}

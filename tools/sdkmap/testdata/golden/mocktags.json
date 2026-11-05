@@ -301,6 +301,29 @@
   "dataSources": [
     {
       "service": "mocktags",
+      "data_source_type": "aws_mocktags_bar",
+      "plugin_type": "Framework",
+      "expr": "newBarDataSource",
+      "location": "internal/service/mocktags/bar_data_source.go:20",
+      "read": {
+        "expr": "(*barDataSource).Read",
+        "location": "internal/service/mocktags/bar_data_source.go:28",
+        "sdk_calls": [
+          "mocktags.DescribeBar"
+        ]
+      },
+      "tags": {
+        "list": {
+          "expr": "(*servicePackage).ListTags",
+          "location": "internal/service/mocktags/tags.go:22",
+          "sdk_calls": [
+            "mocktags.ListBarTags"
+          ]
+        }
+      }
+    },
+    {
+      "service": "mocktags",
       "data_source_type": "aws_mocktags_foo",
       "plugin_type": "SDKv2",
       "expr": "dataSourceFoo",
