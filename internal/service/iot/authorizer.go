@@ -31,7 +31,7 @@ import (
 
 // @SDKResource("aws_iot_authorizer", name="Authorizer")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iot/types;types.AuthorizerDescription")
 func resourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthorizerCreate,
