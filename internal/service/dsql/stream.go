@@ -266,14 +266,25 @@ func (r *streamResource) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
+
+// flatten sets the model from the finder's value, for Read and for an item the list resource includes.
+func (r *streamResource) flatten(ctx context.Context, output *dsql.GetStreamOutput, data *streamResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, output, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
 	setTagsOut(ctx, output.Tags)
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	return diags
 }
 
 func (r *streamResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {

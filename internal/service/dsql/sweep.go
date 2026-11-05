@@ -63,19 +63,14 @@ func sweepStreams(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 			input := dsql.ListStreamsInput{
 				ClusterIdentifier: parent.Identifier,
 			}
-			pages := dsql.NewListStreamsPaginator(conn, &input)
-			for pages.HasMorePages() {
-				page, err := pages.NextPage(ctx)
-
+			for v, err := range listStreams(ctx, conn, &input) {
 				if err != nil {
 					return nil, err
 				}
 
-				for _, v := range page.Streams {
-					sweepResources = append(sweepResources, framework.NewSweepResource(newStreamResource, client,
-						framework.NewAttribute(names.AttrClusterIdentifier, aws.ToString(v.ClusterIdentifier)),
-						framework.NewAttribute("stream_identifier", aws.ToString(v.StreamIdentifier))))
-				}
+				sweepResources = append(sweepResources, framework.NewSweepResource(newStreamResource, client,
+					framework.NewAttribute(names.AttrClusterIdentifier, aws.ToString(v.ClusterIdentifier)),
+					framework.NewAttribute("stream_identifier", aws.ToString(v.StreamIdentifier))))
 			}
 		}
 	}
