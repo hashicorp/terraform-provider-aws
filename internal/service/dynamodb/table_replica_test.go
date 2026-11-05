@@ -392,6 +392,90 @@ func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTableReplica_disassociationProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_dynamodb_table_replica.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// DynamoDB enables disassociation protection on a new replica, so a false
+				// value set on create must be sent rather than treated as unchanged.
+				Config: testAccTableReplicaConfig_disassociationProtection(rName, acctest.CtFalse),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "disassociation_protection_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableReplicaConfig_disassociationProtection(rName, acctest.CtTrue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "disassociation_protection_enabled", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Removing the argument leaves the current setting unchanged.
+				Config: testAccTableReplicaConfig_disassociationProtection(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "disassociation_protection_enabled", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTableReplica_disassociationProtectionDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_dynamodb_table_replica.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableReplicaConfig_disassociationProtection(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "disassociation_protection_enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableReplicaDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
@@ -733,4 +817,41 @@ resource "aws_dynamodb_table_replica" "test" {
   }
 }
 `, rName, deletionProtection))
+}
+
+// testAccTableReplicaConfig_disassociationProtection sets disassociation_protection_enabled on
+// the replica. An empty value omits the argument.
+func testAccTableReplicaConfig_disassociationProtection(rName, disassociationProtection string) string {
+	argument := ""
+	if disassociationProtection != "" {
+		argument = fmt.Sprintf("disassociation_protection_enabled = %s", disassociationProtection)
+	}
+
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  provider         = "awsalternate"
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
+  }
+}
+
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn = aws_dynamodb_table.test.arn
+
+  %[2]s
+}
+`, rName, argument))
 }
