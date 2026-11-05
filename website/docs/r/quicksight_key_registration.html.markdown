@@ -32,10 +32,10 @@ resource "aws_quicksight_key_registration" "example" {
 This resource supports the following arguments:
 
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
-* `key_registration` - (Required) Registered keys. See [key_registration](#key_registration).
+* `key_registration` - (Required) Registered keys. See [`key_registration` Block](#key_registration-block).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### key_registration
+### `key_registration` Block
 
 * `default_key` - (Optional) Whether the key is set as the default key for encryption and decryption use.
 * `key_arn` - (Required) ARN of the AWS KMS key that is registered for encryption and decryption use.

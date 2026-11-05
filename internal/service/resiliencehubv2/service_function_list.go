@@ -23,7 +23,7 @@ import (
 )
 
 // @FrameworkListResource("aws_resiliencehubv2_service_function")
-func newResourceServiceFunctionAsListResource() list.ListResourceWithConfigure {
+func newServiceFunctionResourceAsListResource() list.ListResourceWithConfigure {
 	return &serviceFunctionListResource{}
 }
 

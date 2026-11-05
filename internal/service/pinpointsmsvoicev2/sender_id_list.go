@@ -31,14 +31,6 @@ type senderIDListResource struct {
 func (l *senderIDListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	var query listSenderIDModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing End User Messaging SMS Sender IDs")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -75,8 +67,4 @@ func (l *senderIDListResource) List(ctx context.Context, request list.ListReques
 			}
 		}
 	}
-}
-
-type listSenderIDModel struct {
-	framework.WithRegionModel
 }

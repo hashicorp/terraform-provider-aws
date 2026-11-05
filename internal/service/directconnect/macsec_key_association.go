@@ -15,11 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,19 +43,55 @@ func resourceMacSecKeyAssociation() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				"cak": {
-					Type:         schema.TypeString,
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					AtLeastOneOf:  []string{"cak", "cak_wo", "secret_arn"},
+					ConflictsWith: []string{"cak_wo"},
+					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+				},
+				"cak_wo": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Sensitive:     true,
+					WriteOnly:     true,
+					AtLeastOneOf:  []string{"cak", "cak_wo", "secret_arn"},
+					ConflictsWith: []string{"cak", "secret_arn"},
+					RequiredWith:  []string{"cak_wo_version"},
+					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+				},
+				"cak_wo_version": {
+					Type:         schema.TypeInt,
 					Optional:     true,
 					ForceNew:     true,
-					RequiredWith: []string{"ckn"},
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+					RequiredWith: []string{"cak_wo"},
+					ValidateFunc: validation.IntAtLeast(1),
 				},
 				"ckn": {
-					Type:         schema.TypeString,
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					Computed:      true,
+					AtLeastOneOf:  []string{"ckn", "ckn_wo", "secret_arn"},
+					ConflictsWith: []string{"ckn_wo"},
+					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+				},
+				"ckn_wo": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Sensitive:     true,
+					WriteOnly:     true,
+					AtLeastOneOf:  []string{"ckn", "ckn_wo", "secret_arn"},
+					ConflictsWith: []string{"ckn", "secret_arn"},
+					RequiredWith:  []string{"ckn_wo_version"},
+					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+				},
+				"ckn_wo_version": {
+					Type:         schema.TypeInt,
 					Optional:     true,
 					ForceNew:     true,
-					Computed:     true,
-					AtLeastOneOf: []string{"ckn", "secret_arn"},
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+					RequiredWith: []string{"ckn_wo"},
+					ValidateFunc: validation.IntAtLeast(1),
 				},
 				names.AttrConnectionID: {
 					Type:     schema.TypeString,
@@ -65,7 +103,7 @@ func resourceMacSecKeyAssociation() *schema.Resource {
 					Optional:     true,
 					Computed:     true,
 					ForceNew:     true,
-					AtLeastOneOf: []string{"ckn", "secret_arn"},
+					AtLeastOneOf: []string{"ckn", "ckn_wo", "secret_arn"},
 					ValidateFunc: verify.ValidARN,
 				},
 				"start_on": {
@@ -85,21 +123,44 @@ func resourceMacSecKeyAssociatioCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
+	cakWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("cak_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	cknWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("ckn_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
 	connectionID := d.Get(names.AttrConnectionID).(string)
-	input := &directconnect.AssociateMacSecKeyInput{
+	input := directconnect.AssociateMacSecKeyInput{
 		ConnectionId: aws.String(connectionID),
 	}
 
+	if v, ok := d.GetOk("cak"); ok {
+		input.Cak = aws.String(v.(string))
+	}
+
+	if cakWO != "" {
+		input.Cak = aws.String(cakWO)
+	}
+
 	if v, ok := d.GetOk("ckn"); ok {
-		input.Cak = aws.String(d.Get("cak").(string))
 		input.Ckn = aws.String(v.(string))
+	}
+
+	if cknWO != "" {
+		input.Ckn = aws.String(cknWO)
 	}
 
 	if v, ok := d.GetOk("secret_arn"); ok {
 		input.SecretARN = aws.String(v.(string))
 	}
 
-	output, err := conn.AssociateMacSecKey(ctx, input)
+	output, err := conn.AssociateMacSecKey(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MACSec Key Association with Direct Connect Connection (%s): %s", connectionID, err)
@@ -136,7 +197,12 @@ func resourceMacSecKeyAssociationRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading Direct Connect MACSec Key Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("ckn", key.Ckn)
+	// The API returns the CKN even when it was supplied as a write-only argument.
+	if d.Get("ckn_wo_version").(int) > 0 {
+		d.Set("ckn", nil)
+	} else {
+		d.Set("ckn", key.Ckn)
+	}
 	d.Set(names.AttrConnectionID, connectionID)
 	d.Set("secret_arn", key.SecretARN)
 	d.Set("start_on", key.StartOn)

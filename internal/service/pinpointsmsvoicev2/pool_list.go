@@ -34,14 +34,6 @@ type poolListResource struct {
 func (l *poolListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	var query listPoolModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing End User Messaging SMS Pools")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -92,8 +84,4 @@ func (l *poolListResource) List(ctx context.Context, request list.ListRequest, s
 			}
 		}
 	}
-}
-
-type listPoolModel struct {
-	framework.WithRegionModel
 }

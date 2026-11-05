@@ -6,13 +6,13 @@ package batch
 import (
 	"cmp"
 	"slices"
-	_ "unsafe" // Required for go:linkname
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	_ "github.com/aws/aws-sdk-go-v2/service/batch" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
+	smithyjson "github.com/aws/smithy-go/encoding/json"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type eksProperties awstypes.EksProperties
@@ -130,4 +130,215 @@ func equivalentEKSPropertiesJSON(str1, str2 string) (bool, error) {
 	}
 
 	return tfjson.EqualBytes(b1, b2), nil
+}
+
+func serializeEKSProperties(v *awstypes.EksProperties, value smithyjson.Value) {
+	o := value.Object()
+	defer o.Close()
+
+	if v.PodProperties != nil {
+		serializeEKSPodProperties(v.PodProperties, o.Key("podProperties"))
+	}
+}
+
+func serializeEKSPodProperties(v *awstypes.EksPodProperties, value smithyjson.Value) {
+	o := value.Object()
+	defer o.Close()
+
+	if v.Containers != nil {
+		serializeEKSContainers(v.Containers, o.Key("containers"))
+	}
+	if v.DnsPolicy != nil {
+		o.Key("dnsPolicy").String(*v.DnsPolicy)
+	}
+	if v.HostNetwork != nil {
+		o.Key("hostNetwork").Boolean(*v.HostNetwork)
+	}
+	if v.ImagePullSecrets != nil {
+		a := o.Key("imagePullSecrets").Array()
+		for _, secret := range v.ImagePullSecrets {
+			s := a.Value().Object()
+			if secret.Name != nil {
+				s.Key(names.AttrName).String(*secret.Name)
+			}
+			s.Close()
+		}
+		a.Close()
+	}
+	if v.InitContainers != nil {
+		serializeEKSContainers(v.InitContainers, o.Key("initContainers"))
+	}
+	if v.Metadata != nil {
+		m := o.Key("metadata").Object()
+		if v.Metadata.Annotations != nil {
+			serializeStringMap(v.Metadata.Annotations, m.Key("annotations"))
+		}
+		if v.Metadata.Labels != nil {
+			serializeStringMap(v.Metadata.Labels, m.Key("labels"))
+		}
+		if v.Metadata.Namespace != nil {
+			m.Key(names.AttrNamespace).String(*v.Metadata.Namespace)
+		}
+		m.Close()
+	}
+	if v.ServiceAccountName != nil {
+		o.Key("serviceAccountName").String(*v.ServiceAccountName)
+	}
+	if v.ShareProcessNamespace != nil {
+		o.Key("shareProcessNamespace").Boolean(*v.ShareProcessNamespace)
+	}
+	if v.Volumes != nil {
+		serializeEKSVolumes(v.Volumes, o.Key("volumes"))
+	}
+}
+
+func serializeEKSContainers(v []awstypes.EksContainer, value smithyjson.Value) {
+	a := value.Array()
+	defer a.Close()
+
+	for _, container := range v {
+		serializeEKSContainer(&container, a.Value())
+	}
+}
+
+func serializeEKSContainer(v *awstypes.EksContainer, value smithyjson.Value) {
+	o := value.Object()
+	defer o.Close()
+
+	if v.Args != nil {
+		serializeStringList(v.Args, o.Key("args"))
+	}
+	if v.Command != nil {
+		serializeStringList(v.Command, o.Key("command"))
+	}
+	if v.Env != nil {
+		a := o.Key("env").Array()
+		for _, variable := range v.Env {
+			e := a.Value().Object()
+			if variable.Name != nil {
+				e.Key(names.AttrName).String(*variable.Name)
+			}
+			if variable.Value != nil {
+				e.Key(names.AttrValue).String(*variable.Value)
+			}
+			e.Close()
+		}
+		a.Close()
+	}
+	if v.Image != nil {
+		o.Key("image").String(*v.Image)
+	}
+	if v.ImagePullPolicy != nil {
+		o.Key("imagePullPolicy").String(*v.ImagePullPolicy)
+	}
+	if v.Name != nil {
+		o.Key(names.AttrName).String(*v.Name)
+	}
+	if v.Resources != nil {
+		r := o.Key(names.AttrResources).Object()
+		if v.Resources.Limits != nil {
+			serializeStringMap(v.Resources.Limits, r.Key("limits"))
+		}
+		if v.Resources.Requests != nil {
+			serializeStringMap(v.Resources.Requests, r.Key("requests"))
+		}
+		r.Close()
+	}
+	if v.SecurityContext != nil {
+		serializeEKSContainerSecurityContext(v.SecurityContext, o.Key("securityContext"))
+	}
+	if v.VolumeMounts != nil {
+		a := o.Key("volumeMounts").Array()
+		for _, mount := range v.VolumeMounts {
+			m := a.Value().Object()
+			if mount.MountPath != nil {
+				m.Key("mountPath").String(*mount.MountPath)
+			}
+			if mount.Name != nil {
+				m.Key(names.AttrName).String(*mount.Name)
+			}
+			if mount.ReadOnly != nil {
+				m.Key("readOnly").Boolean(*mount.ReadOnly)
+			}
+			if mount.SubPath != nil {
+				m.Key("subPath").String(*mount.SubPath)
+			}
+			m.Close()
+		}
+		a.Close()
+	}
+}
+
+func serializeEKSContainerSecurityContext(v *awstypes.EksContainerSecurityContext, value smithyjson.Value) {
+	o := value.Object()
+	defer o.Close()
+
+	if v.AllowPrivilegeEscalation != nil {
+		o.Key("allowPrivilegeEscalation").Boolean(*v.AllowPrivilegeEscalation)
+	}
+	if v.Privileged != nil {
+		o.Key("privileged").Boolean(*v.Privileged)
+	}
+	if v.ReadOnlyRootFilesystem != nil {
+		o.Key("readOnlyRootFilesystem").Boolean(*v.ReadOnlyRootFilesystem)
+	}
+	if v.RunAsGroup != nil {
+		o.Key("runAsGroup").Long(*v.RunAsGroup)
+	}
+	if v.RunAsNonRoot != nil {
+		o.Key("runAsNonRoot").Boolean(*v.RunAsNonRoot)
+	}
+	if v.RunAsUser != nil {
+		o.Key("runAsUser").Long(*v.RunAsUser)
+	}
+}
+
+func serializeEKSVolumes(v []awstypes.EksVolume, value smithyjson.Value) {
+	a := value.Array()
+	defer a.Close()
+
+	for _, volume := range v {
+		o := a.Value().Object()
+		if volume.EmptyDir != nil {
+			d := o.Key("emptyDir").Object()
+			if volume.EmptyDir.Medium != nil {
+				d.Key("medium").String(*volume.EmptyDir.Medium)
+			}
+			if volume.EmptyDir.SizeLimit != nil {
+				d.Key("sizeLimit").String(*volume.EmptyDir.SizeLimit)
+			}
+			d.Close()
+		}
+		if volume.HostPath != nil {
+			h := o.Key("hostPath").Object()
+			if volume.HostPath.Path != nil {
+				h.Key(names.AttrPath).String(*volume.HostPath.Path)
+			}
+			h.Close()
+		}
+		if volume.Name != nil {
+			o.Key(names.AttrName).String(*volume.Name)
+		}
+		if volume.PersistentVolumeClaim != nil {
+			p := o.Key("persistentVolumeClaim").Object()
+			if volume.PersistentVolumeClaim.ClaimName != nil {
+				p.Key("claimName").String(*volume.PersistentVolumeClaim.ClaimName)
+			}
+			if volume.PersistentVolumeClaim.ReadOnly != nil {
+				p.Key("readOnly").Boolean(*volume.PersistentVolumeClaim.ReadOnly)
+			}
+			p.Close()
+		}
+		if volume.Secret != nil {
+			s := o.Key("secret").Object()
+			if volume.Secret.Optional != nil {
+				s.Key("optional").Boolean(*volume.Secret.Optional)
+			}
+			if volume.Secret.SecretName != nil {
+				s.Key("secretName").String(*volume.Secret.SecretName)
+			}
+			s.Close()
+		}
+		o.Close()
+	}
 }

@@ -140,6 +140,16 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtBasic:      testAccTransitGatewayPolicyTableAssociation_basic,
 			acctest.CtDisappears: testAccTransitGatewayPolicyTableAssociation_disappears,
 		},
+		"PolicyTableEntry": {
+			acctest.CtBasic:       testAccTransitGatewayPolicyTableEntry_basic,
+			acctest.CtDisappears:  testAccTransitGatewayPolicyTableEntry_disappears,
+			"fullRule":            testAccTransitGatewayPolicyTableEntry_fullRule,
+			"update":              testAccTransitGatewayPolicyTableEntry_update,
+			"Identity":            testAccTransitGatewayPolicyTableEntry_identity,
+			"ListBasic":           testAccTransitGatewayPolicyTableEntry_List_basic,
+			"ListIncludeResource": testAccTransitGatewayPolicyTableEntry_List_includeResource,
+			"ListRegionOverride":  testAccTransitGatewayPolicyTableEntry_List_regionOverride,
+		},
 		"PrefixListReference": {
 			acctest.CtBasic:              testAccTransitGatewayPrefixListReference_basic,
 			acctest.CtDisappears:         testAccTransitGatewayPrefixListReference_disappears,
@@ -152,6 +162,10 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"blackhole":                          testAccTransitGatewayRoute_blackhole,
 			acctest.CtDisappears:                 testAccTransitGatewayRoute_disappears,
 			"disappearsTransitGatewayAttachment": testAccTransitGatewayRoute_disappears_TransitGatewayAttachment,
+			"Identity":                           testAccTransitGatewayRoute_identity,
+			"ListBasic":                          testAccTransitGatewayRoute_List_basic,
+			"ListIncludeResource":                testAccTransitGatewayRoute_List_includeResource,
+			"ListRegionOverride":                 testAccTransitGatewayRoute_List_regionOverride,
 		},
 		"RouteTable": {
 			acctest.CtBasic:            testAccTransitGatewayRouteTable_basic,

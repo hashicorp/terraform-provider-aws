@@ -113,12 +113,10 @@ func MultipleParameterized(ctx context.Context, client AWSClient, request resour
 					return
 				}
 
-				parameterVal := valueAsType(ctx, parameterAttr)
-
-				response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterVal)...)
+				response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterAttr)...)
 
 				if identity := response.Identity; identity != nil {
-					response.Diagnostics.Append(identity.SetAttribute(ctx, identityPath, parameterVal)...)
+					response.Diagnostics.Append(identity.SetAttribute(ctx, identityPath, parameterAttr)...)
 				}
 			}
 		}
@@ -145,28 +143,5 @@ func MultipleParameterized(ctx context.Context, client AWSClient, request resour
 
 	if !identitySpec.IsGlobalResource {
 		setRegionFromStateOrIdentity(ctx, client, request, response)
-	}
-}
-
-func valueAsType(ctx context.Context, v fwattr.Value) any {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
-
-	switch v.Type(ctx) {
-	case types.StringType:
-		return v.(types.String).ValueString()
-	case types.Float64Type:
-		return v.(types.Float64).ValueFloat64()
-	case types.Int64Type:
-		return v.(types.Int64).ValueInt64()
-	case types.Int32Type:
-		return v.(types.Int32).ValueInt32()
-	case types.NumberType:
-		return v.(types.Number).ValueBigFloat()
-	case types.BoolType:
-		return v.(types.Bool).ValueBool()
-	default:
-		return nil
 	}
 }

@@ -275,7 +275,7 @@ The following arguments are required:
 * `artifacts` - (Required) Configuration block. Detailed below.
 * `environment` - (Required) Configuration block. Detailed below.
 * `name` - (Required) Project's name.
-* `service_role` - (Required) Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that
+* `service_role` - (Required) ARN of the AWS Identity and Access Management (IAM) role that
   enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `source` - (Required) Configuration block. Detailed below.
 
@@ -296,7 +296,7 @@ The following arguments are optional:
 * `description` - (Optional) Short description of the project.
 * `file_system_locations` - (Optional) A set of file system locations to mount inside the build. File system locations
   are documented below.
-* `encryption_key` - (Optional) AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting
+* `encryption_key` - (Optional) KMS customer master key (CMK) to be used for encrypting
   the build project's build output artifacts.
 * `logs_config` - (Optional) Configuration block. Detailed below.
 * `project_visibility` - (Optional) Specifies the visibility of the project's builds. Possible values are: `PUBLIC_READ`
@@ -426,7 +426,7 @@ See [ProjectFileSystemLocation](https://docs.aws.amazon.com/codebuild/latest/API
 for more details of the fields.
 
 * `identifier` - (Optional) The name used to access a file system created by Amazon EFS. CodeBuild creates an
-  environment variable by appending the identifier in all capital letters to CODEBUILD\_. For example, if you specify
+  environment variable by appending the identifier in all capital letters to `CODEBUILD_`. For example, if you specify
   my-efs for identifier, a new environment variable is create named CODEBUILD_MY-EFS.
 * `location` - (Optional) A string that specifies the location of the file system created by Amazon EFS. Its format is
   `efs-dns-name:/directory-path`.
@@ -528,7 +528,7 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB`, `GITHUB_ENTE
 
 * `context` - (Optional) Specifies the context of the build status CodeBuild sends to the source provider. The usage of
   this parameter depends on the source provider.
-* `target_url` - (Optional) Specifies the target url of the build status CodeBuild sends to the source provider. The
+* `target_url` - (Optional) Specifies the target URL of the build status CodeBuild sends to the source provider. The
   usage of this parameter depends on the source provider.
 
 ### secondary_source_version
@@ -579,7 +579,7 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB`, `GITHUB_ENTE
 
 * `context` - (Optional) Specifies the context of the build status CodeBuild sends to the source provider. The usage of
   this parameter depends on the source provider.
-* `target_url` - (Optional) Specifies the target url of the build status CodeBuild sends to the source provider. The
+* `target_url` - (Optional) Specifies the target URL of the build status CodeBuild sends to the source provider. The
   usage of this parameter depends on the source provider.
 
 ### vpc_config
@@ -620,7 +620,7 @@ resource "aws_codebuild_project" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild project.
+- `arn` (String) ARN of the CodeBuild project.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
 import CodeBuild Project using the `name`. For example:

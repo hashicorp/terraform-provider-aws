@@ -39,7 +39,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A comma-delimited string joining AWS account ID, folder ID, member type, and member ID.
+* `id` - Comma-delimited string joining AWS account ID, folder ID, member type, and member ID.
 
 ## Import
 

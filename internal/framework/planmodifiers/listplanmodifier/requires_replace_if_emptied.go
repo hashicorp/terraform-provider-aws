@@ -11,7 +11,7 @@ import (
 	fwplanmodifiers "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers"
 )
 
-// RequiresReplaceIfEmptied returns a plan modifier requires resource replacement if:
+// RequiresReplaceIfEmptied returns a plan modifier that requires resource replacement if:
 //   - The resource is planned for update.
 //   - The plan and state values are not equal.
 //   - The state value is a non-empty list.

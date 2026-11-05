@@ -2678,6 +2678,74 @@ func TestAccWAFV2RuleGroup_rateBasedStatement_ASNMatchStatement(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2RuleGroup_rulesJSON(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_rulesJSON(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "rules_json"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rules_json", names.AttrRule},
+				ImportStateIdFunc:       testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2RuleGroup_monetize(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_monetize(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.currency_mode", "TEST"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.chain", "BASE_SEPOLIA"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.0.price_multiplier", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func testAccPreCheckScopeRegional(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
 
@@ -5821,36 +5889,6 @@ resource "aws_wafv2_rule_group" "test" {
 }
 `, rName)
 }
-func TestAccWAFV2RuleGroup_rulesJSON(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.RuleGroup
-	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_wafv2_rule_group.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRuleGroupConfig_rulesJSON(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "rules_json"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"rules_json", names.AttrRule},
-				ImportStateIdFunc:       testAccRuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
 
 func testAccRuleGroupConfig_rulesJSON(rName string) string {
 	return fmt.Sprintf(`
@@ -5884,6 +5922,71 @@ resource "aws_wafv2_rule_group" "test" {
       SampledRequestsEnabled   = false
     }
   }])
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccRuleGroupConfig_monetize(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 2
+  name     = %[1]q
+  scope    = "CLOUDFRONT"
+
+  monetization_config {
+    currency_mode = "TEST"
+
+    crypto_config {
+      payment_network {
+        chain          = "BASE_SEPOLIA"
+        wallet_address = "0xAf7e757119d123ea29714493A1725724EfCFCc7B"
+
+        prices {
+          amount   = "0.001"
+          currency = "USDC"
+        }
+      }
+    }
+  }
+
+  rule {
+    name     = "monetize-api"
+    priority = 1
+
+    statement {
+      byte_match_statement {
+        search_string         = "/api"
+        positional_constraint = "STARTS_WITH"
+
+        field_to_match {
+          uri_path {}
+        }
+
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    action {
+      monetize {
+        price_multiplier = "2"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "monetize-api"
+      sampled_requests_enabled   = false
+    }
+  }
 
   visibility_config {
     cloudwatch_metrics_enabled = false

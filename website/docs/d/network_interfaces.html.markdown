@@ -10,7 +10,7 @@ description: |-
 
 ## Example Usage
 
-The following shows outputting all network interface ids in a region.
+The following shows outputting all network interface IDs in a region.
 
 ```terraform
 data "aws_network_interfaces" "example" {}
@@ -20,7 +20,7 @@ output "example" {
 }
 ```
 
-The following example retrieves a list of all network interface ids with a custom tag of `Name` set to a value of `test`.
+The following example retrieves a list of all network interface IDs with a custom tag of `Name` set to a value of `test`.
 
 ```terraform
 data "aws_network_interfaces" "example" {
@@ -34,7 +34,7 @@ output "example1" {
 }
 ```
 
-The following example retrieves a network interface ids which associated
+The following example retrieves a network interface IDs which associated
 with specific subnet.
 
 ```terraform
@@ -72,7 +72,7 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `ids` - List of all the network interface ids found.
+* `ids` - List of all the network interface IDs found.
 
 ## Timeouts
 

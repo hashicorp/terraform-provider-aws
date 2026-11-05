@@ -79,7 +79,7 @@ resource "aws_codeartifact_domain_permissions_policy" "example" {
 
 #### Required
 
-- `resource_arn` (String) Amazon Resource Name (ARN) of the CodeArtifact domain.
+- `resource_arn` (String) ARN of the CodeArtifact domain.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Domain Permissions Policies using the CodeArtifact Domain ARN. For example:
 

@@ -397,7 +397,7 @@ The `encryption_config` configuration block supports the following arguments:
 
 The `provider` configuration block supports the following arguments:
 
-* `key_arn` - (Required) ARN of the Key Management Service (KMS) customer master key (CMK). The CMK must be symmetric, created in the same region as the cluster, and if the CMK was created in a different account, the user must have access to the CMK. For more information, see [Allowing Users in Other Accounts to Use a CMK in the AWS Key Management Service Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-modifying-external-accounts.html).
+* `key_arn` - (Required) ARN of the KMS customer master key (CMK). The CMK must be symmetric, created in the same region as the cluster, and if the CMK was created in a different account, the user must have access to the CMK. For more information, see [Allowing Users in Other Accounts to Use a CMK in the KMS Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-modifying-external-accounts.html).
 
 ### remote_network_config
 
@@ -437,6 +437,7 @@ The `service_node_port_range` configuration block supports the following argumen
 The `kube_controller_manager_config` configuration block supports the following arguments:
 
 * `horizontal_pod_autoscaler_controller_config` - (Optional) Configuration block for the horizontal pod autoscaler controller. [Detailed](#horizontal_pod_autoscaler_controller_config) below.
+* `pod_gc_controller_config` - (Optional) Configuration block for the pod garbage collection controller. [Detailed](#pod_gc_controller_config) below.
 
 ~> **NOTE:** The `horizontal_pod_autoscaler_controller_config` requires a Provisioned Control Plane scaling tier (e.g., `tier-xl` or higher). It cannot be configured on clusters using the `standard` tier.
 
@@ -445,6 +446,12 @@ The `kube_controller_manager_config` configuration block supports the following 
 The `horizontal_pod_autoscaler_controller_config` configuration block supports the following arguments:
 
 * `horizontal_pod_autoscaler_sync_period` - (Optional) The interval between each sync of the horizontal pod autoscaler. Must be a single-unit duration (e.g., `10s`, `15s`). Valid range: `10s` to `15s`. Default is `15s`.
+
+#### pod_gc_controller_config
+
+The `pod_gc_controller_config` configuration block supports the following arguments:
+
+* `terminated_pod_gc_threshold` - (Optional) The number of terminated pods that can exist before the pod garbage collector starts deleting them. Valid range: `0` to `12500`. Refer to the `aws_eks_cluster_versions` data source for any version-specific constraints.
 
 ### kube_scheduler_config
 
@@ -463,7 +470,7 @@ The `node_resources_fit` configuration block supports the following arguments:
 The `scoring_strategy` configuration block supports the following arguments:
 
 * `type` - (Optional) The scoring strategy type. Valid values are `LeastAllocated` and `MostAllocated`. Default is `LeastAllocated`.
-* `resource` - (Optional) List of resource weight configuration blocks for scoring nodes. [Detailed](#resources) below.
+* `resource` - (Optional) List of resource weight configuration blocks for scoring nodes. [Detailed](#resource) below.
 
 #### resource
 
@@ -474,14 +481,14 @@ The `resource` configuration block supports the following arguments:
 
 ### vpc_config Arguments
 
-* `cluster_security_group_id` - (Computed) Cluster security group that is created by Amazon EKS for the cluster. Managed node groups use this security group for control-plane-to-data-plane communication.
+* `cluster_security_group_id` - (Read-Only) Cluster security group that is created by Amazon EKS for the cluster. Managed node groups use this security group for control-plane-to-data-plane communication.
 * `control_plane_egress_mode` - (Optional, Computed) Egress mode for the EKS control plane. Valid values are `AWS_MANAGED` and `CUSTOMER_ROUTED`. Defaults to `AWS_MANAGED`. Changing from `CUSTOMER_ROUTED` back to `AWS_MANAGED` forces a new resource.
 * `endpoint_private_access` - (Optional) Whether the Amazon EKS private API server endpoint is enabled. Default is `false`.
 * `endpoint_public_access` - (Optional) Whether the Amazon EKS public API server endpoint is enabled. Default is `true`.
 * `public_access_cidrs` - (Optional) List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with `0.0.0.0/0`. Terraform will only perform drift detection of its value when present in a configuration.
 * `security_group_ids` - (Optional) List of security group IDs for the cross-account elastic network interfaces that Amazon EKS creates to use to allow communication between your worker nodes and the Kubernetes control plane.
 * `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones. Amazon EKS creates cross-account elastic network interfaces in these subnets to allow communication between your worker nodes and the Kubernetes control plane.
-* `vpc_id` - (Computed) ID of the VPC associated with your cluster.
+* `vpc_id` - (Read-Only) ID of the VPC associated with your cluster.
 
 ### kubernetes_network_config
 
@@ -496,7 +503,7 @@ The `kubernetes_network_config` configuration block supports the following argum
 
     * Between /24 and /12.
 
-* `service_ipv6_cidr` - (Computed) The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specify `ipv6` for `ip_family` when you create the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
+* `service_ipv6_cidr` - (Read-Only) The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specify `ipv6` for `ip_family` when you create the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
 * `ip_family` - (Optional) The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`. You can only specify an IP family when you create a cluster, changing this value will force a new cluster to be created.
 
 #### elastic_load_balancing
@@ -580,7 +587,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `oidc` - Nested block containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
 
-### oidc
+### OIDC
 
 * `issuer` - Issuer URL for the OpenID Connect identity provider.
 

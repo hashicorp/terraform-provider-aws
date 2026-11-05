@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_fis_safety_lever_state
+```
+
+```release-note:new-list-resource
+aws_fis_safety_lever_state
+```

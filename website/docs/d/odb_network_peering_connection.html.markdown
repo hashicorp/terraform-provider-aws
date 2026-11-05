@@ -36,7 +36,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) for the  ODB network peering connection.
+* `arn` - ARN for the  ODB network peering connection.
 * `created_at` - Created time of the ODB network peering connection.
 * `display_name` - Display name of the ODB network peering connection.
 * `odb_network_arn` - ARN of the ODB network peering connection.

@@ -1,0 +1,10 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+list "aws_iam_instance_profile" "test" {
+  provider = aws
+
+  config {
+    path_prefix = var.expected_path_name
+  }
+}

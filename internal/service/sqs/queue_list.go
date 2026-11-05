@@ -30,19 +30,7 @@ type queueListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type queueListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *queueListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query queueListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	awsClient := l.Meta()
 	conn := awsClient.SQSClient(ctx)
 

@@ -77,7 +77,7 @@ resource "aws_securityhub_aggregator_v2" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Security Hub V2 aggregator.
+- `arn` (String) ARN of the Security Hub V2 aggregator.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub V2 aggregators using `arn`. For example:
 

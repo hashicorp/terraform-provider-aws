@@ -164,8 +164,8 @@ This resource supports the following arguments:
 
 ### `runtime` Block
 
-* `name` - (Optional) Name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
-* `runtime_version` - (Optional) Version of the runtime to use. Currently, the only allowed version is `1.0.0`.
+* `name` - (Required) Name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
+* `runtime_version` - (Required) Version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
 ## Attribute Reference
 
@@ -175,7 +175,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hypen and `field`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hyphen and `field`. For example:
 
 ```terraform
 import {
@@ -184,7 +184,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hypen and `field`. For example:
+Using `terraform import`, import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hyphen and `field`. For example:
 
 ```console
 % terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField

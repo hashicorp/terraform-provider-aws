@@ -36,7 +36,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) for the cloud vm cluster.
+* `arn` - ARN for the cloud vm cluster.
 * `cloud_exadata_infrastructure_arn` - ARN of the Cloud Exadata Infrastructure.
 * `cloud_exadata_infrastructure_id` - ID of the Cloud Exadata Infrastructure.
 * `cluster_name` - Name of the Grid Infrastructure (GI) cluster.

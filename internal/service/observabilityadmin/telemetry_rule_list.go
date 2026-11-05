@@ -35,14 +35,6 @@ type telemetryRuleListResource struct {
 func (l *telemetryRuleListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ObservabilityAdminClient(ctx)
 
-	var query listTelemetryRuleModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input observabilityadmin.ListTelemetryRulesInput
 		for item, err := range listTelemetryRules(ctx, conn, &input) {
@@ -80,10 +72,6 @@ func (l *telemetryRuleListResource) List(ctx context.Context, request list.ListR
 			}
 		}
 	}
-}
-
-type listTelemetryRuleModel struct {
-	framework.WithRegionModel
 }
 
 func listTelemetryRules(ctx context.Context, conn *observabilityadmin.Client, input *observabilityadmin.ListTelemetryRulesInput) iter.Seq2[awstypes.TelemetryRuleSummary, error] {

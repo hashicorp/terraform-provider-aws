@@ -38,7 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `entitlements` - License entitlements. [Detailed below](#entitlements)
 * `home_region` - Home Region of the granted license.
 * `issuer` - Granted license issuer. [Detailed below](#issuer)
-* `license_arn` - Amazon Resource Name (ARN) of the license.
+* `license_arn` - ARN of the license.
 * `license_metadata`- Granted license metadata. This is in the form of a set of all meta data. [Detailed below](#license_metadata)
 * `license_name` - License name.
 * `product_name` - Product name.
@@ -84,7 +84,7 @@ A list with a single map.
 
 * `key_fingerprint` - Issuer key fingerprint.
 * `name` - Issuer name.
-* `sign_key` - Asymmetric KMS key from AWS Key Management Service. The KMS key must have a key usage of sign and verify, and support the RSASSA-PSS SHA-256 signing algorithm.
+* `sign_key` - Asymmetric KMS key from KMS. The KMS key must have a key usage of sign and verify, and support the RSASSA-PSS SHA-256 signing algorithm.
 
 ### license_metadata
 

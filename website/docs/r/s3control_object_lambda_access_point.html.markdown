@@ -55,7 +55,7 @@ This resource supports the following arguments:
 
 The `configuration` block supports the following:
 
-* `allowed_features` - (Optional) Allowed features. Valid values: `GetObject-Range`, `GetObject-PartNumber`.
+* `allowed_features` - (Optional) Allowed features. Valid values: `GetObject-Range`, `GetObject-PartNumber`, `HeadObject-Range`, `HeadObject-PartNumber`.
 * `cloud_watch_metrics_enabled` - (Optional) Whether or not the CloudWatch metrics configuration is enabled.
 * `supporting_access_point` - (Required) Standard access point associated with the Object Lambda Access Point.
 * `transformation_configuration` - (Required) List of transformation configurations for the Object Lambda Access Point. See [`transformation_configuration` Block](#transformation_configuration-block) below for more details.
@@ -64,7 +64,7 @@ The `configuration` block supports the following:
 
 The `transformation_configuration` block supports the following:
 
-* `actions` - (Required) Actions of an Object Lambda Access Point configuration. Valid values: `GetObject`.
+* `actions` - (Required) Actions of an Object Lambda Access Point configuration. Valid values: `GetObject`, `HeadObject`, `ListObjects`, `ListObjectsV2`.
 * `content_transformation` - (Required) Content transformation of an Object Lambda Access Point configuration. See [`content_transformation` Block](#content_transformation-block) below for more details.
 
 ### `content_transformation` Block
@@ -77,7 +77,7 @@ The `content_transformation` block supports the following:
 
 The `aws_lambda` block supports the following:
 
-* `function_arn` - (Required) Amazon Resource Name (ARN) of the AWS Lambda function.
+* `function_arn` - (Required) ARN of the AWS Lambda function.
 * `function_payload` - (Optional) Additional JSON that provides supplemental data to the Lambda function used to transform objects.
 
 ## Attribute Reference
@@ -85,7 +85,7 @@ The `aws_lambda` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `alias` - Alias for the S3 Object Lambda Access Point.
-* `arn` - Amazon Resource Name (ARN) of the Object Lambda Access Point.
+* `arn` - ARN of the Object Lambda Access Point.
 * `id` - AWS account ID and access point name separated by a colon (`:`).
 
 ## Import

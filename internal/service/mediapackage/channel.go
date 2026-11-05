@@ -7,7 +7,6 @@ package mediapackage
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -166,8 +166,7 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	_, err := conn.DeleteChannel(ctx, input)
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting MediaPackage Channel: %s", err)
@@ -179,8 +178,7 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta any
 	err = tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DescribeChannel(ctx, dcinput)
 		if err != nil {
-			var nfe *types.NotFoundException
-			if errors.As(err, &nfe) {
+			if errs.IsA[*types.NotFoundException](err) {
 				return nil
 			}
 			return tfresource.NonRetryableError(err)
@@ -226,8 +224,7 @@ func findChannelByID(ctx context.Context, conn *mediapackage.Client, id string) 
 	out, err := conn.DescribeChannel(ctx, in)
 
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

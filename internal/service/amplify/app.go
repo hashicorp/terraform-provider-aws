@@ -60,7 +60,7 @@ func resourceApp() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Sensitive:    true,
-					ValidateFunc: validation.StringLenBetween(1, 255),
+					ValidateFunc: validation.StringLenBetween(1, 4096),
 				},
 				names.AttrARN: {
 					Type:     schema.TypeString,
@@ -293,7 +293,7 @@ func resourceApp() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Sensitive:    true,
-					ValidateFunc: validation.StringLenBetween(1, 1000),
+					ValidateFunc: validation.StringLenBetween(1, 4096),
 				},
 				"platform": {
 					Type:             schema.TypeString,
@@ -527,7 +527,10 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 				if d.HasChange("auto_branch_creation_config.0.environment_variables") {
 					if v, ok := d.Get("auto_branch_creation_config.0.environment_variables").(map[string]any); ok && len(v) == 0 {
-						input.AutoBranchCreationConfig.EnvironmentVariables = map[string]string{"": ""}
+						// To remove environment variables, set the key to a single space
+						// character and the value to an empty string.
+						// Ref: https://github.com/aws/aws-sdk-go-v2/issues/2788
+						input.AutoBranchCreationConfig.EnvironmentVariables = map[string]string{" ": ""}
 					}
 				}
 			}

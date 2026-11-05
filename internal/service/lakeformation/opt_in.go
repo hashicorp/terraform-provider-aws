@@ -429,7 +429,7 @@ func (r *optInResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	plan.LastModified = fwflex.TimeToFramework(ctx, lstrsc.LakeFormationOptInsInfoList[0].LastModified)
-	plan.LastUpdatedBy = fwflex.StringValueToFramework(ctx, *lstrsc.LakeFormationOptInsInfoList[0].LastUpdatedBy)
+	plan.LastUpdatedBy = fwflex.StringToFramework(ctx, lstrsc.LakeFormationOptInsInfoList[0].LastUpdatedBy)
 
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan)...)
 	if resp.Diagnostics.HasError() {

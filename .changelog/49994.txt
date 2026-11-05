@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_iam_group
+```
+```release-note:enhancement
+resource/aws_iam_group: Add resource identity support
+```

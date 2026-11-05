@@ -74,7 +74,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the odb network resource.
+* `arn` - ARN of the odb network resource.
 * `created_at` - Date and time when the ODB network was created.
 * `ec2_placement_group_ids` - List of EC2 placement group IDs associated with the ODB network.
 * `id` - Unique identifier of the odb network resource.

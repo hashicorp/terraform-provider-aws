@@ -84,6 +84,10 @@ This data source exports the following attributes in addition to the arguments a
                 * `horizontal_pod_autoscaler_sync_period` - HPA sync period configuration with default value and constraints.
                     * `default_value` - The default sync period.
                     * `constraints` - The constraints for the sync period (`min`, `max`).
+            * `pod_gc_controller_config` - Pod garbage collection controller configuration defaults and constraints.
+                * `terminated_pod_gc_threshold` - Terminated pod GC threshold configuration with default value and constraints.
+                    * `default_value` - The default terminated pod GC threshold.
+                    * `constraints` - The constraints for the terminated pod GC threshold (`min`, `max`).
         * `kube_scheduler_config` - Kubernetes scheduler configuration defaults and constraints.
             * `node_resources_fit` - NodeResourcesFit plugin configuration with default value and constraints.
                 * `scoring_strategy` - Scoring strategy configuration.
@@ -97,7 +101,7 @@ This data source exports the following attributes in addition to the arguments a
         * `pod_scheduling_rate_per_second` - Maximum pod scheduling rate per second supported by this tier.
         * `cluster_database_size_gb` - Maximum cluster database size in GB supported by this tier.
         * `control_plane_component_config_overrides` - Control plane component configuration overrides specific to this tier (same structure as `control_plane_component_config`).
-    * `default_platform_version` - Default eks platform version for the cluster version.
+    * `default_platform_version` - Default EKS platform version for the cluster version.
     * `default_version` - Default Kubernetes version for the cluster version.
     * `end_of_extended_support_date` - End of extended support date for the cluster version.
     * `end_of_standard_support_date` - End of standard support date for the cluster version.

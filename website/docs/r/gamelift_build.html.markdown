@@ -29,27 +29,27 @@ resource "aws_gamelift_build" "test" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the build
 * `operating_system` - (Required) Operating system that the game server binaries are built to run on. Valid values: `WINDOWS_2012`, `AMAZON_LINUX`, `AMAZON_LINUX_2`, `WINDOWS_2016`, `AMAZON_LINUX_2023`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `storage_location` - (Required) Information indicating where your game build files are stored. See below.
-* `version` - (Optional) Version that is associated with this build.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `version` - (Optional) Version that is associated with this build.
 
-#### `storage_location`
+#### `storage_location` Block
 
 * `bucket` - (Required) Name of your S3 bucket.
 * `key` - (Required) Name of the zip file containing your build files.
+* `object_version` - (Optional) Specific version of the file. If not set, the latest version of the file is retrieved.
 * `role_arn` - (Required) ARN of the access role that allows Amazon GameLift to access your S3 bucket.
-* `object_version` - (Optional) A specific version of the file. If not set, the latest version of the file is retrieved.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - GameLift Build ID.
 * `arn` - GameLift Build ARN.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - GameLift Build ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

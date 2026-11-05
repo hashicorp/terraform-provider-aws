@@ -10,7 +10,7 @@ description: |-
 
 Manages a Lightsail domain entry (DNS record). Use this resource to define how DNS queries for your domain are handled.
 
-~> **NOTE on `id`:** In an effort to simplify imports, this resource `id` field has been updated to the standard resource id separator, a comma (`,`). For backward compatibility, the previous separator (underscore `_`) can still be used to read and import existing resources. When state is refreshed, the `id` will be updated to use the new standard separator. The previous separator will be deprecated in a future major release.
+~> **NOTE on `id`:** In an effort to simplify imports, this resource `id` field has been updated to the standard resource ID separator, a comma (`,`). For backward compatibility, the previous separator (underscore `_`) can still be used to read and import existing resources. When state is refreshed, the `id` will be updated to use the new standard separator. The previous separator will be deprecated in a future major release.
 
 ## Example Usage
 
@@ -45,11 +45,11 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Combination of attributes to create a unique id: `name`,`domain_name`,`type`,`target`.
+* `id` - Combination of attributes to create a unique ID: `name`,`domain_name`,`type`,`target`.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Domain Entry using the id attribute. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Domain Entry using the `id` attribute. For example:
 
 ```terraform
 import {
@@ -58,7 +58,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Lightsail Domain Entry using the id attribute. For example:
+Using `terraform import`, import Lightsail Domain Entry using the `id` attribute. For example:
 
 ```console
 % terraform import aws_lightsail_domain_entry.example www,example.com,A,127.0.0.1

@@ -35,7 +35,7 @@ This resource supports the following arguments:
 * `transit_gateway_default_route_table_association` - (Optional) Boolean whether the Connect should be associated with the EC2 Transit Gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
 * `transit_gateway_default_route_table_propagation` - (Optional) Boolean whether the Connect should propagate routes with the EC2 Transit Gateway propagation default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
-* `transport_attachment_id` - (Required) The underlaying VPC attachment
+* `transport_attachment_id` - (Required) The underlying VPC attachment
 
 ## Attribute Reference
 

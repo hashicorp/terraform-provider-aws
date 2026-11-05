@@ -34,6 +34,8 @@ Flag openings like "This resource…", "Use this resource…", "Allows you to…
 
 **Forbidden opening words**: `An`, `A`, `The`, `Defines`, `Indicates`, `Specifies`. Rewrite "Indicates the amount of storage" → "Amount of storage." Always propose the corrected wording.
 
+**Don't spell out common abbreviations** (e.g. "Amazon Resource Name (ARN)" → "ARN"). See [Abbreviations](../../../docs/end-user-documentation.md#abbreviations) for the full list and rationale.
+
 **Boolean arguments** must start with `Whether to`:
 
 - ✓ `(Optional) Whether to enable logging.`

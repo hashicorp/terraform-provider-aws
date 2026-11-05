@@ -22,18 +22,18 @@ resource "aws_glue_registry" "example" {
 
 This resource supports the following arguments:
 
+* `description` - (Optional) Description of the registry.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `registry_name` - (Required) The Name of the registry.
-* `description` - (Optional) A description of the registry.
+* `registry_name` - (Required) Name of the registry.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of Glue Registry.
-* `id` - Amazon Resource Name (ARN) of Glue Registry.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of Glue Registry.
+* `id` - ARN of Glue Registry.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -56,7 +56,7 @@ resource "aws_glue_registry" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Glue registry.
+- `arn` (String) ARN of the Glue registry.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Registries using `arn`. For example:
 

@@ -50,7 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `priority` - (Optional) Order of rule evaluation. Priority is evaluated from the lowest value to the highest value. Rules can't have the same priority. Value must be between 1 and 1,000,000.
+* `priority` - (Required) Order of rule evaluation. Priority is evaluated from the lowest value to the highest value. Rules can't have the same priority. Value must be between 1 and 1,000,000.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `action` Block
@@ -77,9 +77,9 @@ The following arguments are optional:
 
 ### `invoke_api` Block
 
-* `api_id` - (Required) Action to invoke a stage of a target API. Only REST APIs are supported.
-* `stage` - (Required) Action to invoke a stage of a target API. Only REST APIs are supported.
-* `strip_base_path` - (Required) Action to invoke a stage of a target API. Only REST APIs are supported.
+* `api_id` - (Required) API identifier of the target API.
+* `stage` - (Required) Name of the target stage.
+* `strip_base_path` - (Optional) Whether to strip the base path when forwarding the request to the target API.
 
 ## Attribute Reference
 

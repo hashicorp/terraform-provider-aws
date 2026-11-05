@@ -42,8 +42,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The id is constructed from `device-fleet-name/device-name`.
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Device.
+* `id` - The ID is constructed from `device-fleet-name/device-name`.
+* `arn` - ARN assigned by AWS to this Device.
 
 ## Import
 

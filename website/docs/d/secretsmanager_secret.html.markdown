@@ -44,7 +44,7 @@ This data source exports the following attributes in addition to the arguments a
 * `created_date` - Created date of the secret in UTC.
 * `description` - Description of the secret.
 * `id` - ARN of the secret.
-* `kms_key_id` - Key Management Service (KMS) Customer Master Key (CMK) associated with the secret.
+* `kms_key_id` - KMS Customer Master Key (CMK) associated with the secret.
 * `last_changed_date` - Last updated date of the secret in UTC.
 * `policy` - Resource-based policy document that's attached to the secret.
 * `tags` - Tags of the secret.

@@ -10,7 +10,7 @@ description: |-
 
 ~> **Note:** `aws_ec2_stop_instance` is in alpha. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
 
-!> **Warning:** This action may cause unintended consequences. When triggered, the `aws_ec2_stop_instance` action changes the instance state to `stopped`, and Terraform does not reconcile the change. With `aws_instance`, the `instance_state` attribute will be out of sync until the next refresh. With `aws_ec2_instance_state`, this action directly conflicts. With higher-level managers (Auto Scaling Groups, ECS/EKS node groups, EMR, Batch), it may trigger replacement or restart of instances. Use caution—this preview action should be limited to development environments.
+!> **Warning:** This action may cause unintended consequences. When triggered, the `aws_ec2_stop_instance` action changes the instance state to `stopped`, and Terraform does not reconcile the change. With `aws_instance`, the `instance_state` attribute will be out of sync until the next refresh. With `aws_ec2_instance_state`, this action directly conflicts. With higher-level managers (Auto Scaling groups, ECS/EKS node groups, EMR, Batch), it may trigger replacement or restart of instances. Use caution—this preview action should be limited to development environments.
 
 Stops an EC2 instance. This action will gracefully stop the instance and wait for it to reach the stopped state.
 

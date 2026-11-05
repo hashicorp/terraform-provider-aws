@@ -87,7 +87,7 @@ This resource supports the following arguments:
 * `connector_label` - (Optional) Label of the connector. The label is unique for each `ConnectorRegistration` in your AWS account. Only needed if calling for the `CustomConnector` connector type.
 * `connector_profile_config` - (Required) Connector-specific configuration and credentials. See [`connector_profile_config` Block](#connector_profile_config-block) for details.
 * `connector_type` - (Required) Type of connector. One of: `Amplitude`, `CustomConnector`, `CustomerProfiles`, `Datadog`, `Dynatrace`, `EventBridge`, `Googleanalytics`, `Honeycode`, `Infornexus`, `LookoutMetrics`, `Marketo`, `Redshift`, `S3`, `Salesforce`, `SAPOData`, `Servicenow`, `Singular`, `Slack`, `Snowflake`, `Trendmicro`, `Upsolver`, `Veeva`, `Zendesk`.
-* `kms_arn` - (Optional) ARN of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
+* `kms_arn` - (Optional) ARN of the KMS key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 * `name` - (Required) Name of the connector profile. The name is unique for each `ConnectorProfile` in your AWS account.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
@@ -349,7 +349,7 @@ This resource supports the following arguments:
 * `cluster_identifier` - (Optional) Unique ID that's assigned to an Amazon Redshift cluster.
 * `data_api_role_arn` - (Optional) ARN of the IAM role that permits AppFlow to access the database through Data API.
 * `database_name` - (Optional) Name of an Amazon Redshift database.
-* `database_url` - (Required) JDBC URL of the Amazon Redshift cluster.
+* `database_url` - (Optional) JDBC URL of the Amazon Redshift cluster.
 * `role_arn` - (Required) ARN of the IAM role.
 
 ### `connector_profile_config.connector_profile_properties.salesforce` Block
@@ -428,7 +428,7 @@ resource "aws_appflow_connector_profile" "example" {
 
 #### Required
 
-* `name` (String) Name of the Appflow connector profile.
+* `name` (String) Name of the AppFlow connector profile.
 
 #### Optional
 

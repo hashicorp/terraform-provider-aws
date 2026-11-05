@@ -59,7 +59,7 @@ The `report_delivery_channel` configuration block supports the following argumen
 The `report_setting` configuration block supports the following arguments:
 
 * `accounts` - (Optional) List of accounts a report covers.
-* `framework_arns` - (Optional) Amazon Resource Names (ARNs) of the frameworks a report covers.
+* `framework_arns` - (Optional) ARNs of the frameworks a report covers.
 * `number_of_frameworks` - (Optional) Number of frameworks a report covers.
 * `organization_units` - (Optional) List of Organizational Units a report covers.
 * `regions` - (Optional) List of regions a report covers.
