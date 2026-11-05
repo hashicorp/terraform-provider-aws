@@ -479,6 +479,38 @@ func testAccPolicy_type_DeclarativeEC2(t *testing.T) {
 	})
 }
 
+func testAccPolicy_type_NetworkSecurityDirector(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type_NetworkSecurityDirector(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeNetworkSecurityDirectorPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
 func testAccPolicy_type_Tag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.Policy
@@ -1145,6 +1177,29 @@ resource "aws_organizations_policy" "test" {
   })
   name = %[1]q
   type = "DECLARATIVE_POLICY_EC2"
+}
+`, rName)
+}
+
+func testAccPolicyConfig_type_NetworkSecurityDirector(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  content = jsonencode({
+    network_security_director = {
+      enablement = {
+        network_security_scan = {
+          disable_in_regions = {
+            "@@assign" = ["ap-south-1", "eu-west-1"]
+          }
+          enable_in_regions = {
+            "@@assign" = ["us-east-1", "us-west-2"]
+          }
+        }
+      }
+    }
+  })
+  name = %[1]q
+  type = "NETWORK_SECURITY_DIRECTOR_POLICY"
 }
 `, rName)
 }
