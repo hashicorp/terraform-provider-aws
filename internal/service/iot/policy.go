@@ -32,7 +32,7 @@ import (
 
 // @SDKResource("aws_iot_policy", name="Policy")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iot;iot.GetPolicyOutput")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
