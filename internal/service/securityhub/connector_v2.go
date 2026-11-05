@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -45,8 +46,6 @@ import (
 func newConnectorV2Resource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &connectorV2Resource{}, nil
 }
-
-const connectorV2DeleteTimeout = 15 * time.Minute
 
 type connectorV2Resource struct {
 	framework.ResourceWithModel[connectorV2ResourceModel]
@@ -86,60 +85,14 @@ func (r *connectorV2Resource) Schema(ctx context.Context, request resource.Schem
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("azure"),
+							path.MatchRelative().AtName("jira_cloud"),
+							path.MatchRelative().AtName("service_now"),
+						),
+					},
 					Blocks: map[string]schema.Block{
-						"jira_cloud": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[jiraCloudDetailModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("jira_cloud"),
-									path.MatchRelative().AtParent().AtName("service_now"),
-									path.MatchRelative().AtParent().AtName("azure"),
-								),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"auth_status": schema.StringAttribute{
-										Computed: true,
-									},
-									"auth_url": schema.StringAttribute{
-										Computed: true,
-									},
-									"cloud_id": schema.StringAttribute{
-										Computed: true,
-									},
-									names.AttrDomain: schema.StringAttribute{
-										Computed: true,
-									},
-									"project_key": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
-						"service_now": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[serviceNowDetailModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"auth_status": schema.StringAttribute{
-										Computed: true,
-									},
-									"instance_name": schema.StringAttribute{
-										Required: true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.RequiresReplace(),
-										},
-									},
-									"secret_arn": schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-									},
-								},
-							},
-						},
 						"azure": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[azureDetailModel](ctx),
 							Validators: []validator.List{
@@ -180,6 +133,54 @@ func (r *connectorV2Resource) Schema(ctx context.Context, request resource.Schem
 												},
 											},
 										},
+									},
+								},
+							},
+						},
+						"jira_cloud": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[jiraCloudDetailModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"auth_status": schema.StringAttribute{
+										Computed: true,
+									},
+									"auth_url": schema.StringAttribute{
+										Computed: true,
+									},
+									"cloud_id": schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrDomain: schema.StringAttribute{
+										Computed: true,
+									},
+									"project_key": schema.StringAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
+						"service_now": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[serviceNowDetailModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"auth_status": schema.StringAttribute{
+										Computed: true,
+									},
+									"instance_name": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"secret_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
 									},
 								},
 							},
@@ -333,7 +334,10 @@ func (r *connectorV2Resource) Delete(ctx context.Context, request resource.Delet
 	}
 	// Azure connectors are enabled asynchronously and cannot be deleted while in
 	// the PENDING_ENABLEMENT state, so retry until the connector is deletable.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, connectorV2DeleteTimeout, func(ctx context.Context) (any, error) {
+	const (
+		timeout = 15 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteConnectorV2(ctx, &input)
 	}, "cannot be deleted")
 
@@ -349,7 +353,7 @@ func (r *connectorV2Resource) Delete(ctx context.Context, request resource.Delet
 	// Wait for the connector to be fully deleted so that any service-linked
 	// configuration recorders it created are removed before dependent resources
 	// (such as aws_config_connector) are deleted.
-	_, err = tfresource.RetryUntilNotFound(ctx, connectorV2DeleteTimeout, func(ctx context.Context) (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findConnectorV2ByID(ctx, conn, connectorID)
 	})
 
