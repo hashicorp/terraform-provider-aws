@@ -685,6 +685,7 @@ func resourceEndpoint() *schema.Resource {
 							"heartbeat_frequency": {
 								Type:     schema.TypeInt,
 								Optional: true,
+								Default:  5,
 							},
 							"heartbeat_schema": {
 								Type:     schema.TypeString,
