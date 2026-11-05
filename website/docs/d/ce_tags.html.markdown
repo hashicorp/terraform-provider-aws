@@ -77,7 +77,7 @@ The `time_period` configuration block supports the following arguments:
 
 The `sort_by` configuration block supports the following arguments:
 
-* `key` - (Optional) Key used to sort the data. AWS requires a key when `sort_by` is specified. Valid values are: `BLENDED_COST`, `UNBLENDED_COST`, `AMORTIZED_COST`, `NET_AMORTIZED_COST`, `NET_UNBLENDED_COST`, `USAGE_QUANTITY`, and `NORMALIZED_USAGE_AMOUNT`.
+* `key` - (Required) Key used to sort the data. Valid values are: `BlendedCost`, `UnblendedCost`, `AmortizedCost`, `NetAmortizedCost`, `NetUnblendedCost`, `UsageQuantity`, `NormalizedUsageAmount`. The equivalent uppercase values (for example, `BLENDED_COST`) are also accepted.
 * `sort_order` - (Optional) order that's used to sort the data. Valid values are: `ASCENDING`,  `DESCENDING`.
 
 ## Attribute Reference
