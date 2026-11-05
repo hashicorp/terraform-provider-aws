@@ -75,6 +75,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Type_AI_OPT_OUT":        testAccPolicy_type_AI_OPT_OUT,
 			"Type_Backup":            testAccPolicy_type_Backup,
 			"Type_Chatbot":           testAccPolicy_type_Chatbot,
+			"Type_DeclarativeEC2":    testAccPolicy_type_DeclarativeEC2,
 			"Type_RCP":               testAccPolicy_type_RCP,
 			"Type_SCP":               testAccPolicy_type_SCP,
 			"Type_Tag":               testAccPolicy_type_Tag,

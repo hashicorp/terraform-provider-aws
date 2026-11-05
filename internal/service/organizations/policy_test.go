@@ -447,6 +447,38 @@ func testAccPolicy_type_Chatbot(t *testing.T) {
 	})
 }
 
+func testAccPolicy_type_DeclarativeEC2(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type_DeclarativeEC2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeDeclarativePolicyEc2)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
 func testAccPolicy_type_Tag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.Policy
@@ -1092,6 +1124,27 @@ resource "aws_organizations_policy" "test" {
   })
   name = %[1]q
   type = "CHATBOT_POLICY"
+}
+`, rName)
+}
+
+func testAccPolicyConfig_type_DeclarativeEC2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  content = jsonencode({
+    ec2_attributes = {
+      exception_message = {
+        "@@assign" = "Public access is managed by this organization."
+      }
+      image_block_public_access = {
+        state = {
+          "@@assign" = "block_new_sharing"
+        }
+      }
+    }
+  })
+  name = %[1]q
+  type = "DECLARATIVE_POLICY_EC2"
 }
 `, rName)
 }
