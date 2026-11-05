@@ -182,6 +182,7 @@ This resource supports the following arguments:
 
 * `relying_party_id` - (Optional) The authentication domain that passkeys providers use as a relying party.
 * `user_verification` - (Optional) If your user pool should require a passkey. Must be one of `required` or `preferred`.
+* `factor_configuration` - (Optional) Whether passkeys can be used as multi-factor authentication (MFA). Valid values are `SINGLE_FACTOR` and `MULTI_FACTOR_WITH_USER_VERIFICATION`. Default values is `SINGLE_FACTOR`.
 
 ### schema
 
