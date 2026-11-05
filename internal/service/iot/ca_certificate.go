@@ -32,7 +32,8 @@ import (
 
 // @SDKResource("aws_iot_ca_certificate", name="CA Certificate")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @NoImport
+// @Testing(tlsCAKey=true)
 func resourceCACertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCACertificateCreate,
