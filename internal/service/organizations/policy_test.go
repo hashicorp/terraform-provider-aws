@@ -383,6 +383,38 @@ func testAccPolicy_type_SCP(t *testing.T) {
 	})
 }
 
+func testAccPolicy_type_RCP(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type_RCP(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeResourceControlPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
 func testAccPolicy_type_Tag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.Policy
@@ -959,6 +991,44 @@ resource "aws_organizations_policy" "test" {
   type    = %[3]q
 }
 `, strconv.Quote(content), rName, policyType)
+}
+
+func testAccPolicyConfig_type_RCP(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  content = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "RequireTLS"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = ["s3:GetObject", "s3:PutObject"]
+        Resource  = ["arn:aws:s3:::example-bucket/*", "arn:aws:s3:::example-bucket"]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = ["false"]
+          }
+        }
+      },
+      {
+        Sid       = "RequireKMSEncryption"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = ["s3:PutObject"]
+        Resource  = ["arn:aws:s3:::example-bucket/*"]
+        Condition = {
+          Null = {
+            "s3:x-amz-server-side-encryption-aws-kms-key-id" = ["true"]
+          }
+        }
+      },
+    ]
+  })
+  name = %[1]q
+  type = "RESOURCE_CONTROL_POLICY"
+}
+`, rName)
 }
 
 func testAccPolicyConfig_type_Bedrock(rName string) string {

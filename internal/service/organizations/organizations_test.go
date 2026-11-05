@@ -74,6 +74,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			acctest.CtDisappears:     testAccPolicy_disappears,
 			"Type_AI_OPT_OUT":        testAccPolicy_type_AI_OPT_OUT,
 			"Type_Backup":            testAccPolicy_type_Backup,
+			"Type_RCP":               testAccPolicy_type_RCP,
 			"Type_SCP":               testAccPolicy_type_SCP,
 			"Type_Tag":               testAccPolicy_type_Tag,
 			"Type_SecurityHub":       testAccPolicy_type_SecurityHub,
