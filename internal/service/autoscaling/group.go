@@ -564,6 +564,11 @@ func resourceGroup() *schema.Resource {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
+													"image_id": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^ami-[0-9a-z]{1,17}$`), "must be an AMI ID"),
+													},
 													"instance_requirements": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -2735,6 +2740,10 @@ func expandLaunchTemplate(tfMap map[string]any, hasDefaultVersion bool) *awstype
 func expandLaunchTemplateOverrides(tfMap map[string]any, hasDefaultVersion bool) awstypes.LaunchTemplateOverrides {
 	apiObject := awstypes.LaunchTemplateOverrides{}
 
+	if v, ok := tfMap["image_id"].(string); ok && v != "" {
+		apiObject.ImageId = aws.String(v)
+	}
+
 	if v, ok := tfMap["instance_requirements"].([]any); ok && len(v) > 0 {
 		apiObject.InstanceRequirements = expandInstanceRequirements(v[0].(map[string]any))
 	}
@@ -3251,18 +3260,19 @@ func expandStartInstanceRefreshInput(name string, tfMap map[string]any, launchTe
 
 	if v, ok := tfMap["preferences"].([]any); ok && len(v) > 0 {
 		apiObject.Preferences = expandRefreshPreferences(v[0].(map[string]any))
-
-		// "The AutoRollback parameter cannot be set to true when the DesiredConfiguration parameter is empty".
-		if aws.ToBool(apiObject.Preferences.AutoRollback) {
-			apiObject.DesiredConfiguration = &awstypes.DesiredConfiguration{
-				LaunchTemplate:       launchTemplate,
-				MixedInstancesPolicy: mixedInstancesPolicy,
-			}
-		}
 	}
 
 	if v, ok := tfMap["strategy"].(string); ok && v != "" {
 		apiObject.Strategy = awstypes.RefreshStrategy(v)
+	}
+
+	// "The AutoRollback parameter cannot be set to true when the DesiredConfiguration parameter is empty", and
+	// root volume replacement takes its AMIs from the desired configuration's mixed instances policy overrides.
+	if (apiObject.Preferences != nil && aws.ToBool(apiObject.Preferences.AutoRollback)) || apiObject.Strategy == awstypes.RefreshStrategyReplaceRootVolume {
+		apiObject.DesiredConfiguration = &awstypes.DesiredConfiguration{
+			LaunchTemplate:       launchTemplate,
+			MixedInstancesPolicy: mixedInstancesPolicy,
+		}
 	}
 
 	return apiObject
@@ -3692,6 +3702,10 @@ func flattenLaunchTemplateSpecificationForMixedInstancesPolicy(apiObject *awstyp
 
 func flattenLaunchTemplateOverrides(apiObject awstypes.LaunchTemplateOverrides) map[string]any {
 	tfMap := map[string]any{}
+
+	if v := apiObject.ImageId; v != nil {
+		tfMap["image_id"] = aws.ToString(v)
+	}
 
 	if v := apiObject.InstanceRequirements; v != nil {
 		tfMap["instance_requirements"] = []any{flattenInstanceRequirements(v)}

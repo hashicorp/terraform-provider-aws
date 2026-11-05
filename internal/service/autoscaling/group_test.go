@@ -109,6 +109,94 @@ func TestExpandCapacityReservationSpecification(t *testing.T) {
 	}
 }
 
+func TestExpandFlattenLaunchTemplateOverridesImageID(t *testing.T) {
+	t.Parallel()
+
+	tfMap := map[string]any{
+		"image_id":             "ami-0123456789abcdef0", //lintignore:AWSAT002
+		names.AttrInstanceType: "p6-b300.48xlarge",
+	}
+
+	got := tfautoscaling.ExpandLaunchTemplateOverrides(tfMap, false)
+	want := awstypes.LaunchTemplateOverrides{
+		ImageId:      aws.String("ami-0123456789abcdef0"), //lintignore:AWSAT002
+		InstanceType: aws.String("p6-b300.48xlarge"),
+	}
+
+	if diff := cmp.Diff(want, got, cmpopts.IgnoreUnexported(awstypes.LaunchTemplateOverrides{})); diff != "" {
+		t.Errorf("unexpected expand diff (-want +got): %s", diff)
+	}
+
+	if diff := cmp.Diff(tfMap, tfautoscaling.FlattenLaunchTemplateOverrides(got)); diff != "" {
+		t.Errorf("unexpected flatten diff (-want +got): %s", diff)
+	}
+}
+
+func TestExpandStartInstanceRefreshInput(t *testing.T) {
+	t.Parallel()
+
+	launchTemplate := &awstypes.LaunchTemplateSpecification{
+		LaunchTemplateId: aws.String("lt-0123456789abcdef0"),
+		Version:          aws.String("3"),
+	}
+	mixedInstancesPolicy := &awstypes.MixedInstancesPolicy{
+		LaunchTemplate: &awstypes.LaunchTemplate{
+			LaunchTemplateSpecification: launchTemplate,
+			Overrides: []awstypes.LaunchTemplateOverrides{{
+				ImageId:      aws.String("ami-0123456789abcdef0"), //lintignore:AWSAT002
+				InstanceType: aws.String("p6-b300.48xlarge"),
+			}},
+		},
+	}
+
+	testCases := []struct {
+		testName string
+		input    map[string]any
+		want     *awstypes.DesiredConfiguration
+	}{
+		{
+			testName: "rolling",
+			input: map[string]any{
+				"strategy": "Rolling",
+			},
+			want: nil,
+		},
+		{
+			testName: "rolling with auto rollback",
+			input: map[string]any{
+				"preferences": []any{map[string]any{"auto_rollback": true}},
+				"strategy":    "Rolling",
+			},
+			want: &awstypes.DesiredConfiguration{MixedInstancesPolicy: mixedInstancesPolicy},
+		},
+		{
+			testName: "replace root volume",
+			input: map[string]any{
+				"strategy": "ReplaceRootVolume",
+			},
+			want: &awstypes.DesiredConfiguration{MixedInstancesPolicy: mixedInstancesPolicy},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfautoscaling.ExpandStartInstanceRefreshInput("test", testCase.input, nil, mixedInstancesPolicy)
+
+			if diff := cmp.Diff(testCase.want, got.DesiredConfiguration, cmpopts.IgnoreUnexported(
+				awstypes.DesiredConfiguration{},
+				awstypes.MixedInstancesPolicy{},
+				awstypes.LaunchTemplate{},
+				awstypes.LaunchTemplateSpecification{},
+				awstypes.LaunchTemplateOverrides{},
+			)); diff != "" {
+				t.Errorf("unexpected diff (-want +got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestAccAutoScalingGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.AutoScalingGroup
@@ -1850,6 +1938,41 @@ func TestAccAutoScalingGroup_InstanceRefresh_autoRollback(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.0.standby_instances", "Ignore"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_InstanceRefresh_replaceRootVolume(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_instanceRefreshReplaceRootVolume(rName, "data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "ReplaceRootVolume"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.image_id", "data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64", names.AttrID),
+				),
+			},
+			{
+				Config: testAccGroupConfig_instanceRefreshReplaceRootVolume(rName, "data.aws_ami.al2023-ami-minimal-x86_64.id"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &group),
+					resource.TestCheckResourceAttrPair(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.image_id", "data.aws_ami.al2023-ami-minimal-x86_64", names.AttrID),
+					testAccCheckInstanceRefreshCount(ctx, t, &group, 1),
+					testAccCheckInstanceRefreshStatus(ctx, t, &group, 0, awstypes.InstanceRefreshStatusPending, awstypes.InstanceRefreshStatusInProgress),
 				),
 			},
 		},
@@ -5901,6 +6024,56 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccGroupConfig_instanceRefreshReplaceRootVolume(rName, imageID string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchTemplateBase(rName, "t3.micro"), fmt.Sprintf(`
+data "aws_ami" "al2023-ami-minimal-x86_64" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-minimal-*-x86_64"]
+  }
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  name               = %[1]q
+  max_size           = 1
+  min_size           = 1
+  desired_capacity   = 1
+
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.test.id
+        version            = aws_launch_template.test.latest_version
+      }
+
+      override {
+        image_id      = %[2]s
+        instance_type = "t3.micro"
+      }
+    }
+  }
+
+  instance_refresh {
+    strategy = "ReplaceRootVolume"
+
+    preferences {
+      min_healthy_percentage = 0
+    }
+  }
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName, imageID))
 }
 
 func testAccGroupConfig_instanceRefreshAlarmSpecification(rName, instanceType string) string {
