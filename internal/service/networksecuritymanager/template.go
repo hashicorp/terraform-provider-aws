@@ -98,6 +98,7 @@ func (r *templateResource) Schema(ctx context.Context, req resource.SchemaReques
 				Required:   true,
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, templateMaxRules),
+					listvalidator.UniqueValues(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),

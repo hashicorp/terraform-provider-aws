@@ -42,7 +42,7 @@ The following arguments are required:
 
 * `firewall_type` - (Required, Forces new resource) Firewall type of the template. Valid values: `WAF`.
 * `name` - (Required, Forces new resource) Name of the template.
-* `rule_arns` - (Required) Ordered list of ARNs of the rules to associate with the template. Specify 1 to 50 rules.
+* `rule_arns` - (Required) Ordered list of ARNs of the rules to associate with the template. Specify 1 to 50 rules. Each rule can be associated only once.
 
 The following arguments are optional:
 
