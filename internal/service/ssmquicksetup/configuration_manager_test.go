@@ -266,6 +266,48 @@ func TestAccSSMQuickSetupConfigurationManager_tags(t *testing.T) {
 	})
 }
 
+// Changing tags starts a new deployment, so a parameter change in the same apply
+// must wait for it instead of failing with a ConflictException.
+func TestAccSSMQuickSetupConfigurationManager_tagsAndParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cm ssmquicksetup.GetConfigurationManagerOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssmquicksetup_configuration_manager.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
+			testAccConfigurationManagerPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationManagerConfig_tagsAndParameters(rName, acctest.CtKey1, acctest.CtValue1, "10%"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "configuration_definition.0.parameters.RateControlConcurrency", "10%"),
+				),
+			},
+			{
+				Config: testAccConfigurationManagerConfig_tagsAndParameters(rName, acctest.CtKey1, acctest.CtValue1Updated, "15%"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, "configuration_definition.0.parameters.RateControlConcurrency", "15%"),
+				),
+			},
+		},
+	})
+}
+
 // Confirms the IAM roles required to execute configuration manager acceptance tests
 // are present
 //
@@ -543,4 +585,46 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
   }
 }
 `, rName, key1, value1, key2, value2))
+}
+
+func testAccConfigurationManagerConfig_tagsAndParameters(rName, key1, value1, rateControlConcurrency string) string {
+	return acctest.ConfigCompose(
+		testAccConfigurationManagerConfigBase_patchPolicy(rName),
+		fmt.Sprintf(`
+locals {
+  # workaround - terrafmt cannot parse verbs inside nested maps
+  rate_control_concurrency = %[4]q
+}
+
+resource "aws_ssmquicksetup_configuration_manager" "test" {
+  name = %[1]q
+
+  configuration_definition {
+    local_deployment_administration_role_arn = local.local_deployment_administration_role_arn
+    local_deployment_execution_role_name     = local.local_deployment_execution_role_name
+    type                                     = "AWSQuickSetupType-PatchPolicy"
+
+    parameters = {
+      "ConfigurationOptionsPatchOperation" : "Scan",
+      "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
+      "ConfigurationOptionsScanNextInterval" : "false",
+      "PatchBaselineRegion" : data.aws_region.current.region,
+      "PatchBaselineUseDefault" : "default",
+      "PatchPolicyName" : local.patch_policy_name,
+      "SelectedPatchBaselines" : local.selected_patch_baselines,
+      "OutputLogEnableS3" : "false",
+      "RateControlConcurrency" : local.rate_control_concurrency,
+      "RateControlErrorThreshold" : "2%%",
+      "IsPolicyAttachAllowed" : "false",
+      "TargetAccounts" : data.aws_caller_identity.current.account_id,
+      "TargetRegions" : data.aws_region.current.region,
+      "TargetType" : "*"
+    }
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, key1, value1, rateControlConcurrency))
 }
