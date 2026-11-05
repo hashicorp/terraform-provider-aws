@@ -3,6 +3,16 @@
 
 provider "null" {}
 
+resource "aws_iot_role_alias" "test" {
+  alias    = var.rName
+  role_arn = aws_iam_role.role.arn
+
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+    (var.knownTagKey)   = var.knownTagValue
+  }
+}
+
 resource "aws_iam_role" "role" {
   name = var.rName
 
@@ -16,16 +26,6 @@ resource "aws_iam_role" "role" {
       Action = "sts:AssumeRole"
     }
   })
-}
-
-resource "aws_iot_role_alias" "test" {
-  alias    = var.rName
-  role_arn = aws_iam_role.role.arn
-
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-    (var.knownTagKey)   = var.knownTagValue
-  }
 }
 
 resource "null_resource" "test" {}

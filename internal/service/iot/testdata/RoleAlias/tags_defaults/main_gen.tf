@@ -7,6 +7,13 @@ provider "aws" {
   }
 }
 
+resource "aws_iot_role_alias" "test" {
+  alias    = var.rName
+  role_arn = aws_iam_role.role.arn
+
+  tags = var.resource_tags
+}
+
 resource "aws_iam_role" "role" {
   name = var.rName
 
@@ -20,13 +27,6 @@ resource "aws_iam_role" "role" {
       Action = "sts:AssumeRole"
     }
   })
-}
-
-resource "aws_iot_role_alias" "test" {
-  alias    = var.rName
-  role_arn = aws_iam_role.role.arn
-
-  tags = var.resource_tags
 }
 
 variable "rName" {

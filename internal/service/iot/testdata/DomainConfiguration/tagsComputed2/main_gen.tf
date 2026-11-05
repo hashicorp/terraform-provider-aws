@@ -3,14 +3,26 @@
 
 provider "null" {}
 
-resource "aws_acm_certificate" "test" {
-  domain_name       = var.domainName
-  validation_method = "DNS"
-}
-
 data "aws_route53_zone" "test" {
   name         = var.rootDomain
   private_zone = false
+}
+
+resource "aws_iot_domain_configuration" "test" {
+  depends_on              = [aws_acm_certificate_validation.test]
+  name                    = var.rName
+  domain_name             = var.domainName
+  server_certificate_arns = [aws_acm_certificate.test.arn]
+
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+    (var.knownTagKey)   = var.knownTagValue
+  }
+}
+
+resource "aws_acm_certificate" "test" {
+  domain_name       = var.domainName
+  validation_method = "DNS"
 }
 
 resource "aws_route53_record" "test" {
@@ -25,18 +37,6 @@ resource "aws_route53_record" "test" {
 resource "aws_acm_certificate_validation" "test" {
   depends_on      = [aws_route53_record.test]
   certificate_arn = aws_acm_certificate.test.arn
-}
-
-resource "aws_iot_domain_configuration" "test" {
-  depends_on              = [aws_acm_certificate_validation.test]
-  name                    = var.rName
-  domain_name             = var.domainName
-  server_certificate_arns = [aws_acm_certificate.test.arn]
-
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-    (var.knownTagKey)   = var.knownTagValue
-  }
 }
 
 resource "null_resource" "test" {}

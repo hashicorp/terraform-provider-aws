@@ -14,31 +14,6 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-resource "aws_iam_role" "test" {
-  name               = var.rName
-  path               = "/service-role/"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSIoTThingsRegistration"
-}
-
-data "aws_iam_policy_document" "device" {
-  statement {
-    actions   = ["iot:Subscribe"]
-    resources = ["*"]
-  }
-}
-
-resource "aws_iot_policy" "test" {
-  name   = var.rName
-  policy = data.aws_iam_policy_document.device.json
-}
-
 resource "aws_iot_provisioning_template" "test" {
   name                  = var.rName
   provisioning_role_arn = aws_iam_role.test.arn
@@ -70,6 +45,31 @@ resource "aws_iot_provisioning_template" "test" {
     (var.unknownTagKey) = null_resource.test.id
     (var.knownTagKey)   = var.knownTagValue
   }
+}
+
+resource "aws_iam_role" "test" {
+  name               = var.rName
+  path               = "/service-role/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSIoTThingsRegistration"
+}
+
+data "aws_iam_policy_document" "device" {
+  statement {
+    actions   = ["iot:Subscribe"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iot_policy" "test" {
+  name   = var.rName
+  policy = data.aws_iam_policy_document.device.json
 }
 
 resource "null_resource" "test" {}
