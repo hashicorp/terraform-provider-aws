@@ -4,6 +4,8 @@
 package json_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"testing"
 
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
@@ -15,10 +17,11 @@ func TestRemoveFields(t *testing.T) {
 	testCases := []struct {
 		testName string
 		input    string
+		fields   []string
 		want     string
 	}{
 		{
-			testName: "empty JSON",
+			testName: "empty object",
 			input:    "{}",
 			want:     "{}",
 		},
@@ -28,9 +31,39 @@ func TestRemoveFields(t *testing.T) {
 			want:     `{"key":42}`,
 		},
 		{
-			testName: "with read-only field",
-			input:    "{\"unifiedAlerting\": {\"enabled\": true}, \"plugins\": {\"pluginAdminEnabled\" :false}}",
-			want:     "{\"unifiedAlerting\":{\"enabled\":true}}",
+			testName: "remove object field",
+			input:    `{"unifiedAlerting":{"enabled":true},"plugins":{"pluginAdminEnabled":false}}`,
+			fields:   []string{`"plugins"`},
+			want:     `{"unifiedAlerting":{"enabled":true}}`,
+		},
+		{
+			testName: "remove nested fields and their values",
+			input:    `{"remove":{"nested":[1,2]},"keep":{"remove":true,"value":1}}`,
+			fields:   []string{`"remove"`},
+			want:     `{"keep":{"value":1}}`,
+		},
+		{
+			testName: "remove duplicate fields",
+			input:    `{"remove":1,"keep":2,"remove":3}`,
+			fields:   []string{`"remove"`},
+			want:     `{"keep":2}`,
+		},
+		{
+			testName: "compare raw field names",
+			input:    `{"pl\u0075gins":1,"plugins":2}`,
+			fields:   []string{`"plugins"`},
+			want:     `{"pl\u0075gins":1}`,
+		},
+		{
+			testName: "preserve top-level scalar",
+			input:    ` 1e+02 `,
+			want:     `1e+02`,
+		},
+		{
+			testName: "invalid JSON",
+			input:    `{"key":`,
+			fields:   []string{`"key"`},
+			want:     "",
 		},
 	}
 
@@ -38,8 +71,8 @@ func TestRemoveFields(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := tfjson.RemoveFields(testCase.input, `"plugins"`), testCase.want; got != want {
-				t.Errorf("RemoveReadOnlyFields(%q) = %q, want %q", testCase.input, got, want)
+			if got := tfjson.RemoveFields(testCase.input, testCase.fields...); got != testCase.want {
+				t.Errorf("RemoveFields(%q) = %q, want %q", testCase.input, got, testCase.want)
 			}
 		})
 	}
@@ -54,9 +87,19 @@ func TestRemoveEmptyFields(t *testing.T) {
 		want     string
 	}{
 		{
-			testName: "empty JSON",
-			input:    "{}",
-			want:     "{}",
+			testName: "empty object",
+			input:    `{}`,
+			want:     `{}`,
+		},
+		{
+			testName: "empty array",
+			input:    `[]`,
+			want:     `[]`,
+		},
+		{
+			testName: "top-level null",
+			input:    `null`,
+			want:     `null`,
 		},
 		{
 			testName: "single non-empty simple field",
@@ -94,24 +137,34 @@ func TestRemoveEmptyFields(t *testing.T) {
 			want:     `{}`,
 		},
 		{
-			testName: "empty fields deeply nested 1 pass",
-			input:    `{"key": {"a": [1, 2], "b": [], "c": {"d": true, "e": null}}}`,
-			want:     `{"key":{"a":[1,2],"c":{"d":true}}}`,
-		},
-		{
-			testName: "empty fields deeply nested 2 passes",
-			input:    `{"key": {"a": [1, 2], "b": {}, "c": {"d": null}}}`,
-			want:     `{"key":{"a":[1,2]}}`,
-		},
-		{
-			testName: "empty fields deeply nested many empty objects",
-			input:    `{"key": {"a": [1, 2], "b": {}, "c": {"d": {}}, "e": {}, "f": 99}}`,
+			testName: "empty fields deeply nested",
+			input:    `{"key":{"a":[1,2],"b":{},"c":{"d":null},"e":{},"f":99}}`,
 			want:     `{"key":{"a":[1,2],"f":99}}`,
 		},
 		{
-			testName: "empty fields nested empty arrays",
-			input:    `{"key": {"a": [1, [2], [], [[]], 3]}}`,
-			want:     `{"key":{"a":[1,[2],3]}}`,
+			testName: "empty values in nested arrays",
+			input:    `{"key":[null,[],[[]],[1,[],null],{},[{"empty":null}],2]}`,
+			want:     `{"key":[[1],2]}`,
+		},
+		{
+			testName: "preserve duplicate fields and raw values",
+			input:    `{"key":1e+02,"key":"a b","empty":null}`,
+			want:     `{"key":1e+02,"key":"a b"}`,
+		},
+		{
+			testName: "preserve raw string escapes",
+			input:    `{"key":"\u003cscript\u003e","empty":null}`,
+			want:     `{"key":"\u003cscript\u003e"}`,
+		},
+		{
+			testName: "invalid JSON",
+			input:    `{"key":`,
+			want:     "",
+		},
+		{
+			testName: "multiple top-level values",
+			input:    `{} {}`,
+			want:     "",
 		},
 		{
 			testName: "real life example",
@@ -124,8 +177,9 @@ func TestRemoveEmptyFields(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := tfjson.RemoveEmptyFields([]byte(testCase.input)), testCase.want; string(got) != want {
-				t.Errorf("RemoveEmptyFields(%q) = %q, want %q", testCase.input, got, want)
+			got := tfjson.RemoveEmptyFields([]byte(testCase.input))
+			if string(got) != testCase.want {
+				t.Errorf("RemoveEmptyFields(%q) = %q, want %q", testCase.input, got, testCase.want)
 			}
 		})
 	}
@@ -140,44 +194,54 @@ func TestRemoveEmptyStringFields(t *testing.T) {
 		want     string
 	}{
 		{
-			testName: "empty JSON",
-			input:    "{}",
-			want:     "{}",
+			testName: "empty object",
+			input:    `{}`,
+			want:     `{}`,
+		},
+		{
+			testName: "top-level empty string",
+			input:    `""`,
+			want:     `""`,
 		},
 		{
 			testName: "single null field",
-			input:    `{"key": null}`,
+			input:    `{"key":null}`,
 			want:     `{"key":null}`,
 		},
 		{
 			testName: "single empty array field",
-			input:    `{"key": []}`,
+			input:    `{"key":[]}`,
 			want:     `{"key":[]}`,
 		},
 		{
 			testName: "single empty object field",
-			input:    `{"key": {}}`,
+			input:    `{"key":{}}`,
 			want:     `{"key":{}}`,
 		},
 		{
 			testName: "single empty string field",
-			input:    `{"key": ""}`,
+			input:    `{"key":""}`,
 			want:     `{}`,
 		},
 		{
 			testName: "single non-empty string field",
-			input:    `{"key": "a"}`,
+			input:    `{"key":"a"}`,
 			want:     `{"key":"a"}`,
 		},
 		{
-			testName: "single non-zero number field",
-			input:    `{"key": 42}`,
-			want:     `{"key":42}`,
+			testName: "empty strings in arrays are retained",
+			input:    `{"key":["",{"empty":"","keep":"value"},""]}`,
+			want:     `{"key":["",{"keep":"value"},""]}`,
 		},
 		{
-			testName: "empty string deeply nested",
-			input:    `{"key": {"a": [1, "two", ""], "b": "", "c": {"d": "dee", "e": ""}}}`,
+			testName: "nested empty string fields",
+			input:    `{"key":{"a":[1,"two",""],"b":"","c":{"d":"dee","e":""}}}`,
 			want:     `{"key":{"a":[1,"two",""],"c":{"d":"dee"}}}`,
+		},
+		{
+			testName: "invalid JSON",
+			input:    `{"key":`,
+			want:     "",
 		},
 	}
 
@@ -185,9 +249,126 @@ func TestRemoveEmptyStringFields(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := tfjson.RemoveEmptyStringFields([]byte(testCase.input)), testCase.want; string(got) != want {
-				t.Errorf("RemoveEmptyStringFields(%q) = %q, want %q", testCase.input, got, want)
+			got := tfjson.RemoveEmptyStringFields([]byte(testCase.input))
+			if string(got) != testCase.want {
+				t.Errorf("RemoveEmptyStringFields(%q) = %q, want %q", testCase.input, got, testCase.want)
 			}
 		})
+	}
+}
+
+func TestRemoveNullAndEmptyArrayValues(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		testName string
+		input    string
+		want     string
+	}{
+		{
+			testName: "top-level empty array",
+			input:    `[]`,
+			want:     `[]`,
+		},
+		{
+			testName: "empty objects retained",
+			input:    `{"empty":{},"becomesEmpty":{"null":null}}`,
+			want:     `{"empty":{},"becomesEmpty":{}}`,
+		},
+		{
+			testName: "nested empty arrays and nulls",
+			input:    `{"values":[[[]],[],[1,[]],null],"object":{"empty":[],"null":null}}`,
+			want:     `{"values":[[1]],"object":{}}`,
+		},
+		{
+			testName: "invalid JSON",
+			input:    `{"key":`,
+			want:     "",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfjson.RemoveNullAndEmptyArrayValues([]byte(testCase.input))
+			if string(got) != testCase.want {
+				t.Errorf("RemoveNullAndEmptyArrayValues(%q) = %q, want %q", testCase.input, got, testCase.want)
+			}
+		})
+	}
+}
+
+func FuzzRemoveEmptyFields(f *testing.F) {
+	for _, input := range []string{
+		`{}`,
+		`[]`,
+		`null`,
+		`{"key":[null,{},[],{"nested":null},1]}`,
+		`{"duplicate":null,"duplicate":{"value":1}}`,
+	} {
+		f.Add(input)
+	}
+
+	f.Fuzz(func(t *testing.T, input string) {
+		if !json.Valid([]byte(input)) {
+			return
+		}
+
+		got := tfjson.RemoveEmptyFields([]byte(input))
+		assertValidAndIdempotent(t, got, tfjson.RemoveEmptyFields)
+	})
+}
+
+func FuzzRemoveEmptyStringFields(f *testing.F) {
+	for _, input := range []string{
+		`{}`,
+		`[]`,
+		`""`,
+		`{"key":["",{"nested":""}]}`,
+		`{"duplicate":"","duplicate":"value"}`,
+	} {
+		f.Add(input)
+	}
+
+	f.Fuzz(func(t *testing.T, input string) {
+		if !json.Valid([]byte(input)) {
+			return
+		}
+
+		got := tfjson.RemoveEmptyStringFields([]byte(input))
+		assertValidAndIdempotent(t, got, tfjson.RemoveEmptyStringFields)
+	})
+}
+
+func FuzzRemoveNullAndEmptyArrayValues(f *testing.F) {
+	for _, input := range []string{
+		`{}`,
+		`[]`,
+		`null`,
+		`{"key":[null,[],[[]],[1,[]]]}`,
+		`{"duplicate":null,"duplicate":[1]}`,
+	} {
+		f.Add(input)
+	}
+
+	f.Fuzz(func(t *testing.T, input string) {
+		if !json.Valid([]byte(input)) {
+			return
+		}
+
+		got := tfjson.RemoveNullAndEmptyArrayValues([]byte(input))
+		assertValidAndIdempotent(t, got, tfjson.RemoveNullAndEmptyArrayValues)
+	})
+}
+
+func assertValidAndIdempotent(t *testing.T, got []byte, transform func([]byte) []byte) {
+	t.Helper()
+
+	if !json.Valid(got) {
+		t.Fatalf("result is invalid JSON: %q", got)
+	}
+	if again := transform(got); !bytes.Equal(again, got) {
+		t.Errorf("transform is not idempotent: first result %q, second result %q", got, again)
 	}
 }
