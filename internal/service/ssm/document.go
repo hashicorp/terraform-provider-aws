@@ -718,6 +718,7 @@ func resourceDocumentFlatten(ctx context.Context, conn *ssm.Client, d *schema.Re
 		}
 
 		if accountsIDs := output.AccountIds; len(accountsIDs) > 0 {
+			slices.Sort(accountsIDs)
 			d.Set(names.AttrPermissions, map[string]any{
 				"account_ids":  strings.Join(accountsIDs, ","),
 				names.AttrType: awstypes.DocumentPermissionTypeShare,
