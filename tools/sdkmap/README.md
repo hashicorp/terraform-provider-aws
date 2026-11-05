@@ -8,7 +8,7 @@ their supported service-package handlers.
 The high-level workflow is:
 
 - Identify `conns.AWSClient` methods that return AWS SDK service clients and index service packages.
-- Find `@SDKResource`, `@SDKDataSource`, and `@FrameworkResource` factory functions.
+- Find `@SDKResource`, `@SDKDataSource`, `@FrameworkResource`, and `@FrameworkDataSource` factory functions.
 - Follow each resource's CRUD, import, and `CustomizeDiff` (SDK V2) or `ModifyPlan` (Framework) handlers to record AWS SDK calls. For data sources, follow only `Read`.
 - Include tag-interceptor operations for tagged resources and data sources.
 - Write the results as JSON.
@@ -33,7 +33,7 @@ The output file is a JSON object with two keys:
 | Field | Type | Description |
 | --- | --- | --- |
 | `resources` | array of objects (resource) | Resources annotated with `@SDKResource` or `@FrameworkResource`. Empty when none are found. |
-| `dataSources` | array of objects (data source) | Data sources annotated with `@SDKDataSource`. Empty when none are found. |
+| `dataSources` | array of objects (data source) | Data sources annotated with `@SDKDataSource` or `@FrameworkDataSource`. Empty when none are found. |
 
 ```json
 {
@@ -129,10 +129,10 @@ The following value-free JSON shows the complete shape of one resource object. O
 | --- | --- | --- |
 | `service` | string | Service package name. |
 | `data_source_type` | string | Terraform data source type. |
-| `plugin_type` | string | Terraform plugin library that implements the data source. |
+| `plugin_type` | string | Terraform plugin library: `SDKv2` or `Framework`. |
 | `expr` | string | Annotated data source factory expression. |
 | `location` | string | Factory declaration location, as a repository-relative `file:line`. |
-| `read` | object (function reference) | Read handler. Omitted when the handler is not set. |
+| `read` | object (function reference) | Read handler: the SDK V2 `Read` function or the Framework `Read` method. Omitted when not set or not declared in a service package. |
 | `tags` | object (tags) | Tag handlers used by the tags interceptor. Only `list` is set, because the tags interceptor never updates a data source's tags. Omitted for data sources without `@Tags(identifierAttribute=...)`. |
 
 The following value-free JSON shows the complete shape of one data source object. Optional fields are omitted when they do not apply.
@@ -182,5 +182,5 @@ Each handler field, and each field in a tags object, is a function reference.
 - S3 calls made through the AWS SDK's [`feature/s3/manager`](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/s3/manager) package aren't tracked. For example, the `aws_s3_object` and `aws_s3_bucket_object` uploads (`s3.PutObject` and the multipart upload operations) are missing from their `create` and `update` entries.
 - Tag listers and updaters shared by several resource types, e.g. the IAM and S3 `ListTags` and `UpdateTags`, are narrowed to a resource's or data source's type only where they, or a function they pass it to, use `switch resourceType` with string literal cases. Any other branching on the resource type is analyzed as a whole, so the `tags` entry includes the SDK calls for every resource type that shares them.
 - Only service packages are analyzed. When an AWS SDK client is passed to a function in any other package, e.g. an SDK waiter, an SDK presign client, or the S3 transfer manager, the operations it calls aren't tracked, and sdkmap logs a warning naming the resource's or data source's function and the function the client is passed to.
-- Calls through an interface, including one embedded in a Framework resource type, include every implementation in the package. For example, `aws_vpc_security_group_ingress_rule` and `aws_vpc_security_group_egress_rule` include each other's SDK calls.
-- Framework data sources, ephemeral resources, actions, list resources, and attribute-level `PlanModifiers` aren't analyzed.
+- Calls through an interface, including one embedded in a Framework resource or data source type, include every implementation in the package. For example, `aws_vpc_security_group_ingress_rule` and `aws_vpc_security_group_egress_rule` include each other's SDK calls.
+- Framework ephemeral resources, actions, list resources, attribute-level `PlanModifiers`, and resource and data source methods other than those described above (e.g. `ValidateConfig`) aren't analyzed.

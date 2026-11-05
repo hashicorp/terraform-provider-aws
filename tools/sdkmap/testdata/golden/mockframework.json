@@ -169,5 +169,29 @@
       }
     }
   ],
-  "dataSources": []
+  "dataSources": [
+    {
+      "service": "mockframework",
+      "data_source_type": "aws_mockframework_foo",
+      "plugin_type": "Framework",
+      "expr": "newFooDataSource",
+      "location": "internal/service/mockframework/foo_data_source.go:20",
+      "read": {
+        "expr": "(*fooDataSource).Read",
+        "location": "internal/service/mockframework/foo_data_source.go:28",
+        "sdk_calls": [
+          "mockframework.DescribeFoo"
+        ]
+      },
+      "tags": {
+        "list": {
+          "expr": "(*servicePackage).ListTags",
+          "location": "internal/service/mockframework/tags_gen.go:36",
+          "sdk_calls": [
+            "mockframework.ListTagsForResource"
+          ]
+        }
+      }
+    }
+  ]
 }
