@@ -5,8 +5,9 @@ package glue
 
 // Exports for use in tests only.
 var (
-	FlattenViewRepresentation  = flattenViewRepresentation
-	FlattenViewRepresentations = flattenViewRepresentations
+	ExpandViewRepresentationInputs = expandViewRepresentationInputs
+	FlattenViewRepresentation      = flattenViewRepresentation
+	FlattenViewRepresentations     = flattenViewRepresentations
 
 	ResourceCatalog                       = newCatalogResource
 	ResourceCatalogTable                  = resourceCatalogTable
