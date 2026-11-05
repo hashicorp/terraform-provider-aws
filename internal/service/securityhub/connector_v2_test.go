@@ -493,9 +493,7 @@ resource "aws_securityhub_connector_v2" "test" {
 }
 
 func testAccConnectorV2Config_azure(rName, clientID, tenantID string) string {
-	return fmt.Sprintf(`
-resource "aws_securityhub_account_v2" "test" {}
-
+	return acctest.ConfigCompose(testAccConnectorV2Config_base(), fmt.Sprintf(`
 resource "aws_config_connector" "test" {
   connector_configuration {
     azure {
@@ -519,7 +517,7 @@ resource "aws_securityhub_connector_v2" "test" {
     }
   }
 
-  depends_on = [aws_securityhub_account_v2.test]
+  depends_on = [aws_securityhub_aggregator_v2.test]
 }
-`, rName, clientID, tenantID)
+`, rName, clientID, tenantID))
 }
