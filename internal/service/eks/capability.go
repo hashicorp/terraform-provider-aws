@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -122,6 +124,18 @@ func (r *capabilityResource) Schema(ctx context.Context, request resource.Schema
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"endpoint_prefix": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 50),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9]([a-z0-9-]*[a-z0-9])?$`), "must consist of lowercase alphanumeric characters or hyphens, and must start and end with an alphanumeric character"),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplaceIfConfigured(),
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
 									names.AttrNamespace: schema.StringAttribute{
 										Optional: true,
 										Computed: true,
@@ -605,6 +619,7 @@ type capabilityConfigurationModel struct {
 
 type argoCDConfigModel struct {
 	AWSIDC           fwtypes.ListNestedObjectValueOf[argoCDAWSIDCConfigModel]        `tfsdk:"aws_idc"`
+	EndpointPrefix   types.String                                                    `tfsdk:"endpoint_prefix"`
 	Namespace        types.String                                                    `tfsdk:"namespace"`
 	NetworkAccess    fwtypes.ListNestedObjectValueOf[argoCDNetworkAccessConfigModel] `tfsdk:"network_access"`
 	RBACRoleMappings fwtypes.SetNestedObjectValueOf[argoCDRoleMappingModel]          `tfsdk:"rbac_role_mapping"`
