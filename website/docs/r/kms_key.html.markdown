@@ -317,7 +317,7 @@ This resource supports the following arguments:
 * `description` - (Optional) Description of the key as viewed in AWS console.
 * `enable_key_rotation` - (Optional, required to be enabled if `rotation_period_in_days` is specified) Whether [key rotation](http://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html) is enabled. Defaults to `false`.
 * `is_enabled` - (Optional) Whether the key is enabled. Defaults to `true`.
-* `key_usage` - (Optional) Intended use of the key. Valid values: `ENCRYPT_DECRYPT`, `SIGN_VERIFY`, or `GENERATE_VERIFY_MAC`. Defaults to `ENCRYPT_DECRYPT`.
+* `key_usage` - (Optional) Intended use of the key. Valid values: `ENCRYPT_DECRYPT`, `SIGN_VERIFY`, `GENERATE_VERIFY_MAC`, or `KEY_AGREEMENT`. Defaults to `ENCRYPT_DECRYPT`.
 * `multi_region` - (Optional) Whether the KMS key is a multi-Region (`true`) or regional (`false`) key. Defaults to `false`.
 * `policy` - (Optional) Valid policy JSON document. Although this is a key policy, not an IAM policy, an [`aws_iam_policy_document`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document), in the form that designates a principal, can be used. For more information about building policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

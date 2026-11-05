@@ -87,6 +87,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.74.6
 	github.com/aws/aws-sdk-go-v2/service/connect v1.208.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.50.6
+	github.com/aws/aws-sdk-go-v2/service/continuum v1.0.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.43.6
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.74.3
@@ -336,7 +337,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.5.0
-	github.com/shopspring/decimal v1.5.0
+	github.com/shopspring/decimal v1.6.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.71.0
 	go.opentelemetry.io/otel v1.47.0
 	golang.org/x/crypto v0.58.0
