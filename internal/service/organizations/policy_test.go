@@ -415,6 +415,38 @@ func testAccPolicy_type_RCP(t *testing.T) {
 	})
 }
 
+func testAccPolicy_type_Chatbot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type_Chatbot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeChatbotPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
 func testAccPolicy_type_Tag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.Policy
@@ -1027,6 +1059,39 @@ resource "aws_organizations_policy" "test" {
   })
   name = %[1]q
   type = "RESOURCE_CONTROL_POLICY"
+}
+`, rName)
+}
+
+func testAccPolicyConfig_type_Chatbot(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  content = jsonencode({
+    chatbot = {
+      default = {
+        client = {
+          "@@assign" = "disabled"
+        }
+      }
+      platforms = {
+        slack = {
+          client = {
+            "@@assign" = "enabled"
+          }
+          default = {
+            supported_role_settings = {
+              "@@assign" = ["user_role", "channel_role"]
+            }
+          }
+          workspaces = {
+            "@@assign" = ["T12341234", "T56785678"]
+          }
+        }
+      }
+    }
+  })
+  name = %[1]q
+  type = "CHATBOT_POLICY"
 }
 `, rName)
 }
