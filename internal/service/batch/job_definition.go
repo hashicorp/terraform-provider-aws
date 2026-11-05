@@ -1442,8 +1442,10 @@ func expandVolumes(tfList []any) []awstypes.EksVolume {
 		if v, ok := tfMap["empty_dir"].([]any); ok && len(v) > 0 {
 			if v, ok := v[0].(map[string]any); ok {
 				apiObject.EmptyDir = &awstypes.EksEmptyDir{
-					Medium:    aws.String(v["medium"].(string)),
 					SizeLimit: aws.String(v["size_limit"].(string)),
+				}
+				if m, ok := v["medium"]; ok && m != "" {
+					apiObject.EmptyDir.Medium = aws.String(m.(string))
 				}
 			}
 		}
