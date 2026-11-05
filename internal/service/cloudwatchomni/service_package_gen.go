@@ -53,6 +53,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newAlertResource,
+			TypeName: "aws_cloudwatchomni_alert",
+			Name:     "Alert",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("alert_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      alertImportID{},
+			},
+		},
+		{
 			Factory:  newDashboardResource,
 			TypeName: "aws_cloudwatchomni_dashboard",
 			Name:     "Dashboard",
@@ -130,6 +145,17 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute("space_id", true),
 				inttypes.StringIdentityAttribute("profile_id", true),
+			}),
+		},
+		{
+			Factory:  newAlertResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_alert",
+			Name:     "Alert",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("alert_id", true),
 			}),
 		},
 		{

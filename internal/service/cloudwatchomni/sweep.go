@@ -20,13 +20,15 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_cloudwatchomni_access_grant", sweepAccessGrants)
-	awsv2.Register("aws_cloudwatchomni_access_profile", sweepAccessProfiles)
+	awsv2.Register("aws_cloudwatchomni_access_profile", sweepAccessProfiles, "aws_cloudwatchomni_alert")
+	awsv2.Register("aws_cloudwatchomni_alert", sweepAlerts)
 	awsv2.Register("aws_cloudwatchomni_dashboard", sweepDashboards)
 	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space")
 	awsv2.Register("aws_cloudwatchomni_organization_domain", sweepOrganizationDomains, "aws_cloudwatchomni_space")
 	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces,
 		"aws_cloudwatchomni_access_grant",
 		"aws_cloudwatchomni_access_profile",
+		"aws_cloudwatchomni_alert",
 		"aws_cloudwatchomni_dashboard",
 	)
 	awsv2.Register("aws_cloudwatchomni_view", sweepViews)
@@ -83,6 +85,39 @@ func sweepAccessProfiles(ctx context.Context, client *conns.AWSClient) ([]sweep.
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newAccessProfileResource, client,
 				framework.NewAttribute("profile_id", aws.ToString(v.ProfileId)),
+				framework.NewAttribute("space_id", spaceID)),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepAlerts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input cloudwatchomni.ListSpacesInput
+	conn := client.CloudWatchOmniClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	for v, err := range listSpaces(ctx, conn, &input) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		if aws.ToString(v.Region) != conn.Options().Region {
+			continue
+		}
+
+		spaceID := aws.ToString(v.SpaceId)
+		input := cloudwatchomni.ListAlertsInput{
+			SpaceId: aws.String(spaceID),
+		}
+		for v, err := range listAlerts(ctx, conn, &input) {
+			if err != nil {
+				return nil, smarterr.NewError(err)
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAlertResource, client,
+				framework.NewAttribute("alert_id", aws.ToString(v.AlertId)),
 				framework.NewAttribute("space_id", spaceID)),
 			)
 		}
