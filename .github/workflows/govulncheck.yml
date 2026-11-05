@@ -13,6 +13,7 @@ on:
       - .github/workflows/govulncheck.yml
       - .ci/tools/**
       - internal/**
+      - go.mod
       - go.sum
       - main.go
       - names/**
