@@ -6,7 +6,6 @@ package configservice_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -24,11 +23,11 @@ func testAccConnector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Connector
 	resourceName := "aws_config_connector.test"
-	clientID := os.Getenv("AZURE_CLIENT_IDENTIFIER")
-	tenantID := os.Getenv("AZURE_TENANT_IDENTIFIER")
+	clientID := acctest.SkipIfEnvVarNotSet(t, "AZURE_CLIENT_IDENTIFIER")
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AZURE_TENANT_IDENTIFIER")
 
 	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccConnectorPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx, t),
@@ -39,9 +38,10 @@ func testAccConnector_basic(t *testing.T) {
 					testAccCheckConnectorExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile(`connector/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "azure.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "azure.0.client_identifier", clientID),
-					resource.TestCheckResourceAttr(resourceName, "azure.0.tenant_identifier", tenantID),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.0.azure.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.0.azure.0.client_identifier", clientID),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.0.azure.0.tenant_identifier", tenantID),
 				),
 			},
 			{
@@ -59,11 +59,11 @@ func testAccConnector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Connector
 	resourceName := "aws_config_connector.test"
-	clientID := os.Getenv("AZURE_CLIENT_IDENTIFIER")
-	tenantID := os.Getenv("AZURE_TENANT_IDENTIFIER")
+	clientID := acctest.SkipIfEnvVarNotSet(t, "AZURE_CLIENT_IDENTIFIER")
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AZURE_TENANT_IDENTIFIER")
 
 	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccConnectorPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx, t),
@@ -92,11 +92,11 @@ func testAccConnector_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Connector
 	resourceName := "aws_config_connector.test"
-	clientID := os.Getenv("AZURE_CLIENT_IDENTIFIER")
-	tenantID := os.Getenv("AZURE_TENANT_IDENTIFIER")
+	clientID := acctest.SkipIfEnvVarNotSet(t, "AZURE_CLIENT_IDENTIFIER")
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AZURE_TENANT_IDENTIFIER")
 
 	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccConnectorPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx, t),
@@ -120,12 +120,6 @@ func testAccConnector_tags(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccConnectorPreCheck(t *testing.T) {
-	if os.Getenv("AZURE_CLIENT_IDENTIFIER") == "" || os.Getenv("AZURE_TENANT_IDENTIFIER") == "" {
-		t.Skip("AZURE_CLIENT_IDENTIFIER and AZURE_TENANT_IDENTIFIER must be set for ConfigService Connector acceptance tests")
-	}
 }
 
 func testAccCheckConnectorExists(ctx context.Context, t *testing.T, n string, v *awstypes.Connector) resource.TestCheckFunc {
@@ -178,9 +172,11 @@ func testAccCheckConnectorDestroy(ctx context.Context, t *testing.T) resource.Te
 func testAccConnectorConfig_basic(clientID, tenantID string) string {
 	return fmt.Sprintf(`
 resource "aws_config_connector" "test" {
-  azure {
-    client_identifier = %[1]q
-    tenant_identifier = %[2]q
+  connector_configuration {
+    azure {
+      client_identifier = %[1]q
+      tenant_identifier = %[2]q
+    }
   }
 }
 `, clientID, tenantID)
@@ -189,9 +185,11 @@ resource "aws_config_connector" "test" {
 func testAccConnectorConfig_tags1(clientID, tenantID, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_config_connector" "test" {
-  azure {
-    client_identifier = %[1]q
-    tenant_identifier = %[2]q
+  connector_configuration {
+    azure {
+      client_identifier = %[1]q
+      tenant_identifier = %[2]q
+    }
   }
 
   tags = {
@@ -204,9 +202,11 @@ resource "aws_config_connector" "test" {
 func testAccConnectorConfig_tags2(clientID, tenantID, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_config_connector" "test" {
-  azure {
-    client_identifier = %[1]q
-    tenant_identifier = %[2]q
+  connector_configuration {
+    azure {
+      client_identifier = %[1]q
+      tenant_identifier = %[2]q
+    }
   }
 
   tags = {

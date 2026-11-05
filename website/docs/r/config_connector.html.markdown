@@ -22,24 +22,35 @@ Before creating a connector, you must configure the corresponding application an
 
 ```terraform
 resource "aws_config_connector" "example" {
-  azure {
-    client_identifier = "00000000-0000-0000-0000-000000000000"
-    tenant_identifier = "11111111-1111-1111-1111-111111111111"
+  connector_configuration {
+    azure {
+      client_identifier = "00000000-0000-0000-0000-000000000000"
+      tenant_identifier = "11111111-1111-1111-1111-111111111111"
+    }
   }
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `azure` - (Required) Configuration for connecting to a Microsoft Azure environment. Changing this forces a new resource to be created. [See below](#azure).
+* `connector_configuration` - (Required) Provider-specific configuration for connecting to the third-party cloud service provider. See [`connector_configuration` Block](#connector_configuration-block) below.
+
+The following arguments are optional:
+
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### azure
+### `connector_configuration` Block
 
-The following arguments are supported in the `azure` block. Changing any of them forces a new resource to be created.
+The `connector_configuration` block supports:
+
+* `azure` - (Optional) Configuration for an Azure connector. See [`azure` Block](#azure-block) below.
+
+### `azure` Block
+
+The `azure` block supports:
 
 * `client_identifier` - (Required) Azure application (client) identifier that AWS uses to authenticate to the Azure environment.
 * `tenant_identifier` - (Required) Azure (Microsoft Entra ID) tenant identifier.
