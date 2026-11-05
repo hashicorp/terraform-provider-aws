@@ -517,6 +517,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 	skip := false
 	tlsKey := false
+	tlsCAKey := false
 	var tlsKeyCN string
 	isDataSource := false
 
@@ -679,6 +680,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						tlsKey = b
 					}
 				}
+				if attr, ok := args.Keyword["tlsCAKey"]; ok {
+					if b, err := common.ParseBoolAttr("tlsCAKey", attr); err != nil {
+						v.errs = append(v.errs, err)
+						continue
+					} else {
+						tlsCAKey = b
+					}
+				}
 				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
 					tlsKeyCN = attr
 				}
@@ -705,6 +714,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
+	}
+	if tlsCAKey {
+		d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
+			Code: `privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+			certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)`,
+		})
+	}
+	if tlsKey || tlsCAKey {
 		d.AdditionalTfVars_["certificate_pem"] = tests.TFVar{
 			GoVarName: "certificatePEM",
 			Type:      tests.TFVarTypeString,
