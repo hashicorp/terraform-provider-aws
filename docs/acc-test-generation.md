@@ -371,6 +371,9 @@ To generate a configuration for a data source test, the generator reuses the con
 Add an additional file `testdata/tmpl/<name>_data_source.gtpl` which contains only the data source block populated with the parameters needed to associate it with the resource.
 For example, the ELB v2 Load Balancer's data source template is `testdata/tmpl/load_balancer_data_source.gtpl`.
 
+The resource under test must be the first resource declaration in the template.
+Supporting resources can be declared after it because Terraform resolves references independently of declaration order.
+
 For all resources and data sources declared in the configuration, unless the type is global, add the Go template directive `{{- template "region" }}` at the top of the resource declaration.
 
 Replace the `tags` attribute with the Go template directive `{{- template "tags" . }}`.
