@@ -30,7 +30,8 @@ import (
 
 // @SDKResource("aws_iot_topic_rule", name="Topic Rule")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(generator="testAccTopicRuleName(t)")
+// @Testing(skipEmptyTags=true)
 func resourceTopicRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicRuleCreate,
