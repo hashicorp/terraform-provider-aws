@@ -59,12 +59,7 @@ func resourceGatewayAssociation() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"allowed_prefixes": {
-					Type:     schema.TypeSet,
-					Optional: true,
-					Computed: true,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-				},
+				"allowed_prefixes": routeFilterPrefixesSchema(),
 				"associated_gateway_id": {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -199,7 +194,7 @@ func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	associatedGatewayID, dxGatewayID := aws.ToString(output.AssociatedGateway.Id), aws.ToString(output.DirectConnectGatewayId)
-	if err := d.Set("allowed_prefixes", flattenRouteFilterPrefixes(output.AllowedPrefixesToDirectConnectGateway)); err != nil {
+	if err := d.Set("allowed_prefixes", flattenCanonicalRouteFilterPrefixes(output.AllowedPrefixesToDirectConnectGateway)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting allowed_prefixes: %s", err)
 	}
 	d.Set("associated_gateway_id", associatedGatewayID)
