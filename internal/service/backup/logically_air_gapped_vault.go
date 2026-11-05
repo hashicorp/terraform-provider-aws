@@ -201,7 +201,7 @@ func (r *logicallyAirGappedVaultResource) Delete(ctx context.Context, request re
 	}
 	_, err := conn.DeleteBackupVault(ctx, &input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, errMessageVaultNotFound) {
 		return
 	}
 
