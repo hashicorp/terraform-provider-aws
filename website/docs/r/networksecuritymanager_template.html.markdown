@@ -10,8 +10,6 @@ description: |-
 
 Manages an AWS Network Security Manager Template. A template groups one or more rules so they can be reused across policies.
 
-Changes to a template are published unless `is_published` is `false`.
-
 ## Example Usage
 
 ### Basic Usage

@@ -117,6 +117,7 @@ func TestAccNetworkSecurityManagerTemplate_disappears(t *testing.T) {
 }
 
 // Updating description and rule_arns publishes a new version in place, keeping the order of the rules.
+// The final steps change only rule_arns, first reordering the rules and then removing one.
 func TestAccNetworkSecurityManagerTemplate_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -177,6 +178,59 @@ func TestAccNetworkSecurityManagerTemplate_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arns"), knownvalue.ListSizeExact(2)),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("rule_arns").AtSliceIndex(0), rule1ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("rule_arns").AtSliceIndex(1), rule2ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			// Reorder the rules without changing anything else.
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Template/update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("updated"),
+					"reversed":      config.BoolVariable(true),
+					"rule_count":    config.IntegerVariable(2),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTemplateExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arns"), knownvalue.ListSizeExact(2)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("rule_arns").AtSliceIndex(0), rule2ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("rule_arns").AtSliceIndex(1), rule1ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			// Remove a rule without changing anything else.
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Template/update/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"description":   config.StringVariable("updated"),
+					"reversed":      config.BoolVariable(true),
+					"rule_count":    config.IntegerVariable(1),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTemplateExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arns"), knownvalue.ListSizeExact(1)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("rule_arns").AtSliceIndex(0), rule2ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 				},
 			},
 		},

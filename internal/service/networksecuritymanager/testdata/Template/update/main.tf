@@ -5,7 +5,7 @@ resource "aws_networksecuritymanager_template" "test" {
   name          = var.rName
   description   = var.description
   firewall_type = "WAF"
-  rule_arns     = slice(aws_networksecuritymanager_rule.test[*].arn, 0, var.rule_count)
+  rule_arns     = slice(var.reversed ? reverse(aws_networksecuritymanager_rule.test[*].arn) : aws_networksecuritymanager_rule.test[*].arn, 0, var.rule_count)
 }
 
 resource "aws_networksecuritymanager_rule" "test" {
@@ -30,6 +30,12 @@ variable "rName" {
 variable "description" {
   type    = string
   default = null
+}
+
+variable "reversed" {
+  type     = bool
+  default  = false
+  nullable = false
 }
 
 variable "rule_count" {
