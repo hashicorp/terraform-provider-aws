@@ -41,7 +41,6 @@ func (provisioningHookPayloadVersion) Values() []provisioningHookPayloadVersion 
 
 // @SDKResource("aws_iot_provisioning_template", name="Provisioning Template")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func resourceProvisioningTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisioningTemplateCreate,
