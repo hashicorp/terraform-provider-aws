@@ -72,6 +72,84 @@ func TestAccCloudFormationStackInstances_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudFormationStackInstances_accounts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackInstances1 tfcloudformation.StackInstances
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	cloudformationStackSetResourceName := "aws_cloudformation_stack_set.test"
+	resourceName := "aws_cloudformation_stack_instances.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackInstancesDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackInstancesConfig_accounts(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackInstancesExists(ctx, t, resourceName, &stackInstances1),
+					resource.TestCheckResourceAttr(resourceName, "accounts.#", "1"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "accounts.0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", "1"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "stack_instance_summaries.0.account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", cloudformationStackSetResourceName, names.AttrName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_stacks",
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackInstances_AlternateAccount_accounts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackInstances1 tfcloudformation.StackInstances
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	cloudformationStackSetResourceName := "aws_cloudformation_stack_set.test"
+	resourceName := "aws_cloudformation_stack_instances.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckStackInstancesDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackInstancesConfig_alternateAccount(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackInstancesExists(ctx, t, resourceName, &stackInstances1),
+					resource.TestCheckResourceAttr(resourceName, "accounts.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "accounts.0", "data.aws_caller_identity.alternate", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "stack_instance_summaries.0.account_id", "data.aws_caller_identity.alternate", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", cloudformationStackSetResourceName, names.AttrName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_stacks",
+				},
+			},
+		},
+	})
+}
+
 func TestAccCloudFormationStackInstances_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackInstances1 tfcloudformation.StackInstances
@@ -892,6 +970,143 @@ resource "aws_cloudformation_stack_instances" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 }
 `)
+}
+
+func testAccStackInstancesConfig_accounts(rName string) string {
+	return acctest.ConfigCompose(testAccStackInstancesBaseConfig(rName), `
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudformation_stack_instances" "test" {
+  accounts       = [data.aws_caller_identity.current.account_id]
+  stack_set_name = aws_cloudformation_stack_set.test.name
+
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+}
+`)
+}
+
+func testAccStackInstancesConfig_alternateAccount(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+data "aws_caller_identity" "alternate" {
+  provider = awsalternate
+}
+
+resource "aws_iam_role" "Administration" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s-Administration"
+}
+
+resource "aws_iam_role_policy" "Administration" {
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ],
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  role = aws_iam_role.Administration.name
+}
+
+resource "aws_iam_role" "Execution" {
+  provider = awsalternate
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "${aws_iam_role.Administration.arn}"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s-Execution"
+}
+
+resource "aws_iam_role_policy" "Execution" {
+  provider = awsalternate
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ],
+      "Action": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+
+  role = aws_iam_role.Execution.name
+}
+
+resource "aws_cloudformation_stack_set" "test" {
+  administration_role_arn = aws_iam_role.Administration.arn
+  execution_role_name     = "%[1]s-Execution"
+  name                    = %[1]q
+
+  template_body = <<TEMPLATE
+Resources:
+  TestVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: %[1]q
+TEMPLATE
+}
+
+resource "aws_cloudformation_stack_instances" "test" {
+  accounts       = [data.aws_caller_identity.alternate.account_id]
+  stack_set_name = aws_cloudformation_stack_set.test.name
+
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+}
+`, rName))
 }
 
 func testAccStackInstancesConfig_regions(rName string, regions []string) string {
