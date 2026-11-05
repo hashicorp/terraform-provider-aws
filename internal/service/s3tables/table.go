@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
@@ -226,6 +227,61 @@ func (r *tableResource) Schema(ctx context.Context, request resource.SchemaReque
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
 											listvalidator.SizeBetween(1, 1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+									},
+									"partition_spec": schema.ListNestedBlock{
+										Description: "Partition specification for the Iceberg table.",
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												names.AttrField: schema.ListNestedBlock{
+													Description: "List of partition fields.",
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"field_id": schema.Int32Attribute{
+																Optional:    true,
+																Description: "Unique identifier for this partition field.",
+																PlanModifiers: []planmodifier.Int32{
+																	int32planmodifier.RequiresReplace(),
+																},
+															},
+															names.AttrName: schema.StringAttribute{
+																Required:    true,
+																Description: "The name for this partition field.",
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+															"source_id": schema.Int32Attribute{
+																Required:    true,
+																Description: "The ID of the source schema field to partition by.",
+																PlanModifiers: []planmodifier.Int32{
+																	int32planmodifier.RequiresReplace(),
+																},
+															},
+															"transform": schema.StringAttribute{
+																Required:    true,
+																Description: "The partition transform to apply to the source field.",
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+													},
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
 										},
 										PlanModifiers: []planmodifier.List{
 											listplanmodifier.RequiresReplace(),
@@ -1026,8 +1082,20 @@ type tableMetadataModel struct {
 }
 
 type icebergMetadataModel struct {
-	Properties fwtypes.MapOfString                                 `tfsdk:"properties"`
-	Schema     fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
+	PartitionSpec fwtypes.ListNestedObjectValueOf[icebergPartitionSpecModel] `tfsdk:"partition_spec"`
+	Properties    fwtypes.MapOfString                                        `tfsdk:"properties"`
+	Schema        fwtypes.ListNestedObjectValueOf[icebergSchemaModel]        `tfsdk:"schema"`
+}
+
+type icebergPartitionSpecModel struct {
+	Fields fwtypes.ListNestedObjectValueOf[icebergPartitionFieldModel] `tfsdk:"field"`
+}
+
+type icebergPartitionFieldModel struct {
+	FieldID   types.Int32  `tfsdk:"field_id"`
+	Name      types.String `tfsdk:"name"`
+	SourceID  types.Int32  `tfsdk:"source_id"`
+	Transform types.String `tfsdk:"transform"`
 }
 
 type icebergSchemaModel struct {
