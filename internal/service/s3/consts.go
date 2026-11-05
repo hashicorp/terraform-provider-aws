@@ -11,6 +11,13 @@ const (
 )
 
 const (
+	annotationTableConfigurationStatusActive      = "ACTIVE"
+	annotationTableConfigurationStatusBackfilling = "BACKFILLING"
+	annotationTableConfigurationStatusCreating    = "CREATING"
+	annotationTableConfigurationStatusFailed      = "FAILED"
+)
+
+const (
 	journalTableConfigurationStatusActive   = "ACTIVE"
 	journalTableConfigurationStatusCreating = "CREATING"
 	journalTableConfigurationStatusFailed   = "FAILED"
