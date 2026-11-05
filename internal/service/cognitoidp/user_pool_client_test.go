@@ -555,6 +555,64 @@ func TestAccCognitoIDPUserPoolClient_tokenValidityUnitsWTokenValidity(t *testing
 	})
 }
 
+// TestAccCognitoIDPUserPoolClient_tokenValidityUnits_removeBlockWithExplicitValues
+// reproduces the scenario where token_validity_units is set with non-default units
+// (e.g. minutes) and a matching validity integer (e.g. 60), then the block is
+// removed from config. Previously the update sent AccessTokenValidity=60 with
+// units reset to hours, yielding 60 hours which exceeds Cognito's 24h maximum:
+//
+//	InvalidParameterException: Invalid range for token validity.
+func TestAccCognitoIDPUserPoolClient_tokenValidityUnits_removeBlockWithExplicitValues(t *testing.T) {
+	ctx := acctest.Context(t)
+	var client awstypes.UserPoolClientType
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with explicit minutes units and a 60-minute validity.
+				Config: testAccUserPoolClientConfig_tokenValidityUnitsExplicitMinutes(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, t, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "60"),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "60"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"access_token":  knownvalue.StringExact("minutes"),
+							"id_token":      knownvalue.StringExact("minutes"),
+							"refresh_token": knownvalue.StringExact("days"),
+						}),
+					})),
+				},
+			},
+			{
+				// Step 2: remove the token_validity_units block entirely.
+				// Must not produce InvalidParameterException: Invalid range for token validity.
+				Config: testAccUserPoolClientConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, t, resourceName, &client),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, t, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPoolClient_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
@@ -1747,6 +1805,26 @@ resource "aws_cognito_user_pool_client" "test" {
   }
 }
 `, rName, units))
+}
+
+func testAccUserPoolClientConfig_tokenValidityUnitsExplicitMinutes(rName string) string {
+	return acctest.ConfigCompose(
+		testAccUserPoolClientConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_user_pool_client" "test" {
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  access_token_validity = 60
+  id_token_validity     = 60
+
+  token_validity_units {
+    access_token  = "minutes"
+    id_token      = "minutes"
+    refresh_token = "days"
+  }
+}
+`, rName))
 }
 
 func testAccUserPoolClientConfig_name(rName, name string) string {
