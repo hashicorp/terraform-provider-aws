@@ -34,7 +34,7 @@ This resource supports the following arguments:
 * `access_tier` - (Optional) The access tier that you want your objects or files transferred into. Valid values: `HOT`, `COOL` and `ARCHIVE`. Default: `HOT`.
 * `agent_arns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
 * `authentication_type` - (Required) The authentication method DataSync uses to access your Azure Blob Storage. Valid values: `SAS`.
-* `blob_type` - (Optional) The type of blob that you want your objects or files to be when transferring them into Azure Blob Storage. Valid values: `BLOB`. Default: `BLOB`.
+* `blob_type` - (Optional) The type of blob that you want your objects or files to be when transferring them into Azure Blob Storage. Valid values: `BLOCK`. Default: `BLOCK`.
 * `container_url` - (Required) The URL of the Azure Blob Storage container involved in your transfer.
 * `sas_configuration` - (Optional) The SAS configuration that allows DataSync to access your Azure Blob Storage. See configuration below.
 * `subdirectory` - (Optional) Path segments if you want to limit your transfer to a virtual directory in the container.

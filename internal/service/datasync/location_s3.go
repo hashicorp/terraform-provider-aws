@@ -142,6 +142,12 @@ func resourceLocationS3Create(ctx context.Context, d *schema.ResourceData, meta 
 			}
 
 			// Retry for IAM eventual consistency on error:
+			// InvalidRequestException: Invalid IAM role, <arn>. DataSync service was unable to perform sts:AssumeRole
+			if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "unable to perform sts:AssumeRole") {
+				return true, err
+			}
+
+			// Retry for IAM eventual consistency on error:
 			// InvalidRequestException: DataSync location access test failed: could not perform s3:ListObjectsV2 on bucket
 			if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "access test failed") {
 				return true, err

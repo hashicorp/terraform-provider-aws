@@ -40,7 +40,7 @@ This resource supports the following arguments:
 
 The `mount_options` configuration block supports the following arguments:
 
-* `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `AUTOMATIC`, `NFS3`, `NFS4_0` and `NFS4_1`. Default: `AUTOMATIC`
+* `version` - (Optional) NFS version that DataSync uses to mount the NFS share. Valid values: `AUTOMATIC`, `NFS3`, `NFS4_0`, `NFS4_1`, and `NFS4_2`. `NFS4_2` requires an Enhanced mode task. Default: `AUTOMATIC`.
 
 ### on_prem_config Argument Reference
 

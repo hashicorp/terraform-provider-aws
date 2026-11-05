@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
@@ -159,6 +160,12 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 		}
 	}
 
+	if len(removedTags) > 0 || len(updatedTags) > 0 {
+		if err := waitTagsPropagated(ctx, conn, identifier, newTags, optFns...); err != nil {
+			return smarterr.NewError(err)
+		}
+	}
+
 	return nil
 }
 
@@ -166,4 +173,36 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return updateTags(ctx, meta.(*conns.AWSClient).ElastiCacheClient(ctx), identifier, oldTags, newTags)
+}
+
+// waitTagsPropagated waits for elasticache service tags to be propagated.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func waitTagsPropagated(ctx context.Context, conn *elasticache.Client, id string, tags tftags.KeyValueTags, optFns ...func(*elasticache.Options)) error {
+	tflog.Debug(ctx, "Waiting for tag propagation", map[string]any{
+		names.AttrTags: tags,
+	})
+
+	checkFunc := func(ctx context.Context) (bool, error) {
+		output, err := listTags(ctx, conn, id, optFns...)
+		if retry.NotFound(err) {
+			return false, nil
+		}
+		if err != nil {
+			return false, smarterr.NewError(err)
+		}
+
+		if inContext, ok := tftags.FromContext(ctx); ok {
+			tags = tags.IgnoreConfig(inContext.IgnoreConfig)
+			output = output.IgnoreConfig(inContext.IgnoreConfig)
+		}
+
+		return output.Equal(tags), nil
+	}
+	opts := tfresource.WaitOpts{
+		ContinuousTargetOccurence: 2,
+		MinTimeout:                1 * time.Second,
+	}
+
+	return tfresource.WaitUntil(ctx, 2*time.Minute, checkFunc, opts)
 }
