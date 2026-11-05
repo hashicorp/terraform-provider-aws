@@ -28,6 +28,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newDeploymentResource,
+			TypeName: "aws_networksecuritymanager_deployment",
+			Name:     "Deployment",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newPolicyResource,
 			TypeName: "aws_networksecuritymanager_policy",
 			Name:     "Policy",
@@ -76,6 +87,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newDeploymentResourceAsListResource,
+			TypeName: "aws_networksecuritymanager_deployment",
+			Name:     "Deployment",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
 		{
 			Factory:  newPolicyResourceAsListResource,
 			TypeName: "aws_networksecuritymanager_policy",
