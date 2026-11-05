@@ -27,7 +27,6 @@ import (
 
 // @SDKResource("aws_iot_thing_type", name="Thing Type")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func resourceThingType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingTypeCreate,
