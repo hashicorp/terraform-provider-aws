@@ -46,7 +46,7 @@ The following arguments are optional:
 
 The `connector_configuration` block supports:
 
-* `azure` - (Optional) Configuration for an Azure connector. See [`azure` Block](#azure-block) below.
+* `azure` - (Required) Configuration for an Azure connector. See [`azure` Block](#azure-block) below.
 
 ### `azure` Block
 

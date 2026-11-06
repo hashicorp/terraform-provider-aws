@@ -6,6 +6,7 @@ package networksecuritymanager
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -49,6 +50,22 @@ func newRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) 
 // unpublished, or a draft saved on top of a published rule, can only be read,
 // updated, published or deleted through the DRAFT-qualified ARN.
 const ruleDraftQualifier = ":DRAFT"
+
+// The first Network Security Manager resource created in an account onboards the
+// account, and a create issued while that is still in progress fails with
+// "ConflictException: Account or org is already onboarded". Terraform creates
+// independent resources in parallel, so the first apply of a configuration with
+// more than one rule hits it.
+const (
+	onboardingConflictMessage = "already onboarded"
+	onboardingTimeout         = 5 * time.Minute
+)
+
+// retryWhenOnboarding retries f while the account is being onboarded. Only the
+// onboarding conflict is retried; any other ConflictException is returned.
+func retryWhenOnboarding[T any](ctx context.Context, f func(context.Context) (T, error)) (T, error) {
+	return tfresource.RetryWhenIsAErrorMessageContains[T, *awstypes.ConflictException](ctx, onboardingTimeout, f, onboardingConflictMessage)
+}
 
 type ruleResource struct {
 	framework.ResourceWithModel[ruleResourceModel]
@@ -123,7 +140,9 @@ func (r *ruleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateRule(ctx, &input)
+	out, err := retryWhenOnboarding(ctx, func(ctx context.Context) (*networksecuritymanager.CreateRuleOutput, error) {
+		return conn.CreateRule(ctx, &input)
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
