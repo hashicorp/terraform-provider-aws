@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -99,10 +98,7 @@ func (d *notifyConfigurationDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, data.flatten(ctx, out))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	data.flatten(ctx, out)
 
 	tags, err := listTags(ctx, conn, data.ARN.ValueString())
 	if err != nil {
@@ -129,11 +125,9 @@ type notifyConfigurationDataSourceModel struct {
 	UseCase                   types.String        `tfsdk:"use_case"`
 }
 
-func (m *notifyConfigurationDataSourceModel) flatten(ctx context.Context, info *awstypes.NotifyConfigurationInformation) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func (m *notifyConfigurationDataSourceModel) flatten(ctx context.Context, info *awstypes.NotifyConfigurationInformation) {
 	if info == nil {
-		return diags
+		return
 	}
 
 	m.ID = types.StringValue(aws.ToString(info.NotifyConfigurationId))
@@ -151,6 +145,4 @@ func (m *notifyConfigurationDataSourceModel) flatten(ctx context.Context, info *
 	} else {
 		m.CreatedTimestamp = timetypes.NewRFC3339Null()
 	}
-
-	return diags
 }
