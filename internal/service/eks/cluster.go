@@ -406,6 +406,29 @@ func resourceCluster() *schema.Resource {
 											Optional: true,
 											Computed: true,
 										},
+										"gateway_api": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"crds": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"managed": {
+																	Type:     schema.TypeBool,
+																	Required: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
 									},
 								},
 							},
@@ -1958,6 +1981,48 @@ func expandKubernetesNetworkConfigElasticLoadBalancing(tfList []any) *types.Elas
 		apiObject.Enabled = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["gateway_api"].([]any); ok {
+		apiObject.GatewayApi = expandKubernetesNetworkConfigGatewayAPI(v)
+	}
+
+	return apiObject
+}
+
+func expandKubernetesNetworkConfigGatewayAPI(tfList []any) *types.GatewayApiConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.GatewayApiConfiguration{}
+
+	if v, ok := tfMap["crds"].([]any); ok {
+		apiObject.Crds = expandKubernetesNetworkConfigCRDManagement(v)
+	}
+
+	return apiObject
+}
+
+func expandKubernetesNetworkConfigCRDManagement(tfList []any) *types.CrdManagementConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.CrdManagementConfiguration{}
+
+	if v, ok := tfMap["managed"].(bool); ok {
+		apiObject.Managed = aws.Bool(v)
+	}
+
 	return apiObject
 }
 
@@ -2429,6 +2494,31 @@ func flattenKubernetesNetworkConfigElasticLoadBalancing(apiObject *types.Elastic
 
 	tfMap := map[string]any{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+		"gateway_api":     flattenKubernetesNetworkConfigGatewayAPI(apiObject.GatewayApi),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenKubernetesNetworkConfigGatewayAPI(apiObject *types.GatewayApiConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"crds": flattenKubernetesNetworkConfigCRDManagement(apiObject.Crds),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenKubernetesNetworkConfigCRDManagement(apiObject *types.CrdManagementConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"managed": aws.ToBool(apiObject.Managed),
 	}
 
 	return []any{tfMap}

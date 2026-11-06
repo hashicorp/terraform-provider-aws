@@ -252,6 +252,26 @@ func dataSourceCluster() *schema.Resource {
 											Type:     schema.TypeBool,
 											Computed: true,
 										},
+										"gateway_api": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"crds": {
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"managed": {
+																	Type:     schema.TypeBool,
+																	Computed: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
 									},
 								},
 							},
