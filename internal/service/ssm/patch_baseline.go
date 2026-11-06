@@ -337,7 +337,15 @@ func resourcePatchBaselineFlatten(ctx context.Context, awsClient *conns.AWSClien
 	if err != nil {
 		return err
 	}
-	jsonString := string(tfjson.RemoveEmptyFields(jsonDoc))
+	jsonDoc, err = tfjson.RemoveJSONValues(jsonDoc, tfjson.RemoveOptions{
+		Null:         true,
+		EmptyArrays:  true,
+		EmptyObjects: true,
+	})
+	if err != nil {
+		return fmt.Errorf("removing empty fields from patch baseline JSON: %w", err)
+	}
+	jsonString := string(jsonDoc)
 
 	if err := d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules)); err != nil {
 		return fmt.Errorf("setting approval_rule: %w", err)

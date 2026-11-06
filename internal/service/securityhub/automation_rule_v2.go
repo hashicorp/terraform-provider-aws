@@ -341,8 +341,18 @@ func (r *automationRuleV2Resource) flatten(ctx context.Context, automationRuleV2
 				diags.AddError("invalid ocsf_finding_criteria_json", err.Error())
 				return diags
 			}
+			v, err = tfjson.RemoveJSONValues(v, tfjson.RemoveOptions{
+				Null:              true,
+				EmptyArrays:       true,
+				EmptyObjects:      true,
+				EmptyStringFields: true,
+			})
+			if err != nil {
+				diags.AddError("invalid ocsf_finding_criteria_json", err.Error())
+				return diags
+			}
 			criteria, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &criteriaModel{
-				OCSFFindingCriteriaJSON: jsontypes.NewNormalizedValue(string(tfjson.RemoveEmptyStringFields(tfjson.RemoveEmptyFields(v)))),
+				OCSFFindingCriteriaJSON: jsontypes.NewNormalizedValue(string(v)),
 			})
 			diags.Append(d...)
 			if diags.HasError() {

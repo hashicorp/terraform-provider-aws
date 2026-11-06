@@ -9,69 +9,26 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 )
 
-type removeOptions struct {
-	fields            map[string]struct{}
-	null              bool
-	emptyArrays       bool
-	emptyObjects      bool
-	emptyStringFields bool
+// RemoveOptions configures values removed by RemoveJSONValues.
+type RemoveOptions struct {
+	// Fields contains decoded object field names to remove at every nesting level.
+	Fields []string
+	// Null removes null values from objects and arrays.
+	Null bool
+	// EmptyArrays removes arrays that are empty after their elements are transformed.
+	EmptyArrays bool
+	// EmptyObjects removes objects that are empty after their fields are transformed.
+	EmptyObjects bool
+	// EmptyStringFields removes empty strings from object fields, but not from arrays.
+	EmptyStringFields bool
 }
 
-// RemoveFields removes the specified fields from a valid JSON string.
-func RemoveFields(in string, fields ...string) string {
-	removeFields := make(map[string]struct{}, len(fields))
-	for _, field := range fields {
-		removeFields[field] = struct{}{}
-	}
-
-	out, err := removeJSONValues([]byte(in), removeOptions{fields: removeFields})
-	if err != nil {
-		return ""
-	}
-
-	return string(out)
-}
-
-// RemoveEmptyFields removes null, empty array, and empty object values from a valid JSON document.
-func RemoveEmptyFields(in []byte) []byte {
-	out, err := removeJSONValues(in, removeOptions{
-		null:         true,
-		emptyArrays:  true,
-		emptyObjects: true,
-	})
-	if err != nil {
-		return nil
-	}
-
-	return out
-}
-
-// RemoveEmptyStringFields removes empty string values from object fields in a valid JSON document.
-func RemoveEmptyStringFields(in []byte) []byte {
-	out, err := removeJSONValues(in, removeOptions{emptyStringFields: true})
-	if err != nil {
-		return nil
-	}
-
-	return out
-}
-
-// RemoveNullAndEmptyArrayValues removes null and empty array values from a valid JSON document.
-func RemoveNullAndEmptyArrayValues(in []byte) []byte {
-	out, err := removeJSONValues(in, removeOptions{
-		null:        true,
-		emptyArrays: true,
-	})
-	if err != nil {
-		return nil
-	}
-
-	return out
-}
-
-func removeJSONValues(in []byte, options removeOptions) ([]byte, error) {
+// RemoveJSONValues removes selected values from a JSON document and compacts the result.
+// The top-level value is always retained.
+func RemoveJSONValues(in []byte, options RemoveOptions) ([]byte, error) {
 	decoder := jsontext.NewDecoder(
 		bytes.NewReader(in),
 		jsontext.AllowDuplicateNames(true),
@@ -93,7 +50,7 @@ func removeJSONValues(in []byte, options removeOptions) ([]byte, error) {
 	return out, nil
 }
 
-func transformJSONValue(decoder *jsontext.Decoder, out *[]byte, options removeOptions, objectField, root bool) (bool, error) {
+func transformJSONValue(decoder *jsontext.Decoder, out *[]byte, options RemoveOptions, objectField, root bool) (bool, error) {
 	start := len(*out)
 
 	var (
@@ -109,8 +66,8 @@ func transformJSONValue(decoder *jsontext.Decoder, out *[]byte, options removeOp
 		var value jsontext.Value
 		value, err = decoder.ReadValue()
 		if err == nil {
-			keep = root || !((options.null && value.Kind() == jsontext.KindNull) ||
-				(options.emptyStringFields && objectField && bytes.Equal(value, []byte(`""`))))
+			keep = root || !((options.Null && value.Kind() == jsontext.KindNull) ||
+				(options.EmptyStringFields && objectField && bytes.Equal(value, []byte(`""`))))
 			if keep {
 				*out = append(*out, value...)
 			}
@@ -126,7 +83,7 @@ func transformJSONValue(decoder *jsontext.Decoder, out *[]byte, options removeOp
 	return keep, nil
 }
 
-func transformJSONObject(decoder *jsontext.Decoder, out *[]byte, options removeOptions, root bool) (bool, error) {
+func transformJSONObject(decoder *jsontext.Decoder, out *[]byte, options RemoveOptions, root bool) (bool, error) {
 	if _, err := decoder.ReadToken(); err != nil {
 		return false, err
 	}
@@ -139,11 +96,17 @@ func transformJSONObject(decoder *jsontext.Decoder, out *[]byte, options removeO
 			return false, err
 		}
 
-		if _, ok := options.fields[string(name)]; ok {
-			if err := decoder.SkipValue(); err != nil {
+		if len(options.Fields) != 0 {
+			decodedName, err := jsontext.AppendUnquote(nil, name)
+			if err != nil {
 				return false, err
 			}
-			continue
+			if slices.Contains(options.Fields, string(decodedName)) {
+				if err := decoder.SkipValue(); err != nil {
+					return false, err
+				}
+				continue
+			}
 		}
 
 		start := len(*out)
@@ -169,10 +132,10 @@ func transformJSONObject(decoder *jsontext.Decoder, out *[]byte, options removeO
 	}
 	*out = append(*out, '}')
 
-	return root || members != 0 || !options.emptyObjects, nil
+	return root || members != 0 || !options.EmptyObjects, nil
 }
 
-func transformJSONArray(decoder *jsontext.Decoder, out *[]byte, options removeOptions, root bool) (bool, error) {
+func transformJSONArray(decoder *jsontext.Decoder, out *[]byte, options RemoveOptions, root bool) (bool, error) {
 	if _, err := decoder.ReadToken(); err != nil {
 		return false, err
 	}
@@ -201,5 +164,5 @@ func transformJSONArray(decoder *jsontext.Decoder, out *[]byte, options removeOp
 	}
 	*out = append(*out, ']')
 
-	return root || elements != 0 || !options.emptyArrays, nil
+	return root || elements != 0 || !options.EmptyArrays, nil
 }

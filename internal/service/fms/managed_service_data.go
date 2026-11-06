@@ -25,5 +25,13 @@ func suppressEquivalentManagedServiceDataJSON(k, old, new string, d *schema.Reso
 
 // removeEmptyFieldsFromJSON removes null and empty array values from a valid JSON string.
 func removeEmptyFieldsFromJSON(in string) string {
-	return string(tfjson.RemoveNullAndEmptyArrayValues([]byte(in)))
+	out, err := tfjson.RemoveJSONValues([]byte(in), tfjson.RemoveOptions{
+		Null:        true,
+		EmptyArrays: true,
+	})
+	if err != nil {
+		return ""
+	}
+
+	return string(out)
 }
