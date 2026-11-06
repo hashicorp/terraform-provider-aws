@@ -33,11 +33,13 @@ import (
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_lambdacore_network_connector", name="Network Connector")
+// @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambdacore;lambdacore.GetNetworkConnectorOutput")
 // @Testing(preCheck="testAccPreCheck")
@@ -83,6 +85,8 @@ func (r *networkConnectorResource) Schema(ctx context.Context, req resource.Sche
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrConfiguration: schema.ListNestedBlock{
@@ -159,6 +163,7 @@ func (r *networkConnectorResource) Create(ctx context.Context, req resource.Crea
 
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.Tags = getTagsIn(ctx)
 
 	outCNC, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func(ctx context.Context) (*lambdacore.CreateNetworkConnectorOutput, error) {
@@ -454,6 +459,8 @@ type networkConnectorResourceModel struct {
 	LatestVersionARN fwtypes.ARN                                                         `tfsdk:"latest_version_arn"`
 	Name             types.String                                                        `tfsdk:"name"`
 	OperatorRole     fwtypes.ARN                                                         `tfsdk:"operator_role"`
+	Tags             tftags.Map                                                          `tfsdk:"tags"`
+	TagsAll          tftags.Map                                                          `tfsdk:"tags_all"`
 	Timeouts         timeouts.Value                                                      `tfsdk:"timeouts"`
 }
 
