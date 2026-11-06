@@ -382,6 +382,9 @@ The `tags` attribute should be the last line of the resource or data source defi
 
 Tags should only be applied to the resource that is being tested.
 
+After generating Terraform configurations, run `terraform fmt -recursive -check` and `make testacc-tflint-dir` before `make quick-fix` and before committing.
+If either check fails, fix the Go template and regenerate; do not edit generated Terraform files directly.
+
 For example:
 
 ```terraform
