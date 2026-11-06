@@ -15,8 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -35,7 +37,6 @@ func newManagedNotificationAdditionalChannelAssociationResource(_ context.Contex
 
 type managedNotificationAdditionalChannelAssociationResource struct {
 	framework.ResourceWithModel[managedNotificationAdditionalChannelAssociationResourceModel]
-	framework.WithNoUpdate
 }
 
 func (r *managedNotificationAdditionalChannelAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -55,6 +56,13 @@ func (r *managedNotificationAdditionalChannelAssociationResource) Schema(ctx con
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"sensitive_events_subscribed": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 		},
 	}
 }
@@ -71,6 +79,7 @@ func (r *managedNotificationAdditionalChannelAssociationResource) Create(ctx con
 	managedNotificationConfigurationARN, channelARN := fwflex.StringValueFromFramework(ctx, data.ManagedNotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.ChannelARN)
 	input := notifications.AssociateManagedNotificationAdditionalChannelInput{
 		ChannelArn:                          aws.String(channelARN),
+		IsSensitiveEventsSubscribed:         fwflex.BoolFromFramework(ctx, data.SensitiveEventsSubscribed),
 		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationARN),
 	}
 	_, err := conn.AssociateManagedNotificationAdditionalChannel(ctx, &input)
@@ -80,6 +89,16 @@ func (r *managedNotificationAdditionalChannelAssociationResource) Create(ctx con
 
 		return
 	}
+
+	output, err := findManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx, conn, managedNotificationConfigurationARN, channelARN)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Managed Notification Additional Channel Association (%s,%s)", managedNotificationConfigurationARN, channelARN), err.Error())
+
+		return
+	}
+
+	data.SensitiveEventsSubscribed = fwflex.BoolToFramework(ctx, output.IsSensitiveEventsSubscribed)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -94,7 +113,7 @@ func (r *managedNotificationAdditionalChannelAssociationResource) Read(ctx conte
 	conn := r.Meta().NotificationsClient(ctx)
 
 	managedNotificationConfigurationARN, channelARN := fwflex.StringValueFromFramework(ctx, data.ManagedNotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.ChannelARN)
-	_, err := findManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx, conn, managedNotificationConfigurationARN, channelARN)
+	output, err := findManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx, conn, managedNotificationConfigurationARN, channelARN)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -109,7 +128,35 @@ func (r *managedNotificationAdditionalChannelAssociationResource) Read(ctx conte
 		return
 	}
 
+	data.SensitiveEventsSubscribed = fwflex.BoolToFramework(ctx, output.IsSensitiveEventsSubscribed)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *managedNotificationAdditionalChannelAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new managedNotificationAdditionalChannelAssociationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().NotificationsClient(ctx)
+
+	managedNotificationConfigurationARN, channelARN := fwflex.StringValueFromFramework(ctx, new.ManagedNotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, new.ChannelARN)
+	input := notifications.UpdateManagedNotificationChannelAssociationInput{
+		ChannelIdentifier:                   aws.String(channelARN),
+		IsSensitiveEventsSubscribed:         fwflex.BoolFromFramework(ctx, new.SensitiveEventsSubscribed),
+		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationARN),
+	}
+	_, err := conn.UpdateManagedNotificationChannelAssociation(ctx, &input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating User Notifications Managed Notification Additional Channel Association (%s,%s)", managedNotificationConfigurationARN, channelARN), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *managedNotificationAdditionalChannelAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -168,4 +215,5 @@ func findManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx context
 type managedNotificationAdditionalChannelAssociationResourceModel struct {
 	ChannelARN                          fwtypes.ARN `tfsdk:"channel_arn"`
 	ManagedNotificationConfigurationARN fwtypes.ARN `tfsdk:"managed_notification_arn"`
+	SensitiveEventsSubscribed           types.Bool  `tfsdk:"sensitive_events_subscribed"`
 }
