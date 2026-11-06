@@ -7,6 +7,7 @@ package interconnect
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/interconnect"
@@ -20,11 +21,72 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newAttachPointsDataSource,
+			TypeName: "aws_interconnect_attach_points",
+			Name:     "Attach Points",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newConnectionDataSource,
+			TypeName: "aws_interconnect_connection",
+			Name:     "Connection",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newConnectionsDataSource,
+			TypeName: "aws_interconnect_connections",
+			Name:     "Connections",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newEnvironmentDataSource,
+			TypeName: "aws_interconnect_environment",
+			Name:     "Environment",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newEnvironmentsDataSource,
+			TypeName: "aws_interconnect_environments",
+			Name:     "Environments",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newConnectionResource,
+			TypeName: "aws_interconnect_connection",
+			Name:     "Connection",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newConnectionProposalAcceptorResource,
+			TypeName: "aws_interconnect_connection_proposal_acceptor",
+			Name:     "Connection Proposal Acceptor",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
