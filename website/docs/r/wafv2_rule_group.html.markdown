@@ -444,8 +444,30 @@ The `monetize` block supports the following arguments:
 
 The `monetization_config` block supports the following arguments:
 
+* `connected_account_config` - (Optional) Connected account that payments settle to, through a supported third-party payment provider (Stripe). Use it instead of, or together with, `crypto_config`; a given `chain` can be used by only one of them. `currency_mode` must be `REAL` when this block is set. See [`connected_account_config`](#connected_account_config-block) below for details.
 * `crypto_config` - (Optional) Cryptocurrency payment configuration for the rule group. See [`crypto_config`](#crypto_config-block) below for details.
 * `currency_mode` - (Optional) Currency mode for monetized requests. Valid values are `TEST` and `REAL`. Defaults to `REAL`.
+
+### `connected_account_config` Block
+
+The `connected_account_config` block supports the following arguments:
+
+* `connected_account_arn` - (Required) ARN of the connected account that payments settle to. You get it from **Payment preferences** > **Connected accounts** in the AWS Billing and Cost Management console. The connected account must be active and enabled for crypto settlement, and you need the `payments:GetConnectedAccount` permission on it.
+* `payment_network` - (Required) Blockchain networks to receive payments on. You can specify 1 to 2 networks. See [Connected Account `payment_network`](#connected-account-payment_network-block) below for details.
+
+### Connected Account `payment_network` Block
+
+The `payment_network` block within `connected_account_config` supports the following arguments:
+
+* `chain` - (Required) Blockchain network used for settlement. Valid values are `BASE` and `SOLANA`.
+* `prices` - (Required) Price configuration for this payment network. Currently supports a single price entry. See [Connected Account `prices`](#connected-account-prices-block) below for details.
+
+### Connected Account `prices` Block
+
+The `prices` block within `connected_account_config` `payment_network` supports the following arguments:
+
+* `amount` - (Required) Base price amount per request, expressed as a decimal string with up to 2 decimal places. Minimum `0.01`, maximum `999999.99` (for example, `"0.01"`).
+* `currency` - (Required) Currency of the price amount. Valid value is `USDC`.
 
 ### `crypto_config` Block
 
