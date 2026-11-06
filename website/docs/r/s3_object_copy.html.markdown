@@ -78,6 +78,9 @@ The following arguments are optional:
 * `kms_key_id` - (Optional) AWS KMS Key ARN to use for object encryption. This value is a fully qualified **ARN** of the KMS Key. If using `aws_kms_key`, use the exported `arn` attribute: `kms_key_id = aws_kms_key.foo.arn`
 * `metadata` - (Optional) Map of keys/values to provision metadata (will be automatically prefixed by `x-amz-meta-`, note that only lowercase label are currently supported by the AWS Go API).
 * `metadata_directive` - (Optional) Whether the metadata is copied from the source object or replaced with metadata provided in the request. Valid values are `COPY` and `REPLACE`.
+* `object_lock_event_hold` - (Optional) [Event hold](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-overview.html) status to apply to this object. Valid values are `ON` and `OFF`. Requires `object_lock_mode`. An event hold duration must not be set while this is `OFF`.
+* `object_lock_event_hold_duration_days` - (Optional) Number of days the object remains protected after its event hold is released. Valid values are between `1` and `36500`. Conflicts with `object_lock_event_hold_duration_years`.
+* `object_lock_event_hold_duration_years` - (Optional) Number of years the object remains protected after its event hold is released. Valid values are between `1` and `100`. Conflicts with `object_lock_event_hold_duration_days`.
 * `object_lock_legal_hold_status` - (Optional) [Legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds) status to apply to the specified object. Valid values are `ON` and `OFF`.
 * `object_lock_mode` - (Optional) Object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) that you want to apply to this object. Valid values are `GOVERNANCE` and `COMPLIANCE`.
 * `object_lock_retain_until_date` - (Optional) Date and time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), when this object's object lock will [expire](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-periods).
@@ -91,6 +94,8 @@ The following arguments are optional:
 * `tagging_directive` - (Optional) Whether the object tag-set is copied from the source object or replaced with tag-set provided in the request. Valid values are `COPY` and `REPLACE`.
 * `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `website_redirect` - (Optional) Target URL for [website redirect](http://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html).
+
+~> **NOTE:** While an event hold is active, S3 advances `object_lock_retain_until_date` and freezes it on release. A configured date is a minimum rather than an exact value: once an event hold is in effect, whether configured or inherited from the bucket's `default_event_hold`, a configured date that the reported date has already passed is ignored, including after release.
 
 ### `grant` Block
 

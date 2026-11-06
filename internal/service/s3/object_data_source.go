@@ -136,6 +136,18 @@ func dataSourceObject() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
+				"object_lock_event_hold": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"object_lock_event_hold_duration_days": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"object_lock_event_hold_duration_years": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
 				"object_lock_legal_hold_status": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -253,6 +265,9 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set("last_modified", nil)
 	}
 	d.Set("metadata", output.Metadata)
+	d.Set("object_lock_event_hold", output.ObjectLockEventHold)
+	d.Set("object_lock_event_hold_duration_days", output.ObjectLockEventHoldDurationDays)
+	d.Set("object_lock_event_hold_duration_years", output.ObjectLockEventHoldDurationYears)
 	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", output.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenObjectDate(output.ObjectLockRetainUntilDate))

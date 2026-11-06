@@ -103,6 +103,9 @@ This data source exports the following attributes in addition to the arguments a
 * `expires` - Date and time at which the object is no longer cacheable.
 * `last_modified` - Last modified date of the object in RFC1123 format (e.g., `Mon, 02 Jan 2006 15:04:05 MST`)
 * `metadata` - Map of metadata stored with the object in S3. [Keys](https://developer.hashicorp.com/terraform/language/expressions/types#maps-objects) are always returned in lowercase.
+* `object_lock_event_hold` - Whether this object has an active event hold. Valid values are `ON` and `OFF`.
+* `object_lock_event_hold_duration_days` - Number of days the object remains protected after its event hold is released.
+* `object_lock_event_hold_duration_years` - Number of years the object remains protected after its event hold is released.
 * `object_lock_legal_hold_status` - Whether this object has an active [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds). This field is only returned if you have permission to view an object's legal hold status.
 * `object_lock_mode` - Object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) currently in place for this object.
 * `object_lock_retain_until_date` - Date and time when this object's object lock will expire.
