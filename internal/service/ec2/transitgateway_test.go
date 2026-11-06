@@ -33,6 +33,14 @@ func TestAccTransitGateway_serial(t *testing.T) {
 
 	semaphore := tfsync.GetSemaphore("TransitGateway", "AWS_EC2_TRANSIT_GATEWAY_LIMIT", 5)
 	testCases := map[string]map[string]func(*testing.T, tfsync.Semaphore){
+		"AttachmentNATConfiguration": {
+			acctest.CtBasic:         testAccTransitGatewayAttachmentNATConfiguration_basic,
+			acctest.CtDisappears:    testAccTransitGatewayAttachmentNATConfiguration_disappears,
+			"updateRules":           testAccTransitGatewayAttachmentNATConfiguration_updateRules,
+			"natGatewaySupport":     testAccTransitGatewayAttachmentNATConfiguration_natGatewaySupport,
+			"natSystemRouteSupport": testAccTransitGatewayAttachmentNATConfiguration_natSystemRouteSupport,
+			"Identity":              testAccTransitGatewayAttachmentNATConfiguration_identity,
+		},
 		"Connect": {
 			acctest.CtBasic:      testAccTransitGatewayConnect_basic,
 			acctest.CtDisappears: testAccTransitGatewayConnect_disappears,
