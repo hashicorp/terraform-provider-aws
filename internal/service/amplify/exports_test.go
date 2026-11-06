@@ -18,4 +18,6 @@ var (
 	FindWebhookByID                    = findWebhookByID
 
 	WaitDomainAssociationAvailable = waitDomainAssociationAvailable
+
+	SuppressCustomHeadersDiff = suppressCustomHeadersDiff
 )
