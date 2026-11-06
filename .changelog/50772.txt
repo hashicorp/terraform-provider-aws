@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_arcregionswitch_plan: Add `payload` argument to `workflow.step.custom_action_lambda_config.lambda` and `workflow.step.parallel_config.step.custom_action_lambda_config.lambda`
+```
