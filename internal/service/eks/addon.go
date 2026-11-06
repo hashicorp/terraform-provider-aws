@@ -10,6 +10,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/big"
+	"reflect"
 	"strings"
 	"time"
 
@@ -17,6 +19,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/goccy/go-yaml/ast"
+	"github.com/goccy/go-yaml/parser"
+	"github.com/goccy/go-yaml/token"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/yaml"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -53,6 +59,8 @@ func resourceAddon() *schema.Resource {
 		ReadWithoutTimeout:   resourceAddonRead,
 		UpdateWithoutTimeout: resourceAddonUpdate,
 		DeleteWithoutTimeout: resourceAddonDelete,
+
+		CustomizeDiff: resourceAddonCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -366,6 +374,106 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
+}
+
+// resourceAddonCustomizeDiff suppresses formatting-only changes to
+// configuration_values. The EKS API re-serializes the stored configuration
+// when returning it: JSON documents come back with different key ordering and
+// whitespace than what was sent, and YAML documents are normalized with
+// comments removed. A raw string comparison between the configuration and the
+// API response therefore never converges, and every plan reports an update
+// that applying cannot resolve. When the old and new values decode to equal
+// documents, keep the value already recorded in state so no update is
+// planned. Real value changes still produce a diff and are applied as usual.
+func resourceAddonCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	oldRaw, newRaw := d.GetChange("configuration_values")
+	old, new := oldRaw.(string), newRaw.(string)
+
+	// An empty old or new value means the configuration is being added or
+	// removed, which is never a formatting difference.
+	if old == "" || new == "" || old == new {
+		return nil
+	}
+
+	if configurationValuesEqual(old, new) {
+		return d.SetNew("configuration_values", old)
+	}
+
+	return nil
+}
+
+// configurationValuesEqual returns whether two aws_eks_addon
+// configuration_values documents are semantically equal. YAML decoding also
+// handles JSON documents, so differences in key ordering, whitespace, and
+// comments do not affect the result.
+func configurationValuesEqual(old, new string) bool {
+	oldNumbers, ok := configurationValueNumbers(old)
+	if !ok {
+		return false
+	}
+	newNumbers, ok := configurationValueNumbers(new)
+	if !ok || !reflect.DeepEqual(oldNumbers, newNumbers) {
+		return false
+	}
+
+	var oldDoc, newDoc any
+	if err := yaml.DecodeFromString(old, &oldDoc); err != nil {
+		return false
+	}
+	if err := yaml.DecodeFromString(new, &newDoc); err != nil {
+		return false
+	}
+
+	return reflect.DeepEqual(oldDoc, newDoc)
+}
+
+// YAML decoding can turn integers outside uint64 into strings. Compare numeric
+// source tokens at each document path before comparing the decoded values.
+func configurationValueNumbers(s string) (map[string]string, bool) {
+	const decimalBase = 10
+
+	file, err := parser.ParseBytes([]byte(s), 0)
+	if err != nil || len(file.Docs) != 1 {
+		return nil, false
+	}
+
+	numbers := make(map[string]string)
+	var visit func(ast.Node) bool
+	visit = func(node ast.Node) bool {
+		switch node := node.(type) {
+		case *ast.DocumentNode:
+			return node.Body != nil && visit(node.Body)
+		case *ast.MappingNode:
+			for _, value := range node.Values {
+				if !visit(value.Value) {
+					return false
+				}
+			}
+		case *ast.SequenceNode:
+			for _, value := range node.Values {
+				if !visit(value) {
+					return false
+				}
+			}
+		case *ast.IntegerNode, *ast.FloatNode:
+			numbers[node.GetPath()] = node.GetToken().Value
+		case *ast.StringNode:
+			if node.GetToken().Type == token.StringType {
+				if _, ok := new(big.Int).SetString(node.GetToken().Value, decimalBase); ok {
+					numbers[node.GetPath()] = node.GetToken().Value
+				}
+			}
+		case *ast.BoolNode, *ast.NullNode, *ast.LiteralNode:
+			// These values cannot lose numeric precision.
+		default:
+			return false
+		}
+		return true
+	}
+	if !visit(file.Docs[0]) {
+		return nil, false
+	}
+	return numbers, true
 }
 
 func resourceAddonFlatten(ctx context.Context, conn *eks.Client, addon *types.Addon, d *schema.ResourceData) error {
