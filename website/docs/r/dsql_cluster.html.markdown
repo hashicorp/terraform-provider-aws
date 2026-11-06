@@ -46,6 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `encryption_details` - Encryption configuration details for the DSQL Cluster.
     * `encryption_status` - The status of encryption for the DSQL Cluster.
     * `encryption_type` - The type of encryption that protects the data on the DSQL Cluster.
+* `endpoint` - Private VPC connection endpoint for the DSQL Cluster.
 * `identifier` - Cluster Identifier.
 * `multi_region_properties` - Multi-region properties of the DSQL Cluster.
     * `clusters` - List of DSQL Cluster ARNs peered to this cluster.
