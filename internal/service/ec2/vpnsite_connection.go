@@ -14,6 +14,7 @@ import (
 	"net"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -869,13 +870,13 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("tunnel1_bgp_asn", tunnelInfo.Tunnel1BGPASN)
 		d.Set("tunnel1_bgp_holdtime", tunnelInfo.Tunnel1BGPHoldTime)
 		d.Set("tunnel1_cgw_inside_address", tunnelInfo.Tunnel1CgwInsideAddress)
-		d.Set("tunnel1_preshared_key", tunnelInfo.Tunnel1PreSharedKey)
+		d.Set("tunnel1_preshared_key", vpnTunnelPreSharedKey(d, "tunnel1_preshared_key", tunnelInfo.Tunnel1PreSharedKey))
 		d.Set("tunnel1_vgw_inside_address", tunnelInfo.Tunnel1VgwInsideAddress)
 		d.Set("tunnel2_address", tunnelInfo.Tunnel2Address)
 		d.Set("tunnel2_bgp_asn", tunnelInfo.Tunnel2BGPASN)
 		d.Set("tunnel2_bgp_holdtime", tunnelInfo.Tunnel2BGPHoldTime)
 		d.Set("tunnel2_cgw_inside_address", tunnelInfo.Tunnel2CgwInsideAddress)
-		d.Set("tunnel2_preshared_key", tunnelInfo.Tunnel2PreSharedKey)
+		d.Set("tunnel2_preshared_key", vpnTunnelPreSharedKey(d, "tunnel2_preshared_key", tunnelInfo.Tunnel2PreSharedKey))
 		d.Set("tunnel2_vgw_inside_address", tunnelInfo.Tunnel2VgwInsideAddress)
 	} else {
 		// This element is present in the DescribeVpnConnections response only if the VPN connection is in the pending or available state.
@@ -1747,6 +1748,24 @@ func customerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 	}
 
 	return tunnelInfo, nil
+}
+
+// vpnTunnelPreSharedKey keeps the known key when AWS redacts a Secrets Manager stored key in the XML.
+func vpnTunnelPreSharedKey(d *schema.ResourceData, key, xmlPreSharedKey string) string {
+	if !strings.Contains(xmlPreSharedKey, "REDACTED") {
+		return xmlPreSharedKey
+	}
+
+	// Raw configuration is null on refresh and import.
+	if rawConfig := d.GetRawConfig(); !rawConfig.IsNull() && rawConfig.GetAttr(key).IsNull() {
+		return xmlPreSharedKey
+	}
+
+	if v := d.Get(key).(string); v != "" {
+		return v
+	}
+
+	return xmlPreSharedKey
 }
 
 func validVPNConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
