@@ -19,8 +19,9 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 	semaphore := tfsync.GetSemaphore("TransitGateway", "AWS_EC2_TRANSIT_GATEWAY_LIMIT", 5)
 	testCases := map[string]map[string]func(*testing.T, tfsync.Semaphore){
 		"Attachment": {
-			"Filter": testAccTransitGatewayAttachmentDataSource_Filter,
-			"ID":     testAccTransitGatewayAttachmentDataSource_ID,
+			"Filter":            testAccTransitGatewayAttachmentDataSource_Filter,
+			"ID":                testAccTransitGatewayAttachmentDataSource_ID,
+			"NATGatewaySupport": testAccTransitGatewayAttachmentDataSource_natGatewaySupport,
 		},
 		"Attachments": {
 			"Filter": testAccTransitGatewayAttachmentsDataSource_Filter,
