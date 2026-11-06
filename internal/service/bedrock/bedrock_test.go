@@ -13,6 +13,12 @@ func TestAccBedrock_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		// Account-level singleton: concurrent tests would fight over one setting.
+		"AccountDataRetention": {
+			acctest.CtBasic: testAccAccountDataRetention_basic,
+			"update":        testAccAccountDataRetention_update,
+			"Identity":      testAccBedrockAccountDataRetention_identitySerial,
+		},
 		// AWS has a default quota of 10 model evaluation jobs per account. Running
 		// all tests in parallel exceeds this quota and triggers cascading failures,
 		// especially in list tests.
