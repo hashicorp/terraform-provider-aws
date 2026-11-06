@@ -26,6 +26,7 @@ func TestAccFMS_serial(t *testing.T) {
 			"policyOption":               testAccPolicy_policyOption,
 			"resourceTags":               testAccPolicy_resourceTags,
 			"resourceTagLogicalOperator": testAccPolicy_resourceTagLogicalOperator,
+			"resourceTagRepeatedKey":     testAccPolicy_resourceTagRepeatedKey,
 			"securityGroup":              testAccPolicy_securityGroup,
 			"tags":                       testAccFMSPolicy_tagsSerial,
 			"update":                     testAccPolicy_update,
