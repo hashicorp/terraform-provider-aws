@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -502,24 +503,10 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	permissions, err := waitPermissionsReady(ctx, conn, &input, filter)
 
-	if !d.IsNewResource() {
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
-			log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-
-		if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Resource does not exist") {
-			log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state: %s", d.Id(), err)
-			d.SetId("")
-			return diags
-		}
-
-		if len(permissions) == 0 {
-			log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state (0 permissions)", d.Id())
-			d.SetId("")
-			return diags
-		}
+	if !d.IsNewResource() && permissionsNotFound(err) {
+		log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state: %s", d.Id(), err)
+		d.SetId("")
+		return diags
 	}
 
 	if err != nil {
@@ -716,6 +703,15 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+// permissionsNotFound reports whether err from waitPermissionsReady means that the permissions
+// do not exist. Any other error (e.g. throttling, timeouts with no completed request, or
+// server errors) means that their existence could not be determined.
+func permissionsNotFound(err error) bool {
+	return retry.NotFound(err) ||
+		errs.IsA[*awstypes.EntityNotFoundException](err) ||
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Resource does not exist")
 }
 
 type PermissionsFilter = tfslices.Predicate[awstypes.PrincipalResourcePermissions]
