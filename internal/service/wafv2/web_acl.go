@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -414,37 +415,27 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		aclName := d.Get(names.AttrName).(string)
 		aclScope := d.Get(names.AttrScope).(string)
 		aclLockToken := d.Get("lock_token").(string)
-		// Find the AWS managed ShieldMitigationRuleGroup group rule if existent and add it into the set of rules to update
-		// so that the provider will not remove the Shield rule when changes are applied to the WebACL.
+		// Find the rules that Shield Advanced automatic application layer DDoS mitigation added, if any, and add them
+		// to the set of rules to update so that the provider will not remove them when changes are applied to the WebACL.
 		var rules []awstypes.Rule
 
-		rules = expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List())
-		if sr := findShieldRule(rules); len(sr) == 0 {
-			output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
-			}
-
-			rules = append(rules, findShieldRule(output.WebACL.Rules)...)
-		}
-
 		if v, ok := d.GetOk("rule_json"); ok {
-			r, err := expandWebACLRulesJSON(v.(string))
+			var err error
+			rules, err = expandWebACLRulesJSON(v.(string))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "expanding WAFv2 WebACL JSON rule (%s): %s", d.Id(), err)
 			}
-			if sr := findShieldRule(rules); len(sr) == 0 {
-				output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
-				}
-
-				r = append(r, findShieldRule(output.WebACL.Rules)...)
-			}
-			rules = r
+		} else {
+			rules = expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List())
 		}
+
+		output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
+		}
+
+		rules = appendShieldRules(rules, output.WebACL.Rules)
 
 		input := &wafv2.UpdateWebACLInput{
 			AssociationConfig:    expandAssociationConfig(d.Get("association_config").([]any)),
@@ -476,7 +467,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		const (
 			timeout = 5 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
+		_, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateWebACL(ctx, input)
 		})
 
@@ -593,45 +584,78 @@ func findWebACLByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name,
 	return findWebACL(ctx, conn, &input)
 }
 
-// filterWebACLRules removes the AWS-added Shield Advanced auto mitigation rule here
-// so that the provider will not report diff and/or attempt to remove the rule as it is
-// owned and managed by AWS.
+// Shield Advanced automatic application layer DDoS mitigation adds this managed rule group rule to a protected
+// web ACL, in addition to the ShieldMitigationRuleGroup_* rule.
+// See https://github.com/hashicorp/terraform-provider-aws/issues/50754.
+const (
+	shieldAntiDDoSRuleName     = "AWSManagedRulesAntiDDoSRuleSet"
+	shieldAntiDDoSRulePriority = 9999999
+)
+
+var shieldMitigationRuleNameRegex = regexache.MustCompile(`^ShieldMitigationRuleGroup_\d{12}_[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}_.*`)
+
+// filterWebACLRules removes the AWS-added Shield Advanced auto mitigation rules here
+// so that the provider will not report diff and/or attempt to remove the rules as they are
+// owned and managed by AWS. A rule that the configuration declares by name is kept.
 // See https://github.com/hashicorp/terraform-provider-aws/issues/22869
 // See https://docs.aws.amazon.com/waf/latest/developerguide/ddos-automatic-app-layer-response-rg.html
 func filterWebACLRules(rules, configRules []awstypes.Rule) []awstypes.Rule {
-	var fr []awstypes.Rule
-	sr := findShieldRule(rules)
-
-	if len(sr) == 0 {
+	if len(findShieldRule(rules)) == 0 {
 		return rules
 	}
 
+	var fr []awstypes.Rule
 	for _, r := range rules {
-		if aws.ToString(r.Name) == aws.ToString(sr[0].Name) {
-			filter := true
-			for _, cr := range configRules {
-				if aws.ToString(cr.Name) == aws.ToString(r.Name) {
-					// exception to filtering -- it's in the config
-					filter = false
-				}
-			}
-
-			if filter {
-				continue
-			}
+		if isShieldRule(r) && !containsRuleName(configRules, aws.ToString(r.Name)) {
+			continue
 		}
 		fr = append(fr, r)
 	}
 	return fr
 }
 
+// appendShieldRules adds the AWS-added Shield Advanced auto mitigation rules in remoteRules
+// that rules does not already declare by name.
+func appendShieldRules(rules, remoteRules []awstypes.Rule) []awstypes.Rule {
+	for _, sr := range findShieldRule(remoteRules) {
+		if !containsRuleName(rules, aws.ToString(sr.Name)) {
+			rules = append(rules, sr)
+		}
+	}
+	return rules
+}
+
 func findShieldRule(rules []awstypes.Rule) []awstypes.Rule {
-	pattern := `^ShieldMitigationRuleGroup_\d{12}_[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}_.*`
 	var sr []awstypes.Rule
 	for _, r := range rules {
-		if regexache.MustCompile(pattern).MatchString(aws.ToString(r.Name)) {
+		if isShieldRule(r) {
 			sr = append(sr, r)
 		}
 	}
 	return sr
+}
+
+// isShieldRule reports whether r is a rule that Shield Advanced automatic application layer DDoS mitigation adds:
+// the ShieldMitigationRuleGroup_* rule group reference, or the AWSManagedRulesAntiDDoSRuleSet managed rule group
+// rule at the priority Shield uses for it.
+func isShieldRule(r awstypes.Rule) bool {
+	name := aws.ToString(r.Name)
+
+	if shieldMitigationRuleNameRegex.MatchString(name) {
+		return true
+	}
+
+	if name != shieldAntiDDoSRuleName || r.Priority != shieldAntiDDoSRulePriority || r.Statement == nil {
+		return false
+	}
+
+	mrgs := r.Statement.ManagedRuleGroupStatement
+
+	return mrgs != nil && aws.ToString(mrgs.VendorName) == "AWS" && aws.ToString(mrgs.Name) == shieldAntiDDoSRuleName
+}
+
+func containsRuleName(rules []awstypes.Rule, name string) bool {
+	return slices.ContainsFunc(rules, func(r awstypes.Rule) bool {
+		return aws.ToString(r.Name) == name
+	})
 }

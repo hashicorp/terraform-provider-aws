@@ -2909,6 +2909,75 @@ func TestAccWAFV2WebACL_RuleGroupReference_manageShieldMitigationRule(t *testing
 	})
 }
 
+// Ensure the AWSManagedRulesAntiDDoSRuleSet rule that Shield Advanced automatic application layer DDoS
+// mitigation adds (priority 9999999) does not cause diff and provider doesn't attempt to remove it.
+// See https://github.com/hashicorp/terraform-provider-aws/issues/50754
+func TestAccWAFV2WebACL_ManagedRuleGroup_shieldAntiDDoSRule(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_ruleGroupForShieldMitigation(webACLName, "desc1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
+				),
+			},
+			{
+				// Shield Advanced adds this rule out-of-band when automatic application layer DDoS mitigation
+				// is enabled for a resource associated with the web ACL. Add the same rule here.
+				PreConfig: func() {
+					conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
+
+					output, err := tfwafv2.FindWebACLByThreePartKey(ctx, conn, aws.ToString(v.Id), webACLName, string(awstypes.ScopeRegional))
+					if err != nil {
+						t.Fatalf("finding WebACL (%s) in PreConfig: %s", webACLName, err)
+					}
+
+					input := wafv2.UpdateWebACLInput{
+						DefaultAction:    output.WebACL.DefaultAction,
+						Description:      output.WebACL.Description,
+						Id:               output.WebACL.Id,
+						LockToken:        output.LockToken,
+						Name:             output.WebACL.Name,
+						Rules:            append(output.WebACL.Rules, testAccWebACLShieldAntiDDoSRule()),
+						Scope:            awstypes.ScopeRegional,
+						VisibilityConfig: output.WebACL.VisibilityConfig,
+					}
+					if _, err := conn.UpdateWebACL(ctx, &input); err != nil {
+						t.Fatalf("adding rule in PreConfig: %s", err)
+					}
+				},
+				Config: testAccWebACLConfig_ruleGroupForShieldMitigation(webACLName, "desc1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLHasRule(&v, "AWSManagedRulesAntiDDoSRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_ruleGroupForShieldMitigation(webACLName, "desc2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLHasRule(&v, "AWSManagedRulesAntiDDoSRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
@@ -4044,6 +4113,53 @@ func testAccCheckWebACLExists(ctx context.Context, t *testing.T, n string, v *aw
 		*v = *output.WebACL
 
 		return nil
+	}
+}
+
+func testAccCheckWebACLHasRule(v *awstypes.WebACL, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, r := range v.Rules {
+			if aws.ToString(r.Name) == name {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("WAFv2 WebACL (%s) has no rule %q", aws.ToString(v.Name), name)
+	}
+}
+
+// testAccWebACLShieldAntiDDoSRule returns the rule that Shield Advanced automatic application layer
+// DDoS mitigation adds with an automatic response action of COUNT.
+func testAccWebACLShieldAntiDDoSRule() awstypes.Rule {
+	return awstypes.Rule{
+		Name:           aws.String("AWSManagedRulesAntiDDoSRuleSet"),
+		OverrideAction: &awstypes.OverrideAction{None: &awstypes.NoneAction{}},
+		Priority:       9999999,
+		Statement: &awstypes.Statement{
+			ManagedRuleGroupStatement: &awstypes.ManagedRuleGroupStatement{
+				ManagedRuleGroupConfigs: []awstypes.ManagedRuleGroupConfig{{
+					AWSManagedRulesAntiDDoSRuleSet: &awstypes.AWSManagedRulesAntiDDoSRuleSet{
+						ClientSideActionConfig: &awstypes.ClientSideActionConfig{
+							Challenge: &awstypes.ClientSideAction{
+								UsageOfAction: awstypes.UsageOfActionDisabled,
+							},
+						},
+						SensitivityToBlock: awstypes.SensitivityToActLow,
+					},
+				}},
+				Name: aws.String("AWSManagedRulesAntiDDoSRuleSet"),
+				RuleActionOverrides: []awstypes.RuleActionOverride{{
+					ActionToUse: &awstypes.RuleAction{Count: &awstypes.CountAction{}},
+					Name:        aws.String("DDoSRequests"),
+				}},
+				VendorName: aws.String("AWS"),
+			},
+		},
+		VisibilityConfig: &awstypes.VisibilityConfig{
+			CloudWatchMetricsEnabled: true,
+			MetricName:               aws.String("AWSManagedRulesAntiDDoSRuleSet"),
+			SampledRequestsEnabled:   false,
+		},
 	}
 }
 
