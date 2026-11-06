@@ -169,7 +169,7 @@ For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctes
 and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
 
 If the resource requires a self-signed CA certificate, use `@Testing(tlsCAKey=true)` instead.
-This adds the same Terraform variables but generates a certificate with the CA basic constraint.
+This adds the Terraform variable `certificate_pem` to the configuration.
 
 Some acceptance tests require an SSH public key.
 This can be included by setting the annotation `@Testing(sshKeyPair=true)`.

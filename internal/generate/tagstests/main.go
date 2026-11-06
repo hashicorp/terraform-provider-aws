@@ -679,20 +679,22 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-	}
-	if tlsCAKey {
-		d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
-			Code: `privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-			certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)`,
-		})
-	}
-	if tlsKey || tlsCAKey {
 		d.AdditionalTfVars_["certificate_pem"] = tests.TFVar{
 			GoVarName: "certificatePEM",
 			Type:      tests.TFVarTypeString,
 		}
 		d.AdditionalTfVars_["private_key_pem"] = tests.TFVar{
 			GoVarName: "privateKeyPEM",
+			Type:      tests.TFVarTypeString,
+		}
+	}
+	if tlsCAKey {
+		d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
+			Code: `privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+			certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)`,
+		})
+		d.AdditionalTfVars_["certificate_pem"] = tests.TFVar{
+			GoVarName: "certificatePEM",
 			Type:      tests.TFVarTypeString,
 		}
 	}
