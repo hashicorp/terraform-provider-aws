@@ -365,6 +365,41 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
+	callAs := d.Get("call_as").(string)
+
+	// ManagedExecution can't change in a request that also sends the template or parameters, so it's applied first on its own.
+	managedExecutionUpdated := false
+	if o, n := d.GetChange("managed_execution"); managedExecutionActive(o.([]any)) != managedExecutionActive(n.([]any)) {
+		input := expandStackSetManagedExecutionUpdateInput(d, create.UniqueId(ctx))
+
+		output, err := conn.UpdateStackSet(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CloudFormation StackSet (%s) managed execution: %s", d.Id(), err)
+		}
+
+		if operationID := aws.ToString(output.OperationId); operationID != "" {
+			if _, err := waitStackSetOperationSucceeded(ctx, conn, d.Id(), operationID, callAs, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation StackSet (%s) managed execution update: %s", d.Id(), err)
+			}
+		}
+
+		managedExecutionUpdated = true
+	}
+
+	if managedExecutionUpdated && !d.HasChangesExcept("managed_execution") {
+		// The managed execution request sends no Parameters; skip the full update only if they still match.
+		stackSet, err := findStackSetByName(ctx, conn, d.Id(), callAs)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet (%s): %s", d.Id(), err)
+		}
+
+		if !stackSetParametersDiffer(d.Get(names.AttrParameters).(map[string]any), stackSet.Parameters) {
+			return append(diags, resourceStackSetRead(ctx, d, meta)...)
+		}
+	}
+
 	input := &cloudformation.UpdateStackSetInput{
 		OperationId:  aws.String(create.UniqueId(ctx)),
 		StackSetName: aws.String(d.Id()),
@@ -376,7 +411,6 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		input.AdministrationRoleARN = aws.String(v.(string))
 	}
 
-	callAs := d.Get("call_as").(string)
 	if v, ok := d.GetOk("call_as"); ok {
 		input.CallAs = awstypes.CallAs(v.(string))
 	}
@@ -440,6 +474,79 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	return append(diags, resourceStackSetRead(ctx, d, meta)...)
+}
+
+// expandStackSetManagedExecutionUpdateInput returns an UpdateStackSet request that changes only the managed execution setting.
+func expandStackSetManagedExecutionUpdateInput(d *schema.ResourceData, operationID string) *cloudformation.UpdateStackSetInput {
+	input := &cloudformation.UpdateStackSetInput{
+		ManagedExecution:    expandManagedExecution(d.Get("managed_execution").([]any)),
+		OperationId:         aws.String(operationID),
+		StackSetName:        aws.String(d.Id()),
+		UsePreviousTemplate: aws.Bool(true),
+	}
+
+	if input.ManagedExecution == nil {
+		input.ManagedExecution = &awstypes.ManagedExecution{
+			Active: aws.Bool(false),
+		}
+	}
+
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = awstypes.CallAs(v.(string))
+	}
+
+	if v, ok := d.GetOk("capabilities"); ok {
+		input.Capabilities = flex.ExpandStringyValueSet[awstypes.Capability](v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.OperationPreferences = expandOperationPreferences(v.([]any)[0].(map[string]any))
+	}
+
+	// As in the full update, SERVICE_MANAGED (auto_deployment) sends no administration or execution role.
+	if _, ok := d.GetOk("auto_deployment"); !ok {
+		if v, ok := d.GetOk("administration_role_arn"); ok {
+			input.AdministrationRoleARN = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("execution_role_name"); ok {
+			input.ExecutionRoleName = aws.String(v.(string))
+		}
+	}
+
+	return input
+}
+
+// managedExecutionActive reports managed_execution.active; an absent block is false.
+func managedExecutionActive(l []any) bool {
+	if len(l) == 0 || l[0] == nil {
+		return false
+	}
+
+	v, _ := l[0].(map[string]any)["active"].(bool)
+
+	return v
+}
+
+// stackSetParametersDiffer reports whether a configured parameter is missing or differs; masked (NoEcho) values count as different.
+func stackSetParametersDiffer(configured map[string]any, actual []awstypes.Parameter) bool {
+	values := make(map[string]string, len(actual))
+	for _, p := range actual {
+		values[aws.ToString(p.ParameterKey)] = aws.ToString(p.ParameterValue)
+	}
+
+	for k, v := range configured {
+		got, ok := values[k]
+		if !ok || got != v.(string) || got == "****" {
+			return true
+		}
+	}
+
+	return false
 }
 
 func resourceStackSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
