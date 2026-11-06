@@ -8,6 +8,7 @@ package lambda
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"slices"
 	"strings"
@@ -391,6 +392,13 @@ func resourceEventSourceMapping() *schema.Resource {
 								ForceNew:     true,
 								ValidateFunc: validation.StringLenBetween(1, 200),
 							},
+							"consumption_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.KafkaEventSourceMappingConsumptionMode](),
+							},
 							"schema_registry_config": kafkaSchemaRegistryConfigSchema(),
 						},
 					},
@@ -459,7 +467,36 @@ func resourceEventSourceMapping() *schema.Resource {
 				},
 			}
 		},
+
+		CustomizeDiff: validateSelfManagedKafkaConsumptionMode,
 	}
+}
+
+// validateSelfManagedKafkaConsumptionMode rejects arguments that Lambda does not support
+// when a self-managed Apache Kafka event source mapping uses the Queue consumption mode.
+func validateSelfManagedKafkaConsumptionMode(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if v := d.Get("self_managed_kafka_event_source_config.0.consumption_mode").(string); awstypes.KafkaEventSourceMappingConsumptionMode(v) != awstypes.KafkaEventSourceMappingConsumptionModeQueue {
+		return nil
+	}
+
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return nil
+	}
+
+	var conflicts []string
+	for _, k := range []string{"maximum_batching_window_in_seconds", "starting_position", "starting_position_timestamp"} {
+		// An unknown value may still resolve to null, so only known values count.
+		if v := rawConfig.GetAttr(k); v.IsKnown() && !v.IsNull() {
+			conflicts = append(conflicts, k)
+		}
+	}
+
+	if len(conflicts) > 0 {
+		return fmt.Errorf(`%s cannot be set when self_managed_kafka_event_source_config.0.consumption_mode is %q`, strings.Join(conflicts, ", "), awstypes.KafkaEventSourceMappingConsumptionModeQueue)
+	}
+
+	return nil
 }
 
 func kafkaSchemaRegistryConfigSchema() *schema.Schema {
@@ -1291,6 +1328,10 @@ func expandSelfManagedKafkaEventSourceConfig(tfMap map[string]any) *awstypes.Sel
 		apiObject.ConsumerGroupId = aws.String(v)
 	}
 
+	if v, ok := tfMap["consumption_mode"].(string); ok && v != "" {
+		apiObject.ConsumptionMode = awstypes.KafkaEventSourceMappingConsumptionMode(v)
+	}
+
 	if v, ok := tfMap["schema_registry_config"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.SchemaRegistryConfig = expandKafkaSchemaRegistryConfig(v[0].(map[string]any))
 	}
@@ -1308,6 +1349,8 @@ func flattenSelfManagedKafkaEventSourceConfig(apiObject *awstypes.SelfManagedKaf
 	if v := apiObject.ConsumerGroupId; v != nil {
 		tfMap["consumer_group_id"] = aws.ToString(v)
 	}
+
+	tfMap["consumption_mode"] = string(apiObject.ConsumptionMode)
 
 	if v := apiObject.SchemaRegistryConfig; v != nil {
 		tfMap["schema_registry_config"] = []any{flattenKafkaSchemaRegistryConfig(v)}
