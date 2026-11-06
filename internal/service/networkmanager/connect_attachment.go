@@ -89,6 +89,14 @@ func resourceConnectAttachment() *schema.Resource {
 						validation.StringMatch(regexache.MustCompile(`[\s\S]*`), "Anything but whitespace"),
 					),
 				},
+				"nat_gateway_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"nat_system_route_support": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
 				"options": {
 					Type:     schema.TypeList,
 					Required: true,
@@ -232,6 +240,8 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	coreNetworkID := aws.ToString(attachment.CoreNetworkId)
 	d.Set("core_network_id", coreNetworkID)
 	d.Set("edge_location", attachment.EdgeLocation)
+	d.Set("nat_gateway_support", attachment.NatGatewaySupport)
+	d.Set("nat_system_route_support", attachment.NatSystemRouteSupport)
 	if connectAttachment.Options != nil {
 		if err := d.Set("options", []any{flattenConnectAttachmentOptions(connectAttachment.Options)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
