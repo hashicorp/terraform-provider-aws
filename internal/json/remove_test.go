@@ -317,12 +317,15 @@ func TestRemoveJSONValues_combinedOptions(t *testing.T) {
 func TestRemoveJSONValues_invalidUTF8(t *testing.T) {
 	t.Parallel()
 
-	input := []byte("{\"key\":\"\xff\",\"empty\":null}")
-	got, err := tfjson.RemoveJSONValues(input, tfjson.RemoveOptions{Null: true})
+	input := []byte("{\"\xff\":1,\"empty\":null}")
+	got, err := tfjson.RemoveJSONValues(input, tfjson.RemoveOptions{
+		Fields: []string{"remove"},
+		Null:   true,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := []byte("{\"key\":\"\xff\"}"); !bytes.Equal(got, want) {
+	if want := []byte("{\"\xff\":1}"); !bytes.Equal(got, want) {
 		t.Errorf("RemoveJSONValues(%q) = %q, want %q", input, got, want)
 	}
 }

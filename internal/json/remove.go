@@ -98,10 +98,10 @@ func transformJSONObject(decoder *jsontext.Decoder, out *[]byte, options RemoveO
 
 		if len(options.Fields) != 0 {
 			decodedName, err := jsontext.AppendUnquote(nil, name)
-			if err != nil {
-				return false, err
-			}
-			if slices.Contains(options.Fields, string(decodedName)) {
+			// The decoder has already validated the string syntax. Unquoting can
+			// only fail here for invalid UTF-8, which is preserved for backwards
+			// compatibility and cannot match a decoded field name.
+			if err == nil && slices.Contains(options.Fields, string(decodedName)) {
 				if err := decoder.SkipValue(); err != nil {
 					return false, err
 				}
