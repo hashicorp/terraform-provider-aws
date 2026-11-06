@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -188,10 +187,7 @@ func (r *notifyConfigurationResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, plan.flatten(ctx, info))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	plan.flatten(ctx, info)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -217,10 +213,7 @@ func (r *notifyConfigurationResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, data.flatten(ctx, out))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	data.flatten(ctx, out)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
@@ -288,10 +281,7 @@ func (r *notifyConfigurationResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, plan.flatten(ctx, out))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	plan.flatten(ctx, out)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -341,11 +331,9 @@ type notifyConfigurationResourceModel struct {
 	UseCase                   types.String        `tfsdk:"use_case"`
 }
 
-func (m *notifyConfigurationResourceModel) flatten(ctx context.Context, info *awstypes.NotifyConfigurationInformation) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func (m *notifyConfigurationResourceModel) flatten(ctx context.Context, info *awstypes.NotifyConfigurationInformation) {
 	if info == nil {
-		return diags
+		return
 	}
 
 	m.ID = types.StringValue(aws.ToString(info.NotifyConfigurationId))
@@ -363,8 +351,6 @@ func (m *notifyConfigurationResourceModel) flatten(ctx context.Context, info *aw
 	} else {
 		m.CreatedTimestamp = timetypes.NewRFC3339Null()
 	}
-
-	return diags
 }
 
 func findNotifyConfigurationByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) (*awstypes.NotifyConfigurationInformation, error) {
