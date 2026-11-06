@@ -6,6 +6,7 @@ package json
 import (
 	"bytes"
 	"encoding/json/jsontext"
+	"errors"
 	"fmt"
 	"io"
 )
@@ -82,7 +83,7 @@ func removeJSONValues(in []byte, options removeOptions) ([]byte, error) {
 		return nil, err
 	}
 
-	if _, err := decoder.ReadToken(); err != io.EOF {
+	if _, err := decoder.ReadToken(); !errors.Is(err, io.EOF) {
 		if err == nil {
 			return nil, fmt.Errorf("multiple top-level JSON values")
 		}
