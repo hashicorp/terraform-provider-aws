@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_datasync_location_azure_blob: Make `agent_arns` optional to support agentless configurations
+```
