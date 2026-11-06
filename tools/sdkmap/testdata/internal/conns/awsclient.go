@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mockcrud"
 	"github.com/aws/aws-sdk-go-v2/service/mockcustomizediff"
 	"github.com/aws/aws-sdk-go-v2/service/mockdatasource"
+	"github.com/aws/aws-sdk-go-v2/service/mockframework"
 	"github.com/aws/aws-sdk-go-v2/service/mockfuncrefs"
 	"github.com/aws/aws-sdk-go-v2/service/mockimport"
 	"github.com/aws/aws-sdk-go-v2/service/mockinterface"
@@ -60,6 +61,10 @@ func (c *AWSClient) MockCustomizeDiffClient(ctx context.Context) *mockcustomized
 
 func (c *AWSClient) MockDataSourceClient(ctx context.Context) *mockdatasource.Client {
 	return client[*mockdatasource.Client](ctx, c, "mockdatasource")
+}
+
+func (c *AWSClient) MockFrameworkClient(ctx context.Context) *mockframework.Client {
+	return client[*mockframework.Client](ctx, c, "mockframework")
 }
 
 func (c *AWSClient) MockFuncRefsClient(ctx context.Context) *mockfuncrefs.Client {
