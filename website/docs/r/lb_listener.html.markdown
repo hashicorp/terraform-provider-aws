@@ -12,6 +12,8 @@ Provides a Load Balancer Listener resource.
 
 ~> **Note:** `aws_alb_listener` is known as `aws_lb_listener`. The functionality is identical.
 
+-> **Note:** Write-Only argument `client_secret_wo` is available to use in place of `client_secret` in the `authenticate_oidc` configuration block. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Forward Action
@@ -225,6 +227,47 @@ resource "aws_lb_listener" "front_end" {
 }
 ```
 
+### Authenticate-OIDC Action with Write-Only Client Secret
+
+```terraform
+resource "aws_lb" "front_end" {
+  # ...
+}
+
+resource "aws_lb_target_group" "front_end" {
+  # ...
+}
+
+ephemeral "aws_secretsmanager_secret_version" "oidc_client_secret" {
+  secret_id = "oidc-client-secret"
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = aws_lb.front_end.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "authenticate-oidc"
+
+    authenticate_oidc {
+      authorization_endpoint   = "https://example.com/authorization_endpoint"
+      client_id                = "client_id"
+      client_secret_wo         = ephemeral.aws_secretsmanager_secret_version.oidc_client_secret.secret_string
+      client_secret_wo_version = 1
+      issuer                   = "https://example.com"
+      token_endpoint           = "https://example.com/token_endpoint"
+      user_info_endpoint       = "https://example.com/user_info_endpoint"
+    }
+  }
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.front_end.arn
+  }
+}
+```
+
 ### JWT Validation Action
 
 ```terraform
@@ -408,7 +451,6 @@ The following arguments are required:
 
 * `authorization_endpoint` - (Required) Authorization endpoint of the IdP.
 * `client_id` - (Required) OAuth 2.0 client identifier.
-* `client_secret` - (Required) OAuth 2.0 client secret.
 * `issuer` - (Required) OIDC issuer identifier of the IdP.
 * `token_endpoint` - (Required) Token endpoint of the IdP.
 * `user_info_endpoint` - (Required) User info endpoint of the IdP.
@@ -416,6 +458,9 @@ The following arguments are required:
 The following arguments are optional:
 
 * `authentication_request_extra_params` - (Optional) Query parameters to include in the redirect request to the authorization endpoint. Max: 10.
+* `client_secret` - (Optional) OAuth 2.0 client secret. Exactly one of `client_secret` or `client_secret_wo` must be specified. Note that this will be stored in the state file.
+* `client_secret_wo` - (Optional, Write-Only) OAuth 2.0 client secret. This argument is not persisted to state. Exactly one of `client_secret` or `client_secret_wo` must be specified. If set, requires `client_secret_wo_version` to be set.
+* `client_secret_wo_version` - (Optional) Required when `client_secret_wo` is set. Changing this value triggers an update to `client_secret_wo`.
 * `on_unauthenticated_request` - (Optional) Behavior if the user is not authenticated. Valid values: `deny`, `allow` and `authenticate`
 * `scope` - (Optional) Set of user claims to be requested from the IdP.
 * `session_cookie_name` - (Optional) Name of the cookie used to maintain session information.

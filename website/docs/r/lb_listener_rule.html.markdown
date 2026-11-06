@@ -12,6 +12,8 @@ Provides a Load Balancer Listener Rule resource.
 
 ~> **Note:** `aws_alb_listener_rule` is known as `aws_lb_listener_rule`. The functionality is identical.
 
+-> **Note:** Write-Only argument `client_secret_wo` is available to use in place of `client_secret` in the `authenticate_oidc` configuration block. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ```terraform
@@ -203,6 +205,35 @@ resource "aws_lb_listener_rule" "oidc" {
   }
 }
 
+# Authenticate-oidc Action with Write-Only Client Secret
+
+ephemeral "aws_secretsmanager_secret_version" "oidc_client_secret" {
+  secret_id = "oidc-client-secret"
+}
+
+resource "aws_lb_listener_rule" "oidc_wo" {
+  listener_arn = aws_lb_listener.front_end.arn
+
+  action {
+    type = "authenticate-oidc"
+
+    authenticate_oidc {
+      authorization_endpoint   = "https://example.com/authorization_endpoint"
+      client_id                = "client_id"
+      client_secret_wo         = ephemeral.aws_secretsmanager_secret_version.oidc_client_secret.secret_string
+      client_secret_wo_version = 1
+      issuer                   = "https://example.com"
+      token_endpoint           = "https://example.com/token_endpoint"
+      user_info_endpoint       = "https://example.com/user_info_endpoint"
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.static.arn
+  }
+}
+
 # JWT-validation Action
 
 resource "aws_lb_listener_rule" "oidc" {
@@ -353,7 +384,9 @@ Authenticate OIDC Blocks (for `authenticate_oidc`) supports the following:
 * `authentication_request_extra_params` - (Optional) The query parameters to include in the redirect request to the authorization endpoint. Max: 10.
 * `authorization_endpoint` - (Required) The authorization endpoint of the IdP.
 * `client_id` - (Required) The OAuth 2.0 client identifier.
-* `client_secret` - (Required) The OAuth 2.0 client secret.
+* `client_secret` - (Optional) The OAuth 2.0 client secret. Exactly one of `client_secret` or `client_secret_wo` must be specified. Note that this will be stored in the state file.
+* `client_secret_wo` - (Optional, Write-Only) The OAuth 2.0 client secret. This argument is not persisted to state. Exactly one of `client_secret` or `client_secret_wo` must be specified. If set, requires `client_secret_wo_version` to be set.
+* `client_secret_wo_version` - (Optional) Required when `client_secret_wo` is set. Changing this value triggers an update to `client_secret_wo`.
 * `issuer` - (Required) The OIDC issuer identifier of the IdP.
 * `on_unauthenticated_request` - (Optional) The behavior if the user is not authenticated. Valid values: `deny`, `allow` and `authenticate`
 * `scope` - (Optional) The set of user claims to be requested from the IdP.
