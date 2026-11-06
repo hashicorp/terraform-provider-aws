@@ -5,8 +5,14 @@ package wafv2_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"regexp"
+	"slices"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -14,11 +20,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,6 +43,230 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"Your request contains fields that belong to a feature you are not allowed to use",
 		"The scope is not valid., field: SCOPE_VALUE, parameter: CLOUDFRONT",
 	)
+}
+
+func TestWebACLUpdate_optimisticLockRules(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		plannedRules []string
+		latestRules  []string
+		wantRules    []string
+		ruleJSON     bool
+	}{
+		"preserve deletion": {
+			plannedRules: []string{"retained", "removed"},
+			latestRules:  []string{"retained"},
+			wantRules:    []string{"retained"},
+		},
+		"preserve addition": {
+			plannedRules: []string{"retained", "removed"},
+			latestRules:  []string{"retained", "removed", "added"},
+			wantRules:    []string{"retained", "removed", "added"},
+		},
+		"preserve empty rules": {
+			plannedRules: []string{"retained", "removed"},
+		},
+		"apply inline rule change": {
+			plannedRules: []string{"planned"},
+			latestRules:  []string{"retained"},
+			wantRules:    []string{"planned"},
+		},
+		"apply inline rule removal": {
+			latestRules: []string{"retained"},
+		},
+		"preserve deletion with unchanged rule JSON": {
+			plannedRules: []string{"retained", "removed"},
+			latestRules:  []string{"retained"},
+			wantRules:    []string{"retained"},
+			ruleJSON:     true,
+		},
+		"apply rule JSON change": {
+			plannedRules: []string{"planned"},
+			latestRules:  []string{"retained"},
+			wantRules:    []string{"planned"},
+			ruleJSON:     true,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
+
+			const (
+				oldToken = "00000000-0000-0000-0000-000000000001"
+				newToken = "00000000-0000-0000-0000-000000000002"
+			)
+			visibilityConfig := &awstypes.VisibilityConfig{
+				CloudWatchMetricsEnabled: false,
+				MetricName:               aws.String("test"),
+				SampledRequestsEnabled:   false,
+			}
+			rules := func(names []string) []awstypes.Rule {
+				var rules []awstypes.Rule
+				for i, name := range names {
+					rules = append(rules, awstypes.Rule{
+						Name:             aws.String(name),
+						Priority:         int32(i),
+						Action:           &awstypes.RuleAction{Count: &awstypes.CountAction{}},
+						Statement:        &awstypes.Statement{GeoMatchStatement: &awstypes.GeoMatchStatement{CountryCodes: []awstypes.CountryCode{awstypes.CountryCodeUs}}},
+						VisibilityConfig: visibilityConfig,
+					})
+				}
+				return rules
+			}
+			webACL := &awstypes.WebACL{
+				Id:               aws.String("00000000-0000-0000-0000-000000000003"),
+				Name:             aws.String("test"),
+				DefaultAction:    &awstypes.DefaultAction{Allow: &awstypes.AllowAction{}},
+				Rules:            rules(tc.latestRules),
+				VisibilityConfig: visibilityConfig,
+			}
+
+			var mu sync.Mutex
+			var updates int
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				mu.Lock()
+				defer mu.Unlock()
+				w.Header().Set("Content-Type", "application/x-amz-json-1.1")
+				switch {
+				case strings.HasSuffix(r.Header.Get("X-Amz-Target"), ".GetWebACL"):
+					if err := json.NewEncoder(w).Encode(map[string]any{"LockToken": newToken, "WebACL": webACL}); err != nil {
+						t.Errorf("encoding GetWebACL response: %s", err)
+					}
+				case strings.HasSuffix(r.Header.Get("X-Amz-Target"), ".UpdateWebACL"):
+					var input wafv2.UpdateWebACLInput
+					if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+						t.Errorf("decoding UpdateWebACL request: %s", err)
+						w.WriteHeader(http.StatusBadRequest)
+						return
+					}
+					updates++
+					wantToken, wantRules := oldToken, tc.plannedRules
+					if updates > 1 {
+						wantToken, wantRules = newToken, tc.wantRules
+					}
+					if got := aws.ToString(input.LockToken); got != wantToken {
+						t.Errorf("update %d: lock token = %q, want %q", updates, got, wantToken)
+					}
+					var gotRules []string
+					for _, rule := range input.Rules {
+						gotRules = append(gotRules, aws.ToString(rule.Name))
+					}
+					slices.Sort(gotRules)
+					wantRules = slices.Sorted(slices.Values(wantRules))
+					if !slices.Equal(gotRules, wantRules) {
+						t.Errorf("update %d: rules = %v, want %v", updates, gotRules, wantRules)
+					}
+					if input.DefaultAction == nil || input.DefaultAction.Block == nil {
+						t.Errorf("update %d: planned default action was not preserved", updates)
+					}
+					if updates == 1 {
+						w.WriteHeader(http.StatusBadRequest)
+						if _, err := fmt.Fprint(w, `{"__type":"WAFOptimisticLockException","Message":"Web ACL has changed"}`); err != nil {
+							t.Errorf("encoding optimistic lock error: %s", err)
+						}
+						return
+					}
+					webACL.DefaultAction = input.DefaultAction
+					webACL.Rules = input.Rules
+					if err := json.NewEncoder(w).Encode(map[string]any{"NextLockToken": newToken}); err != nil {
+						t.Errorf("encoding UpdateWebACL response: %s", err)
+					}
+				default:
+					t.Errorf("unexpected API request: %s", r.Header.Get("X-Amz-Target"))
+					w.WriteHeader(http.StatusBadRequest)
+				}
+			}))
+			t.Cleanup(server.Close)
+
+			p, err := sdkv2.NewProvider(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(map[string]any{
+				names.AttrAccessKey:                 servicemocks.MockStaticAccessKey,
+				names.AttrSecretKey:                 servicemocks.MockStaticSecretKey,
+				names.AttrRegion:                    "us-west-2", //lintignore:AWSAT003
+				names.AttrSkipCredentialsValidation: true,
+				names.AttrSkipRequestingAccountID:   true,
+				names.AttrEndpoints:                 []any{map[string]any{names.WAFV2: server.URL}},
+			})); diags.HasError() {
+				t.Fatalf("configuring provider: %v", diags)
+			}
+
+			config := func(ruleNames []string) map[string]any {
+				raw := map[string]any{
+					names.AttrName:  "test",
+					names.AttrScope: string(awstypes.ScopeRegional),
+					names.AttrDefaultAction: []any{map[string]any{
+						"allow": []any{map[string]any{}},
+					}},
+					"visibility_config": []any{map[string]any{
+						"cloudwatch_metrics_enabled": false,
+						names.AttrMetricName:         "test",
+						"sampled_requests_enabled":   false,
+					}},
+				}
+				if tc.ruleJSON {
+					var jsonRules []map[string]any
+					for i, name := range ruleNames {
+						jsonRules = append(jsonRules, map[string]any{
+							"Name":     name,
+							"Priority": i,
+							"Action":   map[string]any{"Count": map[string]any{}},
+							"Statement": map[string]any{
+								"GeoMatchStatement": map[string]any{"CountryCodes": []string{"US"}},
+							},
+							"VisibilityConfig": visibilityConfig,
+						})
+					}
+					encoded, err := json.Marshal(jsonRules)
+					if err != nil {
+						t.Fatal(err)
+					}
+					raw["rule_json"] = string(encoded)
+					return raw
+				}
+				var inlineRules []any
+				for i, name := range ruleNames {
+					inlineRules = append(inlineRules, map[string]any{
+						names.AttrName:     name,
+						names.AttrPriority: i,
+						names.AttrAction:   []any{map[string]any{"count": []any{map[string]any{}}}},
+						"statement": []any{map[string]any{
+							"geo_match_statement": []any{map[string]any{"country_codes": []any{"US"}}},
+						}},
+						"visibility_config": raw["visibility_config"],
+					})
+				}
+				raw[names.AttrRule] = inlineRules
+				return raw
+			}
+			r := tfwafv2.ResourceWebACL()
+			data := schema.TestResourceDataRaw(t, r.SchemaMap(), config([]string{"retained", "removed"}))
+			data.SetId(aws.ToString(webACL.Id))
+			if err := data.Set("lock_token", oldToken); err != nil {
+				t.Fatal(err)
+			}
+			state := data.State()
+			planned := config(tc.plannedRules)
+			planned[names.AttrDefaultAction] = []any{map[string]any{"block": []any{map[string]any{}}}}
+			diff, err := r.Diff(ctx, state, terraformsdk.NewResourceConfigRaw(planned), p.Meta())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, diags := r.Apply(ctx, state, diff, p.Meta()); diags.HasError() {
+				t.Fatalf("updating Web ACL: %v", diags)
+			}
+			mu.Lock()
+			defer mu.Unlock()
+			if updates != 2 {
+				t.Errorf("UpdateWebACL called %d times, want 2", updates)
+			}
+		})
+	}
 }
 
 func TestAccWAFV2WebACL_basic(t *testing.T) {
