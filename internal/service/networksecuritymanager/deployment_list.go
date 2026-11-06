@@ -39,6 +39,7 @@ func (l *deploymentListResource) List(ctx context.Context, request list.ListRequ
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input networksecuritymanager.ListDeploymentsInput
+		seen := make(map[string]struct{})
 		for item, err := range listDeployments(ctx, conn, &input) {
 			if err != nil {
 				yield(smerr.NewListResultError(ctx, err))
@@ -47,6 +48,10 @@ func (l *deploymentListResource) List(ctx context.Context, request list.ListRequ
 
 			// A draft is listed with its DRAFT-qualified ARN.
 			arn := deploymentBaseARN(aws.ToString(item.DeploymentArn))
+			if _, ok := seen[arn]; ok {
+				continue
+			}
+			seen[arn] = struct{}{}
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
 			var deployment *networksecuritymanager.GetDeploymentOutput
