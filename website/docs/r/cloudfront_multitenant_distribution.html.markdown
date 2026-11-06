@@ -105,6 +105,7 @@ resource "aws_cloudfront_multitenant_distribution" "example" {
 This resource supports the following arguments:
 
 * `cache_behavior` - (Optional) Ordered list of cache behaviors resource for this distribution. See [Cache Behavior](#cache-behavior) below.
+* `cache_tag_config` - (Optional) Cache tag configuration for cache tag extraction from origin responses (maximum one). See [Cache Tag Config](#cache-tag-config) below and the [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/invalidation-by-tags.html) for more information about cache tags.
 * `comment` - (Required) Any comments you want to include about the distribution.
 * `custom_error_response` - (Optional) One or more custom error response elements. See [Custom Error Response](#custom-error-response) below.
 * `default_cache_behavior` - (Required) Default cache behavior for this distribution. See [Default Cache Behavior](#default-cache-behavior) below.
@@ -124,6 +125,10 @@ This resource supports the following arguments:
 Cache behavior supports all the same arguments as [Default Cache Behavior](#default-cache-behavior) with the addition of:
 
 * `path_pattern` - (Required) Pattern that specifies which requests you want this cache behavior to apply to.
+
+### Cache Tag Config
+
+* `header_name` - (Required) Name of the HTTP header in origin responses that CloudFront reads cache tags from.
 
 ### Default Cache Behavior
 
