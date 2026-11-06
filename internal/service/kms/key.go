@@ -120,6 +120,11 @@ func resourceKey() *schema.Resource {
 					ValidateFunc: validation.IntBetween(90, 2560),
 					RequiredWith: []string{"enable_key_rotation"},
 				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				"xks_key_id": {
@@ -285,6 +290,11 @@ func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
+
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining KMS Key: %s", d.Id())
+		return diags
+	}
 
 	input := kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),
@@ -768,6 +778,8 @@ func resourceKeyFlatten(ctx context.Context, d *schema.ResourceData, key *kmsKey
 	}
 	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
+	// Support in-place update of non-refreshable attribute.
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 	if v := key.metadata.XksKeyConfiguration; v != nil {
 		d.Set("xks_key_id", v.Id)
 	} else {
