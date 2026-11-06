@@ -18,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -156,12 +156,11 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "cleaning content metadata: %s", err)
 	}
 
-	normalizedContent, err := structure.NormalizeJsonString(string(cleanedContent))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "normalizing content: %s", err)
+	// Preserve the configured content when it is semantically equal to the cleaned API content,
+	// so that non-canonical JSON (e.g. heredocs) does not force replacement.
+	if content := string(cleanedContent); !verify.JSONStringsEqual(d.Get(names.AttrContent).(string), content) {
+		d.Set(names.AttrContent, content)
 	}
-
-	d.Set(names.AttrContent, normalizedContent)
 	d.Set(names.AttrContentType, output.ContentType)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("version_label", output.VersionLabel)
@@ -253,18 +252,29 @@ func hostedConfigurationVersionARN(ctx context.Context, c *conns.AWSClient, appl
 
 // stripInjectedMetadata removes AWS-injected metadata fields (_createdAt, _updatedAt)
 // from flags.* and values.* objects in hosted configuration content.
+// Content that is not a JSON object (e.g. YAML or plain text freeform configurations),
+// or that contains no injected metadata, is returned unchanged.
 func stripInjectedMetadata(content []byte) ([]byte, error) {
 	var data map[string]any
 	if err := json.Unmarshal(content, &data); err != nil {
-		return nil, err
+		return content, nil
+	}
+
+	stripped := false
+	strip := func(m map[string]any) {
+		for _, k := range []string{"_createdAt", "_updatedAt"} {
+			if _, ok := m[k]; ok {
+				delete(m, k)
+				stripped = true
+			}
+		}
 	}
 
 	// Remove _createdAt and _updatedAt from flags.* objects
 	if flags, ok := data["flags"].(map[string]any); ok {
 		for _, flag := range flags {
 			if flagMap, ok := flag.(map[string]any); ok {
-				delete(flagMap, "_createdAt")
-				delete(flagMap, "_updatedAt")
+				strip(flagMap)
 			}
 		}
 	}
@@ -273,10 +283,13 @@ func stripInjectedMetadata(content []byte) ([]byte, error) {
 	if values, ok := data[names.AttrValues].(map[string]any); ok {
 		for _, value := range values {
 			if valueMap, ok := value.(map[string]any); ok {
-				delete(valueMap, "_createdAt")
-				delete(valueMap, "_updatedAt")
+				strip(valueMap)
 			}
 		}
+	}
+
+	if !stripped {
+		return content, nil
 	}
 
 	return json.Marshal(data)
