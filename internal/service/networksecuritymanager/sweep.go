@@ -17,10 +17,34 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_networksecuritymanager_policy", sweepPolicies)
+	awsv2.Register("aws_networksecuritymanager_deployment", sweepDeployments)
+	// A policy or scope cannot be deleted while a deployment uses it.
+	awsv2.Register("aws_networksecuritymanager_policy", sweepPolicies, "aws_networksecuritymanager_deployment")
 	awsv2.Register("aws_networksecuritymanager_rule", sweepRules, "aws_networksecuritymanager_policy", "aws_networksecuritymanager_template")
-	awsv2.Register("aws_networksecuritymanager_scope", sweepScopes)
+	awsv2.Register("aws_networksecuritymanager_scope", sweepScopes, "aws_networksecuritymanager_deployment")
 	awsv2.Register("aws_networksecuritymanager_template", sweepTemplates)
+}
+
+func sweepDeployments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input networksecuritymanager.ListDeploymentsInput
+	conn := client.NetworkSecurityManagerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := networksecuritymanager.NewListDeploymentsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Deployments {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDeploymentResource, client,
+				framework.NewAttribute(names.AttrARN, deploymentBaseARN(aws.ToString(v.DeploymentArn)))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepTemplates(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
