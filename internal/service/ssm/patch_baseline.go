@@ -7,7 +7,6 @@ package ssm
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -333,11 +332,18 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePatchBaselineFlatten(ctx context.Context, awsClient *conns.AWSClient, d *schema.ResourceData, output *ssm.GetPatchBaselineOutput) error {
-	jsonDoc, err := json.MarshalIndent(output, "", "  ")
+	jsonString, err := tfjson.EncodeToStringIndent(output, "", "  ")
 	if err != nil {
 		return err
 	}
-	jsonString := string(tfjson.RemoveEmptyFields(jsonDoc))
+	jsonString, err = tfjson.RemoveJSONValues(jsonString, tfjson.RemoveOptions{
+		Null:         true,
+		EmptyArrays:  true,
+		EmptyObjects: true,
+	})
+	if err != nil {
+		return fmt.Errorf("removing empty fields from patch baseline JSON: %w", err)
+	}
 
 	if err := d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules)); err != nil {
 		return fmt.Errorf("setting approval_rule: %w", err)
