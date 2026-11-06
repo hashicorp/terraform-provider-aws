@@ -4,7 +4,6 @@
 package json_test
 
 import (
-	"bytes"
 	"encoding/json/jsontext"
 	"testing"
 
@@ -65,11 +64,11 @@ func TestRemoveJSONValues_fields(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfjson.RemoveJSONValues([]byte(testCase.input), tfjson.RemoveOptions{Fields: testCase.fields})
+			got, err := tfjson.RemoveJSONValues(testCase.input, tfjson.RemoveOptions{Fields: testCase.fields})
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(got) != testCase.want {
+			if got != testCase.want {
 				t.Errorf("RemoveJSONValues(%q) = %q, want %q", testCase.input, got, testCase.want)
 			}
 		})
@@ -165,7 +164,7 @@ func TestRemoveJSONValues_emptyFields(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfjson.RemoveJSONValues([]byte(testCase.input), tfjson.RemoveOptions{
+			got, err := tfjson.RemoveJSONValues(testCase.input, tfjson.RemoveOptions{
 				Null:         true,
 				EmptyArrays:  true,
 				EmptyObjects: true,
@@ -173,7 +172,7 @@ func TestRemoveJSONValues_emptyFields(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(got) != testCase.want {
+			if got != testCase.want {
 				t.Errorf("RemoveJSONValues(%q) = %q, want %q", testCase.input, got, testCase.want)
 			}
 		})
@@ -239,11 +238,11 @@ func TestRemoveJSONValues_emptyStringFields(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfjson.RemoveJSONValues([]byte(testCase.input), tfjson.RemoveOptions{EmptyStringFields: true})
+			got, err := tfjson.RemoveJSONValues(testCase.input, tfjson.RemoveOptions{EmptyStringFields: true})
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(got) != testCase.want {
+			if got != testCase.want {
 				t.Errorf("RemoveJSONValues(%q) = %q, want %q", testCase.input, got, testCase.want)
 			}
 		})
@@ -279,14 +278,14 @@ func TestRemoveJSONValues_nullAndEmptyArrayValues(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfjson.RemoveJSONValues([]byte(testCase.input), tfjson.RemoveOptions{
+			got, err := tfjson.RemoveJSONValues(testCase.input, tfjson.RemoveOptions{
 				Null:        true,
 				EmptyArrays: true,
 			})
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(got) != testCase.want {
+			if got != testCase.want {
 				t.Errorf("RemoveJSONValues(%q) = %q, want %q", testCase.input, got, testCase.want)
 			}
 		})
@@ -296,7 +295,7 @@ func TestRemoveJSONValues_nullAndEmptyArrayValues(t *testing.T) {
 func TestRemoveJSONValues_combinedOptions(t *testing.T) {
 	t.Parallel()
 
-	input := []byte(`{"remove":1,"null":null,"array":[],"object":{},"string":"","nested":[{"string":""}],"keep":true}`)
+	input := `{"remove":1,"null":null,"array":[],"object":{},"string":"","nested":[{"string":""}],"keep":true}`
 	options := tfjson.RemoveOptions{
 		Fields:            []string{"remove"},
 		Null:              true,
@@ -309,7 +308,7 @@ func TestRemoveJSONValues_combinedOptions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := `{"keep":true}`; string(got) != want {
+	if want := `{"keep":true}`; got != want {
 		t.Errorf("RemoveJSONValues(%q) = %q, want %q", input, got, want)
 	}
 }
@@ -317,7 +316,7 @@ func TestRemoveJSONValues_combinedOptions(t *testing.T) {
 func TestRemoveJSONValues_invalidUTF8(t *testing.T) {
 	t.Parallel()
 
-	input := []byte("{\"\xff\":1,\"empty\":null}")
+	input := "{\"\xff\":1,\"empty\":null}"
 	got, err := tfjson.RemoveJSONValues(input, tfjson.RemoveOptions{
 		Fields: []string{"remove"},
 		Null:   true,
@@ -325,7 +324,7 @@ func TestRemoveJSONValues_invalidUTF8(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := []byte("{\"\xff\":1}"); !bytes.Equal(got, want) {
+	if want := "{\"\xff\":1}"; got != want {
 		t.Errorf("RemoveJSONValues(%q) = %q, want %q", input, got, want)
 	}
 }
@@ -347,7 +346,7 @@ func TestRemoveJSONValues_invalid(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			if _, err := tfjson.RemoveJSONValues(testCase.input, tfjson.RemoveOptions{}); err == nil {
+			if _, err := tfjson.RemoveJSONValues(string(testCase.input), tfjson.RemoveOptions{}); err == nil {
 				t.Errorf("RemoveJSONValues(%q) returned no error", testCase.input)
 			}
 		})
@@ -378,7 +377,7 @@ func FuzzRemoveJSONValues(f *testing.F) {
 			EmptyObjects:      removeEmptyObjects,
 			EmptyStringFields: removeEmptyStringFields,
 		}
-		got, err := tfjson.RemoveJSONValues([]byte(input), options)
+		got, err := tfjson.RemoveJSONValues(input, options)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -386,7 +385,7 @@ func FuzzRemoveJSONValues(f *testing.F) {
 	})
 }
 
-func assertValidAndIdempotent(t *testing.T, got []byte, options tfjson.RemoveOptions) {
+func assertValidAndIdempotent(t *testing.T, got string, options tfjson.RemoveOptions) {
 	t.Helper()
 
 	if !jsontext.Value(got).IsValid(jsontext.AllowDuplicateNames(true), jsontext.AllowInvalidUTF8(true)) {
@@ -396,7 +395,7 @@ func assertValidAndIdempotent(t *testing.T, got []byte, options tfjson.RemoveOpt
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Equal(again, got) {
+	if again != got {
 		t.Errorf("RemoveJSONValues is not idempotent: first result %q, second result %q", got, again)
 	}
 }

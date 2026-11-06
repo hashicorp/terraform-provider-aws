@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"slices"
+	"strings"
 )
 
 // RemoveOptions configures values removed by RemoveJSONValues.
@@ -28,26 +29,26 @@ type RemoveOptions struct {
 
 // RemoveJSONValues removes selected values from a JSON document and compacts the result.
 // The top-level value is always retained.
-func RemoveJSONValues(in []byte, options RemoveOptions) ([]byte, error) {
+func RemoveJSONValues(in string, options RemoveOptions) (string, error) {
 	decoder := jsontext.NewDecoder(
-		bytes.NewReader(in),
+		strings.NewReader(in),
 		jsontext.AllowDuplicateNames(true),
 		jsontext.AllowInvalidUTF8(true),
 	)
 	out := make([]byte, 0, len(in))
 
 	if _, err := transformJSONValue(decoder, &out, options, false, true); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if _, err := decoder.ReadToken(); !errors.Is(err, io.EOF) {
 		if err == nil {
-			return nil, fmt.Errorf("multiple top-level JSON values")
+			return "", fmt.Errorf("multiple top-level JSON values")
 		}
-		return nil, err
+		return "", err
 	}
 
-	return out, nil
+	return string(out), nil
 }
 
 func transformJSONValue(decoder *jsontext.Decoder, out *[]byte, options RemoveOptions, objectField, root bool) (bool, error) {
