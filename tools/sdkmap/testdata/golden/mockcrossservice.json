@@ -1,0 +1,31 @@
+[
+  {
+    "service": "mockcrossservice",
+    "resource_type": "aws_mockcrossservice_foo",
+    "plugin_type": "SDKv2",
+    "expr": "resourceFoo",
+    "location": "internal/service/mockcrossservice/foo.go:23",
+    "create": {
+      "expr": "resourceFooCreate",
+      "location": "internal/service/mockcrossservice/foo.go:43",
+      "sdk_calls": [
+        "mockcrossservice.CreateFoo",
+        "mockcrossservice.DescribeFoo"
+      ]
+    },
+    "read": {
+      "expr": "resourceFooRead",
+      "location": "internal/service/mockcrossservice/foo.go:63",
+      "sdk_calls": [
+        "mockcrossservice.DescribeFoo"
+      ]
+    },
+    "delete": {
+      "expr": "resourceFooDelete",
+      "location": "internal/service/mockcrossservice/foo.go:84",
+      "sdk_calls": [
+        "mockcrossservice.DeleteFoo"
+      ]
+    }
+  }
+]
