@@ -39,7 +39,7 @@ func testPermissionsFound() (any, string, error) {
 		{
 			Permissions: []awstypes.Permission{awstypes.PermissionAlter},
 			Principal: &awstypes.DataLakePrincipal{
-				DataLakePrincipalIdentifier: aws.String("arn:aws:iam::123456789012:role/example"),
+				DataLakePrincipalIdentifier: aws.String("123456789012"),
 			},
 		},
 	}, "AVAILABLE", nil
@@ -165,7 +165,7 @@ func TestPermissionsNotFound(t *testing.T) {
 			err:      fmt.Errorf("listing permissions: %w", &awstypes.AccessDeniedException{Message: aws.String("Insufficient Lake Formation permission(s)")}),
 			expected: false,
 		},
-		"timeout": {
+		"timed out": {
 			err:      &retry.TimeoutError{LastError: context.DeadlineExceeded},
 			expected: false,
 		},
