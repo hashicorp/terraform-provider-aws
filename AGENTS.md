@@ -176,6 +176,7 @@ When you help prepare a PR, disclose the AI's role in the description and add `�
 
 ### Regenerate, test, and verify (scoped to your package)
 - **Regenerate** after changing annotations or a service's `generate.go`: `make gen PKG=<service>`. Run the provider-wide `make gen` only after changing `names/data/names_data.hcl`, anything under `internal/generate/` — it affects every service and takes many minutes.
+- **Validate generated Terraform configurations** after generation creates or changes Terraform files: run `terraform fmt -recursive -check` and `make testacc-tflint-dir` before `make quick-fix` and before committing. Fix templates rather than generated files when either check fails.
 - **Test** with `make test PKG=<service>` (unit test) (`T=<pattern>` filters by name); for non-service changes, e.g., `go test ./internal/conns/...`.
 - **Fix and verify** with `make quick-fix PKG=<service>` — the default final pass. It applies formatting, imports, lint, semgrep fixes, and `copyright-fix`, and fails if the build is broken (no separate build step needed).
 - **Documentation**: run `make swissshepherd` to verify changes align with docs. Run `make swissshepherd-refresh` only once at the beginning of a session.

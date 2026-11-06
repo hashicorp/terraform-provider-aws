@@ -111,51 +111,6 @@ func TestAccIoTTopicRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIoTTopicRule_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName(t)
-	resourceName := "aws_iot_topic_rule.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTopicRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccTopicRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccTopicRuleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := testAccTopicRuleName(t)
@@ -2529,37 +2484,6 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 }
 `, rName)
-}
-
-func testAccTopicRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iot_topic_rule" "test" {
-  name        = %[1]q
-  enabled     = true
-  sql         = "SELECT * FROM 'topic/test'"
-  sql_version = "2015-10-08"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccTopicRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iot_topic_rule" "test" {
-  name        = %[1]q
-  enabled     = true
-  sql         = "SELECT * FROM 'topic/test'"
-  sql_version = "2015-10-08"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccTopicRuleConfig_cloudWatchAlarm(rName string, alarmName string) string {
