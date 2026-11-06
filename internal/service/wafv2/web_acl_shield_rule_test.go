@@ -10,6 +10,7 @@ import (
 	"maps"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -29,7 +30,10 @@ import (
 func TestWebACLUpdate_preservesShieldRule(t *testing.T) {
 	t.Parallel()
 
-	const shieldRuleName = "ShieldMitigationRuleGroup_123456789012_d2b7c2a5-6f3e-4b8e-9c1d-0a1b2c3d4e5f_example"
+	const (
+		shieldRuleName         = "ShieldMitigationRuleGroup_123456789012_d2b7c2a5-6f3e-4b8e-9c1d-0a1b2c3d4e5f_example"
+		shieldAntiDDoSRuleName = "AWSManagedRulesAntiDDoSRuleSet"
+	)
 
 	testCases := map[string]struct {
 		oldRules map[string]any
@@ -91,6 +95,16 @@ func TestWebACLUpdate_preservesShieldRule(t *testing.T) {
       "Priority": 10000000,
       "Statement": {"RuleGroupReferenceStatement": {"ARN": "` + ruleGroupARN + `"}},
       "VisibilityConfig": {"CloudWatchMetricsEnabled": true, "MetricName": "shield", "SampledRequestsEnabled": true}
+    }, {
+      "Name": "AWSManagedRulesAntiDDoSRuleSet",
+      "OverrideAction": {"None": {}},
+      "Priority": 9999999,
+      "Statement": {"ManagedRuleGroupStatement": {
+        "Name": "AWSManagedRulesAntiDDoSRuleSet",
+        "VendorName": "AWS",
+        "RuleActionOverrides": [{"Name": "DDoSRequests", "ActionToUse": {"Count": {}}}]
+      }},
+      "VisibilityConfig": {"CloudWatchMetricsEnabled": true, "MetricName": "AWSManagedRulesAntiDDoSRuleSet", "SampledRequestsEnabled": false}
     }],
     "VisibilityConfig": {"CloudWatchMetricsEnabled": false, "MetricName": "test", "SampledRequestsEnabled": false}
   }
@@ -150,8 +164,10 @@ func TestWebACLUpdate_preservesShieldRule(t *testing.T) {
 				t.Fatalf("apply: %v", diags)
 			}
 
-			if !strings.Contains(strings.Join(updateRules, ","), shieldRuleName) {
-				t.Errorf("UpdateWebACL rules = %v, want the Shield Advanced rule %q to be preserved", updateRules, shieldRuleName)
+			for _, want := range []string{shieldRuleName, shieldAntiDDoSRuleName} {
+				if !slices.Contains(updateRules, want) {
+					t.Errorf("UpdateWebACL rules = %v, want the Shield Advanced rule %q to be preserved", updateRules, want)
+				}
 			}
 		})
 	}
