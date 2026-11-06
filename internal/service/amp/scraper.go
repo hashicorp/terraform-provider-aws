@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/amp/types"
@@ -138,11 +139,47 @@ func (r *scraperResource) Schema(ctx context.Context, request resource.SchemaReq
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("kafka"),
+							path.MatchRelative().AtName("opensearch"),
+						),
+					},
 					Blocks: map[string]schema.Block{
+						"kafka": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[kafkaExporterConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"cluster_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+									"consumer_group_filter": schema.StringAttribute{
+										CustomType: fwtypes.RegexpType,
+										Optional:   true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 256),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^\^.*\$$`), "must start with ^ and end with $"),
+										},
+									},
+									"topic_filter": schema.StringAttribute{
+										CustomType: fwtypes.RegexpType,
+										Optional:   true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 256),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^\^.*\$$`), "must start with ^ and end with $"),
+										},
+									},
+								},
+							},
+						},
 						"opensearch": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[openSearchExporterConfigurationModel](ctx),
 							Validators: []validator.List{
-								listvalidator.IsRequired(),
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
@@ -418,6 +455,11 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 			input.Destination = nil
 		}
 
+		// UpdateScraper keeps the existing exporter when Exporters is omitted. An empty list removes it.
+		if len(input.Exporters) == 0 && old.Exporters.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			input.Exporters = []awstypes.ExporterConfiguration{}
+		}
+
 		_, err := conn.UpdateScraper(ctx, &input)
 
 		if err != nil {
@@ -578,6 +620,7 @@ type cloudWatchConfigurationModel struct {
 }
 
 type exporterConfigurationModel struct {
+	Kafka      fwtypes.ListNestedObjectValueOf[kafkaExporterConfigurationModel]      `tfsdk:"kafka"`
 	OpenSearch fwtypes.ListNestedObjectValueOf[openSearchExporterConfigurationModel] `tfsdk:"opensearch"`
 }
 
@@ -591,6 +634,18 @@ func (m exporterConfigurationModel) Expand(ctx context.Context) (any, diag.Diagn
 	var v awstypes.ExporterConfiguration
 
 	switch {
+	case !m.Kafka.IsNull():
+		data, d := m.Kafka.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var apiObject awstypes.ExporterConfigurationMemberKafkaConfiguration
+		diags.Append(fwflex.Expand(ctx, data, &apiObject.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		v = &apiObject
 	case !m.OpenSearch.IsNull():
 		data, d := m.OpenSearch.ToPtr(ctx)
 		diags.Append(d...)
@@ -612,6 +667,13 @@ func (m *exporterConfigurationModel) Flatten(ctx context.Context, v any) diag.Di
 	var diags diag.Diagnostics
 
 	switch t := v.(type) {
+	case awstypes.ExporterConfigurationMemberKafkaConfiguration:
+		var data kafkaExporterConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.Kafka = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	case awstypes.ExporterConfigurationMemberOpenSearchConfiguration:
 		var data openSearchExporterConfigurationModel
 		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
@@ -622,6 +684,12 @@ func (m *exporterConfigurationModel) Flatten(ctx context.Context, v any) diag.Di
 	}
 
 	return diags
+}
+
+type kafkaExporterConfigurationModel struct {
+	ClusterARN          fwtypes.ARN    `tfsdk:"cluster_arn"`
+	ConsumerGroupFilter fwtypes.Regexp `tfsdk:"consumer_group_filter"`
+	TopicFilter         fwtypes.Regexp `tfsdk:"topic_filter"`
 }
 
 type openSearchExporterConfigurationModel struct {
