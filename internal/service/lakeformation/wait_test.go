@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
@@ -39,7 +40,7 @@ func testPermissionsFound() (any, string, error) {
 		{
 			Permissions: []awstypes.Permission{awstypes.PermissionAlter},
 			Principal: &awstypes.DataLakePrincipal{
-				DataLakePrincipalIdentifier: aws.String("123456789012"),
+				DataLakePrincipalIdentifier: aws.String(acctest.Ct12Digit),
 			},
 		},
 	}, "AVAILABLE", nil
