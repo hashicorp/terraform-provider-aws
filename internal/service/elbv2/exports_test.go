@@ -14,6 +14,8 @@ var (
 	ResourceTrustStore            = resourceTrustStore
 	ResourceTrustStoreRevocation  = resourceTrustStoreRevocation
 
+	FlattenSubnetMappingsFromAvailabilityZones = flattenSubnetMappingsFromAvailabilityZones
+
 	FindListenerByARN                    = findListenerByARN
 	FindListenerCertificateByTwoPartKey  = findListenerCertificateByTwoPartKey
 	FindListenerRuleByARN                = findListenerRuleByARN
