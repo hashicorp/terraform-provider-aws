@@ -1,0 +1,40 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: govulncheck Checks
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths:
+      - .github/workflows/govulncheck.yml
+      - .ci/tools/**
+      - internal/**
+      - go.mod
+      - go.sum
+      - main.go
+      - names/**
+      - tools/**
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
+permissions:
+  contents: read
+
+jobs:
+  govulncheck:
+    name: govulncheck check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/tools_cache
+        with:
+          tools: golang.org/x/vuln/cmd/govulncheck
+      - run: GOVULNCHECK_ARGS="-show verbose" make govulncheck
