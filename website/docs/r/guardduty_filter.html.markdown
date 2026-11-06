@@ -53,7 +53,7 @@ This resource supports the following arguments:
 * `detector_id` - (Required) ID of a GuardDuty detector, attached to your account.
 * `finding_criteria` - (Required) Criteria to be used in the filter for querying findings. Contains one or more `criterion` blocks, documented [below](#criterion-block).
 * `name` - (Required) Name of your filter.
-* `rank` - (Required) Position of the filter in the list of current filters. Also specifies the order in which this filter is applied to the findings.
+* `rank` - (Optional) Position of the filter in the list of current filters. Also specifies the order in which this filter is applied to the findings. Valid values are from `1` to `100`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Tags that you want to add to the Filter resource. A tag consists of a key and a value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

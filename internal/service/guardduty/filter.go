@@ -154,8 +154,10 @@ func resourceFilter() *schema.Resource {
 					),
 				},
 				"rank": {
-					Type:     schema.TypeInt,
-					Required: true,
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(1, 100),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -174,8 +176,10 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		DetectorId:  aws.String(detectorID),
 		Name:        aws.String(name),
-		Rank:        aws.Int32(int32(d.Get("rank").(int))),
 		Tags:        getTagsIn(ctx),
+	}
+	if v, ok := d.GetOk("rank"); ok {
+		input.Rank = aws.Int32(int32(v.(int)))
 	}
 
 	var err error
@@ -246,7 +250,9 @@ func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			DetectorId:  aws.String(detectorID),
 			FilterName:  aws.String(name),
-			Rank:        aws.Int32(int32(d.Get("rank").(int))),
+		}
+		if v, ok := d.GetOk("rank"); ok {
+			input.Rank = aws.Int32(int32(v.(int)))
 		}
 
 		input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]any))
