@@ -90,6 +90,7 @@ func TestAccConnect_serial(t *testing.T) {
 			acctest.CtDisappears:                testAccPhoneNumber_disappears,
 			"tags":                              testAccPhoneNumber_tags,
 			"description":                       testAccPhoneNumber_description,
+			"updateDescription":                 testAccPhoneNumber_updateDescription,
 			"prefix":                            testAccPhoneNumber_prefix,
 			"targetARN":                         testAccPhoneNumber_targetARN,
 			"identityBasic":                     testAccConnectPhoneNumber_Identity_basic,
