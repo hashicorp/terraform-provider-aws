@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
@@ -253,6 +256,61 @@ func TestAccCloudFormationStackSet_managedExecution(t *testing.T) {
 					testAccCheckStackSetExists(ctx, t, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "managed_execution.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"call_as",
+					"template_url",
+				},
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/35031.
+func TestAccCloudFormationStackSet_managedExecutionUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackSet1, stackSet2, stackSet3 awstypes.StackSet
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetConfig_managedExecutionParameters(rName, false, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, t, resourceName, &stackSet1),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", acctest.CtValue1),
+				),
+			},
+			{
+				// Only managed_execution changes: one managed execution request.
+				Config: testAccStackSetConfig_managedExecutionParameters(rName, true, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, t, resourceName, &stackSet2),
+					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", acctest.CtValue1),
+				),
+			},
+			{
+				// managed_execution and parameters change together.
+				Config: testAccStackSetConfig_managedExecutionParameters(rName, false, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, t, resourceName, &stackSet3),
+					testAccCheckStackSetNotRecreated(&stackSet2, &stackSet3),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", acctest.CtValue2),
 				),
 			},
 			{
@@ -1270,6 +1328,27 @@ TEMPLATE
 `, rName, testAccStackSetTemplateBodyVPC(rName)))
 }
 
+func testAccStackSetConfig_managedExecutionParameters(rName string, active bool, value1 string) string {
+	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "test" {
+  administration_role_arn = aws_iam_role.test[0].arn
+  name                    = %[1]q
+
+  managed_execution {
+    active = %[3]t
+  }
+
+  parameters = {
+    Parameter1 = %[4]q
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccStackSetTemplateBodyParameters1(rName), active, value1))
+}
+
 func testAccStackSetConfig_name(rName string) string {
 	return acctest.ConfigCompose(testAccStackSetConfig_baseAdministrationRoleARNs(rName, 1), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
@@ -1648,4 +1727,225 @@ TEMPLATE
   }
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName)))
+}
+
+func TestManagedExecutionActive(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		in   []any
+		want bool
+	}{
+		"absent":        {in: nil, want: false},
+		"empty":         {in: []any{}, want: false},
+		"nil block":     {in: []any{nil}, want: false},
+		acctest.CtFalse: {in: []any{map[string]any{"active": false}}, want: false},
+		acctest.CtTrue:  {in: []any{map[string]any{"active": true}}, want: true},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfcloudformation.ManagedExecutionActive(tc.in); got != tc.want {
+				t.Errorf("ManagedExecutionActive(%v) = %t, want %t", tc.in, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestStackSetParametersDiffer(t *testing.T) {
+	t.Parallel()
+
+	param := func(k, v string) awstypes.Parameter {
+		return awstypes.Parameter{ParameterKey: aws.String(k), ParameterValue: aws.String(v)}
+	}
+
+	testCases := map[string]struct {
+		configured map[string]any
+		actual     []awstypes.Parameter
+		want       bool
+	}{
+		"none configured": {
+			actual: []awstypes.Parameter{param("A", "1")},
+			want:   false,
+		},
+		"equal": {
+			configured: map[string]any{"A": "1", "B": "2"},
+			actual:     []awstypes.Parameter{param("A", "1"), param("B", "2")},
+			want:       false,
+		},
+		"extra unconfigured parameter (template default)": {
+			configured: map[string]any{"A": "1"},
+			actual:     []awstypes.Parameter{param("A", "1"), param("Default", "x")},
+			want:       false,
+		},
+		"value changed": {
+			configured: map[string]any{"A": "1"},
+			actual:     []awstypes.Parameter{param("A", "default")},
+			want:       true,
+		},
+		"missing": {
+			configured: map[string]any{"A": "1", "B": "2"},
+			actual:     []awstypes.Parameter{param("A", "1")},
+			want:       true,
+		},
+		"masked NoEcho value": {
+			configured: map[string]any{"Secret": "s3cr3t"},
+			actual:     []awstypes.Parameter{param("Secret", "****")},
+			want:       true,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfcloudformation.StackSetParametersDiffer(tc.configured, tc.actual); got != tc.want {
+				t.Errorf("StackSetParametersDiffer() = %t, want %t", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestExpandStackSetManagedExecutionUpdateInput(t *testing.T) {
+	t.Parallel()
+
+	const (
+		name        = "test-stack-set"
+		operationID = "terraform-0001"
+		template    = "Resources: {}"
+	)
+
+	testCases := map[string]struct {
+		raw  map[string]any
+		want *awstypes.ManagedExecution
+		// Fields other than the template, parameters and managed execution.
+		wantCallAs           awstypes.CallAs
+		wantCapabilities     []awstypes.Capability
+		wantDescription      *string
+		wantAdminRoleARN     *string
+		wantExecutionRole    *string
+		wantMaxConcurrent    *int32
+		wantFailureTolerance *int32
+	}{
+		"SERVICE_MANAGED enable": {
+			raw: map[string]any{
+				names.AttrName:        name,
+				"permission_model":    "SERVICE_MANAGED",
+				"call_as":             "SELF",
+				"capabilities":        []any{"CAPABILITY_NAMED_IAM"},
+				names.AttrDescription: "desc",
+				"template_body":       template,
+				names.AttrParameters:  map[string]any{"A": "1"},
+				"auto_deployment": []any{map[string]any{
+					names.AttrEnabled:                  false,
+					"retain_stacks_on_account_removal": false,
+				}},
+				"operation_preferences": []any{map[string]any{
+					"failure_tolerance_count": 0,
+					"max_concurrent_count":    1,
+				}},
+				"managed_execution": []any{map[string]any{"active": true}},
+				// Ignored with auto_deployment.
+				"execution_role_name": "ignored",
+			},
+			want:                 &awstypes.ManagedExecution{Active: aws.Bool(true)},
+			wantCallAs:           awstypes.CallAsSelf,
+			wantCapabilities:     []awstypes.Capability{awstypes.CapabilityCapabilityNamedIam},
+			wantDescription:      aws.String("desc"),
+			wantMaxConcurrent:    aws.Int32(1),
+			wantFailureTolerance: aws.Int32(0),
+		},
+		"SELF_MANAGED disable": {
+			raw: map[string]any{
+				names.AttrName:            name,
+				"administration_role_arn": "arn:aws:iam::123456789012:role/admin", //lintignore:AWSAT005
+				"execution_role_name":     "exec",
+				"template_body":           template,
+				names.AttrParameters:      map[string]any{"A": "1"},
+				"managed_execution":       []any{map[string]any{"active": false}},
+			},
+			want:              &awstypes.ManagedExecution{Active: aws.Bool(false)},
+			wantCallAs:        awstypes.CallAsSelf,                                // schema default
+			wantAdminRoleARN:  aws.String("arn:aws:iam::123456789012:role/admin"), //lintignore:AWSAT005
+			wantExecutionRole: aws.String("exec"),
+		},
+		"block removed": {
+			raw: map[string]any{
+				names.AttrName:  name,
+				"template_body": template,
+			},
+			want:       &awstypes.ManagedExecution{Active: aws.Bool(false)},
+			wantCallAs: awstypes.CallAsSelf, // schema default
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			d := schema.TestResourceDataRaw(t, tfcloudformation.ResourceStackSet().SchemaMap(), tc.raw)
+			d.SetId(tc.raw[names.AttrName].(string))
+
+			got := tfcloudformation.ExpandStackSetManagedExecutionUpdateInput(d, operationID)
+
+			// The request the API accepts with a ManagedExecution change.
+			if got.TemplateBody != nil || got.TemplateURL != nil {
+				t.Errorf("template sent: body %v, url %v", got.TemplateBody, got.TemplateURL)
+			}
+			if !aws.ToBool(got.UsePreviousTemplate) {
+				t.Error("UsePreviousTemplate not set")
+			}
+			if got.Parameters != nil {
+				t.Errorf("Parameters sent: %v", got.Parameters)
+			}
+			if diff := cmp.Diff(tc.want, got.ManagedExecution, cmpopts.IgnoreUnexported(awstypes.ManagedExecution{})); diff != "" {
+				t.Errorf("ManagedExecution (-want +got):\n%s", diff)
+			}
+
+			// Left as they are.
+			if got.Tags != nil || got.AutoDeployment != nil || got.PermissionModel != "" {
+				t.Errorf("unexpected fields: tags %v, auto_deployment %v, permission_model %q", got.Tags, got.AutoDeployment, got.PermissionModel)
+			}
+			if got.Accounts != nil || got.Regions != nil || got.DeploymentTargets != nil {
+				t.Errorf("unexpected targets: accounts %v, regions %v, deployment_targets %v", got.Accounts, got.Regions, got.DeploymentTargets)
+			}
+
+			if aws.ToString(got.StackSetName) != tc.raw[names.AttrName].(string) || aws.ToString(got.OperationId) != operationID {
+				t.Errorf("StackSetName %q, OperationId %q", aws.ToString(got.StackSetName), aws.ToString(got.OperationId))
+			}
+			if got.CallAs != tc.wantCallAs {
+				t.Errorf("CallAs = %q, want %q", got.CallAs, tc.wantCallAs)
+			}
+			if diff := cmp.Diff(tc.wantCapabilities, got.Capabilities); diff != "" {
+				t.Errorf("Capabilities (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.wantDescription, got.Description); diff != "" {
+				t.Errorf("Description (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.wantAdminRoleARN, got.AdministrationRoleARN); diff != "" {
+				t.Errorf("AdministrationRoleARN (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.wantExecutionRole, got.ExecutionRoleName); diff != "" {
+				t.Errorf("ExecutionRoleName (-want +got):\n%s", diff)
+			}
+
+			if tc.wantMaxConcurrent == nil {
+				if got.OperationPreferences != nil {
+					t.Errorf("OperationPreferences sent: %+v", got.OperationPreferences)
+				}
+			} else {
+				if got.OperationPreferences == nil {
+					t.Fatal("OperationPreferences not sent")
+				}
+				if diff := cmp.Diff(tc.wantMaxConcurrent, got.OperationPreferences.MaxConcurrentCount); diff != "" {
+					t.Errorf("MaxConcurrentCount (-want +got):\n%s", diff)
+				}
+				if diff := cmp.Diff(tc.wantFailureTolerance, got.OperationPreferences.FailureToleranceCount); diff != "" {
+					t.Errorf("FailureToleranceCount (-want +got):\n%s", diff)
+				}
+			}
+		})
+	}
 }
