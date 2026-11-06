@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -84,6 +85,71 @@ func TestAccIPAMScope_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-nam
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccIPAMScope_externalAuthorityConfiguration(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+	ctx := acctest.Context(t)
+	// A valid Infoblox external resource identifier can only come from a real Infoblox tenant,
+	// so it cannot be committed. Format: <version>.identity.account.<entity_realm>.<entity_id>.
+	externalResourceIdentifier := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_IPAM_SCOPE_EXTERNAL_RESOURCE_IDENTIFIER")
+	var scope awstypes.IpamScope
+	resourceName := "aws_vpc_ipam_scope.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMScopeConfig_externalAuthorityConfiguration(externalResourceIdentifier),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIPAMScopeExists(ctx, t, resourceName, &scope),
+					resource.TestCheckResourceAttr(resourceName, "external_authority_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "external_authority_configuration.0.external_resource_identifier", externalResourceIdentifier),
+					resource.TestCheckResourceAttr(resourceName, "external_authority_configuration.0.type", string(awstypes.IpamScopeExternalAuthorityTypeInfoblox)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIPAMScopeConfig_basic("test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIPAMScopeExists(ctx, t, resourceName, &scope),
+					resource.TestCheckResourceAttr(resourceName, "external_authority_configuration.#", "0"),
+				),
+			},
+			{
+				Config: testAccIPAMScopeConfig_externalAuthorityConfiguration(externalResourceIdentifier),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIPAMScopeExists(ctx, t, resourceName, &scope),
+					resource.TestCheckResourceAttr(resourceName, "external_authority_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "external_authority_configuration.0.external_resource_identifier", externalResourceIdentifier),
+					resource.TestCheckResourceAttr(resourceName, "external_authority_configuration.0.type", string(awstypes.IpamScopeExternalAuthorityTypeInfoblox)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIPAMScope_externalAuthorityConfigurationInvalidType(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccIPAMScopeConfig_externalAuthorityConfigurationType("not-a-valid-authority"),
+				ExpectError: regexache.MustCompile(`expected type to be one of \["infoblox"\], got not-a-valid-authority`),
 			},
 		},
 	})
@@ -198,6 +264,33 @@ resource "aws_vpc_ipam_scope" "test" {
   description = %[1]q
 }
 `, description))
+}
+
+func testAccIPAMScopeConfig_externalAuthorityConfiguration(externalResourceIdentifier string) string {
+	return acctest.ConfigCompose(testAccIPAMScopeConfig_base, fmt.Sprintf(`
+resource "aws_vpc_ipam_scope" "test" {
+  ipam_id     = aws_vpc_ipam.test.id
+  description = "test"
+
+  external_authority_configuration {
+    external_resource_identifier = %[1]q
+    type                         = %[2]q
+  }
+}
+`, externalResourceIdentifier, awstypes.IpamScopeExternalAuthorityTypeInfoblox))
+}
+
+func testAccIPAMScopeConfig_externalAuthorityConfigurationType(authorityType string) string {
+	return acctest.ConfigCompose(testAccIPAMScopeConfig_base, fmt.Sprintf(`
+resource "aws_vpc_ipam_scope" "test" {
+  ipam_id = aws_vpc_ipam.test.id
+
+  external_authority_configuration {
+    external_resource_identifier = "1.identity.account.example.0123456789abcdef"
+    type                         = %[1]q
+  }
+}
+`, authorityType))
 }
 
 func testAccIPAMScopeConfig_tags(tagKey1, tagValue1 string) string {

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -54,6 +55,24 @@ func resourceIPAMScope() *schema.Resource {
 				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Optional: true,
+				},
+				"external_authority_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"external_resource_identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.IpamScopeExternalAuthorityType](),
+							},
+						},
+					},
 				},
 				"ipam_arn": {
 					Type:     schema.TypeString,
@@ -96,6 +115,10 @@ func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("external_authority_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ExternalAuthorityConfiguration = expandIPAMScopeExternalAuthorityConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	output, err := conn.CreateIpamScope(ctx, input)
 
 	if err != nil {
@@ -130,6 +153,13 @@ func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta any
 	ipamID := strings.Split(aws.ToString(scope.IpamArn), "/")[1]
 	d.Set(names.AttrARN, scope.IpamScopeArn)
 	d.Set(names.AttrDescription, scope.Description)
+	if v := scope.ExternalAuthorityConfiguration; v != nil {
+		if err := d.Set("external_authority_configuration", []any{flattenIPAMScopeExternalAuthorityConfiguration(v)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting external_authority_configuration: %s", err)
+		}
+	} else {
+		d.Set("external_authority_configuration", nil)
+	}
 	d.Set("ipam_arn", scope.IpamArn)
 	d.Set("ipam_id", ipamID)
 	d.Set("ipam_scope_type", scope.IpamScopeType)
@@ -145,13 +175,21 @@ func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChange(names.AttrDescription) {
+	if d.HasChanges(names.AttrDescription, "external_authority_configuration") {
 		input := &ec2.ModifyIpamScopeInput{
 			IpamScopeId: aws.String(d.Id()),
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
+		}
+
+		if d.HasChange("external_authority_configuration") {
+			if v, ok := d.GetOk("external_authority_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ExternalAuthorityConfiguration = expandIPAMScopeExternalAuthorityConfiguration(v.([]any)[0].(map[string]any))
+			} else {
+				input.RemoveExternalAuthorityConfiguration = aws.Bool(true)
+			}
 		}
 
 		_, err := conn.ModifyIpamScope(ctx, input)
@@ -191,4 +229,38 @@ func resourceIPAMScopeDelete(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	return diags
+}
+
+func expandIPAMScopeExternalAuthorityConfiguration(tfMap map[string]any) *awstypes.ExternalAuthorityConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ExternalAuthorityConfiguration{}
+
+	if v, ok := tfMap["external_resource_identifier"].(string); ok && v != "" {
+		apiObject.ExternalResourceIdentifier = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = awstypes.IpamScopeExternalAuthorityType(v)
+	}
+
+	return apiObject
+}
+
+func flattenIPAMScopeExternalAuthorityConfiguration(apiObject *awstypes.IpamScopeExternalAuthorityConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrType: string(apiObject.Type),
+	}
+
+	if v := apiObject.ExternalResourceIdentifier; v != nil {
+		tfMap["external_resource_identifier"] = aws.ToString(v)
+	}
+
+	return tfMap
 }
