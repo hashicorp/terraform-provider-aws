@@ -1100,7 +1100,10 @@ resource "aws_organizations_policy" "test" {
         Effect    = "Deny"
         Principal = "*"
         Action    = ["s3:GetObject", "s3:PutObject"]
-        Resource  = ["arn:aws:s3:::example-bucket/*", "arn:aws:s3:::example-bucket"]
+        Resource = [
+          "arn:${data.aws_partition.current.partition}:s3:::example-bucket",
+          "arn:${data.aws_partition.current.partition}:s3:::example-bucket/*",
+        ]
         Condition = {
           Bool = {
             "aws:SecureTransport" = ["false"]
@@ -1112,7 +1115,7 @@ resource "aws_organizations_policy" "test" {
         Effect    = "Deny"
         Principal = "*"
         Action    = ["s3:PutObject"]
-        Resource  = ["arn:aws:s3:::example-bucket/*"]
+        Resource  = ["arn:${data.aws_partition.current.partition}:s3:::example-bucket/*"]
         Condition = {
           Null = {
             "s3:x-amz-server-side-encryption-aws-kms-key-id" = ["true"]
@@ -1182,6 +1185,7 @@ resource "aws_organizations_policy" "test" {
 }
 
 func testAccPolicyConfig_type_NetworkSecurityDirector(rName string) string {
+	//lintignore:AWSAT003
 	return fmt.Sprintf(`
 resource "aws_organizations_policy" "test" {
   content = jsonencode({
