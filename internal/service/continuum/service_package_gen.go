@@ -20,11 +20,104 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newCodeFindingsDataSource,
+			TypeName: "aws_continuum_code_findings",
+			Name:     "Code Findings",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newCodeIssuesDataSource,
+			TypeName: "aws_continuum_code_issues",
+			Name:     "Code Issues",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newCodeScansDataSource,
+			TypeName: "aws_continuum_code_scans",
+			Name:     "Code Scans",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newCollectorDataSource,
+			TypeName: "aws_continuum_collector",
+			Name:     "Collector",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newEnvironmentDataSource,
+			TypeName: "aws_continuum_environment",
+			Name:     "Environment",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newIntegrationDataSource,
+			TypeName: "aws_continuum_integration",
+			Name:     "Integration",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newCollectorResource,
+			TypeName: "aws_continuum_collector",
+			Name:     "Collector",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newCollectorAssociationResource,
+			TypeName: "aws_continuum_collector_association",
+			Name:     "Collector Association",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("environment_id", true),
+				inttypes.StringIdentityAttribute("collector_arn", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      collectorAssociationImportID{},
+				SetIDAttr:     true,
+			},
+		},
+		{
+			Factory:  newEnvironmentResource,
+			TypeName: "aws_continuum_environment",
+			Name:     "Environment",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newIntegrationResource,
+			TypeName: "aws_continuum_integration",
+			Name:     "Integration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newResourcePolicyResource,
+			TypeName: "aws_continuum_resource_policy",
+			Name:     "Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
