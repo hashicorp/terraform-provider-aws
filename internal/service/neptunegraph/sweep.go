@@ -18,11 +18,36 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_neptunegraph_graph_snapshot", sweepGraphSnapshots)
+
 	awsv2.Register("aws_neptunegraph_private_graph_endpoint", sweepPrivateGraphEndpoints)
 
 	awsv2.Register("aws_neptunegraph_graph", sweepGraphs,
 		"aws_neptunegraph_private_graph_endpoint", // Graph depends on endpoints being deleted first
+		"aws_neptunegraph_graph_snapshot",         // Graph depends on snapshots being deleted first
 	)
+}
+
+func sweepGraphSnapshots(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input neptunegraph.ListGraphSnapshotsInput
+	conn := client.NeptuneGraphClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := neptunegraph.NewListGraphSnapshotsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.GraphSnapshots {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newGraphSnapshotResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepGraphs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
