@@ -89,6 +89,9 @@ func TestAccNetworkSecurityManagerDeployment_List_includeResource(t *testing.T) 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
+	deploymentARN := tfstatecheck.StateValue()
+	policyARN := tfstatecheck.StateValue()
+	scopeARN := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -115,6 +118,9 @@ func TestAccNetworkSecurityManagerDeployment_List_includeResource(t *testing.T) 
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkDeploymentARN),
+					deploymentARN.GetStateValue(resourceName1, tfjsonpath.New(names.AttrARN)),
+					policyARN.GetStateValue("aws_networksecuritymanager_policy.test", tfjsonpath.New(names.AttrARN)),
+					scopeARN.GetStateValue("aws_networksecuritymanager_scope.test", tfjsonpath.New(names.AttrARN)),
 				},
 			},
 
@@ -133,12 +139,20 @@ func TestAccNetworkSecurityManagerDeployment_List_includeResource(t *testing.T) 
 					tfquerycheck.ExpectIdentityFunc("aws_networksecuritymanager_deployment.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_networksecuritymanager_deployment.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_networksecuritymanager_deployment.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkDeploymentARN),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), deploymentARN.ValueCheck()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"enable_cross_account_visibility": knownvalue.Bool(false),
+							}),
+						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("is_published"), knownvalue.Bool(true)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("policy_arns"), knownvalue.SetSizeExact(1)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("policy_arns"), knownvalue.SetExact([]knownvalue.Check{
+							policyARN.ValueCheck(),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("scope_arn"), scopeARN.ValueCheck()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
