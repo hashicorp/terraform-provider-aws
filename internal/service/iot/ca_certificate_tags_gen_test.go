@@ -23,7 +23,6 @@ func TestAccIoTCACertificate_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -39,12 +38,10 @@ func TestAccIoTCACertificate_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -73,13 +70,11 @@ func TestAccIoTCACertificate_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -112,12 +107,10 @@ func TestAccIoTCACertificate_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -146,10 +139,8 @@ func TestAccIoTCACertificate_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:          config.StringVariable(rName),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -174,7 +165,6 @@ func TestAccIoTCACertificate_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -190,12 +180,10 @@ func TestAccIoTCACertificate_Tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -217,10 +205,8 @@ func TestAccIoTCACertificate_Tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:          config.StringVariable(rName),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -239,7 +225,6 @@ func TestAccIoTCACertificate_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -255,10 +240,8 @@ func TestAccIoTCACertificate_Tags_emptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:          config.StringVariable(rName),
 					acctest.CtResourceTags:   config.MapVariable(map[string]config.Variable{}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -280,10 +263,8 @@ func TestAccIoTCACertificate_Tags_emptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:          config.StringVariable(rName),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -302,7 +283,6 @@ func TestAccIoTCACertificate_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -318,10 +298,8 @@ func TestAccIoTCACertificate_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:          config.StringVariable(rName),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -342,12 +320,10 @@ func TestAccIoTCACertificate_Tags_addOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -380,7 +356,6 @@ func TestAccIoTCACertificate_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -396,12 +371,10 @@ func TestAccIoTCACertificate_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -429,10 +402,8 @@ func TestAccIoTCACertificate_Tags_EmptyTag_onCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:          config.StringVariable(rName),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -457,7 +428,6 @@ func TestAccIoTCACertificate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -473,12 +443,10 @@ func TestAccIoTCACertificate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -506,13 +474,11 @@ func TestAccIoTCACertificate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -543,12 +509,10 @@ func TestAccIoTCACertificate_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -581,7 +545,6 @@ func TestAccIoTCACertificate_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -597,12 +560,10 @@ func TestAccIoTCACertificate_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -630,12 +591,10 @@ func TestAccIoTCACertificate_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -667,7 +626,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -683,13 +641,11 @@ func TestAccIoTCACertificate_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -715,14 +671,12 @@ func TestAccIoTCACertificate_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -750,13 +704,11 @@ func TestAccIoTCACertificate_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -782,10 +734,8 @@ func TestAccIoTCACertificate_Tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:          config.StringVariable(rName),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -810,7 +760,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -826,7 +775,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -834,7 +782,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -866,7 +813,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -875,7 +821,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -911,10 +856,8 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:          config.StringVariable(rName),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -939,7 +882,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -955,7 +897,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -963,7 +904,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -993,7 +933,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1003,7 +942,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1037,7 +975,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1045,7 +982,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1078,7 +1014,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_updateToProviderOnly(t *testing.T)
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -1094,12 +1029,10 @@ func TestAccIoTCACertificate_Tags_DefaultTags_updateToProviderOnly(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1128,13 +1061,11 @@ func TestAccIoTCACertificate_Tags_DefaultTags_updateToProviderOnly(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1163,7 +1094,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_updateToResourceOnly(t *testing.T)
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -1179,13 +1109,11 @@ func TestAccIoTCACertificate_Tags_DefaultTags_updateToResourceOnly(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1210,12 +1138,10 @@ func TestAccIoTCACertificate_Tags_DefaultTags_updateToResourceOnly(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1248,7 +1174,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -1264,7 +1189,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1272,7 +1196,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1304,7 +1227,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T)
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -1320,13 +1242,11 @@ func TestAccIoTCACertificate_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					acctest.CtResourceTags:   nil,
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1354,7 +1274,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nullOverlappingResourceTag(t *test
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -1370,7 +1289,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nullOverlappingResourceTag(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1378,7 +1296,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nullOverlappingResourceTag(t *test
 						acctest.CtKey1: nil,
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1407,7 +1324,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nullNonOverlappingResourceTag(t *t
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -1423,7 +1339,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nullNonOverlappingResourceTag(t *t
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1431,7 +1346,6 @@ func TestAccIoTCACertificate_Tags_DefaultTags_nullNonOverlappingResourceTag(t *t
 						acctest.CtResourceKey1: nil,
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1460,7 +1374,6 @@ func TestAccIoTCACertificate_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -1476,10 +1389,8 @@ func TestAccIoTCACertificate_Tags_ComputedTag_onCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:          config.StringVariable(rName),
 					"unknownTagKey":          config.StringVariable("computedkey1"),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1511,7 +1422,6 @@ func TestAccIoTCACertificate_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -1527,12 +1437,10 @@ func TestAccIoTCACertificate_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1561,12 +1469,10 @@ func TestAccIoTCACertificate_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:          config.StringVariable(rName),
 					"unknownTagKey":          config.StringVariable("computedkey1"),
 					"knownTagKey":            config.StringVariable(acctest.CtKey1),
 					"knownTagValue":          config.StringVariable(acctest.CtValue1),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1604,7 +1510,6 @@ func TestAccIoTCACertificate_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -1620,12 +1525,10 @@ func TestAccIoTCACertificate_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1654,10 +1557,8 @@ func TestAccIoTCACertificate_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:          config.StringVariable(rName),
 					"unknownTagKey":          config.StringVariable(acctest.CtKey1),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1689,7 +1590,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -1706,7 +1606,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1717,7 +1616,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 						config.StringVariable(acctest.CtProviderKey1),
 					),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1757,7 +1655,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1768,7 +1665,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 						config.StringVariable(acctest.CtProviderKey1),
 					),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1808,7 +1704,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Again),
 					}),
@@ -1819,7 +1714,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 						config.StringVariable(acctest.CtProviderKey1),
 					),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1862,7 +1756,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_ca_certificate.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, privateKeyPEM)
 
@@ -1879,7 +1772,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -1888,7 +1780,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 						config.StringVariable(acctest.CtResourceKey1),
 					),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -1944,7 +1835,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -1953,7 +1843,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 						config.StringVariable(acctest.CtResourceKey1),
 					),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),
@@ -2009,7 +1898,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CACertificate/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Again),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2Updated),
@@ -2018,7 +1906,6 @@ func TestAccIoTCACertificate_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 						config.StringVariable(acctest.CtResourceKey1),
 					),
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
-					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, t, resourceName),

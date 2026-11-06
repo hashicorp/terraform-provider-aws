@@ -16,18 +16,7 @@ resource "aws_iot_ca_certificate" "test" {
 
 resource "null_resource" "test" {}
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-
 variable "certificate_pem" {
-  type     = string
-  nullable = false
-}
-
-variable "private_key_pem" {
   type     = string
   nullable = false
 }
