@@ -1,0 +1,40 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: regexp-no-compile-at-init
+    languages: [go]
+    message: Do not compile regular expressions as global variables. Either use it inline or wrap with `sync.OnceValue`.
+    paths:
+      include:
+        - "/internal"
+      exclude:
+        - "*_test.go"
+        - "/internal/generate/"
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern: var $NAME = $RE.$COMPILE(...)
+                  - pattern: var $NAME $TYPE = $RE.$COMPILE(...)
+              - pattern-not-inside: |
+                  func $FUNC(...) {
+                    ...
+                  }
+              - pattern-not-inside: |
+                  func ($RECV $RECVTYPE) $METHOD(...) {
+                    ...
+                  }
+          - patterns:
+              - pattern: $RE.$COMPILE(...)
+              - pattern-inside: |
+                  func init() {
+                    ...
+                  }
+      - metavariable-regex:
+          metavariable: $RE
+          regex: ^(regexp|regexache)$
+      - metavariable-regex:
+          metavariable: $COMPILE
+          regex: ^(Must)?Compile(POSIX)?$
+    severity: WARNING
