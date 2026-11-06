@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lakeformation_permissions: Fix existing grants being removed from state, and proposed for re-creation, when reading them fails due to throttling, timeouts, or other errors
+```
