@@ -185,6 +185,8 @@ github.com/aws/aws-sdk-go-v2/service/connect v1.208.0 h1:kLI7hIFfTZQS5W5z3abHT6z
 github.com/aws/aws-sdk-go-v2/service/connect v1.208.0/go.mod h1:ckW8BT2swdP87JRT7SDYJAGjJbvY9Ooq1WRk8SX5FAM=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.50.6 h1:2n3LfuYBaVO3K/8iJyXua5WJF6x+Wh3GLGx/Xnx+1qM=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.50.6/go.mod h1:sC5SBbZTOjnoTyKdUlOF9xJiPSjtYkirlRxeJY/FAXM=
+github.com/aws/aws-sdk-go-v2/service/continuum v1.0.0 h1:Ev6Y4aObuW1GqDV/4dXyrbI7U64S5BTKNR7x2lvJCn8=
+github.com/aws/aws-sdk-go-v2/service/continuum v1.0.0/go.mod h1:4ONx9hlBGk7WYA3gRcg7hUJDZow3+olzOll519zt+uk=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.38.1 h1:YwMME7dxD+nT6l8nJNu4CG9DgNVXsKR3guZH+f5GRuE=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.38.1/go.mod h1:XfZeyCOszbO5nNC6g2fSOG9jMr0sQ7/6Yp3Ou7Fp5E0=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.43.6 h1:PzE9pRL3/RhJ3HA6XybtkFhgkTvDvZilzkEdHBikFi0=
@@ -817,8 +819,8 @@ github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 h1:n661drycOFuPLCN
 github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3/go.mod h1:A0bzQcvG0E7Rwjx0REVgAGH58e96+X0MeOfepqsbeW4=
 github.com/shoenig/test v1.12.1 h1:mLHfnMv7gmhhP44WrvT+nKSxKkPDiNkIuHGdIGI9RLU=
 github.com/shoenig/test v1.12.1/go.mod h1:UxJ6u/x2v/TNs/LoLxBNJRV9DiwBBKYxXSyczsBHFoI=
-github.com/shopspring/decimal v1.5.0 h1:HxSWk31RmJv0EyY4oLiGQB9u7WPludUwPBdvQZnYFPc=
-github.com/shopspring/decimal v1.5.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
+github.com/shopspring/decimal v1.6.0 h1:DcTwjCj4tJPLuGZYsR9W0hyX9pQwMIkdo26Ig1T9xX4=
+github.com/shopspring/decimal v1.6.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
 github.com/skeema/knownhosts v1.3.1 h1:X2osQ+RAjK76shCbvhHHHVl3ZlgDm8apHEHFqRjnBY8=
 github.com/skeema/knownhosts v1.3.1/go.mod h1:r7KTdC8l4uxWRyK2TpQZ/1o5HaSzh06ePQNxPwTcfiY=
 github.com/spf13/cast v1.10.0 h1:h2x0u2shc1QuLHfxi+cTJvs30+ZAHOGRic8uyGTDWxY=

@@ -998,8 +998,10 @@ resource "aws_organizations_policy" "test" {
             "identifier" : {
               "@@assign" : "${aws_bedrock_guardrail.test.guardrail_arn}:${aws_bedrock_guardrail_version.test.version}"
             },
-            "input_tags" : {
-              "@@assign" : "honor"
+            "selective_content_guarding" : {
+              "messages" : {
+                "@@assign" : "selective"
+              }
             }
           }
         }
