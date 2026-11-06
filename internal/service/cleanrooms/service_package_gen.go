@@ -38,6 +38,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  ResourceConfiguredTableAnalysisRule,
+			TypeName: "aws_cleanrooms_configured_table_analysis_rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
 	}
 }
 
