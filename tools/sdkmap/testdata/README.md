@@ -13,12 +13,13 @@ Miniature provider root for tests using `-root testdata`. Its `mock*` service pa
 | `service/mockcrud` | No Update; local/shared/cross-service finders, status/waiters, paginator, options, and retry closures; data source sharing a resource's finder |
 | `service/mockcustomizediff` | References, literals, calls, variables, factories, and nested `customdiff` combinators |
 | `service/mockdatasource` | Data sources only: multi-type factory, paginated finder, and a function literal Read without SDK calls |
-| `service/mockframework` | Framework resources: ModifyPlan, passthrough/custom/embedded importers, value receiver, no Update, and methods promoted from embedded struct and interface |
+| `service/mockframework` | Framework resources: ModifyPlan, passthrough/custom/embedded importers, value receiver, no Update, and methods promoted from embedded struct and interface; tagged data source sharing a resource's finder |
+| `service/mockframeworkdatasource` | Framework data sources only: multi-type factory, paginated finder, value receiver Read without SDK calls, and Read promoted from an embedded struct |
 | `service/mockfuncrefs` | Factory-local method values, call results, and a resource with a `schema.NoopContext` delete function |
 | `service/mockimport` | Passthrough, named, literal, and absent importers |
 | `service/mockinterface` | Interface dispatch and an SDK client wrapped by a package interface |
 | `service/mockstructfield` | SDK clients in fields, including retry, direct/deferred orchestration, and a same-named foreign client |
-| `service/mocktags` | Shared, branching tag handlers (direct/helper, grouped/default/missing cases), cross-service calls, multi-type factory, `@Tags` without an identifier, and a tagged data source |
+| `service/mocktags` | Shared, branching tag handlers (direct/helper, grouped/default/missing cases), cross-service calls, multi-type factory, `@Tags` without an identifier, and tagged SDK V2 and Framework data sources |
 | `service/mocktagsgen` | Unbranched generated-style tag handlers and exported cross-service variables |
 | `service/mocktagsupdateonly` | Generated-style UpdateTags; test-only ListTags; Read sets tags |
 | `service/mocktagsnohandlers` | Tagged and untagged resources without tag handlers |
