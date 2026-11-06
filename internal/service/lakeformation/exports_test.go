@@ -20,6 +20,8 @@ var (
 	ValidPrincipal = validPrincipal
 
 	IncludePrincipalIdentifierInList = includePrincipalIdentifierInList
+	PermissionsNotFound              = permissionsNotFound
+	WaitPermissionsReadyWithRefresh  = waitPermissionsReadyWithRefresh
 
 	FilterCatalogPermissions          = filterCatalogPermissions
 	FilterDataCellsFilter             = filterDataCellsFilter
