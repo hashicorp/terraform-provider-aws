@@ -5,18 +5,20 @@ package pinpointsmsvoicev2
 
 // Exports for use in tests only.
 var (
-	ResourceConfigurationSet = newConfigurationSetResource
-	ResourceEventDestination = newEventDestinationResource
-	ResourceKeyword          = newKeywordResource
-	ResourceOptOutList       = newOptOutListResource
-	ResourcePhoneNumber      = newPhoneNumberResource
-	ResourcePool             = newPoolResource
-	ResourceResourcePolicy   = newResourcePolicyResource
-	ResourceSenderID         = newSenderIDResource
+	ResourceConfigurationSet    = newConfigurationSetResource
+	ResourceEventDestination    = newEventDestinationResource
+	ResourceKeyword             = newKeywordResource
+	ResourceNotifyConfiguration = newNotifyConfigurationResource
+	ResourceOptOutList          = newOptOutListResource
+	ResourcePhoneNumber         = newPhoneNumberResource
+	ResourcePool                = newPoolResource
+	ResourceResourcePolicy      = newResourcePolicyResource
+	ResourceSenderID            = newSenderIDResource
 
 	FindConfigurationSetByID         = findConfigurationSetByID
 	FindEventDestinationByTwoPartKey = findEventDestinationByTwoPartKey
 	FindKeywordByTwoPartKey          = findKeywordByTwoPartKey
+	FindNotifyConfigurationByID      = findNotifyConfigurationByID
 	FindOptOutListByID               = findOptOutListByID
 	FindPhoneNumberByID              = findPhoneNumberByID
 	FindPoolByID                     = findPoolByID

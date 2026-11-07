@@ -17,6 +17,10 @@ import (
 )
 
 func RegisterSweepers() {
+	resource.AddTestSweepers("aws_pinpointsmsvoicev2_notify_configuration", &resource.Sweeper{
+		Name: "aws_pinpointsmsvoicev2_notify_configuration",
+		F:    sweepNotifyConfigurations,
+	})
 	resource.AddTestSweepers("aws_pinpointsmsvoicev2_phone_number", &resource.Sweeper{
 		Name:         "aws_pinpointsmsvoicev2_phone_number",
 		F:            sweepPhoneNumbers,
@@ -160,6 +164,51 @@ func sweepSenderIDs(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping End User Messaging SMS Sender IDs (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepNotifyConfigurations(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	input := &pinpointsmsvoicev2.DescribeNotifyConfigurationsInput{}
+	conn := client.PinpointSMSVoiceV2Client(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := pinpointsmsvoicev2.NewDescribeNotifyConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping End User Messaging SMS Notify Configuration sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing End User Messaging SMS Notify Configurations (%s): %w", region, err)
+		}
+
+		for _, v := range page.NotifyConfigurations {
+			id := aws.ToString(v.NotifyConfigurationId)
+
+			if v.DeletionProtectionEnabled {
+				log.Printf("[INFO] Skipping End User Messaging SMS Notify Configuration %s: DeletionProtectionEnabled=true", id)
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newNotifyConfigurationResource, client,
+				framework.NewAttribute(names.AttrID, id)))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping End User Messaging SMS Notify Configurations (%s): %w", region, err)
 	}
 
 	return nil
