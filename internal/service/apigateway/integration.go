@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -89,7 +90,6 @@ func resourceIntegration() *schema.Resource {
 				"integration_http_method": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ForceNew:     true,
 					ValidateFunc: validHTTPMethod(),
 				},
 				"integration_target": {
@@ -101,7 +101,6 @@ func resourceIntegration() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
-					ForceNew: true,
 					ValidateFunc: validation.StringInSlice([]string{
 						"WHEN_NO_MATCH",
 						"WHEN_NO_TEMPLATES",
@@ -164,7 +163,13 @@ func resourceIntegration() *schema.Resource {
 				},
 			}
 		},
-		CustomizeDiff: validateTimeoutMilliseconds,
+		CustomizeDiff: customdiff.All(
+			validateTimeoutMilliseconds,
+			// UpdateIntegration cannot replace /httpMethod on MOCK integrations.
+			customdiff.ForceNewIf("integration_http_method", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
+				return d.Get(names.AttrType).(string) == string(types.IntegrationTypeMock)
+			}),
+		),
 	}
 }
 
@@ -480,11 +485,27 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		})
 	}
 
+	if d.HasChange("integration_http_method") {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/httpMethod"),
+			Value: aws.String(d.Get("integration_http_method").(string)),
+		})
+	}
+
 	if d.HasChange("integration_target") {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/integrationTarget"),
 			Value: aws.String(d.Get("integration_target").(string)),
+		})
+	}
+
+	if d.HasChange("passthrough_behavior") {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/passthroughBehavior"),
+			Value: aws.String(d.Get("passthrough_behavior").(string)),
 		})
 	}
 
