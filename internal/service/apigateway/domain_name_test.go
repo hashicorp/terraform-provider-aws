@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	tfterraform "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -27,6 +28,83 @@ import (
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// TestDomainNameDiff_endpointTypePrivate checks the planned action without calling AWS:
+// API Gateway can't migrate a public custom domain name to a private one, so a change
+// to or from PRIVATE must replace the domain name, while EDGE <> REGIONAL stays in place.
+func TestDomainNameDiff_endpointTypePrivate(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := map[string]struct {
+		oldType         string
+		oldIPType       string
+		newType         string
+		newIPType       string
+		wantRequiresNew bool
+	}{
+		"edge to private": {
+			oldType:         "EDGE",
+			oldIPType:       "ipv4",
+			newType:         "PRIVATE",
+			newIPType:       "dualstack",
+			wantRequiresNew: true,
+		},
+		"private to regional": {
+			oldType:         "PRIVATE",
+			oldIPType:       "dualstack",
+			newType:         "REGIONAL",
+			newIPType:       "dualstack",
+			wantRequiresNew: true,
+		},
+		"edge to regional": {
+			oldType:   "EDGE",
+			oldIPType: "ipv4",
+			newType:   "REGIONAL",
+			newIPType: "ipv4",
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			state := &tfterraform.InstanceState{
+				ID: "api.example.com",
+				Attributes: map[string]string{
+					names.AttrID:                               "api.example.com",
+					names.AttrDomainName:                       "api.example.com",
+					names.AttrCertificateARN:                   "arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012", //lintignore:AWSAT003,AWSAT005
+					"endpoint_configuration.#":                 "1",
+					"endpoint_configuration.0.types.#":         "1",
+					"endpoint_configuration.0.types.0":         testCase.oldType,
+					"endpoint_configuration.0.ip_address_type": testCase.oldIPType,
+				},
+			}
+			config := tfterraform.NewResourceConfigRaw(map[string]any{
+				names.AttrDomainName:     "api.example.com",
+				names.AttrCertificateARN: "arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012", //lintignore:AWSAT003,AWSAT005
+				"endpoint_configuration": []any{map[string]any{
+					"types":                 []any{testCase.newType},
+					names.AttrIPAddressType: testCase.newIPType,
+				}},
+			})
+
+			diff, err := tfapigateway.ResourceDomainName().Diff(ctx, state, config, nil)
+			if err != nil {
+				t.Fatalf("unexpected diff error: %s", err)
+			}
+			if diff == nil {
+				t.Fatal("expected a diff, got none")
+			}
+
+			if got := diff.RequiresNew(); got != testCase.wantRequiresNew {
+				t.Errorf("RequiresNew() = %t, want %t", got, testCase.wantRequiresNew)
+			}
+		})
+	}
+}
 
 func TestAccAPIGatewayDomainName_certificateARN(t *testing.T) {
 	ctx := acctest.Context(t)
