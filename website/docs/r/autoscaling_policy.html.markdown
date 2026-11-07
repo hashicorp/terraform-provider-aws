@@ -340,6 +340,7 @@ This configuration block supports the following arguments:
 * `predefined_load_metric_specification` - (Optional) Predefined load metric specification.
 * `predefined_metric_pair_specification` - (Optional) Metric pair specification from which Amazon EC2 Auto Scaling determines the appropriate scaling metric and load metric to use.
 * `predefined_scaling_metric_specification` - (Optional) Predefined scaling metric specification.
+* `target_value` - (Required) Target utilization for the metric specification.
 
 #### predefined_load_metric_specification
 
