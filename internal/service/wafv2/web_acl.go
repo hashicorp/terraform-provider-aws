@@ -9,6 +9,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -28,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -375,7 +378,10 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrName, webACL.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(webACL.Name)))
 	if _, ok := d.GetOk("rule_json"); !ok {
-		rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()))
+		rules, deepRules := partitionWebACLRules(filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List())))
+		if len(deepRules) > 0 {
+			diags = sdkdiag.AppendWarningf(diags, "WAFv2 WebACL (%s) rules %q are nested deeper than the rule argument supports. They are not stored in state and are kept unchanged on update. Use rule_json or aws_wafv2_web_acl_rule to manage them", d.Id(), webACLRuleNames(deepRules))
+		}
 		if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 		}
@@ -418,15 +424,30 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		// so that the provider will not remove the Shield rule when changes are applied to the WebACL.
 		var rules []awstypes.Rule
 
+		_, ruleJSON := d.GetOk("rule_json")
 		rules = expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List())
-		if sr := findShieldRule(rules); len(sr) == 0 {
+		if sr := findShieldRule(rules); len(sr) == 0 || !ruleJSON {
 			output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
 			}
 
-			rules = append(rules, findShieldRule(output.WebACL.Rules)...)
+			if len(sr) == 0 {
+				rules = append(rules, findShieldRule(output.WebACL.Rules)...)
+			}
+
+			// Rules nested deeper than the rule argument supports are not stored in state.
+			// Send them back unchanged so that the update does not remove them.
+			if !ruleJSON {
+				_, deepRules := partitionWebACLRules(output.WebACL.Rules)
+				ruleNames := webACLRuleNames(rules)
+				for _, r := range deepRules {
+					if !slices.Contains(ruleNames, aws.ToString(r.Name)) {
+						rules = append(rules, r)
+					}
+				}
+			}
 		}
 
 		if v, ok := d.GetOk("rule_json"); ok {
@@ -623,6 +644,51 @@ func filterWebACLRules(rules, configRules []awstypes.Rule) []awstypes.Rule {
 		fr = append(fr, r)
 	}
 	return fr
+}
+
+// partitionWebACLRules splits rules into those whose statement fits the rule argument's schema
+// and those nested deeper than it supports, which cannot be stored in state.
+func partitionWebACLRules(rules []awstypes.Rule) ([]awstypes.Rule, []awstypes.Rule) {
+	var fit, deep []awstypes.Rule
+	s := webACLRootStatementSchema(webACLRootStatementSchemaLevel)
+	for _, r := range rules {
+		if valueFitsSchema(flattenWebACLRootStatement(r.Statement), s) {
+			fit = append(fit, r)
+		} else {
+			deep = append(deep, r)
+		}
+	}
+	return fit, deep
+}
+
+// valueFitsSchema reports whether every block in the flattened value v is defined by the schema s.
+func valueFitsSchema(v any, s *schema.Schema) bool {
+	r, ok := s.Elem.(*schema.Resource)
+	if !ok {
+		return true
+	}
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Slice {
+		return true
+	}
+	for i := range rv.Len() {
+		m, ok := rv.Index(i).Interface().(map[string]any)
+		if !ok {
+			continue
+		}
+		for k, v := range m {
+			if s, ok := r.Schema[k]; !ok || !valueFitsSchema(v, s) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func webACLRuleNames(rules []awstypes.Rule) []string {
+	return tfslices.ApplyToAll(rules, func(r awstypes.Rule) string {
+		return aws.ToString(r.Name)
+	})
 }
 
 func findShieldRule(rules []awstypes.Rule) []awstypes.Rule {
