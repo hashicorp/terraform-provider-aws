@@ -4079,6 +4079,7 @@ func TestAccWAFV2WebACL_monetizeConnectedAccountValidation(t *testing.T) {
 	ctx := acctest.Context(t)
 	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	connectedAccountARN := "arn:aws:payments::123456789012:connectedaccount/tfacctest-a1b2c3" //lintignore:AWSAT005
+	invalidConnectedAccountARN := "arn:aws:payments::123456789012:connectedaccount/tfacctest" //lintignore:AWSAT005
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -4087,7 +4088,7 @@ func TestAccWAFV2WebACL_monetizeConnectedAccountValidation(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWebACLConfig_monetizeConnectedAccount(webACLName, "arn:aws:payments::123456789012:connectedaccount/tfacctest", "0.01"), //lintignore:AWSAT005
+				Config:      testAccWebACLConfig_monetizeConnectedAccount(webACLName, invalidConnectedAccountARN, "0.01"),
 				ExpectError: regexache.MustCompile(`must be a connected account ARN`),
 			},
 			{
