@@ -3731,6 +3731,10 @@ func expandMonetizationConfig(l []any) *awstypes.MonetizationConfig {
 	m := l[0].(map[string]any)
 	config := &awstypes.MonetizationConfig{}
 
+	if v, ok := m["connected_account_config"].([]any); ok && len(v) > 0 {
+		config.ConnectedAccountConfigs = expandConnectedAccountConfigs(v)
+	}
+
 	if v, ok := m["crypto_config"].([]any); ok && len(v) > 0 {
 		config.CryptoConfig = expandCryptoConfig(v)
 	}
@@ -3740,6 +3744,81 @@ func expandMonetizationConfig(l []any) *awstypes.MonetizationConfig {
 	}
 
 	return config
+}
+
+func expandConnectedAccountConfigs(l []any) []awstypes.ConnectedAccountConfig {
+	if len(l) == 0 {
+		return nil
+	}
+
+	configs := make([]awstypes.ConnectedAccountConfig, 0, len(l))
+	for _, tfMapRaw := range l {
+		m, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		config := awstypes.ConnectedAccountConfig{}
+		if v, ok := m["connected_account_arn"].(string); ok && v != "" {
+			config.ConnectedAccountArn = aws.String(v)
+		}
+		if v, ok := m["payment_network"].([]any); ok && len(v) > 0 {
+			config.PaymentNetworks = expandConnectedAccountChainConfigs(v)
+		}
+		configs = append(configs, config)
+	}
+
+	return configs
+}
+
+func expandConnectedAccountChainConfigs(l []any) []awstypes.ConnectedAccountChainConfig {
+	if len(l) == 0 {
+		return nil
+	}
+
+	networks := make([]awstypes.ConnectedAccountChainConfig, 0, len(l))
+	for _, tfMapRaw := range l {
+		m, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		network := awstypes.ConnectedAccountChainConfig{}
+		if v, ok := m["chain"].(string); ok && v != "" {
+			network.Chain = awstypes.ConnectedAccountChain(v)
+		}
+		if v, ok := m["prices"].([]any); ok && len(v) > 0 {
+			network.Prices = expandConnectedAccountPrices(v)
+		}
+		networks = append(networks, network)
+	}
+
+	return networks
+}
+
+func expandConnectedAccountPrices(l []any) []awstypes.ConnectedAccountPrice {
+	if len(l) == 0 {
+		return nil
+	}
+
+	prices := make([]awstypes.ConnectedAccountPrice, 0, len(l))
+	for _, tfMapRaw := range l {
+		m, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		price := awstypes.ConnectedAccountPrice{}
+		if v, ok := m["amount"].(string); ok && v != "" {
+			price.Amount = aws.String(v)
+		}
+		if v, ok := m["currency"].(string); ok && v != "" {
+			price.Currency = awstypes.CryptoCurrency(v)
+		}
+		prices = append(prices, price)
+	}
+
+	return prices
 }
 
 func expandCryptoConfig(l []any) *awstypes.CryptoConfig {
@@ -3819,11 +3898,70 @@ func flattenMonetizationConfig(apiObject *awstypes.MonetizationConfig) []any {
 		"currency_mode": string(apiObject.CurrencyMode),
 	}
 
+	if apiObject.ConnectedAccountConfigs != nil {
+		m["connected_account_config"] = flattenConnectedAccountConfigs(apiObject.ConnectedAccountConfigs)
+	}
+
 	if apiObject.CryptoConfig != nil {
 		m["crypto_config"] = flattenCryptoConfig(apiObject.CryptoConfig)
 	}
 
 	return []any{m}
+}
+
+func flattenConnectedAccountConfigs(apiObjects []awstypes.ConnectedAccountConfig) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	l := make([]any, 0, len(apiObjects))
+	for _, apiObject := range apiObjects {
+		m := map[string]any{
+			"connected_account_arn": aws.ToString(apiObject.ConnectedAccountArn),
+		}
+		if apiObject.PaymentNetworks != nil {
+			m["payment_network"] = flattenConnectedAccountChainConfigs(apiObject.PaymentNetworks)
+		}
+		l = append(l, m)
+	}
+
+	return l
+}
+
+func flattenConnectedAccountChainConfigs(apiObjects []awstypes.ConnectedAccountChainConfig) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	l := make([]any, 0, len(apiObjects))
+	for _, apiObject := range apiObjects {
+		m := map[string]any{
+			"chain": string(apiObject.Chain),
+		}
+		if apiObject.Prices != nil {
+			m["prices"] = flattenConnectedAccountPrices(apiObject.Prices)
+		}
+		l = append(l, m)
+	}
+
+	return l
+}
+
+func flattenConnectedAccountPrices(apiObjects []awstypes.ConnectedAccountPrice) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	l := make([]any, 0, len(apiObjects))
+	for _, apiObject := range apiObjects {
+		m := map[string]any{
+			"amount":   aws.ToString(apiObject.Amount),
+			"currency": string(apiObject.Currency),
+		}
+		l = append(l, m)
+	}
+
+	return l
 }
 
 func flattenCryptoConfig(apiObject *awstypes.CryptoConfig) []any {
