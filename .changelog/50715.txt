@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_elasticache_user: Reduce `DescribeUsers` API polling while waiting for user creation, modification, and deletion to avoid API throttling
+```
+
+```release-note:bug
+resource/aws_elasticache_user: Return immediately from Read when the user is not found, instead of polling `DescribeUsers` until the not-found limit is reached
+```
