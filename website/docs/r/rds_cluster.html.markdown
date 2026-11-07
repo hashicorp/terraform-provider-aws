@@ -401,8 +401,8 @@ Full details on the core parameters and impacts are in the API Docs: [RestoreDBC
 
 ~> **NOTE:** serverlessv2_scaling_configuration configuration is only valid when engine_mode is set to provisioned. See the [Serverless v2 Scaling Configuration example](#serverless-v2-scaling-configuration) for usage.
 
-* `max_capacity` - (Required) Maximum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0` up to `256` in steps of `0.5`.
-* `min_capacity` - (Required) Minimum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0` up to `256` in steps of `0.5`.
+* `max_capacity` - (Required) Maximum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0` up to `384` in steps of `0.5`. Values above `256` are only supported by Aurora PostgreSQL engine versions that support 384 ACUs.
+* `min_capacity` - (Required) Minimum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0` up to `384` in steps of `0.5`.
 * `seconds_until_auto_pause` - (Optional) Time, in seconds, before an Aurora DB cluster in `provisioned` DB engine mode is paused. Valid values are `300` through `86400`.
 
 ## Attribute Reference

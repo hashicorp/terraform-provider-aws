@@ -623,7 +623,7 @@ func resourceCluster() *schema.Resource {
 							names.AttrMaxCapacity: {
 								Type:         schema.TypeFloat,
 								Required:     true,
-								ValidateFunc: validation.FloatBetween(1, 256),
+								ValidateFunc: validation.FloatBetween(1, 384),
 								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 									// Handles a breaking regression. On v5.79.0 and earlier,
 									// serverlessv2_scaling_configuration block could be removed from
@@ -661,7 +661,7 @@ func resourceCluster() *schema.Resource {
 							"min_capacity": {
 								Type:         schema.TypeFloat,
 								Required:     true,
-								ValidateFunc: validation.FloatBetween(0, 256),
+								ValidateFunc: validation.FloatBetween(0, 384),
 							},
 							"seconds_until_auto_pause": {
 								Type:         schema.TypeInt,

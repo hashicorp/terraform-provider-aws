@@ -2297,21 +2297,21 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 256.0, 0),
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 384.0, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "256"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "384"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName, 256.0, 0, "21600"),
+				Config: testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName, 384.0, 0, "21600"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "256"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "384"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause", "21600"),
 				),
