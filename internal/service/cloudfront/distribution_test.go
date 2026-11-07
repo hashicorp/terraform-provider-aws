@@ -1960,6 +1960,39 @@ func TestAccCloudFrontDistribution_viewerMtlsConfig(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontDistribution_viewerMtlsConfigPassthrough(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_viewerMtlsConfigPassthrough(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.mode", string(awstypes.ViewerMtlsModePassthrough)),
+					resource.TestCheckResourceAttr(resourceName, "viewer_mtls_config.0.trust_store_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontDistribution_cacheTagConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
@@ -5774,6 +5807,56 @@ resource "aws_cloudfront_distribution" "test" {
 
 }
 `)
+}
+
+func testAccDistributionConfig_viewerMtlsConfigPassthrough() string {
+	return `
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "https-only"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  viewer_mtls_config {
+    mode = "passthrough"
+  }
+}
+`
 }
 
 func testAccDistributionConfig_cacheTagConfig(enabled, retainOnDelete bool, cacheTagConfigHeaderName string) string {
