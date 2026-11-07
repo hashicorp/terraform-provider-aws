@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -81,6 +82,12 @@ func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaR
 						},
 						"https_port": schema.Int64Attribute{
 							Required: true,
+						},
+						names.AttrIPAddressType: schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.VpcIpAddressType](),
+							Optional:   true,
+							Computed:   true,
+							Default:    stringdefault.StaticString(string(awstypes.VpcIpAddressTypeIpv4)),
 						},
 						names.AttrName: schema.StringAttribute{
 							Required: true,
@@ -414,6 +421,7 @@ type vpcOriginEndpointConfigModel struct {
 	ARN                  types.String                                             `tfsdk:"arn"`
 	HTTPPort             types.Int64                                              `tfsdk:"http_port"`
 	HTTPSPort            types.Int64                                              `tfsdk:"https_port"`
+	IPAddressType        fwtypes.StringEnum[awstypes.VpcIpAddressType]            `tfsdk:"ip_address_type"`
 	Name                 types.String                                             `tfsdk:"name"`
 	OriginProtocolPolicy fwtypes.StringEnum[awstypes.OriginProtocolPolicy]        `tfsdk:"origin_protocol_policy"`
 	OriginSSLProtocols   fwtypes.ListNestedObjectValueOf[originSSLProtocolsModel] `tfsdk:"origin_ssl_protocols"`
