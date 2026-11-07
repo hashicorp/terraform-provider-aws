@@ -623,7 +623,28 @@ var associationConfigSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"request_body": requestBodySchema(),
+				"challenge_javascript_sdk_injection": challengeJavascriptSDKInjectionSchema(),
+				"request_body":                       requestBodySchema(),
+			},
+		},
+	}
+})
+
+var challengeJavascriptSDKInjectionSchema = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"cloudfront": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{},
+					},
+				},
 			},
 		},
 	}
