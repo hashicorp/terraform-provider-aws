@@ -418,6 +418,79 @@ func testAccCheckCostCategorySplitChargeRuleOrder(ctx context.Context, n string,
 	}
 }
 
+func TestAccCECostCategory_defaultValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	var output awstypes.CostCategory
+	resourceName := "aws_ce_cost_category.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCostCategoryConfig_defaultValue(rName, "MyDefaultValue", "production"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultValue, "MyDefaultValue"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.value", "production"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Change an unrelated attribute. UpdateCostCategoryDefinition replaces the
+			// whole definition, so default_value has to be resent or AWS clears it.
+			{
+				Config: testAccCostCategoryConfig_defaultValue(rName, "MyDefaultValue", "prod-renamed"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.value", "prod-renamed"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultValue, "MyDefaultValue"),
+				),
+			},
+			// Removing the argument must still clear the value.
+			{
+				Config: testAccCostCategoryConfig_defaultValue(rName, "", "prod-renamed"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDefaultValue, ""),
+				),
+			},
+		},
+	})
+}
+
+func testAccCostCategoryConfig_defaultValue(rName, defaultValue, ruleValue string) string {
+	var defaultValueArg string
+	if defaultValue != "" {
+		defaultValueArg = fmt.Sprintf("default_value = %q", defaultValue)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_ce_cost_category" "test" {
+  name         = %[1]q
+  rule_version = "CostCategoryExpression.v1"
+  %[3]s
+  rule {
+    value = %[2]q
+    rule {
+      dimension {
+        key           = "LINKED_ACCOUNT_NAME"
+        values        = ["-prod"]
+        match_options = ["ENDS_WITH"]
+      }
+    }
+    type = "REGULAR"
+  }
+}
+`, rName, ruleValue, defaultValueArg)
+}
+
 func testAccCostCategoryConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test" {
