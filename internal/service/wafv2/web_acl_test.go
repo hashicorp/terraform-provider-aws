@@ -4,9 +4,13 @@
 package wafv2_test
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"regexp"
+	"slices"
 	"testing"
 	"time"
 
@@ -3999,6 +4003,250 @@ func TestAccWAFV2WebACL_monetize(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccWAFV2WebACL_ByteMatchStatement_searchStringBase64(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+	// md5("Bearer helloworld"): the raw digest that the MD5 text transformation produces is not valid UTF-8.
+	md5Digest := "h2QVtbiOklmEbY1TNBraLw=="
+	sha256Digest := sha256.Sum256([]byte("s3cret"))
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_byteMatchStatementSearchStringBase64(webACLName, webACLName, fmt.Sprintf("search_string_base64 = %q", md5Digest)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLByteMatchSearchStrings(&v, map[string]string{
+						"rule-1": string(mustBase64Decode(t, md5Digest)),
+						"rule-2": string(sha256Digest[:]),
+					}),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName: "rule-1",
+						"statement.0.byte_match_statement.0.search_string":        "",
+						"statement.0.byte_match_statement.0.search_string_base64": md5Digest,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName: "rule-2",
+						"statement.0.not_statement.0.statement.0.byte_match_statement.0.search_string":        "",
+						"statement.0.not_statement.0.statement.0.byte_match_statement.0.search_string_base64": base64.StdEncoding.EncodeToString(sha256Digest[:]),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+			{
+				// Any update sends every rule again; the binary values must survive it.
+				Config: testAccWebACLConfig_byteMatchStatementSearchStringBase64(webACLName, "updated", fmt.Sprintf("search_string_base64 = %q", md5Digest)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated"),
+					testAccCheckWebACLByteMatchSearchStrings(&v, map[string]string{
+						"rule-1": string(mustBase64Decode(t, md5Digest)),
+						"rule-2": string(sha256Digest[:]),
+					}),
+				),
+			},
+			{
+				// Valid UTF-8 set in base64 is read back in base64.
+				Config: testAccWebACLConfig_byteMatchStatementSearchStringBase64(webACLName, "updated", `search_string_base64 = base64encode("BadBot")`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLByteMatchSearchStrings(&v, map[string]string{"rule-1": "BadBot", "rule-3": "BadBot"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName: "rule-1",
+						"statement.0.byte_match_statement.0.search_string":        "",
+						"statement.0.byte_match_statement.0.search_string_base64": "QmFkQm90",
+					}),
+					// The same bytes set as text in another rule stay in search_string.
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName: "rule-3",
+						"statement.0.byte_match_statement.0.search_string":        "BadBot",
+						"statement.0.byte_match_statement.0.search_string_base64": "",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_byteMatchStatementSearchStringBase64(webACLName, "updated", `search_string = "BadBot"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLByteMatchSearchStrings(&v, map[string]string{"rule-1": "BadBot"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName: "rule-1",
+						"statement.0.byte_match_statement.0.search_string":        "BadBot",
+						"statement.0.byte_match_statement.0.search_string_base64": "",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_ByteMatchStatement_searchStringValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWebACLConfig_byteMatchStatementSearchStringBase64(webACLName, webACLName, `search_string = "a"`+"\n"+`search_string_base64 = "YQ=="`),
+				ExpectError: regexache.MustCompile(`2 attributes specified when one \(and only one\) of`),
+			},
+			{
+				Config:      testAccWebACLConfig_byteMatchStatementSearchStringBase64(webACLName, webACLName, ""),
+				ExpectError: regexache.MustCompile(`No attribute specified when one \(and only one\) of`),
+			},
+			{
+				Config:      testAccWebACLConfig_byteMatchStatementSearchStringBase64(webACLName, webACLName, `search_string_base64 = "not base64"`),
+				ExpectError: regexache.MustCompile(`must be base64-encoded`),
+			},
+			{
+				Config:      testAccWebACLConfig_byteMatchStatementSearchStringBase64(webACLName, webACLName, fmt.Sprintf("search_string_base64 = %q", base64.StdEncoding.EncodeToString(make([]byte, 201)))),
+				ExpectError: regexache.MustCompile(`must decode to between 1 and 200 bytes, got 201`),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_ByteMatchStatement_upgradeFromV6_69_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		CheckDestroy: testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.69.0",
+					},
+				},
+				Config: testAccWebACLConfig_byteMatchStatement(webACLName, string(awstypes.PositionalConstraintContainsWord), acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccWebACLConfig_byteMatchStatement(webACLName, string(awstypes.PositionalConstraintContainsWord), acctest.CtValue1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_ByteMatchStatement_uriFragmentCustomResponse(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// fallback_behavior left unset, in a rule with an unset custom_response_body_key.
+				Config: testAccWebACLConfig_byteMatchStatementURIFragmentCustomResponse(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_fragment.0.fallback_behavior": "MATCH",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func testAccCheckWebACLByteMatchSearchStrings(v *awstypes.WebACL, want map[string]string) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		return checkByteMatchSearchStrings(v.Rules, want)
+	}
+}
+
+// checkByteMatchSearchStrings checks the bytes that AWS WAF stored as the SearchString of the
+// byte match statement in each named rule.
+func checkByteMatchSearchStrings(rules []awstypes.Rule, want map[string]string) error {
+	for name, want := range want {
+		i := slices.IndexFunc(rules, func(r awstypes.Rule) bool { return aws.ToString(r.Name) == name })
+		if i < 0 {
+			return fmt.Errorf("rule %s not found", name)
+		}
+
+		got, ok := byteMatchSearchString(rules[i].Statement)
+		if !ok {
+			return fmt.Errorf("rule %s: no byte match statement", name)
+		}
+		if !bytes.Equal(got, []byte(want)) {
+			return fmt.Errorf("rule %s: SearchString = %x, want %x", name, got, want)
+		}
+	}
+
+	return nil
+}
+
+func byteMatchSearchString(s *awstypes.Statement) ([]byte, bool) {
+	switch {
+	case s == nil:
+		return nil, false
+	case s.ByteMatchStatement != nil:
+		return s.ByteMatchStatement.SearchString, true
+	case s.NotStatement != nil:
+		return byteMatchSearchString(s.NotStatement.Statement)
+	case s.AndStatement != nil:
+		for _, s := range s.AndStatement.Statements {
+			if v, ok := byteMatchSearchString(&s); ok {
+				return v, true
+			}
+		}
+	}
+
+	return nil, false
+}
+
+func mustBase64Decode(t *testing.T, s string) []byte {
+	t.Helper()
+
+	b, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return b
 }
 
 func testAccCheckWebACLDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
@@ -8060,6 +8308,176 @@ resource "aws_wafv2_web_acl" "test" {
     visibility_config {
       cloudwatch_metrics_enabled = false
       metric_name                = "monetize-api"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_byteMatchStatementSearchStringBase64(rName, description, searchString string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[2]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      byte_match_statement {
+        field_to_match {
+          single_header {
+            name = "authorization"
+          }
+        }
+        positional_constraint = "EXACTLY"
+        %[3]s
+        text_transformation {
+          priority = 0
+          type     = "MD5"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-1"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  rule {
+    name     = "rule-2"
+    priority = 2
+
+    action {
+      count {}
+    }
+
+    statement {
+      not_statement {
+        statement {
+          byte_match_statement {
+            field_to_match {
+              single_header {
+                name = "x-api-key"
+              }
+            }
+            positional_constraint = "EXACTLY"
+            search_string_base64  = base64sha256("s3cret")
+            text_transformation {
+              priority = 0
+              type     = "SHA256"
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-2"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  rule {
+    name     = "rule-3"
+    priority = 3
+
+    action {
+      count {}
+    }
+
+    # The same bytes as plain text, next to a rule that may set them in base64.
+    statement {
+      byte_match_statement {
+        field_to_match {
+          single_header {
+            name = "user-agent"
+          }
+        }
+        positional_constraint = "EXACTLY"
+        search_string         = "BadBot"
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-3"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, description, searchString)
+}
+
+func testAccWebACLConfig_byteMatchStatementURIFragmentCustomResponse(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      block {
+        custom_response {
+          response_code = 403
+        }
+      }
+    }
+
+    statement {
+      byte_match_statement {
+        field_to_match {
+          uri_fragment {}
+        }
+        positional_constraint = "CONTAINS"
+        search_string         = "frag"
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-1"
       sampled_requests_enabled   = false
     }
   }

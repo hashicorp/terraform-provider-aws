@@ -259,6 +259,10 @@ func resourceWebACL() *schema.Resource {
 				"visibility_config": visibilityConfigSchema(),
 			}
 		},
+
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validateByteMatchStatementSearchString,
+		},
 	}
 }
 
@@ -375,8 +379,10 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrName, webACL.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(webACL.Name)))
 	if _, ok := d.GetOk("rule_json"); !ok {
-		rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()))
-		if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
+		prior := d.Get(names.AttrRule).(*schema.Set).List()
+		rules := flattenWebACLRules(filterWebACLRules(webACL.Rules, expandWebACLRules(prior)))
+		preferSearchStringBase64(rules, prior)
+		if err := d.Set(names.AttrRule, rules); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 		}
 	} else {
