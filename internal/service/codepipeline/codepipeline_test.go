@@ -1290,6 +1290,12 @@ func TestAccCodePipeline_computeAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.commands.0", "echo hello1 > hello1.txt"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.commands.1", "echo hello2 > hello2.txt"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.commands.2", "echo hello3 > hello3.txt"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.environment_variable.0.name", "VarName"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.environment_variable.0.value", "VarValue"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.environment_variable.0.type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.environment_variable.1.name", "SecondVarName"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.environment_variable.1.value", "SecondVarValue"),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.environment_variable.1.type", "PLAINTEXT"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_artifacts_for_compute_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_artifacts_for_compute_action.0.name", "ComputeArtifact"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.output_artifacts_for_compute_action.0.files.#", "3"),
@@ -3750,6 +3756,19 @@ resource "aws_codepipeline" "test" {
         "echo hello2 > hello2.txt",
         "echo hello3 > hello3.txt",
       ]
+
+      environment_variable {
+        name  = "VarName"
+        value = "VarValue"
+        type  = "PLAINTEXT"
+      }
+
+      environment_variable {
+        name  = "SecondVarName"
+        value = "SecondVarValue"
+        type  = "PLAINTEXT"
+      }
+
 
       configuration = {}
       output_artifacts_for_compute_action {
