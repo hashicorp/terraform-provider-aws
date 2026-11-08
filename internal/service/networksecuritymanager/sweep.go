@@ -17,7 +17,12 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_networksecuritymanager_admin_account", sweepAdminAccounts)
+	awsv2.Register("aws_networksecuritymanager_admin_account", sweepAdminAccounts,
+		"aws_networksecuritymanager_policy",
+		"aws_networksecuritymanager_rule",
+		"aws_networksecuritymanager_scope",
+		"aws_networksecuritymanager_template",
+	)
 	awsv2.Register("aws_networksecuritymanager_deployment", sweepDeployments)
 	// A policy or scope cannot be deleted while a deployment uses it.
 	awsv2.Register("aws_networksecuritymanager_policy", sweepPolicies, "aws_networksecuritymanager_deployment")
