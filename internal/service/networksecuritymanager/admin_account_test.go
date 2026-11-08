@@ -5,12 +5,12 @@ package networksecuritymanager_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworksecuritymanager "github.com/hashicorp/terraform-provider-aws/internal/service/networksecuritymanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -469,26 +469,27 @@ func TestAccNetworkSecurityManagerAdminAccount_validation(t *testing.T) {
 	})
 }
 
+const resNameAdminAccount = "Admin Account"
+
 func testAccCheckAdminAccountDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networksecuritymanager_admin_account" {
 				continue
 			}
 
-			_, err := tfnetworksecuritymanager.FindAdminAccountByID(ctx, conn, rs.Primary.Attributes["admin_account_id"])
-
-			if retry.NotFound(err) {
+			id := rs.Primary.Attributes["admin_account_id"]
+			ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
+			_, err := tfnetworksecuritymanager.FindAdminAccountByID(ctx, conn, id)
+			if retry.NotFound(err) || tfnetworksecuritymanager.IsAccountNotOnboardedError(err) {
 				continue
 			}
-
 			if err != nil {
-				return err
+				return create.Error(names.NetworkSecurityManager, create.ErrActionCheckingDestroyed, resNameAdminAccount, id, err)
 			}
 
-			return fmt.Errorf("Network Security Manager Admin Account %s still exists", rs.Primary.Attributes["admin_account_id"])
+			return create.Error(names.NetworkSecurityManager, create.ErrActionCheckingDestroyed, resNameAdminAccount, id, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -499,15 +500,18 @@ func testAccCheckAdminAccountExists(ctx context.Context, t *testing.T, n string,
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return create.Error(names.NetworkSecurityManager, create.ErrActionCheckingExistence, resNameAdminAccount, n, errors.New("not found"))
+		}
+		if rs.Primary.ID == "" {
+			return create.Error(names.NetworkSecurityManager, create.ErrActionCheckingExistence, resNameAdminAccount, n, errors.New("not set"))
 		}
 
+		ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
-
-		output, err := tfnetworksecuritymanager.FindAdminAccountByID(ctx, conn, rs.Primary.Attributes["admin_account_id"])
-
+		id := rs.Primary.Attributes["admin_account_id"]
+		output, err := tfnetworksecuritymanager.FindAdminAccountByID(ctx, conn, id)
 		if err != nil {
-			return err
+			return create.Error(names.NetworkSecurityManager, create.ErrActionCheckingExistence, resNameAdminAccount, id, err)
 		}
 
 		*v = *output
@@ -517,57 +521,38 @@ func testAccCheckAdminAccountExists(ctx context.Context, t *testing.T, n string,
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	acctest.PreCheckOrganizationManagementAccount(ctx, t)
+	conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
 
-	meta := acctest.ProviderMeta(ctx, t)
+	input := organizations.ListAWSServiceAccessForOrganizationInput{}
+	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, &input)
 
-	// Enable AWS Organizations trusted access for Network Security Manager.
-	// EnableAWSServiceAccess is idempotent, so this is safe when trusted access
-	// is already enabled. A failure is deliberately not fatal: every test
-	// configuration also declares aws_organizations_aws_service_access for the
-	// same principal, and it is the first create that onboards the account. In
-	// particular, a caller without organizations:EnableAWSServiceAccess must not
-	// skip or fail the whole suite here.
-	orgInput := organizations.EnableAWSServiceAccessInput{
-		ServicePrincipal: aws.String("network-security-manager.amazonaws.com"),
-	}
-	if _, err := meta.OrganizationsClient(ctx).EnableAWSServiceAccess(ctx, &orgInput); err != nil {
-		t.Logf("enabling AWS Organizations trusted access for Network Security Manager: %s", err)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if acctest.PreCheckSkipError(err) {
+			t.Skipf("skipping acceptance testing: %s", err)
+		}
+		if err != nil {
+			t.Fatalf("unexpected PreCheck error: %s", err)
+		}
+
+		for _, principal := range page.EnabledServicePrincipals {
+			if aws.ToString(principal.ServicePrincipal) == "network-security-manager.amazonaws.com" {
+				return
+			}
+		}
 	}
 
-	conn := meta.NetworkSecurityManagerClient(ctx)
+	t.Skip("skipping acceptance testing: enable AWS Organizations trusted access for Network Security Manager")
 
-	input := networksecuritymanager.ListAdminAccountsInput{}
-	_, err := conn.ListAdminAccounts(ctx, &input)
-
-	// An account that has never created a Network Security Manager resource is
-	// not yet onboarded; the first create onboards it.
-	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "not onboarded") {
-		return
-	}
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
 }
 
 func testAccAdminAccountConfig_base() string {
-	return `
-data "aws_caller_identity" "current" {}
-
-resource "aws_organizations_aws_service_access" "test" {
-  service_principal = "network-security-manager.amazonaws.com"
-}
-`
+	return `data "aws_caller_identity" "current" {}`
 }
 
 func testAccAdminAccountConfig_basic(priority int) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = %[1]d
 }
@@ -577,8 +562,6 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_accountID(accountID string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = %[1]q
   priority         = 1
 }
@@ -588,8 +571,6 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_full(rName string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = 5
 
@@ -626,8 +607,6 @@ resource "aws_organizations_organizational_unit" "test" {
 func testAccAdminAccountConfig_scopeFilterIncludeAll() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = 1
 
@@ -643,8 +622,6 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_scopeFilterIncludeOnlyAccounts() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = 1
 
@@ -662,8 +639,6 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_scopeFilterIncludeOnlyOUs(rName string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = 1
 
@@ -688,8 +663,6 @@ resource "aws_organizations_organizational_unit" "test" {
 func testAccAdminAccountConfig_scopeFilterExcludeOnlyAccounts() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = 1
 
@@ -707,8 +680,6 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_scopeFilterTwoMembers() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = 1
 
@@ -728,8 +699,6 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_scopeFilterEmpty() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = 1
 
@@ -743,8 +712,6 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_scopeFilterIncludeAllFalse() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = 1
 
@@ -760,8 +727,6 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_firewallTypes(firewallTypes string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = 1
 
@@ -781,8 +746,6 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_allFirewallTypesEnabled(enabled bool) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  depends_on = [aws_organizations_aws_service_access.test]
-
   admin_account_id = data.aws_caller_identity.current.account_id
   priority         = 1
 
