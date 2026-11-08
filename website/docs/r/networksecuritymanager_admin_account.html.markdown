@@ -3,12 +3,14 @@ subcategory: "Network Security Manager"
 layout: "aws"
 page_title: "AWS: aws_networksecuritymanager_admin_account"
 description: |-
-  Terraform resource for managing an AWS Network Security Manager Admin Account.
+  Manages an AWS Network Security Manager Admin Account.
 ---
 
 # Resource: aws_networksecuritymanager_admin_account
 
-Terraform resource for managing an AWS Network Security Manager Admin Account. An administrator account can centrally create and manage AWS WAF and Shield Advanced protection across the accounts and organizational units (OUs) of an AWS Organization. The resource must be managed from the organization's management account, and the administrator's authority can be narrowed with an `admin_scope`.
+Manages an AWS Network Security Manager Admin Account. An administrator account can centrally create and manage AWS WAF and Shield Advanced protection across the accounts and organizational units (OUs) of an AWS Organization. The resource must be managed from the organization's management account, and the administrator's authority can be narrowed with an `admin_scope`.
+
+~> AWS Organizations trusted access for Network Security Manager must remain enabled. If trusted access is disabled outside Terraform, the resource is treated as absent during refresh.
 
 ~> Setting an administrator account again shortly after it was removed, or while the service is still creating its service-linked role, is rejected by AWS with a `ConflictException`. The resource retries the request until it is accepted or the `create` timeout expires.
 
@@ -67,7 +69,7 @@ The `admin_scope` block supports the following arguments:
 
 The `firewall_type_scope` block supports the following arguments:
 
-* `all_firewall_types_enabled` - (Optional) Whether the administrator can manage all firewall types.
+* `all_firewall_types_enabled` - (Optional) Whether to allow the administrator to manage all firewall types.
 * `firewall_types` - (Optional) Set of firewall types that the administrator can manage. Valid values: `WAF`, `SHIELD_ADVANCED`.
 
 ### `scope_filter` Block
@@ -75,7 +77,7 @@ The `firewall_type_scope` block supports the following arguments:
 The `scope_filter` block supports the following arguments. Exactly one of them must be configured:
 
 * `exclude_only` - (Optional) Accounts and OUs to exclude from the administrator's scope; everything else is in scope. See [`exclude_only` Block](#exclude_only-block) below.
-* `include_all` - (Optional) Set to `true` to put all accounts and OUs of the organization in scope.
+* `include_all` - (Optional) Whether to include all accounts and OUs of the organization in scope. Must be `true` if set.
 * `include_only` - (Optional) Only the specified accounts and OUs are in the administrator's scope. See [`include_only` Block](#include_only-block) below.
 
 ### `exclude_only` Block
@@ -123,7 +125,7 @@ import {
 
 #### Required
 
-* `admin_account_id` - (String) AWS account ID of the administrator account.
+* `admin_account_id` (String) AWS account ID of the administrator account.
 
 #### Optional
 
