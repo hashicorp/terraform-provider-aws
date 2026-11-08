@@ -193,6 +193,42 @@ func TestAccIPAM_cascade(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	})
 }
 
+func TestAccIPAM_cascadeUpdate(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+	ctx := acctest.Context(t)
+	var ipam awstypes.Ipam
+	resourceName := "aws_vpc_ipam.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMConfig_cascadeUpdate(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, t, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "cascade", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccIPAMConfig_cascadeUpdate(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, t, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "cascade", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccIPAMConfig_cascadeUpdate(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, t, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "cascade", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIPAM_tier(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var ipam awstypes.Ipam
@@ -426,6 +462,19 @@ resource "aws_vpc_ipam" "test" {
   cascade = true
 }
 `
+
+func testAccIPAMConfig_cascadeUpdate(cascade bool) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.region
+  }
+  cascade = %[1]t
+}
+`, cascade)
+}
 
 func testAccIPAMConfig_description(description string) string {
 	return fmt.Sprintf(`
