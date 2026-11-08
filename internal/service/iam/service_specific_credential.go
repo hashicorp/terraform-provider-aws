@@ -177,6 +177,7 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 	d.Set("service_user_name", cred.ServiceUserName)
 	d.Set(names.AttrStatus, cred.Status)
 	d.Set(names.AttrUserName, cred.UserName)
+	d.Set("service_password", d.Get("service_password"))
 
 	return diags
 }
