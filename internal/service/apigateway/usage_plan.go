@@ -301,42 +301,91 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			os := o.(*schema.Set).List()
 			ns := n.(*schema.Set).List()
 
-			// Remove every stages associated. Simpler to remove and add new ones,
-			// since there are no replacings.
+			// Build maps keyed by "api_id:stage" so we can compute the
+			// actual diff instead of removing all stages and re-adding
+			// them. The remove-all/add-all approach is unsafe because API
+			// Gateway does not apply patch operations atomically: if any
+			// add fails after the removes have been committed the usage
+			// plan is left with zero stages, causing an outage (#50330).
+			oldStages := make(map[string]map[string]any, len(os))
 			for _, v := range os {
 				m := v.(map[string]any)
-				operations = append(operations, types.PatchOperation{
-					Op:    types.OpRemove,
-					Path:  aws.String("/apiStages"),
-					Value: aws.String(fmt.Sprintf("%s:%s", m["api_id"].(string), m[names.AttrStage].(string))),
-				})
+				key := fmt.Sprintf("%s:%s", m["api_id"].(string), m[names.AttrStage].(string))
+				oldStages[key] = m
 			}
 
-			// Handle additions
-			if len(ns) > 0 {
-				for _, v := range ns {
-					m := v.(map[string]any)
-					id := fmt.Sprintf("%s:%s", m["api_id"].(string), m[names.AttrStage].(string))
+			newStages := make(map[string]map[string]any, len(ns))
+			for _, v := range ns {
+				m := v.(map[string]any)
+				key := fmt.Sprintf("%s:%s", m["api_id"].(string), m[names.AttrStage].(string))
+				newStages[key] = m
+			}
+
+			// Emit adds before removes so that a partial failure leaves
+			// extra stages attached rather than none.
+			for key, m := range newStages {
+				oldM, existed := oldStages[key]
+
+				if !existed {
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpAdd,
 						Path:  aws.String("/apiStages"),
-						Value: aws.String(id),
+						Value: aws.String(key),
 					})
-					if t, ok := m["throttle"].(*schema.Set); ok && t.Len() > 0 {
-						for _, throttle := range t.List() {
+				}
+
+				// Apply throttle settings for newly added stages and
+				// update throttle settings that may have changed on
+				// existing stages.
+				if t, ok := m["throttle"].(*schema.Set); ok && t.Len() > 0 {
+					for _, throttle := range t.List() {
+						th := throttle.(map[string]any)
+						operations = append(operations, types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/rateLimit", key, th[names.AttrPath].(string))),
+							Value: flex.Float64ValueToString(th["rate_limit"].(float64)),
+						})
+						operations = append(operations, types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/burstLimit", key, th[names.AttrPath].(string))),
+							Value: flex.IntValueToString(th["burst_limit"].(int)),
+						})
+					}
+				}
+
+				// Remove throttle paths that existed on the old stage
+				// but are no longer configured.
+				if existed {
+					if oldT, ok := oldM["throttle"].(*schema.Set); ok && oldT.Len() > 0 {
+						newPaths := make(map[string]struct{})
+						if newT, ok := m["throttle"].(*schema.Set); ok {
+							for _, throttle := range newT.List() {
+								th := throttle.(map[string]any)
+								newPaths[th[names.AttrPath].(string)] = struct{}{}
+							}
+						}
+						for _, throttle := range oldT.List() {
 							th := throttle.(map[string]any)
-							operations = append(operations, types.PatchOperation{
-								Op:    types.OpReplace,
-								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/rateLimit", id, th[names.AttrPath].(string))),
-								Value: flex.Float64ValueToString(th["rate_limit"].(float64)),
-							})
-							operations = append(operations, types.PatchOperation{
-								Op:    types.OpReplace,
-								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/burstLimit", id, th[names.AttrPath].(string))),
-								Value: flex.IntValueToString(th["burst_limit"].(int)),
-							})
+							p := th[names.AttrPath].(string)
+							if _, ok := newPaths[p]; !ok {
+								operations = append(operations, types.PatchOperation{
+									Op:   types.OpRemove,
+									Path: aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s", key, p)),
+								})
+							}
 						}
 					}
+				}
+			}
+
+			// Remove only stages that are no longer present.
+			for key := range oldStages {
+				if _, exists := newStages[key]; !exists {
+					operations = append(operations, types.PatchOperation{
+						Op:    types.OpRemove,
+						Path:  aws.String("/apiStages"),
+						Value: aws.String(key),
+					})
 				}
 			}
 		}
