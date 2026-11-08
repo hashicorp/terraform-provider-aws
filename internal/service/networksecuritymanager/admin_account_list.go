@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
@@ -55,7 +54,7 @@ func (l *adminAccountListResource) List(ctx context.Context, request list.ListRe
 				continue
 			}
 			if err != nil {
-				yield(fwdiag.NewListResultErrorDiagnostic(err))
+				yield(smerr.NewListResultError(ctx, err, smerr.ID, adminAccountID))
 				return
 			}
 
