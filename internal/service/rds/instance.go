@@ -6,6 +6,7 @@
 package rds
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -2168,44 +2169,19 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 	// a perpetual diff on the next plan. Override affected attributes with their
 	// pending values so that state reflects what was requested.
 	// Engine version is handled separately by dbSetResourceDataEngineVersionFromInstance.
-	if v.PendingModifiedValues != nil {
-		p := v.PendingModifiedValues
-		if p.AllocatedStorage != nil {
-			d.Set(names.AttrAllocatedStorage, p.AllocatedStorage)
-		}
-		if p.BackupRetentionPeriod != nil {
-			d.Set("backup_retention_period", p.BackupRetentionPeriod)
-		}
-		if p.CACertificateIdentifier != nil {
-			d.Set("ca_cert_identifier", p.CACertificateIdentifier)
-		}
-		if p.DBInstanceClass != nil {
-			d.Set("instance_class", p.DBInstanceClass)
-		}
-		if p.DBSubnetGroupName != nil {
-			d.Set("db_subnet_group_name", p.DBSubnetGroupName)
-		}
-		if p.DedicatedLogVolume != nil {
-			d.Set("dedicated_log_volume", p.DedicatedLogVolume)
-		}
-		if p.IAMDatabaseAuthenticationEnabled != nil {
-			d.Set("iam_database_authentication_enabled", p.IAMDatabaseAuthenticationEnabled)
-		}
-		if p.Iops != nil {
-			d.Set(names.AttrIOPS, p.Iops)
-		}
-		if p.LicenseModel != nil {
-			d.Set("license_model", p.LicenseModel)
-		}
-		if p.MultiAZ != nil {
-			d.Set("multi_az", p.MultiAZ)
-		}
-		if p.StorageThroughput != nil {
-			d.Set("storage_throughput", p.StorageThroughput)
-		}
-		if p.StorageType != nil {
-			d.Set(names.AttrStorageType, p.StorageType)
-		}
+	if p := v.PendingModifiedValues; p != nil {
+		d.Set(names.AttrAllocatedStorage, cmp.Or(p.AllocatedStorage, v.AllocatedStorage))
+		d.Set("backup_retention_period", cmp.Or(p.BackupRetentionPeriod, v.BackupRetentionPeriod))
+		d.Set("ca_cert_identifier", cmp.Or(p.CACertificateIdentifier, v.CACertificateIdentifier))
+		d.Set("instance_class", cmp.Or(p.DBInstanceClass, v.DBInstanceClass))
+		d.Set("db_subnet_group_name", cmp.Or(p.DBSubnetGroupName, v.DBSubnetGroup.DBSubnetGroupName))
+		d.Set("dedicated_log_volume", cmp.Or(p.DedicatedLogVolume, v.DedicatedLogVolume))
+		d.Set("iam_database_authentication_enabled", cmp.Or(p.IAMDatabaseAuthenticationEnabled, v.IAMDatabaseAuthenticationEnabled))
+		d.Set(names.AttrIOPS, cmp.Or(p.Iops, v.Iops))
+		d.Set("license_model", cmp.Or(p.LicenseModel, v.LicenseModel))
+		d.Set("multi_az", cmp.Or(p.MultiAZ, v.MultiAZ))
+		d.Set("storage_throughput", cmp.Or(p.StorageThroughput, v.StorageThroughput))
+		d.Set(names.AttrStorageType, cmp.Or(p.StorageType, v.StorageType))
 	}
 
 	dbSetResourceDataEngineVersionFromInstance(d, v)
