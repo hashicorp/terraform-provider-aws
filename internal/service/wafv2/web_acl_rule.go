@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -1522,6 +1523,159 @@ type webACLRuleAWSManagedRulesACFPRuleSetModel struct {
 	ResponseInspection   fwtypes.ListNestedObjectValueOf[webACLRuleResponseInspectionModel]    `tfsdk:"response_inspection"`
 }
 
+func (m webACLRuleAWSManagedRulesACFPRuleSetModel) expand(ctx context.Context) (result awstypes.AWSManagedRulesACFPRuleSet, diags diag.Diagnostics) {
+	result.CreationPath = m.CreationPath.ValueStringPointer()
+	result.EnableRegexInPath = m.EnableRegexInPath.ValueBool()
+	result.RegistrationPagePath = m.RegistrationPagePath.ValueStringPointer()
+
+	// Use AutoFlex for response_inspection
+	if !m.ResponseInspection.IsNull() {
+		diags.Append(flex.Expand(ctx, m.ResponseInspection, &result.ResponseInspection)...)
+	}
+
+	// Handle request_inspection manually because AutoFlex cannot map
+	// the plural Identifiers list to the singular Identifier *string
+	// fields in PhoneNumberField and AddressField.
+	if !m.RequestInspection.IsNull() {
+		riModels, d := m.RequestInspection.ToSlice(ctx)
+		diags.Append(d...)
+		if !diags.HasError() && len(riModels) > 0 && riModels[0] != nil {
+			ri := riModels[0]
+			inspection := &awstypes.RequestInspectionACFP{
+				PayloadType: ri.PayloadType.ValueEnum(),
+			}
+
+			// EmailField — AutoFlex handles single Identifier fine
+			if !ri.EmailField.IsNull() {
+				diags.Append(flex.Expand(ctx, ri.EmailField, &inspection.EmailField)...)
+			}
+
+			// PasswordField
+			if !ri.PasswordField.IsNull() {
+				diags.Append(flex.Expand(ctx, ri.PasswordField, &inspection.PasswordField)...)
+			}
+
+			// UsernameField
+			if !ri.UsernameField.IsNull() {
+				diags.Append(flex.Expand(ctx, ri.UsernameField, &inspection.UsernameField)...)
+			}
+
+			// PhoneNumberFields — custom: one Identifiers list → multiple PhoneNumberField objects
+			if !ri.PhoneNumberFields.IsNull() {
+				pnModels, d := ri.PhoneNumberFields.ToSlice(ctx)
+				diags.Append(d...)
+				if !diags.HasError() && len(pnModels) > 0 && pnModels[0] != nil {
+					var identifiers []types.String
+					diags.Append(pnModels[0].Identifiers.ElementsAs(ctx, &identifiers, false)...)
+					for _, id := range identifiers {
+						inspection.PhoneNumberFields = append(inspection.PhoneNumberFields, awstypes.PhoneNumberField{
+							Identifier: id.ValueStringPointer(),
+						})
+					}
+				}
+			}
+
+			// AddressFields — custom: one Identifiers list → multiple AddressField objects
+			if !ri.AddressFields.IsNull() {
+				afModels, d := ri.AddressFields.ToSlice(ctx)
+				diags.Append(d...)
+				if !diags.HasError() && len(afModels) > 0 && afModels[0] != nil {
+					var identifiers []types.String
+					diags.Append(afModels[0].Identifiers.ElementsAs(ctx, &identifiers, false)...)
+					for _, id := range identifiers {
+						inspection.AddressFields = append(inspection.AddressFields, awstypes.AddressField{
+							Identifier: id.ValueStringPointer(),
+						})
+					}
+				}
+			}
+
+			result.RequestInspection = inspection
+		}
+	}
+
+	return result, diags
+}
+
+func (m *webACLRuleAWSManagedRulesACFPRuleSetModel) flatten(ctx context.Context, v *awstypes.AWSManagedRulesACFPRuleSet) (diags diag.Diagnostics) {
+	m.CreationPath = types.StringPointerValue(v.CreationPath)
+	m.EnableRegexInPath = types.BoolValue(v.EnableRegexInPath)
+	m.RegistrationPagePath = types.StringPointerValue(v.RegistrationPagePath)
+
+	// Use AutoFlex for response_inspection
+	m.ResponseInspection = fwtypes.NewListNestedObjectValueOfNull[webACLRuleResponseInspectionModel](ctx)
+	if v.ResponseInspection != nil {
+		var riModel webACLRuleResponseInspectionModel
+		diags.Append(flex.Flatten(ctx, v.ResponseInspection, &riModel)...)
+		m.ResponseInspection = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &riModel)
+	}
+
+	// Handle request_inspection manually for phone_number_fields and address_fields
+	m.RequestInspection = fwtypes.NewListNestedObjectValueOfNull[webACLRuleRequestInspectionACFPModel](ctx)
+	if v.RequestInspection != nil {
+		ri := v.RequestInspection
+		riModel := webACLRuleRequestInspectionACFPModel{
+			PayloadType: fwtypes.StringEnumValue(ri.PayloadType),
+		}
+
+		// EmailField — AutoFlex handles single Identifier fine
+		riModel.EmailField = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIdentifierFieldModel](ctx)
+		if ri.EmailField != nil {
+			var emailModel webACLRuleIdentifierFieldModel
+			diags.Append(flex.Flatten(ctx, ri.EmailField, &emailModel)...)
+			riModel.EmailField = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &emailModel)
+		}
+
+		// PasswordField
+		riModel.PasswordField = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIdentifierFieldModel](ctx)
+		if ri.PasswordField != nil {
+			var pwModel webACLRuleIdentifierFieldModel
+			diags.Append(flex.Flatten(ctx, ri.PasswordField, &pwModel)...)
+			riModel.PasswordField = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &pwModel)
+		}
+
+		// UsernameField
+		riModel.UsernameField = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIdentifierFieldModel](ctx)
+		if ri.UsernameField != nil {
+			var unModel webACLRuleIdentifierFieldModel
+			diags.Append(flex.Flatten(ctx, ri.UsernameField, &unModel)...)
+			riModel.UsernameField = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &unModel)
+		}
+
+		// PhoneNumberFields — custom: multiple PhoneNumberField objects → one Identifiers list
+		riModel.PhoneNumberFields = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIdentifiersFieldModel](ctx)
+		if len(ri.PhoneNumberFields) > 0 {
+			identifierValues := make([]attr.Value, len(ri.PhoneNumberFields))
+			for i, pnf := range ri.PhoneNumberFields {
+				identifierValues[i] = types.StringPointerValue(pnf.Identifier)
+			}
+			identifiersList := fwtypes.NewListValueOfMust[types.String](ctx, identifierValues)
+			pnModel := webACLRuleIdentifiersFieldModel{
+				Identifiers: identifiersList,
+			}
+			riModel.PhoneNumberFields = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &pnModel)
+		}
+
+		// AddressFields — custom: multiple AddressField objects → one Identifiers list
+		riModel.AddressFields = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIdentifiersFieldModel](ctx)
+		if len(ri.AddressFields) > 0 {
+			identifierValues := make([]attr.Value, len(ri.AddressFields))
+			for i, af := range ri.AddressFields {
+				identifierValues[i] = types.StringPointerValue(af.Identifier)
+			}
+			identifiersList := fwtypes.NewListValueOfMust[types.String](ctx, identifierValues)
+			afModel := webACLRuleIdentifiersFieldModel{
+				Identifiers: identifiersList,
+			}
+			riModel.AddressFields = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &afModel)
+		}
+
+		m.RequestInspection = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &riModel)
+	}
+
+	return diags
+}
+
 type webACLRuleAWSManagedRulesATPRuleSetModel struct {
 	EnableRegexInPath  types.Bool                                                         `tfsdk:"enable_regex_in_path"`
 	LoginPath          types.String                                                       `tfsdk:"login_path"`
@@ -1568,7 +1722,13 @@ func (m webACLRuleManagedRuleGroupConfigModel) expand(ctx context.Context) (resu
 		diags.Append(flex.Expand(ctx, m.AWSManagedRulesBotControlRuleSet, &r.AWSManagedRulesBotControlRuleSet)...)
 	}
 	if !m.AWSManagedRulesACFPRuleSet.IsNull() {
-		diags.Append(flex.Expand(ctx, m.AWSManagedRulesACFPRuleSet, &r.AWSManagedRulesACFPRuleSet)...)
+		acfpModels, d := m.AWSManagedRulesACFPRuleSet.ToSlice(ctx)
+		diags.Append(d...)
+		if !diags.HasError() && len(acfpModels) > 0 && acfpModels[0] != nil {
+			expanded, d := acfpModels[0].expand(ctx)
+			diags.Append(d...)
+			r.AWSManagedRulesACFPRuleSet = &expanded
+		}
 	}
 	if !m.AWSManagedRulesATPRuleSet.IsNull() {
 		diags.Append(flex.Expand(ctx, m.AWSManagedRulesATPRuleSet, &r.AWSManagedRulesATPRuleSet)...)
@@ -1615,7 +1775,7 @@ func (m *webACLRuleManagedRuleGroupConfigModel) flatten(ctx context.Context, v a
 	}
 	if v.AWSManagedRulesACFPRuleSet != nil {
 		var model webACLRuleAWSManagedRulesACFPRuleSetModel
-		diags.Append(flex.Flatten(ctx, v.AWSManagedRulesACFPRuleSet, &model)...)
+		diags.Append(model.flatten(ctx, v.AWSManagedRulesACFPRuleSet)...)
 		m.AWSManagedRulesACFPRuleSet = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	}
 	if v.AWSManagedRulesATPRuleSet != nil {
