@@ -8,6 +8,8 @@ package route53
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -63,6 +65,16 @@ func (r *recordsExclusiveResource) Schema(ctx context.Context, req resource.Sche
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrName: schema.StringAttribute{
+				CustomType: fwtypes.DNSNameStringType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(1024),
 				},
 			},
 		},
@@ -268,11 +280,21 @@ func (r *recordsExclusiveResource) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
+func (r *recordsExclusiveResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config recordsExclusiveResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(validateRecordsExclusiveNames(ctx, config)...)
+}
+
 func (r *recordsExclusiveResource) syncRecordSets(ctx context.Context, plan recordsExclusiveResourceModel, timeout time.Duration) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := r.Meta().Route53Client(ctx)
 
-	have, err := findResourceRecordSetsForHostedZone(ctx, conn, plan.ZoneID.ValueString())
+	have, err := findResourceRecordSetsForRecordsExclusive(ctx, conn, plan)
 	if err != nil {
 		diags.AddError(
 			create.ProblemStandardMessage(names.Route53, "Syncronizing", ResNameRecordsExclusive, plan.ZoneID.String(), err),
@@ -370,7 +392,7 @@ func (r *recordsExclusiveResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	conn := r.Meta().Route53Client(ctx)
-	output, err := findResourceRecordSetsForHostedZone(ctx, conn, state.ZoneID.ValueString())
+	output, err := findResourceRecordSetsForRecordsExclusive(ctx, conn, state)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -415,7 +437,64 @@ func (r *recordsExclusiveResource) Update(ctx context.Context, req resource.Upda
 }
 
 func (r *recordsExclusiveResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	if strings.Contains(req.ID, intflex.ResourceIdSeparator) {
+		parts, err := intflex.ExpandResourceId(req.ID, recordsExclusiveResourceIDPartCount, false)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unexpected Import Identifier",
+				fmt.Sprintf("Expected import identifier with format: zone_id%sname. Got: %q", intflex.ResourceIdSeparator, req.ID),
+			)
+			return
+		}
+
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("zone_id"), parts[0])...)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[1])...)
+		return
+	}
+
 	resource.ImportStatePassthroughID(ctx, path.Root("zone_id"), req, resp)
+}
+
+const recordsExclusiveResourceIDPartCount = 2
+
+func validateRecordsExclusiveNames(ctx context.Context, data recordsExclusiveResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if data.ResourceRecordSet.IsNull() || data.ResourceRecordSet.IsUnknown() {
+		return diags
+	}
+
+	recordSets, d := data.ResourceRecordSet.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	nameScoped := !data.Name.IsNull() && !data.Name.IsUnknown()
+	scopeName := data.Name.ValueString()
+	for _, recordSet := range recordSets {
+		if recordSet == nil || !nameScoped || recordSet.Name.IsNull() || recordSet.Name.IsUnknown() {
+			continue
+		}
+
+		if normalizeDomainName(recordSet.Name.ValueString()) != normalizeDomainName(scopeName) {
+			diags.AddAttributeError(
+				path.Root("resource_record_set"),
+				"Invalid Record Set Name",
+				fmt.Sprintf("When the top-level name argument is configured, each resource_record_set name must match %q.", scopeName),
+			)
+		}
+	}
+
+	return diags
+}
+
+func findResourceRecordSetsForRecordsExclusive(ctx context.Context, conn *route53.Client, data recordsExclusiveResourceModel) ([]awstypes.ResourceRecordSet, error) {
+	if data.Name.IsNull() || data.Name.IsUnknown() {
+		return findResourceRecordSetsForHostedZone(ctx, conn, data.ZoneID.ValueString())
+	}
+
+	return findResourceRecordSetsForHostedZoneByName(ctx, conn, data.ZoneID.ValueString(), data.Name.ValueString())
 }
 
 func findResourceRecordSetsForHostedZone(ctx context.Context, conn *route53.Client, zoneID string) ([]awstypes.ResourceRecordSet, error) {
@@ -440,8 +519,39 @@ func findResourceRecordSetsForHostedZone(ctx context.Context, conn *route53.Clie
 	return findResourceRecordSets(ctx, conn, &input, morePages, filter)
 }
 
+func findResourceRecordSetsForHostedZoneByName(ctx context.Context, conn *route53.Client, zoneID, recordName string) ([]awstypes.ResourceRecordSet, error) {
+	hostedZone, err := findHostedZoneByID(ctx, conn, zoneID)
+	if err != nil {
+		return nil, err
+	}
+	hostedZoneName := aws.ToString(hostedZone.HostedZone.Name)
+	normalizedRecordName := normalizeDomainName(recordName)
+
+	input := route53.ListResourceRecordSetsInput{
+		HostedZoneId:    aws.String(zoneID),
+		StartRecordName: aws.String(fqdn(normalizedRecordName)),
+	}
+	morePages := func(page *route53.ListResourceRecordSetsOutput) bool {
+		return page.IsTruncated && normalizeDomainName(page.NextRecordName) == normalizedRecordName
+	}
+	filter := func(v *awstypes.ResourceRecordSet) bool {
+		if normalizeDomainName(v.Name) != normalizedRecordName {
+			return false
+		}
+
+		// Zone NS & SOA records are created by default and not managed by this resource
+		if normalizedRecordName == normalizeDomainName(hostedZoneName) && (v.Type == awstypes.RRTypeNs || v.Type == awstypes.RRTypeSoa) {
+			return false
+		}
+		return true
+	}
+
+	return findResourceRecordSets(ctx, conn, &input, morePages, filter)
+}
+
 type recordsExclusiveResourceModel struct {
 	ResourceRecordSet fwtypes.SetNestedObjectValueOf[resourceRecordSetModel] `tfsdk:"resource_record_set"`
+	Name              fwtypes.DNSNameString                                  `tfsdk:"name"`
 	Timeouts          timeouts.Value                                         `tfsdk:"timeouts"`
 	ZoneID            types.String                                           `tfsdk:"zone_id"`
 }
