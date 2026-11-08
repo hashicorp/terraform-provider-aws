@@ -10,3 +10,12 @@ variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = list(string)
 }
+variable "vpc_id" {
+  type        = string
+  description = "vpc id"
+}
+
+variable "outpost_id" {
+  type        = string
+  description = "outpost id"
+}
