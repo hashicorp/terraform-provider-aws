@@ -18,4 +18,6 @@ var (
 	FindRuleByARN        = findRuleByARN
 	FindScopeByARN       = findScopeByARN
 	FindTemplateByARN    = findTemplateByARN
+
+	IsAccountNotOnboardedError = isAccountNotOnboardedError
 )
