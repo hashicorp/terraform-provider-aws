@@ -35,6 +35,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,6 +89,9 @@ func (r *adminAccountResource) Schema(ctx context.Context, req resource.SchemaRe
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AdminAccountStatus](),
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -211,7 +215,8 @@ func (r *adminAccountResource) Create(ctx context.Context, req resource.CreateRe
 	// PutAdminAccount is rejected with a ConflictException immediately after
 	// the same account was removed, or while the service-linked role is being
 	// created. Retry until the service accepts the request.
-	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, r.CreateTimeout(ctx, plan.Timeouts), func(ctx context.Context) (any, error) {
+	deadline := inttypes.NewDeadline(r.CreateTimeout(ctx, plan.Timeouts))
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, deadline.Remaining(), func(ctx context.Context) (any, error) {
 		return conn.PutAdminAccount(ctx, input)
 	})
 	if err != nil {
@@ -219,7 +224,7 @@ func (r *adminAccountResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	output, err := waitAdminAccountOnboarded(ctx, conn, adminAccountID, r.CreateTimeout(ctx, plan.Timeouts))
+	output, err := waitAdminAccountOnboarded(ctx, conn, adminAccountID, deadline.Remaining())
 	if err != nil {
 		// Taint the resource.
 		resp.State.SetAttribute(ctx, path.Root("admin_account_id"), adminAccountID)
@@ -246,6 +251,11 @@ func (r *adminAccountResource) Read(ctx context.Context, req resource.ReadReques
 
 	adminAccountID := state.AdminAccountID.ValueString()
 	output, err := findAdminAccountByID(ctx, conn, adminAccountID)
+	if isAccountNotOnboardedError(err) {
+		err = smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -291,7 +301,8 @@ func (r *adminAccountResource) Update(ctx context.Context, req resource.UpdateRe
 			return
 		}
 
-		_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, r.UpdateTimeout(ctx, plan.Timeouts), func(ctx context.Context) (any, error) {
+		deadline := inttypes.NewDeadline(r.UpdateTimeout(ctx, plan.Timeouts))
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, deadline.Remaining(), func(ctx context.Context) (any, error) {
 			return conn.PutAdminAccount(ctx, input)
 		})
 		if err != nil {
@@ -299,7 +310,7 @@ func (r *adminAccountResource) Update(ctx context.Context, req resource.UpdateRe
 			return
 		}
 
-		output, err := waitAdminAccountOnboarded(ctx, conn, adminAccountID, r.UpdateTimeout(ctx, plan.Timeouts))
+		output, err := waitAdminAccountOnboarded(ctx, conn, adminAccountID, deadline.Remaining())
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, adminAccountID)
 			return
@@ -309,10 +320,6 @@ func (r *adminAccountResource) Update(ctx context.Context, req resource.UpdateRe
 		if resp.Diagnostics.HasError() {
 			return
 		}
-	} else if plan.Status.IsUnknown() {
-		// Nothing was sent to the service, so there is no fresh status to read;
-		// carry the computed value forward from state.
-		plan.Status = state.Status
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -328,6 +335,7 @@ func (r *adminAccountResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	adminAccountID := state.AdminAccountID.ValueString()
+	deadline := inttypes.NewDeadline(r.DeleteTimeout(ctx, state.Timeouts))
 	input := networksecuritymanager.DeleteAdminAccountInput{
 		AccountId: aws.String(adminAccountID),
 	}
@@ -336,7 +344,7 @@ func (r *adminAccountResource) Delete(ctx context.Context, req resource.DeleteRe
 	// can be rejected with an AccessDeniedException ("Unable to determine
 	// service/operation name to be authorized") until the service has
 	// finished onboarding it.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.AccessDeniedException](ctx, r.DeleteTimeout(ctx, state.Timeouts), func(ctx context.Context) (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.AccessDeniedException](ctx, deadline.Remaining(), func(ctx context.Context) (any, error) {
 		return conn.DeleteAdminAccount(ctx, &input)
 	}, "Unable to determine service/operation name")
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -347,7 +355,7 @@ func (r *adminAccountResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	if _, err := waitAdminAccountDeleted(ctx, conn, adminAccountID, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+	if _, err := waitAdminAccountDeleted(ctx, conn, adminAccountID, deadline.Remaining()); err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, adminAccountID)
 		return
 	}
@@ -492,10 +500,18 @@ func waitAdminAccountOnboarded(ctx context.Context, conn *networksecuritymanager
 }
 
 func waitAdminAccountDeleted(ctx context.Context, conn *networksecuritymanager.Client, adminAccountID string, timeout time.Duration) (*awstypes.AdminAccountDetails, error) {
+	refresh := statusAdminAccount(conn, adminAccountID)
 	stateConf := &retry.StateChangeConf{
-		Pending: append(enum.Slice(awstypes.AdminAccountStatusOnboarded), adminAccountStatusAccountNotOnboarded),
+		Pending: enum.Slice(awstypes.AdminAccountStatusOnboarded),
 		Target:  []string{},
-		Refresh: statusAdminAccount(conn, adminAccountID),
+		Refresh: func(ctx context.Context) (any, string, error) {
+			output, status, err := refresh(ctx)
+			if status == adminAccountStatusAccountNotOnboarded {
+				return nil, "", nil
+			}
+
+			return output, status, err
+		},
 		Timeout: timeout,
 	}
 
