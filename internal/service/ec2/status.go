@@ -1184,6 +1184,17 @@ func statusIPAMPoolCIDR(conn *ec2.Client, cidrBlock, poolID, poolCIDRID string) 
 			return nil, "", err
 		}
 
+		// If a FailureReason is present, report the state as failed even if the API
+		// still shows a pending state. This surfaces quota-related errors immediately
+		// rather than waiting for the timeout.
+		if output.FailureReason != nil && output.FailureReason.Code != "" {
+			state := output.State
+			if state == awstypes.IpamPoolCidrStatePendingProvision {
+				state = awstypes.IpamPoolCidrStateFailedProvision
+			}
+			return output, string(state), nil
+		}
+
 		return output, string(output.State), nil
 	}
 }
