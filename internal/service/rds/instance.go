@@ -2171,40 +2171,40 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 	if v.PendingModifiedValues != nil {
 		p := v.PendingModifiedValues
 		if p.AllocatedStorage != nil {
-			d.Set(names.AttrAllocatedStorage, aws.ToInt32(p.AllocatedStorage))
+			d.Set(names.AttrAllocatedStorage, p.AllocatedStorage)
 		}
 		if p.BackupRetentionPeriod != nil {
-			d.Set("backup_retention_period", aws.ToInt32(p.BackupRetentionPeriod))
+			d.Set("backup_retention_period", p.BackupRetentionPeriod)
 		}
 		if p.CACertificateIdentifier != nil {
-			d.Set("ca_cert_identifier", aws.ToString(p.CACertificateIdentifier))
+			d.Set("ca_cert_identifier", p.CACertificateIdentifier)
 		}
 		if p.DBInstanceClass != nil {
-			d.Set("instance_class", aws.ToString(p.DBInstanceClass))
+			d.Set("instance_class", p.DBInstanceClass)
 		}
 		if p.DBSubnetGroupName != nil {
-			d.Set("db_subnet_group_name", aws.ToString(p.DBSubnetGroupName))
+			d.Set("db_subnet_group_name", p.DBSubnetGroupName)
 		}
 		if p.DedicatedLogVolume != nil {
-			d.Set("dedicated_log_volume", aws.ToBool(p.DedicatedLogVolume))
+			d.Set("dedicated_log_volume", p.DedicatedLogVolume)
 		}
 		if p.IAMDatabaseAuthenticationEnabled != nil {
-			d.Set("iam_database_authentication_enabled", aws.ToBool(p.IAMDatabaseAuthenticationEnabled))
+			d.Set("iam_database_authentication_enabled", p.IAMDatabaseAuthenticationEnabled)
 		}
 		if p.Iops != nil {
-			d.Set(names.AttrIOPS, aws.ToInt32(p.Iops))
+			d.Set(names.AttrIOPS, p.Iops)
 		}
 		if p.LicenseModel != nil {
-			d.Set("license_model", aws.ToString(p.LicenseModel))
+			d.Set("license_model", p.LicenseModel)
 		}
 		if p.MultiAZ != nil {
-			d.Set("multi_az", aws.ToBool(p.MultiAZ))
+			d.Set("multi_az", p.MultiAZ)
 		}
 		if p.StorageThroughput != nil {
-			d.Set("storage_throughput", aws.ToInt32(p.StorageThroughput))
+			d.Set("storage_throughput", p.StorageThroughput)
 		}
 		if p.StorageType != nil {
-			d.Set(names.AttrStorageType, aws.ToString(p.StorageType))
+			d.Set(names.AttrStorageType, p.StorageType)
 		}
 	}
 
