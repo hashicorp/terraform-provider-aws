@@ -2161,6 +2161,53 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 		d.Set("listener_endpoint", nil)
 	}
 
+	// When modifications are pending (e.g., scheduled for the next maintenance
+	// window because apply_immediately is false), the API returns the current
+	// (pre-modification) values for the instance attributes. Terraform has already
+	// recorded the requested values in state, so reading back the old values causes
+	// a perpetual diff on the next plan. Override affected attributes with their
+	// pending values so that state reflects what was requested.
+	// Engine version is handled separately by dbSetResourceDataEngineVersionFromInstance.
+	if v.PendingModifiedValues != nil {
+		p := v.PendingModifiedValues
+		if p.AllocatedStorage != nil {
+			d.Set(names.AttrAllocatedStorage, aws.ToInt32(p.AllocatedStorage))
+		}
+		if p.BackupRetentionPeriod != nil {
+			d.Set("backup_retention_period", aws.ToInt32(p.BackupRetentionPeriod))
+		}
+		if p.CACertificateIdentifier != nil {
+			d.Set("ca_cert_identifier", aws.ToString(p.CACertificateIdentifier))
+		}
+		if p.DBInstanceClass != nil {
+			d.Set("instance_class", aws.ToString(p.DBInstanceClass))
+		}
+		if p.DBSubnetGroupName != nil {
+			d.Set("db_subnet_group_name", aws.ToString(p.DBSubnetGroupName))
+		}
+		if p.DedicatedLogVolume != nil {
+			d.Set("dedicated_log_volume", aws.ToBool(p.DedicatedLogVolume))
+		}
+		if p.IAMDatabaseAuthenticationEnabled != nil {
+			d.Set("iam_database_authentication_enabled", aws.ToBool(p.IAMDatabaseAuthenticationEnabled))
+		}
+		if p.Iops != nil {
+			d.Set(names.AttrIOPS, aws.ToInt32(p.Iops))
+		}
+		if p.LicenseModel != nil {
+			d.Set("license_model", aws.ToString(p.LicenseModel))
+		}
+		if p.MultiAZ != nil {
+			d.Set("multi_az", aws.ToBool(p.MultiAZ))
+		}
+		if p.StorageThroughput != nil {
+			d.Set("storage_throughput", aws.ToInt32(p.StorageThroughput))
+		}
+		if p.StorageType != nil {
+			d.Set(names.AttrStorageType, aws.ToString(p.StorageType))
+		}
+	}
+
 	dbSetResourceDataEngineVersionFromInstance(d, v)
 
 	setTagsOut(ctx, v.TagList)
