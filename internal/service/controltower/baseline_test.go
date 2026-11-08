@@ -60,6 +60,19 @@ func testAccBaseline_basic(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore:              []string{"operation_identifier"},
 			},
+			// STEP 3: Test updating baseline_version in place
+			{
+				Config: testAccBaselineConfig_updatedVersion(rName, baselineARN),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBaselineExists(ctx, t, resourceName, &baseline),
+					resource.TestCheckResourceAttr(resourceName, "baseline_version", "5.0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
 		},
 	})
 }
@@ -323,4 +336,31 @@ resource "aws_controltower_baseline" "test" {
   ]
 }
 `, rName, baselineARN, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+func testAccBaselineConfig_updatedVersion(rName, baselineARN string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+data "aws_organizations_organization" "current" {}
+
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = data.aws_organizations_organization.current.roots[0].id
+}
+
+resource "aws_controltower_baseline" "test" {
+  baseline_identifier = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}::baseline/17BSJV3IGJ2QSGA2"
+  baseline_version    = "5.0"
+  target_identifier   = aws_organizations_organizational_unit.test.arn
+  parameters {
+    key   = "IdentityCenterEnabledBaselineArn"
+    value = %[2]q
+  }
+  depends_on = [
+    aws_organizations_organizational_unit.test
+  ]
+}
+`, rName, baselineARN)
 }
