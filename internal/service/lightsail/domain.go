@@ -27,6 +27,10 @@ func ResourceDomain() *schema.Resource {
 		ReadWithoutTimeout:   resourceDomainRead,
 		DeleteWithoutTimeout: resourceDomainDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrDomainName: {
@@ -76,6 +80,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	d.Set(names.AttrARN, resp.Domain.Arn)
+	d.Set(names.AttrDomainName, resp.Domain.Name)
 	return diags
 }
 
