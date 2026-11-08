@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: Fix inconsistent result after apply when an origin has an explicit empty `origin_path`
+```
