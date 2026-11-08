@@ -501,7 +501,9 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 				Key:   aws.String(k),
 				Value: aws.String(v),
 			})
-			apiObject.ResourceTagLogicalOperator = awstypes.ResourceTagLogicalOperator(d.Get("resource_tag_logical_operator").(string))
+		}
+		if v, ok := d.GetOk("resource_tag_logical_operator"); ok {
+			apiObject.ResourceTagLogicalOperator = awstypes.ResourceTagLogicalOperator(v.(string))
 		}
 	}
 
