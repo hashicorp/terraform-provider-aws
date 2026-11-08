@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_secretsmanager_secret_versions: Fix `last_accessed_date` returning `null` by making the `dsVersionsData` struct `LastAccessedDate` field to use `timetypes.RFC3339` instead of `types.String`.
+```
