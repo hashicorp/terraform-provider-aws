@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpc_endpoint_subnet_association: Fix `OperationInProgress` errors when multiple subnet associations targeting the same VPC endpoint are created or destroyed in parallel
+```
