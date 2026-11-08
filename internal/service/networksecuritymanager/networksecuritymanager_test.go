@@ -20,12 +20,13 @@ func TestAccNetworkSecurityManager_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AdminAccount": {
-			acctest.CtBasic:      testAccAdminAccount_basic,
-			acctest.CtDisappears: testAccAdminAccount_disappears,
-			"full":               testAccAdminAccount_full,
-			"adminScope":         testAccAdminAccount_adminScope,
-			"Identity":           testAccNetworkSecurityManagerAdminAccount_identitySerial,
-			"List_basic":         testAccAdminAccount_List_basic,
+			acctest.CtBasic:       testAccAdminAccount_basic,
+			acctest.CtDisappears:  testAccAdminAccount_disappears,
+			"full":                testAccAdminAccount_full,
+			"adminScope":          testAccAdminAccount_adminScope,
+			"Identity":            testAccNetworkSecurityManagerAdminAccount_identitySerial,
+			"List_basic":          testAccAdminAccount_List_basic,
+			"List_regionOverride": testAccAdminAccount_List_regionOverride,
 		},
 	}
 
