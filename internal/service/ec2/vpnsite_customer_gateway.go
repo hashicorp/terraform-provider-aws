@@ -76,7 +76,7 @@ func resourceCustomerGateway() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.IsIPv4Address,
+					ValidateFunc: validation.IsIPAddress,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
