@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_route53domains_domain: Add `consent` attribute
+```
+
+```release-note:enhancement
+resource/aws_route53domains_registered_domain: Add `consent` attribute
+```
