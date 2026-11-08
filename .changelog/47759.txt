@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iot_topic_rule: Allow IoT substitution templates (e.g. `${timestamp()}`) as valid values for `metric_timestamp` in `cloudwatch_metric` blocks
+```
