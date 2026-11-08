@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_inspector2_filter: Fix recreation on every apply of filters created by an Inspector2 delegated administrator, which `ListFilters` does not return when filtering by ARN
+```
