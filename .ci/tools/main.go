@@ -18,5 +18,6 @@ import (
 	_ "github.com/pavius/impi/cmd/impi"
 	_ "github.com/terraform-linters/tflint"
 	_ "golang.org/x/tools/cmd/stringer"
+	_ "golang.org/x/vuln/cmd/govulncheck"
 	_ "mvdan.cc/gofumpt"
 )
