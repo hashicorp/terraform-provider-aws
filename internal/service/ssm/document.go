@@ -713,6 +713,14 @@ func resourceDocumentFlatten(ctx context.Context, conn *ssm.Client, d *schema.Re
 
 		output, err := conn.DescribeDocumentPermission(ctx, input)
 
+		// Documents shared via AWS RAM will always return a 4xx error. Fall back
+		// by setting permissions to nil.
+		//
+		// > After you migrate a document, you manage sharing for that document through AWS RAM.
+		// > The ModifyDocumentPermission and DescribeDocumentPermission API operations return
+		// > a 4xx error for a migrated document.
+		//
+		// Ref: https://docs.aws.amazon.com/systems-manager/latest/userguide/documents-ssm-sharing.html#ssm-share-using-ram
 		if errs.IsA[*awstypes.InvalidDocumentOperation](err) {
 			output, err = &ssm.DescribeDocumentPermissionOutput{}, nil
 		}
