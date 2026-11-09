@@ -222,6 +222,11 @@ func ResourceCanary() *schema.Resource {
 						},
 					},
 				},
+				"source_code_hash": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
 				"source_location_arn": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -495,7 +500,7 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			input.RuntimeVersion = aws.String(d.Get("runtime_version").(string))
 		}
 
-		if d.HasChanges("handler", "zip_file", names.AttrS3Bucket, "s3_key", "s3_version") {
+		if d.HasChanges("handler", "zip_file", names.AttrS3Bucket, "s3_key", "s3_version", "source_code_hash") {
 			conns.GlobalMutexKV.Lock(canaryMutex)
 			defer conns.GlobalMutexKV.Unlock(canaryMutex)
 
