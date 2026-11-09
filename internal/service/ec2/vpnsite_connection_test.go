@@ -1554,7 +1554,7 @@ func TestAccSiteVPNConnection_largeBandwidthTunnel_withoutTGWorVGW(t *testing.T)
 	})
 }
 
-func TestAccSiteVPNConnection_tunnelBandwidth(t *testing.T) {
+func TestAccSiteVPNConnection_TunnelBandwidth_modify(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpn awstypes.VpnConnection
 	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
