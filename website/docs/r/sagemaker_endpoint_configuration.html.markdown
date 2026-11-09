@@ -91,7 +91,14 @@ This resource supports the following arguments:
 
 * `max_instance_count` - (Optional) Maximum number of instances that the endpoint can provision when it scales up to accommodate an increase in traffic.
 * `min_instance_count` - (Optional) Minimum number of instances that the endpoint must retain when it scales down to accommodate a decrease in traffic.
+* `scale_in_policy` - (Optional) Configures the scale-in behavior for managed instance scaling. See [scale_in_policy](#scale_in_policy) below.
 * `status` - (Optional) Whether managed instance scaling is enabled. Valid values are `ENABLED` and `DISABLED`.
+
+##### scale_in_policy
+
+* `strategy` - (Required) The strategy for scaling in instances. Valid values are `IDLE_RELEASE` and `CONSOLIDATION`. `IDLE_RELEASE` releases instances that have no hosted inference component copies. `CONSOLIDATION` consolidates inference component copies onto fewer instances to release more instances.
+* `cooldown_in_minutes` - (Optional) The cooldown period, in minutes, after the last endpoint operation before the endpoint evaluates consolidation scale-in opportunities. Default: `20`.
+* `maximum_step_size` - (Optional) The maximum number of instances that the endpoint can terminate at a time during a consolidation scale-in operation. Default: `1`.
 
 ### data_capture_config
 
