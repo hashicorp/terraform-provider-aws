@@ -213,22 +213,33 @@ same type of resource. The definition of a complete test looks like this:
 
 ```go
 func TestAccCloudWatchDashboard_basic(t *testing.T) {
-  ctx := acctest.Context(t)
+	ctx := acctest.Context(t)
 	var dashboard cloudwatch.GetDashboardOutput
-	rInt := acctest.RandInt()
+	resourceName := "aws_cloudwatch_dashboard.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDashboardConfig(rInt),
+				ConfigDirectory: config.StaticDirectory("testdata/Dashboard/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, t, "aws_cloudwatch_dashboard.foobar", &dashboard),
-					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccDashboardName(rInt)),
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dashboard_name"), knownvalue.StringExact(rName)),
+				},
 			},
 		},
 	})
@@ -242,11 +253,13 @@ When executing the test, the following steps are taken for each `TestStep`:
    may have. For example, to test the `aws_cloudwatch_dashboard` resource, a valid configuration with the requisite fields is required. This results in a configuration which looks like this:
 
     ```terraform
-    resource "aws_cloudwatch_dashboard" "foobar" {
-      dashboard_name = "terraform-test-dashboard-%[1]d"
+    resource "aws_cloudwatch_dashboard" "test" {
+      dashboard_name = var.rName
+
       dashboard_body = <<EOF
-      {
-        "widgets": [{
+    {
+      "widgets": [
+        {
           "type": "text",
           "x": 0,
           "y": 0,
@@ -255,9 +268,10 @@ When executing the test, the following steps are taken for each `TestStep`:
           "properties": {
             "markdown": "Hi there from Terraform: CloudWatch"
           }
-        }]
-      }
-      EOF
+        }
+      ]
+    }
+    EOF
     }
     ```
 
@@ -293,7 +307,7 @@ When executing the test, the following steps are taken for each `TestStep`:
    for several common types of checks - for example:
 
    ```go
-   resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccDashboardName(rInt)),
+   statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dashboard_name"), knownvalue.StringExact(rName)),
    ```
 
 1. The resources created by the test are destroyed. This step happens
