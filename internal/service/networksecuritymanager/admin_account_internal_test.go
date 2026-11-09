@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -23,7 +24,7 @@ func TestAdminAccountAccountIDMapping(t *testing.T) {
 
 	ctx := context.Background()
 	model := adminAccountResourceModel{
-		AccountID:  types.StringValue("123456789012"),
+		AccountID:  types.StringValue(acctest.Ct12Digit),
 		AdminScope: fwtypes.NewListNestedObjectValueOfNull[adminScopeModel](ctx),
 		Priority:   types.Int32Value(1),
 	}
@@ -45,8 +46,8 @@ func TestAdminAccountAccountIDMapping(t *testing.T) {
 	if diags := r.flatten(ctx, &output, &model); diags.HasError() {
 		t.Fatalf("flattening admin account: %v", diags)
 	}
-	if got := model.AccountID.ValueString(); got != "123456789012" {
-		t.Fatalf("account_id = %q, want %q", got, "123456789012")
+	if got := model.AccountID.ValueString(); got != acctest.Ct12Digit {
+		t.Fatalf("account_id = %q, want %q", got, acctest.Ct12Digit)
 	}
 }
 

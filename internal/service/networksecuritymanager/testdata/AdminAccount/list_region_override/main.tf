@@ -3,8 +3,8 @@
 
 resource "aws_networksecuritymanager_admin_account" "test" {
   account_id = data.aws_caller_identity.current.account_id
-  priority         = 1
-  region           = var.region
+  priority   = 1
+  region     = var.region
 }
 
 data "aws_caller_identity" "current" {}

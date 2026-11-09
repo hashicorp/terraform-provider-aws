@@ -21,7 +21,7 @@ Manages an AWS Network Security Manager Admin Account. An administrator account 
 ```terraform
 resource "aws_networksecuritymanager_admin_account" "example" {
   account_id = "123456789012"
-  priority         = 1
+  priority   = 1
 }
 ```
 
@@ -30,7 +30,7 @@ resource "aws_networksecuritymanager_admin_account" "example" {
 ```terraform
 resource "aws_networksecuritymanager_admin_account" "example" {
   account_id = "123456789012"
-  priority         = 2
+  priority   = 2
 
   admin_scope {
     firewall_type_scope {
