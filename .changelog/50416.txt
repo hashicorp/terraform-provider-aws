@@ -1,3 +1,6 @@
 ```release-note:bug
-resource/aws_ssm_document: Fix `InvalidDocumentOperation` errors when reading documents shared using AWS RAM
+resource/aws_ssm_document: Fix `InvalidDocumentOperation` exceptions during Read when sharing is managed through AWS RAM
+```
+```release-note:bug
+list-resource/aws_ssm_document: Fix `InvalidDocumentOperation` exceptions during Read when sharing is managed through AWS RAM
 ```
