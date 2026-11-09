@@ -243,7 +243,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Description: "Labels to apply to matching web requests.",
 			},
-			"statement": statementBlock(ctx, webACLRuleStatementSchemaLevel),
+			"statement": statementBlock(ctx, ruleStatementSchemaLevel),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,

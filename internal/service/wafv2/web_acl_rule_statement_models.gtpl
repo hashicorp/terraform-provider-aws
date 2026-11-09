@@ -41,6 +41,9 @@ import (
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
 {{ end }}
 
+// ruleStatementSchemaLevel is the maximum nesting depth for logical statements.
+const ruleStatementSchemaLevel = {{ .MaxLevel }}
+
 // Statements nested in a logical statement only offer the statement types AWS WAF accepts there:
 //   - rate_based_statement, managed_rule_group_statement and rule_group_reference_statement
 //     are only valid at the top level of a rule.

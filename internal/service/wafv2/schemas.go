@@ -75,15 +75,8 @@ func ruleGroupRootStatementSchema(level int) *schema.Schema {
 	}
 }
 
-const (
-	statementSchemaCacheSize = max(
-		ruleGroupRootStatementSchemaLevel,
-		webACLRootStatementSchemaLevel,
-	)
-)
-
 type schemaCache struct {
-	values [statementSchemaCacheSize]schema.Schema
+	values [ruleStatementSchemaLevel]schema.Schema
 	once   sync.Once
 }
 
@@ -120,7 +113,7 @@ func (c *schemaCache) get(level int) *schema.Schema {
 
 		// Initialize the rest of the elements
 		previous := &c.values[0]
-		for i := 1; i < statementSchemaCacheSize; i++ {
+		for i := 1; i < ruleStatementSchemaLevel; i++ {
 			c.values[i] = schema.Schema{
 				Type:     schema.TypeList,
 				Optional: true,
