@@ -14,6 +14,8 @@ Provides a Synthetics Canary resource.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_synthetics_canary" "some" {
   name                 = "some-canary"
@@ -25,6 +27,32 @@ resource "aws_synthetics_canary" "some" {
 
   schedule {
     expression = "rate(0 minute)"
+  }
+}
+```
+
+### Redeploy When the Script Changes
+
+The provider does not read the canary script back from AWS, so rewriting a ZIP file (or S3 object) in place is not detected as a change. Set `source_code_hash` to a hash of the archive so that new script contents trigger an update.
+
+```terraform
+data "archive_file" "canary" {
+  type        = "zip"
+  source_dir  = "${path.module}/canary"
+  output_path = "${path.module}/canary.zip"
+}
+
+resource "aws_synthetics_canary" "example" {
+  name                 = "example"
+  artifact_s3_location = "s3://${aws_s3_bucket.example.bucket}/"
+  execution_role_arn   = aws_iam_role.example.arn
+  handler              = "index.handler"
+  zip_file             = data.archive_file.canary.output_path
+  source_code_hash     = data.archive_file.canary.output_base64sha256
+  runtime_version      = "syn-nodejs-puppeteer-9.1"
+
+  schedule {
+    expression = "rate(5 minutes)"
   }
 }
 ```
@@ -51,6 +79,7 @@ The following arguments are optional:
 * `s3_bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. **Conflicts with `zip_file`.**
 * `s3_key` - (Optional) S3 key of your script. **Conflicts with `zip_file`.**
 * `s3_version` - (Optional) S3 version ID of your script. **Conflicts with `zip_file`.**
+* `source_code_hash` - (Optional) User-defined hash of the canary script package, used to trigger updates when the script contents change but `zip_file` or `s3_key` stay the same. Usually set to `filebase64sha256("file.zip")` or the `output_base64sha256` attribute of an `archive_file` data source. Tracked only by the provider; out-of-band changes to the script are not detected.
 * `start_canary` - (Optional) Whether to run or stop the canary.
 * `success_retention_period` - (Optional) Number of days to retain data about successful runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
