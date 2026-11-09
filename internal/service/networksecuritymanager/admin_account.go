@@ -45,7 +45,7 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 // @Testing(generator=false)
-// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccPreCheckAdminAccount")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types;awstypes;awstypes.AdminAccountDetails")
 // @Testing(importStateIdAttribute="account_id")
 // @Testing(identityRegionOverrideTest=false)

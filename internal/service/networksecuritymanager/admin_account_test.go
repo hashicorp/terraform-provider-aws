@@ -10,9 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
-	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -35,7 +33,7 @@ func testAccAdminAccount_basic(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckAdminAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -129,7 +127,7 @@ func testAccAdminAccount_disappears(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckAdminAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -165,7 +163,7 @@ func testAccAdminAccount_full(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckAdminAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -270,7 +268,7 @@ func testAccAdminAccount_adminScope(t *testing.T) {
 	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckAdminAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -431,7 +429,7 @@ func TestAccNetworkSecurityManagerAdminAccount_validation(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckAdminAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -528,29 +526,8 @@ func testAccCheckAdminAccountExists(ctx context.Context, t *testing.T, n string,
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
-
-	input := organizations.ListAWSServiceAccessForOrganizationInput{}
-	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, &input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if acctest.PreCheckSkipError(err) {
-			t.Skipf("skipping acceptance testing: %s", err)
-		}
-		if err != nil {
-			t.Fatalf("unexpected PreCheck error: %s", err)
-		}
-
-		for _, principal := range page.EnabledServicePrincipals {
-			if aws.ToString(principal.ServicePrincipal) == "network-security-manager.amazonaws.com" {
-				return
-			}
-		}
-	}
-
-	t.Skip("skipping acceptance testing: enable AWS Organizations trusted access for Network Security Manager")
+func testAccPreCheckAdminAccount(ctx context.Context, t *testing.T) {
+	acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "network-security-manager.amazonaws.com")
 }
 
 func testAccAdminAccountConfig_base() string {
