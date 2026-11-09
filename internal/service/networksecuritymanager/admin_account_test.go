@@ -543,7 +543,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 
 	t.Skip("skipping acceptance testing: enable AWS Organizations trusted access for Network Security Manager")
-
 }
 
 func testAccAdminAccountConfig_base() string {
