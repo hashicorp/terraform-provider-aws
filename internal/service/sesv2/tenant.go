@@ -101,9 +101,12 @@ func (r *tenantResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// The reputation management policy is managed through the separate reputation
-	// entity API, keyed by the tenant ARN. Apply it only when the user configured it.
+	// entity API, keyed by the tenant ARN. Apply it only when the user set a
+	// concrete value. Because the attribute is Optional+Computed, an omitted
+	// value is unknown (not null) at create time; in that case leave the
+	// AWS-applied default policy in place and just read it back below.
 	arn := fwflex.StringValueFromFramework(ctx, plan.TenantARN)
-	if !plan.ReputationEntityPolicy.IsNull() {
+	if !plan.ReputationEntityPolicy.IsNull() && !plan.ReputationEntityPolicy.IsUnknown() {
 		if err := putTenantReputationEntityPolicy(ctx, conn, arn, fwflex.StringValueFromFramework(ctx, plan.ReputationEntityPolicy)); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return
@@ -185,8 +188,9 @@ func (r *tenantResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// Only the reputation policy is mutable here; tags are handled by the
 	// transparent tagging interceptor. Skip the reputation API calls entirely
-	// when the policy is unchanged (e.g. a tags-only update).
-	if !plan.ReputationEntityPolicy.Equal(state.ReputationEntityPolicy) {
+	// when the policy is unchanged (e.g. a tags-only update) or resolves to an
+	// unknown value.
+	if !plan.ReputationEntityPolicy.Equal(state.ReputationEntityPolicy) && !plan.ReputationEntityPolicy.IsUnknown() {
 		if err := putTenantReputationEntityPolicy(ctx, conn, arn, fwflex.StringValueFromFramework(ctx, plan.ReputationEntityPolicy)); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 			return

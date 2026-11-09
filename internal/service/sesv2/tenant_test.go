@@ -94,6 +94,34 @@ func TestAccSESV2Tenant_disappears(t *testing.T) {
 	})
 }
 
+func TestAccSESV2Tenant_reputationEntityPolicyDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	resourceName := "aws_sesv2_tenant.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTenantDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// No reputation_entity_policy configured: AWS applies a default
+				// policy. Creation must succeed (not call UpdateReputationEntityPolicy
+				// with an unknown value) and the attribute must compute to that default.
+				Config: testAccTenantConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTenantExists(ctx, t, resourceName),
+					testAccCheckTenantReputationEntityPolicy(ctx, t, resourceName, "reputation-policy/standard"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reputation_entity_policy"), knownvalue.StringRegexp(regexache.MustCompile(`:ses:[a-z0-9-]+:aws:reputation-policy/standard$`))),
+				},
+			},
+		},
+	})
+}
+
 func TestAccSESV2Tenant_reputationEntityPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
