@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `domain_arn` - ARN of the domain named in `domain_name`.
 * `id` - Name of the domain named in `domain_name`.
-* `peers` - The domains this domain replicates with. Each entry has:
+* `peers` - Domains this domain replicates with. Each entry has:
     * `peer_domain_arn` - ARN of the peer domain.
     * `peer_role` - Role of the peer domain: `PRIMARY` or `SECONDARY`.
     * `status` - Status of the relationship with this peer.
