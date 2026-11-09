@@ -12,8 +12,8 @@ on:
         required: true
 
 permissions:
-  issues: read         # required to search issues
-  pull-requests: read  # required to search pull requests
+  issues: read # required to search issues
+  pull-requests: read # required to search pull requests
 
 jobs:
   tidy-jira:
@@ -27,5 +27,6 @@ jobs:
           jira_password: ${{ secrets.jira_password }}
           jira_jql_filter: ${{ secrets.jira_jql_filter }}
           jira_github_url_field_id: "Issue Link[URL Field]"
+          jira_frb_github_url_field_id: "GitHub Issue/PR[URL Field]"
           github_release_name: v${{ github.event.inputs.release_tag }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
