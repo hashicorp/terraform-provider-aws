@@ -6,7 +6,7 @@
 
 Terraform includes an acceptance test harness that does most of the repetitive
 work involved in testing a resource. For additional information about testing
-Terraform Providers, see the [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/testing).
+Terraform Providers, see the [Plugin Framework documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests).
 
 ## In context
 
@@ -119,7 +119,7 @@ ok  	github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch	27.
 
 Running acceptance tests requires version 0.12.26 or higher of the Terraform CLI to be installed.
 
-For advanced developers, the acceptance testing framework accepts some additional environment variables that can be used to control Terraform CLI binary selection, logging, and other behaviors. See the [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests#environment-variables) for more information.
+For advanced developers, the acceptance testing framework accepts some additional environment variables that can be used to control Terraform CLI binary selection, logging, and other behaviors. See the [Plugin Framework documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/environment-variables) for more information.
 
 Please Note: On macOS 10.14 and later (and some Linux distributions), the default user open file limit is 256. This may cause unexpected issues when running the acceptance testing since this can prevent various operations from occurring such as opening network connections to AWS. To view this limit, the `ulimit -n` command can be run. To update this limit, run `ulimit -n 1024`  (or higher).
 
@@ -186,7 +186,7 @@ TF_ACC=1 go test ./internal/service/ecs/... -v -count 1 -parallel 20 -run='TestA
 ## Writing an Acceptance Test
 
 Terraform has a framework for writing acceptance tests which minimizes the
-amount of boilerplate code necessary to use common testing patterns. This guide is meant to augment the general [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests) with Terraform AWS Provider specific conventions and helpers.
+amount of boilerplate code necessary to use common testing patterns. This guide is meant to augment the general [Plugin Framework documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests) with Terraform AWS Provider specific conventions and helpers.
 
 ### Anatomy of an Acceptance Test
 
@@ -267,7 +267,7 @@ When executing the test, the following steps are taken for each `TestStep`:
    successfully, a test function like this is used:
 
     ```go
-    func testAccCheckDashboardExists(ctx context.Context, t *testing.T, n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
+    func testAccCheckDashboardExists(ctx context.Context, t *testing.T, n string, v *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
       return func(s *terraform.State) error {
         rs, ok := s.RootModule().Resources[n]
         if !ok {
@@ -275,16 +275,12 @@ When executing the test, the following steps are taken for each `TestStep`:
         }
 
         conn := acctest.ProviderMeta(ctx, t).CloudWatchConn(ctx)
-        params := cloudwatch.GetDashboardInput{
-          DashboardName: aws.String(rs.Primary.ID),
-        }
-
-        resp, err := conn.GetDashboardWithContext(ctx, &params)
+        output, err := tfcloudwatch.FindDashboardByName(ctx, conn, rs.Primary.ID)
         if err != nil {
           return err
         }
 
-        *dashboard = *resp
+        *v = *output
 
         return nil
       }
@@ -310,7 +306,7 @@ When executing the test, the following steps are taken for each `TestStep`:
 
     ```go
     func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
-	    return func(s *terraform.State) error {
+      return func(s *terraform.State) error {
         conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
         for _, rs := range s.RootModule().Resources {
@@ -318,20 +314,15 @@ When executing the test, the following steps are taken for each `TestStep`:
             continue
           }
 
-          params := cloudwatch.GetDashboardInput{
-            DashboardName: aws.String(rs.Primary.ID),
+          _, err := tfcloudwatch.FindDashboardByName(ctx, conn, rs.Primary.ID)
+          if retry.NotFound(err) {
+            continue
           }
-
-          _, err := conn.GetDashboardWithContext(ctx, &params)
-          if err == nil {
-            return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
-          }
-          if !isDashboardNotFoundErr(err) {
+          if err != nil {
             return err
           }
-        }
 
-        return nil
+          return fmt.Errorf("CloudWatch Dashboard %s still exists", rs.Primary.ID)
       }
     }
     ```
@@ -547,7 +538,7 @@ func TestAccExampleThing_basic(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckExampleThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
@@ -1098,7 +1089,7 @@ data "aws_example_thing" "test" {
 
 ## Acceptance Test Sweepers
 
-When running the acceptance tests, especially when developing or troubleshooting Terraform resources, it's possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent lingering resources from consuming quota or causing unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [SDKv2 documentation on test sweepers](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/sweepers) with Terraform AWS Provider specific details.
+When running the acceptance tests, especially when developing or troubleshooting Terraform resources, it's possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent lingering resources from consuming quota or causing unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [Plugin Framework documentation on test sweepers](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/sweepers) with Terraform AWS Provider specific details.
 
 ### Running Test Sweepers
 
@@ -1285,8 +1276,8 @@ These are basic principles to help guide the creation of acceptance tests.
 
 Below are the required items that will be noted during the submission review and prevent immediate merging:
 
-- __Implements CheckDestroy__: Resource testing should include a `CheckDestroy` function (typically named `testAccCheck{SERVICE}{RESOURCE}Destroy`) that calls the API to verify that the Terraform resource has been deleted or disassociated as appropriate. More information about `CheckDestroy` functions can be found in the [SDKv2 TestCase documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/testcase#checkdestroy).
-- __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheck{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. More information about these functions can be found in the [SDKv2 Custom Check Functions documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/teststep#custom-check-functions).
+- __Implements CheckDestroy__: Resource testing should include a `CheckDestroy` function (typically named `testAccCheck{SERVICE}{RESOURCE}Destroy`) that calls the API to verify that the Terraform resource has been deleted or disassociated as appropriate. More information about `CheckDestroy` functions can be found in the [Plugin Framework Test Cases documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/testcase#checkdestroy).
+- __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheck{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. More information about these functions can be found in the [Plugin Framework Custom check functions documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/teststep#custom-check-functions).
 - __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `acctest.go` should be used for multiple account/region or otherwise specialized testing.
 - __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when run outside an expected environment.
 - __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, names.ExampleServiceID),`).
@@ -1301,7 +1292,7 @@ For resources that support import, the additional item below is required that wi
 
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
 
-- __Uses Builtin Check Functions__: Tests should use already available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify values in the Terraform state over creating custom `TestCheckFunc`. More information about these functions can be found in the [SDKv2 Builtin Check Functions documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/teststep#builtin-check-functions).
+- __Uses Builtin Check Functions__: Tests should use already available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify values in the Terraform state over creating custom `TestCheckFunc`. More information about these functions can be found in the [Plugin Framework Built-in check functions documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/teststep#built-in-check-functions).
 - __Uses TestCheckResourceAttrPair() for Data Sources__: Tests should use [`resource.TestCheckResourceAttrPair()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#TestCheckResourceAttrPair) to verify values in the Terraform state for data sources attributes to compare them with their expected resource attributes.
 - __Excludes Timeouts Configurations__: Test configurations should not include `timeouts {...}` configuration blocks except for explicit testing of customizable timeouts (typically very short timeouts with `ExpectError`).
 - __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAcc{SERVICE}{RESOURCE}_basic`) should use available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
