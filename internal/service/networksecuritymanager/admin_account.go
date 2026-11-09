@@ -447,11 +447,6 @@ func findAdminAccountSummaryByID(ctx context.Context, conn *networksecuritymanag
 // organization; the administrator account is already registered.
 const adminAccountStatusAccountNotOnboarded = "ACCOUNT_NOT_ONBOARDED"
 
-const (
-	adminAccountOnboardedOccurrences  = 3
-	adminAccountOnboardedPollInterval = 5 * time.Second
-)
-
 func isAccountNotOnboardedError(err error) bool {
 	return errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "is not onboarded to Network Security Manager")
 }
@@ -484,8 +479,8 @@ func waitAdminAccountOnboarded(ctx context.Context, conn *networksecuritymanager
 		Timeout: timeout,
 		// The not-onboarded window can open after the account is first seen
 		// as ONBOARDED, so require it to stay ONBOARDED across several polls.
-		ContinuousTargetOccurence: adminAccountOnboardedOccurrences,
-		PollInterval:              adminAccountOnboardedPollInterval,
+		ContinuousTargetOccurence: 3,
+		PollInterval:              5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
