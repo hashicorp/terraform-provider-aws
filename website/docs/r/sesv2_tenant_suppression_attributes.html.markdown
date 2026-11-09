@@ -12,6 +12,8 @@ Manages AWS SESv2 (Simple Email V2) tenant-level suppression attributes.
 
 Use this resource to configure the suppression list preferences for a [tenant](sesv2_tenant.html.markdown). A tenant can either maintain its own suppression list (`TENANT` scope) or use the account-level suppression list (`ACCOUNT` scope). This is the tenant-scoped equivalent of [`aws_sesv2_account_suppression_attributes`](sesv2_account_suppression_attributes.html.markdown).
 
+~> **Note:** SES has no API to delete a tenant's suppression attributes, so destroying this resource only removes it from Terraform state; the tenant's suppression settings remain as last applied. To return the tenant to the account-level suppression list, set `suppression_scope = "ACCOUNT"` before removing the resource rather than relying on destroy.
+
 ## Example Usage
 
 ```terraform
