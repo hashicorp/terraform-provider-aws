@@ -192,6 +192,7 @@ func scopeSelectionNestedBlockObject(_ context.Context) schema.NestedBlockObject
 				Optional:    true,
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
+					setvalidator.ValueStringsAre(fwvalidators.AWSAccountID()),
 				},
 			},
 			"organizational_units": schema.SetAttribute{
