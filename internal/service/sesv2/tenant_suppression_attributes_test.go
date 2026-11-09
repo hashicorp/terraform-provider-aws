@@ -116,6 +116,14 @@ func TestAccSESV2TenantSuppressionAttributes_disappears_tenant(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsesv2.ResourceTenant, tenantResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
