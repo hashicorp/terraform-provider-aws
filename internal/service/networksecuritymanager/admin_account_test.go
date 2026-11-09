@@ -52,7 +52,7 @@ func testAccAdminAccount_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("admin_account_id"), tfknownvalue.AccountID()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), tfknownvalue.AccountID()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), tfknownvalue.StringExact(awstypes.AdminAccountStatusOnboarded)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("admin_scope"), knownvalue.ListSizeExact(0)),
@@ -66,9 +66,9 @@ func testAccAdminAccount_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "admin_account_id"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrAccountID),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "admin_account_id",
+				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
 			},
 			// priority is updated in place through PutAdminAccount; 1 and 10 are the bounds.
 			{
@@ -210,9 +210,9 @@ func testAccAdminAccount_full(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "admin_account_id"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrAccountID),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "admin_account_id",
+				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
 				ImportStateVerifyIgnore:              []string{names.AttrTimeouts},
 			},
 		},
@@ -288,9 +288,9 @@ func testAccAdminAccount_adminScope(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "admin_account_id"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrAccountID),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "admin_account_id",
+				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
 			},
 			// include_all -> include_only (accounts)
 			{
@@ -317,9 +317,9 @@ func testAccAdminAccount_adminScope(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "admin_account_id"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrAccountID),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "admin_account_id",
+				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
 			},
 			// include_only -> exclude_only (accounts)
 			{
@@ -384,9 +384,9 @@ func testAccAdminAccount_adminScope(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "admin_account_id"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrAccountID),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "admin_account_id",
+				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
 			},
 			{
 				Config: testAccAdminAccountConfig_allFirewallTypesEnabled(true),
@@ -478,7 +478,7 @@ func testAccCheckAdminAccountDestroy(ctx context.Context, t *testing.T) resource
 				continue
 			}
 
-			id := rs.Primary.Attributes["admin_account_id"]
+			id := rs.Primary.Attributes[names.AttrAccountID]
 			ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 			conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
 			_, err := tfnetworksecuritymanager.FindAdminAccountByID(ctx, conn, id)
@@ -508,7 +508,7 @@ func testAccCheckAdminAccountExists(ctx context.Context, t *testing.T, n string,
 
 		ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).NetworkSecurityManagerClient(ctx)
-		id := rs.Primary.Attributes["admin_account_id"]
+		id := rs.Primary.Attributes[names.AttrAccountID]
 		output, err := tfnetworksecuritymanager.FindAdminAccountByID(ctx, conn, id)
 		if err != nil {
 			return create.Error(names.NetworkSecurityManager, create.ErrActionCheckingExistence, resNameAdminAccount, id, err)
@@ -553,8 +553,8 @@ func testAccAdminAccountConfig_base() string {
 func testAccAdminAccountConfig_basic(priority int) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-  priority         = %[1]d
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = %[1]d
 }
 `, priority), testAccAdminAccountConfig_base())
 }
@@ -562,8 +562,8 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_accountID(accountID string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = %[1]q
-  priority         = 1
+  account_id = %[1]q
+  priority   = 1
 }
 `, accountID), testAccAdminAccountConfig_base())
 }
@@ -571,8 +571,8 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_full(rName string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-  priority         = 5
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = 5
 
   admin_scope {
     firewall_type_scope {
@@ -607,8 +607,8 @@ resource "aws_organizations_organizational_unit" "test" {
 func testAccAdminAccountConfig_scopeFilterIncludeAll() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-  priority         = 1
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = 1
 
   admin_scope {
     scope_filter {
@@ -622,8 +622,8 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_scopeFilterIncludeOnlyAccounts() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-  priority         = 1
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = 1
 
   admin_scope {
     scope_filter {
@@ -639,8 +639,8 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_scopeFilterIncludeOnlyOUs(rName string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-  priority         = 1
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = 1
 
   admin_scope {
     scope_filter {
@@ -663,8 +663,8 @@ resource "aws_organizations_organizational_unit" "test" {
 func testAccAdminAccountConfig_scopeFilterExcludeOnlyAccounts() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-  priority         = 1
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = 1
 
   admin_scope {
     scope_filter {
@@ -680,8 +680,8 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_scopeFilterTwoMembers() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-  priority         = 1
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = 1
 
   admin_scope {
     scope_filter {
@@ -699,8 +699,8 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_scopeFilterEmpty() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-  priority         = 1
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = 1
 
   admin_scope {
     scope_filter {}
@@ -712,8 +712,8 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_scopeFilterIncludeAllFalse() string {
 	return acctest.ConfigCompose(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-  priority         = 1
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = 1
 
   admin_scope {
     scope_filter {
@@ -727,8 +727,8 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_firewallTypes(firewallTypes string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-  priority         = 1
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = 1
 
   admin_scope {
     firewall_type_scope {
@@ -746,8 +746,8 @@ resource "aws_networksecuritymanager_admin_account" "test" {
 func testAccAdminAccountConfig_allFirewallTypesEnabled(enabled bool) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
-  priority         = 1
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = 1
 
   admin_scope {
     firewall_type_scope {

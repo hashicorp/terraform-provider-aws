@@ -4,14 +4,51 @@
 package networksecuritymanager
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
+
+func TestAdminAccountAccountIDMapping(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	model := adminAccountResourceModel{
+		AccountID:  types.StringValue("123456789012"),
+		AdminScope: fwtypes.NewListNestedObjectValueOfNull[adminScopeModel](ctx),
+		Priority:   types.Int32Value(1),
+	}
+
+	var input networksecuritymanager.PutAdminAccountInput
+	if diags := flex.Expand(ctx, model, &input); diags.HasError() {
+		t.Fatalf("expanding admin account: %v", diags)
+	}
+	if got := aws.ToString(input.AccountId); got != model.AccountID.ValueString() {
+		t.Fatalf("AccountId = %q, want %q", got, model.AccountID.ValueString())
+	}
+
+	// GetAdminAccount can omit the account ID; configuration or import retains it.
+	output := awstypes.AdminAccountDetails{
+		Priority: aws.Int32(1),
+		Status:   awstypes.AdminAccountStatusOnboarded,
+	}
+	r := &adminAccountResource{}
+	if diags := r.flatten(ctx, &output, &model); diags.HasError() {
+		t.Fatalf("flattening admin account: %v", diags)
+	}
+	if got := model.AccountID.ValueString(); got != "123456789012" {
+		t.Fatalf("account_id = %q, want %q", got, "123456789012")
+	}
+}
 
 func TestIsAccountNotOnboardedError(t *testing.T) {
 	t.Parallel()

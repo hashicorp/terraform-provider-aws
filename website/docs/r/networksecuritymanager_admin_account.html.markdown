@@ -20,7 +20,7 @@ Manages an AWS Network Security Manager Admin Account. An administrator account 
 
 ```terraform
 resource "aws_networksecuritymanager_admin_account" "example" {
-  admin_account_id = "123456789012"
+  account_id = "123456789012"
   priority         = 1
 }
 ```
@@ -29,7 +29,7 @@ resource "aws_networksecuritymanager_admin_account" "example" {
 
 ```terraform
 resource "aws_networksecuritymanager_admin_account" "example" {
-  admin_account_id = "123456789012"
+  account_id = "123456789012"
   priority         = 2
 
   admin_scope {
@@ -50,7 +50,7 @@ resource "aws_networksecuritymanager_admin_account" "example" {
 
 The following arguments are required:
 
-* `admin_account_id` - (Required, Forces new resource) AWS account ID to set as a Network Security Manager administrator account.
+* `account_id` - (Required, Forces new resource) AWS account ID to set as a Network Security Manager administrator account.
 * `priority` - (Required) Priority of the administrator account, between `1` and `10`.
 
 The following arguments are optional:
@@ -125,14 +125,14 @@ import {
 
 #### Required
 
-* `admin_account_id` (String) AWS account ID of the administrator account.
+* `admin_account_id` (String) AWS account ID of the administrator account, corresponding to the resource's `account_id` argument.
 
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Security Manager Admin Account using the `admin_account_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Security Manager Admin Account using the `account_id`. For example:
 
 ```terraform
 import {
@@ -141,7 +141,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Network Security Manager Admin Account using the `admin_account_id`. For example:
+Using `terraform import`, import Network Security Manager Admin Account using the `account_id`. For example:
 
 ```console
 % terraform import aws_networksecuritymanager_admin_account.example 123456789012

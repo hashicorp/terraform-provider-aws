@@ -152,7 +152,7 @@ func sweepAdminAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 		}
 
 		sweepResources = append(sweepResources, framework.NewSweepResource(newAdminAccountResource, client,
-			framework.NewAttribute("admin_account_id", aws.ToString(v.AccountId))),
+			framework.NewAttribute(names.AttrAccountID, aws.ToString(v.AccountId))),
 		)
 	}
 

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkListResource("aws_networksecuritymanager_admin_account")
@@ -44,7 +45,7 @@ func (l *adminAccountListResource) List(ctx context.Context, request list.ListRe
 				return
 			}
 			adminAccountID := aws.ToString(item.AccountId)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("admin_account_id"), adminAccountID)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrAccountID), adminAccountID)
 
 			// The summary carries no status, and a removed administrator account
 			// stays listed as OFFBOARDED for a while, so every item is read to
@@ -62,7 +63,7 @@ func (l *adminAccountListResource) List(ctx context.Context, request list.ListRe
 
 			var data adminAccountResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				data.AdminAccountID = fwflex.StringValueToFramework(ctx, adminAccountID)
+				data.AccountID = fwflex.StringValueToFramework(ctx, adminAccountID)
 
 				if request.IncludeResource {
 					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))

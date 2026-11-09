@@ -40,13 +40,13 @@ import (
 )
 
 // @FrameworkResource("aws_networksecuritymanager_admin_account", name="Admin Account")
-// @IdentityAttribute("admin_account_id")
+// @IdentityAttribute("admin_account_id", resourceAttributeName="account_id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 // @Testing(generator=false)
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types;awstypes;awstypes.AdminAccountDetails")
-// @Testing(importStateIdAttribute="admin_account_id")
+// @Testing(importStateIdAttribute="account_id")
 // @Testing(identityRegionOverrideTest=false)
 func newAdminAccountResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &adminAccountResource{}
@@ -71,7 +71,7 @@ type adminAccountResource struct {
 func (r *adminAccountResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"admin_account_id": schema.StringAttribute{
+			names.AttrAccountID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -205,9 +205,9 @@ func (r *adminAccountResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	adminAccountID := plan.AdminAccountID.ValueString()
-	input, diags := expandPutAdminAccountInput(ctx, &plan)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+	adminAccountID := plan.AccountID.ValueString()
+	var input networksecuritymanager.PutAdminAccountInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -217,7 +217,7 @@ func (r *adminAccountResource) Create(ctx context.Context, req resource.CreateRe
 	// created. Retry until the service accepts the request.
 	deadline := inttypes.NewDeadline(r.CreateTimeout(ctx, plan.Timeouts))
 	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, deadline.Remaining(), func(ctx context.Context) (any, error) {
-		return conn.PutAdminAccount(ctx, input)
+		return conn.PutAdminAccount(ctx, &input)
 	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, adminAccountID)
@@ -227,7 +227,7 @@ func (r *adminAccountResource) Create(ctx context.Context, req resource.CreateRe
 	output, err := waitAdminAccountOnboarded(ctx, conn, adminAccountID, deadline.Remaining())
 	if err != nil {
 		// Taint the resource.
-		resp.State.SetAttribute(ctx, path.Root("admin_account_id"), adminAccountID)
+		resp.State.SetAttribute(ctx, path.Root(names.AttrAccountID), adminAccountID)
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, adminAccountID)
 		return
 	}
@@ -249,7 +249,7 @@ func (r *adminAccountResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	adminAccountID := state.AdminAccountID.ValueString()
+	adminAccountID := state.AccountID.ValueString()
 	output, err := findAdminAccountByID(ctx, conn, adminAccountID)
 	if isAccountNotOnboardedError(err) {
 		err = smarterr.NewError(&retry.NotFoundError{
@@ -284,7 +284,7 @@ func (r *adminAccountResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	adminAccountID := plan.AdminAccountID.ValueString()
+	adminAccountID := plan.AccountID.ValueString()
 
 	diff, d := flex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
@@ -295,15 +295,15 @@ func (r *adminAccountResource) Update(ctx context.Context, req resource.UpdateRe
 	// There is no separate update operation: PutAdminAccount on an existing
 	// administrator account replaces its priority and administrative scope.
 	if diff.HasChanges() {
-		input, diags := expandPutAdminAccountInput(ctx, &plan)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+		var input networksecuritymanager.PutAdminAccountInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		deadline := inttypes.NewDeadline(r.UpdateTimeout(ctx, plan.Timeouts))
 		_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, deadline.Remaining(), func(ctx context.Context) (any, error) {
-			return conn.PutAdminAccount(ctx, input)
+			return conn.PutAdminAccount(ctx, &input)
 		})
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, adminAccountID)
@@ -334,7 +334,7 @@ func (r *adminAccountResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	adminAccountID := state.AdminAccountID.ValueString()
+	adminAccountID := state.AccountID.ValueString()
 	deadline := inttypes.NewDeadline(r.DeleteTimeout(ctx, state.Timeouts))
 	input := networksecuritymanager.DeleteAdminAccountInput{
 		AccountId: aws.String(adminAccountID),
@@ -359,22 +359,6 @@ func (r *adminAccountResource) Delete(ctx context.Context, req resource.DeleteRe
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, adminAccountID)
 		return
 	}
-}
-
-func expandPutAdminAccountInput(ctx context.Context, data *adminAccountResourceModel) (*networksecuritymanager.PutAdminAccountInput, diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
-	var diags diag.Diagnostics
-
-	var input networksecuritymanager.PutAdminAccountInput
-	smerr.AddEnrich(ctx, &diags, flex.Expand(ctx, data, &input))
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	// The account ID argument is named after the API's response field
-	// (AdminAccount) rather than its request field (AccountId).
-	input.AccountId = data.AdminAccountID.ValueStringPointer()
-
-	return &input, diags
 }
 
 func (r *adminAccountResource) flatten(ctx context.Context, output *awstypes.AdminAccountDetails, data *adminAccountResourceModel) diag.Diagnostics {
@@ -525,11 +509,11 @@ func waitAdminAccountDeleted(ctx context.Context, conn *networksecuritymanager.C
 
 type adminAccountResourceModel struct {
 	framework.WithRegionModel
-	AdminAccountID types.String                                     `tfsdk:"admin_account_id"`
-	AdminScope     fwtypes.ListNestedObjectValueOf[adminScopeModel] `tfsdk:"admin_scope"`
-	Priority       types.Int32                                      `tfsdk:"priority"`
-	Status         fwtypes.StringEnum[awstypes.AdminAccountStatus]  `tfsdk:"status"`
-	Timeouts       timeouts.Value                                   `tfsdk:"timeouts"`
+	AccountID  types.String                                     `tfsdk:"account_id"`
+	AdminScope fwtypes.ListNestedObjectValueOf[adminScopeModel] `tfsdk:"admin_scope"`
+	Priority   types.Int32                                      `tfsdk:"priority"`
+	Status     fwtypes.StringEnum[awstypes.AdminAccountStatus]  `tfsdk:"status"`
+	Timeouts   timeouts.Value                                   `tfsdk:"timeouts"`
 }
 
 type adminScopeModel struct {

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_networksecuritymanager_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.current.account_id
+  account_id = data.aws_caller_identity.current.account_id
   priority         = 1
   region           = var.region
 }

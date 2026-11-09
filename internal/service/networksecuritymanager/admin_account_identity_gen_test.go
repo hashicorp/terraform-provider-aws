@@ -63,7 +63,7 @@ func testAccNetworkSecurityManagerAdminAccount_Identity_basic(t *testing.T) {
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 						"admin_account_id":  knownvalue.NotNull(),
 					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("admin_account_id")),
+					statecheck.ExpectIdentityValueMatchesStateAtPath(resourceName, tfjsonpath.New("admin_account_id"), tfjsonpath.New(names.AttrAccountID)),
 				},
 			},
 
@@ -72,11 +72,11 @@ func testAccNetworkSecurityManagerAdminAccount_Identity_basic(t *testing.T) {
 				ConfigDirectory:                      config.StaticDirectory("testdata/AdminAccount/basic/"),
 				ConfigVariables:                      config.Variables{},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "admin_account_id"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrAccountID),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "admin_account_id",
+				ImportStateVerifyIdentifierAttribute: names.AttrAccountID,
 			},
 
 			// Step 3: Import block with Import ID
@@ -86,10 +86,10 @@ func testAccNetworkSecurityManagerAdminAccount_Identity_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "admin_account_id"),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrAccountID),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("admin_account_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -104,7 +104,7 @@ func testAccNetworkSecurityManagerAdminAccount_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("admin_account_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},

@@ -50,7 +50,7 @@ func testAccAdminAccount_List_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/AdminAccount/list_basic/"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("admin_account_id"), tfknownvalue.AccountID()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), tfknownvalue.AccountID()),
 				},
 			},
 
@@ -83,7 +83,7 @@ func testAccAdminAccount_List_basic(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc(resourceName, identity.Checks()),
 					querycheck.ExpectResourceDisplayName(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), tfknownvalue.AccountID()),
 					querycheck.ExpectResourceKnownValues(resourceName, tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("admin_account_id"), tfknownvalue.AccountID()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrAccountID), tfknownvalue.AccountID()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("admin_scope"), knownvalue.ListSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(1)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),

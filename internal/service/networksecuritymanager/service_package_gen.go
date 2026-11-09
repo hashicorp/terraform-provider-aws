@@ -32,7 +32,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_networksecuritymanager_admin_account",
 			Name:     "Admin Account",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("admin_account_id", true)),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName("admin_account_id", true, names.AttrAccountID)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -102,7 +102,7 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			TypeName: "aws_networksecuritymanager_admin_account",
 			Name:     "Admin Account",
 			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("admin_account_id", true)),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName("admin_account_id", true, names.AttrAccountID)),
 		},
 		{
 			Factory:  newDeploymentResourceAsListResource,
