@@ -27,7 +27,7 @@ func ToFramework(ctx context.Context, source cty.Value, target any) error {
 	}
 
 	vTarget := reflect.ValueOf(target)
-	if kind := vTarget.Kind(); kind != reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+	if kind := vTarget.Kind(); kind != reflect.Pointer {
 		return fmt.Errorf("target must be a pointer, got %T (Kind: %s)", target, kind)
 	}
 	vTarget = vTarget.Elem()

@@ -8,6 +8,7 @@ package efs
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"time"
 
@@ -28,82 +29,85 @@ import (
 )
 
 // @SDKResource("aws_efs_replication_configuration", name="Replication Configuration")
+// @IdentityAttribute("id")
+// Tests require configuration of 'destination_region' variable.
+// @Testing(identityTest=false)
+// @Testing(generator=false)
+// @Testing(preIdentityVersion="v6.65.0")
 func resourceReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigurationCreate,
 		ReadWithoutTimeout:   resourceReplicationConfigurationRead,
 		DeleteWithoutTimeout: resourceReplicationConfigurationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCreationTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestination: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"availability_zone_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
-						},
-						names.AttrFileSystemID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrRegion: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidRegionName,
-							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreationTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDestination: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"availability_zone_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
+							},
+							names.AttrFileSystemID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrRegion: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidRegionName,
+								AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"original_source_file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_file_system_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_file_system_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"source_file_system_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"original_source_file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_file_system_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_file_system_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"source_file_system_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -113,7 +117,7 @@ func resourceReplicationConfigurationCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fsID := d.Get("source_file_system_id").(string)
-	input := &efs.CreateReplicationConfigurationInput{
+	input := efs.CreateReplicationConfigurationInput{
 		SourceFileSystemId: aws.String(fsID),
 	}
 
@@ -121,7 +125,7 @@ func resourceReplicationConfigurationCreate(ctx context.Context, d *schema.Resou
 		input.Destinations = expandDestinationsToCreate(v.([]any))
 	}
 
-	_, err := conn.CreateReplicationConfiguration(ctx, input)
+	_, err := conn.CreateReplicationConfiguration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EFS Replication Configuration (%s): %s", fsID, err)
@@ -200,9 +204,10 @@ func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.Resou
 }
 
 func deleteReplicationConfiguration(ctx context.Context, conn *efs.Client, fsID string, timeout time.Duration, optFns ...func(*efs.Options)) error {
-	_, err := conn.DeleteReplicationConfiguration(ctx, &efs.DeleteReplicationConfigurationInput{
+	input := efs.DeleteReplicationConfigurationInput{
 		SourceFileSystemId: aws.String(fsID),
-	}, optFns...)
+	}
+	_, err := conn.DeleteReplicationConfiguration(ctx, &input, optFns...)
 
 	if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.ReplicationNotFound](err) {
 		return nil
@@ -219,8 +224,25 @@ func deleteReplicationConfiguration(ctx context.Context, conn *efs.Client, fsID 
 	return nil
 }
 
-func findReplicationConfiguration(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput, filter tfslices.Predicate[*awstypes.ReplicationConfigurationDescription], optFns ...func(*efs.Options)) (*awstypes.ReplicationConfigurationDescription, error) {
-	output, err := findReplicationConfigurations(ctx, conn, input, filter, optFns...)
+func listReplicationConfigurationPages(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput, optFns ...func(*efs.Options)) iter.Seq2[[]awstypes.ReplicationConfigurationDescription, error] {
+	return func(yield func([]awstypes.ReplicationConfigurationDescription, error) bool) {
+		pages := efs.NewDescribeReplicationConfigurationsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing EFS Replication Configurations: %w", err))
+				return
+			}
+
+			if !yield(page.Replications, nil) {
+				return
+			}
+		}
+	}
+}
+
+func findReplicationConfiguration(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput, optFns ...func(*efs.Options)) (*awstypes.ReplicationConfigurationDescription, error) {
+	output, err := findReplicationConfigurations(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -229,39 +251,28 @@ func findReplicationConfiguration(ctx context.Context, conn *efs.Client, input *
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findReplicationConfigurations(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput, filter tfslices.Predicate[*awstypes.ReplicationConfigurationDescription], optFns ...func(*efs.Options)) ([]awstypes.ReplicationConfigurationDescription, error) {
-	var output []awstypes.ReplicationConfigurationDescription
+func findReplicationConfigurations(ctx context.Context, conn *efs.Client, input *efs.DescribeReplicationConfigurationsInput, optFns ...func(*efs.Options)) ([]awstypes.ReplicationConfigurationDescription, error) {
+	output, err := tfslices.CollectAndConcatWithError(listReplicationConfigurationPages(ctx, conn, input, optFns...))
 
-	pages := efs.NewDescribeReplicationConfigurationsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx, optFns...)
-
-		if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.ReplicationNotFound](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.ReplicationNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Replications {
-			if filter(&v) {
-				output = append(output, v)
-			}
-		}
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
 }
 
 func findReplicationConfigurationByID(ctx context.Context, conn *efs.Client, id string, optFns ...func(*efs.Options)) (*awstypes.ReplicationConfigurationDescription, error) {
-	input := &efs.DescribeReplicationConfigurationsInput{
+	input := efs.DescribeReplicationConfigurationsInput{
 		FileSystemId: aws.String(id),
 	}
 
-	output, err := findReplicationConfiguration(ctx, conn, input, tfslices.PredicateTrue[*awstypes.ReplicationConfigurationDescription](), optFns...)
+	output, err := findReplicationConfiguration(ctx, conn, &input, optFns...)
 
 	if err != nil {
 		return nil, err

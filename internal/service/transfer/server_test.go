@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -61,6 +62,7 @@ func testAccServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "host_key_fingerprint"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "invocation_role", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "logging_role", ""),
 					resource.TestCheckResourceAttr(resourceName, "post_authentication_login_banner", ""),
 					resource.TestCheckResourceAttr(resourceName, "pre_authentication_login_banner", ""),
@@ -132,6 +134,14 @@ func testAccServer_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceServer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1457,6 +1467,89 @@ func testAccServer_workflowDetails(t *testing.T) {
 	})
 }
 
+func testAccServer_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.DescribedServer
+	resourceName := "aws_transfer_server.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerConfig_ipAddressType(string(awstypes.IpAddressTypeDualstack)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeDualstack)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccServerConfig_ipAddressType(string(awstypes.IpAddressTypeIpv4)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeIpv4)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccServer_ipAddressTypeWithVPCAddressAllocationIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Try to create a server with both DUALSTACK ip address type and VPC address allocation IDs, which should fail validation
+				Config:      testAccServerConfig_ipAddressTypeWithVPCAddressAllocationIDs(rName, string(awstypes.IpAddressTypeDualstack)),
+				ExpectError: regexache.MustCompile(`cannot specify address_allocation_ids when ip_address_type is DUALSTACK`),
+			},
+			{
+				Config: testAccServerConfig_ipAddressTypeWithVPCAddressAllocationIDs(rName, string(awstypes.IpAddressTypeIpv4)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeIpv4)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				// Try to update ip_address_type to DUALSTACK, which should fail validation since address allocation IDs are specified
+				Config:      testAccServerConfig_ipAddressTypeWithVPCAddressAllocationIDs(rName, string(awstypes.IpAddressTypeDualstack)),
+				ExpectError: regexache.MustCompile(`cannot specify address_allocation_ids when ip_address_type is DUALSTACK`),
+			},
+		},
+	})
+}
+
 func testAccCheckServerExists(ctx context.Context, t *testing.T, n string, v *awstypes.DescribedServer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1704,15 +1797,21 @@ resource "aws_api_gateway_integration_response" "test" {
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
-  rest_api_id       = aws_api_gateway_rest_api.test.id
-  stage_name        = "test"
-  description       = %[1]q
-  stage_description = %[1]q
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  description = %[1]q
 
   variables = {
     "a" = "2"
   }
 }
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  deployment_id = aws_api_gateway_deployment.test.id
+  stage_name    = "test"
+  description   = %[1]q
+}
+
 `, rName)
 }
 
@@ -1789,7 +1888,7 @@ func testAccServerConfig_apiGatewayIdentityProviderType(rName string, forceDestr
 	return acctest.ConfigCompose(testAccServerConfig_apiGatewayBase(rName), testAccServerConfig_loggingRoleBase(rName), fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
-  url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  url                    = "${aws_api_gateway_stage.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
 
@@ -2193,7 +2292,7 @@ func testAccServerConfig_protocols(rName string) string {
 		fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
-  url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  url                    = "${aws_api_gateway_stage.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
   protocols              = ["FTP"]
@@ -2255,7 +2354,7 @@ resource "aws_acm_certificate" "test" {
 
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
-  url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  url                    = "${aws_api_gateway_stage.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
   protocols              = ["FTP", "FTPS"]
@@ -2315,7 +2414,7 @@ func testAccServerConfig_identityProviderType_sftpAuthenticationMethods(rName st
 	return acctest.ConfigCompose(testAccServerConfig_apiGatewayBase(rName), testAccServerConfig_loggingRoleBase(rName), fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type      = "API_GATEWAY"
-  url                         = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  url                         = "${aws_api_gateway_stage.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role             = aws_iam_role.test.arn
   logging_role                = aws_iam_role.test.arn
   sftp_authentication_methods = "PASSWORD"
@@ -2331,7 +2430,7 @@ func testAccServerConfig_identityProviderType_sftpAuthenticationMethods_updated(
 	return acctest.ConfigCompose(testAccServerConfig_apiGatewayBase(rName), testAccServerConfig_loggingRoleBase(rName), fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type      = "API_GATEWAY"
-  url                         = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  url                         = "${aws_api_gateway_stage.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role             = aws_iam_role.test.arn
   logging_role                = aws_iam_role.test.arn
   sftp_authentication_methods = "PUBLIC_KEY_AND_PASSWORD"
@@ -2490,4 +2589,63 @@ resource "aws_transfer_server" "test" {
   }
 }
 `, rName)
+}
+
+func testAccServerConfig_ipAddressType(ipAddressType string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_server" "test" {
+  ip_address_type = %[1]q
+}
+`, ipAddressType)
+}
+
+func testAccServerConfig_ipAddressTypeWithVPCAddressAllocationIDs(rName, ipAddressType string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_eip" "test" {
+  count = 1
+
+  domain = "vpc"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_transfer_server" "test" {
+  endpoint_type = "VPC"
+
+  endpoint_details {
+    address_allocation_ids = [aws_eip.test[0].id]
+    subnet_ids             = [aws_subnet.test[0].id]
+    vpc_id                 = aws_vpc.test.id
+  }
+
+  ip_address_type = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, ipAddressType))
 }

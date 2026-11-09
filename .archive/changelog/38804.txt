@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ecs_task_definition: Prevent lowercasing of the first character of JSON keys in `container_definitions.dockerLabels`
-```

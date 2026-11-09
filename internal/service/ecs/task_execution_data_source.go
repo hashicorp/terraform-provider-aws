@@ -29,232 +29,234 @@ func dataSourceTaskExecution() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTaskExecutionRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCapacityProviderStrategy: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"base": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 100000),
-						},
-						"capacity_provider": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrWeight: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 1000),
-						},
-					},
-				},
-			},
-			"client_token": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"cluster": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"desired_count": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 10),
-			},
-			"enable_ecs_managed_tags": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"enable_execute_command": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"group": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"launch_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.LaunchType](),
-			},
-			names.AttrNetworkConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"assign_public_ip": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrSecurityGroups: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnets: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCapacityProviderStrategy: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"base": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 100000),
+							},
+							"capacity_provider": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrWeight: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 1000),
+							},
 						},
 					},
 				},
-			},
-			"overrides": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"container_overrides": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"command": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"cpu": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									names.AttrEnvironment: {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrKey: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrValue: {
-													Type:     schema.TypeString,
-													Required: true,
+				"client_token": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"cluster": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"desired_count": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 10),
+				},
+				"enable_ecs_managed_tags": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"enable_execute_command": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"group": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"launch_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.LaunchType](),
+				},
+				names.AttrNetworkConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"assign_public_ip": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrSecurityGroups: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnets: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				"overrides": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_overrides": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"command": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"cpu": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										names.AttrEnvironment: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKey: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
-									},
-									"memory": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"memory_reservation": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"resource_requirements": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrType: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
-												},
-												names.AttrValue: {
-													Type:     schema.TypeString,
-													Required: true,
+										"memory": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										"memory_reservation": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"resource_requirements": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"cpu": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrExecutionRoleARN: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"memory": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"task_role_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"placement_constraints": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 10,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrExpression: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.PlacementConstraintType](),
+							"cpu": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrExecutionRoleARN: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"memory": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"task_role_arn": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"placement_strategy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrField: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
+				"placement_constraints": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 10,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrExpression: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.PlacementConstraintType](),
+							},
 						},
 					},
 				},
-			},
-			"platform_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrPropagateTags: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PropagateTags](),
-			},
-			"reference_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"started_by": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrTags: tftags.TagsSchema(),
-			"task_arns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"task_definition": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"placement_strategy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrField: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"platform_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrPropagateTags: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PropagateTags](),
+				},
+				"reference_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"started_by": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrTags: tftags.TagsSchema(),
+				"task_arns": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"task_definition": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

@@ -23,94 +23,96 @@ func DataSourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePipelineDefinitionRead,
 
-		Schema: map[string]*schema.Schema{
-			"parameter_object": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"string_value": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"parameter_value": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"string_value": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"pipeline_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"pipeline_object": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrField: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"ref_value": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"string_value": {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"parameter_object": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attribute": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"string_value": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+				"parameter_value": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"string_value": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"pipeline_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"pipeline_object": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrField: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"ref_value": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"string_value": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

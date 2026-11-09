@@ -49,8 +49,6 @@ This resource supports the following arguments:
 * `predicates` - (Optional) The objects to include in a rule (documented below).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Nested Blocks
-
 ### `predicates`
 
 See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_Predicate.html) for more information.
@@ -64,19 +62,17 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 * `data_id` - (Required) A unique identifier for a predicate in the rule, such as Byte Match Set ID or IPSet ID.
 * `type` - (Required) The type of predicate in a rule. Valid values: `ByteMatch`, `GeoMatch`, `IPMatch`, `RegexMatch`, `SizeConstraint`, `SqlInjectionMatch`, or `XssMatch`.
 
-## Remarks
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF rule.
-* `arn` - Amazon Resource Name (ARN)
+* `arn` - ARN
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Rated Based Rule using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Rated Based Rule using the ID. For example:
 
 ```terraform
 import {
@@ -85,7 +81,7 @@ import {
 }
 ```
 
-Using `terraform import`, import WAF Rated Based Rule using the id. For example:
+Using `terraform import`, import WAF Rated Based Rule using the ID. For example:
 
 ```console
 % terraform import aws_waf_rate_based_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

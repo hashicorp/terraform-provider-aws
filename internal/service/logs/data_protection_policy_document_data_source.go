@@ -25,125 +25,127 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataProtectionPolicyDocumentRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_data_identifier": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 10,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringIsNotEmpty,
-											validation.StringLenBetween(1, 128),
-										),
-									},
-									"regex": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringIsNotEmpty,
-											validation.StringLenBetween(1, 200),
-										),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_data_identifier": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 10,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringIsNotEmpty,
+												validation.StringLenBetween(1, 128),
+											),
+										},
+										"regex": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringIsNotEmpty,
+												validation.StringLenBetween(1, 200),
+											),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrJSON: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			"statement": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 2,
-				MaxItems: 2,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_identifiers": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrJSON: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+				"statement": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 2,
+					MaxItems: 2,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_identifiers": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
-						},
-						"operation": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"audit": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"findings_destination": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrCloudWatchLogs: {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"log_group": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringIsNotEmpty,
+							"operation": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"audit": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"findings_destination": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrCloudWatchLogs: {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"log_group": {
+																				Type:         schema.TypeString,
+																				Required:     true,
+																				ValidateFunc: validation.StringIsNotEmpty,
+																			},
 																		},
 																	},
 																},
-															},
-															"firehose": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"delivery_stream": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringIsNotEmpty,
+																"firehose": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"delivery_stream": {
+																				Type:         schema.TypeString,
+																				Required:     true,
+																				ValidateFunc: validation.StringIsNotEmpty,
+																			},
 																		},
 																	},
 																},
-															},
-															"s3": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		names.AttrBucket: {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringIsNotEmpty,
+																"s3": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			names.AttrBucket: {
+																				Type:         schema.TypeString,
+																				Required:     true,
+																				ValidateFunc: validation.StringIsNotEmpty,
+																			},
 																		},
 																	},
 																},
@@ -153,19 +155,19 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 												},
 											},
 										},
-									},
-									"deidentify": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"mask_config": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{},
+										"deidentify": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"mask_config": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{},
+														},
 													},
 												},
 											},
@@ -173,19 +175,19 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 									},
 								},
 							},
-						},
-						"sid": {
-							Type:     schema.TypeString,
-							Optional: true,
+							"sid": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2021-06-01",
-			},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "2021-06-01",
+				},
+			}
 		},
 	}
 }

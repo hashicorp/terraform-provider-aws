@@ -26,83 +26,85 @@ import (
 func DataSourceFaq() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFaqRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"error_message": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"faq_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(
-						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
-						"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens.",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"error_message": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"faq_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 100),
+						validation.StringMatch(
+							regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
+							"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens.",
+						),
 					),
-				),
-			},
-			"file_format": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"index_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
-					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
-				),
-			},
-			names.AttrLanguageCode: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRoleARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"s3_path": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Computed: true,
+				},
+				"file_format": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"index_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringMatch(
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
+						"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
+					),
+				},
+				names.AttrLanguageCode: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRoleARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"s3_path": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

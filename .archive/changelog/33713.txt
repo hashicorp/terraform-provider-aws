@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_appautoscaling_scheduled_action: Always send `start_time` and `end_time` values on update when configured
-```

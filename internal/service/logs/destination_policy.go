@@ -24,6 +24,10 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_log_destination_policy", name="Destination Policy")
+// @IdentityAttribute("destination_name")
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(existsType="string")
+// @Testing(checkDestroyNoop=true)
 func resourceDestinationPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationPolicyPut,
@@ -31,21 +35,19 @@ func resourceDestinationPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceDestinationPolicyPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"access_policy": sdkv2.IAMPolicyDocumentSchemaRequired(),
-			"destination_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"force_update": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_policy": sdkv2.IAMPolicyDocumentSchemaRequired(),
+				"destination_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"force_update": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+			}
 		},
 	}
 }
@@ -60,7 +62,7 @@ func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	name := d.Get("destination_name").(string)
-	input := &cloudwatchlogs.PutDestinationPolicyInput{
+	input := cloudwatchlogs.PutDestinationPolicyInput{
 		AccessPolicy:    aws.String(policy),
 		DestinationName: aws.String(name),
 	}
@@ -69,7 +71,7 @@ func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, m
 		input.ForceUpdate = aws.Bool(v.(bool))
 	}
 
-	_, err = conn.PutDestinationPolicy(ctx, input)
+	_, err = conn.PutDestinationPolicy(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Destination Policy (%s): %s", name, err)

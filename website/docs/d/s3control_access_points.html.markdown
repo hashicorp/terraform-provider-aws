@@ -32,17 +32,17 @@ The following arguments are optional:
 
 * `account_id` - (Optional) AWS account ID for the account that owns the specified access points. If omitted, defaults to the caller's account ID.
 * `bucket` - (Optional) Name of the bucket associated with the access points.
-* `data_source_id` - Unique identifier for the access points data source.
-* `data_source_type` - Type of the data source that the access points are attached to. To return all access points set this argument to `ALL`.
+* `data_source_id` - (Optional) Unique identifier for the access points data source.
+* `data_source_type` - (Optional) Type of the data source that the access points are attached to. To return all access points set this argument to `ALL`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `access_points` - A list of access points matching the search criteria. See [`access_points`](#access_points-attribute-reference) below.
+* `access_points` - List of access points matching the search criteria. See [`access_points`](#access_points-block) below.
 
-### `access_points` Attribute Reference
+### `access_points` Block
 
 * `access_point_arn` - Access point ARN.
 * `alias` - Access point alias.
@@ -51,9 +51,9 @@ This data source exports the following attributes in addition to the arguments a
 * `data_source_id` - Unique identifier for the data source of the access point.
 * `data_source_type` - Type of the data source that the access point is attached to.
 * `name` - Name of the access point.
-* `network_origin` - Indicates whether the access point allows access from the public Internet.
-* `vpc_configuration` - VPC configuration for the access point. See [`vpc_configuration`](#vpc_configuration-attribute-reference) below.
+* `network_origin` - Whether the access point allows access from the public Internet.
+* `vpc_configuration` - VPC configuration for the access point. See [`vpc_configuration`](#vpc_configuration-block) below.
 
-#### `vpc_configuration` Attribute Reference
+#### `vpc_configuration` Block
 
 * `vpc_id` - Access point will only allow connections from this VPC.

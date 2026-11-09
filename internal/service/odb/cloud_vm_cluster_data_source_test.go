@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
@@ -42,28 +41,28 @@ func TestAccODBCloudVmClusterDataSource_basic(t *testing.T) {
 	}
 
 	var cloudvmcluster odbtypes.CloudVmCluster
-	odbNetRName := sdkacctest.RandomWithPrefix(vmClusterTestDS.odbNetDisplayNamePrefix)
-	exaInfraRName := sdkacctest.RandomWithPrefix(vmClusterTestDS.exaInfraDisplayNamePrefix)
-	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestDS.vmClusterDisplayNamePrefix)
+	odbNetRName := acctest.RandomWithPrefix(t, vmClusterTestDS.odbNetDisplayNamePrefix)
+	exaInfraRName := acctest.RandomWithPrefix(t, vmClusterTestDS.exaInfraDisplayNamePrefix)
+	vmcDisplayName := acctest.RandomWithPrefix(t, vmClusterTestDS.vmClusterDisplayNamePrefix)
 	dataSourceName := "data.aws_odb_cloud_vm_cluster.test"
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			vmClusterTestDS.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             vmClusterTestDS.testAccCheckCloudVmClusterDestroy(ctx),
+		CheckDestroy:             vmClusterTestDS.testAccCheckCloudVmClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: vmClusterTestDS.cloudVMClusterConfig(odbNetRName, exaInfraRName, vmcDisplayName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					vmClusterTestDS.testAccCheckCloudVmClusterExists(ctx, dataSourceName, &cloudvmcluster),
+					vmClusterTestDS.testAccCheckCloudVmClusterExists(ctx, t, dataSourceName, &cloudvmcluster),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDisplayName, vmcDisplayName),
 				),
 			},
@@ -71,9 +70,9 @@ func TestAccODBCloudVmClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func (cloudVmClusterDSTest) testAccCheckCloudVmClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+func (cloudVmClusterDSTest) testAccCheckCloudVmClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_cloud_vm_cluster" {
@@ -92,7 +91,7 @@ func (cloudVmClusterDSTest) testAccCheckCloudVmClusterDestroy(ctx context.Contex
 	}
 }
 
-func (cloudVmClusterDSTest) testAccCheckCloudVmClusterExists(ctx context.Context, name string, cloudvmcluster *odbtypes.CloudVmCluster) resource.TestCheckFunc {
+func (cloudVmClusterDSTest) testAccCheckCloudVmClusterExists(ctx context.Context, t *testing.T, name string, cloudvmcluster *odbtypes.CloudVmCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -101,7 +100,7 @@ func (cloudVmClusterDSTest) testAccCheckCloudVmClusterExists(ctx context.Context
 		if rs.Primary.ID == "" {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, name, errors.New("not set"))
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 		resp, err := tfodb.FindCloudVmClusterForResourceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudVmCluster, rs.Primary.ID, err)
@@ -112,7 +111,7 @@ func (cloudVmClusterDSTest) testAccCheckCloudVmClusterExists(ctx context.Context
 }
 
 func (cloudVmClusterDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ODBClient(ctx)
 	input := odb.ListCloudVmClustersInput{}
 	_, err := conn.ListCloudVmClusters(ctx, &input)
 	if acctest.PreCheckSkipError(err) {

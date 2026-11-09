@@ -7,7 +7,6 @@ package invoicing
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -260,8 +260,7 @@ func (r *invoiceUnitResource) Delete(ctx context.Context, request resource.Delet
 	}
 	_, err := conn.DeleteInvoiceUnit(ctx, &input)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ARN.ValueString())
@@ -281,8 +280,7 @@ func findInvoiceUnitByARN(ctx context.Context, conn *invoicing.Client, arn strin
 
 	output, err := conn.GetInvoiceUnit(ctx, &input)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
@@ -301,7 +299,7 @@ func waitInvoiceUnitCreated(ctx context.Context, conn *invoicing.Client, arn str
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{"AVAILABLE"},
-		Refresh: statusInvoiceUnit(ctx, conn, arn),
+		Refresh: statusInvoiceUnit(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -318,7 +316,7 @@ func waitInvoiceUnitUpdated(ctx context.Context, conn *invoicing.Client, arn str
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{"AVAILABLE"},
-		Refresh: statusInvoiceUnit(ctx, conn, arn),
+		Refresh: statusInvoiceUnit(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -335,7 +333,7 @@ func waitInvoiceUnitDeleted(ctx context.Context, conn *invoicing.Client, arn str
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"AVAILABLE"},
 		Target:  []string{},
-		Refresh: statusInvoiceUnit(ctx, conn, arn),
+		Refresh: statusInvoiceUnit(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -348,7 +346,7 @@ func waitInvoiceUnitDeleted(ctx context.Context, conn *invoicing.Client, arn str
 	return nil, smarterr.NewError(err)
 }
 
-func statusInvoiceUnit(_ context.Context, conn *invoicing.Client, arn string) retry.StateRefreshFunc {
+func statusInvoiceUnit(conn *invoicing.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findInvoiceUnitByARN(ctx, conn, arn)
 

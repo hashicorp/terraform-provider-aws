@@ -1,3 +1,0 @@
-```release-note:note
-provider: Add OpenBSD to list of OSes which the provider is built on
-```

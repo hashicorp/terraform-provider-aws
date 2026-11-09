@@ -47,282 +47,284 @@ func resourceMaintenanceWindowTask() *schema.Resource {
 		UpdateWithoutTimeout: resourceMaintenanceWindowTaskUpdate,
 		DeleteWithoutTimeout: resourceMaintenanceWindowTaskDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cutoff_behavior": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowTaskCutoffBehavior](),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"max_concurrency": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a number without leading zeros or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
-			},
-			"max_errors": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be zero, a number without leading zeros, or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`),
-					"Only alphanumeric characters, hyphens, dots & underscores allowed."),
-			},
-			names.AttrPriority: {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-			names.AttrServiceRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"targets": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 50,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cutoff_behavior": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowTaskCutoffBehavior](),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"max_concurrency": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a number without leading zeros or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
+				},
+				"max_errors": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be zero, a number without leading zeros, or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`),
+						"Only alphanumeric characters, hyphens, dots & underscores allowed."),
+				},
+				names.AttrPriority: {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				names.AttrServiceRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"targets": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 50,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			"task_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"task_invocation_parameters": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"automation_parameters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"document_version": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
-									},
-									names.AttrParameter: {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrValues: {
-													Type:     schema.TypeList,
-													Required: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
+				"task_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"task_invocation_parameters": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"automation_parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"document_version": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
 										},
-									},
-								},
-							},
-						},
-						"lambda_parameters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"client_context": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 8000),
-									},
-									"payload": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Sensitive:    true,
-										ValidateFunc: validation.StringLenBetween(0, 4096),
-									},
-									"qualifier": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-								},
-							},
-						},
-						"run_command_parameters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cloudwatch_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cloudwatch_log_group_name": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"cloudwatch_output_enabled": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-											},
-										},
-									},
-									names.AttrComment: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 100),
-									},
-									"document_hash": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 256),
-									},
-									"document_hash_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.DocumentHashType](),
-									},
-									"document_version": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), "must be $DEFAULT, $LATEST, or a version number"),
-									},
-									"notification_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"notification_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"notification_events": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:             schema.TypeString,
-														ValidateDiagFunc: enum.Validate[awstypes.NotificationEvent](),
+										names.AttrParameter: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValues: {
+														Type:     schema.TypeList,
+														Required: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
 													},
 												},
-												"notification_type": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
-												},
 											},
 										},
-									},
-									"output_s3_bucket": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"output_s3_key_prefix": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrParameter: {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrValues: {
-													Type:     schema.TypeList,
-													Required: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-									names.AttrServiceRoleARN: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"timeout_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(30, 2592000),
 									},
 								},
 							},
-						},
-						"step_functions_parameters": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"input": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Sensitive:    true,
-										ValidateFunc: validation.StringLenBetween(0, 4096),
+							"lambda_parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"client_context": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 8000),
+										},
+										"payload": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Sensitive:    true,
+											ValidateFunc: validation.StringLenBetween(0, 4096),
+										},
+										"qualifier": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
 									},
-									names.AttrName: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 80),
+								},
+							},
+							"run_command_parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"cloudwatch_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cloudwatch_log_group_name": {
+														Type:     schema.TypeString,
+														Optional: true,
+														Computed: true,
+													},
+													"cloudwatch_output_enabled": {
+														Type:     schema.TypeBool,
+														Optional: true,
+													},
+												},
+											},
+										},
+										names.AttrComment: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 100),
+										},
+										"document_hash": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 256),
+										},
+										"document_hash_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.DocumentHashType](),
+										},
+										"document_version": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), "must be $DEFAULT, $LATEST, or a version number"),
+										},
+										"notification_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"notification_arn": {
+														Type:         schema.TypeString,
+														Optional:     true,
+														ValidateFunc: verify.ValidARN,
+													},
+													"notification_events": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Elem: &schema.Schema{
+															Type:             schema.TypeString,
+															ValidateDiagFunc: enum.Validate[awstypes.NotificationEvent](),
+														},
+													},
+													"notification_type": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
+													},
+												},
+											},
+										},
+										"output_s3_bucket": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"output_s3_key_prefix": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrParameter: {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValues: {
+														Type:     schema.TypeList,
+														Required: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
+												},
+											},
+										},
+										names.AttrServiceRoleARN: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"timeout_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(30, 2592000),
+										},
+									},
+								},
+							},
+							"step_functions_parameters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"input": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Sensitive:    true,
+											ValidateFunc: validation.StringLenBetween(0, 4096),
+										},
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 80),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"task_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowTaskType](),
-			},
-			"window_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"window_task_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"task_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowTaskType](),
+				},
+				"window_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"window_task_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

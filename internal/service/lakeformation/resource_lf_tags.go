@@ -42,181 +42,183 @@ func ResourceResourceLFTags() *schema.Resource {
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				Computed: true,
-				ForceNew: true,
-				Optional: true,
-			},
-			names.AttrDatabase: {
-				Type:     schema.TypeList,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Optional: true,
-				ExactlyOneOf: []string{
-					names.AttrDatabase,
-					"table",
-					"table_with_columns",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					Computed: true,
+					ForceNew: true,
+					Optional: true,
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
-						},
+				names.AttrDatabase: {
+					Type:     schema.TypeList,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Optional: true,
+					ExactlyOneOf: []string{
+						names.AttrDatabase,
+						"table",
+						"table_with_columns",
 					},
-				},
-			},
-			"lf_tag": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrKey: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						names.AttrValue: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateLFTagValues(),
-						},
-					},
-				},
-				Set: lfTagsHash,
-			},
-			"table": {
-				Type:     schema.TypeList,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Optional: true,
-				ExactlyOneOf: []string{
-					names.AttrDatabase,
-					"table",
-					"table_with_columns",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
-						},
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
-							AtLeastOneOf: []string{
-								"table.0.name",
-								"table.0.wildcard",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
 							},
-						},
-						"wildcard": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							ForceNew: true,
-							Optional: true,
-							AtLeastOneOf: []string{
-								"table.0.name",
-								"table.0.wildcard",
+							names.AttrName: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
 							},
 						},
 					},
 				},
-			},
-			"table_with_columns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Optional: true,
-				ExactlyOneOf: []string{
-					names.AttrDatabase,
-					"table",
-					"table_with_columns",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
-							Type:     schema.TypeString,
-							Computed: true,
-							ForceNew: true,
-							Optional: true,
-						},
-						"column_names": {
-							Type:     schema.TypeSet,
-							ForceNew: true,
-							Optional: true,
-							Set:      schema.HashString,
-							Elem: &schema.Schema{
+				"lf_tag": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrKey: {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.NoZeroValues,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
 							},
-							AtLeastOneOf: []string{
-								"table_with_columns.0.column_names",
-								"table_with_columns.0.wildcard",
-							},
-						},
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
-						},
-						"excluded_column_names": {
-							Type:     schema.TypeSet,
-							ForceNew: true,
-							Optional: true,
-							Set:      schema.HashString,
-							Elem: &schema.Schema{
+							names.AttrValue: {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.NoZeroValues,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validateLFTagValues(),
 							},
 						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
-						},
-						"wildcard": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							ForceNew: true,
-							Optional: true,
-							AtLeastOneOf: []string{
-								"table_with_columns.0.column_names",
-								"table_with_columns.0.wildcard",
+					},
+					Set: lfTagsHash,
+				},
+				"table": {
+					Type:     schema.TypeList,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Optional: true,
+					ExactlyOneOf: []string{
+						names.AttrDatabase,
+						"table",
+						"table_with_columns",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
+							},
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
+								AtLeastOneOf: []string{
+									"table.0.name",
+									"table.0.wildcard",
+								},
+							},
+							"wildcard": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								ForceNew: true,
+								Optional: true,
+								AtLeastOneOf: []string{
+									"table.0.name",
+									"table.0.wildcard",
+								},
 							},
 						},
 					},
 				},
-			},
+				"table_with_columns": {
+					Type:     schema.TypeList,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Optional: true,
+					ExactlyOneOf: []string{
+						names.AttrDatabase,
+						"table",
+						"table_with_columns",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCatalogID: {
+								Type:     schema.TypeString,
+								Computed: true,
+								ForceNew: true,
+								Optional: true,
+							},
+							"column_names": {
+								Type:     schema.TypeSet,
+								ForceNew: true,
+								Optional: true,
+								Set:      schema.HashString,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.NoZeroValues,
+								},
+								AtLeastOneOf: []string{
+									"table_with_columns.0.column_names",
+									"table_with_columns.0.wildcard",
+								},
+							},
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
+							},
+							"excluded_column_names": {
+								Type:     schema.TypeSet,
+								ForceNew: true,
+								Optional: true,
+								Set:      schema.HashString,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.NoZeroValues,
+								},
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
+							},
+							"wildcard": {
+								Type:     schema.TypeBool,
+								Default:  false,
+								ForceNew: true,
+								Optional: true,
+								AtLeastOneOf: []string{
+									"table_with_columns.0.column_names",
+									"table_with_columns.0.wildcard",
+								},
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

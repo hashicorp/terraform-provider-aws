@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -102,6 +103,14 @@ func TestAccRDSClusterInstance_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceClusterInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -309,6 +318,45 @@ func TestAccRDSClusterInstance_az(t *testing.T) {
 					names.AttrApplyImmediately,
 					names.AttrForceDestroy,
 				},
+			},
+		},
+	})
+}
+
+func TestAccRDSClusterInstance_warningEventCategories(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_warningEventCategories(rName, `["failure"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "warning_event_categories.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "failure"),
+				),
+			},
+			{
+				// Confirm an update (not just create) with the argument set
+				// also applies cleanly and does not error.
+				Config: testAccClusterInstanceConfig_warningEventCategories(rName, `["failure", "maintenance"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "warning_event_categories.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "failure"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "warning_event_categories.*", "maintenance"),
+				),
 			},
 		},
 	})
@@ -1387,6 +1435,19 @@ resource "aws_db_parameter_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccClusterInstanceConfig_warningEventCategories(rName, categories string) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = %[1]q
+  engine             = data.aws_rds_engine_version.default.engine
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+
+  warning_event_categories = %[2]s
+}
+`, rName, categories))
 }
 
 func testAccClusterInstanceConfig_kmsKey(rName string) string {

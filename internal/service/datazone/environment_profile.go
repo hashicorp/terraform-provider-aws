@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,38 +17,43 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_environment_profile", name="Environment Profile")
+// @IdentityAttribute("domain_identifier")
+// @IdentityAttribute("id")
+// @ImportIDHandler("environmentProfileImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetEnvironmentProfileOutput")
+// @Testing(importStateIdAttributes="id;domain_identifier", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preIdentityVersion="v6.47.0")
 func newEnvironmentProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &environmentProfileResource{}, nil
 }
 
 const (
 	ResNameEnvironmentProfile = "Environment Profile"
-
-	environmentProfileIDParts = 2
 )
 
 type environmentProfileResource struct {
 	framework.ResourceWithModel[environmentProfileResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *environmentProfileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -133,13 +139,13 @@ func (r *environmentProfileResource) Create(ctx context.Context, req resource.Cr
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var plan environmentProfileResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := &datazone.CreateEnvironmentProfileInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, &plan, in))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -147,34 +153,28 @@ func (r *environmentProfileResource) Create(ctx context.Context, req resource.Cr
 
 	out, err := conn.CreateEnvironmentProfile(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameEnvironmentProfile, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.ValueString())
 		return
 	}
 	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameEnvironmentProfile, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.ValueString())
 		return
 	}
 
-	option := flex.WithIgnoredFieldNamesAppend("UserParameters")
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, option)...)
+	option := fwflex.WithIgnoredFieldNamesAppend("UserParameters")
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, option))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *environmentProfileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var state environmentProfileResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -185,42 +185,40 @@ func (r *environmentProfileResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionReading, ResNameEnvironmentProfile, state.Id.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Id.ValueString())
 		return
 	}
 
-	option := flex.WithIgnoredFieldNamesAppend("UserParameters")
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, option)...)
+	option := fwflex.WithIgnoredFieldNamesAppend("UserParameters")
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, option))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	state.EnvironmentBlueprintId = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
-	state.ProjectIdentifier = flex.StringToFramework(ctx, out.ProjectId)
+	state.EnvironmentBlueprintId = fwflex.StringToFramework(ctx, out.EnvironmentBlueprintId)
+	state.ProjectIdentifier = fwflex.StringToFramework(ctx, out.ProjectId)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *environmentProfileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var plan, state environmentProfileResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Description.Equal(state.Description) ||
-		!plan.Name.Equal(state.Name) ||
-		!plan.UserParameters.Equal(state.UserParameters) ||
-		!plan.AwsAccountId.Equal(state.AwsAccountId) ||
-		!plan.AwsAccountRegion.Equal(state.AwsAccountRegion) {
-		in := &datazone.UpdateEnvironmentProfileInput{}
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	if diff.HasChanges() {
+		in := &datazone.UpdateEnvironmentProfileInput{}
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, in))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -228,28 +226,25 @@ func (r *environmentProfileResource) Update(ctx context.Context, req resource.Up
 
 		out, err := conn.UpdateEnvironmentProfile(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameEnvironmentProfile, state.Id.ValueString(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Id.ValueString())
 			return
 		}
 
-		option := flex.WithIgnoredFieldNamesAppend("UserParameters")
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, option)...)
+		option := fwflex.WithIgnoredFieldNamesAppend("UserParameters")
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, option))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *environmentProfileResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var state environmentProfileResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -261,26 +256,9 @@ func (r *environmentProfileResource) Delete(ctx context.Context, req resource.De
 	_, err := conn.DeleteEnvironmentProfile(ctx, &input)
 
 	if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameEnvironmentProfile, state.Id.ValueString(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Id.ValueString())
 		return
 	}
-}
-
-func (r *environmentProfileResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, environmentProfileIDParts, false)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: id,domain_identifier. Got: %q", req.ID),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), parts[1])...)
 }
 
 func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id string, domainID string) (*datazone.GetEnvironmentProfileOutput, error) {
@@ -304,6 +282,26 @@ func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id s
 	}
 
 	return out, nil
+}
+
+var (
+	_ inttypes.ImportIDParser = environmentProfileImportID{}
+)
+
+type environmentProfileImportID struct{}
+
+func (environmentProfileImportID) Parse(id string) (string, map[string]any, error) {
+	profileID, domainID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <id>%s<domain-identifier>", id, intflex.ResourceIdSeparator)
+	}
+
+	result := map[string]any{
+		names.AttrID:        profileID,
+		"domain_identifier": domainID,
+	}
+
+	return id, result, nil
 }
 
 type environmentProfileResourceModel struct {

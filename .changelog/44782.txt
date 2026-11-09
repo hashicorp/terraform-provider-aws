@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_networkflowmonitor_monitor
-```
-
-```release-note:new-resource
-aws_networkflowmonitor_scope
-```

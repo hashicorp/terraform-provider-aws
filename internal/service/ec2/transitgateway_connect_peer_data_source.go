@@ -34,48 +34,50 @@ func dataSourceTransitGatewayConnectPeer() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bgp_asn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bgp_peer_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bgp_transit_gateway_addresses": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrFilter: customFiltersSchema(),
-			"inside_cidr_blocks": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"peer_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"transit_gateway_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTransitGatewayAttachmentID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"transit_gateway_connect_peer_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bgp_asn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bgp_peer_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bgp_transit_gateway_addresses": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrFilter: customFiltersSchema(),
+				"inside_cidr_blocks": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"peer_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"transit_gateway_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTransitGatewayAttachmentID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"transit_gateway_connect_peer_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

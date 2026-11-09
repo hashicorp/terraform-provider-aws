@@ -43,209 +43,211 @@ func resourceFlowDefinition() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"flow_definition_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-z](-*[0-9a-z])*$`), "Valid characters are a-z, 0-9, and - (hyphen)."),
-				),
-			},
-			"human_loop_activation_config": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				MaxItems:     1,
-				RequiredWith: []string{"human_loop_request_source", "human_loop_activation_config"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"human_loop_activation_conditions_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"human_loop_activation_conditions": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 10240),
-											validation.StringIsJSON,
-										),
-										StateFunc: func(v any) string {
-											json, _ := structure.NormalizeJsonString(v)
-											return json
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"flow_definition_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9a-z](-*[0-9a-z])*$`), "Valid characters are a-z, 0-9, and - (hyphen)."),
+					),
+				},
+				"human_loop_activation_config": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ForceNew:     true,
+					MaxItems:     1,
+					RequiredWith: []string{"human_loop_request_source", "human_loop_activation_config"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"human_loop_activation_conditions_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"human_loop_activation_conditions": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 10240),
+												validation.StringIsJSON,
+											),
+											StateFunc: func(v any) string {
+												json, _ := structure.NormalizeJsonString(v)
+												return json
+											},
+											DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 										},
-										DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"human_loop_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"human_task_ui_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"public_workforce_task_price": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"amount_in_usd": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cents": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.IntBetween(0, 99),
-												},
-												"dollars": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.IntBetween(0, 2),
-												},
-												"tenth_fractions_of_a_cent": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.IntBetween(0, 9),
+				"human_loop_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"human_task_ui_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"public_workforce_task_price": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"amount_in_usd": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"cents": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.IntBetween(0, 99),
+													},
+													"dollars": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.IntBetween(0, 2),
+													},
+													"tenth_fractions_of_a_cent": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ForceNew:     true,
+														ValidateFunc: validation.IntBetween(0, 9),
+													},
 												},
 											},
 										},
 									},
 								},
 							},
+							"task_availability_lifetime_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(1, 864000),
+							},
+							"task_count": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IntBetween(1, 3),
+							},
+							"task_description": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"task_keywords": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 5,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.All(
+										validation.StringLenBetween(1, 30),
+										validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+( [0-9A-Za-z]+)*$`), ""),
+									),
+								},
+							},
+							"task_time_limit_in_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								Default:      3600,
+								ValidateFunc: validation.IntBetween(30, 28800),
+							},
+							"task_title": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							"workteam_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
-						"task_availability_lifetime_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1, 864000),
+					},
+				},
+				"human_loop_request_source": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					ForceNew:     true,
+					MaxItems:     1,
+					RequiredWith: []string{"human_loop_request_source", "human_loop_activation_config"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"aws_managed_human_loop_request_source": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AwsManagedHumanLoopRequestSource](),
+							},
 						},
-						"task_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1, 3),
-						},
-						"task_description": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"task_keywords": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 5,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+					},
+				},
+				"output_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_output_path": {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Required: true,
 								ValidateFunc: validation.All(
-									validation.StringLenBetween(1, 30),
-									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+( [0-9A-Za-z]+)*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+									validation.StringLenBetween(1, 512),
 								),
 							},
 						},
-						"task_time_limit_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							Default:      3600,
-							ValidateFunc: validation.IntBetween(30, 28800),
-						},
-						"task_title": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"workteam_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
 					},
 				},
-			},
-			"human_loop_request_source": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				MaxItems:     1,
-				RequiredWith: []string{"human_loop_request_source", "human_loop_activation_config"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"aws_managed_human_loop_request_source": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AwsManagedHumanLoopRequestSource](),
-						},
-					},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"output_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"s3_output_path": {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
-								validation.StringLenBetween(1, 512),
-							),
-						},
-					},
-				},
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

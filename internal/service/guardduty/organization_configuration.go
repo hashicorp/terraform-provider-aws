@@ -35,65 +35,67 @@ func resourceOrganizationConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"auto_enable_organization_members": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AutoEnableMembers](),
-			},
-			"datasources": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				MaxItems:   1,
-				Deprecated: "datasources is deprecated. Use \"aws_guardduty_organization_configuration_feature\" resources instead.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kubernetes": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"audit_logs": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"enable": {
-													Type:     schema.TypeBool,
-													Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"auto_enable_organization_members": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AutoEnableMembers](),
+				},
+				"datasources": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					MaxItems:   1,
+					Deprecated: "datasources is deprecated. Use \"aws_guardduty_organization_configuration_feature\" resources instead.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"kubernetes": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"audit_logs": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"enable": {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"malware_protection": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"scan_ec2_instance_with_findings": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ebs_volumes": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"auto_enable": {
-																Type:     schema.TypeBool,
-																Required: true,
+							"malware_protection": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"scan_ec2_instance_with_findings": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"ebs_volumes": {
+														Type:     schema.TypeList,
+														Required: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"auto_enable": {
+																	Type:     schema.TypeBool,
+																	Required: true,
+																},
 															},
 														},
 													},
@@ -103,30 +105,30 @@ func resourceOrganizationConfiguration() *schema.Resource {
 									},
 								},
 							},
-						},
-						"s3_logs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"auto_enable": {
-										Type:     schema.TypeBool,
-										Required: true,
+							"s3_logs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"auto_enable": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"detector_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+				"detector_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			}
 		},
 	}
 }

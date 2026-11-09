@@ -38,203 +38,205 @@ func ResourcePipeline() *schema.Resource {
 
 		DeprecationMessage: "This resource is deprecated. Use AWS Elemental MediaConvert instead.",
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"aws_kms_key_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
-			// ContentConfig also requires ThumbnailConfig
-			"content_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					// elastictranscoder.PipelineOutputConfig
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Optional: true,
-							// AWS may insert the bucket name here taken from output_bucket
-							Computed: true,
-						},
-						names.AttrStorageClass: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Standard",
-								"ReducedRedundancy",
-							}, false),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
 
-			"content_config_permissions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"aws_kms_key_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+
+				// ContentConfig also requires ThumbnailConfig
+				"content_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						// elastictranscoder.PipelineOutputConfig
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Optional: true,
+								// AWS may insert the bucket name here taken from output_bucket
+								Computed: true,
+							},
+							names.AttrStorageClass: {
+								Type:     schema.TypeString,
+								Optional: true,
 								ValidateFunc: validation.StringInSlice([]string{
-									"Read",
-									"ReadAcp",
-									"WriteAcp",
-									"FullControl",
+									"Standard",
+									"ReducedRedundancy",
 								}, false),
 							},
 						},
-						"grantee": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"grantee_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Canonical",
-								"Email",
-								"Group",
-							}, false),
-						},
 					},
 				},
-			},
 
-			"input_bucket": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`),
-						"only alphanumeric characters, hyphens, underscores, and periods allowed"),
-					validation.StringLenBetween(1, 40),
-				),
-			},
-
-			"notifications": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"completed": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"error": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"progressing": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"warning": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-
-			// The output_bucket must be set, or both of content_config.bucket
-			// and thumbnail_config.bucket.
-			// This is set as Computed, because the API may or may not return
-			// this as set based on the other 2 configurations.
-			"output_bucket": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			names.AttrRole: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
-			"thumbnail_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					// elastictranscoder.PipelineOutputConfig
-					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
-							Type:     schema.TypeString,
-							Optional: true,
-							// AWS may insert the bucket name here taken from output_bucket
-							Computed: true,
-						},
-						names.AttrStorageClass: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Standard",
-								"ReducedRedundancy",
-							}, false),
-						},
-					},
-				},
-			},
-
-			"thumbnail_config_permissions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"content_config_permissions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"access": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.StringInSlice([]string{
+										"Read",
+										"ReadAcp",
+										"WriteAcp",
+										"FullControl",
+									}, false),
+								},
+							},
+							"grantee": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"grantee_type": {
+								Type:     schema.TypeString,
+								Optional: true,
 								ValidateFunc: validation.StringInSlice([]string{
-									"Read",
-									"ReadAcp",
-									"WriteAcp",
-									"FullControl",
+									"Canonical",
+									"Email",
+									"Group",
 								}, false),
 							},
 						},
-						"grantee": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"grantee_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"Canonical",
-								"Email",
-								"Group",
-							}, false),
+					},
+				},
+
+				"input_bucket": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`),
+							"only alphanumeric characters, hyphens, underscores, and periods allowed"),
+						validation.StringLenBetween(1, 40),
+					),
+				},
+
+				"notifications": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"completed": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"error": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"progressing": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"warning": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
+
+				// The output_bucket must be set, or both of content_config.bucket
+				// and thumbnail_config.bucket.
+				// This is set as Computed, because the API may or may not return
+				// this as set based on the other 2 configurations.
+				"output_bucket": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+
+				names.AttrRole: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+
+				"thumbnail_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						// elastictranscoder.PipelineOutputConfig
+						Schema: map[string]*schema.Schema{
+							names.AttrBucket: {
+								Type:     schema.TypeString,
+								Optional: true,
+								// AWS may insert the bucket name here taken from output_bucket
+								Computed: true,
+							},
+							names.AttrStorageClass: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Standard",
+									"ReducedRedundancy",
+								}, false),
+							},
+						},
+					},
+				},
+
+				"thumbnail_config_permissions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"access": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.StringInSlice([]string{
+										"Read",
+										"ReadAcp",
+										"WriteAcp",
+										"FullControl",
+									}, false),
+								},
+							},
+							"grantee": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"grantee_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"Canonical",
+									"Email",
+									"Group",
+								}, false),
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

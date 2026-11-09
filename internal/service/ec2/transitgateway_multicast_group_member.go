@@ -32,23 +32,25 @@ func resourceTransitGatewayMulticastGroupMember() *schema.Resource {
 		ReadWithoutTimeout:   resourceTransitGatewayMulticastGroupMemberRead,
 		DeleteWithoutTimeout: resourceTransitGatewayMulticastGroupMemberDelete,
 
-		Schema: map[string]*schema.Schema{
-			"group_ip_address": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidMulticastIPAddress,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"transit_gateway_multicast_domain_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"group_ip_address": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidMulticastIPAddress,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"transit_gateway_multicast_domain_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

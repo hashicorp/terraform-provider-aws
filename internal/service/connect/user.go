@@ -41,118 +41,120 @@ func resourceUser() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_user_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"hierarchy_group_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"identity_info": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEmail: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"first_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 100),
-						},
-						"last_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 100),
-						},
-						"secondary_email": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrInstanceID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrPassword: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(8, 64),
-			},
-			"phone_config": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"after_contact_work_time_limit": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"auto_accept": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"desk_phone_number": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validDeskPhoneNumber,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if v := awstypes.PhoneType(d.Get("phone_config.0.phone_type").(string)); v == awstypes.PhoneTypeDeskPhone {
-									return false
-								}
-								return true
+				"directory_user_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"hierarchy_group_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"identity_info": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEmail: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"first_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 100),
+							},
+							"last_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 100),
+							},
+							"secondary_email": {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
 						},
-						"phone_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.PhoneType](),
+					},
+				},
+				names.AttrInstanceID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrPassword: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ValidateFunc: validation.StringLenBetween(8, 64),
+				},
+				"phone_config": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"after_contact_work_time_limit": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(0),
+							},
+							"auto_accept": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"desk_phone_number": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validDeskPhoneNumber,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									if v := awstypes.PhoneType(d.Get("phone_config.0.phone_type").(string)); v == awstypes.PhoneTypeDeskPhone {
+										return false
+									}
+									return true
+								},
+							},
+							"phone_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.PhoneType](),
+							},
 						},
 					},
 				},
-			},
-			"routing_profile_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"security_profile_ids": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 10,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"routing_profile_id": {
+					Type:     schema.TypeString,
+					Required: true,
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"security_profile_ids": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 10,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"user_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

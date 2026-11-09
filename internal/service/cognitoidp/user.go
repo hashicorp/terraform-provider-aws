@@ -54,107 +54,109 @@ func resourceUser() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAttributes: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if k == "attributes.sub" || k == "attributes.%" {
-						return true
-					}
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAttributes: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if k == "attributes.sub" || k == "attributes.%" {
+							return true
+						}
 
-					return false
+						return false
+					},
 				},
-			},
-			"client_metadata": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"desired_delivery_mediums": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"client_metadata": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"desired_delivery_mediums": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.DeliveryMediumType](),
+					},
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"force_alias_creation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"last_modified_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"message_action": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.DeliveryMediumType](),
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.MessageActionType](),
 				},
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"force_alias_creation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"last_modified_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"message_action": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MessageActionType](),
-			},
-			"mfa_setting_list": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"mfa_setting_list": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			names.AttrPassword: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				ValidateFunc:  validation.StringLenBetween(6, 256),
-				ConflictsWith: []string{"temporary_password"},
-			},
-			"preferred_mfa_setting": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sub": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"temporary_password": {
-				Type:          schema.TypeString,
-				Sensitive:     true,
-				Optional:      true,
-				ValidateFunc:  validation.StringLenBetween(6, 256),
-				ConflictsWith: []string{names.AttrPassword},
-			},
-			names.AttrUserPoolID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrUsername: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"validation_data": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				names.AttrPassword: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Sensitive:     true,
+					ValidateFunc:  validation.StringLenBetween(6, 256),
+					ConflictsWith: []string{"temporary_password"},
 				},
-			},
+				"preferred_mfa_setting": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sub": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"temporary_password": {
+					Type:          schema.TypeString,
+					Sensitive:     true,
+					Optional:      true,
+					ValidateFunc:  validation.StringLenBetween(6, 256),
+					ConflictsWith: []string{names.AttrPassword},
+				},
+				names.AttrUserPoolID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrUsername: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"validation_data": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+			}
 		},
 	}
 }

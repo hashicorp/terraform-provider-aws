@@ -31,18 +31,18 @@ cluster's endpoint should support. Valid values are: `NONE` and `TLS`.
 Default value is `NONE`.
 * `cluster_name` - (Required) Group identifier. DAX converts this name to
 lowercase
-* `iam_role_arn` - (Required) A valid Amazon Resource Name (ARN) that identifies
+* `iam_role_arn` - (Required) Valid ARN that identifies
 an IAM role. At runtime, DAX will assume this role and use the role's
 permissions to access DynamoDB on your behalf
 * `node_type` - (Required) The compute and memory capacity of the nodes. See
-[Nodes][1] for supported node types
+[Nodes](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes) for supported node types
 * `replication_factor` - (Required) The number of nodes in the DAX cluster. A
 replication factor of 1 will create a single-node cluster, without any read
 replicas
 * `availability_zones` - (Optional) List of Availability Zones in which the
 nodes will be created
 * `description` - (Optional) Description for the cluster
-* `notification_topic_arn` - (Optional) An Amazon Resource Name (ARN) of an
+* `notification_topic_arn` - (Optional) ARN of an
 SNS topic to send DAX notifications to. Example:
 `arn:aws:sns:us-east-1:012345678999:my_sns_topic`
 * `parameter_group_name` - (Optional) Name of the parameter group to associate
@@ -105,5 +105,3 @@ Using `terraform import`, import DAX Clusters using the `cluster_name`. For exam
 ```console
 % terraform import aws_dax_cluster.my_cluster my_cluster
 ```
-
-[1]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes

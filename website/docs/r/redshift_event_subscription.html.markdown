@@ -64,10 +64,18 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the Redshift event notification subscription
+* `arn` - ARN of the Redshift event notification subscription
 * `id` - The name of the Redshift event notification subscription
 * `customer_aws_id` - The AWS customer account associated with the Redshift event notification subscription
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `40m`)
+* `update` - (Default `40m`)
+* `delete` - (Default `40m`)
 
 ## Import
 

@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -214,6 +215,14 @@ func TestAccStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceFileSystemAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_storagegateway_file_system_association.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_storagegateway_file_system_association.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -240,6 +249,14 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_storageGateway(t *tes
 					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceGateway(), "aws_storagegateway_gateway.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_storagegateway_file_system_association.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_storagegateway_file_system_association.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -271,6 +288,14 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_fsxFileSystem(t *test
 					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceWindowsFileSystem(), "aws_fsx_windows_file_system.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_storagegateway_file_system_association.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_storagegateway_file_system_association.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

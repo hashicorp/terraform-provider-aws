@@ -52,153 +52,155 @@ func ResourceFeature() *schema.Resource {
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_variation": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 127),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-				),
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 160),
-			},
-			"entity_overrides": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.MapKeyLenBetween(1, 512),
-					validation.MapValueLenBetween(1, 127),
-					validation.MapValueMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-				),
-				Elem: &schema.Schema{Type: schema.TypeString},
-			},
-			"evaluation_rules": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_variation": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 127),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					),
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 160),
+				},
+				"entity_overrides": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.MapKeyLenBetween(1, 512),
+						validation.MapValueLenBetween(1, 127),
+						validation.MapValueMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					),
+					Elem: &schema.Schema{Type: schema.TypeString},
+				},
+				"evaluation_rules": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"evaluation_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FeatureEvaluationStrategy](),
-			},
-			names.AttrLastUpdatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 127),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-				),
-			},
-			"project": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 2048),
-					validation.StringMatch(regexache.MustCompile(`(^[0-9A-Za-z_.-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:project/[0-9A-Za-z_.-]*)`), "name or arn of the project"),
-				),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// case 1: User-defined string (old) is a name and is the suffix of API-returned string (new). Check non-empty old in resoure creation scenario
-					// case 2: after setting API-returned string.  User-defined string (new) is suffix of API-returned string (old)
-					return (strings.HasSuffix(new, old) && old != "") || strings.HasSuffix(old, new)
+				"evaluation_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FeatureEvaluationStrategy](),
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"value_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"variations": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 127),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
-							),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bool_value": {
-										Type:         nullable.TypeNullableBool,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableBool,
-										// unable to index parent list
-										// ConflictsWith: []string{"double_value", "long_value", "string_value"},
-									},
-									"double_value": {
-										Type:     nullable.TypeNullableFloat,
-										Optional: true,
-										// unable to index parent list
-										// ConflictsWith: []string{"bool_value", "long_value", "string_value"},
-									},
-									"long_value": {
-										Type:     nullable.TypeNullableInt,
-										Optional: true,
-										// values in ValidateFunc results in overflows
-										// ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(-9007199254740991, 9007199254740991),
-										// unable to index parent list
-										// ConflictsWith: []string{"bool_value", "double_value", "string_value"},
-									},
-									"string_value": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 512),
-										// unable to index parent list
-										// ConflictsWith: []string{"bool_value", "double_value", "long_value"},
+				names.AttrLastUpdatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 127),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					),
+				},
+				"project": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 2048),
+						validation.StringMatch(regexache.MustCompile(`(^[0-9A-Za-z_.-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:project/[0-9A-Za-z_.-]*)`), "name or arn of the project"),
+					),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// case 1: User-defined string (old) is a name and is the suffix of API-returned string (new). Check non-empty old in resoure creation scenario
+						// case 2: after setting API-returned string.  User-defined string (new) is suffix of API-returned string (old)
+						return (strings.HasSuffix(new, old) && old != "") || strings.HasSuffix(old, new)
+					},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"value_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"variations": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 127),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+								),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bool_value": {
+											Type:         nullable.TypeNullableBool,
+											Optional:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableBool,
+											// unable to index parent list
+											// ConflictsWith: []string{"double_value", "long_value", "string_value"},
+										},
+										"double_value": {
+											Type:     nullable.TypeNullableFloat,
+											Optional: true,
+											// unable to index parent list
+											// ConflictsWith: []string{"bool_value", "long_value", "string_value"},
+										},
+										"long_value": {
+											Type:     nullable.TypeNullableInt,
+											Optional: true,
+											// values in ValidateFunc results in overflows
+											// ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(-9007199254740991, 9007199254740991),
+											// unable to index parent list
+											// ConflictsWith: []string{"bool_value", "double_value", "string_value"},
+										},
+										"string_value": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(0, 512),
+											// unable to index parent list
+											// ConflictsWith: []string{"bool_value", "double_value", "long_value"},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

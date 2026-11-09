@@ -25,82 +25,84 @@ func dataSourceRepositoryCreationTemplate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRepositoryCreationTemplateRead,
 
-		Schema: map[string]*schema.Schema{
-			"applied_for": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"applied_for": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-			},
-			"custom_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncryptionConfiguration: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrKMSKey: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"custom_role_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncryptionConfiguration: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrKMSKey: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"image_tag_mutability": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_tag_mutability_exclusion_filter": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrFilter: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"filter_type": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"image_tag_mutability": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_tag_mutability_exclusion_filter": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrFilter: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"filter_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"lifecycle_policy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPrefix: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 256),
-					validation.StringMatch(
-						regexache.MustCompile(`(?:ROOT|(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*)`),
-						"must only include alphanumeric, underscore, period, hyphen, or slash characters, or be the string `ROOT`"),
-				),
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository_policy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceTags: tftags.TagsSchemaComputed(),
+				"lifecycle_policy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPrefix: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 256),
+						validation.StringMatch(
+							regexache.MustCompile(`(?:ROOT|(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*)`),
+							"must only include alphanumeric, underscore, period, hyphen, or slash characters, or be the string `ROOT`"),
+					),
+				},
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"repository_policy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrResourceTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

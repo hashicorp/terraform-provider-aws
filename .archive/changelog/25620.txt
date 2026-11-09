@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_route53_record: Successfully allow renaming of `set_identifier` (specified with multiple routing policies)
-```

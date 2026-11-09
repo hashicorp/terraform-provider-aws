@@ -26,7 +26,7 @@ const indentValue = 2
 // prettifyInternal will recursively walk value v to build a textual
 // representation of the value.
 func prettifyInternal(v reflect.Value, indent int, buf *bytes.Buffer) {
-	for v.Kind() == reflect.Ptr { //nolint:govet // wants us to inline constant which would be less readable
+	for v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 
@@ -50,7 +50,7 @@ func prettifyInternal(v reflect.Value, indent int, buf *bytes.Buffer) {
 			if name[0:1] == strings.ToLower(name[0:1]) {
 				continue // ignore unexported fields
 			}
-			if (f.Kind() == reflect.Ptr || f.Kind() == reflect.Slice || f.Kind() == reflect.Map) && f.IsNil() { //nolint:govet // wants us to inline constant which would be less readable
+			if (f.Kind() == reflect.Pointer || f.Kind() == reflect.Slice || f.Kind() == reflect.Map) && f.IsNil() {
 				continue // ignore unset fields
 			}
 			names = append(names, name)

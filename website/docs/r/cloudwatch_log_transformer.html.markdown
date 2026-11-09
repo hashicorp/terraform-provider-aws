@@ -213,7 +213,7 @@ The `parse_route53` block supports the following arguments:
 
 The `parse_to_ocsf` block supports the following arguments:
 
-* `event_type` - (Required) Specifies the service or process that produces the log events. Allowed values are: `CloudTrail`, `Route53Resolver`, `VPCFlow`, `EKSAudit`, and `AWSWAF`.
+* `event_source` - (Required) Specifies the service or process that produces the log events. Allowed values are: `CloudTrail`, `Route53Resolver`, `VPCFlow`, `EKSAudit`, and `AWSWAF`.
 * `ocsf_version` - (Required) Specifies the version of the OCSF schema to use for the transformed log events. The only allowed value is `V1.1`.
 * `source` - (Optional) Specifies the source field to be parsed. The only allowed value is `@message`. If omitted, the whole log message is processed.
 
@@ -304,6 +304,27 @@ Each `upper_case_string` block supports the following arguments:
 This resource exports no additional attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_transformer.example
+  identity = {
+    "log_group_arn" = "arn:aws:logs:us-west-2:123456789012:log-group:example"
+  }
+}
+
+resource "aws_cloudwatch_log_transformer" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `log_group_arn` (String) ARN of the CloudWatch Logs log group.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Transformer using the `log_group_arn`. For example:
 

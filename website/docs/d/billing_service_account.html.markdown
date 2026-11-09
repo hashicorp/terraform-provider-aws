@@ -68,5 +68,5 @@ This data source does not support any arguments.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the AWS billing service account.
 * `arn` - ARN of the AWS billing service account.
+* `id` - ID of the AWS billing service account.

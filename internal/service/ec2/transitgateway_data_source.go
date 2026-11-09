@@ -32,75 +32,77 @@ func dataSourceTransitGateway() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"amazon_side_asn": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"association_default_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_accept_shared_attachments": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_route_table_association": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_route_table_propagation": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encryption_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"multicast_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"propagation_default_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"security_group_referencing_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"transit_gateway_cidr_blocks": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"vpn_ecmp_support": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"amazon_side_asn": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"association_default_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_accept_shared_attachments": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_route_table_association": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_route_table_propagation": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dns_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"encryption_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrFilter: customFiltersSchema(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"multicast_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"propagation_default_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"security_group_referencing_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"transit_gateway_cidr_blocks": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"vpn_ecmp_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

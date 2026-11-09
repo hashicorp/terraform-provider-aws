@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMetaRegionsDataSource_basic(t *testing.T) {
@@ -24,6 +25,7 @@ func TestAccMetaRegionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRegionsDataSourceConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "names.#", 0),
 				),
 			},

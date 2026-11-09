@@ -28,143 +28,145 @@ func dataSourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataPatchBaselineRead,
 
-		Schema: map[string]*schema.Schema{
-			"approved_patches": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"approved_patches_compliance_level": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"approved_patches_enable_non_security": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"approval_rule": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"approve_after_days": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"approve_until_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"compliance_level": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"enable_non_security": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"patch_filter": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrValues: {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"approved_patches": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"approved_patches_compliance_level": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"approved_patches_enable_non_security": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"approval_rule": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"approve_after_days": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"approve_until_date": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"compliance_level": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"enable_non_security": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"patch_filter": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrValues: {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"available_security_updates_compliance_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_baseline": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"global_filter": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrValues: {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				"available_security_updates_compliance_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_baseline": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"global_filter": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrValues: {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrJSON: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrNamePrefix: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"operating_system": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
-			},
-			names.AttrOwner: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"rejected_patches": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"rejected_patches_action": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSource: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrConfiguration: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"products": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				names.AttrJSON: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrNamePrefix: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"operating_system": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
+				},
+				names.AttrOwner: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"rejected_patches": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"rejected_patches_action": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSource: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrConfiguration: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"products": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

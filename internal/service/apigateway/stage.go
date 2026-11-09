@@ -57,114 +57,116 @@ func resourceStage() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_log_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDestinationARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrFormat: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cache_cluster_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"cache_cluster_size": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.CacheClusterSize](),
-			},
-			"canary_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"deployment_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"percent_traffic": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							Default:  0.0,
-						},
-						"stage_variable_overrides": {
-							Type:     schema.TypeMap,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Optional: true,
-						},
-						"use_stage_cache": {
-							Type:     schema.TypeBool,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_log_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDestinationARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrFormat: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"client_certificate_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"deployment_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"documentation_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"execution_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"invoke_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			attrRestAPIID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"stage_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"variables": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"xray_tracing_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"web_acl_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cache_cluster_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"cache_cluster_size": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.CacheClusterSize](),
+				},
+				"canary_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"deployment_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"percent_traffic": {
+								Type:     schema.TypeFloat,
+								Optional: true,
+								Default:  0.0,
+							},
+							"stage_variable_overrides": {
+								Type:     schema.TypeMap,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Optional: true,
+							},
+							"use_stage_cache": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"client_certificate_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"deployment_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"documentation_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"execution_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"invoke_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				attrRestAPIID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"stage_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"variables": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"xray_tracing_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"web_acl_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

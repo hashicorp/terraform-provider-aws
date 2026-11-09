@@ -26,16 +26,18 @@ func dataSourceConfigurationProfiles() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationProfilesRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrApplicationID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"configuration_profile_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrApplicationID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"configuration_profile_ids": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

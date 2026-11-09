@@ -43,72 +43,74 @@ func resourceDomainSAMLOptions() *schema.Resource {
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"saml_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"idp": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"entity_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"metadata_content": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringIsNotEmpty,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"saml_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
+							"idp": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"entity_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"metadata_content": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringIsNotEmpty,
+										},
 									},
 								},
 							},
-						},
-						"master_backend_role": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringIsNotEmpty,
-						},
-						"master_user_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Sensitive:    true,
-							ValidateFunc: validation.StringIsNotEmpty,
-						},
-						"roles_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"session_timeout_minutes": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Default:          60,
-							ValidateFunc:     validation.IntBetween(1, 1440),
-							DiffSuppressFunc: domainSamlOptionsDiffSupress,
-						},
-						"subject_key": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          "",
-							DiffSuppressFunc: domainSamlOptionsDiffSupress,
+							"master_backend_role": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							"master_user_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Sensitive:    true,
+								ValidateFunc: validation.StringIsNotEmpty,
+							},
+							"roles_key": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"session_timeout_minutes": {
+								Type:             schema.TypeInt,
+								Optional:         true,
+								Default:          60,
+								ValidateFunc:     validation.IntBetween(1, 1440),
+								DiffSuppressFunc: domainSamlOptionsDiffSupress,
+							},
+							"subject_key": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          "",
+								DiffSuppressFunc: domainSamlOptionsDiffSupress,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

@@ -10,17 +10,25 @@ description: |-
 
 Provides a SageMaker AI Endpoint resource.
 
+~> **Note:** `aws_sagemaker_endpoint` resources cannot recognize changes to an `aws_sagemaker_endpoint_configuration` resource unless the Endpoint Configuration's `name` attribute, changes. Endpoint Configuration names should be randomized by either specifying `name_prefix` or specifying no name. This will automatically change the name when the Endpoint Configuration is modified. The Endpoint Configuration's lifecycle meta-argument `lifecycle.create_before_destroy` should also be set to `true` to prevent conflicts.
+
 ## Example Usage
 
 Basic usage:
 
 ```terraform
-resource "aws_sagemaker_endpoint" "e" {
-  name                 = "my-endpoint"
-  endpoint_config_name = aws_sagemaker_endpoint_configuration.ec.name
+resource "aws_sagemaker_endpoint" "example" {
+  name                 = "example-endpoint"
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.example.name
+}
 
-  tags = {
-    Name = "foo"
+resource "aws_sagemaker_endpoint_configuration" "example" {
+  name_prefix = "example-endpoint-config"
+
+  # Endpoint Configuration parameters
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 ```
@@ -54,29 +62,29 @@ This resource supports the following arguments:
 * `rollback_maximum_batch_size` - (Optional) Batch size for rollback to the old endpoint fleet. Each rolling step to provision capacity and turn on traffic on the old endpoint fleet, and terminate capacity on the new endpoint fleet. If this field is absent, the default value will be set to 100% of total capacity which means to bring up the whole capacity of the old fleet at once during rollback. See [Rollback Maximum Batch Size](#rollback-maximum-batch-size).
 * `wait_interval_in_seconds` - (Required) The length of the baking period, during which SageMaker AI monitors alarms for each batch on the new fleet. Valid values are between `0` and `3600`.
 
-##### Traffic Routing Configuration
+#### Traffic Routing Configuration
 
 * `type` - (Required) Traffic routing strategy type. Valid values are: `ALL_AT_ONCE`, `CANARY`, and `LINEAR`.
 * `wait_interval_in_seconds` - (Required) The waiting time (in seconds) between incremental steps to turn on traffic on the new endpoint fleet. Valid values are between `0` and `3600`.
 * `canary_size` - (Optional) Batch size for the first step to turn on traffic on the new endpoint fleet. Value must be less than or equal to 50% of the variant's total instance count. See [Canary Size](#canary-size).
 * `linear_step_size` - (Optional) Batch size for each step to turn on traffic on the new endpoint fleet. Value must be 10-50% of the variant's total instance count. See [Linear Step Size](#linear-step-size).
 
-###### Maximum Batch Size
+#### Maximum Batch Size
 
 * `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
-###### Rollback Maximum Batch Size
+#### Rollback Maximum Batch Size
 
 * `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
-###### Canary Size
+#### Canary Size
 
 * `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
-###### Linear Step Size
+#### Linear Step Size
 
 * `type` - (Required) Specifies the endpoint capacity type. Valid values are: `INSTANCE_COUNT`, or `CAPACITY_PERCENT`.
 * `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
@@ -85,7 +93,7 @@ This resource supports the following arguments:
 
 * `alarms` - (Required) List of CloudWatch alarms in your account that are configured to monitor metrics on an endpoint. If any alarms are tripped during a deployment, SageMaker AI rolls back the deployment. See [Alarms](#alarms).
 
-##### Alarms
+#### Alarms
 
 * `alarm_name` - (Required) The name of a CloudWatch alarm in your account.
 
@@ -93,8 +101,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint.
-* `name` - The name of the endpoint.
+* `arn` - ARN assigned by AWS to this endpoint.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

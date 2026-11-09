@@ -14,7 +14,7 @@ on:
         default: false
 
 permissions:
-  pull-requests: write
+  pull-requests: write # required to comment on and close pull requests
 
 jobs:
   close-stale-drafts:

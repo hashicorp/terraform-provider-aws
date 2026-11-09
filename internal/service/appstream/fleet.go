@@ -47,178 +47,180 @@ func resourceFleet() *schema.Resource {
 
 		CustomizeDiff: resourceFleetCustDiff,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"compute_capacity": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"available": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"desired_instances": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"compute_capacity.0.desired_sessions",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"compute_capacity": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"available": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"desired_instances": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"compute_capacity.0.desired_sessions",
+								},
+							},
+							"desired_sessions": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								ExactlyOneOf: []string{
+									"compute_capacity.0.desired_instances",
+								},
+							},
+							"in_use": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"running": {
+								Type:     schema.TypeInt,
+								Computed: true,
 							},
 						},
-						"desired_sessions": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ExactlyOneOf: []string{
-								"compute_capacity.0.desired_instances",
+					},
+				},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(0, 256),
+				},
+				"disconnect_timeout_in_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(60, 360000),
+				},
+				names.AttrDisplayName: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringLenBetween(0, 100),
+				},
+				"domain_join_info": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"directory_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"organizational_unit_distinguished_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
 							},
 						},
-						"in_use": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"running": {
-							Type:     schema.TypeInt,
-							Computed: true,
+					},
+				},
+				"enable_default_internet_access": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"fleet_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FleetType](),
+				},
+				names.AttrIAMRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"idle_disconnect_timeout_in_seconds": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  0,
+					ValidateFunc: validation.Any(
+						validation.IntBetween(60, 360000),
+						validation.IntInSlice([]int{0}),
+					),
+				},
+				"image_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"image_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"max_sessions_per_instance": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"max_user_duration_in_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IntBetween(600, 432000),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"stream_view": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.StreamView](),
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCConfig: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetIDs: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"disconnect_timeout_in_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(60, 360000),
-			},
-			names.AttrDisplayName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-			"domain_join_info": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"directory_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"organizational_unit_distinguished_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"enable_default_internet_access": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"fleet_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FleetType](),
-			},
-			names.AttrIAMRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"idle_disconnect_timeout_in_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-				ValidateFunc: validation.Any(
-					validation.IntBetween(60, 360000),
-					validation.IntInSlice([]int{0}),
-				),
-			},
-			"image_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"image_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"max_sessions_per_instance": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"max_user_duration_in_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(600, 432000),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"stream_view": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.StreamView](),
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCConfig: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrSubnetIDs: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

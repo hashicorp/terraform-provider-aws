@@ -26,13 +26,13 @@ import (
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
 // @SingletonIdentity
 // @IdentityVersion(1, sdkV2IdentityUpgraders="imageBlockPublicAccessIdentityUpgradeV0")
-// @V60SDKv2Fix
 // @NoImport
 // @Testing(checkDestroyNoop=true)
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
 // Generated tests have several issues: (todo: list them)
 // @Testing(identityTest=false)
+// @Testing(preIdentityVersion="v5.100.0")
 // @Testing(identityVersion="0;v6.0.0")
 // @Testing(identityVersion="1;v6.21.0")
 func resourceImageBlockPublicAccess() *schema.Resource {
@@ -46,12 +46,14 @@ func resourceImageBlockPublicAccess() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrState: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(imageBlockPublicAccessState_Values(), false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrState: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(imageBlockPublicAccessState_Values(), false),
+				},
+			}
 		},
 	}
 }
@@ -117,6 +119,7 @@ func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceD
 var imageBlockPublicAccessIdentityUpgradeV0 = schema.IdentityUpgrader{
 	Version: 0,
 	Upgrade: func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+		rawState[names.AttrAccountID] = meta.(*conns.AWSClient).AccountID(ctx)
 		rawState[names.AttrRegion] = meta.(*conns.AWSClient).Region(ctx)
 		return rawState, nil
 	},

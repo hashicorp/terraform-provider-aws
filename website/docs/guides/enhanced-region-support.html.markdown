@@ -36,7 +36,7 @@ resource "aws_vpc" "peer" {
 }
 ```
 
-## What's _not_ changing
+## What's not changing
 
 _Pre-v6.0.0 configurations that use provider blocks per Region remain valid in v6.0.0 and are not deprecated._
 

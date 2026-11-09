@@ -35,80 +35,82 @@ func resourceHostedConnection() *schema.Resource {
 		ReadWithoutTimeout:   resourceHostedConnectionRead,
 		DeleteWithoutTimeout: resourceHostedConnectionDelete,
 
-		Schema: map[string]*schema.Schema{
-			"aws_device": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bandwidth": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validConnectionBandWidth(),
-			},
-			names.AttrConnectionID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"connection_region": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"has_logical_redundancy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"jumbo_frame_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"lag_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"loa_issue_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLocation: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"partner_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrProviderName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRegion: {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "region is deprecated. Use connection_region instead.",
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"vlan": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 4094),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"aws_device": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bandwidth": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validConnectionBandWidth(),
+				},
+				names.AttrConnectionID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"connection_region": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"has_logical_redundancy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"jumbo_frame_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"lag_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"loa_issue_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLocation: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrOwnerAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"partner_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrProviderName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRegion: {
+					Type:       schema.TypeString,
+					Computed:   true,
+					Deprecated: "region is deprecated. Use connection_region instead.",
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"vlan": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntBetween(1, 4094),
+				},
+			}
 		},
 	}
 }

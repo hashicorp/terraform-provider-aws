@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_mq_broker: Fix `interface conversion: interface {} is *schema.Set, not []string` panic
-```

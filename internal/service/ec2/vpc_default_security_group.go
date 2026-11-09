@@ -18,9 +18,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_default_security_group", name="Security Group")
+// @SDKResource("aws_default_security_group", name="Default Security Group")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroup")
+// @Testing(generator=false)
+// @Testing(checkDestroyNoop=true)
+// @Testing(importIgnore="revoke_rules_on_delete", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.66.0")
 func resourceDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -29,10 +35,6 @@ func resourceDefaultSecurityGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceSecurityGroupUpdate,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		SchemaVersion: 1, // Keep in sync with aws_security_group's schema version.
 		MigrateState:  securityGroupMigrateState,
 
@@ -40,43 +42,45 @@ func resourceDefaultSecurityGroup() *schema.Resource {
 		//   - description is Computed-only
 		//   - name is Computed-only
 		//   - name_prefix is Computed-only
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"egress":  securityGroupRuleSetNestedBlock,
-			"ingress": securityGroupRuleSetNestedBlock,
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrNamePrefix: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// Not used.
-			"revoke_rules_on_delete": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"egress":  securityGroupRuleSetNestedBlock,
+				"ingress": securityGroupRuleSetNestedBlock,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrNamePrefix: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				// Not used.
+				"revoke_rules_on_delete": {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

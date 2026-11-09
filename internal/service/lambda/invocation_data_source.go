@@ -25,29 +25,31 @@ func dataSourceInvocation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInvocationRead,
 
-		Schema: map[string]*schema.Schema{
-			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"input": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsJSON,
-			},
-			"qualifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  FunctionVersionLatest,
-			},
-			"result": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tenant_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"function_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"input": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringIsJSON,
+				},
+				"qualifier": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  FunctionVersionLatest,
+				},
+				"result": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tenant_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

@@ -41,82 +41,84 @@ func resourceCachediSCSIVolume() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"chap_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"gateway_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"kms_encrypted": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrKMSKey: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				RequiredWith: []string{"kms_encrypted"},
-			},
-			"lun_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			// Poor API naming: this accepts the IP address of the network interface
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"network_interface_port": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrSnapshotID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"source_volume_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTargetARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"target_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"volume_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_size_in_bytes": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"chap_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"gateway_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"kms_encrypted": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrKMSKey: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					RequiredWith: []string{"kms_encrypted"},
+				},
+				"lun_number": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				// Poor API naming: this accepts the IP address of the network interface
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"network_interface_port": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrSnapshotID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"source_volume_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTargetARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"volume_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"volume_size_in_bytes": {
+					Type:     schema.TypeInt,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

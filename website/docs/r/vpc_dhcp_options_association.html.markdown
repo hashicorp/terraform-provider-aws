@@ -23,20 +23,17 @@ resource "aws_vpc_dhcp_options_association" "dns_resolver" {
 
 This resource supports the following arguments:
 
+* `dhcp_options_id` - (Required) ID of the DHCP Options Set to associate to the VPC.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `vpc_id` - (Required) The ID of the VPC to which we would like to associate a DHCP Options Set.
-* `dhcp_options_id` - (Required) The ID of the DHCP Options Set to associate to the VPC.
+* `vpc_id` - (Required) ID of the VPC to which we would like to associate a DHCP Options Set.
 
-## Remarks
-
-* You can only associate one DHCP Options Set to a given VPC ID.
-* Removing the DHCP Options Association automatically sets AWS's `default` DHCP Options Set to the VPC.
+~> **Note:** Only one DHCP Options Set can be associated to a given VPC. Removing the association automatically sets AWS's `default` DHCP Options Set to the VPC.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the DHCP Options Set Association.
+* `id` - ID of the DHCP Options Set Association.
 
 ## Import
 

@@ -38,81 +38,94 @@ func resourceHostedPrivateVirtualInterface() *schema.Resource {
 			StateContext: resourceHostedPrivateVirtualInterfaceImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"address_family": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
-			},
-			"amazon_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"amazon_side_asn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_device": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bgp_asn": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"bgp_auth_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrConnectionID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"customer_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"jumbo_frame_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"mtu": {
-				Type:         schema.TypeInt,
-				Default:      1500,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntInSlice([]int{1500, 9001}),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrOwnerAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"vlan": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 4094),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"address_family": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
+				},
+				"amazon_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"amazon_side_asn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_device": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bgp_asn":      bgpASNAttributeSchema(false),
+				"bgp_asn_long": bgpASNAttributeSchema(true),
+				"bgp_auth_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrConnectionID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"customer_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				"jumbo_frame_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"mtu": {
+					Type:         schema.TypeInt,
+					Default:      1500,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntInSlice([]int{1500, 9001}),
+				},
+				"rate_limit": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"prefix_pool_allocated_count_ipv4": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"prefix_pool_allocated_count_ipv6": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrOwnerAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"vlan": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntBetween(1, 4094),
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -125,12 +138,14 @@ func resourceHostedPrivateVirtualInterface() *schema.Resource {
 func resourceHostedPrivateVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
+	asn, asnLong := expandBGPASN(d)
 
 	input := &directconnect.AllocatePrivateVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewPrivateVirtualInterfaceAllocation: &awstypes.NewPrivateVirtualInterfaceAllocation{
 			AddressFamily:        awstypes.AddressFamily(d.Get("address_family").(string)),
-			Asn:                  int32(d.Get("bgp_asn").(int)),
+			Asn:                  asn,
+			AsnLong:              asnLong,
 			Mtu:                  aws.Int32(int32(d.Get("mtu").(int))),
 			VirtualInterfaceName: aws.String(d.Get(names.AttrName).(string)),
 			Vlan:                 int32(d.Get("vlan").(int)),
@@ -152,6 +167,10 @@ func resourceHostedPrivateVirtualInterfaceCreate(ctx context.Context, d *schema.
 
 	if v, ok := d.GetOk("mtu"); ok {
 		input.NewPrivateVirtualInterfaceAllocation.Mtu = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("rate_limit"); ok {
+		input.NewPrivateVirtualInterfaceAllocation.RateLimit = aws.String(v.(string))
 	}
 
 	output, err := conn.AllocatePrivateVirtualInterface(ctx, input)
@@ -197,7 +216,9 @@ func resourceHostedPrivateVirtualInterfaceRead(ctx context.Context, d *schema.Re
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
-	d.Set("bgp_asn", vif.Asn)
+	if err := setBGPASN(d, vif.Asn, vif.AsnLong); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting BGP ASN: %s", err)
+	}
 	d.Set("bgp_auth_key", vif.AuthKey)
 	d.Set(names.AttrConnectionID, vif.ConnectionId)
 	d.Set("customer_address", vif.CustomerAddress)
@@ -205,6 +226,9 @@ func resourceHostedPrivateVirtualInterfaceRead(ctx context.Context, d *schema.Re
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set(names.AttrOwnerAccountID, vif.OwnerAccount)
+	d.Set("prefix_pool_allocated_count_ipv4", vif.PrefixPoolAllocatedCountIpv4)
+	d.Set("prefix_pool_allocated_count_ipv6", vif.PrefixPoolAllocatedCountIpv6)
+	d.Set("rate_limit", vif.RateLimit)
 	d.Set("vlan", vif.Vlan)
 
 	return diags
@@ -225,6 +249,10 @@ func resourceHostedPrivateVirtualInterfaceImport(ctx context.Context, d *schema.
 
 	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "private" {
 		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
+	}
+
+	if err := setBGPASN(d, vif.Asn, vif.AsnLong); err != nil {
+		return nil, fmt.Errorf("setting BGP ASN: %w", err)
 	}
 
 	return []*schema.ResourceData{d}, nil

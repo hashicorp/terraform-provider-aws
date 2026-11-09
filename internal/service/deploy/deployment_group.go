@@ -67,318 +67,118 @@ func resourceDeploymentGroup() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"alarm_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"alarms": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"ignore_poll_alarm_failure": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
-			"app_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_rollback_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"events": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"autoscaling_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"blue_green_deployment_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"deployment_ready_option": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"action_on_timeout": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.DeploymentReadyAction](),
-									},
-									"wait_time_in_minutes": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-								},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"alarm_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"alarms": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-						},
-						"green_fleet_provisioning_option": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAction: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.GreenFleetProvisioningAction](),
-									},
-								},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
 							},
-						},
-						"terminate_blue_instances_on_deployment_success": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAction: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.InstanceAction](),
-									},
-									"termination_wait_time_in_minutes": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtMost(2880),
-									},
-								},
+							"ignore_poll_alarm_failure": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
 							},
 						},
 					},
 				},
-			},
-			"compute_platform": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deployment_config_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "CodeDeployDefault.OneAtATime",
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-			"deployment_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deployment_group_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
-			},
-			"deployment_style": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"deployment_option": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.DeploymentOptionWithoutTrafficControl,
-							ValidateDiagFunc: enum.Validate[types.DeploymentOption](),
-						},
-						"deployment_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.DeploymentTypeInPlace,
-							ValidateDiagFunc: enum.Validate[types.DeploymentType](),
-						},
-					},
+				"app_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 100),
 				},
-			},
-			"ec2_tag_filter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.EC2TagFilterType](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"ec2_tag_set": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ec2_tag_filter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.EC2TagFilterType](),
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+				"auto_rollback_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"events": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 						},
 					},
 				},
-			},
-			"ecs_service": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrClusterName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						names.AttrServiceName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-					},
+				"autoscaling_groups": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			"load_balancer_info": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"elb_info": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"target_group_info": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"target_group_pair_info": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"prod_traffic_route": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"listener_arns": {
-													Type:     schema.TypeSet,
-													Required: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: verify.ValidARN,
-													},
-												},
-											},
+				"blue_green_deployment_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"deployment_ready_option": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"action_on_timeout": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.DeploymentReadyAction](),
+										},
+										"wait_time_in_minutes": {
+											Type:     schema.TypeInt,
+											Optional: true,
 										},
 									},
-									"target_group": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 2,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrName: {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.NoZeroValues,
-												},
-											},
+								},
+							},
+							"green_fleet_provisioning_option": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAction: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.GreenFleetProvisioningAction](),
 										},
 									},
-									"test_traffic_route": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"listener_arns": {
-													Type:     schema.TypeSet,
-													Required: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: verify.ValidARN,
-													},
-												},
-											},
+								},
+							},
+							"terminate_blue_instances_on_deployment_success": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAction: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.InstanceAction](),
+										},
+										"termination_wait_time_in_minutes": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntAtMost(2880),
 										},
 									},
 								},
@@ -386,71 +186,273 @@ func resourceDeploymentGroup() *schema.Resource {
 						},
 					},
 				},
-			},
-			"on_premises_instance_tag_filter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.TagFilterType](),
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
+				"compute_platform": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"outdated_instances_strategy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.OutdatedInstancesStrategyUpdate,
-				ValidateDiagFunc: enum.Validate[types.OutdatedInstancesStrategy](),
-			},
-			names.AttrServiceRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"termination_hook_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"trigger_configuration": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"trigger_events": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Schema{
+				"deployment_config_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "CodeDeployDefault.OneAtATime",
+					ValidateFunc: validation.StringLenBetween(0, 100),
+				},
+				"deployment_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deployment_group_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 100),
+				},
+				"deployment_style": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					MaxItems:         1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"deployment_option": {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[types.TriggerEventType](),
+								Optional:         true,
+								Default:          types.DeploymentOptionWithoutTrafficControl,
+								ValidateDiagFunc: enum.Validate[types.DeploymentOption](),
 							},
-						},
-						"trigger_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"trigger_target_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+							"deployment_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.DeploymentTypeInPlace,
+								ValidateDiagFunc: enum.Validate[types.DeploymentType](),
+							},
 						},
 					},
 				},
-			},
+				"ec2_tag_filter": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.EC2TagFilterType](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"ec2_tag_set": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ec2_tag_filter": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.EC2TagFilterType](),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"ecs_service": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrClusterName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+							names.AttrServiceName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.NoZeroValues,
+							},
+						},
+					},
+				},
+				"load_balancer_info": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"elb_info": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"target_group_info": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"target_group_pair_info": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"prod_traffic_route": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"listener_arns": {
+														Type:     schema.TypeSet,
+														Required: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: verify.ValidARN,
+														},
+													},
+												},
+											},
+										},
+										"target_group": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 2,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrName: {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.NoZeroValues,
+													},
+												},
+											},
+										},
+										"test_traffic_route": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"listener_arns": {
+														Type:     schema.TypeSet,
+														Required: true,
+														Elem: &schema.Schema{
+															Type:         schema.TypeString,
+															ValidateFunc: verify.ValidARN,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"on_premises_instance_tag_filter": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.TagFilterType](),
+							},
+							names.AttrValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"outdated_instances_strategy": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          types.OutdatedInstancesStrategyUpdate,
+					ValidateDiagFunc: enum.Validate[types.OutdatedInstancesStrategy](),
+				},
+				names.AttrServiceRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"termination_hook_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"trigger_configuration": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"trigger_events": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[types.TriggerEventType](),
+								},
+							},
+							"trigger_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"trigger_target_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

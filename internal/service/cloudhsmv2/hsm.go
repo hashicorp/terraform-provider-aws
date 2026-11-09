@@ -40,44 +40,46 @@ func resourceHSM() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAvailabilityZone: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrAvailabilityZone, names.AttrSubnetID},
-			},
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"hsm_eni_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hsm_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hsm_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrIPAddress: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrSubnetID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrAvailabilityZone, names.AttrSubnetID},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAvailabilityZone: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrAvailabilityZone, names.AttrSubnetID},
+				},
+				"cluster_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"hsm_eni_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"hsm_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"hsm_state": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrIPAddress: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrSubnetID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrAvailabilityZone, names.AttrSubnetID},
+				},
+			}
 		},
 	}
 }

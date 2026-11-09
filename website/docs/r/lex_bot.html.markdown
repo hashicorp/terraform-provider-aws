@@ -111,14 +111,6 @@ are documented under [message](#message).
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `5m`)
-* `update` - (Default `5m`)
-* `delete` - (Default `5m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -133,6 +125,14 @@ element to BUILDING. After Amazon Lex builds the bot, it sets status to READY. I
 build the bot, it sets status to FAILED. Amazon Lex returns the reason for the failure in the
 failure_reason response element.
 * `version` - The version of the bot.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_sesv2_configuration_set: Allow `suppression_options.suppressed_reasons` to be an empty list (`[]`) in order to disable the suppression list
-```

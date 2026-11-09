@@ -24,33 +24,35 @@ func DataSourceRouteCalculator() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteCalculatorRead,
 
-		Schema: map[string]*schema.Schema{
-			"calculator_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"calculator_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_source": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"update_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"calculator_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"calculator_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data_source": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"update_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

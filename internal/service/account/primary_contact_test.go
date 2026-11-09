@@ -41,7 +41,7 @@ func testAccPrimaryContact_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "phone_number", "+64211111111"),
 					resource.TestCheckResourceAttr(resourceName, "postal_code", "98101"),
 					resource.TestCheckResourceAttr(resourceName, "state_or_region", "WA"),
-					resource.TestCheckResourceAttr(resourceName, "website_url", "https://www.examplecorp.com"),
+					resource.TestCheckResourceAttr(resourceName, "website_url", "https://www.example.com"),
 				),
 			},
 			{
@@ -63,7 +63,7 @@ func testAccPrimaryContact_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "phone_number", "+64211111111"),
 					resource.TestCheckResourceAttr(resourceName, "postal_code", "98101"),
 					resource.TestCheckResourceAttr(resourceName, "state_or_region", "WA"),
-					resource.TestCheckResourceAttr(resourceName, "website_url", "https://www.examplecorp.com"),
+					resource.TestCheckResourceAttr(resourceName, "website_url", "https://www.example.com"),
 				),
 			},
 		},
@@ -101,7 +101,7 @@ resource "aws_account_primary_contact" "test" {
   phone_number       = "+64211111111"
   postal_code        = "98101"
   state_or_region    = "WA"
-  website_url        = "https://www.examplecorp.com"
+  website_url        = "https://www.example.com"
 }
 `, name)
 }

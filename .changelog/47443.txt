@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_imagebuilder_lifecycle_policy: Support wildcard semantic version for `resource_selection.recipe.semantic_version`
-```

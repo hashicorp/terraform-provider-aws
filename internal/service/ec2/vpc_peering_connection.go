@@ -47,41 +47,43 @@ func resourceVPCPeeringConnection() *schema.Resource {
 
 		// Keep in sync with aws_vpc_peering_connection_accepter's schema.
 		// See notes in vpc_peering_connection_accepter.go.
-		Schema: map[string]*schema.Schema{
-			"accept_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"accepter": vpcPeeringConnectionOptionsSchema,
-			"auto_accept": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"peer_owner_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"peer_region": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"peer_vpc_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"requester":       vpcPeeringConnectionOptionsSchema,
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"accepter": vpcPeeringConnectionOptionsSchema,
+				"auto_accept": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"peer_owner_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"peer_region": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"peer_vpc_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"requester":       vpcPeeringConnectionOptionsSchema,
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

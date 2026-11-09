@@ -278,6 +278,22 @@ func statusLocalGatewayRouteTableVPCAssociation(conn *ec2.Client, id string) ret
 	}
 }
 
+func statusLocalGatewayRouteTableVIFGroupAssociation(conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findLocalGatewayRouteTableVIFGroupAssociationByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.State), nil
+	}
+}
+
 func statusManagedPrefixListState(conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findManagedPrefixListByID(ctx, conn, id)
@@ -1722,6 +1738,39 @@ func statusNATGatewayAddressByNATGatewayIDAndPrivateIP(conn *ec2.Client, natGate
 		}
 
 		return output, string(output.Status), nil
+	}
+}
+
+func statusNATGatewaySecondaryPrivateIPAddressCount(conn *ec2.Client, natGatewayID string, expectedCount int) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findNATGatewayByID(ctx, conn, natGatewayID)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		secondaryCount := 0
+		for _, natGatewayAddress := range output.NatGatewayAddresses {
+			if !aws.ToBool(natGatewayAddress.IsPrimary) && aws.ToString(natGatewayAddress.PrivateIp) != "" {
+				if natGatewayAddress.Status == awstypes.NatGatewayAddressStatusFailed {
+					return output, string(natGatewayAddress.Status), nil
+				}
+
+				if natGatewayAddress.Status == awstypes.NatGatewayAddressStatusSucceeded {
+					secondaryCount++
+				}
+			}
+		}
+
+		if secondaryCount == expectedCount {
+			return output, "ready", nil
+		}
+
+		return output, "pending", nil
 	}
 }
 

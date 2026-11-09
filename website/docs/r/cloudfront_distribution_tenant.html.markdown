@@ -90,16 +90,16 @@ This resource supports the following arguments:
 * `geo_restriction` (Optional) - [Geographic restrictions](#geo-restriction-arguments) configuration for the tenant (maximum one).
 * `web_acl` (Optional) - [Web ACL](#web-acl-arguments) configuration for the tenant (maximum one).
 
-##### Certificate Arguments
+#### Certificate Arguments
 
 * `arn` (Optional) - ARN of the AWS Certificate Manager certificate to use with this distribution tenant.
 
-##### Geo Restriction Arguments
+#### Geo Restriction Arguments
 
 * `restriction_type` (Optional) - Method to restrict distribution by country: `none`, `whitelist`, or `blacklist`.
 * `locations` (Optional) - Set of ISO 3166-1-alpha-2 country codes for the restriction. Required if `restriction_type` is `whitelist` or `blacklist`.
 
-##### Web ACL Arguments
+#### Web ACL Arguments
 
 * `action` (Optional) - Action to take for the web ACL. Valid values: `allow`, `block`.
 * `arn` (Optional) - ARN of the AWS WAF web ACL to associate with this distribution tenant.
@@ -124,6 +124,18 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Current status of the distribution tenant.
 * `etag` - Current version of the distribution tenant.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+~> **NOTE:** In versions prior to `v6.51.0`, resource timeouts were accepted but not enforced. Timeouts are now fully enforced. If you have previously configured custom timeouts, they will now take effect.
+
+~> **NOTE:** When using `managed_certificate_request`, the managed certificate issuance uses a fixed 3 hour timeout regardless of the configured resource timeout. This behavior will be updated in a future major version.
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `45m`)
+* `update` - (Default `45m`)
+* `delete` - (Default `45m`)
 
 ## Import
 

@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Add terraform-provider-aws version to HTTP User-Agent header
-```

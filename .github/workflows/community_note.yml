@@ -13,8 +13,8 @@ on:
       - opened
 
 permissions:
-  issues: write
-  pull-requests: write
+  issues: write         # required to comment on issues
+  pull-requests: write  # required to comment on pull requests
 
 jobs:
   add_note:

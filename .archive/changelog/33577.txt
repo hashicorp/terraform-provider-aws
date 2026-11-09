@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_batch_job_queue: Correctly validates elements of `compute_environments` as ARNs
-```

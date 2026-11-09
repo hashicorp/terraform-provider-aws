@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudformation_stack: Marks `outputs` as Computed when there are potential changes.
-```

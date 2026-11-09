@@ -27,86 +27,88 @@ func dataSourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainNameRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificateARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_upload_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudfront_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudfront_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"domain_name_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"endpoint_access_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrIPAddressType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"types": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCertificateARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_upload_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloudfront_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cloudfront_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"domain_name_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"endpoint_access_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"endpoint_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrIPAddressType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"types": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
 						},
 					},
 				},
-			},
-			names.AttrPolicy: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"regional_certificate_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"regional_certificate_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"regional_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"regional_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"security_policy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrPolicy: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"regional_certificate_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"regional_certificate_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"regional_domain_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"regional_zone_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"security_policy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

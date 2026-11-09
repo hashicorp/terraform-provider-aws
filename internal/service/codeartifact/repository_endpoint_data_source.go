@@ -26,30 +26,32 @@ func dataSourceRepositoryEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRepositoryEndpointRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"domain_owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrFormat: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.PackageFormat](),
-			},
-			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"repository_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"domain_owner": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrFormat: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.PackageFormat](),
+				},
+				"repository": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"repository_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

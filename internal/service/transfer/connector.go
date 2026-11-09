@@ -49,136 +49,138 @@ func resourceConnector() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"access_role": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"as2_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"compression": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CompressionEnum](),
-						},
-						"encryption_algorithm": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.EncryptionAlg](),
-						},
-						"local_profile_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"mdn_response": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MdnResponse](),
-						},
-						"mdn_signing_algorithm": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MdnSigningAlg](),
-						},
-						"message_subject": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"partner_profile_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"signing_algorithm": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SigningAlg](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_role": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"as2_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"compression": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CompressionEnum](),
+							},
+							"encryption_algorithm": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.EncryptionAlg](),
+							},
+							"local_profile_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"mdn_response": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MdnResponse](),
+							},
+							"mdn_signing_algorithm": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MdnSigningAlg](),
+							},
+							"message_subject": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"partner_profile_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"signing_algorithm": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SigningAlg](),
+							},
 						},
 					},
 				},
-			},
-			"connector_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"egress_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"vpc_lattice": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"port_number": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 65535),
-									},
-									"resource_configuration_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
+				"connector_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"egress_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"vpc_lattice": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"port_number": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(1, 65535),
+										},
+										"resource_configuration_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"logging_role": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"security_policy_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 100),
-					validation.StringMatch(regexache.MustCompile(`^TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+$`), "must be in the format matching TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+"),
-				),
-			},
-			"sftp_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"trusted_host_keys": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 10,
-							Elem: &schema.Schema{
+				"logging_role": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"security_policy_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 100),
+						validation.StringMatch(regexache.MustCompile(`^TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+$`), "must be in the format matching TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+"),
+					),
+				},
+				"sftp_config": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"trusted_host_keys": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 10,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 2028),
+								},
+							},
+							"user_secret_id": {
 								Type:         schema.TypeString,
+								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 2028),
 							},
 						},
-						"user_secret_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2028),
-						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrURL: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

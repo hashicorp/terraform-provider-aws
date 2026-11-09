@@ -36,14 +36,6 @@ type listResourceRule struct {
 func (l *listResourceRule) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().EventsClient(ctx)
 
-	var query listRuleModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing EventBridge Rule")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input eventbridge.ListRulesInput
@@ -94,22 +86,23 @@ func (l *listResourceRule) List(ctx context.Context, request list.ListRequest, s
 	}
 }
 
-type listRuleModel struct {
-	framework.WithRegionModel
-}
-
 func listRules(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListRulesInput) iter.Seq2[awstypes.Rule, error] {
 	return func(yield func(awstypes.Rule, error) bool) {
+		var stopped bool
 		err := listRulesPages(ctx, conn, input, func(page *eventbridge.ListRulesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
 			for _, item := range page.Rules {
 				if !yield(item, nil) {
-					return !lastPage
+					stopped = true
+					return false
 				}
 			}
 			return !lastPage
 		})
-		if err != nil {
-			yield(awstypes.Rule{}, fmt.Errorf("listing EventBridge Rule resources: %w", err))
+		if !stopped && err != nil {
+			yield(inttypes.Zero[awstypes.Rule](), fmt.Errorf("listing EventBridge Rules: %w", err))
 			return
 		}
 	}

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_apigatewayv2_route: Fix `BadRequestException: Unable to update route. Authorizer type is invalid or null` errors when updating `authorizer_id`
-```

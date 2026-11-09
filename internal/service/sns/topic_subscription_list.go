@@ -5,7 +5,6 @@ package sns
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -120,21 +120,6 @@ func (l *topicSubscriptionListResource) List(ctx context.Context, request list.L
 	}
 }
 
-func listSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput) iter.Seq2[awstypes.Subscription, error] {
-	return func(yield func(awstypes.Subscription, error) bool) {
-		pages := sns.NewListSubscriptionsByTopicPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.Subscription{}, fmt.Errorf("listing SNS Topic Subscriptions: %w", err))
-				return
-			}
-
-			for _, subscription := range page.Subscriptions {
-				if !yield(subscription, nil) {
-					return
-				}
-			}
-		}
-	}
+func listSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...func(*sns.Options)) iter.Seq2[awstypes.Subscription, error] {
+	return tfiter.ConcatValuesWithError(listSubscriptionPagesByTopic(ctx, conn, input, optFns...))
 }

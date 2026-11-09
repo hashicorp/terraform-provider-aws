@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_gamelift_game_server_group: Correctly plan `tags_all` value
-```

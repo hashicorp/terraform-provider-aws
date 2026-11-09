@@ -53,6 +53,21 @@ func testAccPreCheckDefaultVPCExists(ctx context.Context, t *testing.T) {
 	}
 }
 
+// testAccCheckDefaultVPCExists is the standard-named wrapper required by
+// Resource Identity generated tests. aws_default_vpc adopts the AWS-managed
+// default VPC so existence checks are equivalent to acctest.CheckVPCExists.
+func testAccCheckDefaultVPCExists(ctx context.Context, t *testing.T, n string, v *awstypes.Vpc) resource.TestCheckFunc {
+	return acctest.CheckVPCExists(ctx, t, n, v)
+}
+
+// testAccCheckDefaultVPCDestroy is the standard-named wrapper required by
+// Resource Identity generated tests. aws_default_vpc never deletes the
+// underlying AWS default VPC (delete is a no-op unless force_destroy is set),
+// so destroy verification reuses the "existing" variant.
+func testAccCheckDefaultVPCDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return testAccCheckDefaultVPCDestroyExists(ctx, t)
+}
+
 func testAccPreCheckDefaultVPCNotFound(ctx context.Context, t *testing.T) {
 	if vpcID := defaultVPC(ctx, t); vpcID != "" {
 		t.Logf("Deleting existing default VPC: %s", vpcID)
@@ -116,6 +131,12 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "existing_default_vpc"},
 			},
 		},
 	})

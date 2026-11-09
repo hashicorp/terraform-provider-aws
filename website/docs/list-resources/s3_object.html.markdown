@@ -26,4 +26,5 @@ list "aws_s3_object" "example" {
 This list resource supports the following arguments:
 
 * `bucket` - (Required) Name of the S3 bucket to list objects from.
+* `prefix` - (Optional) Limits the response to keys that begin with the specified prefix.
 * `region` - (Optional) Region to query. Defaults to provider region.

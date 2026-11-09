@@ -26,7 +26,6 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_basic(rName, 2),
@@ -44,6 +43,7 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "stream_mode_details.0.stream_mode", resourceName, "stream_mode_details.0.stream_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttr(dataSourceName, "warm_throughput.#", "0"),
 				),
 			},
 			{
@@ -67,7 +67,6 @@ func TestAccKinesisStreamDataSource_encryption(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_encryption(rName, 2),
@@ -98,7 +97,6 @@ func TestAccKinesisStreamDataSource_maxRecordSizeInKiB(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_maxRecordSizeInKiB(rName, 10240),
@@ -134,7 +132,6 @@ func TestAccKinesisStreamDataSource_pagedShards(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamDataSourceConfig_basic(rName, 1100),

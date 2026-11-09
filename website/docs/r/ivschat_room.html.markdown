@@ -20,7 +20,7 @@ resource "aws_ivschat_room" "example" {
 }
 ```
 
-## Usage with Logging Configuration to S3 Bucket
+### Usage with Logging Configuration to S3 Bucket
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -106,7 +106,7 @@ resource "aws_ivschat_room" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the IVS Chat room.
+- `arn` (String) ARN of the IVS Chat room.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Chat Room using the ARN. For example:
 

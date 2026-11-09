@@ -61,17 +61,17 @@ resource "aws_s3control_object_lambda_access_point_policy" "example" {
 
 This resource supports the following arguments:
 
+* `account_id` - (Optional) AWS account ID for the account that owns the Object Lambda Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
+* `name` - (Required) Name of the Object Lambda Access Point.
+* `policy` - (Required) Object Lambda Access Point resource policy document.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `account_id` - (Optional) The AWS account ID for the account that owns the Object Lambda Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
-* `name` - (Required) The name of the Object Lambda Access Point.
-* `policy` - (Required) The Object Lambda Access Point resource policy document.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `has_public_access_policy` - Indicates whether this access point currently has a policy that allows public access.
-* `id` - The AWS account ID and access point name separated by a colon (`:`).
+* `has_public_access_policy` - Whether this access point currently has a policy that allows public access.
+* `id` - AWS account ID and access point name separated by a colon (`:`).
 
 ## Import
 

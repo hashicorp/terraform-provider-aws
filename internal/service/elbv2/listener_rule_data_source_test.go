@@ -1006,10 +1006,47 @@ func TestAccELBV2ListenerRuleDataSource_conditionSourceIP(t *testing.T) {
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
 						expectKnownCondition("source_ip", knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrIPAddressType: knownvalue.Null(),
 								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
 									knownvalue.StringExact("192.168.0.0/16"),
 									knownvalue.StringExact("dead:cafe::/64"),
 								}),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_conditionSourceIPAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionSourceIPAddressType(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("source_ip", knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrIPAddressType: knownvalue.StringExact(string(awstypes.SourceIpAddressTypeEnumIpv6)),
+								names.AttrValues:        knownvalue.SetExact([]knownvalue.Check{}),
 							}),
 						})),
 					})),
@@ -1048,8 +1085,8 @@ func TestAccELBV2ListenerRuleDataSource_transform(t *testing.T) {
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"rewrite": knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
-											"regex":   knownvalue.StringExact("^mywebsite-(.+).com$"),
-											"replace": knownvalue.StringExact("internal.dev.$1.myweb.com"),
+											"regex":   knownvalue.StringExact("^mywebsite-(.+)\\.test$"),
+											"replace": knownvalue.StringExact("internal.dev.$1.myweb.test"),
 										}),
 									}),
 								}),
@@ -1714,6 +1751,14 @@ resource "aws_lb_listener_rule" "test" {
 `)
 }
 
+func testAccListenerRuleDataSourceConfig_conditionSourceIPAddressType(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_sourceIPAddressType(rName, string(awstypes.SourceIpAddressTypeEnumIpv6)), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+`)
+}
+
 func testAccListenerRuleDataSourceConfig_transform(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
 data "aws_lb_listener_rule" "test" {
@@ -1738,8 +1783,8 @@ resource "aws_lb_listener_rule" "test" {
     type = "host-header-rewrite"
     host_header_rewrite_config {
       rewrite {
-        regex   = "^mywebsite-(.+).com$"
-        replace = "internal.dev.$1.myweb.com"
+        regex   = "^mywebsite-(.+)\\.test$"
+        replace = "internal.dev.$1.myweb.test"
       }
     }
   }

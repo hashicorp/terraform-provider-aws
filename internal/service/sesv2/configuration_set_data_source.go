@@ -25,128 +25,130 @@ func dataSourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationSetRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"configuration_set_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"delivery_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_delivery_seconds": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"sending_pool_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"tls_policy": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"reputation_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"last_fresh_start": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"reputation_metrics_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
+				"configuration_set_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
 				},
-			},
-			"sending_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"sending_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"suppression_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"suppressed_reasons": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"delivery_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_delivery_seconds": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"sending_pool_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"tls_policy": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"tracking_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"custom_redirect_domain": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"https_policy": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"reputation_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"last_fresh_start": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"reputation_metrics_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"vdm_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dashboard_options": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"engagement_metrics": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+				"sending_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"sending_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
 							},
 						},
-						"guardian_options": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"optimized_shared_delivery": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
+					},
+				},
+				"suppression_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"suppressed_reasons": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
 								},
 							},
 						},
 					},
 				},
-			},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"tracking_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"custom_redirect_domain": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"https_policy": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"vdm_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"dashboard_options": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"engagement_metrics": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"guardian_options": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"optimized_shared_delivery": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

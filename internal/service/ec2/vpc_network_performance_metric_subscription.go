@@ -30,35 +30,37 @@ func resourceNetworkPerformanceMetricSubscription() *schema.Resource {
 		ReadWithoutTimeout:   resourceNetworkPerformanceMetricSubscriptionRead,
 		DeleteWithoutTimeout: resourceNetworkPerformanceMetricSubscriptionDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrDestination: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"metric": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.MetricTypeAggregateLatency,
-				ValidateDiagFunc: enum.Validate[awstypes.MetricType](),
-			},
-			"period": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrSource: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"statistic": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.StatisticTypeP50,
-				ValidateDiagFunc: enum.Validate[awstypes.StatisticType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrDestination: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"metric": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.MetricTypeAggregateLatency,
+					ValidateDiagFunc: enum.Validate[awstypes.MetricType](),
+				},
+				"period": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrSource: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"statistic": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.StatisticTypeP50,
+					ValidateDiagFunc: enum.Validate[awstypes.StatisticType](),
+				},
+			}
 		},
 	}
 }

@@ -95,6 +95,14 @@ func testAccApp_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfamplify.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -190,6 +198,51 @@ func testAccApp_AutoBranchCreationConfig(t *testing.T) {
 					// resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", "0"),
 					// resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_branch_creation", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func testAccApp_AutoBranchCreationConfigEnvironmentVariables(t *testing.T) {
+	ctx := acctest.Context(t)
+	var app types.App
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_amplify_app.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_autoBranchCreationConfigEnvironmentVariables(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.ENVVAR1", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppConfig_autoBranchCreationConfigEnvironmentVariablesUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.ENVVAR1", "2"),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.ENVVAR2", "2"),
+				),
+			},
+			{
+				Config: testAccAppConfig_autoBranchCreationConfigNoEnvironmentVariables(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, t, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.0.environment_variables.%", "0"),
 				),
 			},
 		},
@@ -844,6 +897,64 @@ resource "aws_amplify_app" "test" {
     enable_pull_request_preview = false
 
     pull_request_environment_name = "test2"
+  }
+}
+`, rName)
+}
+
+func testAccAppConfig_autoBranchCreationConfigEnvironmentVariables(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  enable_auto_branch_creation = true
+
+  auto_branch_creation_patterns = [
+    "feature/*",
+  ]
+
+  auto_branch_creation_config {
+    environment_variables = {
+      ENVVAR1 = "1"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppConfig_autoBranchCreationConfigEnvironmentVariablesUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  enable_auto_branch_creation = true
+
+  auto_branch_creation_patterns = [
+    "feature/*",
+  ]
+
+  auto_branch_creation_config {
+    environment_variables = {
+      ENVVAR1 = "2",
+      ENVVAR2 = "2"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppConfig_autoBranchCreationConfigNoEnvironmentVariables(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  enable_auto_branch_creation = true
+
+  auto_branch_creation_patterns = [
+    "feature/*",
+  ]
+
+  auto_branch_creation_config {
   }
 }
 `, rName)

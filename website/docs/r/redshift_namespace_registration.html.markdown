@@ -124,7 +124,9 @@ resource "aws_redshift_namespace_registration" "example" {
 
 #### Optional
 
+- `account_id` (String) AWS Account where this resource is managed.
 - `provisioned_cluster_identifier` (String) Identifier of the provisioned cluster. Required when `namespace_type` is `provisioned`.
+- `region` (String) Region where this resource is managed.
 - `serverless_namespace_identifier` (String) Identifier of the serverless namespace. Required when `namespace_type` is `serverless`.
 - `serverless_workgroup_identifier` (String) Identifier of the serverless workgroup. Required when `namespace_type` is `serverless`.
 

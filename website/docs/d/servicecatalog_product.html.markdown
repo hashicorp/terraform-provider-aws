@@ -50,3 +50,9 @@ This data source exports the following attributes in addition to the arguments a
 * `support_url` - Contact URL for product support.
 * `tags` - Tags applied to the product.
 * `type` - Type of product.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `read` - (Default `10m`)

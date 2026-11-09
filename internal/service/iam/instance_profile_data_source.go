@@ -22,35 +22,37 @@ func dataSourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceProfileRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrRoleARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"role_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"role_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrRoleARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"role_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"role_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

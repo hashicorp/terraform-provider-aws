@@ -43,244 +43,246 @@ func resourceDataSource() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"dynamodb_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delta_sync_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"base_table_ttl": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"delta_sync_table_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"delta_sync_table_ttl": {
-										Type:     schema.TypeInt,
-										Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"dynamodb_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"delta_sync_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"base_table_ttl": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										"delta_sync_table_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"delta_sync_table_ttl": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						names.AttrTableName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"use_caller_credentials": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"versioned": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-				ConflictsWith: []string{"elasticsearch_config", "http_config", "lambda_config", "relational_database_config", "opensearchservice_config"},
-			},
-			"elasticsearch_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEndpoint: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							names.AttrTableName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"use_caller_credentials": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"versioned": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
+					ConflictsWith: []string{"elasticsearch_config", "http_config", "lambda_config", "relational_database_config", "opensearchservice_config"},
 				},
-				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "opensearchservice_config"},
-			},
-			"event_bridge_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"event_bus_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+				"elasticsearch_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEndpoint: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
+					ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "opensearchservice_config"},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "lambda_config", "relational_database_config"},
-			},
-			"http_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authorization_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authorization_type": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          awstypes.AuthorizationTypeAwsIam,
-										ValidateDiagFunc: enum.Validate[awstypes.AuthorizationType](),
-									},
-									"aws_iam_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"signing_region": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"signing_service_name": {
-													Type:     schema.TypeString,
-													Optional: true,
+				"event_bridge_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"event_bus_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+					ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "lambda_config", "relational_database_config"},
+				},
+				"http_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authorization_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"authorization_type": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          awstypes.AuthorizationTypeAwsIam,
+											ValidateDiagFunc: enum.Validate[awstypes.AuthorizationType](),
+										},
+										"aws_iam_config": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"signing_region": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"signing_service_name": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrEndpoint: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "lambda_config", "relational_database_config"},
-			},
-			"lambda_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrFunctionARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+							names.AttrEndpoint: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
+					ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "lambda_config", "relational_database_config"},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "relational_database_config"},
-			},
-			"opensearchservice_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEndpoint: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRegion: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+				"lambda_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrFunctionARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
+					ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "relational_database_config"},
 				},
-				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "elasticsearch_config"},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z_][0-9A-Za-z_]*`), "must match [A-Za-z_][0-9A-Za-z_]*"),
-			},
-			"relational_database_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"http_endpoint_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"aws_secret_store_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrDatabaseName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"db_cluster_identifier": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRegion: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									names.AttrSchema: {
-										Type:     schema.TypeString,
-										Optional: true,
+				"opensearchservice_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEndpoint: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+					ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "elasticsearch_config"},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z_][0-9A-Za-z_]*`), "must match [A-Za-z_][0-9A-Za-z_]*"),
+				},
+				"relational_database_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"http_endpoint_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"aws_secret_store_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrDatabaseName: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"db_cluster_identifier": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRegion: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										names.AttrSchema: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrSourceType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.RelationalDatabaseSourceTypeRdsHttpEndpoint,
-							ValidateDiagFunc: enum.Validate[awstypes.RelationalDatabaseSourceType](),
+							names.AttrSourceType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.RelationalDatabaseSourceTypeRdsHttpEndpoint,
+								ValidateDiagFunc: enum.Validate[awstypes.RelationalDatabaseSourceType](),
+							},
 						},
 					},
+					ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "lambda_config"},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "lambda_config"},
-			},
-			names.AttrServiceRoleARN: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DataSourceType](),
-				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-			},
+				names.AttrServiceRoleARN: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DataSourceType](),
+					StateFunc:        sdkv2.ToUpperSchemaStateFunc,
+				},
+			}
 		},
 	}
 }

@@ -29,7 +29,6 @@ import (
 )
 
 // @SDKResource("aws_vpclattice_target_group_attachment", name="Target Group Attachment")
-// @Testing(tagsTest=false)
 func resourceTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupAttachmentCreate,
@@ -41,36 +40,38 @@ func resourceTargetGroupAttachment() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrTarget: {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						names.AttrPort: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsPortNumber,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrTarget: {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrID: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringLenBetween(1, 2048),
+							},
+							names.AttrPort: {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
 						},
 					},
 				},
-			},
-			"target_group_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"target_group_identifier": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

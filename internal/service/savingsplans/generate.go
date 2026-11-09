@@ -4,6 +4,7 @@
 //go:generate go run ../../generate/listpages/main.go -ListOps=DescribeSavingsPlans,DescribeSavingsPlansOfferings
 //go:generate go run ../../generate/tags/main.go -KVTValues -ServiceTagsMap -UpdateTags
 //go:generate go run ../../generate/servicepackage/main.go
+//go:generate go run ../../generate/identitytests/main.go
 // ONLY://go:generate go run ../../generate/tagstests/main.go
 
 package savingsplans

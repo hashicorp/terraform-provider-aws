@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -28,6 +27,10 @@ import (
 )
 
 // @FrameworkResource("aws_cloudwatch_log_delivery_destination_policy", name="Delivery Destination Policy")
+// @IdentityAttribute("delivery_destination_name")
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(importIgnore="delivery_destination_policy")
+// @Testing(importStateIdAttribute="delivery_destination_name")
 func newDeliveryDestinationPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deliveryDestinationPolicyResource{}
 
@@ -36,6 +39,7 @@ func newDeliveryDestinationPolicyResource(context.Context) (resource.ResourceWit
 
 type deliveryDestinationPolicyResource struct {
 	framework.ResourceWithModel[deliveryDestinationPolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *deliveryDestinationPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -64,15 +68,16 @@ func (r *deliveryDestinationPolicyResource) Create(ctx context.Context, request 
 
 	conn := r.Meta().LogsClient(ctx)
 
+	deliveryDestinationName := fwflex.StringValueFromFramework(ctx, data.DeliveryDestinationName)
 	input := cloudwatchlogs.PutDeliveryDestinationPolicyInput{
-		DeliveryDestinationName:   fwflex.StringFromFramework(ctx, data.DeliveryDestinationName),
+		DeliveryDestinationName:   aws.String(deliveryDestinationName),
 		DeliveryDestinationPolicy: fwflex.StringFromFramework(ctx, data.DeliveryDestinationPolicy),
 	}
 
 	_, err := conn.PutDeliveryDestinationPolicy(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Delivery Destination Policy (%s)", data.DeliveryDestinationName.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Delivery Destination Policy (%s)", deliveryDestinationName), err.Error())
 
 		return
 	}
@@ -89,7 +94,8 @@ func (r *deliveryDestinationPolicyResource) Read(ctx context.Context, request re
 
 	conn := r.Meta().LogsClient(ctx)
 
-	output, err := findDeliveryDestinationPolicyByDeliveryDestinationName(ctx, conn, data.DeliveryDestinationName.ValueString())
+	deliveryDestinationName := fwflex.StringValueFromFramework(ctx, data.DeliveryDestinationName)
+	output, err := findDeliveryDestinationPolicyByDeliveryDestinationName(ctx, conn, deliveryDestinationName)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -99,7 +105,7 @@ func (r *deliveryDestinationPolicyResource) Read(ctx context.Context, request re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery Destination Policy (%s)", data.DeliveryDestinationName.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery Destination Policy (%s)", deliveryDestinationName), err.Error())
 
 		return
 	}
@@ -119,15 +125,16 @@ func (r *deliveryDestinationPolicyResource) Update(ctx context.Context, request 
 
 	conn := r.Meta().LogsClient(ctx)
 
+	deliveryDestinationName := fwflex.StringValueFromFramework(ctx, new.DeliveryDestinationName)
 	input := cloudwatchlogs.PutDeliveryDestinationPolicyInput{
-		DeliveryDestinationName:   fwflex.StringFromFramework(ctx, new.DeliveryDestinationName),
+		DeliveryDestinationName:   aws.String(deliveryDestinationName),
 		DeliveryDestinationPolicy: fwflex.StringFromFramework(ctx, new.DeliveryDestinationPolicy),
 	}
 
 	_, err := conn.PutDeliveryDestinationPolicy(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Delivery Destination Policy (%s)", new.DeliveryDestinationName.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Delivery Destination Policy (%s)", deliveryDestinationName), err.Error())
 
 		return
 	}
@@ -157,10 +164,6 @@ func (r *deliveryDestinationPolicyResource) Delete(ctx context.Context, request 
 
 		return
 	}
-}
-
-func (r *deliveryDestinationPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("delivery_destination_name"), request, response)
 }
 
 func findDeliveryDestinationPolicyByDeliveryDestinationName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.Policy, error) {

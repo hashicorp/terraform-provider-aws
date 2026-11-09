@@ -88,6 +88,14 @@ func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceRestAPI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -222,6 +230,34 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayRestAPI_securityPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_securityPolicy(rName, string(types.SecurityPolicySecurityPolicyTls1312PfsPq202509), string(types.EndpointAccessModeBasic)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicySecurityPolicyTls1312PfsPq202509)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_access_mode", string(types.EndpointAccessModeBasic)),
 				),
 			},
 			{
@@ -1475,10 +1511,101 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccRestAPIConfig_policySetByBody(rName, "Deny"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Deny"`)),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+		},
+	})
+}
+
+// Regression test: a body-only update must not wipe a policy managed by
+// aws_api_gateway_rest_api_policy (regression introduced by #48118).
+func TestAccAPIGatewayRestAPI_Policy_setByPolicyResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetRestApiOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_policySetByPolicyResource(rName, "/test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					// aws_api_gateway_rest_api is read before aws_api_gateway_rest_api_policy
+					// runs, so check the policy resource's own attribute here.
+					resource.TestMatchResourceAttr("aws_api_gateway_rest_api_policy.test", names.AttrPolicy, regexache.MustCompile(`"Allow"`)),
+				),
+			},
+			// Body-only update must not wipe the policy set by aws_api_gateway_rest_api_policy.
+			// The inter-step refresh populates aws_api_gateway_rest_api.test.policy from AWS,
+			// which the fix then restores after PutRestApi clears it.
+			{
+				Config: testAccRestAPIConfig_policySetByPolicyResource(rName, "/test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					testAccCheckRestAPIRoutes(ctx, t, &conf, []string{"/", "/test2"}),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Allow"`)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_api_gateway_rest_api_policy.test", plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayRestAPI_Description_updateAttributeAndBody(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var conf apigateway.GetRestApiOutput
+
+	resourceName := "aws_api_gateway_rest_api.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx, t),
+
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_Description_updateAttributeAndBody(rName, "description1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "test"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+			{
+				Config: testAccRestAPIConfig_Description_updateAttributeAndBody(rName, "description2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "test"),
+				),
 			},
 		},
 	})
@@ -2161,6 +2288,20 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName)
 }
 
+func testAccRestAPIConfig_securityPolicy(rName, securityPolicy, endpointAccessMode string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name                 = %[1]q
+  security_policy      = %[2]q
+  endpoint_access_mode = %[3]q
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+`, rName, securityPolicy, endpointAccessMode)
+}
+
 func testAccRestAPIConfig_keySource(rName string, apiKeySource string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
@@ -2799,6 +2940,67 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName, bodyPolicyEffect)
 }
 
+func testAccRestAPIConfig_policySetByPolicyResource(rName string, bodyPath string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+
+  body = jsonencode({
+    swagger = "2.0"
+    info = {
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
+    }
+    schemes = ["https"]
+    paths = {
+      %[2]q = {
+        get = {
+          responses = {
+            "200" = {
+              description = "OK"
+            }
+          }
+          x-amazon-apigateway-integration = {
+            httpMethod = "GET"
+            type       = "HTTP"
+            responses = {
+              default = {
+                statusCode = 200
+              }
+            }
+            uri = "https://api.example.com/"
+          }
+        }
+      }
+    }
+  })
+}
+
+resource "aws_api_gateway_rest_api_policy" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "execute-api:Invoke"
+        Condition = {
+          IpAddress = {
+            "aws:SourceIp" = "123.123.123.123/32"
+          }
+        }
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Resource = "*"
+      }
+    ]
+  })
+}
+`, rName, bodyPath)
+}
+
 func testAccRestAPIConfig_failOnWarnings(rName string, title string, failOnWarnings string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
@@ -2844,4 +3046,172 @@ resource "aws_api_gateway_rest_api" "test" {
   })
 }
 `, rName, title, failOnWarnings)
+}
+
+func testAccRestAPIConfig_Description_updateAttributeAndBody(rName, oasDescription string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name                 = "test"
+  description          = %[2]q
+  endpoint_access_mode = "BASIC"
+  security_policy      = "SecurityPolicy_TLS13_1_2_2021_06"
+
+  body = jsonencode({
+    openapi = "3.0.0"
+
+    info = {
+      title       = "Private API"
+      version     = "1.0.0"
+      description = %[2]q
+    }
+
+    paths = {
+      "/test" = {
+        get = {
+          summary     = "Health check"
+          description = "Health check endpoint"
+
+          responses = {
+            "200" = {
+              description = "Successful operation"
+
+              content = {
+                "application/json" = {
+                  schema = {
+                    type = "object"
+
+                    properties = {
+                      message = {
+                        type    = "string"
+                        example = "test"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          "x-amazon-apigateway-integration" = {
+            type       = "MOCK"
+            httpMethod = "POST"
+
+            requestTemplates = {
+              "application/json" = jsonencode({
+                statusCode = 200
+                body       = "{\"message\":\"test\"}"
+              })
+            }
+
+            responses = {
+              default = {
+                statusCode = "200"
+
+                responseTemplates = {
+                  "application/json" = "$input.body"
+                }
+              }
+            }
+          }
+
+          "x-amazon-apigateway-request-validator" = "all"
+        }
+      }
+    }
+
+    "x-amazon-apigateway-minimum-compression-size" = 0
+
+    "x-amazon-apigateway-request-validators" = {
+      all = {
+        validateRequestParameters = true
+        validateRequestBody       = true
+      }
+    }
+
+    "x-amazon-apigateway-endpoint-configuration" = {
+      disableExecuteApiEndpoint = false
+      ipAddressType             = "dualstack"
+
+      vpcEndpointIds = [
+        aws_vpc_endpoint.test.id
+      ]
+    }
+
+    "x-amazon-apigateway-policy" = {
+      Version = "2012-10-17"
+
+      Statement = [
+        {
+          Effect    = "Deny"
+          Principal = "*"
+          Action    = "execute-api:Invoke"
+
+          Resource = [
+            "execute-api:/*/*/*"
+          ]
+
+          Condition = {
+            StringNotEquals = {
+              "aws:SourceVpce" = [
+                aws_vpc_endpoint.test.id
+              ]
+            }
+          }
+        },
+        {
+          Effect    = "Allow"
+          Principal = "*"
+          Action    = "execute-api:Invoke"
+
+          Resource = [
+            "execute-api:/*/*/*"
+          ]
+        }
+      ]
+    }
+  })
+
+  endpoint_configuration {
+    types = ["PRIVATE"]
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  private_dns_enabled = false
+  security_group_ids  = [aws_default_security_group.test.id]
+
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.execute-api"
+  subnet_ids        = [aws_subnet.test.id]
+  vpc_endpoint_type = "Interface"
+  vpc_id            = aws_vpc.test.id
+}
+`, rName, oasDescription))
 }

@@ -42,18 +42,20 @@ func resourceGroupPolicyAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceGroupPolicyAttachmentRead,
 		DeleteWithoutTimeout: resourceGroupPolicyAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			"group": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"policy_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"group": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"policy_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }

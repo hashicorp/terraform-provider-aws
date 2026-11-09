@@ -1,0 +1,27 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_cloudwatch_log_index_policy" "test" {
+  log_group_name  = aws_cloudwatch_log_group.test.name
+  policy_document = "{\"Fields\":[\"eventName\"]}"
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/testacc/index-policy-${var.rName}"
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.51.0"
+    }
+  }
+}
+
+provider "aws" {}

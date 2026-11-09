@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_msk_cluster: Add `zookeeper_connect_string_tls` attribute
-```

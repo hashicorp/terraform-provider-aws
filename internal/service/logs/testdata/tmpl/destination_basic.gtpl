@@ -1,4 +1,5 @@
 resource "aws_cloudwatch_log_destination" "test" {
+{{- template "region" }}
   name       = var.rName
   target_arn = aws_kinesis_stream.test.arn
   role_arn   = aws_iam_role.test.arn
@@ -9,11 +10,14 @@ resource "aws_cloudwatch_log_destination" "test" {
 }
 
 resource "aws_kinesis_stream" "test" {
+{{- template "region" }}
   name        = var.rName
   shard_count = 1
 }
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+{{- template "region" }}
+}
 
 data "aws_iam_policy_document" "role" {
   statement {

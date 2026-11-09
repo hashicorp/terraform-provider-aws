@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -46,6 +45,7 @@ import (
 
 // @FrameworkResource("aws_odb_network", name="Network")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newResourceNetwork(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceNetwork{}
 	r.SetDefaultCreateTimeout(24 * time.Hour)
@@ -224,6 +224,11 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 			"percent_progress": schema.Float32Attribute{
 				Computed:    true,
 				Description: "The amount of progress made on the current operation on the ODB network, expressed as a percentage.",
+			},
+			"ec2_placement_group_ids": schema.ListAttribute{
+				Computed:    true,
+				CustomType:  fwtypes.ListOfStringType,
+				Description: "A list of EC2 placement group IDs associated with the ODB network.",
 			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType:  statusType,
@@ -743,10 +748,10 @@ func (r *resourceNetwork) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func waitNetworkCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbNetwork, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusProvisioning),
 		Target:  enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh: statusNetwork(ctx, conn, id),
+		Refresh: statusNetwork(conn, id),
 		Timeout: timeout,
 	}
 
@@ -761,10 +766,10 @@ func waitNetworkCreated(ctx context.Context, conn *odb.Client, id string, timeou
 func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, conn *odb.Client, id string, timeout time.Duration, managedResourceStatus func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus) (*odbtypes.OdbNetwork, error) {
 	switch targetStatus {
 	case odbtypes.AccessEnabled:
-		stateConf := &sdkretry.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending: enum.Slice(odbtypes.ManagedResourceStatusEnabling),
 			Target:  enum.Slice(odbtypes.ManagedResourceStatusEnabled),
-			Refresh: statusManagedService(ctx, conn, id, managedResourceStatus),
+			Refresh: statusManagedService(conn, id, managedResourceStatus),
 			Timeout: timeout,
 		}
 		outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -773,10 +778,10 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 		}
 		return nil, err
 	case odbtypes.AccessDisabled:
-		stateConf := &sdkretry.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending: enum.Slice(odbtypes.ManagedResourceStatusDisabling),
 			Target:  enum.Slice(odbtypes.ManagedResourceStatusDisabled),
-			Refresh: statusManagedService(ctx, conn, id, managedResourceStatus),
+			Refresh: statusManagedService(conn, id, managedResourceStatus),
 			Timeout: timeout,
 		}
 		outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -815,8 +820,8 @@ func waitForCrossRegionRestoreSourcesStatus(ctx context.Context, conn *odb.Clien
 	return nil
 }
 
-func statusManagedService(ctx context.Context, conn *odb.Client, id string, managedResourceStatus func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusManagedService(conn *odb.Client, id string, managedResourceStatus func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindOracleDBNetworkResourceByID(ctx, conn, id)
 
 		if err != nil {
@@ -832,10 +837,10 @@ func statusManagedService(ctx context.Context, conn *odb.Client, id string, mana
 }
 
 func waitNetworkUpdated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbNetwork, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusUpdating),
 		Target:  enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh: statusNetwork(ctx, conn, id),
+		Refresh: statusNetwork(conn, id),
 		Timeout: timeout,
 	}
 
@@ -848,10 +853,10 @@ func waitNetworkUpdated(ctx context.Context, conn *odb.Client, id string, timeou
 }
 
 func waitNetworkDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbNetwork, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusTerminating),
 		Target:  []string{},
-		Refresh: statusNetwork(ctx, conn, id),
+		Refresh: statusNetwork(conn, id),
 		Timeout: timeout,
 	}
 
@@ -863,8 +868,8 @@ func waitNetworkDeleted(ctx context.Context, conn *odb.Client, id string, timeou
 	return nil, err
 }
 
-func statusNetwork(ctx context.Context, conn *odb.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNetwork(conn *odb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindOracleDBNetworkResourceByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -900,9 +905,8 @@ func FindOracleDBNetworkResourceByID(ctx context.Context, conn *odb.Client, id s
 	out, err := conn.GetOdbNetwork(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -994,6 +998,7 @@ type odbNetworkResourceModel struct {
 	ManagedServices                   fwtypes.ListNestedObjectValueOf[odbNetworkManagedServicesResourceModel]    `tfsdk:"managed_services"`
 	CreatedAt                         timetypes.RFC3339                                                          `tfsdk:"created_at"`
 	DeleteAssociatedResources         types.Bool                                                                 `tfsdk:"delete_associated_resources"`
+	Ec2PlacementGroupIds              fwtypes.ListOfString                                                       `tfsdk:"ec2_placement_group_ids"`
 	Tags                              tftags.Map                                                                 `tfsdk:"tags"`
 	TagsAll                           tftags.Map                                                                 `tfsdk:"tags_all"`
 }

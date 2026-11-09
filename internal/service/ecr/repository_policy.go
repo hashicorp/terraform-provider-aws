@@ -36,17 +36,19 @@ func resourceRepositoryPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceRepositoryPolicyPut,
 		DeleteWithoutTimeout: resourceRepositoryPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"repository": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -80,7 +81,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			attrColor: hexColorSchema(attrOptional),
+																			attrColor: hexColorSchema(sdkschema.AttrOptional),
 																		},
 																	},
 																},
@@ -90,7 +91,7 @@ func geospatialMapVisualSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_point_style": stringEnumSchema[awstypes.GeospatialSelectedPointStyle](attrOptional),
+										"selected_point_style": sdkschema.StringEnumSchema[awstypes.GeospatialSelectedPointStyle](sdkschema.AttrOptional),
 									},
 								},
 							},
@@ -114,7 +115,7 @@ func geospatialMapVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(),
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialMapConfiguration.html
 					Type:     schema.TypeList,
@@ -172,7 +173,7 @@ func geospatialMapVisualDataSourceSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_point_style": stringEnumDataSourceSchema[awstypes.GeospatialSelectedPointStyle](),
+										"selected_point_style": sdkschema.StringEnumDataSourceSchema[awstypes.GeospatialSelectedPointStyle](),
 									},
 								},
 							},

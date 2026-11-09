@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lambda_function_url: Fix removal of `cors` configuration block
-```

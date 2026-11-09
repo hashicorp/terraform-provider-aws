@@ -345,7 +345,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 
 	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving Pinpoint default endpoint: %s", err)
+		t.Fatalf("resolving End User Messaging default endpoint: %s", err)
 	}
 
 	return caseExpectations{
@@ -359,7 +359,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving Pinpoint FIPS endpoint: %s", err)
+		t.Fatalf("resolving End User Messaging FIPS endpoint: %s", err)
 	}
 
 	hostname := endpoint.Hostname()
@@ -375,7 +375,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	} else if err != nil && errors.Is(err, context.DeadlineExceeded) {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		t.Fatalf("looking up Pinpoint endpoint %q: %s", hostname, err)
+		t.Fatalf("looking up End User Messaging endpoint %q: %s", hostname, err)
 	}
 
 	return caseExpectations{

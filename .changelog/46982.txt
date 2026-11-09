@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudfront_distribution_tenant: Fix panic when managed certificate is not found during creation
-```

@@ -14,9 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfssmcontacts "github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -94,6 +96,14 @@ func testAccContactChannel_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssmcontacts.ResourceContactChannel(), channelResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(channelResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(channelResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -341,13 +351,7 @@ func testAccCheckContactChannelDestroy(ctx context.Context, t *testing.T) resour
 
 			if err != nil {
 				// Getting resources may return validation exception when the replication set has been destroyed
-				var ve *types.ValidationException
-				if errors.As(err, &ve) {
-					continue
-				}
-
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
+				if errs.IsA[*types.ValidationException](err) || errs.IsA[*types.ResourceNotFoundException](err) {
 					continue
 				}
 

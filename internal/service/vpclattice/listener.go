@@ -49,55 +49,57 @@ func resourceListener() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedAt: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDefaultAction: {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				MinItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"fixed_response": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrStatusCode: {
-										Type:     schema.TypeInt,
-										Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedAt: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDefaultAction: {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					MinItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"fixed_response": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrStatusCode: {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"forward": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"target_groups": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target_group_identifier": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrWeight: {
-													Type:     schema.TypeInt,
-													Default:  100,
-													Optional: true,
+							"forward": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"target_groups": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"target_group_identifier": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrWeight: {
+														Type:     schema.TypeInt,
+														Default:  100,
+														Optional: true,
+													},
 												},
 											},
 										},
@@ -107,47 +109,47 @@ func resourceListener() *schema.Resource {
 						},
 					},
 				},
-			},
-			"last_updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"listener_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			names.AttrPort: {
-				Type:         schema.TypeInt,
-				Computed:     true,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsPortNumber,
-			},
-			names.AttrProtocol: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ListenerProtocol](),
-			},
-			"service_arn": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				AtLeastOneOf: []string{"service_arn", "service_identifier"},
-			},
-			"service_identifier": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				AtLeastOneOf: []string{"service_arn", "service_identifier"},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"last_updated_at": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"listener_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				names.AttrPort: {
+					Type:         schema.TypeInt,
+					Computed:     true,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsPortNumber,
+				},
+				names.AttrProtocol: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ListenerProtocol](),
+				},
+				"service_arn": {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					AtLeastOneOf: []string{"service_arn", "service_identifier"},
+				},
+				"service_identifier": {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					AtLeastOneOf: []string{"service_arn", "service_identifier"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

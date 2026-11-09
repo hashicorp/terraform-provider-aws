@@ -39,91 +39,93 @@ func resourceCACertificate() *schema.Resource {
 		UpdateWithoutTimeout: resourceCACertificateUpdate,
 		DeleteWithoutTimeout: resourceCACertificateDelete,
 
-		Schema: map[string]*schema.Schema{
-			"active": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"allow_auto_registration": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ca_certificate_pem": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				Sensitive: true,
-			},
-			"certificate_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.CertificateModeDefault,
-				ValidateDiagFunc: enum.Validate[awstypes.CertificateMode](),
-			},
-			"customer_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"generation_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"registration_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"template_body": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 10240),
-						},
-						"template_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 36),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, underscores, and hyphens"),
-							),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"active": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"allow_auto_registration": {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ca_certificate_pem": {
+					Type:      schema.TypeString,
+					Required:  true,
+					ForceNew:  true,
+					Sensitive: true,
+				},
+				"certificate_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.CertificateModeDefault,
+					ValidateDiagFunc: enum.Validate[awstypes.CertificateMode](),
+				},
+				"customer_version": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"generation_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"registration_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"template_body": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 10240),
+							},
+							"template_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 36),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, underscores, and hyphens"),
+								),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"validity": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"not_after": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"not_before": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"validity": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"not_after": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"not_before": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"verification_certificate_pem": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				ForceNew:  true,
-				Sensitive: true,
-			},
+				"verification_certificate_pem": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					ForceNew:  true,
+					Sensitive: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(

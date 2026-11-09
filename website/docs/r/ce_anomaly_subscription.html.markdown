@@ -214,7 +214,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name for the subscription.
 * `subscriber` - (Required) A subscriber configuration. Multiple subscribers can be defined.
     * `type` - (Required) The type of subscription. Valid Values: `SNS` | `EMAIL`.
-    * `address` - (Required) The address of the subscriber. If type is `SNS`, this will be the arn of the sns topic. If type is `EMAIL`, this will be the destination email address.
+    * `address` - (Required) The address of the subscriber. If type is `SNS`, this will be the ARN of the SNS topic. If type is `EMAIL`, this will be the destination email address.
 * `threshold_expression` - (Optional) An Expression object used to specify the anomalies that you want to generate alerts for. See [Threshold Expression](#threshold-expression).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -274,7 +274,7 @@ resource "aws_ce_anomaly_subscription" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Cost Explorer anomaly subscription.
+- `arn` (String) ARN of the Cost Explorer anomaly subscription.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_anomaly_subscription` using the `id`. For example:
 

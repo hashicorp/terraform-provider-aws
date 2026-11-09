@@ -7,7 +7,6 @@ package transcribe
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -46,34 +46,36 @@ func ResourceMedicalVocabulary() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"download_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLanguageCode: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"en-US"}, false), // en-US is the only supported language for this service
-			},
-			"vocabulary_file_uri": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 2000),
-			},
-			"vocabulary_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 200),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"download_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLanguageCode: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice([]string{"en-US"}, false), // en-US is the only supported language for this service
+				},
+				"vocabulary_file_uri": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2000),
+				},
+				"vocabulary_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 200),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -179,8 +181,7 @@ func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData
 	}
 	_, err := conn.DeleteMedicalVocabulary(ctx, &input)
 
-	var badRequestException *types.BadRequestException
-	if errors.As(err, &badRequestException) {
+	if errs.IsA[*types.BadRequestException](err) {
 		return diags
 	}
 
@@ -272,8 +273,7 @@ func FindMedicalVocabularyByName(ctx context.Context, conn *transcribe.Client, i
 
 	out, err := conn.GetMedicalVocabulary(ctx, in)
 
-	var badRequestException *types.BadRequestException
-	if errors.As(err, &badRequestException) {
+	if errs.IsA[*types.BadRequestException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}

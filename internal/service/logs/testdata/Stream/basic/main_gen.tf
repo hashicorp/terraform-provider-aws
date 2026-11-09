@@ -1,0 +1,17 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_cloudwatch_log_stream" "test" {
+  name           = "${var.rName}-s"
+  log_group_name = aws_cloudwatch_log_group.test.id
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "${var.rName}-g"
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}

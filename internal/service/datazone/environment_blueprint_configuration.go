@@ -12,7 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -23,10 +22,18 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @FrameworkResource("aws_datazone_environment_blueprint_configuration", name="Environment Blueprint Configuration")
+// @IdentityAttribute("domain_id")
+// @IdentityAttribute("environment_blueprint_id")
+// @ImportIDHandler("environmentBlueprintConfigurationImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datazone;datazone.GetEnvironmentBlueprintConfigurationOutput")
+// @Testing(importStateIdFunc="testAccEnvironmentBlueprintConfigurationImportStateIdFunc", importStateIdAttribute="domain_id")
+// @Testing(preIdentityVersion="v6.47.0")
 func newEnvironmentBlueprintConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &environmentBlueprintConfigurationResource{}
 
@@ -35,6 +42,7 @@ func newEnvironmentBlueprintConfigurationResource(_ context.Context) (resource.R
 
 type environmentBlueprintConfigurationResource struct {
 	framework.ResourceWithModel[environmentBlueprintConfigurationResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *environmentBlueprintConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -57,6 +65,10 @@ func (r *environmentBlueprintConfigurationResource) Schema(ctx context.Context, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"global_parameters": schema.MapAttribute{
+				CustomType: fwtypes.MapOfStringType,
+				Optional:   true,
+			},
 			"manage_access_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
@@ -75,7 +87,7 @@ func (r *environmentBlueprintConfigurationResource) Schema(ctx context.Context, 
 
 func (r *environmentBlueprintConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data environmentBlueprintConfigurationResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -84,7 +96,7 @@ func (r *environmentBlueprintConfigurationResource) Create(ctx context.Context, 
 
 	domainID, environmentBlueprintID := fwflex.StringValueFromFramework(ctx, data.DomainIdentifier), fwflex.StringValueFromFramework(ctx, data.EnvironmentBlueprintIdentifier)
 	var input datazone.PutEnvironmentBlueprintConfigurationInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -92,17 +104,17 @@ func (r *environmentBlueprintConfigurationResource) Create(ctx context.Context, 
 	_, err := conn.PutEnvironmentBlueprintConfiguration(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating DataZone Environment Blueprint Configuration (%s/%s)", domainID, environmentBlueprintID), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, domainID+"/"+environmentBlueprintID)
 
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *environmentBlueprintConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data environmentBlueprintConfigurationResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -120,13 +132,13 @@ func (r *environmentBlueprintConfigurationResource) Read(ctx context.Context, re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading DataZone Environment Blueprint Configuration (%s/%s)", domainID, environmentBlueprintID), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, domainID+"/"+environmentBlueprintID)
 
 		return
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -134,12 +146,12 @@ func (r *environmentBlueprintConfigurationResource) Read(ctx context.Context, re
 	data.DomainIdentifier = fwflex.StringToFramework(ctx, output.DomainId)
 	data.EnvironmentBlueprintIdentifier = fwflex.StringToFramework(ctx, output.EnvironmentBlueprintId)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *environmentBlueprintConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var data environmentBlueprintConfigurationResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -148,7 +160,7 @@ func (r *environmentBlueprintConfigurationResource) Update(ctx context.Context, 
 
 	domainID, environmentBlueprintID := fwflex.StringValueFromFramework(ctx, data.DomainIdentifier), fwflex.StringValueFromFramework(ctx, data.EnvironmentBlueprintIdentifier)
 	var input datazone.PutEnvironmentBlueprintConfigurationInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -156,17 +168,17 @@ func (r *environmentBlueprintConfigurationResource) Update(ctx context.Context, 
 	_, err := conn.PutEnvironmentBlueprintConfiguration(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating DataZone Environment Blueprint Configuration (%s/%s)", domainID, environmentBlueprintID), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, domainID+"/"+environmentBlueprintID)
 
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *environmentBlueprintConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data environmentBlueprintConfigurationResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -186,27 +198,10 @@ func (r *environmentBlueprintConfigurationResource) Delete(ctx context.Context, 
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting DataZone Environment Blueprint Configuration (%s/%s)", domainID, environmentBlueprintID), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, domainID+"/"+environmentBlueprintID)
 
 		return
 	}
-}
-
-func (r *environmentBlueprintConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	const (
-		environmentBlueprintConfigurationIDParts     = 2
-		environmentBlueprintConfigurationIDSeparator = "/"
-	)
-	parts := strings.Split(request.ID, environmentBlueprintConfigurationIDSeparator)
-	if len(parts) != environmentBlueprintConfigurationIDParts {
-		err := fmt.Errorf("unexpected format for ID (%[1]s), expected DOMAIN-ID%[2]sENVIRONMENT-BLUEPRINT-ID", request.ID, environmentBlueprintConfigurationIDSeparator)
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
-
-		return
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("domain_id"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("environment_blueprint_id"), parts[1])...)
 }
 
 func findEnvironmentBlueprintConfigurationByTwoPartKey(ctx context.Context, conn *datazone.Client, domainID, environmentBlueprintID string) (*datazone.GetEnvironmentBlueprintConfigurationOutput, error) {
@@ -233,11 +228,32 @@ func findEnvironmentBlueprintConfigurationByTwoPartKey(ctx context.Context, conn
 	return output, nil
 }
 
+var (
+	_ inttypes.ImportIDParser = environmentBlueprintConfigurationImportID{}
+)
+
+type environmentBlueprintConfigurationImportID struct{}
+
+func (environmentBlueprintConfigurationImportID) Parse(id string) (string, map[string]any, error) {
+	domainID, blueprintID, found := strings.Cut(id, "/")
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <domain-id>/<environment-blueprint-id>", id)
+	}
+
+	result := map[string]any{
+		"domain_id":                domainID,
+		"environment_blueprint_id": blueprintID,
+	}
+
+	return id, result, nil
+}
+
 type environmentBlueprintConfigurationResourceModel struct {
 	framework.WithRegionModel
 	DomainIdentifier               types.String             `tfsdk:"domain_id"`
 	EnabledRegions                 fwtypes.ListOfString     `tfsdk:"enabled_regions"`
 	EnvironmentBlueprintIdentifier types.String             `tfsdk:"environment_blueprint_id"`
+	GlobalParameters               fwtypes.MapOfString      `tfsdk:"global_parameters"`
 	ManageAccessRoleARN            fwtypes.ARN              `tfsdk:"manage_access_role_arn"`
 	ProvisioningRoleARN            fwtypes.ARN              `tfsdk:"provisioning_role_arn"`
 	RegionalParameters             fwtypes.MapOfMapOfString `tfsdk:"regional_parameters"`

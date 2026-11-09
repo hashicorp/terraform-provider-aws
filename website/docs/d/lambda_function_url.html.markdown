@@ -75,7 +75,7 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `authorization_type` - Type of authentication that the function URL uses.
-* `cors` - Cross-origin resource sharing (CORS) settings for the function URL. [See below](#cors-attribute-reference).
+* `cors` - Cross-origin resource sharing (CORS) settings for the function URL. [See below](#cors-block).
 * `creation_time` - When the function URL was created, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
 * `function_arn` - ARN of the function.
 * `function_url` - HTTP URL endpoint for the function in the format `https://<url_id>.lambda-url.<region>.on.aws/`.
@@ -83,7 +83,7 @@ This data source exports the following attributes in addition to the arguments a
 * `last_modified_time` - When the function URL configuration was last updated, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
 * `url_id` - Generated ID for the endpoint.
 
-### cors Attribute Reference
+### `cors` Block
 
 * `allow_credentials` - Whether credentials are included in the CORS request.
 * `allow_headers` - List of headers that are specified in the Access-Control-Request-Headers header.

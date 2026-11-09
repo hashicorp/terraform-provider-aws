@@ -42,71 +42,73 @@ func resourceWorkspaceSAMLConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"admin_role_values": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"allowed_organizations": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"editor_role_values": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"email_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"groups_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"idp_metadata_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"idp_metadata_xml": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"login_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"login_validity_duration": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"name_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"org_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"role_assertion": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workspace_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"admin_role_values": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"allowed_organizations": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"editor_role_values": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"email_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"groups_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"idp_metadata_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"idp_metadata_xml": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"login_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"login_validity_duration": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"name_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"org_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"role_assertion": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"workspace_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

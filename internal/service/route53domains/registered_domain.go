@@ -470,7 +470,7 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChanges("admin_privacy", "billing_contact", "registrant_privacy", "tech_privacy") {
+	if d.HasChanges("admin_privacy", "billing_privacy", "registrant_privacy", "tech_privacy") {
 		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), d.Get("admin_privacy").(bool), d.Get("billing_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -507,10 +507,13 @@ func hasDomainTransferLock(statusList []string) bool {
 }
 
 func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, name string) (*route53domains.GetDomainDetailOutput, error) {
-	input := &route53domains.GetDomainDetailInput{
+	input := route53domains.GetDomainDetailInput{
 		DomainName: aws.String(name),
 	}
+	return findDomainDetail(ctx, conn, &input)
+}
 
+func findDomainDetail(ctx context.Context, conn *route53domains.Client, input *route53domains.GetDomainDetailInput) (*route53domains.GetDomainDetailOutput, error) {
 	output, err := conn.GetDomainDetail(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidInput](err, "not found") {

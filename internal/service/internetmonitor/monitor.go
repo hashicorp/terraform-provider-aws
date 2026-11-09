@@ -43,100 +43,102 @@ func resourceMonitor() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"health_events_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"availability_score_threshold": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							Default:  95.0,
-						},
-						"performance_score_threshold": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							Default:  95.0,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"health_events_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"availability_score_threshold": {
+								Type:     schema.TypeFloat,
+								Optional: true,
+								Default:  95.0,
+							},
+							"performance_score_threshold": {
+								Type:     schema.TypeFloat,
+								Optional: true,
+								Default:  95.0,
+							},
 						},
 					},
 				},
-			},
-			"internet_measurements_log_delivery": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"s3_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucketName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrBucketPrefix: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"log_delivery_status": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          types.LogDeliveryStatusEnabled,
-										ValidateDiagFunc: enum.Validate[types.LogDeliveryStatus](),
+				"internet_measurements_log_delivery": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"s3_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucketName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrBucketPrefix: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"log_delivery_status": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Default:          types.LogDeliveryStatusEnabled,
+											ValidateDiagFunc: enum.Validate[types.LogDeliveryStatus](),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"max_city_networks_to_monitor": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 500000),
-				AtLeastOneOf: []string{"traffic_percentage_to_monitor", "max_city_networks_to_monitor"},
-			},
-			"monitor_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			names.AttrResources: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+				"max_city_networks_to_monitor": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 500000),
+					AtLeastOneOf: []string{"traffic_percentage_to_monitor", "max_city_networks_to_monitor"},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  types.MonitorConfigStateActive,
-				ValidateFunc: validation.StringInSlice(enum.Slice(
-					types.MonitorConfigStateActive,
-					types.MonitorConfigStateInactive,
-				), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"traffic_percentage_to_monitor": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 100),
-				AtLeastOneOf: []string{"traffic_percentage_to_monitor", "max_city_networks_to_monitor"},
-			},
+				"monitor_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrResources: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  types.MonitorConfigStateActive,
+					ValidateFunc: validation.StringInSlice(enum.Slice(
+						types.MonitorConfigStateActive,
+						types.MonitorConfigStateInactive,
+					), false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"traffic_percentage_to_monitor": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 100),
+					AtLeastOneOf: []string{"traffic_percentage_to_monitor", "max_city_networks_to_monitor"},
+				},
+			}
 		},
 	}
 }

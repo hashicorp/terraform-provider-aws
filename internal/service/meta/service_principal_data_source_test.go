@@ -62,7 +62,7 @@ func TestAccMetaServicePrincipalDataSource_ByRegion(t *testing.T) {
 	for _, region := range regions {
 		t.Run(region, func(t *testing.T) {
 			t.Parallel()
-			acctest.Test(ctx, t, resource.TestCase{
+			acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- subtests handle own parallelism via t.Parallel()
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -134,7 +134,7 @@ func TestAccMetaServicePrincipalDataSource_UniqueForServiceInRegion(t *testing.T
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("%s/%s", testCase.Region, testCase.Service), func(t *testing.T) {
 			t.Parallel()
-			acctest.Test(ctx, t, resource.TestCase{
+			acctest.Test(ctx, t, resource.TestCase{ // nosemgrep:ci.semgrep.acctest.testcase-use-paralleltest -- subtests handle own parallelism via t.Parallel()
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

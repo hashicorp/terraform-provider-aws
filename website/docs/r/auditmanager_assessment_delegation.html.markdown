@@ -29,7 +29,7 @@ The following arguments are required:
 
 * `assessment_id` - (Required) Identifier for the assessment.
 * `control_set_id` - (Required) Assessment control set name. This value is the control set name used during assessment creation (not the AWS-generated ID). The `_id` suffix on this attribute has been preserved to be consistent with the underlying AWS API.
-* `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM role.
+* `role_arn` - (Required) ARN of the IAM role.
 * `role_type` - (Required) Type of customer persona. For assessment delegation, type must always be `RESOURCE_OWNER`.
 
 The following arguments are optional:

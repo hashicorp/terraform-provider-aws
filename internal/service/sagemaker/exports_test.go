@@ -65,11 +65,13 @@ var (
 	ResourceFeatureGroup                           = resourceFeatureGroup
 	ResourceFlowDefinition                         = resourceFlowDefinition
 	ResourceHub                                    = resourceHub
+	ResourceHubContentReference                    = newHubContentReferenceResource
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
 	ResourceHyperParameterTuningJob                = newHyperParameterTuningJobResource
 	ResourceImage                                  = resourceImage
 	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
+	ResourceInferenceComponent                     = newInferenceComponentResource
 	ResourceMlflowApp                              = newMlflowAppResource
 	ResourceMlflowTrackingServer                   = resourceMlflowTrackingServer
 	ResourceModel                                  = resourceModel
@@ -97,14 +99,17 @@ var (
 	FindDeviceFleetByName                     = findDeviceFleetByName
 	FindDomainByName                          = findDomainByName
 	FindEndpointByName                        = findEndpointByName
+	FindEndpointByNameExcludeDeleting         = findEndpointByNameExcludeDeleting
 	FindEndpointConfigByName                  = findEndpointConfigByName
 	FindFeatureGroupByName                    = findFeatureGroupByName
 	FindFlowDefinitionByName                  = findFlowDefinitionByName
 	FindHubByName                             = findHubByName
+	FindHubContentByName                      = findHubContentByName
 	FindHyperParameterTuningJobByName         = findHyperParameterTuningJobByName
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
+	FindInferenceComponentByName              = findInferenceComponentByName
 	FindLabelingJobByName                     = findLabelingJobByName
 	FindMlflowAppByARN                        = findMlflowAppByARN
 	FindMlflowTrackingServerByName            = findMlflowTrackingServerByName
@@ -151,4 +156,6 @@ var (
 
 	ValidName   = validName
 	ValidPrefix = validPrefix
+
+	StripARNVersion = stripARNVersion
 )

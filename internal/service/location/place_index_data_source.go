@@ -24,45 +24,47 @@ import (
 func DataSourcePlaceIndex() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePlaceIndexRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_source": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"data_source_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"intended_use": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data_source": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"data_source_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"intended_use": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"index_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"index_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"update_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"index_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"index_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"update_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

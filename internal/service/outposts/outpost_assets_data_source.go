@@ -28,37 +28,39 @@ func dataSourceOutpostAssets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: DataSourceOutpostAssetsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"asset_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"host_id_filter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 50),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]*$`), "must match [0-9A-Za-z-]"),
-					),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"status_id_filter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 2,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.AssetState](),
+				"asset_ids": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
+				"host_id_filter": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							validation.StringLenBetween(1, 50),
+							validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]*$`), "must match [0-9A-Za-z-]"),
+						),
+					},
+				},
+				"status_id_filter": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 2,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.AssetState](),
+					},
+				},
+			}
 		},
 	}
 }

@@ -23,47 +23,49 @@ func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPath: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrGroupName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"users": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"user_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrUserName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrPath: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrGroupName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"users": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"user_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrUserName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrPath: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

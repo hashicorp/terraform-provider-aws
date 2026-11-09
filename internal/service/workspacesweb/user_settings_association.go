@@ -26,9 +26,6 @@ import (
 )
 
 // @FrameworkResource("aws_workspacesweb_user_settings_association", name="User Settings Association")
-// @Testing(tagsTest=false)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.UserSettings")
-// @Testing(importStateIdAttribute="user_settings_arn,portal_arn")
 func newUserSettingsAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &userSettingsAssociationResource{}, nil
 }

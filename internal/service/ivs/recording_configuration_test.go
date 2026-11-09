@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -132,6 +133,14 @@ func TestAccIVSRecordingConfiguration_disappears(t *testing.T) {
 					testAccCheckRecordingConfigurationExists(ctx, t, resourceName, &recordingconfiguration),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfivs.ResourceRecordingConfiguration(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -161,6 +170,14 @@ func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 					testAccCheckRecordingConfigurationExists(ctx, t, resourceName, &recordingconfiguration),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), parentResourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},

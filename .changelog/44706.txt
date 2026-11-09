@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_rds_cluster: Fix "When modifying Provisioned IOPS storage, specify a value for both allocated storage and iops" error when updating RDS clusters with Provisioned IOPS storage
-```

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -107,11 +108,12 @@ func testAccOptIn_table(t *testing.T) {
 	})
 }
 
-func testAccOptIn_disappears(t *testing.T) {
+func testAccOptIn_Disappears_catalogDatabase(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var optin lakeformation.ListLakeFormationOptInsOutput
 	resourceName := "aws_lakeformation_opt_in.test"
+	catalogDatabaseResourceName := "aws_glue_catalog_database.test"
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -127,9 +129,19 @@ func testAccOptIn_disappears(t *testing.T) {
 				Config: testAccOptInConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptInExists(ctx, t, resourceName, &optin),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceOptIn, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogDatabase(), catalogDatabaseResourceName),
 				),
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(catalogDatabaseResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(catalogDatabaseResourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

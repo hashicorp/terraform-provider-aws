@@ -41,82 +41,84 @@ func resourceFirewallRule() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Action](),
-			},
-			"block_override_dns_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.BlockOverrideDnsType](),
-			},
-			"block_override_domain": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"block_override_ttl": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 604800),
-			},
-			"block_response": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.BlockResponse](),
-			},
-			"confidence_threshold": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ConfidenceThreshold](),
-				ConflictsWith:    []string{"firewall_domain_list_id"},
-			},
-			"dns_threat_protection": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.DnsThreatProtection](),
-				ConflictsWith:    []string{"firewall_domain_list_id"},
-			},
-			"firewall_domain_list_id": {
-				Type:          schema.TypeString,
-				ForceNew:      true,
-				Optional:      true,
-				ValidateFunc:  validation.StringLenBetween(1, 64),
-				ConflictsWith: []string{"dns_threat_protection", "confidence_threshold"},
-			},
-			"firewall_domain_redirection_action": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.FirewallDomainRedirectionActionInspectRedirectionDomain,
-				ValidateDiagFunc: enum.Validate[awstypes.FirewallDomainRedirectionAction](),
-			},
-			"firewall_rule_group_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"firewall_threat_protection_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validResolverName,
-			},
-			names.AttrPriority: {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"q_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Action](),
+				},
+				"block_override_dns_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.BlockOverrideDnsType](),
+				},
+				"block_override_domain": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"block_override_ttl": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 604800),
+				},
+				"block_response": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.BlockResponse](),
+				},
+				"confidence_threshold": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ConfidenceThreshold](),
+					ConflictsWith:    []string{"firewall_domain_list_id"},
+				},
+				"dns_threat_protection": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DnsThreatProtection](),
+					ConflictsWith:    []string{"firewall_domain_list_id"},
+				},
+				"firewall_domain_list_id": {
+					Type:          schema.TypeString,
+					ForceNew:      true,
+					Optional:      true,
+					ValidateFunc:  validation.StringLenBetween(1, 64),
+					ConflictsWith: []string{"dns_threat_protection", "confidence_threshold"},
+				},
+				"firewall_domain_redirection_action": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.FirewallDomainRedirectionActionInspectRedirectionDomain,
+					ValidateDiagFunc: enum.Validate[awstypes.FirewallDomainRedirectionAction](),
+				},
+				"firewall_rule_group_id": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"firewall_threat_protection_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validResolverName,
+				},
+				names.AttrPriority: {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"q_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 		CustomizeDiff: firewallRuleCustomizeDiff,
 	}

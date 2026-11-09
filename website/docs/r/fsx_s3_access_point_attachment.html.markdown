@@ -71,14 +71,14 @@ The `posix_user` configuration block supports the following arguments:
 
 The `s3_access_point` configuration block supports the following arguments:
 
-* `policy` - (Required) Access policy associated with the S3 access point configuration.
+* `policy` - (Optional) Access policy associated with the S3 access point configuration.
 * `vpc_configuration` - (Optional) Amazon S3 restricts access to the S3 access point to requests made from the specified VPC. See [`vpc_configuration` Block](#vpc_configuration-block) for details.
 
 ### `vpc_configuration` Block
 
 The `vpc_configuration` configuration block supports the following arguments:
 
-* `vpc_id` - (Required) VPC ID.
+* `vpc_id` - (Optional) VPC ID.
 
 ## Attribute Reference
 

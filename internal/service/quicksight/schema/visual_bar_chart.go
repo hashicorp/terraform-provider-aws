@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,7 +29,7 @@ func barCharVisualSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"bars_arrangement":               stringEnumSchema[awstypes.BarsArrangement](attrOptionalComputed),
+							"bars_arrangement":               sdkschema.StringEnumSchema[awstypes.BarsArrangement](sdkschema.AttrOptionalComputed),
 							"category_axis":                  axisDisplayOptionsSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"category_label_options":         chartAxisLabelOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"color_label_options":            chartAxisLabelOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
@@ -59,7 +60,7 @@ func barCharVisualSchema() *schema.Schema {
 								},
 							},
 							"legend":                  legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"orientation":             stringEnumSchema[awstypes.BarChartOrientation](attrOptionalComputed),
+							"orientation":             sdkschema.StringEnumSchema[awstypes.BarChartOrientation](sdkschema.AttrOptionalComputed),
 							"reference_lines":         referenceLineSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
 							"small_multiples_options": smallMultiplesOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartSortConfiguration.html
@@ -100,14 +101,14 @@ func barChartVisualDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id":       idDataSourceSchema(),
+				attrVisualID:      idDataSourceSchema(),
 				names.AttrActions: visualCustomActionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				attrChartConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"bars_arrangement":               stringEnumDataSourceSchema[awstypes.BarsArrangement](),
+							"bars_arrangement":               sdkschema.StringEnumDataSourceSchema[awstypes.BarsArrangement](),
 							"category_axis":                  axisDisplayOptionsDataSourceSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"category_label_options":         chartAxisLabelOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"color_label_options":            chartAxisLabelOptionsDataSourceSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
@@ -134,7 +135,7 @@ func barChartVisualDataSourceSchema() *schema.Schema {
 								},
 							},
 							"legend":                  legendOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"orientation":             stringEnumDataSourceSchema[awstypes.BarChartOrientation](),
+							"orientation":             sdkschema.StringEnumDataSourceSchema[awstypes.BarChartOrientation](),
 							"reference_lines":         referenceLineDataSourceSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
 							"small_multiples_options": smallMultiplesOptionsDataSourceSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
 							attrSortConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartSortConfiguration.html

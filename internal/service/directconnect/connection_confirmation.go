@@ -29,12 +29,18 @@ func resourceConnectionConfirmation() *schema.Resource {
 		ReadWithoutTimeout:   resourceConnectionConfirmationRead,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrConnectionID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrConnectionID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
 	}
 }
@@ -54,11 +60,15 @@ func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "confirming Direct Connect Connection (%s): %s", connectionID, err)
 	}
 
-	d.SetId(connectionID)
-
-	if _, err := waitConnectionConfirmed(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Connection (%s) confirm: %s", d.Id(), err)
+	if err := waitConnectionConfirmed(ctx, conn, connectionID, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Connection (%s) confirm: %s", connectionID, err)
 	}
+
+	// Setting ID is deferred until after the waiter to prevent a timeout from producing
+	// a tainted resource.
+	//
+	// As a "connection" resource type, there is nothing to clean up when waiting times out.
+	d.SetId(connectionID)
 
 	return diags
 }
@@ -82,10 +92,7 @@ func resourceConnectionConfirmationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func waitConnectionConfirmed(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) { //nolint:unparam
-	const (
-		timeout = 10 * time.Minute
-	)
+func waitConnectionConfirmed(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateRequested),
 		Target:  enum.Slice(awstypes.ConnectionStateAvailable),
@@ -93,11 +100,6 @@ func waitConnectionConfirmed(ctx context.Context, conn *directconnect.Client, id
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Connection); ok {
-		return output, err
-	}
-
-	return nil, err
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
 }

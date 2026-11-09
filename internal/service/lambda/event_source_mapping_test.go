@@ -483,6 +483,14 @@ func TestAccLambdaEventSourceMapping_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceEventSourceMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -2142,7 +2150,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs22.x"
+  runtime       = "nodejs24.x"
 }
 `, rName, streamStatusAttribute, streamViewTypeAttribute)
 }

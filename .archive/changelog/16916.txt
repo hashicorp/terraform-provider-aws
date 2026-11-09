@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_lakeformation_permissions: Allow `principal` to be an AWS account ID or an IAM group, ou, or organization
-```

@@ -53,149 +53,151 @@ func resourceStateMachine() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"definition": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024*1024), // 1048576
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEncryptionConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kms_data_key_reuse_period_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(60, 900),
-						},
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"definition": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024*1024), // 1048576
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEncryptionConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"kms_data_key_reuse_period_seconds": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(60, 900),
+							},
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
+							},
 						},
 					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrLoggingConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"include_execution_data": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"level": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogLevel](),
-						},
-						"log_destination": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								verify.ValidARN,
-								validation.StringMatch(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
-							),
+				names.AttrLoggingConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"include_execution_data": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"level": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.LogLevel](),
+							},
+							"log_destination": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									verify.ValidARN,
+									validation.StringMatch(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
+								),
+							},
 						},
 					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 80),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
-				),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 80-sdkid.UniqueIDSuffixLength),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
-				),
-			},
-			"publish": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
-			},
-			"revision_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"state_machine_version_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tracing_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 80),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+					),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 80-sdkid.UniqueIDSuffixLength),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+					),
+				},
+				"publish": {
+					Type:     schema.TypeBool,
+					Default:  false,
+					Optional: true,
+				},
+				"revision_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"state_machine_version_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tracing_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 						},
 					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.StateMachineTypeStandard,
-				ValidateDiagFunc: enum.Validate[awstypes.StateMachineType](),
-			},
-			"version_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.StateMachineTypeStandard,
+					ValidateDiagFunc: enum.Validate[awstypes.StateMachineType](),
+				},
+				"version_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -264,61 +266,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.StateMachineArn)
-	if output.CreationDate != nil {
-		d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
-	} else {
-		d.Set(names.AttrCreationDate, nil)
-	}
-	d.Set("definition", output.Definition)
-	d.Set(names.AttrDescription, output.Description)
-	if output.EncryptionConfiguration != nil {
-		if err := d.Set(names.AttrEncryptionConfiguration, []any{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
-		}
-	} else {
-		d.Set(names.AttrEncryptionConfiguration, nil)
-	}
-	if output.LoggingConfiguration != nil {
-		if err := d.Set(names.AttrLoggingConfiguration, []any{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
-		}
-	} else {
-		d.Set(names.AttrLoggingConfiguration, nil)
-	}
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
-	d.Set("publish", d.Get("publish").(bool))
-	d.Set("revision_id", output.RevisionId)
-	d.Set(names.AttrRoleARN, output.RoleArn)
-	d.Set(names.AttrStatus, output.Status)
-	if output.TracingConfiguration != nil {
-		if err := d.Set("tracing_configuration", []any{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tracing_configuration: %s", err)
-		}
-	} else {
-		d.Set("tracing_configuration", nil)
-	}
-	d.Set(names.AttrType, output.Type)
-
-	input := &sfn.ListStateMachineVersionsInput{
-		StateMachineArn: aws.String(d.Id()),
-	}
-	listVersionsOutput, err := conn.ListStateMachineVersions(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machine (%s) Versions: %s", d.Id(), err)
-	}
-
-	// The results are sorted in descending order of the version creation time.
-	// https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListStateMachineVersions.html
-	if len(listVersionsOutput.StateMachineVersions) > 0 {
-		d.Set("state_machine_version_arn", listVersionsOutput.StateMachineVersions[0].StateMachineVersionArn)
-	} else {
-		d.Set("state_machine_version_arn", nil)
-	}
-
-	return diags
+	return append(diags, resourceStateMachineFlatten(ctx, conn, output, d)...)
 }
 
 func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -540,6 +488,66 @@ func flattenTracingConfiguration(apiObject *awstypes.TracingConfiguration) map[s
 	return tfMap
 }
 
+func resourceStateMachineFlatten(ctx context.Context, conn *sfn.Client, output *sfn.DescribeStateMachineOutput, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	d.Set(names.AttrARN, output.StateMachineArn)
+	if output.CreationDate != nil {
+		d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
+	} else {
+		d.Set(names.AttrCreationDate, nil)
+	}
+	d.Set("definition", output.Definition)
+	d.Set(names.AttrDescription, output.Description)
+	if output.EncryptionConfiguration != nil {
+		if err := d.Set(names.AttrEncryptionConfiguration, []any{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
+		}
+	} else {
+		d.Set(names.AttrEncryptionConfiguration, nil)
+	}
+	if output.LoggingConfiguration != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []any{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
+		}
+	} else {
+		d.Set(names.AttrLoggingConfiguration, nil)
+	}
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set("publish", d.Get("publish").(bool))
+	d.Set("revision_id", output.RevisionId)
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrStatus, output.Status)
+	if output.TracingConfiguration != nil {
+		if err := d.Set("tracing_configuration", []any{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tracing_configuration: %s", err)
+		}
+	} else {
+		d.Set("tracing_configuration", nil)
+	}
+	d.Set(names.AttrType, output.Type)
+
+	input := &sfn.ListStateMachineVersionsInput{
+		StateMachineArn: aws.String(d.Id()),
+	}
+	listVersionsOutput, err := conn.ListStateMachineVersions(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machine (%s) Versions: %s", d.Id(), err)
+	}
+
+	// The results are sorted in descending order of the version creation time.
+	// https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListStateMachineVersions.html
+	if len(listVersionsOutput.StateMachineVersions) > 0 {
+		d.Set("state_machine_version_arn", listVersionsOutput.StateMachineVersions[0].StateMachineVersionArn)
+	} else {
+		d.Set("state_machine_version_arn", nil)
+	}
+
+	return diags
+}
+
 func stateMachineUpdateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	if publish := d.Get("publish").(bool); publish && stateMachineNeedsConfigUpdate(d) {
 		d.SetNewComputed("revision_id")
@@ -549,7 +557,7 @@ func stateMachineUpdateComputedAttributesOnPublish(_ context.Context, d *schema.
 }
 
 func stateMachineNeedsConfigUpdate(d sdkv2.ResourceDiffer) bool {
-	for k, attr := range resourceStateMachine().Schema {
+	for k, attr := range resourceStateMachine().SchemaMap() {
 		if attr.ForceNew {
 			continue
 		}

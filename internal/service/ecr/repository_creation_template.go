@@ -42,106 +42,108 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"applied_for": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"applied_for": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[types.RCTAppliedFor](),
+					},
+				},
+				"custom_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				names.AttrEncryptionConfiguration: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.EncryptionTypeAes256,
+								ValidateDiagFunc: enum.Validate[types.EncryptionType](),
+							},
+							names.AttrKMSKey: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				},
+				"image_tag_mutability": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.RCTAppliedFor](),
+					Optional:         true,
+					Default:          types.ImageTagMutabilityMutable,
+					ValidateDiagFunc: enum.Validate[types.ImageTagMutability](),
 				},
-			},
-			"custom_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			names.AttrEncryptionConfiguration: {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.EncryptionTypeAes256,
-							ValidateDiagFunc: enum.Validate[types.EncryptionType](),
-						},
-						names.AttrKMSKey: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			"image_tag_mutability": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          types.ImageTagMutabilityMutable,
-				ValidateDiagFunc: enum.Validate[types.ImageTagMutability](),
-			},
-			"image_tag_mutability_exclusion_filter": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrFilter: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateDiagFunc: validation.AllDiag(
-								validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
-								validation.ToDiagFunc(validation.StringMatch(
-									regexache.MustCompile(`^[a-zA-Z0-9._*-]+$`),
-									"must contain only letters, numbers, and special characters (._*-)",
-								)),
-								validateImageTagMutabilityExclusionFilter(),
-							),
-						},
-						"filter_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ImageTagMutabilityExclusionFilterType](),
+				"image_tag_mutability_exclusion_filter": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrFilter: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateDiagFunc: validation.AllDiag(
+									validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
+									validation.ToDiagFunc(validation.StringMatch(
+										regexache.MustCompile(`^[a-zA-Z0-9._*-]+$`),
+										"must contain only letters, numbers, and special characters (._*-)",
+									)),
+									validateImageTagMutabilityExclusionFilter(),
+								),
+							},
+							"filter_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ImageTagMutabilityExclusionFilterType](),
+							},
 						},
 					},
 				},
-			},
-			"lifecycle_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsJSON,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalentLifecyclePolicyJSON(old, new)
-					return equal
+				"lifecycle_policy": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsJSON,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						equal, _ := equivalentLifecyclePolicyJSON(old, new)
+						return equal
+					},
+					DiffSuppressOnRefresh: true,
+					StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
 				},
-				DiffSuppressOnRefresh: true,
-				StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
-			},
-			names.AttrPrefix: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 256),
-					validation.StringMatch(
-						regexache.MustCompile(`(?:ROOT|(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*)`),
-						"must only include alphanumeric, underscore, period, hyphen, or slash characters, or be the string `ROOT`"),
-				),
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository_policy":    sdkv2.IAMPolicyDocumentSchemaOptional(),
-			names.AttrResourceTags: tftags.TagsSchema(),
+				names.AttrPrefix: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 256),
+						validation.StringMatch(
+							regexache.MustCompile(`(?:ROOT|(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*)`),
+							"must only include alphanumeric, underscore, period, hyphen, or slash characters, or be the string `ROOT`"),
+					),
+				},
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"repository_policy":    sdkv2.IAMPolicyDocumentSchemaOptional(),
+				names.AttrResourceTags: tftags.TagsSchema(),
+			}
 		},
 	}
 }

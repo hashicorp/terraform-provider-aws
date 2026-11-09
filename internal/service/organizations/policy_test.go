@@ -13,6 +13,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -193,6 +194,14 @@ func testAccPolicy_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tforganizations.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -374,6 +383,134 @@ func testAccPolicy_type_SCP(t *testing.T) {
 	})
 }
 
+func testAccPolicy_type_RCP(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type_RCP(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeResourceControlPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_Chatbot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type_Chatbot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeChatbotPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_DeclarativeEC2(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type_DeclarativeEC2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeDeclarativePolicyEc2)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_NetworkSecurityDirector(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type_NetworkSecurityDirector(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeNetworkSecurityDirectorPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
 func testAccPolicy_type_Tag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.Policy
@@ -440,6 +577,57 @@ func testAccPolicy_type_SecurityHub(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeSecurityhubPolicy)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
+func testAccPolicy_type_GuardDuty(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_guardduty.html
+	guardDutyPolicyContent := `{
+    "guardduty" : {
+      "enablement" : {
+        "default" : {
+          "foundational" : {
+            "status" : {
+              "@@assign" : "enabled"
+            }
+          },
+          "s3_data_events" : {
+            "status" : {
+              "@@assign" : "enabled"
+            }
+          }
+        }
+      }
+    }
+}`
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_type(rName, guardDutyPolicyContent, string(awstypes.PolicyTypeGuarddutyPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeGuarddutyPolicy)),
 				),
 			},
 			{
@@ -661,6 +849,53 @@ func testAccPolicy_importManagedPolicy(t *testing.T) {
 	})
 }
 
+func testAccPolicy_contentEquivalent(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy awstypes.Policy
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_contentEquivalent(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccPolicyConfig_contentEquivalentReordered(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).OrganizationsClient(ctx)
@@ -854,6 +1089,125 @@ resource "aws_organizations_policy" "test" {
 `, strconv.Quote(content), rName, policyType)
 }
 
+func testAccPolicyConfig_type_RCP(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  content = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "RequireTLS"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = ["s3:GetObject", "s3:PutObject"]
+        Resource = [
+          "arn:${data.aws_partition.current.partition}:s3:::example-bucket",
+          "arn:${data.aws_partition.current.partition}:s3:::example-bucket/*",
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = ["false"]
+          }
+        }
+      },
+      {
+        Sid       = "RequireKMSEncryption"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = ["s3:PutObject"]
+        Resource  = ["arn:${data.aws_partition.current.partition}:s3:::example-bucket/*"]
+        Condition = {
+          Null = {
+            "s3:x-amz-server-side-encryption-aws-kms-key-id" = ["true"]
+          }
+        }
+      },
+    ]
+  })
+  name = %[1]q
+  type = "RESOURCE_CONTROL_POLICY"
+}
+`, rName)
+}
+
+func testAccPolicyConfig_type_Chatbot(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  content = jsonencode({
+    chatbot = {
+      default = {
+        client = {
+          "@@assign" = "disabled"
+        }
+      }
+      platforms = {
+        slack = {
+          client = {
+            "@@assign" = "enabled"
+          }
+          default = {
+            supported_role_settings = {
+              "@@assign" = ["user_role", "channel_role"]
+            }
+          }
+          workspaces = {
+            "@@assign" = ["T12341234", "T56785678"]
+          }
+        }
+      }
+    }
+  })
+  name = %[1]q
+  type = "CHATBOT_POLICY"
+}
+`, rName)
+}
+
+func testAccPolicyConfig_type_DeclarativeEC2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  content = jsonencode({
+    ec2_attributes = {
+      exception_message = {
+        "@@assign" = "Public access is managed by this organization."
+      }
+      image_block_public_access = {
+        state = {
+          "@@assign" = "block_new_sharing"
+        }
+      }
+    }
+  })
+  name = %[1]q
+  type = "DECLARATIVE_POLICY_EC2"
+}
+`, rName)
+}
+
+func testAccPolicyConfig_type_NetworkSecurityDirector(rName string) string {
+	//lintignore:AWSAT003
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  content = jsonencode({
+    network_security_director = {
+      enablement = {
+        network_security_scan = {
+          disable_in_regions = {
+            "@@assign" = ["ap-south-1", "eu-west-1"]
+          }
+          enable_in_regions = {
+            "@@assign" = ["us-east-1", "us-west-2"]
+          }
+        }
+      }
+    }
+  })
+  name = %[1]q
+  type = "NETWORK_SECURITY_DIRECTOR_POLICY"
+}
+`, rName)
+}
+
 func testAccPolicyConfig_type_Bedrock(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -938,8 +1292,10 @@ resource "aws_organizations_policy" "test" {
             "identifier" : {
               "@@assign" : "${aws_bedrock_guardrail.test.guardrail_arn}:${aws_bedrock_guardrail_version.test.version}"
             },
-            "input_tags" : {
-              "@@assign" : "honor"
+            "selective_content_guarding" : {
+              "messages" : {
+                "@@assign" : "selective"
+              }
             }
           }
         }
@@ -962,6 +1318,56 @@ resource "aws_organizations_policy" "test" {
 }
 
 `, strconv.Quote(content), rName)
+}
+
+func testAccPolicyConfig_contentEquivalent(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  name = %[1]q
+  content = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Deny"
+      Action   = ["sts:AssumeRole"]
+      Resource = "*"
+      Condition = {
+        "ForAnyValue:StringLike" = {
+          "aws:ResourceOrgPaths" = [
+            "o-example/r-root/ou-root-aaa/*",
+            "o-example/r-root/ou-root-bbb/*",
+            "o-example/r-root/ou-root-ccc/*",
+          ]
+        }
+      }
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccPolicyConfig_contentEquivalentReordered(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_policy" "test" {
+  name = %[1]q
+  content = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Deny"
+      Resource = "*"
+      Action   = ["sts:AssumeRole"]
+      Condition = {
+        "ForAnyValue:StringLike" = {
+          "aws:ResourceOrgPaths" = [
+            "o-example/r-root/ou-root-ccc/*",
+            "o-example/r-root/ou-root-aaa/*",
+            "o-example/r-root/ou-root-bbb/*",
+          ]
+        }
+      }
+    }]
+  })
+}
+`, rName)
 }
 
 const testAccPolicyConfig_managed = `

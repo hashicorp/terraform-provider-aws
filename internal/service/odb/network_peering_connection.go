@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -42,6 +41,7 @@ import (
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_odb_network_peering_connection", name="Network Peering Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newResourceNetworkPeeringConnection(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceNetworkPeeringConnection{}
 
@@ -215,7 +215,7 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 		odbNetwork = plan.OdbNetworkId
 	}
 	//Validation : check is there any peer cidr for removal
-	if len(plan.PeerNetworkCidrs.Elements()) > 0 {
+	if plan.PeerNetworkCidrs.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
 		err := errors.New("during creation add / removal of peer network cidr is not supported")
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameNetworkPeeringConnection, plan.DisplayName.ValueString(), err),
@@ -459,10 +459,10 @@ func (r *resourceNetworkPeeringConnection) FindAddRemovePeeredNetworkCIDR(planCI
 }
 
 func waitNetworkPeeringConnectionCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbPeeringConnection, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(odbtypes.ResourceStatusProvisioning),
 		Target:                    enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh:                   statusNetworkPeeringConnection(ctx, conn, id),
+		Refresh:                   statusNetworkPeeringConnection(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -477,10 +477,10 @@ func waitNetworkPeeringConnectionCreated(ctx context.Context, conn *odb.Client, 
 }
 
 func waitNetworkPeeringConnectionUpdated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbPeeringConnection, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(odbtypes.ResourceStatusUpdating),
 		Target:                    enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
-		Refresh:                   statusNetworkPeeringConnection(ctx, conn, id),
+		Refresh:                   statusNetworkPeeringConnection(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -495,10 +495,10 @@ func waitNetworkPeeringConnectionUpdated(ctx context.Context, conn *odb.Client, 
 }
 
 func waitNetworkPeeringConnectionDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.OdbPeeringConnection, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusTerminating),
 		Target:  []string{},
-		Refresh: statusNetworkPeeringConnection(ctx, conn, id),
+		Refresh: statusNetworkPeeringConnection(conn, id),
 		Timeout: timeout,
 	}
 
@@ -509,8 +509,8 @@ func waitNetworkPeeringConnectionDeleted(ctx context.Context, conn *odb.Client, 
 	return nil, err
 }
 
-func statusNetworkPeeringConnection(ctx context.Context, conn *odb.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusNetworkPeeringConnection(conn *odb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findNetworkPeeringConnectionByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -530,9 +530,8 @@ func findNetworkPeeringConnectionByID(ctx context.Context, conn *odb.Client, id 
 	out, err := conn.GetOdbPeeringConnection(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

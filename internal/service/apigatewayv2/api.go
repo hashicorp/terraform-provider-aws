@@ -44,133 +44,135 @@ func resourceAPI() *schema.Resource {
 		UpdateWithoutTimeout: resourceAPIUpdate,
 		DeleteWithoutTimeout: resourceAPIDelete,
 
-		Schema: map[string]*schema.Schema{
-			"api_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"api_key_selection_expression": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "$request.header.x-api-key",
-				ValidateFunc: validation.StringInSlice([]string{
-					"$context.authorizer.usageIdentifierKey",
-					"$request.header.x-api-key",
-				}, false),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"body": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONOrYAMLDiffs,
-				ValidateFunc:     verify.ValidStringIsJSONOrYAML,
-			},
-			"cors_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_credentials": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"allow_headers": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      sdkv2.StringCaseInsensitiveSetFunc,
-						},
-						"allow_methods": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      sdkv2.StringCaseInsensitiveSetFunc,
-						},
-						"allow_origins": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      sdkv2.StringCaseInsensitiveSetFunc,
-						},
-						"expose_headers": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      sdkv2.StringCaseInsensitiveSetFunc,
-						},
-						"max_age": {
-							Type:     schema.TypeInt,
-							Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"api_key_selection_expression": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "$request.header.x-api-key",
+					ValidateFunc: validation.StringInSlice([]string{
+						"$context.authorizer.usageIdentifierKey",
+						"$request.header.x-api-key",
+					}, false),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"body": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONOrYAMLDiffs,
+					ValidateFunc:     verify.ValidStringIsJSONOrYAML,
+				},
+				"cors_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_credentials": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"allow_headers": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Set:      sdkv2.StringCaseInsensitiveSetFunc,
+							},
+							"allow_methods": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Set:      sdkv2.StringCaseInsensitiveSetFunc,
+							},
+							"allow_origins": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Set:      sdkv2.StringCaseInsensitiveSetFunc,
+							},
+							"expose_headers": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								Set:      sdkv2.StringCaseInsensitiveSetFunc,
+							},
+							"max_age": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"credentials_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"disable_execute_api_endpoint": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"execution_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"fail_on_warnings": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrIPAddressType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"protocol_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ProtocolType](),
-			},
-			"route_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"route_selection_expression": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "$request.method $request.path",
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTarget: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrVersion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
+				"credentials_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"disable_execute_api_endpoint": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"execution_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"fail_on_warnings": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrIPAddressType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"protocol_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ProtocolType](),
+				},
+				"route_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"route_selection_expression": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "$request.method $request.path",
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTarget: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrVersion: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+			}
 		},
 	}
 }

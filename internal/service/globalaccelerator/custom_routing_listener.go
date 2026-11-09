@@ -28,7 +28,7 @@ import (
 // @SDKResource("aws_globalaccelerator_custom_routing_listener", name="Custom Routing Listener")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes.CustomRoutingListener")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes;awstypes.CustomRoutingListener")
 func resourceCustomRoutingListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomRoutingListenerCreate,
@@ -42,36 +42,38 @@ func resourceCustomRoutingListener() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accelerator_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"port_range": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 10,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"from_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumber,
-						},
-						"to_port": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IsPortNumber,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accelerator_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"port_range": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: 10,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"from_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
+							"to_port": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IsPortNumber,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

@@ -37,18 +37,20 @@ func resourceUserPolicyAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceUserPolicyAttachmentRead,
 		DeleteWithoutTimeout: resourceUserPolicyAttachmentDelete,
 
-		Schema: map[string]*schema.Schema{
-			"policy_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"user": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"policy_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"user": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+			}
 		},
 	}
 }

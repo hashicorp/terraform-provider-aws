@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_elasticache_cluster: Either `engine` or `replication_group_id` must be specified
-```

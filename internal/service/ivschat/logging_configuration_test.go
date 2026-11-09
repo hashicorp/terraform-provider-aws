@@ -14,9 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfivschat "github.com/hashicorp/terraform-provider-aws/internal/service/ivschat"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -282,6 +284,14 @@ func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
 					testAccCheckLoggingConfigurationExists(ctx, t, resourceName, &loggingconfiguration),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfivschat.ResourceLoggingConfiguration(), resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -301,8 +311,7 @@ func testAccCheckLoggingConfigurationDestroy(ctx context.Context, t *testing.T) 
 				Identifier: aws.String(rs.Primary.ID),
 			})
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
+				if errs.IsA[*types.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err

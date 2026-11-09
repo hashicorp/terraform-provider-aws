@@ -65,8 +65,8 @@ ephemeral "aws_secretsmanager_random_password" "test" {
 ephemeral "aws_secretsmanager_random_password" "test" {
   password_length     = 20
   exclude_punctuation = true
-  exclude_characters = "abcdef"
-  include_space = true
+  exclude_characters  = "abcdef"
+  include_space       = true
 }
 `,
 		},
@@ -77,8 +77,8 @@ ephemeral "aws_secretsmanager_random_password" "test" {
 ephemeral "aws_secretsmanager_random_password" "test" {
   password_length     = 20
   exclude_punctuation = true
-  exclude_characters = "abcdef"
-  include_space = true
+  exclude_characters  = "abcdef"
+  include_space       = true
 }
 `,
 		},
@@ -89,8 +89,8 @@ ephemeral "aws_secretsmanager_random_password" "test" {
 ephemeral "aws_secretsmanager_random_password" "test" {
   password_length     = 20
   exclude_punctuation = true
-  exclude_characters = "abc\"def"
-  include_space = true
+  exclude_characters  = "abc\"def"
+  include_space       = true
 }
 `,
 		},

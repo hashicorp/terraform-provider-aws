@@ -40,7 +40,7 @@ This data source supports the following arguments:
 * `resolver_query_log_config_id` - (Optional) ID of the Route53 Resolver Query Logging Configuration.
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
-[Route53resolver Filter value in the AWS API reference][1].
+[Route53resolver Filter value in the AWS API reference](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_Filter.html).
 
 ## Attribute Reference
 
@@ -53,5 +53,3 @@ This data source exports the following attributes in addition to the arguments a
 * `owner_id` - The AWS account ID for the account that created the query logging configuration.
 * `share_status` - An indication of whether the query logging configuration is shared with other AWS accounts or was shared with the current account by another AWS account.
 * `tags` - Map of tags to assign to the service.
-
-[1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_Filter.html

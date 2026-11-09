@@ -92,14 +92,6 @@ The `s3_destination` block supports the following arguments:
 * `bucket` - (Optional) The name of the bucket in which Evidently stores evaluation events.
 * `prefix` - (Optional) The bucket prefix in which Evidently stores evaluation events.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `2m`)
-* `delete` - (Default `2m`)
-* `update` - (Default `2m`)
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -110,11 +102,19 @@ This resource exports the following attributes in addition to the arguments abov
 * `created_time` - The date and time that the project is created.
 * `experiment_count` - The number of experiments currently in the project. This includes all experiments that have been created and not deleted, whether they are ongoing or not.
 * `feature_count` - The number of features currently in the project.
-* `id` - The ID has the same value as the arn of the project.
+* `id` - The ID has the same value as the ARN of the project.
 * `last_updated_time` - The date and time that the project was most recently updated.
 * `launch_count` - The number of launches currently in the project. This includes all launches that have been created and not deleted, whether they are ongoing or not.
 * `status` - The current state of the project. Valid values are `AVAILABLE` and `UPDATING`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `2m`)
+* `delete` - (Default `2m`)
+* `update` - (Default `2m`)
 
 ## Import
 

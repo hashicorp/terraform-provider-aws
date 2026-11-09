@@ -33,14 +33,6 @@ func (l *transitGatewayMeteringPolicyListResource) List(ctx context.Context, req
 	c := l.Meta()
 	conn := c.EC2Client(ctx)
 
-	var query listTransitGatewayMeteringPolicyModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing EC2 Transit Gateway Metering Policies")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -72,8 +64,4 @@ func (l *transitGatewayMeteringPolicyListResource) List(ctx context.Context, req
 			}
 		}
 	}
-}
-
-type listTransitGatewayMeteringPolicyModel struct {
-	framework.WithRegionModel
 }

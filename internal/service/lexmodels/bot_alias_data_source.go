@@ -25,41 +25,43 @@ func dataSourceBotAlias() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBotAliasRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bot_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validBotName,
-			},
-			"bot_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLastUpdatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validBotAliasName,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bot_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validBotName,
+				},
+				"bot_version": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validBotAliasName,
+				},
+			}
 		},
 	}
 }

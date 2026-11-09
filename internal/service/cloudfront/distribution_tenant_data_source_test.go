@@ -7,7 +7,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -43,6 +47,19 @@ func TestAccCloudFrontDistributionTenantDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "parameters.#", resourceName, "parameter.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrDomain), knownvalue.Null()),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrID),
+						resourceName, tfjsonpath.New(names.AttrID),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrTags),
+						resourceName, tfjsonpath.New(names.AttrTagsAll),
+						compare.ValuesSame(),
+					),
+				},
 			},
 		},
 	})

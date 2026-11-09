@@ -7,7 +7,6 @@ package mediapackage
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -38,53 +38,55 @@ func ResourceChannel() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"channel_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w-]+$`), "must only contain alphanumeric characters, dashes or underscores"),
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Managed by Terraform",
-			},
-			"hls_ingest": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ingest_endpoints": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrPassword: {
-										Type:      schema.TypeString,
-										Computed:  true,
-										Sensitive: true,
-									},
-									names.AttrURL: {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									names.AttrUsername: {
-										Type:     schema.TypeString,
-										Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"channel_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w-]+$`), "must only contain alphanumeric characters, dashes or underscores"),
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "Managed by Terraform",
+				},
+				"hls_ingest": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ingest_endpoints": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrPassword: {
+											Type:      schema.TypeString,
+											Computed:  true,
+											Sensitive: true,
+										},
+										names.AttrURL: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrUsername: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -164,8 +166,7 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	_, err := conn.DeleteChannel(ctx, input)
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting MediaPackage Channel: %s", err)
@@ -177,8 +178,7 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta any
 	err = tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DescribeChannel(ctx, dcinput)
 		if err != nil {
-			var nfe *types.NotFoundException
-			if errors.As(err, &nfe) {
+			if errs.IsA[*types.NotFoundException](err) {
 				return nil
 			}
 			return tfresource.NonRetryableError(err)
@@ -224,8 +224,7 @@ func findChannelByID(ctx context.Context, conn *mediapackage.Client, id string) 
 	out, err := conn.DescribeChannel(ctx, in)
 
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

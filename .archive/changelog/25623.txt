@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_api_gateway_model: Remove length validation from `schema` argument
-```

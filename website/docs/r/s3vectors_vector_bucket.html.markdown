@@ -41,12 +41,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `encryption_configuration` - (Optional, Forces new resource) Encryption configuration for the vector bucket. See [Encryption Configuration](#encryption-configuration) below for more details.
+* `encryption_configuration` - (Optional, Forces new resource) Encryption configuration for the vector bucket. See [`encryption_configuration`](#encryption_configuration-block) below for more details.
 * `force_destroy` - (Optional, Default:`false`) Boolean that indicates all indexes and vectors should be deleted from the vector bucket *when the vector bucket is destroyed* so that the vector bucket can be destroyed without error. Once this parameter is set to `true`, there must be a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the vector bucket or destroying the vector bucket, this flag will not work.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Encryption Configuration
+### `encryption_configuration` Block
 
 The `encryption_configuration` block supports the following:
 
@@ -58,10 +58,31 @@ The `encryption_configuration` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `creation_time` - Date and time when the vector bucket was created.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vector_bucket_arn` - ARN of the vector bucket.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3vectors_vector_bucket.example
+  identity = {
+    vector_bucket_arn = "arn:aws:s3vectors:us-west-2:123456789012:bucket/example-bucket"
+  }
+}
+
+resource "aws_s3vectors_vector_bucket" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `vector_bucket_arn` (String) ARN of the S3 Vectors Vector Bucket.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Vectors Vector Bucket using the `vector_bucket_arn`. For example:
 

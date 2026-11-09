@@ -23,8 +23,8 @@ data "aws_api_gateway_authorizer" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizer_id` - (Required) Authorizer identifier.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) ID of the associated REST API.
 
 ## Attribute Reference
@@ -34,7 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the API Gateway Authorizer.
 * `authorizer_credentials` - Credentials required for the authorizer.
 * `authorizer_result_ttl_in_seconds` - TTL of cached authorizer results in seconds.
-* `authorizer_uri` - Authorizer's Uniform Resource Identifier (URI).
+* `authorizer_uri` - Authorizer's URI.
 * `identity_source` - Source of the identity in an incoming request.
 * `identity_validation_expression` - Validation expression for the incoming identity.
 * `name` - Name of the authorizer.

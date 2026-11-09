@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_sns_topic: Fix IAM eventual consistency error creating SNS topics with ABAC-controlled permissions
-```

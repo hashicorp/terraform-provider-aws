@@ -1,6 +1,10 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+service "agentregistry" {
+  parallelism = 10
+}
+
 service "amp" {
   # The maximum scrapers per region quota is fixed at 10
   parallelism = 10
@@ -180,6 +184,10 @@ service "fsx" {
 
 service "imagebuilder" {
   vpc_lock = true
+}
+
+service "inspector" {
+  skip = true
 }
 
 service "ipam" {

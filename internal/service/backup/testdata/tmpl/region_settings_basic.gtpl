@@ -9,6 +9,7 @@ resource "aws_backup_region_settings" "test" {
     "EBS"                    = true
     "EC2"                    = true
     "EFS"                    = true
+    "EKS"                    = true
     "FSx"                    = true
     "Neptune"                = true
     "RDS"                    = true

@@ -1,3 +1,0 @@
-```release-note:new-action
-aws_sfn_start_execution
-```

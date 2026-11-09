@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elastictranscoder"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elastictranscoder/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -230,6 +231,14 @@ func TestAccElasticTranscoderPipeline_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelastictranscoder.ResourcePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

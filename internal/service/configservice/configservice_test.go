@@ -17,6 +17,7 @@ func TestAccConfigService_serial(t *testing.T) {
 		"AggregateAuthorization": {
 			acctest.CtBasic:      testAccConfigServiceAggregateAuthorization_basic,
 			"deprecatedRegion":   testAccConfigServiceAggregateAuthorization_deprecatedRegion,
+			"regionMigration":    testAccConfigServiceAggregateAuthorization_regionMigration,
 			acctest.CtDisappears: testAccConfigServiceAggregateAuthorization_disappears,
 			"tags":               testAccConfigServiceAggregateAuthorization_tagsSerial,
 		},
@@ -35,6 +36,10 @@ func TestAccConfigService_serial(t *testing.T) {
 			"ListBasic":           testAccConfigRule_List_basic,
 			"ListIncludeResource": testAccConfigRule_List_includeResource,
 			"ListRegionOverride":  testAccConfigRule_List_regionOverride,
+		},
+		"ConfigurationAggregator": {
+			"organization": testAccConfigurationAggregator_organization,
+			"switch":       testAccConfigurationAggregator_switch,
 		},
 		"ConfigurationRecorderStatus": {
 			acctest.CtBasic:      testAccConfigurationRecorderStatus_basic,
@@ -63,6 +68,11 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updateS3Template":          testAccConformancePack_updateS3Template,
 			"updateTemplateBody":        testAccConformancePack_updateTemplateBody,
 			"Identity":                  testAccConfigServiceConformancePack_identitySerial,
+		},
+		"Connector": {
+			acctest.CtBasic:      testAccConnector_basic,
+			acctest.CtDisappears: testAccConnector_disappears,
+			"tags":               testAccConnector_tags,
 		},
 		"DeliveryChannel": {
 			acctest.CtBasic:      testAccDeliveryChannel_basic,

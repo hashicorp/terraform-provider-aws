@@ -132,6 +132,7 @@ const (
 	AttrNamespace                  = "namespace"
 	AttrNetworkConfiguration       = "network_configuration"
 	AttrNetworkInterfaceID         = "network_interface_id"
+	AttrOutpostARN                 = "outpost_arn"
 	AttrOwner                      = "owner"
 	AttrOwnerAccountID             = "owner_account_id"
 	AttrOwnerID                    = "owner_id"

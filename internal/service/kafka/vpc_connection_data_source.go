@@ -25,34 +25,36 @@ func dataSourceVPCConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCConnectionRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"authentication": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"client_subnets": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"target_cluster_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"authentication": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"client_subnets": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"target_cluster_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

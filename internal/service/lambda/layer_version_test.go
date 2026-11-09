@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -77,6 +78,14 @@ func TestAccLambdaLayerVersion_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceLayerVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -347,7 +356,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop, // this purposely leaves dangling resources, since skip_destroy = true
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs22.x"),
+				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs24.x"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", fmt.Sprintf("layer:%s:1", rName)),

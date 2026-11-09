@@ -43,3 +43,9 @@ This data source exports the following attributes in addition to the arguments a
 * `product_id` - Product identifier.
 * `status` - Constraint status.
 * `type` - Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `RESOURCE_UPDATE`, `STACKSET`, and `TEMPLATE`.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `read` - (Default `10m`)

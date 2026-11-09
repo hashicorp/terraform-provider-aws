@@ -62,7 +62,7 @@ For example, if we're looking at an error in the VPC flow log resource, this is 
 ```go
 func TestAccVPCFlowLog_destinationError(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -123,18 +123,18 @@ Of course, not all bugs throw errors. For example, perhaps the bug you are looki
 ```go
 func TestAccVPCFlowLog_destinationError(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowLogDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCFlowLogConfig_destinationError(rName),
                 Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
 					resource.TestCheckResourceAttr(resourceName, "log_group_name", ""), // this should not be empty
 				),
 			},
@@ -196,7 +196,7 @@ For example, if you want to contribute just a failing test, the example below sh
 ```go
 func TestAccVPCFlowLog_destinationError(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -232,18 +232,18 @@ There are other types of bugs besides the error thrown in the previous example. 
 ```go
 func TestAccVPCFlowLog_destinationError(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowLogDestroy(ctx),
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCFlowLogConfig_destinationError(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
                      // log_group_name should be "xyz-123"
                      // See https://github.com/hashicorp/terraform-provider-aws/issues/45912
 					resource.TestCheckResourceAttr(resourceName, "log_group_name", ""),

@@ -25,28 +25,30 @@ func dataSourceDelegatedServices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedServicesRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"delegated_services": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delegation_enabled_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"service_principal": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"delegated_services": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"delegation_enabled_date": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"service_principal": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

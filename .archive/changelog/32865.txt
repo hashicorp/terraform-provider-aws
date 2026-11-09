@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudfront_distribution: Don't call `UpdateDistribution` API if only tags are updated
-```

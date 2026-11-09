@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -85,6 +86,14 @@ func TestAccIAMUserPolicyAttachmentsExclusive_disappears_User(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUserPolicyAttachment(), attachmentResourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUser(), userResourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -115,8 +124,18 @@ func TestAccIAMUserPolicyAttachmentsExclusive_disappears_Policy(t *testing.T) {
 					testAccCheckUserPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					// Managed policy must be detached before it can be deleted
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUserPolicyAttachment(), attachmentResourceName),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicy(), policyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicy(), policyResourceName), // nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(policyResourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(policyResourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 		},
