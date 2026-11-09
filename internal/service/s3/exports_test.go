@@ -85,8 +85,6 @@ var (
 	DirectoryBucketNameSuffixRegexPattern = directoryBucketNameSuffixRegexPattern
 
 	LifecycleConfigEqual = lifecycleConfigEqual
-
-	WaitBucketPolicyFound = waitBucketPolicyFound
 )
 
 type (
