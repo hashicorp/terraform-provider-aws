@@ -1521,6 +1521,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.UseLatestRestorableTime = aws.Bool(v)
 		}
 
+		if v, ok := d.GetOk(names.AttrAllocatedStorage); ok {
+			input.AllocatedStorage = aws.Int32(int32(v.(int)))
+		}
+
 		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
