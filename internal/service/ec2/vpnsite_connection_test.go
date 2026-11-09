@@ -1557,7 +1557,6 @@ func TestAccSiteVPNConnection_largeBandwidthTunnel_withoutTGWorVGW(t *testing.T)
 func TestAccSiteVPNConnection_tunnelBandwidth(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpn awstypes.VpnConnection
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 
@@ -1568,7 +1567,7 @@ func TestAccSiteVPNConnection_tunnelBandwidth(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNConnectionConfig_tunnelBandwidth(rName, rBgpAsn, string(awstypes.VpnTunnelBandwidthStandard)),
+				Config: testAccVPNConnectionConfig_tunnelBandwidth(rBgpAsn, awstypes.VpnTunnelBandwidthStandard),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -1580,7 +1579,7 @@ func TestAccSiteVPNConnection_tunnelBandwidth(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPNConnectionConfig_tunnelBandwidth(rName, rBgpAsn, string(awstypes.VpnTunnelBandwidthLarge)),
+				Config: testAccVPNConnectionConfig_tunnelBandwidth(rBgpAsn, awstypes.VpnTunnelBandwidthLarge),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -3198,24 +3197,20 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccVPNConnectionConfig_tunnelBandwidth(rName string, rBgpAsn int, tunnelBandwidth string) string {
+func testAccVPNConnectionConfig_tunnelBandwidth(rBgpAsn int, tunnelBandwidth awstypes.VpnTunnelBandwidth) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
-  bgp_asn    = %[2]d
+  bgp_asn    = %[1]d
   ip_address = "198.51.100.2"
   type       = "ipsec.1"
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_vpn_connection" "test" {
   customer_gateway_id = aws_customer_gateway.test.id
-  tunnel_bandwidth    = %[3]q
+  tunnel_bandwidth    = %[2]q
   type                = "ipsec.1"
 }
-`, rName, rBgpAsn, tunnelBandwidth)
+`, rBgpAsn, tunnelBandwidth)
 }
 
 func testAccVPNConnectionConfig_vpnConcentrator(rName string, rBgpAsn int) string {
