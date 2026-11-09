@@ -15,8 +15,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1573,10 +1576,12 @@ func TestAccSiteVPNConnection_TunnelBandwidth_modify(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, t, resourceName, &vpn),
-					resource.TestCheckResourceAttr(resourceName, "tunnel_bandwidth", string(awstypes.VpnTunnelBandwidthStandard)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tunnel_bandwidth"), tfknownvalue.StringExact(awstypes.VpnTunnelBandwidthStandard)),
+				},
 			},
 			{
 				Config: testAccVPNConnectionConfig_tunnelBandwidth(rBgpAsn, awstypes.VpnTunnelBandwidthLarge),
@@ -1585,10 +1590,17 @@ func TestAccSiteVPNConnection_TunnelBandwidth_modify(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, t, resourceName, &vpn),
-					resource.TestCheckResourceAttr(resourceName, "tunnel_bandwidth", string(awstypes.VpnTunnelBandwidthLarge)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tunnel_bandwidth"), tfknownvalue.StringExact(awstypes.VpnTunnelBandwidthLarge)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
