@@ -8,6 +8,7 @@ package ec2
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SingletonIdentity
 // @SDKResource("aws_ebs_encryption_by_default", name="EBS Encryption By Default")
 func resourceEBSEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
@@ -66,7 +68,9 @@ func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EBS encryption by default: %s", err)
 	}
 
-	d.Set(names.AttrEnabled, resp.EbsEncryptionByDefault)
+	if err := resourceEBSEncryptionByDefaultFlatten(ctx, resp, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening EBS encryption by default: %w", err)
+	}
 
 	return diags
 }
@@ -107,4 +111,8 @@ func setEBSEncryptionByDefault(ctx context.Context, conn *ec2.Client, enabled bo
 	}
 
 	return err
+}
+
+func resourceEBSEncryptionByDefaultFlatten(ctx context.Context, resp *ec2.GetEbsEncryptionByDefaultOutput, d *schema.ResourceData) error {
+	return d.Set(names.AttrEnabled, aws.ToBool(resp.EbsEncryptionByDefault))
 }
