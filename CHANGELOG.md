@@ -2,14 +2,22 @@
 
 FEATURES:
 
+* **New List Resource:** `aws_networksecuritymanager_deployment` ([#50815](https://github.com/hashicorp/terraform-provider-aws/issues/50815))
 * **New List Resource:** `aws_networksecuritymanager_policy` ([#50789](https://github.com/hashicorp/terraform-provider-aws/issues/50789))
 * **New List Resource:** `aws_networksecuritymanager_template` ([#50799](https://github.com/hashicorp/terraform-provider-aws/issues/50799))
+* **New Resource:** `aws_config_connector` ([#49559](https://github.com/hashicorp/terraform-provider-aws/issues/49559))
+* **New Resource:** `aws_networksecuritymanager_deployment` ([#50815](https://github.com/hashicorp/terraform-provider-aws/issues/50815))
 * **New Resource:** `aws_networksecuritymanager_policy` ([#50789](https://github.com/hashicorp/terraform-provider-aws/issues/50789))
 * **New Resource:** `aws_networksecuritymanager_template` ([#50799](https://github.com/hashicorp/terraform-provider-aws/issues/50799))
+
+ENHANCEMENTS:
+
+* resource/aws_securityhub_connector_v2: Add `azure` configuration block to `connector_provider` for Microsoft Azure multi-cloud coverage ([#49560](https://github.com/hashicorp/terraform-provider-aws/issues/49560))
 
 BUG FIXES:
 
 * resource/aws_networksecuritymanager_rule: Fix the first apply of more than one rule in an account that has never used AWS Network Security Manager failing with `ConflictException: Account or org is already onboarded` ([#50807](https://github.com/hashicorp/terraform-provider-aws/issues/50807))
+* resource/aws_organizations_policy: Fix infinite drift in `content` when AWS returns policy statement elements in a different order ([#47190](https://github.com/hashicorp/terraform-provider-aws/issues/47190))
 
 ## 6.72.0 (November 4, 2026)
 
