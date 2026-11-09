@@ -93,7 +93,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) A map of tags to assign to the zone. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc` - (Optional) Configuration block(s) specifying VPC(s) to associate with a private hosted zone. Conflicts with the `delegation_set_id` argument in this resource and any [`aws_route53_zone_association` resource](/docs/providers/aws/r/route53_zone_association.html) specifying the same zone ID. Detailed below.
 
-### vpc Argument Reference
+### `vpc` Argument Reference
 
 * `vpc_id` - (Required) ID of the VPC to associate.
 * `vpc_region` - (Optional) Region of the VPC to associate. Defaults to AWS provider region.

@@ -43,21 +43,24 @@ The following arguments are required:
 The following arguments are optional:
 
 * `principals` - (Optional) List of AWS account IDs that are allowed to associate resources with the accelerator.
-* `resource` - (Optional) List of resources to be associated with the accelerator.
-    * `cidr_block` - (Optional) IP address range, in CIDR format, that is specified as resource.
-    * `endpoint_id` - (Optional) The endpoint ID for the endpoint that is specified as a AWS resource.
-    * `region` - (Optional) The AWS Region where a shared endpoint resource is located.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `resource` - (Optional) List of resources to be associated with the accelerator. See [`resource`](#resource-block) below.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `resource` Block
+
+* `cidr_block` - (Optional) IP address range, in CIDR format, that is specified as resource.
+* `endpoint_id` - (Optional) Endpoint ID for the endpoint that is specified as a AWS resource.
+* `region` - (Optional) AWS Region where a shared endpoint resource is located.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Cross Account Attachment.
-* `id` - ID of the Cross Account Attachment.
 * `created_time` - Creation Time when the Cross Account Attachment.
+* `id` - ID of the Cross Account Attachment.
 * `last_modified_time` - Last modified time of the Cross Account Attachment.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

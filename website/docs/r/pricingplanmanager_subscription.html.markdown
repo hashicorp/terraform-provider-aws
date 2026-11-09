@@ -68,11 +68,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the subscription.
 * `etag` - Entity tag of the subscription, used by AWS for optimistic concurrency control.
-* `scheduled_change` - Pending change that takes effect at the end of the current billing period, if any. See [`scheduled_change`](#scheduled_change) below.
+* `scheduled_change` - Pending change that takes effect at the end of the current billing period, if any. See [`scheduled_change`](#scheduled_change-block) below.
 * `status` - Current status of the subscription. Valid values: `PENDING_APPROVAL`, `ACTIVE`, `SYNC_IN_PROGRESS`, `FAILED`.
 * `status_reason` - Human-readable explanation of the current status, when available.
 
-### scheduled_change
+### `scheduled_change` Block
 
 * `change_type` - Type of pending change. Valid values: `DOWNGRADE`, `CANCELLATION`.
 * `effective_date` - Date and time when the change takes effect.

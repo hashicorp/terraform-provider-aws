@@ -177,9 +177,8 @@ func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChanges("data_source_configuration", names.AttrDescription) {
 		input := &location.UpdatePlaceIndexInput{
-			IndexName: aws.String(d.Id()),
-			// Deprecated but still required by the API
-			PricingPlan: awstypes.PricingPlan("RequestBasedUsage"),
+			IndexName:   aws.String(d.Id()),
+			PricingPlan: awstypes.PricingPlan("RequestBasedUsage"), //nolint:staticcheck // Deprecated but still required by the API.
 		}
 
 		if v, ok := d.GetOk("data_source_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {

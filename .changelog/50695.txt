@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_bedrockdataautomation_blueprint
+```
+
+```release-note:new-list-resource
+aws_bedrockdataautomation_blueprint
+```

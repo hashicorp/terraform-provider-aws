@@ -273,6 +273,49 @@ func TestAccCloudFrontOriginAccessControl_lambdaOriginType(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontOriginAccessControl_lambdaWebFunction(t *testing.T) {
+	ctx := acctest.Context(t)
+	var originaccesscontrol awstypes.OriginAccessControl
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_origin_access_control.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessControlDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOriginAccessControlConfig_lambdaWebFunction(rName, "sigv4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOriginAccessControlExists(ctx, t, resourceName, &originaccesscontrol),
+					resource.TestCheckResourceAttr(resourceName, "origin_access_control_origin_type", "lambda"),
+					resource.TestCheckResourceAttr(resourceName, "signing_behavior", "always-amz-auth"),
+					resource.TestCheckResourceAttr(resourceName, "signing_protocol", "sigv4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOriginAccessControlConfig_lambdaWebFunction(rName, "sigv4a"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOriginAccessControlExists(ctx, t, resourceName, &originaccesscontrol),
+					resource.TestCheckResourceAttr(resourceName, "origin_access_control_origin_type", "lambda"),
+					resource.TestCheckResourceAttr(resourceName, "signing_behavior", "always-amz-auth"),
+					resource.TestCheckResourceAttr(resourceName, "signing_protocol", "sigv4a"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontOriginAccessControl_mediaPackageV2Type(t *testing.T) {
 	ctx := acctest.Context(t)
 	var originaccesscontrol awstypes.OriginAccessControl
@@ -437,4 +480,15 @@ resource "aws_cloudfront_origin_access_control" "test" {
   signing_protocol                  = "sigv4"
 }
 `, rName, originType)
+}
+
+func testAccOriginAccessControlConfig_lambdaWebFunction(rName, signingProtocol string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_origin_access_control" "test" {
+  name                              = %[1]q
+  origin_access_control_origin_type = "lambda"
+  signing_behavior                  = "always-amz-auth"
+  signing_protocol                  = %[2]q
+}
+`, rName, signingProtocol)
 }

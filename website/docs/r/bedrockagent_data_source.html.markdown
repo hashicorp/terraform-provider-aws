@@ -3,12 +3,12 @@ subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_data_source"
 description: |-
-  Terraform resource for managing an AWS Agents for Amazon Bedrock Data Source.
+  Manages an AWS Agents for Amazon Bedrock Data Source.
 ---
 
 # Resource: aws_bedrockagent_data_source
 
-Terraform resource for managing an AWS Agents for Amazon Bedrock Data Source.
+Manages an AWS Agents for Amazon Bedrock Data Source.
 
 ## Example Usage
 
@@ -139,6 +139,69 @@ resource "aws_bedrockagent_data_source" "example" {
 }
 ```
 
+### GraphRAG with Neptune Analytics
+
+Knowledge bases that use `NEPTUNE_ANALYTICS` storage require every associated data source to set `context_enrichment_configuration`.
+
+The graph construction model must be one that GraphRAG currently supports, and the supported models are reachable only through a cross-Region [inference profile](https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html). Passing a plain foundation model ARN fails with `ValidationException: Invalid graph bedrock foundation model provided`.
+
+The knowledge base service role needs:
+
+* `bedrock:GetInferenceProfile` on `*`. Scoping this to the profile ARN is not honored, and creation fails with `Not authorized to call GetInferenceProfile` even when the granted ARN matches the one in the error.
+* `bedrock:InvokeModel` on the inference profile ARN.
+* `bedrock:InvokeModel` on the underlying foundation model in every Region the profile routes to, which `aws bedrock get-inference-profile` reports as `models[].modelArn`.
+
+```terraform
+resource "aws_bedrockagent_knowledge_base" "example" {
+  name     = "graphrag-example"
+  role_arn = aws_iam_role.example.arn
+
+  knowledge_base_configuration {
+    type = "VECTOR"
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:aws:bedrock:us-east-1::foundation-model/cohere.embed-english-v3"
+    }
+  }
+
+  storage_configuration {
+    type = "NEPTUNE_ANALYTICS"
+    neptune_analytics_configuration {
+      graph_arn = aws_neptunegraph_graph.example.arn
+      field_mapping {
+        metadata_field = "metadata"
+        text_field     = "text"
+      }
+    }
+  }
+}
+
+resource "aws_bedrockagent_data_source" "example" {
+  knowledge_base_id = aws_bedrockagent_knowledge_base.example.id
+  name              = "graphrag-example"
+
+  data_source_configuration {
+    type = "S3"
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.example.arn
+    }
+  }
+
+  vector_ingestion_configuration {
+    context_enrichment_configuration {
+      type = "BEDROCK_FOUNDATION_MODEL"
+
+      bedrock_foundation_model_configuration {
+        model_arn = "arn:aws:bedrock:us-east-1:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0"
+
+        enrichment_strategy_configuration {
+          method = "CHUNK_ENTITY_EXTRACTION"
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -219,6 +282,7 @@ The `managed_knowledge_base_connector_configuration` configuration block support
 * `connector_parameters` - (Optional) JSON-encoded string containing the connector-specific parameters. The structure depends on the connector type (S3, SharePoint, Google Drive, etc.). See [Managed Knowledge Base connector parameters](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-connectors.html) for details on each connector type.
 * `deletion_protection_configuration` - (Optional) Configuration for deletion protection on the data source. See [`deletion_protection_configuration` Block](#deletion_protection_configuration-block) for details.
 * `media_extraction_configuration` - (Optional) Configuration for extracting media content (images, audio, video) from documents. See [`media_extraction_configuration` Block](#media_extraction_configuration-block) for details.
+* `sync_schedule` - (Optional) Recurring schedule on which the connector automatically syncs this data source. See [`sync_schedule` Block](#sync_schedule-block) for details.
 
 ### `deletion_protection_configuration` Block
 
@@ -252,6 +316,41 @@ The `image_extraction_configuration` configuration block supports the following 
 The `video_extraction_configuration` configuration block supports the following arguments:
 
 * `video_extraction_status` - (Required) Whether video extraction is enabled. Valid values: `ENABLED`, `DISABLED`.
+
+### `sync_schedule` Block
+
+The `sync_schedule` configuration block supports the following arguments:
+
+* `daily` - (Optional) Daily sync that runs once a day at a system-chosen off-peak time. The run time is not configurable. See [`daily` Block](#daily-block) for details.
+* `monthly` - (Optional) Monthly sync that runs once a month on the specified day of the month. See [`monthly` Block](#monthly-block) for details.
+* `weekly` - (Optional) Weekly sync that runs once a week on the specified day of the week. See [`weekly` Block](#weekly-block) for details.
+
+### `daily` Block
+
+The `daily` configuration block has no arguments.
+
+### `monthly` Block
+
+The `monthly` configuration block supports the following arguments:
+
+* `day_of_month` - (Required) Day of the month on which the monthly sync runs. See [`day_of_month` Block](#day_of_month-block) for details.
+
+### `day_of_month` Block
+
+The `day_of_month` configuration block supports the following arguments:
+
+* `day_number` - (Optional) Specific day of the month, from 1 to 28.
+* `last_day_of_month` - (Optional) Configure this option to run the monthly sync on the last calendar day of each month. See [`last_day_of_month` Block](#last_day_of_month-block) for details.
+
+### `last_day_of_month` Block
+
+The `last_day_of_month` configuration block has no arguments.
+
+### `weekly` Block
+
+The `weekly` configuration block supports the following arguments:
+
+* `day_of_week` - (Required) Day of the week on which the weekly sync runs. Valid values: `SUNDAY`, `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`.
 
 ### `s3_configuration` Block
 
@@ -364,10 +463,10 @@ The `web_configuration` configuration block supports the following arguments:
 The `crawler_configuration` configuration block supports the following arguments:
 
 * `crawler_limits` - (Optional) Configuration of crawl limits for the web URLs. See [`crawler_limits` Block](#crawler_limits-block) for details.
-* `exclusion_filters` - (Optional) List of one or more exclusion regular expression patterns to exclude object types that match the pattern.
-* `inclusion_filters` - (Optional) List of one or more inclusion regular expression patterns to include object types that match the pattern.
+* `exclusion_filters` - (Optional) List of one or more exclusion regular expression patterns to exclude URLs that match the pattern.
+* `inclusion_filters` - (Optional) List of one or more inclusion regular expression patterns to include URLs that match the pattern.
 * `scope` - (Optional) Scope of what is crawled for your URLs.
-* `user_agent` - (Optional) String used to identify the crawler or bot when it accesses a web server. Default value is `bedrockbot_UUID`.
+* `user_agent` - (Optional) Custom suffix appended to the `bedrockbot_UUID` user agent header that the crawler uses when it accesses a web server. Must be between 15 and 40 characters.
 
 ### `crawler_limits` Block
 
@@ -405,6 +504,7 @@ The `server_side_encryption_configuration` configuration block supports the foll
 The `vector_ingestion_configuration` configuration block supports the following arguments:
 
 * `chunking_configuration` - (Optional, Forces new resource) Details about how to chunk the documents in the data source. A chunk refers to an excerpt from a data source that is returned when the knowledge base that it belongs to is queried. See [`chunking_configuration` Block](#chunking_configuration-block) for details.
+* `context_enrichment_configuration` - (Optional, Forces new resource) Context enrichment configuration used to provide additional context to the RAG application. Required when the knowledge base uses Amazon Neptune Analytics (GraphRAG) storage. See [`context_enrichment_configuration` Block](#context_enrichment_configuration-block) for details.
 * `custom_transformation_configuration` - (Optional, Forces new resource) Configuration for custom transformation of data source documents. See [`custom_transformation_configuration` Block](#custom_transformation_configuration-block) for details.
 * `parsing_configuration` - (Optional, Forces new resource) Configuration for custom parsing of data source documents. See [`parsing_configuration` Block](#parsing_configuration-block) for details.
 
@@ -412,7 +512,7 @@ The `vector_ingestion_configuration` configuration block supports the following 
 
 The `chunking_configuration` configuration block supports the following arguments:
 
-* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIXED_SIZE`, `HIERARCHICAL`, `SEMANTIC`, `NONE`.
+* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data. Valid values: `FIXED_SIZE`, `HIERARCHICAL`, `SEMANTIC`, `NONE`.
 * `fixed_size_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. Requires `chunking_strategy` as `FIXED_SIZE`. See [`fixed_size_chunking_configuration` Block](#fixed_size_chunking_configuration-block) for details.
 * `hierarchical_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose hierarchical chunking. Requires `chunking_strategy` as `HIERARCHICAL`. See [`hierarchical_chunking_configuration` Block](#hierarchical_chunking_configuration-block) for details.
 * `semantic_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose semantic chunking. Requires `chunking_strategy` as `SEMANTIC`. See [`semantic_chunking_configuration` Block](#semantic_chunking_configuration-block) for details.
@@ -444,6 +544,26 @@ The `semantic_chunking_configuration` configuration block supports the following
 * `breakpoint_percentile_threshold` - (Required, Forces new resource) Dissimilarity threshold for splitting chunks.
 * `buffer_size` - (Required, Forces new resource) Buffer size.
 * `max_token` - (Required, Forces new resource) Maximum number of tokens a chunk can contain.
+
+### `context_enrichment_configuration` Block
+
+The `context_enrichment_configuration` configuration block supports the following arguments:
+
+* `bedrock_foundation_model_configuration` - (Optional, Forces new resource) Settings for a foundation model used to enrich the context of data source documents. Required when `type` is `BEDROCK_FOUNDATION_MODEL`. See [`context_enrichment_configuration.bedrock_foundation_model_configuration` Block](#context_enrichment_configurationbedrock_foundation_model_configuration-block) for details.
+* `type` - (Required, Forces new resource) Method used for context enrichment. Valid value: `BEDROCK_FOUNDATION_MODEL`.
+
+### `context_enrichment_configuration.bedrock_foundation_model_configuration` Block
+
+The `bedrock_foundation_model_configuration` configuration block supports the following arguments:
+
+* `enrichment_strategy_configuration` - (Required, Forces new resource) Strategy used to enrich the context of data source documents. See [`context_enrichment_configuration.bedrock_foundation_model_configuration.enrichment_strategy_configuration` Block](#context_enrichment_configurationbedrock_foundation_model_configurationenrichment_strategy_configuration-block) for details.
+* `model_arn` - (Required, Forces new resource) ARN of the cross-Region inference profile used for context enrichment.
+
+### `context_enrichment_configuration.bedrock_foundation_model_configuration.enrichment_strategy_configuration` Block
+
+The `enrichment_strategy_configuration` configuration block supports the following arguments:
+
+* `method` - (Required, Forces new resource) Method used to enrich the context of data source documents. Valid value: `CHUNK_ENTITY_EXTRACTION`.
 
 ### `custom_transformation_configuration` Block
 
@@ -489,7 +609,7 @@ The `parsing_configuration` configuration block supports the following arguments
 
 * `bedrock_data_automation_configuration` - (Optional) Settings for using Amazon Bedrock Data Automation to parse documents. See [`bedrock_data_automation_configuration` Block](#bedrock_data_automation_configuration-block) for details.
 * `bedrock_foundation_model_configuration` - (Optional) Settings for a foundation model used to parse documents in a data source. See [`bedrock_foundation_model_configuration` Block](#bedrock_foundation_model_configuration-block) for details.
-* `parsing_strategy` - (Required) Parsing strategy to use. Valid values: `BEDROCK_FOUNDATION_MODEL`, `BEDROCK_DATA_AUTOMATION`.
+* `parsing_strategy` - (Required) Parsing strategy to use. Valid values: `BEDROCK_FOUNDATION_MODEL`, `BEDROCK_DATA_AUTOMATION`, `SMART_PARSING`, `MULTI_MODAL_EMBEDDINGS`.
 
 ### `bedrock_data_automation_configuration` Block
 

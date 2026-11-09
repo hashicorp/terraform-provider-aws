@@ -25,7 +25,7 @@ resource "aws_vpc_block_public_access_exclusion" "test" {
 }
 ```
 
-### Usage with subnet id
+### Usage with subnet ID
 
 ```terraform
 resource "aws_vpc" "test" {

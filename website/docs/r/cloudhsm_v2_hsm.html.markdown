@@ -43,8 +43,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `availability_zone` - Name of the Availability Zone the HSM instance is located in.
 * `cluster_id` - ID of Cloud HSM v2 cluster.
-* `hsm_eni_id` - The id of the ENI interface allocated for HSM module.
-* `hsm_id` - The id of the HSM module.
+* `hsm_eni_id` - The ID of the ENI interface allocated for HSM module.
+* `hsm_id` - The ID of the HSM module.
 * `hsm_state` - The state of the HSM module.
 * `ip_address` - The IP address of the HSM Module.
 * `subnet_id` -  The ID of subnet in which HSM is located

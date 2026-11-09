@@ -119,13 +119,13 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the appstream stack.
+* `arn` - ARN of the AppStream stack.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the stack was created.
-* `id` - Unique ID of the appstream stack.
+* `id` - Unique ID of the AppStream stack.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_stack` using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_stack` using the ID. For example:
 
 ```terraform
 import {
@@ -134,7 +134,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_appstream_stack` using the id. For example:
+Using `terraform import`, import `aws_appstream_stack` using the ID. For example:
 
 ```console
 % terraform import aws_appstream_stack.example stackID

@@ -110,6 +110,8 @@ service/bedrockagent:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
 service/bedrockagentcore:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagentcore_'
+service/bedrockdataautomation:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockdataautomation_'
 service/bedrockruntime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockruntime_'
 service/billing:
@@ -206,6 +208,8 @@ service/connectcontactlens:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectcontactlens_'
 service/connectparticipant:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectparticipant_'
+service/continuum:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_continuum_'
 service/controltower:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_controltower_'
 service/costoptimizationhub:
@@ -684,6 +688,8 @@ service/secretsmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_secretsmanager_'
 service/securityhub:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securityhub_'
+service/securityir:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securityir_'
 service/securitylake:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securitylake_'
 service/serverlessrepo:

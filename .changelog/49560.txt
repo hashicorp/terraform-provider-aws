@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_securityhub_connector_v2: Add `azure` configuration block to `connector_provider` for Microsoft Azure multi-cloud coverage
+```

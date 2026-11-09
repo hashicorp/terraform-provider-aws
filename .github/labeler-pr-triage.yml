@@ -364,6 +364,12 @@ service/bedrockagentcore:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagentcore/**/*'
               - 'website/**/bedrockagentcore_*'
+service/bedrockdataautomation:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/bedrockdataautomation/**/*'
+              - 'website/**/bedrockdataautomation_*'
 service/bedrockruntime:
   - any:
       - changed-files:
@@ -519,6 +525,7 @@ service/cloudwatch:
               - 'website/**/cloudwatch_composite_*'
               - 'website/**/cloudwatch_contributor_*'
               - 'website/**/cloudwatch_otel_*'
+              - 'website/**/cloudwatch_resource_metrics_*'
 service/cloudwatchomni:
   - any:
       - changed-files:
@@ -663,6 +670,12 @@ service/connectparticipant:
           - any-glob-to-any-file:
               - 'internal/service/connectparticipant/**/*'
               - 'website/**/connectparticipant_*'
+service/continuum:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/continuum/**/*'
+              - 'website/**/continuum_*'
 service/controltower:
   - any:
       - changed-files:
@@ -2156,6 +2169,12 @@ service/securityhub:
           - any-glob-to-any-file:
               - 'internal/service/securityhub/**/*'
               - 'website/**/securityhub_*'
+service/securityir:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/securityir/**/*'
+              - 'website/**/securityir_*'
 service/securitylake:
   - any:
       - changed-files:

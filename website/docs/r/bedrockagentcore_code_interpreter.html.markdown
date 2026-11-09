@@ -16,7 +16,7 @@ Manages an AWS Bedrock AgentCore Code Interpreter. Code Interpreter provides a s
 
 ```terraform
 resource "aws_bedrockagentcore_code_interpreter" "example" {
-  name        = "example-code-interpreter"
+  name        = "example_code_interpreter"
   description = "Code interpreter for data analysis"
 
   network_configuration {
@@ -45,7 +45,7 @@ resource "aws_iam_role" "example" {
 }
 
 resource "aws_bedrockagentcore_code_interpreter" "example" {
-  name               = "example-code-interpreter"
+  name               = "example_code_interpreter"
   description        = "Code interpreter with custom execution role"
   execution_role_arn = aws_iam_role.example.arn
 
@@ -66,7 +66,7 @@ The following arguments are optional:
 
 * `certificate` - (Optional) Certificates to install in the code interpreter. Between 1 and 200 blocks are supported. See [`certificate`](#certificate-block) below.
 * `description` - (Optional) Description of the code interpreter.
-* `execution_role_arn` - (Optional) ARN of the IAM role that the code interpreter assumes for execution. Required when using `SANDBOX` network mode.
+* `execution_role_arn` - (Optional) ARN of the IAM role that the code interpreter assumes for execution.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

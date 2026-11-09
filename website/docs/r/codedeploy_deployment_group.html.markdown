@@ -194,7 +194,7 @@ This resource supports the following arguments:
 * `service_role_arn` - (Required) The service role ARN that allows deployments.
 * `alarm_configuration` - (Optional) Configuration block of alarms associated with the deployment group (documented below).
 * `auto_rollback_configuration` - (Optional) Configuration block of the automatic rollback configuration associated with the deployment group (documented below).
-* `autoscaling_groups` - (Optional) Autoscaling groups associated with the deployment group.
+* `autoscaling_groups` - (Optional) Auto Scaling groups associated with the deployment group.
 * `blue_green_deployment_config` - (Optional) Configuration block of the blue/green deployment options for a deployment group (documented below).
 * `deployment_config_name` - (Optional) The name of the group's deployment config. The default is "CodeDeployDefault.OneAtATime".
 * `deployment_style` - (Optional) Configuration block of the type of deployment, either in-place or blue/green, you want to run and whether to route deployment traffic behind a load balancer (documented below).
