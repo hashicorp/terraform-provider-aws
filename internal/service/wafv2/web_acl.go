@@ -495,8 +495,8 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 				// Rules may be managed separately from this resource.
 				//
-				// When no rule changes are planned, preserve concurrent rule changes instead of
-				// resending the originally planned values from state.
+				// When no rule changes are planned send the most current rule set instead of
+				// the originally planned values from state, which may now be stale.
 				if !d.HasChanges(names.AttrRule, "rule_json") {
 					input.Rules = output.WebACL.Rules
 				}
