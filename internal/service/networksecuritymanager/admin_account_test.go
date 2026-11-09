@@ -465,6 +465,14 @@ func TestAccNetworkSecurityManagerAdminAccount_validation(t *testing.T) {
 				Config:      testAccAdminAccountConfig_scopeFilterIncludeAllFalse(),
 				ExpectError: regexache.MustCompile(`include_all Value must be "true"`),
 			},
+			{
+				Config:      testAccAdminAccountConfig_firewallTypes(""),
+				ExpectError: regexache.MustCompile(`firewall_types set must\s+contain at least 1 elements`),
+			},
+			{
+				Config:      testAccAdminAccountConfig_scopeFilterIncludeOnlyEmptyAccounts(),
+				ExpectError: regexache.MustCompile(`accounts set must\s+contain at least 1 elements`),
+			},
 		},
 	})
 }
@@ -717,6 +725,23 @@ resource "aws_networksecuritymanager_admin_account" "test" {
   admin_scope {
     scope_filter {
       include_all = false
+    }
+  }
+}
+`, testAccAdminAccountConfig_base())
+}
+
+func testAccAdminAccountConfig_scopeFilterIncludeOnlyEmptyAccounts() string {
+	return acctest.ConfigCompose(`
+resource "aws_networksecuritymanager_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+  priority   = 1
+
+  admin_scope {
+    scope_filter {
+      include_only {
+        accounts = []
+      }
     }
   }
 }

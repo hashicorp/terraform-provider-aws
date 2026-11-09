@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -116,6 +117,9 @@ func (r *adminAccountResource) Schema(ctx context.Context, req resource.SchemaRe
 										CustomType:  fwtypes.SetOfStringEnumType[awstypes.PolicyFirewallType](),
 										ElementType: types.StringType,
 										Optional:    true,
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
+										},
 									},
 								},
 							},
@@ -186,11 +190,17 @@ func scopeSelectionNestedBlockObject(_ context.Context) schema.NestedBlockObject
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+				},
 			},
 			"organizational_units": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+				},
 			},
 		},
 	}
@@ -453,7 +463,10 @@ func statusAdminAccount(conn *networksecuritymanager.Client, adminAccountID stri
 			return nil, "", nil
 		}
 		if isAccountNotOnboardedError(err) {
-			return nil, adminAccountStatusAccountNotOnboarded, nil
+			// Return a non-nil placeholder so StateChangeConf treats this as a
+			// pending state (resetting ContinuousTargetOccurence) rather than
+			// as not found.
+			return &awstypes.AdminAccountDetails{}, adminAccountStatusAccountNotOnboarded, nil
 		}
 		if err != nil {
 			return nil, "", smarterr.NewError(err)
@@ -580,7 +593,7 @@ func (m scopeFilterModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	case m.IncludeAll.ValueBool():
 		return &awstypes.AdminScopeFilterInputMemberIncludeAll{Value: awstypes.Unit{}}, diags
 
-	case !m.IncludeOnly.IsNull():
+	case m.IncludeOnly.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0:
 		model, d := m.IncludeOnly.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
@@ -593,7 +606,7 @@ func (m scopeFilterModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 		}
 		return &r, diags
 
-	case !m.ExcludeOnly.IsNull():
+	case m.ExcludeOnly.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0:
 		model, d := m.ExcludeOnly.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &diags, d)
 		if diags.HasError() {
