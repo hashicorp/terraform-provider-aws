@@ -1310,6 +1310,37 @@ The below are style-based items that _may_ be noted during review and are recomm
 - __Uses TestCheckResourceAttrPair() for Data Sources__: Tests should use [`resource.TestCheckResourceAttrPair()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#TestCheckResourceAttrPair) to verify values in the Terraform state for data sources attributes to compare them with their expected resource attributes.
 - __Excludes Timeouts Configurations__: Test configurations should not include `timeouts {...}` configuration blocks except for explicit testing of customizable timeouts (typically very short timeouts with `ExpectError`).
 - __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAcc{SERVICE}{RESOURCE}_basic`) should use available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
+- __Uses IAM Policy Document Data Source for Policy Documents__: Test configurations should use the [`aws_iam_policy_document` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) instead of the [`jsonencode` function](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or ["heredoc" string literals](https://developer.hashicorp.com/terraform/language/expressions/strings#heredoc-strings) to generate IAM policy documents. For example:
+
+    ```terraform
+    resource "aws_s3_bucket" "test" {
+      bucket        = var.rName
+      force_destroy = true
+    }
+
+    data "aws_iam_policy_document" "allow_write_access" {
+      statement {
+        principals {
+          type        = "Service"
+          identifiers = ["workspaces-web.amazonaws.com"]
+        }
+
+        actions = [
+          "s3:PutObject"
+        ]
+
+        resources = [
+          aws_s3_bucket.test.arn,
+          "${aws_s3_bucket.test.arn}/*"
+        ]
+      }
+    }
+
+    resource "aws_s3_bucket_policy" "allow_write_access" {
+      bucket = aws_s3_bucket.test.id
+      policy = data.aws_iam_policy_document.allow_write_access.json
+    }
+    ```
 
 ### Avoid Hard Coding
 
