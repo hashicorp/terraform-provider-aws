@@ -5,8 +5,8 @@ package bedrock
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -60,7 +61,7 @@ func (r *guardrailResourcePolicyResource) Schema(_ context.Context, _ resource.S
 
 func (r *guardrailResourcePolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data guardrailResourcePolicyResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -75,16 +76,16 @@ func (r *guardrailResourcePolicyResource) Create(ctx context.Context, request re
 
 	_, err := conn.PutResourcePolicy(ctx, input)
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating Bedrock Guardrail Resource Policy (%s)", resourceARN), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *guardrailResourcePolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data guardrailResourcePolicyResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -94,28 +95,28 @@ func (r *guardrailResourcePolicyResource) Read(ctx context.Context, request reso
 	resourceARN := data.ResourceARN.ValueString()
 	policy, err := findGuardrailResourcePolicyByARN(ctx, conn, resourceARN)
 	if retry.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, resourceARN)
 		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Guardrail Resource Policy (%s)", resourceARN), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
 
 	policyToSet, err := verify.PolicyToSet(data.Policy.ValueString(), aws.ToString(policy))
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Guardrail Resource Policy (%s)", resourceARN), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
 	data.Policy = fwtypes.IAMPolicyValue(policyToSet)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *guardrailResourcePolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var data guardrailResourcePolicyResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -130,16 +131,16 @@ func (r *guardrailResourcePolicyResource) Update(ctx context.Context, request re
 
 	_, err := conn.PutResourcePolicy(ctx, input)
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Guardrail Resource Policy (%s)", resourceARN), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, resourceARN)
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *guardrailResourcePolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data guardrailResourcePolicyResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -155,7 +156,7 @@ func (r *guardrailResourcePolicyResource) Delete(ctx context.Context, request re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Guardrail Resource Policy (%s)", data.ResourceARN.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ResourceARN.ValueString())
 		return
 	}
 }
@@ -174,15 +175,15 @@ func findGuardrailResourcePolicyByARN(ctx context.Context, conn *bedrock.Client,
 	output, err := conn.GetResourcePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{LastError: err}
+		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil || output.ResourcePolicy == nil {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.ResourcePolicy, nil
