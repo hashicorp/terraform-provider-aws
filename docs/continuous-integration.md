@@ -363,6 +363,17 @@ make golangci-lint5
 PKG=rds make golangci-lint2
 ```
 
+#### govulncheck
+
+Use the target `govulncheck` to report known vulnerabilities that affect Go code:
+
+```console
+make govulncheck
+```
+
+!!! note
+    Install [tools](#before-running-tests) before running this check.
+
 ### GoReleaser CI / build-32-bit
 
 GoReleaser CI build-32-bit ensures that GoReleaser can build a 32-bit binary. This check catches rare but important edge cases. Currently, we do not offer a `make` target to run this check locally.

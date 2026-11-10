@@ -77,7 +77,7 @@ The `time_period` configuration block supports the following arguments:
 
 The `sort_by` configuration block supports the following arguments:
 
-* `key` - (Required) key that's used to sort the data. Valid values are: `BlendedCost`,  `UnblendedCost`, `AmortizedCost`, `NetAmortizedCost`, `NetUnblendedCost`, `UsageQuantity`, `NormalizedUsageAmount`.
+* `key` - (Required) Key used to sort the data. Valid values are: `BlendedCost`, `UnblendedCost`, `AmortizedCost`, `NetAmortizedCost`, `NetUnblendedCost`, `UsageQuantity`, `NormalizedUsageAmount`. The equivalent uppercase values (for example, `BLENDED_COST`) are also accepted.
 * `sort_order` - (Optional) order that's used to sort the data. Valid values are: `ASCENDING`,  `DESCENDING`.
 
 ## Attribute Reference

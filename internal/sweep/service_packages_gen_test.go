@@ -43,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockdataautomation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockruntime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
@@ -79,6 +80,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connectcases"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/continuum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/costoptimizationhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
@@ -327,6 +329,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		bedrock.ServicePackage(ctx),
 		bedrockagent.ServicePackage(ctx),
 		bedrockagentcore.ServicePackage(ctx),
+		bedrockdataautomation.ServicePackage(ctx),
 		bedrockruntime.ServicePackage(ctx),
 		billing.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
@@ -363,6 +366,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		configservice.ServicePackage(ctx),
 		connect.ServicePackage(ctx),
 		connectcases.ServicePackage(ctx),
+		continuum.ServicePackage(ctx),
 		controltower.ServicePackage(ctx),
 		costoptimizationhub.ServicePackage(ctx),
 		cur.ServicePackage(ctx),

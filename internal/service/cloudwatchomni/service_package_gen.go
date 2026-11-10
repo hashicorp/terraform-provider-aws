@@ -78,6 +78,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newOrganizationDomainResource,
+			TypeName: "aws_cloudwatchomni_organization_domain",
+			Name:     "Organization Domain",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newSpaceResource,
 			TypeName: "aws_cloudwatchomni_space",
 			Name:     "Space",
@@ -136,6 +147,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newDomainResourceAsListResource,
 			TypeName: "aws_cloudwatchomni_domain",
 			Name:     "Domain",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_id", true)),
+		},
+		{
+			Factory:  newOrganizationDomainResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_organization_domain",
+			Name:     "Organization Domain",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_id", true)),
 		},

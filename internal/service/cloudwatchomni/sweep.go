@@ -8,6 +8,7 @@ import (
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_cloudwatchomni_access_profile", sweepAccessProfiles)
 	awsv2.Register("aws_cloudwatchomni_dashboard", sweepDashboards)
 	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space")
+	awsv2.Register("aws_cloudwatchomni_organization_domain", sweepOrganizationDomains, "aws_cloudwatchomni_space")
 	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces,
 		"aws_cloudwatchomni_access_grant",
 		"aws_cloudwatchomni_access_profile",
@@ -132,7 +134,44 @@ func sweepDomains(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 			return nil, smarterr.NewError(err)
 		}
 
+		// Organization domains are swept by sweepOrganizationDomains.
+		if isOrganizationDomainARN(aws.ToString(v.DomainArn)) {
+			continue
+		}
+
 		sweepResources = append(sweepResources, framework.NewSweepResource(newDomainResource, client,
+			framework.NewAttribute("domain_id", aws.ToString(v.DomainId))),
+		)
+	}
+
+	return sweepResources, nil
+}
+
+func sweepOrganizationDomains(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input cloudwatchomni.ListDomainsInput
+	conn := client.CloudWatchOmniClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	for v, err := range listDomains(ctx, conn, &input) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		domainARN := aws.ToString(v.DomainArn)
+		if !isOrganizationDomainARN(domainARN) {
+			continue
+		}
+
+		// Only the organization's management account can delete an organization domain, and only in its home region.
+		parsedARN, err := arn.Parse(domainARN)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+		if parsedARN.AccountID != client.AccountID(ctx) || parsedARN.Region != conn.Options().Region {
+			continue
+		}
+
+		sweepResources = append(sweepResources, framework.NewSweepResource(newOrganizationDomainResource, client,
 			framework.NewAttribute("domain_id", aws.ToString(v.DomainId))),
 		)
 	}

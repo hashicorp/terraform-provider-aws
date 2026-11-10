@@ -1032,6 +1032,35 @@ service "bedrockagentcore" {
   brand                    = "Amazon"
 }
 
+service "bedrockdataautomation" {
+  cli_v2_command {
+    aws_cli_v2_command           = "bedrock-data-automation"
+    aws_cli_v2_command_no_dashes = "bedrockdataautomation"
+  }
+
+  sdk {
+    id            = "Bedrock Data Automation"
+    arn_namespace = "bedrock"
+  }
+
+  names {
+    provider_name_upper = "BedrockDataAutomation"
+    human_friendly      = "Bedrock Data Automation"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListBlueprints"
+  }
+
+  resource_prefix {
+    correct = "aws_bedrockdataautomation_"
+  }
+
+  provider_package_correct = "bedrockdataautomation"
+  doc_prefix               = ["bedrockdataautomation_"]
+  brand                    = "Amazon"
+}
+
 service "bedrockruntime" {
   cli_v2_command {
     aws_cli_v2_command           = "bedrock-runtime"
@@ -2621,6 +2650,30 @@ service "wisdom" {
   doc_prefix               = ["wisdom_"]
   brand                    = "Amazon"
   not_implemented          = true
+}
+
+service "continuum" {
+  sdk {
+    id            = "Continuum"
+    arn_namespace = "continuum"
+  }
+
+  names {
+    provider_name_upper = "Continuum"
+    human_friendly      = "Continuum"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListIntegrations"
+  }
+
+  resource_prefix {
+    correct = "aws_continuum_"
+  }
+
+  provider_package_correct = "continuum"
+  doc_prefix               = ["continuum_"]
+  brand                    = "AWS"
 }
 
 service "controltower" {

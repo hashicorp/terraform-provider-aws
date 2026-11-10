@@ -37,6 +37,7 @@ func TestAccCloudTrail_serial(t *testing.T) {
 			"globalServiceEvents":         testAccTrail_globalServiceEvents,
 			"multiRegion":                 testAccTrail_multiRegion,
 			"organization":                testAccTrail_organization,
+			"recursiveLogging":            testAccTrail_recursiveLogging,
 			"logValidation":               testAccTrail_logValidation,
 			"kmsKey":                      testAccTrail_kmsKey,
 			"snsTopicNameBasic":           testAccTrail_snsTopicNameBasic,

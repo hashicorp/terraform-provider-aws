@@ -56,9 +56,9 @@ func resourcePolicy() *schema.Resource {
 				names.AttrContent: {
 					Type:                  schema.TypeString,
 					Required:              true,
-					DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-					DiffSuppressOnRefresh: true,
 					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      suppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
 				},
 				names.AttrDescription: {
 					Type:     schema.TypeString,
@@ -86,11 +86,21 @@ func resourcePolicy() *schema.Resource {
 	}
 }
 
+func suppressEquivalentPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
+	switch awstypes.PolicyType(d.Get(names.AttrType).(string)) {
+	case awstypes.PolicyTypeResourceControlPolicy, awstypes.PolicyTypeServiceControlPolicy:
+		return verify.SuppressEquivalentPolicyDiffs(k, old, new, d)
+	default:
+		return verify.SuppressEquivalentJSONDiffs(k, old, new, d)
+	}
+}
+
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
+
 	input := &organizations.CreatePolicyInput{
 		Content:     aws.String(d.Get(names.AttrContent).(string)),
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
