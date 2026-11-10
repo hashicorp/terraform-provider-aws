@@ -145,6 +145,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
 		{
+			Factory:  newAccountPolicyResourceAsListResource,
+			TypeName: "aws_cloudwatch_log_account_policy",
+			Name:     "Account Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_name", true),
+				inttypes.StringIdentityAttribute("policy_type", true),
+			}),
+		},
+		{
 			Factory:  newS3TableIntegrationSourceResourceAsListResource,
 			TypeName: "aws_cloudwatch_log_s3_table_integration_source",
 			Name:     "S3 Table Integration Source",
