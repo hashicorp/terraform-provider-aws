@@ -123,12 +123,13 @@ func TestAccBedrockGuardrailResourcePolicy_update(t *testing.T) {
 
 func testAccCheckGuardrailResourcePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrock_guardrail_resource_policy" {
 				continue
 			}
+
+			ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 			arn := rs.Primary.Attributes[names.AttrResourceARN]
 
@@ -159,6 +160,7 @@ func testAccCheckGuardrailResourcePolicyExists(ctx context.Context, t *testing.T
 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrailResourcePolicy, name, errors.New("resource_arn not set"))
 		}
 
+		ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 		_, err := tfbedrock.FindGuardrailResourcePolicyByARN(ctx, conn, arn)
