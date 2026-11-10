@@ -6,13 +6,9 @@ package directconnect_test
 import (
 	"context"
 	"fmt"
-	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awsconfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -194,10 +190,11 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 
 func TestAccDirectConnectLag_requestMACSec(t *testing.T) {
 	ctx := acctest.Context(t)
+	// The location must support 10Gbps MACsec.
+	location := acctest.SkipIfEnvVarNotSet(t, "DX_MACSEC_LOCATION")
 	var lag awstypes.Lag
 	resourceName := "aws_dx_lag.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	locationCode, providerName := testAccFindMacSecCapableLocation(ctx, t, "10G")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -206,7 +203,7 @@ func TestAccDirectConnectLag_requestMACSec(t *testing.T) {
 		CheckDestroy:             testAccCheckLagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLagConfig_requestMACSec(rName, locationCode, providerName),
+				Config: testAccLagConfig_requestMACSec(rName, location),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, t, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
@@ -216,11 +213,11 @@ func TestAccDirectConnectLag_requestMACSec(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
 					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrLocation, locationCode),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLocation, location),
 					resource.TestCheckResourceAttr(resourceName, "macsec_capable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, providerName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrProviderName),
 					resource.TestCheckResourceAttr(resourceName, "request_macsec", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -381,57 +378,22 @@ resource "aws_dx_lag" "test" {
 `, rName)
 }
 
-func testAccLagConfig_requestMACSec(rName, locationCode, providerName string) string {
+func testAccLagConfig_requestMACSec(rName, location string) string {
 	return fmt.Sprintf(`
+data "aws_dx_location" "test" {
+  location_code = %[2]q
+}
+
 resource "aws_dx_lag" "test" {
   name                  = %[1]q
   connections_bandwidth = "10Gbps"
-  location              = %[2]q
+  location              = data.aws_dx_location.test.location_code
   request_macsec        = true
   encryption_mode       = "no_encrypt"
 
-  provider_name = %[3]q
+  provider_name = data.aws_dx_location.test.available_providers[0]
 }
-`, rName, locationCode, providerName)
-}
-
-// testAccFindMacSecCapableLocation queries Direct Connect for a location that
-// supports MACsec at the given port speed (e.g. "10G", "100G"). It uses the
-// AWS SDK directly (rather than the test framework's provider client) so that
-// the location can be resolved before the TestCase struct is constructed and
-// embedded as a literal in the HCL config string.
-//
-// The test is skipped if no MACsec-capable location with at least one provider
-// is available in the active region, or if Direct Connect itself is not
-// available in the partition.
-func testAccFindMacSecCapableLocation(ctx context.Context, t *testing.T, portSpeed string) (locationCode, providerName string) {
-	t.Helper()
-
-	cfg, err := awsconfig.LoadDefaultConfig(ctx)
-	if err != nil {
-		t.Skipf("loading AWS config: %s", err)
-		return "", ""
-	}
-
-	conn := directconnect.NewFromConfig(cfg)
-	input := directconnect.DescribeLocationsInput{}
-	output, err := conn.DescribeLocations(ctx, &input)
-	if err != nil {
-		t.Skipf("describing Direct Connect locations: %s", err)
-		return "", ""
-	}
-
-	for _, loc := range output.Locations {
-		if len(loc.AvailableProviders) == 0 {
-			continue
-		}
-		if slices.Contains(loc.AvailableMacSecPortSpeeds, portSpeed) {
-			return aws.ToString(loc.LocationCode), loc.AvailableProviders[0]
-		}
-	}
-
-	t.Skipf("no Direct Connect location supporting %s MACsec available in this region; skipping", portSpeed)
-	return "", ""
+`, rName, location)
 }
 
 func testAccLagConfig_tags1(rName, tagKey1, tagValue1 string) string {
