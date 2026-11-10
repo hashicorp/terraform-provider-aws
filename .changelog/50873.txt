@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudwatch_log_account_policy: Add `RETENTION_POLICY` as a valid value for `policy_type`
+```
+
+```release-note:new-list-resource
+aws_cloudwatch_log_account_policy
+```
