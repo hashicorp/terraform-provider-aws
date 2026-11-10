@@ -9,13 +9,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -143,8 +142,8 @@ func testAccCheckGuardrailResourcePolicyDestroy(ctx context.Context, t *testing.
 			arn := rs.Primary.Attributes[names.AttrResourceARN]
 
 			_, err := tfbedrock.FindGuardrailResourcePolicyByARN(ctx, conn, arn)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
+			if retry.NotFound(err) {
+				continue
 			}
 			if err != nil {
 				return create.Error(names.Bedrock, create.ErrActionCheckingDestroyed, tfbedrock.ResNameGuardrailResourcePolicy, arn, err)
