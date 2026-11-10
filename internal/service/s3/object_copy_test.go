@@ -614,11 +614,11 @@ func TestAccS3ObjectCopy_objectLockEventHoldRetainUntilDrift(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "ON"),
+					acctest.CheckSleep(t, 4*time.Minute),
 				),
 			},
 			{
-				PreConfig: func() { time.Sleep(240 * time.Second) },
-				Config:    testAccObjectCopyConfig_lockEventHoldDurationDays(rName1, names.AttrSource, rName2, names.AttrTarget, retainUntilDate, 1),
+				Config: testAccObjectCopyConfig_lockEventHoldDurationDays(rName1, names.AttrSource, rName2, names.AttrTarget, retainUntilDate, 1),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
