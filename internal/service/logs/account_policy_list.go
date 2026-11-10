@@ -5,6 +5,8 @@ package logs
 
 import (
 	"context"
+	"fmt"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -15,19 +17,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-// @FrameworkListResource("aws_cloudwatch_log_account_policy")
-func newAccountPolicyResourceAsListResource() list.ListResourceWithConfigure {
-	return &accountPolicyListResource{}
+// @SDKListResource("aws_cloudwatch_log_account_policy")
+func newAccountPolicyResourceAsListResource() inttypes.ListResourceForSDK {
+	l := accountPolicyListResource{}
+	l.SetResourceSchema(resourceAccountPolicy())
+	return &l
 }
 
 var _ list.ListResource = &accountPolicyListResource{}
 
 type accountPolicyListResource struct {
-	accountPolicyResource
-	framework.WithList
+	framework.ListResourceWithSDKv2Resource
 }
 
 func (l *accountPolicyListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
@@ -75,15 +80,27 @@ func (l *accountPolicyListResource) List(ctx context.Context, request list.ListR
 
 			result := request.NewListResult(ctx)
 
-			var data accountPolicyResourceModel
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				result.Diagnostics.Append(l.flatten(ctx, &item, &data)...)
-				if result.Diagnostics.HasError() {
-					return
-				}
+			rd := l.ResourceData()
+			rd.SetId(name)
+			rd.Set("policy_name", name)
+			rd.Set("policy_type", item.PolicyType)
 
-				result.DisplayName = name
-			})
+			if request.IncludeResource {
+				if err := resourceAccountPolicyFlatten(rd, &item); err != nil {
+					tflog.Error(ctx, "Reading CloudWatch Logs Account Policy", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
+			}
+
+			result.DisplayName = name
+
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
 
 			if !yield(result) {
 				return
@@ -95,4 +112,30 @@ func (l *accountPolicyListResource) List(ctx context.Context, request list.ListR
 type listAccountPolicyModel struct {
 	framework.WithRegionModel
 	PolicyType fwtypes.StringEnum[awstypes.PolicyType] `tfsdk:"policy_type"`
+}
+
+func listAccountPolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeAccountPoliciesInput) iter.Seq2[awstypes.AccountPolicy, error] {
+	return tfiter.ConcatValuesWithError(listAccountPolicyPages(ctx, conn, input))
+}
+
+// listAccountPolicyPages pages DescribeAccountPolicies, which has no SDK paginator.
+func listAccountPolicyPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeAccountPoliciesInput) iter.Seq2[[]awstypes.AccountPolicy, error] {
+	return func(yield func([]awstypes.AccountPolicy, error) bool) {
+		for {
+			page, err := conn.DescribeAccountPolicies(ctx, input)
+			if err != nil {
+				yield(nil, fmt.Errorf("listing CloudWatch Logs Account Policies: %w", err))
+				return
+			}
+
+			if !yield(page.AccountPolicies, nil) {
+				return
+			}
+
+			if aws.ToString(page.NextToken) == "" {
+				return
+			}
+			input.NextToken = page.NextToken
+		}
+	}
 }

@@ -5,7 +5,7 @@ package logs
 
 // Exports for use in tests only.
 var (
-	ResourceAccountPolicy                    = newAccountPolicyResource
+	ResourceAccountPolicy                    = resourceAccountPolicy
 	ResourceAnomalyDetector                  = newAnomalyDetectorResource
 	ResourceDataProtectionPolicy             = resourceDataProtectionPolicy
 	ResourceDelivery                         = newDeliveryResource

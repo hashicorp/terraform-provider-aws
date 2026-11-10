@@ -76,18 +76,33 @@ func sweepAccountPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep
 	conn := client.LogsClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	for _, policyType := range enum.EnumValues[awstypes.PolicyType]() {
-		input := cloudwatchlogs.DescribeAccountPoliciesInput{
-			PolicyType: policyType,
-		}
-		for v, err := range listAccountPolicies(ctx, conn, &input) {
-			if err != nil {
-				return nil, err
+	// Make one Describe call per policy type
+	var inputs []*cloudwatchlogs.DescribeAccountPoliciesInput
+	for _, pt := range enum.EnumValues[awstypes.PolicyType]() {
+		inputs = append(inputs, &cloudwatchlogs.DescribeAccountPoliciesInput{
+			PolicyType: pt,
+		})
+	}
+
+	for _, input := range inputs {
+		err := describeAccountPoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeAccountPoliciesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newAccountPolicyResource, client,
-				framework.NewAttribute("policy_name", aws.ToString(v.PolicyName)),
-				framework.NewAttribute("policy_type", string(v.PolicyType))))
+			for _, v := range page.AccountPolicies {
+				r := resourceAccountPolicy()
+				d := r.Data(nil)
+				d.SetId(aws.ToString(v.PolicyName))
+				d.Set("policy_type", v.PolicyType)
+
+				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			}
+
+			return !lastPage
+		})
+		if err != nil {
+			return nil, err
 		}
 	}
 
