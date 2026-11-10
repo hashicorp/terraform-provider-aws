@@ -45,7 +45,7 @@ func TestAccBedrockGuardrailResourcePolicy_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGuardrailResourcePolicyImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
 			},
@@ -122,17 +122,6 @@ func TestAccBedrockGuardrailResourcePolicy_update(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccGuardrailResourcePolicyImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrResourceARN], nil
-	}
 }
 
 func testAccCheckGuardrailResourcePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
