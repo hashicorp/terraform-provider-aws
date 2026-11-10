@@ -19,7 +19,7 @@ import (
 )
 
 // @SDKListResource("aws_ebs_encryption_by_default")
-func newEbsEncryptionByDefaultResourceAsListResource() inttypes.ListResourceForSDK {
+func newEBSEncryptionByDefaultResourceAsListResource() inttypes.ListResourceForSDK {
 	l := ebsEncryptionByDefaultListResource{}
 	l.SetResourceSchema(resourceEBSEncryptionByDefault())
 	return &l

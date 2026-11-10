@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccEC2EbsEncryptionByDefault_List_basic(t *testing.T) {
+func testAccEC2EBSEncryptionByDefault_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ebs_encryption_by_default.test"
@@ -62,7 +62,7 @@ func testAccEC2EbsEncryptionByDefault_List_basic(t *testing.T) {
 	})
 }
 
-func testAccEC2EbsEncryptionByDefault_List_includeResource(t *testing.T) {
+func testAccEC2EBSEncryptionByDefault_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ebs_encryption_by_default.test"
@@ -106,7 +106,7 @@ func testAccEC2EbsEncryptionByDefault_List_includeResource(t *testing.T) {
 	})
 }
 
-func testAccEC2EbsEncryptionByDefault_List_regionOverride(t *testing.T) {
+func testAccEC2EBSEncryptionByDefault_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ebs_encryption_by_default.test"

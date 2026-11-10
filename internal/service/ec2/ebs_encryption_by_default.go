@@ -8,7 +8,6 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -115,5 +114,5 @@ func setEBSEncryptionByDefault(ctx context.Context, conn *ec2.Client, enabled bo
 }
 
 func resourceEBSEncryptionByDefaultFlatten(ctx context.Context, resp *ec2.GetEbsEncryptionByDefaultOutput, d *schema.ResourceData) error {
-	return d.Set(names.AttrEnabled, aws.ToBool(resp.EbsEncryptionByDefault))
+	return d.Set(names.AttrEnabled, resp.EbsEncryptionByDefault)
 }
