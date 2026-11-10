@@ -86,6 +86,8 @@ Each block argument must have two entries in the documentation:
 
 Within the subsection, arguments follow the ordering rules above.
 
+Title each subsection with a block heading such as `` ### `ip_rule` Block ``. A block's fields are documented only by a heading that names the block; a link to another section, or a sentence such as "The `ip_rule` object supports:", does not count. If blocks with the same name at different paths have different fields, qualify the heading with an ancestor, for example `` ### `rule.ip_rule` Block ``. See the [`swissshepherd` `schema_docs` rule](https://github.com/YakDriver/swissshepherd/blob/main/docs/rules/schema_docs.md#coverage-which-section-documents-a-block) for how headings resolve to blocks.
+
 If the block also has read-only (computed-only) attributes, document them inline in the block's subsection with the `(Read-Only)` label, in alphabetical order with the arguments. This keeps everything about a block in one place. Read-only attributes at the top level, and blocks with no configurable arguments, belong in [Attribute Reference](#attributes) instead.
 
 For example:
@@ -134,7 +136,7 @@ Every attribute must have a description.
 
 Each block attribute must have two entries in the documentation:
 
-1. The initial entry, with a link to the subsection describing the block's attributes. e.g. `` `health` - Health status. See [`health`](#health) below. ``.
+1. The initial entry, with a link to the subsection describing the block's attributes. e.g. `` `health` - Health status. See [`health` Block](#health-block) below. ``.
 1. A subsection, added after all top-level arguments. If the resource has multiple blocks, these subsections should be ordered alphabetically.
 
 Within the subsection, arguments follow the ordering rules above.
@@ -146,12 +148,12 @@ For example:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `health` - Health status. See [`health`](#health) below.
+* `health` - Health status. See [`health` Block](#health-block) below.
 * `id` - ID of the thing.
 
-### `health`
+### `health` Block
 
-`health` supports:
+The `health` block exports:
 
 * `status_code` - Health status code.
 * `status_message` - Health status message.
