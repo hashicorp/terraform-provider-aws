@@ -263,7 +263,7 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		operations := make([]types.PatchOperation, 0)
+		var operations []types.PatchOperation
 
 		if d.HasChange(names.AttrName) {
 			operations = append(operations, types.PatchOperation{
@@ -325,16 +325,18 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 					if t, ok := m["throttle"].(*schema.Set); ok && t.Len() > 0 {
 						for _, throttle := range t.List() {
 							th := throttle.(map[string]any)
-							operations = append(operations, types.PatchOperation{
-								Op:    types.OpReplace,
-								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/rateLimit", id, th[names.AttrPath].(string))),
-								Value: flex.Float64ValueToString(th["rate_limit"].(float64)),
-							})
-							operations = append(operations, types.PatchOperation{
-								Op:    types.OpReplace,
-								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/burstLimit", id, th[names.AttrPath].(string))),
-								Value: flex.IntValueToString(th["burst_limit"].(int)),
-							})
+							operations = append(operations,
+								types.PatchOperation{
+									Op:    types.OpReplace,
+									Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/rateLimit", id, th[names.AttrPath].(string))),
+									Value: flex.Float64ValueToString(th["rate_limit"].(float64)),
+								},
+								types.PatchOperation{
+									Op:    types.OpReplace,
+									Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/burstLimit", id, th[names.AttrPath].(string))),
+									Value: flex.IntValueToString(th["burst_limit"].(int)),
+								},
+							)
 						}
 					}
 				}
@@ -358,30 +360,34 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 				// Handle Replaces
 				if o != nil && n != nil {
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpReplace,
-						Path:  aws.String("/throttle/rateLimit"),
-						Value: flex.Float64ValueToString(d["rate_limit"].(float64)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpReplace,
-						Path:  aws.String("/throttle/burstLimit"),
-						Value: flex.IntValueToString(d["burst_limit"].(int)),
-					})
+					operations = append(operations,
+						types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String("/throttle/rateLimit"),
+							Value: flex.Float64ValueToString(d["rate_limit"].(float64)),
+						},
+						types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String("/throttle/burstLimit"),
+							Value: flex.IntValueToString(d["burst_limit"].(int)),
+						},
+					)
 				}
 
 				// Handle Additions
 				if o == nil && n != nil {
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpAdd,
-						Path:  aws.String("/throttle/rateLimit"),
-						Value: flex.Float64ValueToString(d["rate_limit"].(float64)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpAdd,
-						Path:  aws.String("/throttle/burstLimit"),
-						Value: flex.IntValueToString(d["burst_limit"].(int)),
-					})
+					operations = append(operations,
+						types.PatchOperation{
+							Op:    types.OpAdd,
+							Path:  aws.String("/throttle/rateLimit"),
+							Value: flex.Float64ValueToString(d["rate_limit"].(float64)),
+						},
+						types.PatchOperation{
+							Op:    types.OpAdd,
+							Path:  aws.String("/throttle/burstLimit"),
+							Value: flex.IntValueToString(d["burst_limit"].(int)),
+						},
+					)
 				}
 			}
 		}
@@ -407,40 +413,44 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 				// Handle Replaces
 				if o != nil && n != nil {
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpReplace,
-						Path:  aws.String("/quota/limit"),
-						Value: flex.IntValueToString(d["limit"].(int)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpReplace,
-						Path:  aws.String("/quota/offset"),
-						Value: flex.IntValueToString(d["offset"].(int)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpReplace,
-						Path:  aws.String("/quota/period"),
-						Value: aws.String(d["period"].(string)),
-					})
+					operations = append(operations,
+						types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String("/quota/limit"),
+							Value: flex.IntValueToString(d["limit"].(int)),
+						},
+						types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String("/quota/offset"),
+							Value: flex.IntValueToString(d["offset"].(int)),
+						},
+						types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String("/quota/period"),
+							Value: aws.String(d["period"].(string)),
+						},
+					)
 				}
 
 				// Handle Additions
 				if o == nil && n != nil {
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpAdd,
-						Path:  aws.String("/quota/limit"),
-						Value: flex.IntValueToString(d["limit"].(int)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpAdd,
-						Path:  aws.String("/quota/offset"),
-						Value: flex.IntValueToString(d["offset"].(int)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpAdd,
-						Path:  aws.String("/quota/period"),
-						Value: aws.String(d["period"].(string)),
-					})
+					operations = append(operations,
+						types.PatchOperation{
+							Op:    types.OpAdd,
+							Path:  aws.String("/quota/limit"),
+							Value: flex.IntValueToString(d["limit"].(int)),
+						},
+						types.PatchOperation{
+							Op:    types.OpAdd,
+							Path:  aws.String("/quota/offset"),
+							Value: flex.IntValueToString(d["offset"].(int)),
+						},
+						types.PatchOperation{
+							Op:    types.OpAdd,
+							Path:  aws.String("/quota/period"),
+							Value: aws.String(d["period"].(string)),
+						},
+					)
 				}
 			}
 		}
