@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_waf_rate_based_rule
 
-`aws_waf_rate_based_rule` Retrieves a WAF Rate Based Rule Resource Id.
+`aws_waf_rate_based_rule` Retrieves a WAF Rate Based Rule Resource ID.
 
 ## Example Usage
 

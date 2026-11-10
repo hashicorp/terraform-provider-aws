@@ -879,28 +879,6 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 	}
 })
 
-var scopeDownStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementModel](ctx),
-		Validators: []validator.List{listvalidator.SizeAtMost(1)},
-		NestedObject: schema.NestedBlockObject{
-			Blocks: map[string]schema.Block{
-				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
-				"geo_match_statement":                   geoMatchStatementBlock(ctx),
-				"byte_match_statement":                  byteMatchStatementBlock(ctx),
-				"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
-				"xss_match_statement":                   xssMatchStatementBlock(ctx),
-				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
-				"regex_match_statement":                 regexMatchStatementBlock(ctx),
-				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
-				"label_match_statement":                 labelMatchStatementBlock(ctx),
-				"asn_match_statement":                   asnMatchStatementBlock(ctx),
-			},
-		},
-		Description: "Scope down statement for managed rule groups.",
-	}
-})
-
 var customRequestHandlingBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleCustomRequestHandlingModel](ctx),

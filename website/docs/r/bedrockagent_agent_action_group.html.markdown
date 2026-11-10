@@ -3,11 +3,11 @@ subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_agent_action_group"
 description: |-
-  Terraform resource for managing an AWS Agents for Amazon Bedrock Agent Action Group.
+  Manages an AWS Agents for Amazon Bedrock Agent Action Group.
 ---
 # Resource: aws_bedrockagent_agent_action_group
 
-Terraform resource for managing an AWS Agents for Amazon Bedrock Agent Action Group.
+Manages an AWS Agents for Amazon Bedrock Agent Action Group.
 
 ## Example Usage
 
@@ -103,21 +103,21 @@ resource "aws_bedrockagent_agent_action_group" "example" {
 
 The following arguments are required:
 
-* `action_group_executor` - (Required) ARN of the Lambda function containing the business logic that is carried out upon invoking the action or custom control method for handling the information elicited from the user. See [`action_group_executor` Block](#action_group_executor-block) for details.
 * `action_group_name` - (Required) Name of the action group.
 * `agent_id` - (Required) Unique identifier of the agent for which to create the action group.
 * `agent_version` - (Required) Version of the agent for which to create the action group. Valid values: `DRAFT`.
 
 The following arguments are optional:
 
+* `action_group_executor` - (Optional) ARN of the Lambda function containing the business logic that is carried out upon invoking the action or custom control method for handling the information elicited from the user. See [`action_group_executor` Block](#action_group_executor-block) for details.
 * `action_group_state` - (Optional) Whether the action group is available for the agent to invoke or not when sending an [InvokeAgent](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_InvokeAgent.html) request. Valid values: `ENABLED`, `DISABLED`.
 * `api_schema` - (Optional) Either details about the S3 object containing the OpenAPI schema for the action group or the JSON or YAML-formatted payload defining the schema. For more information, see [Action group OpenAPI schemas](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-api-schema.html). See [`api_schema` Block](#api_schema-block) for details.
 * `description` - (Optional) Description of the action group.
 * `function_schema` - (Optional) Function schema for the action group. Each function represents an action in an action group. See [`function_schema` Block](#function_schema-block) for details.
 * `parent_action_group_signature` - (Optional) To allow your agent to request the user for additional information when trying to complete a task, set this argument to `AMAZON.UserInput`. You must leave the `description`, `api_schema`, and `action_group_executor` arguments blank for this action group. Valid values: `AMAZON.UserInput`.
-* `prepare_agent` - (Optional) Whether or not to prepare the agent after creation or modification. Defaults to `true`.
+* `prepare_agent` - (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `skip_resource_in_use_check` - (Optional) Whether the in-use check is skipped when deleting the action group.
+* `skip_resource_in_use_check` - (Optional) Whether to skip the in-use check when deleting the action group. Defaults to `false`.
 
 ### `action_group_executor` Block
 
@@ -168,7 +168,7 @@ The `parameters` configuration block supports the following arguments:
 * `map_block_key` - (Required) Name of the parameter.
 
   **Note:** The argument name `map_block_key` may seem out of context, but is necessary for backward compatibility reasons in the provider.
-* `required` - (Optional) Whether the parameter is required for the agent to complete the function for action group invocation.
+* `required` - (Optional) Whether to require the parameter for the agent to complete the function for action group invocation.
 * `type` - (Required) Data type of the parameter. Valid values: `string`, `number`, `integer`, `boolean`, `array`.
 
 ## Attribute Reference
@@ -196,7 +196,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Agents for Amazon Bedrock Agent Action Group the action group ID, the agent ID, and the agent version separated by `,`. For example:
+Using `terraform import`, import Agents for Amazon Bedrock Agent Action Group using the action group ID, the agent ID, and the agent version separated by `,`. For example:
 
 ```console
 % terraform import aws_bedrockagent_agent_action_group.example MMAUDBZTH4,GGRRAED6JP,DRAFT

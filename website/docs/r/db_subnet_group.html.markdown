@@ -40,9 +40,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the db subnet group.
+* `arn` - ARN of the DB subnet group.
 * `id` - DB subnet group name.
-* `supported_network_types` - Network type of the db subnet group.
+* `supported_network_types` - Network type of the DB subnet group.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - Provides the VPC ID of the DB subnet group.
 

@@ -580,9 +580,7 @@ func TestExpandEmbeddedStruct(t *testing.T) {
 	testCases := autoFlexTestCases{
 		"exported": {
 			Source: &tfExportedEmbeddedStruct{
-				TFExportedStruct: TFExportedStruct{
-					Field1: types.StringValue("a"),
-				},
+				Field1: types.StringValue("a"),
 				Field2: types.StringValue("b"),
 			},
 			Target: &awsEmbeddedStruct{},
@@ -593,9 +591,7 @@ func TestExpandEmbeddedStruct(t *testing.T) {
 		},
 		"unexported": {
 			Source: &tfUnexportedEmbeddedStruct{
-				tfSingleStringField: tfSingleStringField{
-					Field1: types.StringValue("a"),
-				},
+				Field1: types.StringValue("a"),
 				Field2: types.StringValue("b"),
 			},
 			Target: &awsEmbeddedStruct{},
@@ -1344,9 +1340,7 @@ func TestFlattenEmbeddedStruct(t *testing.T) {
 			},
 			Target: &tfExportedEmbeddedStruct{},
 			WantTarget: &tfExportedEmbeddedStruct{
-				TFExportedStruct: TFExportedStruct{
-					Field1: types.StringValue("a"),
-				},
+				Field1: types.StringValue("a"),
 				Field2: types.StringValue("b"),
 			},
 		},
@@ -1357,9 +1351,7 @@ func TestFlattenEmbeddedStruct(t *testing.T) {
 			},
 			Target: &tfUnexportedEmbeddedStruct{},
 			WantTarget: &tfUnexportedEmbeddedStruct{
-				tfSingleStringField: tfSingleStringField{
-					Field1: types.StringValue("a"),
-				},
+				Field1: types.StringValue("a"),
 				Field2: types.StringValue("b"),
 			},
 		},

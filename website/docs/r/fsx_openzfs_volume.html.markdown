@@ -25,7 +25,7 @@ resource "aws_fsx_openzfs_volume" "test" {
 This resource supports the following arguments:
 
 * `copy_tags_to_snapshots` - (Optional) Whether tags for the file system should be copied to snapshots. Default is false.
-* `data_compression_type` - (Optional) Method used to compress the data on the volume. Valid values are `NONE` or `ZSTD`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
+* `data_compression_type` - (Optional) Method used to compress the data on the volume. Valid values are `NONE`, `ZSTD`, or `LZ4`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
 * `delete_volume_options` - (Optional) Whether to delete all child volumes and snapshots. Valid values: `DELETE_CHILD_VOLUMES_AND_SNAPSHOTS`. This configuration must be applied separately before attempting to delete the resource to have the desired behavior..
 * `name` - (Required) Name of the volume. You can use a maximum of 203 alphanumeric characters, plus the underscore (_) special character.
 * `nfs_exports` - (Optional) NFS export configuration for the root volume. Exactly 1 item. See [`nfs_exports` Block](#nfs_exports-block) Below for details.

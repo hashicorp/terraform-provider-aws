@@ -10,9 +10,9 @@ description: |-
 
 Manages an Amazon Bedrock model invocation job. A model invocation job runs a foundation model, or a model accessed through an inference profile, against multiple prompts read from Amazon S3, and writes the results back to Amazon S3.
 
-~> Amazon Bedrock does not support permanently deleting a model invocation job. Destroying this resource stops the job (if it hasn't already reached a terminal state) using the [StopModelInvocationJob](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_StopModelInvocationJob.html) API, then removes it from Terraform state. Set `skip_destroy` to leave the job in its current state instead.
+~> **Note:** Amazon Bedrock does not support permanently deleting a model invocation job. Destroying this resource stops the job (if it hasn't already reached a terminal state) using the [StopModelInvocationJob](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_StopModelInvocationJob.html) API, then removes it from Terraform state. Set `skip_destroy` to leave the job in its current state instead.
 
-~> This resource does not support `tags`. Amazon Bedrock does not allow retrieving tags for a batch inference job that has already finished running, which would cause errors when importing or listing existing jobs.
+~> **Note:** This resource does not support `tags`. Amazon Bedrock does not allow retrieving tags for a batch inference job that has already finished running, which would cause errors when importing or listing existing jobs.
 
 ## Example Usage
 
@@ -133,7 +133,7 @@ resource "aws_bedrock_model_invocation_job" "example" {
 
 #### Required
 
-- `job_arn` (String) ARN of the batch inference job.
+* `job_arn` (String) ARN of the batch inference job.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Model Invocation Job using the `job_arn`. For example:
 

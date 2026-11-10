@@ -475,7 +475,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 ### `container_override` Block
 
 * `command` - (Optional) List of commands to send to the container that overrides the default command from the Docker image or the task definition. You must also specify a container name.
-* `cpu` - (Optional) Number of cpu units reserved for the container, instead of the default value from the task definition. You must also specify a container name.
+* `cpu` - (Optional) Number of CPU units reserved for the container, instead of the default value from the task definition. You must also specify a container name.
 * `environment` - (Optional) Environment variables to send to the container. You can add new environment variables, which are added to the container at launch, or you can override the existing environment variables from the Docker image or the task definition. You must also specify a container name. See [`target_parameters.ecs_task_parameters.overrides.container_override.environment` Block](#target_parametersecs_task_parametersoverridescontainer_overrideenvironment-block) for details.
 * `environment_file` - (Optional) List of files containing the environment variables to pass to a container, instead of the value from the container definition. See [`environment_file` Block](#environment_file-block) for details.
 * `memory` - (Optional) Hard limit (in MiB) of memory to present to the container, instead of the default value from the task definition. If your container attempts to exceed the memory specified here, the container is killed. You must also specify a container name.
@@ -514,7 +514,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 ### `placement_strategy` Block
 
-* `field` - (Optional) Field to apply the placement strategy against. For the spread placement strategy, valid values are instanceId (or host, which has the same effect), or any platform or custom attribute that is applied to a container instance, such as attribute:ecs.availability-zone. For the binpack placement strategy, valid values are cpu and memory. For the random placement strategy, this field is not used. Maximum length of 255.
+* `field` - (Optional) Field to apply the placement strategy against. For the spread placement strategy, valid values are instanceId (or host, which has the same effect), or any platform or custom attribute that is applied to a container instance, such as attribute:ecs.availability-zone. For the binpack placement strategy, valid values are `cpu` and `memory`. For the random placement strategy, this field is not used. Maximum length of 255.
 * `type` - (Optional) Type of placement strategy. The random placement strategy randomly places tasks on available candidates. The spread placement strategy spreads placement across available candidates evenly based on the field parameter. The binpack strategy places tasks on available candidates that have the least available amount of the resource that is specified with the field parameter. For example, if you binpack on memory, a task is placed on the instance with the least amount of remaining memory (but still enough to run the task). Valid Values: random, spread, binpack.
 
 ### `eventbridge_event_bus_parameters` Block

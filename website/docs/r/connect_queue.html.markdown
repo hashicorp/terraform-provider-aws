@@ -79,7 +79,7 @@ This resource supports the following arguments:
 * `max_contacts` - (Optional) Specifies the maximum number of contacts that can be in the queue before it is considered full. Minimum value of 0.
 * `name` - (Required) Specifies the name of the Queue.
 * `outbound_caller_config` - (Required) A block that defines the outbound caller ID name, number, and outbound whisper flow. The Outbound Caller Config block is documented below.
-* `quick_connect_ids` - (Optional) Specifies a list of quick connects ids that determine the quick connects available to agents who are working the queue.
+* `quick_connect_ids` - (Optional) Specifies a list of quick connects IDs that determine the quick connects available to agents who are working the queue.
 * `status` - (Optional) Specifies the description of the Queue. Valid values are `ENABLED`, `DISABLED`.
 * `tags` - (Optional) Tags to apply to the Queue. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

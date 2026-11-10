@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -98,6 +99,28 @@ func findAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.Client, name
 	// Eventual consistency check.
 	if aws.ToString(output.GroupName) != name {
 		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
+}
+
+func findCapacityManagerAttributes(ctx context.Context, conn *ec2.Client) (*ec2.GetCapacityManagerAttributesOutput, error) {
+	var input ec2.GetCapacityManagerAttributesInput
+	output, err := conn.GetCapacityManagerAttributes(ctx, &input)
+
+	// Capacity Manager returns an error, not a disabled status, when it isn't enabled.
+	if tfawserr.ErrCodeEquals(err, errCodeCapacityManagerDisabled) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	if output == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil
@@ -2464,7 +2487,12 @@ func findNetworkInterfacePermissionByID(ctx context.Context, conn *ec2.Client, i
 func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) ([]awstypes.NetworkInterface, error) {
 	var output []awstypes.NetworkInterface
 
-	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, input)
+	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, input, func(o *ec2.DescribeNetworkInterfacesPaginatorOptions) {
+		// MaxResults cannot be combined with NetworkInterfaceIds.
+		if o.Limit == 0 && len(input.NetworkInterfaceIds) == 0 {
+			o.Limit = 1000
+		}
+	})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

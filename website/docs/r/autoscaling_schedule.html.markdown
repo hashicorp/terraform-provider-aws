@@ -59,7 +59,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN assigned by AWS to the autoscaling schedule.
+* `arn` - ARN assigned by AWS to the Auto Scaling schedule.
 
 ## Import
 

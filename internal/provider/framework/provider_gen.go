@@ -264,6 +264,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// bedrockdataautomation
+
+				"bedrockdataautomation": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// bedrockruntime
 
 				"bedrockruntime": schema.StringAttribute{
@@ -537,6 +544,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// connectcases
 
 				"connectcases": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// continuum
+
+				"continuum": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},
@@ -1598,6 +1612,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// pricingplanmanager
+
+				"pricingplanmanager": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// qbusiness
 
 				"qbusiness": schema.StringAttribute{
@@ -1876,6 +1897,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// securityhub
 
 				"securityhub": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// securityir
+
+				"securityir": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

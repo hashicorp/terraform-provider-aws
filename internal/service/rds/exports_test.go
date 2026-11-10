@@ -34,6 +34,7 @@ var (
 	ResourceSnapshot                            = resourceSnapshot
 	ResourceSnapshotCopy                        = resourceSnapshotCopy
 	ResourceSubnetGroup                         = resourceSubnetGroup
+	ResourceTenantDatabase                      = newTenantDatabaseResource
 
 	ClusterIDAndRegionFromARN                  = clusterIDAndRegionFromARN
 	FindCustomDBEngineVersionByTwoPartKey      = findCustomDBEngineVersionByTwoPartKey
@@ -52,6 +53,7 @@ var (
 	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
 	FindDBShardGroupByID                       = findDBShardGroupByID
 	FindDBSnapshotByID                         = findDBSnapshotByID
+	FindTenantDatabaseByID                     = findTenantDatabaseByID
 	FindDBSubnetGroupByName                    = findDBSubnetGroupByName
 	FindDefaultCertificate                     = findDefaultCertificate
 	FindDefaultDBProxyTargetGroupByDBProxyName = findDefaultDBProxyTargetGroupByDBProxyName
@@ -104,7 +106,8 @@ var (
 	ValidSubnetGroupName             = validSubnetGroupName
 	ValidSubnetGroupNamePrefix       = validSubnetGroupNamePrefix
 
-	WaitDBClusterUpdated = waitDBClusterUpdated
+	WaitDBClusterUpdated      = waitDBClusterUpdated
+	WaitDBInstanceMultiTenant = waitDBInstanceMultiTenant
 
 	EngineVersionIsNewer = engineVersionIsNewer
 )

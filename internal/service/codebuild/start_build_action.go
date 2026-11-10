@@ -5,7 +5,6 @@ package codebuild
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -169,14 +169,11 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		},
 	})
 	if err != nil {
-		var timeoutErr *actionwait.TimeoutError
-		var failureErr *actionwait.FailureStateError
-		var unexpectedErr *actionwait.UnexpectedStateError
-		if errors.As(err, &timeoutErr) {
+		if errs.IsA[*actionwait.TimeoutError](err) {
 			resp.Diagnostics.AddError("Build timeout", "Build did not complete within the specified timeout")
-		} else if errors.As(err, &failureErr) {
+		} else if errs.IsA[*actionwait.FailureStateError](err) {
 			resp.Diagnostics.AddError("Build failed", "Build completed with status: "+err.Error())
-		} else if errors.As(err, &unexpectedErr) {
+		} else if errs.IsA[*actionwait.UnexpectedStateError](err) {
 			resp.Diagnostics.AddError("Unexpected build status", err.Error())
 		} else {
 			resp.Diagnostics.AddError("Error waiting for build", err.Error())

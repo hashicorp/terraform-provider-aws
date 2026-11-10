@@ -49,7 +49,8 @@ The `.ci/tools` module is cached in its own **tools lane**, keyed on `.ci/tools`
 The tools lane caches the **installed tool binaries** and the **tools build cache**, so jobs skip `go install` on a cache hit.
 It follows a **single-writer, many-readers** model:
 
-* **Writer**: the `tools_cache` job in [`provider.yml`](provider.yml) installs the full `.ci/tools` toolset and saves the cache.
+* **Writer**: the `tools_cache` job in [`provider.yml`](provider.yml) installs every tool imported by [`.ci/tools/main.go`](../../.ci/tools/main.go) and saves the cache.
+  The writer derives its install list from `main.go` (no hardcoded list), and `main.go` is part of the cache key, so adding or removing a tool always produces a new, complete cache entry.
   It writes only on the `main` branch (`if: github.ref == 'refs/heads/main'`), which keeps cache entries stable and prevents faster non-CI jobs from racing to save a poor entry.
 * **Readers**: jobs that need a tool use the [`tools_cache` composite action](../actions/tools_cache), which sets up Go for the `.ci/tools` module and restores the cache read-only.
   Pass the tool import paths to install via the `tools` input; they are installed unless the cache matches `.ci/tools` exactly:

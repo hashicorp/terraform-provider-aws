@@ -86,7 +86,7 @@ resource "aws_codebuild_resource_policy" "example" {
 
 - `resource_arn` (String) ARN of the CodeBuild resource.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Resource Policy using the CodeBuild Resource Policy arn. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Resource Policy using the CodeBuild Resource Policy ARN. For example:
 
 ```terraform
 import {
@@ -95,7 +95,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CodeBuild Resource Policy using the CodeBuild Resource Policy arn. For example:
+Using `terraform import`, import CodeBuild Resource Policy using the CodeBuild Resource Policy ARN. For example:
 
 ```console
 % terraform import aws_codebuild_resource_policy.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name

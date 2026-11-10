@@ -279,6 +279,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 													path.MatchRelative().AtName("allowed_audience"),
 													path.MatchRelative().AtName("allowed_clients"),
 													path.MatchRelative().AtName("allowed_scopes"),
+													path.MatchRelative().AtName("custom_claim").AtAnySetValue(),
 												),
 											},
 											Attributes: map[string]schema.Attribute{

@@ -147,7 +147,7 @@ resource "aws_ce_cost_category" "example" {
 
 - `arn` (String) ARN of the Cost Explorer cost category.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_cost_category` using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_cost_category` using the ID. For example:
 
 ```terraform
 import {
@@ -156,7 +156,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_ce_cost_category` using the id. For example:
+Using `terraform import`, import `aws_ce_cost_category` using the ID. For example:
 
 ```console
 % terraform import aws_ce_cost_category.example costCategoryARN

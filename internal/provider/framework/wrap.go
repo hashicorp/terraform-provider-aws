@@ -552,12 +552,10 @@ func newWrappedResource(ctx context.Context, spec *inttypes.ServicePackageFramew
 	}
 
 	return &wrappedResourceWithIdentity{
-		wrappedResource: wrappedResource{
-			inner:              inner,
-			servicePackageName: servicePackageName,
-			spec:               spec,
-			interceptors:       interceptors,
-		},
+		inner:              inner,
+		servicePackageName: servicePackageName,
+		spec:               spec,
+		interceptors:       interceptors,
 	}
 }
 

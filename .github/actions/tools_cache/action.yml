@@ -14,7 +14,7 @@ inputs:
     description: >-
       Space- or newline-separated list of .ci/tools import paths to install
       unless the tools cache matches .ci/tools exactly (e.g.
-      github.com/client9/misspell/cmd/misspell).
+      github.com/golangci/misspell/cmd/misspell).
     required: true
 
 runs:
@@ -43,16 +43,36 @@ runs:
         path: |
           ${{ env.GOBIN_PATH }}
           ${{ env.GOCACHE }}
-        key: ${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum') }}
+        key: ${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum', '.ci/tools/main.go') }}
         restore-keys: |
           ${{ runner.os }}-tools-go-
+
+    # Defense in depth: an exact hit should contain every tool, but verify the
+    # requested binaries exist so a bad cache entry slows the job instead of
+    # failing it. The binary name is the last element of the import path.
+    - name: Verify restored tools
+      id: verify-tools
+      if: steps.cache-tools.outputs.cache-hit == 'true'
+      shell: bash
+      env:
+        TOOLS: ${{ inputs.tools }}
+      run: |
+        missing=false
+        for tool in $TOOLS; do
+          bin="${GOBIN_PATH}/${tool##*/}"
+          if [[ ! -x "$bin" ]]; then
+            echo "::warning::Tools cache hit but ${bin} is missing; installing tools."
+            missing=true
+          fi
+        done
+        echo "missing=${missing}" >> "$GITHUB_OUTPUT"
 
     # Install unless the restored binaries match .ci/tools exactly. A partial
     # hit holds a previous toolset (for example, before a tool bump, until the
     # writer saves the new entry), so its binaries can't be trusted; its build
     # cache still makes this install fast.
     - name: Install tools (unless exact cache hit)
-      if: steps.cache-tools.outputs.cache-hit != 'true'
+      if: steps.cache-tools.outputs.cache-hit != 'true' || steps.verify-tools.outputs.missing == 'true'
       shell: bash
       env:
         TOOLS: ${{ inputs.tools }}

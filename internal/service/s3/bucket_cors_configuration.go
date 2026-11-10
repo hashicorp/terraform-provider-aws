@@ -7,6 +7,7 @@ package s3
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -184,13 +185,22 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket CORS Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, bucket)
-	if err := d.Set("cors_rule", flattenCORSRules(corsRules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting cors_rule: %s", err)
+	if err := resourceBucketCorsConfigurationFlatten(bucket, corsRules, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 
 	return diags
+}
+
+func resourceBucketCorsConfigurationFlatten(bucket string, corsRules []types.CORSRule, d *schema.ResourceData) error {
+	d.Set(names.AttrBucket, bucket)
+
+	if err := d.Set("cors_rule", flattenCORSRules(corsRules)); err != nil {
+		return fmt.Errorf("setting cors_rule: %w", err)
+	}
+
+	return nil
 }
 
 func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
