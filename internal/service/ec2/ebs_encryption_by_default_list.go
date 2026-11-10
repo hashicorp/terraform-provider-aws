@@ -62,7 +62,7 @@ func (l *ebsEncryptionByDefaultListResource) List(ctx context.Context, request l
 
 		state := "disabled"
 		if aws.ToBool(resp.EbsEncryptionByDefault) {
-			state = "enabled"
+			state = names.AttrEnabled
 		}
 		result.DisplayName = fmt.Sprintf("EBS Encryption By Default (%s, %s)", region, state)
 

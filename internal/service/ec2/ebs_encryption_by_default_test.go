@@ -27,7 +27,7 @@ func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
 			acctest.CtBasic: testAccEBSEncryptionByDefaultDataSource_basic,
 		},
 		"List": {
-			"basic":           testAccEC2EBSEncryptionByDefault_List_basic,
+			acctest.CtBasic:   testAccEC2EBSEncryptionByDefault_List_basic,
 			"includeResource": testAccEC2EBSEncryptionByDefault_List_includeResource,
 			"regionOverride":  testAccEC2EBSEncryptionByDefault_List_regionOverride,
 		},
