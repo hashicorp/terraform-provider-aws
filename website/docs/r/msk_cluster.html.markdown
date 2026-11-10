@@ -314,8 +314,8 @@ This resource supports the following arguments:
 
 ### `logging_info` Block
 
-* `broker_logs` - (Required) Configuration block for Broker Logs settings for logging info. See [`broker_logs` Block](#broker_logs-block) below.
 * `authorizer_logs` - (Optional) Configuration block for Authorizer Logs settings.
+* `broker_logs` - (Required) Configuration block for Broker Logs settings for logging info. See [`broker_logs` Block](#broker_logs-block) below.
 
 ### `broker_logs` Block
 
