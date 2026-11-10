@@ -88,6 +88,27 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bedrock_guardrail_resource_policy.example
+  identity = {
+    resource_arn = "arn:aws:bedrock:us-east-1:123456789012:guardrail/abc123"
+  }
+}
+
+resource "aws_bedrock_guardrail_resource_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `resource_arn` (String) ARN of the guardrail or guardrail profile to which the resource policy is attached.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Guardrail Resource Policy using the `resource_arn`. For example:
 
 ```terraform
