@@ -53,8 +53,28 @@ resource "aws_bedrock_guardrail_resource_policy" "example" {
 ### Guardrail Profile RBP for Cross-Region Inference
 
 ```terraform
+resource "aws_bedrock_guardrail" "example" {
+  name                      = "org-guardrail"
+  blocked_input_messaging   = "Blocked."
+  blocked_outputs_messaging = "Blocked."
+
+  content_policy_config {
+    filters_config {
+      type            = "VIOLENCE"
+      input_strength  = "HIGH"
+      output_strength = "HIGH"
+    }
+  }
+
+  cross_region_config {
+    guardrail_profile_identifier = "arn:aws:bedrock:us-east-1:123456789012:guardrail-profile/us.guardrail.v1:0"
+  }
+}
+
+data "aws_organizations_organization" "current" {}
+
 resource "aws_bedrock_guardrail_resource_policy" "profile" {
-  resource_arn = var.guardrail_profile_arn
+  resource_arn = aws_bedrock_guardrail.example.cross_region_config[0].guardrail_profile_identifier
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -62,7 +82,7 @@ resource "aws_bedrock_guardrail_resource_policy" "profile" {
       Effect    = "Allow"
       Principal = "*"
       Action    = ["bedrock:ApplyGuardrail"]
-      Resource  = var.guardrail_profile_arn
+      Resource  = aws_bedrock_guardrail.example.cross_region_config[0].guardrail_profile_identifier
       Condition = {
         StringEquals = { "aws:PrincipalOrgID" = data.aws_organizations_organization.current.id }
       }
