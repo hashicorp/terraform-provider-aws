@@ -1,14 +1,14 @@
 ---
-subcategory: "EC2 (Elastic Compute Cloud)"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_encryption_by_default"
 description: |-
-  Lists EC2 (Elastic Compute Cloud) Ebs Encryption By Default resources.
+  Lists EC2 EBS Encryption By Default resources.
 ---
 
 # List Resource: aws_ebs_encryption_by_default
 
-Lists EC2 (Elastic Compute Cloud) Ebs Encryption By Default resources.
+Lists EC2 EBS Encryption By Default resources.
 
 ## Example Usage
 
