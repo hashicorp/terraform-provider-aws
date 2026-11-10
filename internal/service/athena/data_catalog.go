@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_athena_data_catalog", name="Data Catalog")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceDataCatalog() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataCatalogCreate,
