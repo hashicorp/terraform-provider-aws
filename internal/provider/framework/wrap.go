@@ -53,7 +53,9 @@ func newWrappedDataSource(ctx context.Context, spec *inttypes.ServicePackageFram
 		isRegionOverrideEnabled = true
 	}
 
-	var interceptors interceptorInvocations
+	// Pre-size to the maximum number of interceptors added below to avoid
+	// reallocating the backing array as interceptors are appended.
+	interceptors := make(interceptorInvocations, 0, 4)
 
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
@@ -206,7 +208,9 @@ func newWrappedEphemeralResource(ctx context.Context, spec *inttypes.ServicePack
 		isRegionOverrideEnabled = true
 	}
 
-	var interceptors interceptorInvocations
+	// Pre-size to the maximum number of interceptors added below to avoid
+	// reallocating the backing array as interceptors are appended.
+	interceptors := make(interceptorInvocations, 0, 3)
 
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
@@ -364,7 +368,9 @@ func newWrappedAction(ctx context.Context, spec *inttypes.ServicePackageAction, 
 		isRegionOverrideEnabled = true
 	}
 
-	var interceptors interceptorInvocations
+	// Pre-size to the maximum number of interceptors added below to avoid
+	// reallocating the backing array as interceptors are appended.
+	var interceptors interceptorInvocations = make(interceptorInvocations, 0, 2)
 
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
@@ -503,7 +509,9 @@ func newWrappedResource(ctx context.Context, spec *inttypes.ServicePackageFramew
 		isRegionOverrideEnabled = true
 	}
 
-	var interceptors interceptorInvocations
+	// Pre-size to the maximum number of interceptors added below to avoid
+	// reallocating the backing array as interceptors are appended.
+	interceptors := make(interceptorInvocations, 0, 9)
 
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
@@ -799,7 +807,9 @@ type wrappedListResourceFramework struct {
 var _ list.ListResourceWithConfigure = &wrappedListResourceFramework{}
 
 func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListResource, servicePackageName string) list.ListResourceWithConfigure {
-	var interceptors interceptorInvocations
+	// Pre-size to the maximum number of interceptors added below to avoid
+	// reallocating the backing array as interceptors are appended.
+	interceptors := make(interceptorInvocations, 0, 1)
 
 	var isRegionOverrideEnabled bool
 	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
@@ -932,7 +942,9 @@ type wrappedListResourceSDK struct {
 var _ inttypes.ListResourceForSDK = &wrappedListResourceSDK{}
 
 func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) inttypes.ListResourceForSDK {
-	var interceptors interceptorInvocations
+	// Pre-size to the maximum number of interceptors added below to avoid
+	// reallocating the backing array as interceptors are appended.
+	interceptors := make(interceptorInvocations, 0, 1)
 
 	var isRegionOverrideEnabled bool
 	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
