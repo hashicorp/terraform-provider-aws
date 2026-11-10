@@ -30,16 +30,14 @@ func StringMatch(pattern, message string) schema.SchemaValidateFunc {
 			return nil, []error{fmt.Errorf("expected type of %s to be string", k)}
 		}
 
-		r, err := regexacheCompile(pattern)
-		if err != nil {
+		re, matched, err := matchString(pattern, v)
+		switch {
+		case err != nil:
 			return nil, []error{fmt.Errorf("failed to compile regex pattern %q: %v", pattern, err)}
-		}
-
-		if ok := r.MatchString(v); !ok {
-			if message != "" {
-				return nil, []error{fmt.Errorf("invalid value for %s (%s)", k, message)}
-			}
-			return nil, []error{fmt.Errorf("expected value of %s to match regular expression %q, got %q", k, r.String(), v)}
+		case !matched && message != "":
+			return nil, []error{fmt.Errorf("invalid value for %s (%s)", k, message)}
+		case !matched:
+			return nil, []error{fmt.Errorf("expected value of %s to match regular expression %q, got %q", k, re.String(), v)}
 		}
 		return nil, nil
 	}
@@ -57,8 +55,9 @@ func StringMatchDiag(pattern, message string) schema.SchemaValidateDiagFunc {
 			return append(diags, errs.NewIncorrectValueTypeAttributeError(path, "string"))
 		}
 
-		r, err := regexacheCompile(pattern)
-		if err != nil {
+		re, matched, err := matchString(pattern, v)
+		switch {
+		case err != nil:
 			return append(diags, errs.NewAttributeErrorDiagnostic(
 				path,
 				"Invalid Validator Configuration",
@@ -67,22 +66,29 @@ func StringMatchDiag(pattern, message string) schema.SchemaValidateDiagFunc {
 					"Please report the following to the provider developer:\n\n"+
 					fmt.Sprintf("The regex pattern %q failed to compile: %v", pattern, err),
 			))
-		}
-
-		if ok := r.MatchString(v); !ok {
-			if message != "" {
-				return append(diags, errs.NewInvalidValueAttributeError(
-					path,
-					"Value is invalid: "+message,
-				))
-			}
+		case !matched && message != "":
 			return append(diags, errs.NewInvalidValueAttributeError(
 				path,
-				fmt.Sprintf("Expected value to match regular expression %q, got %q", r.String(), v),
+				"Value is invalid: "+message,
+			))
+		case !matched:
+			return append(diags, errs.NewInvalidValueAttributeError(
+				path,
+				fmt.Sprintf("Expected value to match regular expression %q, got %q", re.String(), v),
 			))
 		}
 		return diags
 	}
+}
+
+// matchString reports whether `v` matches `pattern`.
+// `err` is non-nil only if `pattern` fails to compile, in which case `re` is nil.
+func matchString(pattern, v string) (re *regexp.Regexp, matched bool, err error) {
+	re, err = regexacheCompile(pattern)
+	if err != nil {
+		return nil, false, err
+	}
+	return re, re.MatchString(v), nil
 }
 
 // regexacheCompile compiles `pattern` using `regexache`, which caches compiled expressions.
