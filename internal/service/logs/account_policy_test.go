@@ -178,6 +178,56 @@ func TestAccLogsAccountPolicy_basicRetention(t *testing.T) {
 	})
 }
 
+func TestAccLogsAccountPolicy_basicMetricExtraction(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rSelectionCriteria := fmt.Sprintf("LogGroupNamePrefix IN [\"/%s\"]", rName)
+	resourceName := "aws_cloudwatch_log_account_policy.test"
+	var accountPolicy types.AccountPolicy
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountPolicyConfig_basicMetricExtraction(rName, rSelectionCriteria),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPolicyExists(ctx, t, resourceName, &accountPolicy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_document"), tfknownvalue.JSONNoDiff(`{"EmbeddedMetricFormat": {"Status": "Disabled"}}`)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_type"), tfknownvalue.StringExact(types.PolicyTypeMetricExtractionPolicy)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrScope), tfknownvalue.StringExact(types.ScopeAll)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("selection_criteria"), knownvalue.StringExact(rSelectionCriteria)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAccountPolicyImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "policy_name",
+			},
+			{
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccLogsAccountPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -442,4 +492,21 @@ resource "aws_cloudwatch_log_account_policy" "test" {
   selection_criteria = %[2]q
 }
 `, rName, rSelectionCriteria, retentionInDays)
+}
+
+func testAccAccountPolicyConfig_basicMetricExtraction(rName, rSelectionCriteria string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_account_policy" "test" {
+  policy_name = %[1]q
+  policy_type = "METRIC_EXTRACTION_POLICY"
+
+  policy_document = jsonencode({
+    EmbeddedMetricFormat = {
+      Status = "Disabled"
+    }
+  })
+
+  selection_criteria = %[2]q
+}
+`, rName, rSelectionCriteria)
 }
