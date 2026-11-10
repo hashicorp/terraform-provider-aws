@@ -29,21 +29,9 @@ type logGroupListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type logGroupListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.LogsClient(ctx)
-
-	var query logGroupListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
@@ -55,11 +43,12 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 				return
 			}
 
+			logGroupName := aws.ToString(output.LogGroupName)
 			rd := l.ResourceData()
-			rd.SetId(aws.ToString(output.LogGroupName))
+			rd.SetId(logGroupName)
 			resourceGroupFlatten(ctx, rd, output)
 
-			result.DisplayName = aws.ToString(output.LogGroupName)
+			result.DisplayName = logGroupName
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {

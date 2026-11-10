@@ -1,4 +1,2 @@
-.github/workflows/*.lock.yml linguist-generated=true merge=ours
-.github/workflows/agentics-maintenance.yml linguist-generated=true merge=ours
 *_gen.go linguist-generated=true
 *_gen_test.go linguist-generated=true

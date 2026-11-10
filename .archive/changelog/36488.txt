@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lexv2models_slot: Fix custom_payload typo
-```

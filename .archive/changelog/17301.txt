@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_elasticache_replication_group: Allow changing `cluster_mode.replica_count` without re-creation
-```

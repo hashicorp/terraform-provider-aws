@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_ssoadmin_account_assignment: Correct `target_type` argument to required
-```

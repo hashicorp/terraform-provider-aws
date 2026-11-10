@@ -42,6 +42,4 @@ list "aws_iam_policy" "example" {
 
 This list resource supports the following arguments:
 
-* `path_prefix` - (Optional) Limits the returned IAM Policies to those within this path.
-  If `path_prefix` is not specified, or is `"/"`, returns all IAM Policies.
-  Must begin and end with a slash (`/`) and contain uppercase or lowercase alphanumeric characters or any of the following: `/`, `,`, `.`, `+`, `@`, `=`, `_`, or `-`.
+* `path_prefix` - (Optional) Limits the returned IAM Policies to those within this path. If `path_prefix` is not specified, or is `"/"`, returns all IAM Policies. Must begin and end with a slash (`/`) and contain uppercase or lowercase alphanumeric characters or any of the following: `/`, `,`, `.`, `+`, `@`, `=`, `_`, or `-`.

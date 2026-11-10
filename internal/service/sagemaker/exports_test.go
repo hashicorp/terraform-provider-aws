@@ -71,6 +71,7 @@ var (
 	ResourceImage                                  = resourceImage
 	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
+	ResourceInferenceComponent                     = newInferenceComponentResource
 	ResourceMlflowApp                              = newMlflowAppResource
 	ResourceMlflowTrackingServer                   = resourceMlflowTrackingServer
 	ResourceModel                                  = resourceModel
@@ -98,6 +99,7 @@ var (
 	FindDeviceFleetByName                     = findDeviceFleetByName
 	FindDomainByName                          = findDomainByName
 	FindEndpointByName                        = findEndpointByName
+	FindEndpointByNameExcludeDeleting         = findEndpointByNameExcludeDeleting
 	FindEndpointConfigByName                  = findEndpointConfigByName
 	FindFeatureGroupByName                    = findFeatureGroupByName
 	FindFlowDefinitionByName                  = findFlowDefinitionByName
@@ -107,6 +109,7 @@ var (
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
+	FindInferenceComponentByName              = findInferenceComponentByName
 	FindLabelingJobByName                     = findLabelingJobByName
 	FindMlflowAppByARN                        = findMlflowAppByARN
 	FindMlflowTrackingServerByName            = findMlflowTrackingServerByName

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_codedeploy_deployment_group: Add `outdated_instances_strategy` argument
-```

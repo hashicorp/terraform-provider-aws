@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_vpn_connection: Add `tunnel_bandwidth` argument to support higher bandwidth tunnels
-```

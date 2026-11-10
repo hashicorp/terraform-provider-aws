@@ -630,6 +630,10 @@ func dataSourceLaunchTemplate() *schema.Resource {
 								Type:     schema.TypeInt,
 								Computed: true,
 							},
+							"ena_queue_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 							"interface_type": {
 								Type:     schema.TypeString,
 								Computed: true,

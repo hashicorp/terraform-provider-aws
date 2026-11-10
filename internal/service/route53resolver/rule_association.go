@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_route53_resolver_rule_association", name="Rule Association")
 // @IdentityAttribute("id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes.ResolverRuleAssociation")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes;awstypes.ResolverRuleAssociation")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(domainTfVar="domain")
 func resourceRuleAssociation() *schema.Resource {
@@ -110,6 +110,12 @@ func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Rule Association (%s): %s", d.Id(), err)
 	}
+
+	return resourceRuleAssociationFlatten(d, ruleAssociation)
+}
+
+func resourceRuleAssociationFlatten(d *schema.ResourceData, ruleAssociation *awstypes.ResolverRuleAssociation) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	d.Set(names.AttrName, ruleAssociation.Name)
 	d.Set("resolver_rule_id", ruleAssociation.ResolverRuleId)

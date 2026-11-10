@@ -1813,7 +1813,7 @@ func normalizeAlgoSpecMetricDefinitions(
 		return
 	}
 
-	if saved.IsNull() || len(saved.Elements()) == 0 {
+	if saved.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
 		flatSpecs[0].MetricDefinitions = fwtypes.NewListNestedObjectValueOfNull[trainingJobMetricDefinitionModel](ctx)
 	} else {
 		savedSpecs, d := saved.ToSlice(ctx)
@@ -1840,7 +1840,7 @@ func normalizeStoppingCondition(
 		return
 	}
 
-	if (saved.IsNull() || len(saved.Elements()) == 0) && !serverlessJobConfig.IsNull() && len(serverlessJobConfig.Elements()) > 0 {
+	if (saved.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0) && !serverlessJobConfig.IsNull() && serverlessJobConfig.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
 		*target = fwtypes.NewListNestedObjectValueOfNull[trainingJobStoppingConditionModel](ctx)
 	}
 }

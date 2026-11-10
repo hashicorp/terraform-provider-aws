@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -88,6 +89,22 @@ func testAccTelemetryEvaluation_disappears(t *testing.T) {
 	})
 }
 
+func testAccTelemetryEvaluation_allRegionsAndRegionsConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTelemetryEvaluationConfig_conflicts(acctest.AlternateRegion()),
+				ExpectError: regexache.MustCompile(`(Attribute "regions" cannot be specified when "all_regions" is specified|Attribute "all_regions" cannot be specified when "regions" is specified)`),
+			},
+		},
+	})
+}
+
 func testAccCheckTelemetryEvaluationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
@@ -152,4 +169,13 @@ func testAccTelemetryEvaluationConfig_basic() string {
 	return `
 resource "aws_observabilityadmin_telemetry_evaluation" "test" {}
 `
+}
+
+func testAccTelemetryEvaluationConfig_conflicts(alternateRegion string) string {
+	return acctest.ConfigCompose(fmt.Sprintf(`
+resource "aws_observabilityadmin_telemetry_evaluation" "test" {
+  all_regions = true
+  regions     = [%[1]q]
+}
+`, alternateRegion))
 }

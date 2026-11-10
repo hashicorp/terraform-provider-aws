@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_appflow_flow: Fix tasks not updating properly due to empty task being processed
-```

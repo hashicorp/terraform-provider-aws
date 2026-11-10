@@ -6,7 +6,7 @@
 
 Terraform includes an acceptance test harness that does most of the repetitive
 work involved in testing a resource. For additional information about testing
-Terraform Providers, see the [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/testing).
+Terraform Providers, see the [Plugin Framework documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests).
 
 ## In context
 
@@ -119,7 +119,7 @@ ok  	github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch	27.
 
 Running acceptance tests requires version 0.12.26 or higher of the Terraform CLI to be installed.
 
-For advanced developers, the acceptance testing framework accepts some additional environment variables that can be used to control Terraform CLI binary selection, logging, and other behaviors. See the [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests#environment-variables) for more information.
+For advanced developers, the acceptance testing framework accepts some additional environment variables that can be used to control Terraform CLI binary selection, logging, and other behaviors. See the [Plugin Framework documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/environment-variables) for more information.
 
 Please Note: On macOS 10.14 and later (and some Linux distributions), the default user open file limit is 256. This may cause unexpected issues when running the acceptance testing since this can prevent various operations from occurring such as opening network connections to AWS. To view this limit, the `ulimit -n` command can be run. To update this limit, run `ulimit -n 1024`  (or higher).
 
@@ -186,7 +186,7 @@ TF_ACC=1 go test ./internal/service/ecs/... -v -count 1 -parallel 20 -run='TestA
 ## Writing an Acceptance Test
 
 Terraform has a framework for writing acceptance tests which minimizes the
-amount of boilerplate code necessary to use common testing patterns. This guide is meant to augment the general [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests) with Terraform AWS Provider specific conventions and helpers.
+amount of boilerplate code necessary to use common testing patterns. This guide is meant to augment the general [Plugin Framework documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests) with Terraform AWS Provider specific conventions and helpers.
 
 ### Anatomy of an Acceptance Test
 
@@ -213,22 +213,33 @@ same type of resource. The definition of a complete test looks like this:
 
 ```go
 func TestAccCloudWatchDashboard_basic(t *testing.T) {
-  ctx := acctest.Context(t)
+	ctx := acctest.Context(t)
 	var dashboard cloudwatch.GetDashboardOutput
-	rInt := acctest.RandInt()
+	resourceName := "aws_cloudwatch_dashboard.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDashboardConfig(rInt),
+				ConfigDirectory: config.StaticDirectory("testdata/Dashboard/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, "aws_cloudwatch_dashboard.foobar", &dashboard),
-					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccDashboardName(rInt)),
+					testAccCheckDashboardExists(ctx, t, resourceName, &dashboard),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dashboard_name"), knownvalue.StringExact(rName)),
+				},
 			},
 		},
 	})
@@ -242,11 +253,13 @@ When executing the test, the following steps are taken for each `TestStep`:
    may have. For example, to test the `aws_cloudwatch_dashboard` resource, a valid configuration with the requisite fields is required. This results in a configuration which looks like this:
 
     ```terraform
-    resource "aws_cloudwatch_dashboard" "foobar" {
-      dashboard_name = "terraform-test-dashboard-%[1]d"
+    resource "aws_cloudwatch_dashboard" "test" {
+      dashboard_name = var.rName
+
       dashboard_body = <<EOF
-      {
-        "widgets": [{
+    {
+      "widgets": [
+        {
           "type": "text",
           "x": 0,
           "y": 0,
@@ -255,9 +268,10 @@ When executing the test, the following steps are taken for each `TestStep`:
           "properties": {
             "markdown": "Hi there from Terraform: CloudWatch"
           }
-        }]
-      }
-      EOF
+        }
+      ]
+    }
+    EOF
     }
     ```
 
@@ -267,24 +281,20 @@ When executing the test, the following steps are taken for each `TestStep`:
    successfully, a test function like this is used:
 
     ```go
-    func testAccCheckDashboardExists(ctx context.Context, n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
+    func testAccCheckDashboardExists(ctx context.Context, t *testing.T, n string, v *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
       return func(s *terraform.State) error {
         rs, ok := s.RootModule().Resources[n]
         if !ok {
           return fmt.Errorf("Not found: %s", n)
         }
 
-        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
-        params := cloudwatch.GetDashboardInput{
-          DashboardName: aws.String(rs.Primary.ID),
-        }
-
-        resp, err := conn.GetDashboardWithContext(ctx, &params)
+        conn := acctest.ProviderMeta(ctx, t).CloudWatchConn(ctx)
+        output, err := tfcloudwatch.FindDashboardByName(ctx, conn, rs.Primary.ID)
         if err != nil {
           return err
         }
 
-        *dashboard = *resp
+        *v = *output
 
         return nil
       }
@@ -297,7 +307,7 @@ When executing the test, the following steps are taken for each `TestStep`:
    for several common types of checks - for example:
 
    ```go
-   resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccDashboardName(rInt)),
+   statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dashboard_name"), knownvalue.StringExact(rName)),
    ```
 
 1. The resources created by the test are destroyed. This step happens
@@ -310,7 +320,7 @@ When executing the test, the following steps are taken for each `TestStep`:
 
     ```go
     func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
-	    return func(s *terraform.State) error {
+      return func(s *terraform.State) error {
         conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
         for _, rs := range s.RootModule().Resources {
@@ -318,20 +328,15 @@ When executing the test, the following steps are taken for each `TestStep`:
             continue
           }
 
-          params := cloudwatch.GetDashboardInput{
-            DashboardName: aws.String(rs.Primary.ID),
+          _, err := tfcloudwatch.FindDashboardByName(ctx, conn, rs.Primary.ID)
+          if retry.NotFound(err) {
+            continue
           }
-
-          _, err := conn.GetDashboardWithContext(ctx, &params)
-          if err == nil {
-            return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
-          }
-          if !isDashboardNotFoundErr(err) {
+          if err != nil {
             return err
           }
-        }
 
-        return nil
+          return fmt.Errorf("CloudWatch Dashboard %s still exists", rs.Primary.ID)
       }
     }
     ```
@@ -504,7 +509,7 @@ func TestAccExampleThing_basic(t *testing.T) {
       {
         // ... omitted for brevity ...
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
           resource.TestCheckResourceAttr(resourceName, "description", ""),
           resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -547,13 +552,13 @@ func TestAccExampleThing_basic(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
           resource.TestCheckResourceAttr(resourceName, "description", ""),
           resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -755,12 +760,12 @@ func TestAccExampleThing_disappears(t *testing.T) {
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName, &job),
+          testAccCheckExampleThingExists(ctx, t, resourceName, &job),
           acctest.CheckSDKResourceDisappears(ctx, t, ResourceExampleThing(), resourceName),
         ),
         ExpectNonEmptyPlan: true,
@@ -804,12 +809,12 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleChildThingDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleChildThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           acctest.CheckSDKResourceDisappears(ctx, t, ResourceExampleParentThing(), parentResourceName),
         ),
         ExpectNonEmptyPlan: true,
@@ -841,12 +846,12 @@ func TestAccExampleThing_Description(t *testing.T) {
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigDescription(rName, "description1"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           resource.TestCheckResourceAttr(resourceName, "description", "description1"),
         ),
       },
@@ -858,7 +863,7 @@ func TestAccExampleThing_Description(t *testing.T) {
       {
         Config: testAccExampleThingConfigDescription(rName, "description2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           resource.TestCheckResourceAttr(resourceName, "description", "description2"),
         ),
       },
@@ -901,12 +906,12 @@ func TestAccExample_basic(t *testing.T) {
     },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-    CheckDestroy:             testAccCheckExampleDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleConfig(),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleExists(ctx, resourceName),
+          testAccCheckExampleExists(ctx, t, resourceName),
           // ... additional checks ...
         ),
       },
@@ -966,12 +971,12 @@ func TestAccExample_basic(t *testing.T) {
     },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
-    CheckDestroy:             testAccCheckExampleDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleConfig(),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleExists(ctx, resourceName),
+          testAccCheckExampleExists(ctx, t, resourceName),
           // ... additional checks ...
         ),
       },
@@ -1066,12 +1071,12 @@ func TestAccExampleThingDataSource_Name(t *testing.T) {
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx, t),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingDataSourceConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(ctx, resourceName),
+          testAccCheckExampleThingExists(ctx, t, resourceName),
           resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
           resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
           resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -1098,7 +1103,7 @@ data "aws_example_thing" "test" {
 
 ## Acceptance Test Sweepers
 
-When running the acceptance tests, especially when developing or troubleshooting Terraform resources, it's possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent lingering resources from consuming quota or causing unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [SDKv2 documentation on test sweepers](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/sweepers) with Terraform AWS Provider specific details.
+When running the acceptance tests, especially when developing or troubleshooting Terraform resources, it's possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent lingering resources from consuming quota or causing unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [Plugin Framework documentation on test sweepers](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/sweepers) with Terraform AWS Provider specific details.
 
 ### Running Test Sweepers
 
@@ -1285,12 +1290,12 @@ These are basic principles to help guide the creation of acceptance tests.
 
 Below are the required items that will be noted during the submission review and prevent immediate merging:
 
-- __Implements CheckDestroy__: Resource testing should include a `CheckDestroy` function (typically named `testAccCheck{SERVICE}{RESOURCE}Destroy`) that calls the API to verify that the Terraform resource has been deleted or disassociated as appropriate. More information about `CheckDestroy` functions can be found in the [SDKv2 TestCase documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/testcase#checkdestroy).
-- __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheck{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. Preferably, this function will also accept a pointer to an API object representing the Terraform resource from the API response that can be set for potential usage in later `TestCheckFunc`. More information about these functions can be found in the [SDKv2 Custom Check Functions documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/teststep#custom-check-functions).
+- __Implements CheckDestroy__: Resource testing should include a `CheckDestroy` function (typically named `testAccCheck{SERVICE}{RESOURCE}Destroy`) that calls the API to verify that the Terraform resource has been deleted or disassociated as appropriate. More information about `CheckDestroy` functions can be found in the [Plugin Framework Test Cases documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/testcase#checkdestroy).
+- __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheck{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. More information about these functions can be found in the [Plugin Framework Custom check functions documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/teststep#custom-check-functions).
 - __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `acctest.go` should be used for multiple account/region or otherwise specialized testing.
 - __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when run outside an expected environment.
 - __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, names.ExampleServiceID),`).
-- __Uses resource.ParallelTest__: Tests should use [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
+- __Uses acctest.ParallelTest__: Tests should use `acctest.ParallelTest` instead of `acctest.Test` except where serialized testing is absolutely required.
 - [ ] __Uses fmt.Sprintf()__: Test configurations preferably should be separated into their own functions (typically named `testAcc{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
 - __Uses Randomized Infrastructure Naming__: Test configurations that use resources where a unique name is required should generate a random name. Typically this is created via `rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)` in the acceptance test function before generating the configuration.
 - __Prevents S3 Bucket Deletion Errors__: Test configurations that use `aws_s3_bucket` resources as a logging destination should include the `force_destroy = true` configuration. This is to prevent race conditions where logging objects may be written during the testing duration which will cause `BucketNotEmpty` errors during deletion.
@@ -1301,10 +1306,41 @@ For resources that support import, the additional item below is required that wi
 
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
 
-- __Uses Builtin Check Functions__: Tests should use already available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify values in the Terraform state over creating custom `TestCheckFunc`. More information about these functions can be found in the [SDKv2 Builtin Check Functions documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/teststep#builtin-check-functions).
+- __Uses Builtin Check Functions__: Tests should use already available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify values in the Terraform state over creating custom `TestCheckFunc`. More information about these functions can be found in the [Plugin Framework Built-in check functions documentation](https://developer.hashicorp.com/terraform/plugin/testing/acceptance-tests/teststep#built-in-check-functions).
 - __Uses TestCheckResourceAttrPair() for Data Sources__: Tests should use [`resource.TestCheckResourceAttrPair()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#TestCheckResourceAttrPair) to verify values in the Terraform state for data sources attributes to compare them with their expected resource attributes.
 - __Excludes Timeouts Configurations__: Test configurations should not include `timeouts {...}` configuration blocks except for explicit testing of customizable timeouts (typically very short timeouts with `ExpectError`).
 - __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAcc{SERVICE}{RESOURCE}_basic`) should use available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
+- __Uses IAM Policy Document Data Source for Policy Documents__: Test configurations should use the [`aws_iam_policy_document` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) instead of the [`jsonencode` function](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or ["heredoc" string literals](https://developer.hashicorp.com/terraform/language/expressions/strings#heredoc-strings) to generate IAM policy documents. For example:
+
+    ```terraform
+    resource "aws_s3_bucket" "test" {
+      bucket        = var.rName
+      force_destroy = true
+    }
+
+    data "aws_iam_policy_document" "allow_write_access" {
+      statement {
+        principals {
+          type        = "Service"
+          identifiers = ["workspaces-web.amazonaws.com"]
+        }
+
+        actions = [
+          "s3:PutObject"
+        ]
+
+        resources = [
+          aws_s3_bucket.test.arn,
+          "${aws_s3_bucket.test.arn}/*"
+        ]
+      }
+    }
+
+    resource "aws_s3_bucket_policy" "allow_write_access" {
+      bucket = aws_s3_bucket.test.id
+      policy = data.aws_iam_policy_document.allow_write_access.json
+    }
+    ```
 
 ### Avoid Hard Coding
 

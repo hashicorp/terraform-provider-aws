@@ -20,6 +20,14 @@ To disable resource tagging tests for a specific resource or data source type, a
 @Testing(tagsTest=false)
 ```
 
+In some very rare cases, a resource or data source type supports tagging but cannot use transparent tagging.
+For example, the data source `aws_cognito_user_pool` has to manage both the standard `tags` and `tags_all` attributes as well as the deprecated `user_pool_tags`.
+Opt in to generated tagging tests by adding the following annotation to its source file:
+
+```
+@Testing(tagsTest=true)
+```
+
 To enable Resource Identity tests, add the following line:
 
 ```go
@@ -85,16 +93,18 @@ Multiple `@Testing(requireEnvVarValue)` annotations are allowed.
 
 Some resource types require alternate providers configured either for an alternate AWS account or an alternate region.
 If the test uses multiple regions, consider using the `region` attribute on resource in the alternate region instead of a separate provider instance.
+To use the `region` attribute, use the annotation `@Testing(altRegionTfVars=true)`.
+This will add the `PreCheck` function `acctest.PreCheckAlternateAccount` and set the Terraform variable `secondary_region` to the alternate region.
 
 To specify a provider instance configured for an alternate account, use the annotation `@Testing(useAlternateAccount=true)`.
-This will add the `PreCheck` function `acctest.PreCheckAlternateAccount` as well as initializing a provider instance with the alias `awsalternate`.
+This will add the `PreCheck` function `acctest.PreCheckAlternateAccount` and initialize a provider instance with the alias `awsalternate`.
 
 To specify a provider instance configured for an alternate region, use the annotation `@Testing(altRegionProvider=true)`.
-This will add the `PreCheck` function `acctest.PreCheckMultipleRegion` as well as initializing a provider instance with the alias `awsalternate`.
+This will add the `PreCheck` function `acctest.PreCheckMultipleRegion` and initialize a provider instance with the alias `awsalternate`.
 
 #### Exists and Destroy Checks
 
-Most `Exists` functions used in acceptance tests take a pointer to the returned API object.
+Some `Exists` functions used in acceptance tests take a pointer to the returned API object.
 To specify the type of this parameter, use the annotation `@Testing(existsType=<reference>)`.
 This references a Go type and package path with optional package alias, using the format
 `<package path>;[<package alias>;]<function call>`.
@@ -158,6 +168,10 @@ To override the common name, set the annotation `@Testing(tlsKeyDomain=<referenc
 For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctest.RandomSubdomain()`
 and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
 
+Some acceptance tests require an SSH public key.
+This can be included by setting the annotation `@Testing(sshKeyPair=true)`.
+The Terraform variable name will be `public_key`.
+
 Some acceptance tests require a TLS ECDSA public key PEM.
 This can be included by setting the annotation `@Testing(tlsEcdsaPublicKeyPem=true)`.
 The Terraform variable name will be `rTlsEcdsaPublicKeyPem`.
@@ -206,6 +220,15 @@ For example, the resource type `aws_ssoadmin_application` has an ARN Identity an
 
 Otherwise, if the resource type has an `id` attribute that is set to the same value as an identity attribute,
 add an `@Testing(idAttrDuplicates="<attribute_name>")` annotation.
+
+If the resource type implemented using Plugin SDK
+and it has an ARN Identity, Single Parameter Identity, Singleton Identity, or Custom Inherent Region Identity,
+by default the `id` attribute will match the Identity attribute.
+In some rare cases, the value in the `id` attribute cannot be used as the identifying attribute;
+in this case, add the `duplicatesIdAttr=false` parameter to the identity annotation
+For example, the resource type `aws_iam_policy_attachment` sets the `id` attribute to the value of the `name`,
+but the `policy_arn` is the identifying attribute,
+so the annotation is `@ArnIdentity("policy_arn", duplicatesIdAttr=false)`.
 
 #### Composed Attribute Values
 

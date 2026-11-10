@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_route: `destination_prefix_list_id` attribute can be specified for managed prefix list destinations
-```

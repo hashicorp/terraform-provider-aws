@@ -84,7 +84,21 @@ func resourceReplicationGroup() *schema.Resource {
 					Optional:      true,
 					Sensitive:     true,
 					ValidateFunc:  validReplicationGroupAuthToken,
-					ConflictsWith: []string{"user_group_ids"},
+					ConflictsWith: []string{"user_group_ids", "auth_token_wo"},
+				},
+				"auth_token_wo": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					WriteOnly:     true,
+					Sensitive:     true,
+					ValidateFunc:  validReplicationGroupAuthToken,
+					ConflictsWith: []string{"user_group_ids", "auth_token"},
+					RequiredWith:  []string{"auth_token_wo_version"},
+				},
+				"auth_token_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					RequiredWith: []string{"auth_token_wo"},
 				},
 				"auth_token_update_strategy": {
 					Type:             schema.TypeString,
@@ -454,7 +468,7 @@ func resourceReplicationGroup() *schema.Resource {
 					Type:          schema.TypeSet,
 					Optional:      true,
 					Elem:          &schema.Schema{Type: schema.TypeString},
-					ConflictsWith: []string{"auth_token"},
+					ConflictsWith: []string{"auth_token", "auth_token_wo"},
 				},
 			}
 		},
@@ -555,6 +569,17 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("auth_token"); ok {
 		input.AuthToken = aws.String(v.(string))
+	}
+
+	// Get the write-only auth token value from configuration. It is never
+	// persisted to state, so it must be read from the raw config on each apply.
+	authTokenWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("auth_token_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+	if authTokenWO != "" {
+		input.AuthToken = aws.String(authTokenWO)
 	}
 
 	if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
@@ -910,12 +935,105 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 		d.Set("transit_encryption_mode", c.TransitEncryptionMode)
 
+		if err := applyReplicationGroupPendingModifications(d, rgp, &c); err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): applying pending modifications: %s", d.Id(), err)
+		}
+
 		if c.AuthTokenEnabled != nil && !aws.ToBool(c.AuthTokenEnabled) {
-			d.Set("auth_token", nil)
+			// Do not clear auth_token if a pending auth token change is in progress
+			// (SETTING or ROTATING), as the token is being modified and will be applied
+			// during the next maintenance window.
+			if c.PendingModifiedValues == nil || c.PendingModifiedValues.AuthTokenStatus == "" {
+				d.Set("auth_token", nil)
+			}
 		}
 	}
 
 	return diags
+}
+
+func applyReplicationGroupPendingModifications(d *schema.ResourceData, rgp *awstypes.ReplicationGroup, c *awstypes.CacheCluster) error {
+	if c.PendingModifiedValues != nil {
+		nodeType := aws.ToString(c.PendingModifiedValues.CacheNodeType)
+		if nodeType != "" {
+			d.Set("node_type", nodeType)
+		}
+
+		if c.PendingModifiedValues.EngineVersion != nil {
+			switch aws.ToString(c.Engine) {
+			case engineRedis:
+				if err := setEngineVersionRedis(d, c.PendingModifiedValues.EngineVersion); err != nil {
+					return err
+				}
+			case engineValkey:
+				if err := setEngineVersionValkey(d, c.PendingModifiedValues.EngineVersion); err != nil {
+					return err
+				}
+			}
+		}
+
+		if c.PendingModifiedValues.TransitEncryptionEnabled != nil {
+			transitEncryptionEnabled := aws.ToBool(c.PendingModifiedValues.TransitEncryptionEnabled)
+			d.Set("transit_encryption_enabled", transitEncryptionEnabled)
+		}
+
+		if c.PendingModifiedValues.TransitEncryptionMode != "" {
+			d.Set("transit_encryption_mode", c.PendingModifiedValues.TransitEncryptionMode)
+		}
+	}
+
+	if rgp.PendingModifiedValues != nil {
+		if rgp.PendingModifiedValues.AutomaticFailoverStatus != "" {
+			switch rgp.PendingModifiedValues.AutomaticFailoverStatus {
+			case awstypes.PendingAutomaticFailoverStatusEnabled:
+				d.Set("automatic_failover_enabled", true)
+			case awstypes.PendingAutomaticFailoverStatusDisabled:
+				d.Set("automatic_failover_enabled", false)
+			}
+		}
+
+		if rgp.PendingModifiedValues.ClusterMode != "" {
+			d.Set("cluster_mode", rgp.PendingModifiedValues.ClusterMode)
+		}
+
+		// transit_encryption_enabled and transit_encryption_mode are written up to
+		// three times, and this ordering is intentional: first from the live cache
+		// cluster values in the Read function, then from the cache cluster's pending
+		// values above, and finally from the replication group's pending values here.
+		// The replication group-level pending values are authoritative, so they are
+		// applied last (last write wins). Do not reorder these writes.
+		if rgp.PendingModifiedValues.TransitEncryptionEnabled != nil {
+			transitEncryptionEnabled := aws.ToBool(rgp.PendingModifiedValues.TransitEncryptionEnabled)
+			d.Set("transit_encryption_enabled", transitEncryptionEnabled)
+		}
+
+		if rgp.PendingModifiedValues.TransitEncryptionMode != "" {
+			d.Set("transit_encryption_mode", rgp.PendingModifiedValues.TransitEncryptionMode)
+		}
+
+		// user_group_ids pending changes are expressed as add/remove deltas against
+		// the live UserGroupIds (see UserGroupsUpdateStatus), not as a full target
+		// set. Reconstruct the resulting set so state matches configuration while the
+		// change is applied during the next maintenance window.
+		if ug := rgp.PendingModifiedValues.UserGroups; ug != nil {
+			remove := make(map[string]struct{}, len(ug.UserGroupIdsToRemove))
+			for _, id := range ug.UserGroupIdsToRemove {
+				remove[id] = struct{}{}
+			}
+
+			userGroupIDs := make([]string, 0, len(rgp.UserGroupIds)+len(ug.UserGroupIdsToAdd))
+			for _, id := range rgp.UserGroupIds {
+				if _, ok := remove[id]; !ok {
+					userGroupIDs = append(userGroupIDs, id)
+				}
+			}
+			userGroupIDs = append(userGroupIDs, ug.UserGroupIdsToAdd...)
+
+			d.Set("user_group_ids", userGroupIDs)
+		}
+	}
+
+	return nil
 }
 
 func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1157,7 +1275,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			add, del := ns.Difference(os), os.Difference(ns)
 
 			if add.Len() > 0 {
-				if d.HasChanges("auth_token", "auth_token_update_strategy") && awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
+				if d.HasChanges("auth_token", "auth_token_wo_version", "auth_token_update_strategy") && awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
 					// Transitioning to RBAC.
 					input.AuthTokenUpdateStrategy = awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string))
 				}
@@ -1186,12 +1304,27 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			})
 		}
 
-		if d.HasChanges("auth_token", "auth_token_update_strategy") {
+		if d.HasChanges("auth_token", "auth_token_wo_version", "auth_token_update_strategy") {
 			// AuthTokenUpdateStrategyTypeDelete only supported while transitioning to RBAC.
 			if awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) != awstypes.AuthTokenUpdateStrategyTypeDelete {
+				authToken := d.Get("auth_token").(string)
+
+				// When the write-only token version changes, source the new token
+				// from the write-only argument in configuration.
+				if d.HasChange("auth_token_wo_version") {
+					authTokenWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("auth_token_wo"))
+					diags = append(diags, di...)
+					if diags.HasError() {
+						return diags
+					}
+					if authTokenWO != "" {
+						authToken = authTokenWO
+					}
+				}
+
 				authInput := elasticache.ModifyReplicationGroupInput{
 					ApplyImmediately:        aws.Bool(true),
-					AuthToken:               aws.String(d.Get("auth_token").(string)),
+					AuthToken:               aws.String(authToken),
 					AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
 					ReplicationGroupId:      aws.String(d.Id()),
 				}
@@ -1702,17 +1835,18 @@ func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context
 
 func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	strategy, strategyOk := diff.GetOk("auth_token_update_strategy")
-	// Use GetRawConfig to check if auth_token is configured, even if unknown at plan time
-	tokenConfigured := !diff.GetRawConfig().GetAttr("auth_token").IsNull()
+	// Use GetRawConfig to check if auth_token or auth_token_wo is configured, even if unknown at plan time
+	rawConfig := diff.GetRawConfig()
+	tokenConfigured := !rawConfig.GetAttr("auth_token").IsNull() || !rawConfig.GetAttr("auth_token_wo").IsNull()
 
 	if strategyOk && awstypes.AuthTokenUpdateStrategyType(strategy.(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
 		if tokenConfigured {
-			return errors.New(`"auth_token" must not be specified when "auth_token_update_strategy" is "DELETE"`)
+			return errors.New(`"auth_token"/"auth_token_wo" must not be specified when "auth_token_update_strategy" is "DELETE"`)
 		}
 		return nil
 	}
 	if strategyOk && !tokenConfigured {
-		return errors.New(`"auth_token_update_strategy": "auth_token" must be specified`)
+		return errors.New(`"auth_token_update_strategy": "auth_token" or "auth_token_wo" must be specified`)
 	}
 
 	return nil

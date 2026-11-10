@@ -5,10 +5,12 @@ package ses
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -88,6 +90,11 @@ func sweepIdentities(identityType awstypes.IdentityType) sweep.SweeperFn {
 }
 
 func sweepReceiptRuleSets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	// https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-ses.html#govcloud-ses-diffs.
+	if region := client.Region(ctx); region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
+		log.Printf("[WARN] Skipping SES Receipt Rule Set sweep for region: %s", region)
+		return nil, nil
+	}
 	conn := client.SESClient(ctx)
 	var input ses.ListReceiptRuleSetsInput
 	sweepResources := make([]sweep.Sweepable, 0)

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_launch_template
 
-Provides an EC2 launch template resource. Can be used to create instances or auto scaling groups.
+Provides an EC2 launch template resource. Can be used to create instances or Auto Scaling groups.
 
 ## Example Usage
 
@@ -115,7 +115,7 @@ This resource supports the following arguments:
 * `credit_specification` - (Optional) Customize the credit specification of the instance. See [Credit
   Specification](#credit-specification) below for more details.
 * `default_version` - (Optional) Default Version of the launch template.
-* `description` - (Optional) Description of the launch template.
+* `description` - (Optional) Description of the launch template version (`VersionDescription` in the [EC2 API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateLaunchTemplateVersion.html)). Launch templates in AWS do not have a template-level description; whenever a change to this resource creates a new version, the new version is created with this description. To give each version a distinct description, update this argument in the same apply as the other changes.
 * `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-stop-protection.html).
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
@@ -160,7 +160,7 @@ Configure additional volumes of the instance besides specified by the AMI. It's 
   [AWS's Block Device Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
   to understand the implications of using these attributes.
 
-To find out more information for an existing AMI to override the configuration, such as `device_name`, you can use the [AWS CLI ec2 describe-images command](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html).
+To find out more information for an existing AMI to override the configuration, such as `device_name`, you can use the [AWS CLI `ec2 describe-images` command](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html).
 
 Each `block_device_mappings` supports the following:
 
@@ -245,7 +245,7 @@ to attach.
 
 The `iam_instance_profile` block supports the following:
 
-* `arn` - The Amazon Resource Name (ARN) of the instance profile. Conflicts with `name`.
+* `arn` - ARN of the instance profile. Conflicts with `name`.
 * `name` - The name of the instance profile.
 
 ### Instance Requirements
@@ -267,7 +267,7 @@ This configuration block supports the following:
       * xilinx
     ```
 
-* `accelerator_names` - (Optional) List of accelerator names. Default is any acclerator.
+* `accelerator_names` - (Optional) List of accelerator names. Default is any accelerator.
 
     ```
     Valid names:
@@ -296,14 +296,14 @@ This configuration block supports the following:
 
     ~> **NOTE:** If you specify `allowed_instance_types`, you can't specify `excluded_instance_types`.
 
-* `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
+* `bare_metal` - (Optional) Indicate whether bare metal instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
 * `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
-    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the AMI that you specify in your launch template.
 
     ```
     Valid names:
@@ -422,15 +422,16 @@ The `network_performance_options` block supports the following:
 
 Attaches one or more [Network Interfaces](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html) to the instance.
 
-Check limitations for autoscaling group in [Creating an Auto Scaling Group Using a Launch Template Guide](https://docs.aws.amazon.com/autoscaling/ec2/userguide/create-asg-launch-template.html#limitations)
+Check limitations for Auto Scaling group in [Creating an Auto Scaling group Using a Launch Template Guide](https://docs.aws.amazon.com/autoscaling/ec2/userguide/create-asg-launch-template.html#limitations)
 
 Each `network_interfaces` block supports the following:
 
 * `associate_carrier_ip_address` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface. Boolean value, can be left unset.
-* `associate_public_ip_address` - (Optional) Associate a public ip address with the network interface. Boolean value, can be left unset.
+* `associate_public_ip_address` - (Optional) Associate a public IP address with the network interface. Boolean value, can be left unset.
 * `delete_on_termination` - (Optional) Whether the network interface should be destroyed on instance termination.
 * `description` - (Optional) Description of the network interface.
 * `device_index` - (Optional) The integer index of the network interface attachment.
+* `ena_queue_count` - (Optional) The number of ENA queues to be created with the instance. Requires an instance type and operating system that support [ENA queue configuration](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ena-queues.html).
 * `interface_type` - (Optional) The type of network interface. To create an Elastic Fabric Adapter (EFA), specify `efa`.
 * `ipv4_prefix_count` - (Optional) The number of IPv4 prefixes to be automatically assigned to the network interface. Conflicts with `ipv4_prefixes`
 * `ipv4_prefixes` - (Optional) One or more IPv4 prefixes to be assigned to the network interface. Conflicts with `ipv4_prefix_count`
@@ -517,7 +518,7 @@ Each `tag_specifications` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the launch template.
+* `arn` - ARN of the launch template.
 * `id` - The ID of the launch template.
 * `latest_version` - The latest version of the launch template.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

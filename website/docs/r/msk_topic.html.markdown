@@ -35,7 +35,7 @@ resource "aws_msk_topic" "example" {
 
 The following arguments are required:
 
-* `cluster_arn` - (Required) Amazon Resource Name (ARN) that uniquely identifies MSK Cluster.
+* `cluster_arn` - (Required) ARN that uniquely identifies MSK Cluster.
 * `name` - (Required) Name of Topic.
 * `partition_count` - (Required) Number of partitions for Topic.
 * `replication_factor` - (Required) Replication factor for Topic.
@@ -82,18 +82,19 @@ resource "aws_msk_topic" "example" {
 
 #### Required
 
-* `cluster_arn` (String) Amazon Resource Name (ARN) that uniquely identifies MSK Cluster.
+* `cluster_arn` (String) ARN that uniquely identifies MSK Cluster.
 * `name` (String) Name of Topic.
 
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Managed Streaming for Kafka Topic using the `cluster_arn` and `name` . For example:
 
 ```terraform
 import {
-  to = aws_kafka_topic.example
+  to = aws_msk_topic.example
   id = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3,topicname"
 }
 ```
@@ -101,5 +102,5 @@ import {
 Using `terraform import`, import Managed Streaming for Kafka Topic using the `cluster_arn` and `name`. For example:
 
 ```console
-% terraform import aws_kafka_topic.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3,topicname
+% terraform import aws_msk_topic.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3,topicname
 ```

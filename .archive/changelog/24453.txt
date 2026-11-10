@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_acm_certificate_validation: Restore certificate issuance timestamp as the resource `id` value, fixing error on existing resource Read
-```

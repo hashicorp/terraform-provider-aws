@@ -5,7 +5,11 @@ package dsql
 
 // Exports for use in tests only.
 var (
-	ResourceCluster = newClusterResource
+	ResourceCluster       = newClusterResource
+	ResourceClusterPolicy = newClusterPolicyResource
+	ResourceStream        = newStreamResource
 
-	FindClusterByID = findClusterByID
+	FindClusterByID        = findClusterByID
+	FindClusterPolicyByID  = findClusterPolicyByID
+	FindStreamByTwoPartKey = findStreamByTwoPartKey
 )

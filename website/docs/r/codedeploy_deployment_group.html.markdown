@@ -194,7 +194,7 @@ This resource supports the following arguments:
 * `service_role_arn` - (Required) The service role ARN that allows deployments.
 * `alarm_configuration` - (Optional) Configuration block of alarms associated with the deployment group (documented below).
 * `auto_rollback_configuration` - (Optional) Configuration block of the automatic rollback configuration associated with the deployment group (documented below).
-* `autoscaling_groups` - (Optional) Autoscaling groups associated with the deployment group.
+* `autoscaling_groups` - (Optional) Auto Scaling groups associated with the deployment group.
 * `blue_green_deployment_config` - (Optional) Configuration block of the blue/green deployment options for a deployment group (documented below).
 * `deployment_config_name` - (Optional) The name of the group's deployment config. The default is "CodeDeployDefault.OneAtATime".
 * `deployment_style` - (Optional) Configuration block of the type of deployment, either in-place or blue/green, you want to run and whether to route deployment traffic behind a load balancer (documented below).
@@ -317,23 +317,23 @@ The `target_group_pair_info` configuration block supports the following:
 * `target_group` - (Required) Configuration blocks for a target group within a target group pair (documented below).
 * `test_traffic_route` - (Optional) Configuration block for the test traffic route (documented below).
 
-##### load_balancer_info target_group_pair_info prod_traffic_route Argument Reference
+#### load_balancer_info target_group_pair_info prod_traffic_route Argument Reference
 
 The `prod_traffic_route` configuration block supports the following:
 
-* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners. Must contain exactly one listener ARN.
+* `listener_arns` - (Required) List of ARNs of the load balancer listeners. Must contain exactly one listener ARN.
 
-##### load_balancer_info target_group_pair_info target_group Argument Reference
+#### load_balancer_info target_group_pair_info target_group Argument Reference
 
 The `target_group` configuration block supports the following:
 
 * `name` - (Required) Name of the target group.
 
-##### load_balancer_info target_group_pair_info test_traffic_route Argument Reference
+#### load_balancer_info target_group_pair_info test_traffic_route Argument Reference
 
 The `test_traffic_route` configuration block supports the following:
 
-* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners.
+* `listener_arns` - (Required) List of ARNs of the load balancer listeners.
 
 ### on_premises_instance_tag_filter Argument Reference
 

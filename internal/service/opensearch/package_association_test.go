@@ -39,6 +39,12 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "package_id", packageResourceName, names.AttrID),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrDomainName, "package_id"),
+			},
 		},
 	})
 }

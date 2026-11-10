@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_sagemaker_notebook_instance: Add `platform_identifier` argument
-```

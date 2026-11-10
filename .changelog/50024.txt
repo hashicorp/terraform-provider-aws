@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_iam_openid_connect_provider
+```
+```release-note:note
+resource/aws_iam_openid_connect_provider: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```

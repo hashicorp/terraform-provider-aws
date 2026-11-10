@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_mwaa_environment: Correctly apply `plugins_s3_object_version` change
-```

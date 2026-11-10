@@ -1,7 +1,0 @@
-```release-note:enhancement
-resource/aws_transfer_server: Add `domain` argument.
-```
-
-```release-note:enhancement
-data-source/aws_transfer_server: Add `domain` attribute.
-```

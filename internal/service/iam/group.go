@@ -26,16 +26,16 @@ import (
 )
 
 // @SDKResource("aws_iam_group", name="Group")
+// @IdentityAttribute("name")
+// @MutableIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Group")
+// @Testing(preIdentityVersion="v6.64.0")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -118,12 +118,16 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading IAM Group (%s): %s", d.Id(), err)
 	}
 
+	resourceGroupFlatten(group, d)
+
+	return diags
+}
+
+func resourceGroupFlatten(group *awstypes.Group, d *schema.ResourceData) {
 	d.Set(names.AttrARN, group.Arn)
 	d.Set(names.AttrName, group.GroupName)
 	d.Set(names.AttrPath, group.Path)
 	d.Set("unique_id", group.GroupId)
-
-	return diags
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

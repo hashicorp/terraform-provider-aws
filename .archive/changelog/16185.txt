@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_iam_service_specific_credential
-```

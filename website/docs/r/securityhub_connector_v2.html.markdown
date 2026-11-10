@@ -77,26 +77,44 @@ This resource supports the following arguments:
 
 The `connector_provider` block supports the following:
 
+* `azure` - (Optional) Details about a Microsoft Azure integration for multi-cloud coverage. See [`azure`](#azure) below.
 * `jira_cloud` - (Optional) Details about a Jira Cloud integration. See [`jira_cloud`](#jira_cloud) below.
 * `service_now` - (Optional) Details about a ServiceNow ITSM integration. See [`service_now`](#service_now) below.
+
+Exactly one of `azure`, `jira_cloud`, or `service_now` must be specified.
+
+### `azure`
+
+The `azure` block supports the following:
+
+* `aws_config_connector_arn` - (Required, Forces new resource) ARN of the AWS Config multi-cloud connector used to establish the connection to Azure. See [`aws_config_connector`](config_connector.html).
+* `azure_regions` - (Required) Set of Azure regions to monitor.
+* `scope_configuration` - (Required) Scope configuration that defines which Azure resources are monitored. See [`scope_configuration`](#scope_configuration) below.
+
+### `scope_configuration`
+
+The `scope_configuration` block supports the following:
+
+* `scope_type` - (Required) Type of scope. Valid values are `TENANT` and `SUBSCRIPTION`.
+* `scope_values` - (Optional) Set of scope values, such as Azure subscription IDs, when `scope_type` is `SUBSCRIPTION`.
 
 ### `jira_cloud`
 
 The `jira_cloud` block supports the following:
 
-* `auth_status` - (Computed) Status of the authorization between Jira Cloud and the service.
-* `auth_url` - (Computed) URL to provide to customers for OAuth auth code flow.
-* `cloud_id` - (Computed) Cloud ID of the Jira Cloud.
-* `domain` - (Computed) URL domain of the Jira Cloud instance.
+* `auth_status` - (Read-Only) Status of the authorization between Jira Cloud and the service.
+* `auth_url` - (Read-Only) URL to provide to customers for OAuth auth code flow.
+* `cloud_id` - (Read-Only) Cloud ID of the Jira Cloud.
+* `domain` - (Read-Only) URL domain of the Jira Cloud instance.
 * `project_key` - (Required) Jira Cloud project key.
 
 ### `service_now`
 
 The `service_now` block supports the following:
 
-* `auth_status` - (Computed) Status of the authorization between ServiceNow and the service.
+* `auth_status` - (Read-Only) Status of the authorization between ServiceNow and the service.
 * `instance_name` - (Required) Instance name of ServiceNow ITSM.
-* `secret_arn` - (Required) Amazon Resource Name (ARN) of the AWS Secrets Manager secret that contains the ServiceNow credentials.
+* `secret_arn` - (Required) ARN of the AWS Secrets Manager secret that contains the ServiceNow credentials.
 
 ## Attribute Reference
 

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_lb_listener: Don't send zero value (`false`, `0` or `""`) for unconfigured listener attributes on Create
-```

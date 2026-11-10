@@ -22,22 +22,22 @@ data "aws_appintegrations_event_integration" "example" {
 
 This data source supports the following arguments:
 
+* `name` - (Required) AppIntegrations Event Integration name.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The AppIntegrations Event Integration name.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the AppIntegrations Event Integration.
-* `description` - The description of the Event Integration.
-* `eventbridge_bus` - The EventBridge bus.
-* `event_filter` - A block that defines the configuration information for the event filter. The Event Filter block is documented below.
-* `id` - The identifier of the Event Integration which is the name of the Event Integration.
+* `arn` - ARN of the AppIntegrations Event Integration.
+* `description` - Description of the Event Integration.
+* `event_filter` - Block that defines the configuration information for the event filter. The Event Filter block is documented below.
+* `eventbridge_bus` - EventBridge bus.
+* `id` - Identifier of the Event Integration which is the name of the Event Integration.
 * `tags` - Metadata that you can assign to help organize the report plans you create.
 
 ### Event Filter Attributes
 
 `event_filter` has the following attributes:
 
-* `source` - The source of the events.
+* `source` - Source of the events.

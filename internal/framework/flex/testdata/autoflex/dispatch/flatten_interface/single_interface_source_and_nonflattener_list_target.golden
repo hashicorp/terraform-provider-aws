@@ -46,7 +46,7 @@
   },
   {
     "@level": "error",
-    "@message": "Source does not implement flex.Flattener",
+    "@message": "Target does not implement flex.Flattener",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Field1",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceInterface",

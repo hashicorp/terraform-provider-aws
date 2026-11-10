@@ -323,6 +323,12 @@ func resourceProject() *schema.Resource {
 									},
 								},
 							},
+							"host_kernel": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.HostKernel](),
+							},
 							"image": {
 								Type:     schema.TypeString,
 								Required: true,
@@ -1480,6 +1486,10 @@ func expandProjectEnvironment(tfMap map[string]any) *types.ProjectEnvironment {
 		apiObject.Fleet = projectFleet
 	}
 
+	if v, ok := tfMap["host_kernel"].(string); ok && v != "" {
+		apiObject.HostKernel = types.HostKernel(v)
+	}
+
 	if v, ok := tfMap["image"].(string); ok && v != "" {
 		apiObject.Image = aws.String(v)
 	}
@@ -1962,6 +1972,7 @@ func flattenProjectCache(apiObject *types.ProjectCache) []any {
 func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []any {
 	tfMap := map[string]any{
 		"compute_type":                apiObject.ComputeType,
+		"host_kernel":                 apiObject.HostKernel,
 		"image_pull_credentials_type": apiObject.ImagePullCredentialsType,
 		names.AttrType:                apiObject.Type,
 	}

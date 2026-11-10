@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_sagemaker_workteam: Add `worker_access_configuration` attribute
-```

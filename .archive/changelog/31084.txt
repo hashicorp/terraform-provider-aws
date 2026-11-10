@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_acmpca_certificate_authority: The `status` attribute has been removed
-```

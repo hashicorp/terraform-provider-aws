@@ -24,12 +24,12 @@ data "aws_kinesis_firehose_delivery_stream" "stream" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Kinesis Firehose Delivery Stream.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - ARN of the Kinesis Firehose Delivery Stream.
 * `arn` - ARN of the Kinesis Firehose Delivery Stream (same as `id`).
+* `id` - ARN of the Kinesis Firehose Delivery Stream.

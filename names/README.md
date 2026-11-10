@@ -23,20 +23,20 @@ The schema of the attributes and blocks of `data/names_data.hcl` are as follows:
 ```hcl
 service "" {
 
-  // If both of these attributes are the same as the service block's name, this block will be ommitted
+  // If both of these attributes are the same as the service block's name, this block will be omitted
   cli_v2_command { 
     aws_cli_v2_command           = ""
     aws_cli_v2_command_no_dashes = ""
   }
 
-  // If both of these attributes are the same as the service block's name, this block will be ommitted
+  // If both of these attributes are the same as the service block's name, this block will be omitted
   go_packages { 
     v1_package = ""
     v2_package = ""
   } 
 
-  // If any blocks below here have attirbutes with empty strings or false bools, they will be ommitted
-  // Blocks with zero attributes will be ommitted 
+  // If any blocks below here have attirbutes with empty strings or false bools, they will be omitted
+  // Blocks with zero attributes will be omitted 
   sdk {
     id             = "" 
     client_version = 2 

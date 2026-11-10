@@ -784,6 +784,10 @@ func resourceLaunchTemplate() *schema.Resource {
 								Type:     schema.TypeInt,
 								Optional: true,
 							},
+							"ena_queue_count": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
 							"ena_srd_specification": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -2034,6 +2038,10 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.DeviceIndex = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap["ena_queue_count"].(int); ok && v != 0 {
+		apiObject.EnaQueueCount = aws.Int32(int32(v))
+	}
+
 	if v, ok := tfMap["ena_srd_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.EnaSrdSpecification = expandEnaSrdSpecificationRequest(v[0].(map[string]any))
 	}
@@ -3026,6 +3034,10 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject awstyp
 
 	if v := apiObject.DeviceIndex; v != nil {
 		tfMap["device_index"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.EnaQueueCount; v != nil {
+		tfMap["ena_queue_count"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.EnaSrdSpecification; v != nil {

@@ -162,6 +162,12 @@ func resourceFunction() *schema.Resource {
 								Required:     true,
 								ValidateFunc: validation.IntBetween(1, 31622400),
 							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 							names.AttrRetentionPeriod: {
 								Type:         schema.TypeInt,
 								Optional:     true,
@@ -522,6 +528,10 @@ func resourceFunction() *schema.Resource {
 						},
 					},
 				},
+				"use_resource_timeout_for_propagation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
 				names.AttrVersion: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -729,7 +739,13 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	_, err := retryFunctionOp(ctx, func() (*lambda.CreateFunctionOutput, error) {
+	createTimeout := d.Timeout(schema.TimeoutCreate)
+	propagationTimeout := lambdaPropagationTimeout
+	if d.Get("use_resource_timeout_for_propagation").(bool) {
+		propagationTimeout = createTimeout
+	}
+
+	_, err := retryFunctionOp(ctx, propagationTimeout, func() (*lambda.CreateFunctionOutput, error) {
 		return conn.CreateFunction(ctx, &input)
 	})
 
@@ -739,7 +755,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(functionName)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findFunctionByName(ctx, conn, d.Id())
 	})
 
@@ -747,7 +763,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) create: %s", d.Id(), err)
 	}
 
-	if _, err := waitFunctionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitFunctionCreated(ctx, conn, d.Id(), createTimeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) create: %s", d.Id(), err)
 	}
 
@@ -808,6 +824,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			resetNonRefreshableAttributes(d)
 		}
 	}()
+
+	updateTimeout := d.Timeout(schema.TimeoutUpdate)
+	propagationTimeout := lambdaPropagationTimeout
+	if d.Get("use_resource_timeout_for_propagation").(bool) {
+		propagationTimeout = updateTimeout
+	}
 
 	if d.HasChange("code_signing_config_arn") {
 		if v, ok := d.GetOk("code_signing_config_arn"); ok {
@@ -971,7 +993,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
-		_, err := retryFunctionOp(ctx, func() (*lambda.UpdateFunctionConfigurationOutput, error) {
+		_, err := retryFunctionOp(ctx, propagationTimeout, func() (*lambda.UpdateFunctionConfigurationOutput, error) {
 			return conn.UpdateFunctionConfiguration(ctx, &input)
 		})
 
@@ -979,7 +1001,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) configuration: %s", d.Id(), err)
 		}
 
-		if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitFunctionUpdated(ctx, conn, d.Id(), updateTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) configuration update: %s", d.Id(), err)
 		}
 	}
@@ -1074,7 +1096,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.PublishTo = awstypes.FunctionVersionLatestPublished(v.(string))
 		}
 
-		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PublishVersion(ctx, &input)
 		}, "in progress")
 
@@ -1388,13 +1410,19 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 		},
 	}
 
-	if _, err := retryFunctionOp(ctx, func() (*lambda.UpdateFunctionConfigurationOutput, error) {
+	deleteTimeout := d.Timeout(schema.TimeoutDelete)
+	propagationTimeout := lambdaPropagationTimeout
+	if d.Get("use_resource_timeout_for_propagation").(bool) {
+		propagationTimeout = deleteTimeout
+	}
+
+	if _, err := retryFunctionOp(ctx, propagationTimeout, func() (*lambda.UpdateFunctionConfigurationOutput, error) {
 		return conn.UpdateFunctionConfiguration(ctx, input)
 	}); err != nil {
 		return fmt.Errorf("updating Lambda Function (%s) configuration: %w", d.Id(), err)
 	}
 
-	if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitFunctionUpdated(ctx, conn, d.Id(), deleteTimeout); err != nil {
 		return fmt.Errorf("waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
 	}
 
@@ -1540,8 +1568,8 @@ type functionCU interface {
 	lambda.CreateFunctionOutput | lambda.UpdateFunctionConfigurationOutput
 }
 
-func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*T, error) {
-	output, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
+func retryFunctionOp[T functionCU](ctx context.Context, timeout time.Duration, f func() (*T, error)) (*T, error) {
+	output, err := tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (any, error) {
 			return f()
 		},
@@ -1816,10 +1844,16 @@ func expandDurableConfigs(tfList []any) *awstypes.DurableConfig {
 	}
 
 	tfMap := tfList[0].(map[string]any)
-	return &awstypes.DurableConfig{
+	apiObject := &awstypes.DurableConfig{
 		ExecutionTimeout:      aws.Int32(int32(tfMap["execution_timeout"].(int))),
 		RetentionPeriodInDays: aws.Int32(int32(tfMap[names.AttrRetentionPeriod].(int))),
 	}
+
+	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
+		apiObject.KMSKeyArn = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func flattenDurableConfig(apiObject *awstypes.DurableConfig) []any {
@@ -1831,6 +1865,10 @@ func flattenDurableConfig(apiObject *awstypes.DurableConfig) []any {
 
 	if v := apiObject.ExecutionTimeout; v != nil {
 		tfMap["execution_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.KMSKeyArn; v != nil {
+		tfMap[names.AttrKMSKeyARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.RetentionPeriodInDays; v != nil {

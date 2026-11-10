@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_notifications_event_rule: Fix persistent diff when `event_pattern` argument is not specified in config
-```

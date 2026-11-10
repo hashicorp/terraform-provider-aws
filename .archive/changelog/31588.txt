@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_route53_vpc_association_authorization: Fix `ConcurrentModification` error
-```

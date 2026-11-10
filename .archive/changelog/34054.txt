@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_verifiedaccess_group: Fix `InvalidParameterValue: Policy Document cannot be provided when Policy Enabled is false or missing` errors when updating `policy_document`
-```

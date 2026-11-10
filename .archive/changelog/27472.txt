@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_prometheus_workspace: Create a logging configuration on resource update if none existed previously
-```

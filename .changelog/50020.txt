@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_network_acl
+```
+```release-note:enhancement
+resource/aws_network_acl: Add resource identity support
+```

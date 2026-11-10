@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_devopsguru_notification_channel: Fix persistent diff when `filters.message_types` or `filters.severities` contains multiple elements
-```

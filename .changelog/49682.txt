@@ -1,0 +1,7 @@
+```release-note:new-list-resource
+aws_ecs_cluster
+```
+
+```release-note:enhancement
+resource/aws_ecs_cluster: Add resource identity support
+```

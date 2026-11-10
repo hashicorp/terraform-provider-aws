@@ -178,6 +178,13 @@ func resourceONTAPFileSystem() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
+				"network_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
+				},
 				names.AttrOwnerID: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -337,6 +344,10 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("network_type"); ok {
+		input.NetworkType = awstypes.NetworkType(v.(string))
+	}
+
 	if v, ok := d.GetOk("route_table_ids"); ok {
 		input.OntapConfiguration.RouteTableIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -403,6 +414,7 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("ha_pairs", haPairs)
 	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
 	d.Set("network_interface_ids", filesystem.NetworkInterfaceIds)
+	d.Set("network_type", filesystem.NetworkType)
 	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("preferred_subnet_id", ontapConfig.PreferredSubnetId)
 	d.Set("route_table_ids", ontapConfig.RouteTableIds)

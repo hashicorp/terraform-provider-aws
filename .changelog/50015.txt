@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_docdb_cluster: `availability_zones` now validates that at most 3 items are provided at plan time. This is acceptable in a minor version because AWS would always reject requests with more than 3 availability zones at apply time.
+```
+
+```release-note:enhancement
+resource/aws_docdb_cluster: Add validation that `availability_zones` contains at most 3 items, failing at plan time instead of forcing a destructive replacement
+```

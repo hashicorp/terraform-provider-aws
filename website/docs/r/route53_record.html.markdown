@@ -12,7 +12,7 @@ Provides a Route53 record resource.
 
 ## Example Usage
 
-### Simple routing policy
+### Simple Routing Policy
 
 ```terraform
 resource "aws_route53_record" "www" {
@@ -24,7 +24,7 @@ resource "aws_route53_record" "www" {
 }
 ```
 
-### Weighted routing policy
+### Weighted Routing Policy
 
 Other routing policies are configured similarly. See [Amazon Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html) for details.
 
@@ -58,7 +58,7 @@ resource "aws_route53_record" "www-live" {
 }
 ```
 
-### Geoproximity routing policy
+### Geoproximity Routing Policy
 
 ```terraform
 resource "aws_route53_record" "www" {
@@ -66,18 +66,20 @@ resource "aws_route53_record" "www" {
   name    = "www.example.com"
   type    = "CNAME"
   ttl     = 300
+
   geoproximity_routing_policy {
     coordinates {
       latitude  = "49.22"
       longitude = "-74.01"
     }
   }
+
   set_identifier = "dev"
   records        = ["dev.example.com"]
 }
 ```
 
-### Alias record
+### Alias Record
 
 See [related part of Amazon Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html)
 to understand differences between alias and non-alias records.
@@ -111,7 +113,7 @@ resource "aws_route53_record" "www" {
 }
 ```
 
-### Alias record for AWS Global Accelerator
+### Alias Record for AWS Global Accelerator
 
 ```terraform
 resource "aws_globalaccelerator_accelerator" "main" {
@@ -157,6 +159,20 @@ resource "aws_route53_record" "example" {
   ]
 }
 ```
+
+### Caching Read Results
+
+!> Cached reads is an experimental feature. The behavior may change without notice, and it is not subject to the backwards compatibility guarantee of the provider. Please provide feedback on [this tracking issue](https://github.com/hashicorp/terraform-provider-aws/issues/50301).
+
+AWS Route53 enforces API [rate limits](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html#limits-api-requests) at the account level. Configurations that manage many records in the same account may trigger throttling and cause slow `plan` and `apply` times because each record resource issues its own API call during read/write operations.
+
+Setting the `TF_AWS_ROUTE53_RECORD_BATCH_READS` environment variable to `true` causes the provider to fetch all records for hosted zones referenced by `aws_route53_record` once and cache the results in memory for the duration of the `plan` or `apply`, regardless of how many records are managed. No per-resource configuration is required.
+
+```console
+% TF_AWS_ROUTE53_RECORD_BATCH_READS=true terraform plan
+```
+
+~> **Warning:** When `TF_AWS_ROUTE53_RECORD_BATCH_READS` is set to a true value, the provider caches a zone's full record set the first time a record in that zone is read, then serves all subsequent reads from that cache. The caching layer ensures removal of cache entries for any records that are updated during an `apply` operation; however, any changes made to records outside of Terraform (e.g. via the AWS Console or CLI) after the cache is populated will not be detected.
 
 ## Argument Reference
 
@@ -236,8 +252,7 @@ Weighted routing policies support the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `name` - The name of the record.
-* `fqdn` - [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) built using the zone domain and `name`.
+* `fqdn` - [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) built using the zone domain and `name`. Does not include trailing `.`.
 
 ## Timeouts
 

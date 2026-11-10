@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Fix crash when using custom S3 endpoints with non-standard region strings (e.g., S3-compatible storage like Ceph or MinIO)
-```

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_acm_certificate: Add `private_key_wo` write-only argument and `private_key_wo_version` argument
-```

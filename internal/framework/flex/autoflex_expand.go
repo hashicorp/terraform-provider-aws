@@ -163,19 +163,19 @@ func expandConvert(ctx context.Context, expander *autoExpander, sourcePath path.
 
 	tflog.SubsystemInfo(ctx, subsystemName, "Converting")
 
-	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+	if fromExpander, ok := reflect.TypeAssert[Expander](valFrom); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
 		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
 		return diags
 	}
 
-	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
+	if fromTypedExpander, ok := reflect.TypeAssert[TypedExpander](valFrom); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
 		diags.Append(expandTypedExpander(ctx, fromTypedExpander, vTo)...)
 		return diags
 	}
 
-	vFrom, ok := valFrom.Interface().(attr.Value)
+	vFrom, ok := reflect.TypeAssert[attr.Value](valFrom)
 	if !ok {
 		tflog.SubsystemError(ctx, subsystemName, "Source does not implement attr.Value")
 		diags.Append(diagExpandingSourceDoesNotImplementAttrValue(reflect.TypeOf(valFrom.Interface())))
@@ -730,7 +730,7 @@ func expandListOrSetOfInt64(ctx context.Context, expander *autoExpander, vFrom v
 			// types.List(OfInt64) -> []int64 or []int32
 			//
 			tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-				logAttrKeySourceSize: len(vFrom.Elements()),
+				logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
 			})
 			var to []int64
 			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
@@ -751,33 +751,13 @@ func expandListOrSetOfInt64(ctx context.Context, expander *autoExpander, vFrom v
 				//
 				// types.List(OfInt64) -> []*int32.
 				//
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: len(vFrom.Elements()),
-				})
-				var to []*int32
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
+				return expandWithElementsAs[[]*int32](ctx, vFrom, vTo)
 
 			case reflect.Int64:
 				//
 				// types.List(OfInt64) -> []*int64.
 				//
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: len(vFrom.Elements()),
-				})
-				var to []*int64
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
+				return expandWithElementsAs[[]*int64](ctx, vFrom, vTo)
 			}
 		}
 
@@ -821,7 +801,7 @@ func expandListOrSetOfString(ctx context.Context, expander *autoExpander, vFrom 
 			// types.List(OfString) -> []string.
 			//
 			tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-				logAttrKeySourceSize: len(vFrom.Elements()),
+				logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
 			})
 			var to []string
 			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
@@ -844,17 +824,7 @@ func expandListOrSetOfString(ctx context.Context, expander *autoExpander, vFrom 
 				//
 				// types.List(OfString) -> []*string.
 				//
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: len(vFrom.Elements()),
-				})
-				var to []*string
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
+				return expandWithElementsAs[[]*string](ctx, vFrom, vTo)
 			}
 		}
 
@@ -900,17 +870,7 @@ func expandListOrSetOfInt32(ctx context.Context, expander *autoExpander, vFrom v
 			//
 			// types.Set(OfInt32) -> []int32
 			//
-			tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-				logAttrKeySourceSize: len(vFrom.Elements()),
-			})
-			var to []int32
-			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-			if diags.HasError() {
-				return diags
-			}
-
-			vTo.Set(reflect.ValueOf(to))
-			return diags
+			return expandWithElementsAs[[]int32](ctx, vFrom, vTo)
 
 		case reflect.Pointer:
 			switch tSliceElem.Elem().Kind() {
@@ -918,17 +878,7 @@ func expandListOrSetOfInt32(ctx context.Context, expander *autoExpander, vFrom v
 				//
 				// types.Set(OfInt32) -> []*int32
 				//
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: len(vFrom.Elements()),
-				})
-				var to []*int32
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
+				return expandWithElementsAs[[]*int32](ctx, vFrom, vTo)
 			}
 		}
 
@@ -964,9 +914,30 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 	}
 
 	switch v.ElementType(ctx).(type) {
+	case basetypes.Int32Typable:
+		diags.Append(expandMapOfInt32(ctx, expander, v, vTo)...)
+		return diags
+
 	case basetypes.StringTypable:
 		diags.Append(expandMapOfString(ctx, expander, v, vTo)...)
 		return diags
+
+	case basetypes.ListTypable:
+		data, d := v.ToMapValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
+		case reflect.Slice:
+			//
+			// types.Map(OfList[types.String]) -> map[string][]string.
+			//
+			switch k := tMapElem.Elem().Kind(); k {
+			case reflect.String:
+				return expandWithElementsAs[map[string][]string](ctx, data, vTo)
+			}
+		}
 
 	case basetypes.MapTypable:
 		data, d := v.ToMapValue(ctx)
@@ -976,42 +947,20 @@ func expandMap(ctx context.Context, expander *autoExpander, vFrom basetypes.MapV
 		}
 		switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
 		case reflect.Map:
-			//
-			// types.Map(OfMap) -> map[string]map[string]string.
-			//
 			switch k := tMapElem.Elem().Kind(); k {
 			case reflect.String:
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: len(data.Elements()),
-				})
-				var out map[string]map[string]string
-				diags.Append(data.ElementsAs(ctx, &out, false)...)
-
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(out))
-				return diags
+				//
+				// types.Map(OfMap[types.String]) -> map[string]map[string]string.
+				//
+				return expandWithElementsAs[map[string]map[string]string](ctx, data, vTo)
 
 			case reflect.Pointer:
 				switch k := tMapElem.Elem().Elem().Kind(); k {
 				case reflect.String:
 					//
-					// types.Map(OfMap) -> map[string]map[string]*string.
+					// types.Map(OfMap[types.String]) -> map[string]map[string]*string.
 					//
-					tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-						logAttrKeySourceSize: len(data.Elements()),
-					})
-					var to map[string]map[string]*string
-					diags.Append(data.ElementsAs(ctx, &to, false)...)
-
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
+					return expandWithElementsAs[map[string]map[string]*string](ctx, data, vTo)
 				}
 			}
 		}
@@ -1038,17 +987,7 @@ func expandMapOfString(ctx context.Context, _ *autoExpander, vFrom basetypes.Map
 				//
 				// types.Map(OfString) -> map[string]string.
 				//
-				tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-					logAttrKeySourceSize: len(vFrom.Elements()),
-				})
-				var to map[string]string
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
+				return expandWithElementsAs[map[string]string](ctx, vFrom, vTo)
 
 			case reflect.Pointer:
 				switch k := tMapElem.Elem().Kind(); k {
@@ -1056,26 +995,45 @@ func expandMapOfString(ctx context.Context, _ *autoExpander, vFrom basetypes.Map
 					//
 					// types.Map(OfString) -> map[string]*string.
 					//
-					tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
-						logAttrKeySourceSize: len(vFrom.Elements()),
-					})
-					var to map[string]*string
-					diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
+					return expandWithElementsAs[map[string]*string](ctx, vFrom, vTo)
 				}
 			}
 		}
 	}
 
-	tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-		logAttrKeyFrom: fmt.Sprintf("map[string, %s]", vFrom.ElementType(ctx)),
-		logAttrKeyTo:   vTo.Kind(),
-	})
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+
+	return diags
+}
+
+// expandMapOfInt32 copies a Plugin Framework MapOfInt32(ish) value to a compatible AWS API value.
+func expandMapOfInt32(ctx context.Context, _ *autoExpander, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch vTo.Kind() {
+	case reflect.Map:
+		switch tMapKey := vTo.Type().Key(); tMapKey.Kind() {
+		case reflect.String: // key
+			switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
+			case reflect.Int32:
+				//
+				// types.Map(OfInt32) -> map[string]int32.
+				//
+				return expandWithElementsAs[map[string]int32](ctx, vFrom, vTo)
+
+			case reflect.Pointer:
+				switch k := tMapElem.Elem().Kind(); k {
+				case reflect.Int32:
+					//
+					// types.Map(OfInt32) -> map[string]*int32.
+					//
+					return expandWithElementsAs[map[string]*int32](ctx, vFrom, vTo)
+				}
+			}
+		}
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
 
 	return diags
 }
@@ -1380,13 +1338,13 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 		return diags
 	}
 
-	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+	if fromExpander, ok := reflect.TypeAssert[Expander](valFrom); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
 		diags.Append(expandExpander(ctx, fromExpander, valTo)...)
 		return diags
 	}
 
-	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
+	if fromTypedExpander, ok := reflect.TypeAssert[TypedExpander](valFrom); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
 		diags.Append(expandTypedExpander(ctx, fromTypedExpander, valTo)...)
 		return diags
@@ -1525,7 +1483,7 @@ func mapBlockKey(ctx context.Context, from any) (reflect.Value, diag.Diagnostics
 		if field.Name == mapBlockKeyFieldName {
 			fieldVal := valFrom.FieldByIndex(field.Index)
 
-			if v, ok := fieldVal.Interface().(basetypes.StringValuable); ok {
+			if v, ok := reflect.TypeAssert[basetypes.StringValuable](fieldVal); ok {
 				v, d := v.ToStringValue(ctx)
 				diags.Append(d...)
 				if d.HasError() {
@@ -1635,6 +1593,25 @@ func expandTypedExpander(ctx context.Context, fromTypedExpander TypedExpander, t
 	return diags
 }
 
+type elementsAs interface {
+	ElementsAs(context.Context, any, bool) diag.Diagnostics
+	Length(basetypes.CollectionLengthOptions) int
+}
+
+func expandWithElementsAs[T any](ctx context.Context, vFrom elementsAs, vTo reflect.Value) (diags diag.Diagnostics) {
+	tflog.SubsystemTrace(ctx, subsystemName, "Expanding with ElementsAs", map[string]any{
+		logAttrKeySourceSize: vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero),
+	})
+	var to T
+	diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(to))
+	return diags
+}
+
 func diagExpandingSourceIsNil(sourceType reflect.Type) diag.ErrorDiagnostic {
 	return diag.NewErrorDiagnostic(
 		"Incompatible Types",
@@ -1736,7 +1713,7 @@ func expandXMLWrapper(ctx context.Context, expander *autoExpander, vFrom valueWi
 
 	// Set fields
 	itemsField.Set(itemsSlice)
-	if err := setXMLWrapperQuantityField(quantityField, int32(len(vFrom.Elements()))); err != nil {
+	if err := setXMLWrapperQuantityField(quantityField, int32(vFrom.Length(fwtypes.CollectionLengthUnhandledAsZero))); err != nil {
 		diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
 		return diags
 	}
@@ -2045,7 +2022,7 @@ func expandRule2XMLWrapper(ctx context.Context, expander *autoExpander, nestedOb
 	}
 
 	// Convert items collection to Items slice using existing logic
-	if itemsAttr, ok := itemsSourceField.Interface().(attr.Value); ok {
+	if itemsAttr, ok := reflect.TypeAssert[attr.Value](itemsSourceField); ok {
 		if collectionValue, ok := itemsAttr.(valueWithElementsAs); ok {
 			diags.Append(expandConvertCollectionToXMLWrapperFields(ctx, expander, collectionValue, itemsField, quantityField)...)
 			if diags.HasError() {
@@ -2239,7 +2216,7 @@ func expandIsXMLWrapperCollapseTarget(_ *autoExpander, structType reflect.Type) 
 func expandConvertCollectionToItemsQuantity(ctx context.Context, expander *autoExpander, sourceFieldVal reflect.Value, itemsField, quantityField reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
+	sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal)
 	if !ok {
 		tflog.SubsystemError(ctx, subsystemName, "Source field is not an attr.Value")
 		return diags
@@ -2356,7 +2333,7 @@ func expandConvertCollectionToXMLWrapperFields(ctx context.Context, _ *autoExpan
 // expandShouldConvertToXMLWrapper determines if a source field should be converted to XML wrapper format
 func expandShouldConvertToXMLWrapper(_ *autoExpander, sourceFieldVal, targetFieldVal reflect.Value) bool {
 	// Check if source is a collection (Set/List) and target is XML wrapper struct
-	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
+	sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal)
 	if !ok {
 		return false
 	}
@@ -2381,7 +2358,7 @@ func expandShouldConvertToXMLWrapper(_ *autoExpander, sourceFieldVal, targetFiel
 func expandConvertToXMLWrapper(ctx context.Context, expander *autoExpander, sourceFieldVal reflect.Value, targetFieldVal reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	sourceValue, ok := sourceFieldVal.Interface().(attr.Value)
+	sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal)
 	if !ok {
 		tflog.SubsystemError(ctx, subsystemName, "Source field is not an attr.Value", map[string]any{
 			logAttrKeySourceTypeLiteral: sourceFieldVal.Type().String(),
@@ -2437,7 +2414,7 @@ func expandBuildGenericXMLWrapperCollapse(ctx context.Context, expander *autoExp
 		for sourceField := range typeFrom.Fields() {
 			sourceFieldVal := valFrom.FieldByName(sourceField.Name)
 
-			if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
+			if sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal); ok {
 				switch sourceValue.(type) {
 				case basetypes.SetValuable, basetypes.ListValuable:
 					hasCollectionFields = true
@@ -2454,7 +2431,7 @@ func expandBuildGenericXMLWrapperCollapse(ctx context.Context, expander *autoExp
 			shouldCreateZeroValue := false
 			for sourceField := range typeFrom.Fields() {
 				sourceFieldVal := valFrom.FieldByName(sourceField.Name)
-				if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
+				if sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal); ok {
 					switch sourceValue.(type) {
 					case basetypes.SetValuable, basetypes.ListValuable:
 						_, sourceFieldOpts := autoflexTags(sourceField)
@@ -2473,7 +2450,7 @@ func expandBuildGenericXMLWrapperCollapse(ctx context.Context, expander *autoExp
 				// Mark all collection fields as processed
 				for sourceField := range typeFrom.Fields() {
 					sourceFieldVal := valFrom.FieldByName(sourceField.Name)
-					if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
+					if sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal); ok {
 						switch sourceValue.(type) {
 						case basetypes.SetValuable, basetypes.ListValuable:
 							processedFields[sourceField.Name] = true
@@ -2518,7 +2495,7 @@ func expandBuildGenericXMLWrapperCollapse(ctx context.Context, expander *autoExp
 		sourceFieldVal := valFrom.FieldByName(mainSourceFieldName)
 
 		// Check if source is a NestedObjectCollectionValue (Rule 2 pattern)
-		if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
+		if sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal); ok {
 			if !sourceValue.IsNull() && !sourceValue.IsUnknown() {
 				if nestedObjCollection, ok := sourceValue.(fwtypes.NestedObjectCollectionValue); ok {
 					// This is Rule 2: single nested object with items + additional fields
@@ -2597,7 +2574,7 @@ func expandBuildGenericXMLWrapperCollapse(ctx context.Context, expander *autoExp
 
 		if itemsField.IsValid() && quantityField.IsValid() {
 			// Check if the source field is actually usable (not null/unknown)
-			if sourceValue, ok := sourceFieldVal.Interface().(attr.Value); ok {
+			if sourceValue, ok := reflect.TypeAssert[attr.Value](sourceFieldVal); ok {
 				if !sourceValue.IsNull() && !sourceValue.IsUnknown() {
 					// Convert the collection to wrapper slice and Quantity
 					diags.Append(expandConvertCollectionToItemsQuantity(ctx, expander, sourceFieldVal, itemsField, quantityField)...)

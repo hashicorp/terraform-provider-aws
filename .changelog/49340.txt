@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_mq_broker: Fix `reading MQ Broker (...) shared resources` errors when reading RabbitMQ brokers in partitions where `mq:DescribeSharedResources` is unavailable, such as AWS GovCloud (US)
+```
+
+```release-note:bug
+data-source/aws_mq_broker: Fix `reading MQ Broker (...) shared resources` errors when reading RabbitMQ brokers in partitions where `mq:DescribeSharedResources` is unavailable, such as AWS GovCloud (US)
+```

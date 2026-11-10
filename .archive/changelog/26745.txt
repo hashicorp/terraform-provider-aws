@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_instance: Prevents errors in ISO regions when not using DisableApiStop attribute
-```

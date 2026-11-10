@@ -31,19 +31,7 @@ type keyListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type keyListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *keyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query keyListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	awsClient := l.Meta()
 	conn := awsClient.KMSClient(ctx)
 

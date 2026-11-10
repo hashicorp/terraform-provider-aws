@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_s3_bucket_logging: Retry on empty read of logging config
-```

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_fsx_lustre_filesystem: Allow creating filesystem from backup using `backup_id`.
-```

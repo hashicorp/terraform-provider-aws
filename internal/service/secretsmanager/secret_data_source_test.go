@@ -119,6 +119,7 @@ func testAccSecretCheckDataSource(datasourceName, resourceName string) resource.
 			names.AttrName,
 			names.AttrPolicy,
 			"tags.#",
+			names.AttrType,
 		}
 
 		for _, attrName := range attrNames {

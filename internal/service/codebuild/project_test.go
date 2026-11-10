@@ -5917,3 +5917,151 @@ EOT
 }
 `, autoRetryLimit, rName))
 }
+
+func TestAccCodeBuildProject_Environment_hostKernel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var project types.Project
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_project.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_environmentHostKernel(rName, string(types.HostKernelLinuxKernel6)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProjectExists(ctx, t, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.host_kernel", string(types.HostKernelLinuxKernel6)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Updating the host kernel should be applied in place.
+				Config: testAccProjectConfig_environmentHostKernel(rName, string(types.HostKernelLinuxKernel4)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProjectExists(ctx, t, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.host_kernel", string(types.HostKernelLinuxKernel4)),
+				),
+			},
+		},
+	})
+}
+
+func testAccProjectConfig_environmentHostKernel(rName, hostKernel string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+    host_kernel  = %[2]q
+  }
+
+  source {
+    type      = "NO_SOURCE"
+    buildspec = <<EOT
+version: 0.2
+phases:
+  build:
+    commands:
+      - exit 1
+EOT
+  }
+}
+`, rName, hostKernel))
+}
+
+// TestExpandProjectEnvironmentHostKernel verifies the project-level host_kernel
+// attribute expands to the SDK ProjectEnvironment for every enum value, and that
+// an unset value leaves the field empty.
+func TestExpandProjectEnvironmentHostKernel(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		hostKernel any // value for tfMap["host_kernel"], or nil to omit the key
+		expected   types.HostKernel
+	}{
+		"LINUX_KERNEL_4":      {hostKernel: string(types.HostKernelLinuxKernel4), expected: types.HostKernelLinuxKernel4},
+		"LINUX_KERNEL_6":      {hostKernel: string(types.HostKernelLinuxKernel6), expected: types.HostKernelLinuxKernel6},
+		"LINUX_KERNEL_LATEST": {hostKernel: string(types.HostKernelLinuxKernelLatest), expected: types.HostKernelLinuxKernelLatest},
+		"unset":               {hostKernel: nil, expected: ""},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			tfMap := map[string]any{
+				"compute_type":    "BUILD_GENERAL1_SMALL",
+				"image":           "2",
+				names.AttrType:    "LINUX_CONTAINER",
+				"privileged_mode": false,
+			}
+			if tc.hostKernel != nil {
+				tfMap["host_kernel"] = tc.hostKernel
+			}
+
+			got := tfcodebuild.ExpandProjectEnvironment(tfMap)
+			if got == nil {
+				t.Fatal("expandProjectEnvironment returned nil")
+			}
+			if got.HostKernel != tc.expected {
+				t.Errorf("HostKernel = %q, want %q", got.HostKernel, tc.expected)
+			}
+		})
+	}
+}
+
+// TestFlattenProjectEnvironmentHostKernel verifies the SDK ProjectEnvironment.HostKernel
+// flattens back into the host_kernel attribute for every enum value (and empty).
+func TestFlattenProjectEnvironmentHostKernel(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]types.HostKernel{
+		"LINUX_KERNEL_4":      types.HostKernelLinuxKernel4,
+		"LINUX_KERNEL_6":      types.HostKernelLinuxKernel6,
+		"LINUX_KERNEL_LATEST": types.HostKernelLinuxKernelLatest,
+		"empty":               "",
+	}
+
+	for name, hostKernel := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			apiObject := &types.ProjectEnvironment{
+				HostKernel: hostKernel,
+			}
+
+			tfList := tfcodebuild.FlattenProjectEnvironment(apiObject)
+			if len(tfList) != 1 {
+				t.Fatalf("flattenProjectEnvironment returned %d elements, want 1", len(tfList))
+			}
+
+			tfMap := tfList[0].(map[string]any)
+			got, ok := tfMap["host_kernel"].(types.HostKernel)
+			if !ok {
+				t.Fatalf("host_kernel has type %T, want types.HostKernel", tfMap["host_kernel"])
+			}
+			if got != hostKernel {
+				t.Errorf("host_kernel = %q, want %q", got, hostKernel)
+			}
+		})
+	}
+}
