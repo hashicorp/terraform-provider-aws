@@ -53,13 +53,13 @@ func TestAccLogsAccountPolicy_basicSubscriptionFilter(t *testing.T) {
 	})
 }
 
-func TestAccLogsAccountPolicy_basicDataProtection(t *testing.T) {
+func testAccAccountPolicy_basicDataProtection(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_account_policy.test"
 	var accountPolicy awstypes.AccountPolicy
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -117,7 +117,7 @@ func TestAccLogsAccountPolicy_basicDataProtection(t *testing.T) {
 func TestAccLogsAccountPolicy_basicRetention(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rSelectionCriteria := fmt.Sprintf("LogGroupNamePrefix IN [\"/%s\"]", rName)
+	rSelectionCriteria := fmt.Sprintf("LogGroupNamePrefix = \"/%s\"", rName)
 	resourceName := "aws_cloudwatch_log_account_policy.test"
 	var accountPolicy awstypes.AccountPolicy
 
@@ -191,10 +191,10 @@ func TestAccLogsAccountPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountPolicyConfig_basicDataProtection(rName),
+				Config: testAccAccountPolicyConfig_basicFieldIndex(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPolicyExists(ctx, t, resourceName, &accountPolicy),
-					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceAccountPolicy(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceAccountPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -237,6 +237,53 @@ func TestAccLogsAccountPolicy_selectionCriteria(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "policy_name",
+			},
+		},
+	})
+}
+
+func testAccAccountPolicy_migrateFromPluginSDK(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_account_policy.test"
+	var accountPolicy awstypes.AccountPolicy
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
+		CheckDestroy: testAccCheckAccountPolicyDestroy(ctx, t),
+		// Without refresh, the plan uses the upgraded SDKv2 state as-is.
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.72.0",
+					},
+				},
+				Config: testAccAccountPolicyConfig_basicDataProtection(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPolicyExists(ctx, t, resourceName, &accountPolicy),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccAccountPolicyConfig_basicDataProtection(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrScope), tfknownvalue.StringExact(awstypes.ScopeAll)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("selection_criteria"), knownvalue.Null()),
+				},
 			},
 		},
 	})
@@ -442,4 +489,19 @@ resource "aws_cloudwatch_log_account_policy" "test" {
   selection_criteria = %[2]q
 }
 `, rName, rSelectionCriteria, retentionInDays)
+}
+
+func testAccAccountPolicyConfig_basicFieldIndex(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_account_policy" "test" {
+  policy_name = %[1]q
+  policy_type = "FIELD_INDEX_POLICY"
+
+  policy_document = jsonencode({
+    Fields = ["RequestId"]
+  })
+
+  selection_criteria = "LogGroupNamePrefix = \"/%[1]s\""
+}
+`, rName)
 }

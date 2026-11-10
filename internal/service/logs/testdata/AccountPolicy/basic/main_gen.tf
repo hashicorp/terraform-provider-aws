@@ -3,40 +3,13 @@
 
 resource "aws_cloudwatch_log_account_policy" "test" {
   policy_name = var.rName
-  policy_type = "DATA_PROTECTION_POLICY"
+  policy_type = "FIELD_INDEX_POLICY"
 
   policy_document = jsonencode({
-    Name    = "Test"
-    Version = "2021-06-01"
-
-    Statement = [
-      {
-        Sid            = "Audit"
-        DataIdentifier = ["arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/EmailAddress"]
-        Operation = {
-          Audit = {
-            FindingsDestination = {}
-          }
-        }
-      },
-      {
-        Sid            = "Redact"
-        DataIdentifier = ["arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/EmailAddress"]
-        Operation = {
-          Deidentify = {
-            MaskConfig = {}
-          }
-        }
-      }
-    ]
+    Fields = ["RequestId"]
   })
-}
 
-data "aws_partition" "current" {}
-
-resource "aws_cloudwatch_log_group" "test" {
-  name              = var.rName
-  retention_in_days = 1
+  selection_criteria = "LogGroupNamePrefix = \"/${var.rName}\""
 }
 
 variable "rName" {

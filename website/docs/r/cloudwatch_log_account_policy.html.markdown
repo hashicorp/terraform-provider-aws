@@ -91,7 +91,7 @@ resource "aws_cloudwatch_log_account_policy" "retention" {
       enforcementMode = "RETROACTIVE"
     }
   )
-  selection_criteria = "LogGroupNamePrefix IN [\"/aws/lambda\"]"
+  selection_criteria = "LogGroupNamePrefix = \"/aws/lambda\""
 }
 ```
 
@@ -104,7 +104,7 @@ This resource supports the following arguments:
 * `policy_type` - (Required) Type of account policy. Valid values are `DATA_PROTECTION_POLICY`, `SUBSCRIPTION_FILTER_POLICY`, `FIELD_INDEX_POLICY`, `TRANSFORMER_POLICY`, `METRIC_EXTRACTION_POLICY`, and `RETENTION_POLICY`. Refer to the [AWS docs](https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutAccountPolicy.html) for the number of policies of each type allowed in an account.
 * `policy_name` - (Required) Name of the account policy.
 * `scope` - (Optional) Currently defaults to and only accepts the value: `ALL`.
-* `selection_criteria` - (Optional) Criteria for applying the policy to a selection of log groups. Valid only when `policy_type` is `SUBSCRIPTION_FILTER_POLICY`, `FIELD_INDEX_POLICY`, `TRANSFORMER_POLICY`, or `RETENTION_POLICY`. For `SUBSCRIPTION_FILTER_POLICY`, the only allowable criteria selector is `LogGroupName NOT IN []`. For `TRANSFORMER_POLICY` and `RETENTION_POLICY`, the only allowable criteria selector is `LogGroupNamePrefix`.
+* `selection_criteria` - (Optional) Criteria for applying the policy to a selection of log groups. Valid only when `policy_type` is `SUBSCRIPTION_FILTER_POLICY`, `FIELD_INDEX_POLICY`, `TRANSFORMER_POLICY`, or `RETENTION_POLICY`. For `SUBSCRIPTION_FILTER_POLICY`, the only allowable criteria selector is `LogGroupName NOT IN []`. For `RETENTION_POLICY`, the only allowable criteria selector is `LogGroupNamePrefix`, for example `LogGroupNamePrefix = "/aws/lambda"`.
 
 ## Attribute Reference
 

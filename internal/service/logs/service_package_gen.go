@@ -28,6 +28,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAccountPolicyResource,
+			TypeName: "aws_cloudwatch_log_account_policy",
+			Name:     "Account Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_name", true),
+				inttypes.StringIdentityAttribute("policy_type", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      accountPolicyImportID{},
+			},
+		},
+		{
 			Factory:  newAnomalyDetectorResource,
 			TypeName: "aws_cloudwatch_log_anomaly_detector",
 			Name:     "Anomaly Detector",
@@ -169,20 +183,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
-		{
-			Factory:  resourceAccountPolicy,
-			TypeName: "aws_cloudwatch_log_account_policy",
-			Name:     "Account Policy",
-			Region:   inttypes.ResourceRegionDefault(),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute("policy_name", true),
-				inttypes.StringIdentityAttribute("policy_type", true),
-			}),
-			Import: inttypes.SDKv2Import{
-				WrappedImport: true,
-				ImportID:      accountPolicyImportID{},
-			},
-		},
 		{
 			Factory:  resourceDataProtectionPolicy,
 			TypeName: "aws_cloudwatch_log_data_protection_policy",

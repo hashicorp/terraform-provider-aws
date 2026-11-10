@@ -13,6 +13,11 @@ func TestAccLogs_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		// An account can have only one DATA_PROTECTION_POLICY.
+		"AccountPolicy": {
+			"basicDataProtection":  testAccAccountPolicy_basicDataProtection,
+			"migrateFromPluginSDK": testAccAccountPolicy_migrateFromPluginSDK,
+		},
 		"Delivery": {
 			acctest.CtBasic:          testAccDelivery_basic,
 			acctest.CtDisappears:     testAccDelivery_disappears,
