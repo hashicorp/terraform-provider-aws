@@ -1566,7 +1566,7 @@ func TestAccVPCEndpoint_InterfacePrivateDNSNoGateway_s3_fips(t *testing.T) {
 					})})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrIPAddressType), tfknownvalue.StringExact(awstypes.IpAddressTypeIpv4)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("private_dns_enabled"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrServiceName), knownvalue.StringExact(fmt.Sprintf("com.amazonaws.%s.s3", acctest.Region()))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrServiceName), knownvalue.StringExact(fmt.Sprintf("com.amazonaws.%s.s3-fips", acctest.Region()))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_type"), tfknownvalue.StringExact(awstypes.VpcEndpointTypeInterface)),
 				},
 			},
