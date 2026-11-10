@@ -28,7 +28,6 @@ func TestAccBedrockGuardrailResourcePolicy_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			acctest.PreCheckOrganizationsEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,7 +61,6 @@ func TestAccBedrockGuardrailResourcePolicy_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			acctest.PreCheckOrganizationsEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -97,7 +95,6 @@ func TestAccBedrockGuardrailResourcePolicy_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			acctest.PreCheckOrganizationsEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -177,6 +174,8 @@ func testAccGuardrailResourcePolicyConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
@@ -196,8 +195,6 @@ resource "aws_bedrock_guardrail" "test" {
 
 func testAccGuardrailResourcePolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccGuardrailResourcePolicyConfig_base(rName), `
-data "aws_organizations_organization" "current" {}
-
 resource "aws_bedrock_guardrail_resource_policy" "test" {
   resource_arn = aws_bedrock_guardrail.test.guardrail_arn
 
@@ -205,12 +202,9 @@ resource "aws_bedrock_guardrail_resource_policy" "test" {
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
-      Principal = "*"
+      Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
       Action    = ["bedrock:GetGuardrail", "bedrock:ApplyGuardrail"]
       Resource  = aws_bedrock_guardrail.test.guardrail_arn
-      Condition = {
-        StringEquals = { "aws:PrincipalOrgID" = data.aws_organizations_organization.current.id }
-      }
     }]
   })
 }
@@ -219,8 +213,6 @@ resource "aws_bedrock_guardrail_resource_policy" "test" {
 
 func testAccGuardrailResourcePolicyConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccGuardrailResourcePolicyConfig_base(rName), `
-data "aws_organizations_organization" "current" {}
-
 resource "aws_bedrock_guardrail_resource_policy" "test" {
   resource_arn = aws_bedrock_guardrail.test.guardrail_arn
 
@@ -228,12 +220,9 @@ resource "aws_bedrock_guardrail_resource_policy" "test" {
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
-      Principal = "*"
+      Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
       Action    = ["bedrock:ApplyGuardrail"]
       Resource  = aws_bedrock_guardrail.test.guardrail_arn
-      Condition = {
-        StringEquals = { "aws:PrincipalOrgID" = data.aws_organizations_organization.current.id }
-      }
     }]
   })
 }
