@@ -5,18 +5,23 @@ package athena
 
 // Exports for use in tests only.
 var (
-	FindCapacityReservationByName     = findCapacityReservationByName
-	FindDataCatalogByName             = findDataCatalogByName
-	FindDatabaseByName                = findDatabaseByName
-	FindNamedQueryByID                = findNamedQueryByID
-	FindPreparedStatementByTwoPartKey = findPreparedStatementByTwoPartKey
-	FindWorkGroupByName               = findWorkGroupByName
-	QueryExecutionResult              = queryExecutionResult
+	DeleteSystemTables                 = deleteSystemTables
+	FindCapacityReservationByName      = findCapacityReservationByName
+	FindDataCatalogByName              = findDataCatalogByName
+	FindDatabaseByName                 = findDatabaseByName
+	FindNamedQueryByID                 = findNamedQueryByID
+	FindPreparedStatementByTwoPartKey  = findPreparedStatementByTwoPartKey
+	FindSystemTableConfigurationByName = findSystemTableConfigurationByName
+	FindSystemTables                   = findSystemTables
+	FindWorkGroupByName                = findWorkGroupByName
+	QueryExecutionResult               = queryExecutionResult
+	ResetSystemTables                  = resetSystemTables
 
-	ResourceCapacityReservation = newCapacityReservationResource
-	ResourceDataCatalog         = resourceDataCatalog
-	ResourceDatabase            = resourceDatabase
-	ResourceNamedQuery          = resourceNamedQuery
-	ResourcePreparedStatement   = resourcePreparedStatement
-	ResourceWorkGroup           = resourceWorkGroup
+	ResourceCapacityReservation      = newCapacityReservationResource
+	ResourceDataCatalog              = resourceDataCatalog
+	ResourceDatabase                 = resourceDatabase
+	ResourceNamedQuery               = resourceNamedQuery
+	ResourcePreparedStatement        = resourcePreparedStatement
+	ResourceSystemTableConfiguration = newSystemTableConfigurationResource
+	ResourceWorkGroup                = resourceWorkGroup
 )
