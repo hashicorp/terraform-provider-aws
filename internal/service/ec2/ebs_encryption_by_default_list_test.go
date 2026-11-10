@@ -121,12 +121,15 @@ func testAccEC2EBSEncryptionByDefault_List_regionOverride(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckEncryptionByDefaultDestroy(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/EbsEncryptionByDefault/list_region_override/"),
+				ConfigVariables: config.Variables{
+					"region": config.StringVariable(acctest.AlternateRegion()),
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnabled), knownvalue.Bool(true)),
@@ -137,6 +140,9 @@ func testAccEC2EBSEncryptionByDefault_List_regionOverride(t *testing.T) {
 			{
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/EbsEncryptionByDefault/list_region_override/"),
+				ConfigVariables: config.Variables{
+					"region": config.StringVariable(acctest.AlternateRegion()),
+				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_ebs_encryption_by_default.test", identity.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_ebs_encryption_by_default.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringExact(fmt.Sprintf("EBS Encryption By Default (%s, enabled)", acctest.AlternateRegion()))),

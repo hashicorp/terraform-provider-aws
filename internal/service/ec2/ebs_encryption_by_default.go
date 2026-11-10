@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,8 +47,7 @@ func resourceEBSEncryptionByDefaultCreate(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "creating EBS encryption by default (%t): %s", enabled, err)
 	}
 
-	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
-	d.SetId(create.UniqueId(ctx))
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	return append(diags, resourceEBSEncryptionByDefaultRead(ctx, d, meta)...)
 }
