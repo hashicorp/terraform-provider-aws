@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_ssmquicksetup_configuration_manager: Taint resource if Create fails, so the next apply replaces it instead of leaving the failed configuration manager outside of Terraform state
+```
+
