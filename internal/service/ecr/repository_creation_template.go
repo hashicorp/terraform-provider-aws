@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -100,10 +101,7 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 								Required: true,
 								ValidateDiagFunc: validation.AllDiag(
 									validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
-									validation.ToDiagFunc(validation.StringMatch(
-										regexache.MustCompile(`^[a-zA-Z0-9._*-]+$`),
-										"must contain only letters, numbers, and special characters (._*-)",
-									)),
+									lazyvalidation.StringMatchDiag(`^[a-zA-Z0-9._*-]+$`, "must contain only letters, numbers, and special characters (._*-)"),
 									validateImageTagMutabilityExclusionFilter(),
 								),
 							},
