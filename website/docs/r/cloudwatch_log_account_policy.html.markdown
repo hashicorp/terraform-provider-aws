@@ -79,16 +79,32 @@ resource "aws_cloudwatch_log_account_policy" "field_index" {
 }
 ```
 
+### Retention Policy
+
+```terraform
+resource "aws_cloudwatch_log_account_policy" "retention" {
+  policy_name = "lambda-retention"
+  policy_type = "RETENTION_POLICY"
+  policy_document = jsonencode(
+    {
+      retentionInDays = 90
+      enforcementMode = "RETROACTIVE"
+    }
+  )
+  selection_criteria = "LogGroupNamePrefix IN [\"/aws/lambda\"]"
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy_document` - (Required) Text of the account policy. Refer to the [AWS docs](https://docs.aws.amazon.com/cli/latest/reference/logs/put-account-policy.html) for more information.
-* `policy_type` - (Required) Type of account policy. One of `DATA_PROTECTION_POLICY`, `SUBSCRIPTION_FILTER_POLICY`, `FIELD_INDEX_POLICY` or `TRANSFORMER_POLICY`. You can have one account policy per type in an account.
+* `policy_type` - (Required) Type of account policy. Valid values are `DATA_PROTECTION_POLICY`, `SUBSCRIPTION_FILTER_POLICY`, `FIELD_INDEX_POLICY`, `TRANSFORMER_POLICY`, `METRIC_EXTRACTION_POLICY`, and `RETENTION_POLICY`. Refer to the [AWS docs](https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutAccountPolicy.html) for the number of policies of each type allowed in an account.
 * `policy_name` - (Required) Name of the account policy.
 * `scope` - (Optional) Currently defaults to and only accepts the value: `ALL`.
-* `selection_criteria` - (Optional) - Criteria for applying a subscription filter policy to a selection of log groups. The only allowable criteria selector is `LogGroupName NOT IN []`.
+* `selection_criteria` - (Optional) Criteria for applying the policy to a selection of log groups. Valid only when `policy_type` is `SUBSCRIPTION_FILTER_POLICY`, `FIELD_INDEX_POLICY`, `TRANSFORMER_POLICY`, or `RETENTION_POLICY`. For `SUBSCRIPTION_FILTER_POLICY`, the only allowable criteria selector is `LogGroupName NOT IN []`. For `TRANSFORMER_POLICY` and `RETENTION_POLICY`, the only allowable criteria selector is `LogGroupNamePrefix`.
 
 ## Attribute Reference
 
