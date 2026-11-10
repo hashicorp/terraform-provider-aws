@@ -3,7 +3,7 @@
 
 resource "aws_ebs_encryption_by_default" "test" {
   enabled = true
-  region = var.region
+  region  = var.region
 }
 
 variable "region" {
