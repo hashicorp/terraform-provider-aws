@@ -24,11 +24,15 @@ linters:
     gocritic:
       enabled-tags:
         - diagnostic
+        - performance
       disabled-tags:
         - experimental
         - opinionated
-        - performance
         - style
+      disabled-checks:
+        - appendCombine
+        - hugeParam
+        - rangeValCopy
     godox:
       keywords:
         # for lingering skaff TIP comments
