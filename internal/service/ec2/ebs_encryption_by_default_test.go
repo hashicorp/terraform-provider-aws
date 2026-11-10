@@ -31,6 +31,9 @@ func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
 			"includeResource": testAccEC2EBSEncryptionByDefault_List_includeResource,
 			"regionOverride":  testAccEC2EBSEncryptionByDefault_List_regionOverride,
 		},
+		"Identity": {
+			"serial": testAccEC2EBSEBSEncryptionByDefault_identitySerial,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
@@ -112,6 +115,14 @@ func testAccCheckEBSEncryptionByDefault(ctx context.Context, t *testing.T, n str
 
 		return nil
 	}
+}
+
+func testAccCheckEBSEncryptionByDefaultDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return testAccCheckEncryptionByDefaultDestroy(ctx, t)
+}
+
+func testAccCheckEBSEncryptionByDefaultExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
+	return testAccCheckEBSEncryptionByDefault(ctx, t, resourceName, true)
 }
 
 func testAccEBSEncryptionByDefaultConfig_basic(enabled bool) string {
