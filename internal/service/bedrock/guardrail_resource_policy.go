@@ -183,7 +183,8 @@ func findGuardrailResourcePolicyByARN(ctx context.Context, conn *bedrock.Client,
 		return nil, smarterr.NewError(err)
 	}
 
-	if output == nil || output.ResourcePolicy == nil {
+	// An empty policy means no policy is attached.
+	if output == nil || aws.ToString(output.ResourcePolicy) == "" {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
