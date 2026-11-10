@@ -28,7 +28,7 @@ func TestAccOpenSearchDomainReplication_basic(t *testing.T) {
 	}
 
 	var replication opensearch.DescribeDomainReplicationOutput
-	rName := testAccRandomDomainName(t)[:26] // leaves room for the -p/-s suffix (28 max)
+	rName := testAccRandomDomainReplicationName(t)
 	resourceName := "aws_opensearch_domain_replication.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -45,14 +45,14 @@ func TestAccOpenSearchDomainReplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "peer_domain_arn", "aws_opensearch_domain.secondary", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_arn", "aws_opensearch_domain.primary", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRole, "PRIMARY"),
+					resource.TestCheckResourceAttr(resourceName, "peer_role", "SECONDARY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, "peers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "peers.0.peer_role", "SECONDARY"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrDomainName, "peer_domain_arn"),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrTimeouts},
 			},
@@ -67,7 +67,7 @@ func TestAccOpenSearchDomainReplication_disappears(t *testing.T) {
 	}
 
 	var replication opensearch.DescribeDomainReplicationOutput
-	rName := testAccRandomDomainName(t)[:26] // leaves room for the -p/-s suffix (28 max)
+	rName := testAccRandomDomainReplicationName(t)
 	resourceName := "aws_opensearch_domain_replication.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -100,7 +100,7 @@ func TestAccOpenSearchDomainReplication_switchover(t *testing.T) {
 	}
 
 	var replication opensearch.DescribeDomainReplicationOutput
-	rName := testAccRandomDomainName(t)[:26] // leaves room for the -p/-s suffix (28 max)
+	rName := testAccRandomDomainReplicationName(t)
 	resourceName := "aws_opensearch_domain_replication.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -131,8 +131,7 @@ func TestAccOpenSearchDomainReplication_switchover(t *testing.T) {
 					testAccCheckDomainReplicationLogState(t, resourceName),
 					testAccCheckDomainReplicationExists(ctx, t, resourceName, &replication),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRole, "SECONDARY"),
-					resource.TestCheckResourceAttr(resourceName, "peers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "peers.0.peer_role", "PRIMARY"),
+					resource.TestCheckResourceAttr(resourceName, "peer_role", "PRIMARY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 				),
 			},
@@ -147,7 +146,7 @@ func TestAccOpenSearchDomainReplication_failover(t *testing.T) {
 	}
 
 	var replication opensearch.DescribeDomainReplicationOutput
-	rName := testAccRandomDomainName(t)[:26] // leaves room for the -p/-s suffix (28 max)
+	rName := testAccRandomDomainReplicationName(t)
 	resourceName := "aws_opensearch_domain_replication.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -178,14 +177,17 @@ func TestAccOpenSearchDomainReplication_failover(t *testing.T) {
 					testAccCheckDomainReplicationLogState(t, resourceName),
 					testAccCheckDomainReplicationExists(ctx, t, resourceName, &replication),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRole, "SECONDARY"),
+					resource.TestCheckResourceAttr(resourceName, "peer_role", "PRIMARY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "EJECTED"),
-					resource.TestCheckResourceAttr(resourceName, "peers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "peers.0.peer_role", "PRIMARY"),
-					resource.TestCheckResourceAttr(resourceName, "peers.0.status", "EJECTED"),
 				),
 			},
 		},
 	})
+}
+
+// testAccRandomDomainReplicationName leaves room for the -p/-s suffix (28 max).
+func testAccRandomDomainReplicationName(t *testing.T) string {
+	return testAccRandomDomainName(t)[:26]
 }
 
 // testAccDomainReplicationPromote promotes the secondary outside Terraform, by switchover or
@@ -196,11 +198,15 @@ func testAccDomainReplicationPromote(ctx context.Context, t *testing.T, rName st
 	primaryName, secondaryName := rName+"-p", rName+"-s"
 	conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 
-	before, err := tfopensearch.FindDomainReplicationByDomainName(ctx, conn, secondaryName)
+	primary, err := tfopensearch.FindDomainByName(ctx, conn, primaryName)
 	if err != nil {
-		t.Fatalf("describing replication on %s: %s", secondaryName, err)
+		t.Fatalf("describing domain %s: %s", primaryName, err)
 	}
-	primaryARN := aws.ToString(before.Peers[0].PeerDomainArn)
+	secondary, err := tfopensearch.FindDomainByName(ctx, conn, secondaryName)
+	if err != nil {
+		t.Fatalf("describing domain %s: %s", secondaryName, err)
+	}
+	primaryARN, secondaryARN := aws.ToString(primary.ARN), aws.ToString(secondary.ARN)
 
 	if failover {
 		out, err := conn.FailoverReplication(ctx, &opensearch.FailoverReplicationInput{
@@ -229,12 +235,12 @@ func testAccDomainReplicationPromote(ctx context.Context, t *testing.T, rName st
 
 	deadline := time.Now().Add(60 * time.Minute)
 	for {
-		sec, secErr := tfopensearch.FindDomainReplicationByDomainName(ctx, conn, secondaryName)
-		pri, priErr := tfopensearch.FindDomainReplicationByDomainName(ctx, conn, primaryName)
-		t.Logf("promote poll: %s=%s; %s=%s", secondaryName, describeReplicationForLog(sec, secErr), primaryName, describeReplicationForLog(pri, priErr))
+		sec, secErr := tfopensearch.FindDomainReplicationByTwoPartKey(ctx, conn, secondaryName, primaryARN)
+		pri, priErr := tfopensearch.FindDomainReplicationByTwoPartKey(ctx, conn, primaryName, secondaryARN)
+		t.Logf("promote poll: %s=%s; %s=%s", secondaryName, describeReplicationForLog(sec, primaryARN, secErr), primaryName, describeReplicationForLog(pri, secondaryARN, priErr))
 
-		if secErr == nil && sec.Role == awstypes.ReplicationRolePrimary && settled(sec.Peers[0].Status) &&
-			(priErr != nil || settled(pri.Peers[0].Status)) {
+		if secErr == nil && sec.Role == awstypes.ReplicationRolePrimary && settled(replicationPeerStatus(sec, primaryARN)) &&
+			(priErr != nil || settled(replicationPeerStatus(pri, secondaryARN))) {
 			return
 		}
 
@@ -246,12 +252,28 @@ func testAccDomainReplicationPromote(ctx context.Context, t *testing.T, rName st
 	}
 }
 
-func describeReplicationForLog(out *opensearch.DescribeDomainReplicationOutput, err error) string {
+// replicationPeerPair returns the entry for peerDomainARN in out. out comes from
+// FindDomainReplicationByTwoPartKey, which guarantees the entry is present.
+func replicationPeerPair(out *opensearch.DescribeDomainReplicationOutput, peerDomainARN string) awstypes.ReplicationPeer {
+	for _, p := range out.Peers {
+		if aws.ToString(p.PeerDomainArn) == peerDomainARN {
+			return p
+		}
+	}
+
+	return awstypes.ReplicationPeer{}
+}
+
+func replicationPeerStatus(out *opensearch.DescribeDomainReplicationOutput, peerDomainARN string) awstypes.ReplicationStatus {
+	return replicationPeerPair(out, peerDomainARN).Status
+}
+
+func describeReplicationForLog(out *opensearch.DescribeDomainReplicationOutput, peerDomainARN string, err error) string {
 	if err != nil {
 		return fmt.Sprintf("error(%s)", err)
 	}
 
-	p := out.Peers[0]
+	p := replicationPeerPair(out, peerDomainARN)
 	return fmt.Sprintf("role=%s peer_role=%s status=%s msg=%q", out.Role, p.PeerRole, p.Status, aws.ToString(p.StatusMessage))
 }
 
@@ -263,7 +285,7 @@ func testAccCheckDomainReplicationLogState(t *testing.T, n string) resource.Test
 		}
 
 		a := rs.Primary.Attributes
-		t.Logf("%s state: role=%s status=%s peers.#=%s peers.0.peer_role=%s peers.0.status=%s", n, a[names.AttrRole], a[names.AttrStatus], a["peers.#"], a["peers.0.peer_role"], a["peers.0.status"])
+		t.Logf("%s state: id=%s role=%s peer_role=%s status=%s status_message=%q", n, rs.Primary.ID, a[names.AttrRole], a["peer_role"], a[names.AttrStatus], a[names.AttrStatusMessage])
 
 		return nil
 	}
@@ -278,7 +300,12 @@ func testAccCheckDomainReplicationExists(ctx context.Context, t *testing.T, n st
 
 		conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 
-		output, err := tfopensearch.FindDomainReplicationByDomainName(ctx, conn, rs.Primary.ID)
+		domainName, peerDomainARN, err := tfopensearch.DomainReplicationParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		output, err := tfopensearch.FindDomainReplicationByTwoPartKey(ctx, conn, domainName, peerDomainARN)
 		if err != nil {
 			return err
 		}
@@ -298,7 +325,12 @@ func testAccCheckDomainReplicationDestroy(ctx context.Context, t *testing.T) res
 				continue
 			}
 
-			_, err := tfopensearch.FindDomainReplicationByDomainName(ctx, conn, rs.Primary.ID)
+			domainName, peerDomainARN, err := tfopensearch.DomainReplicationParseResourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = tfopensearch.FindDomainReplicationByTwoPartKey(ctx, conn, domainName, peerDomainARN)
 			if retry.NotFound(err) {
 				continue
 			}

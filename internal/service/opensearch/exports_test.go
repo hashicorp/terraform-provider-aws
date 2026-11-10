@@ -16,13 +16,14 @@ var (
 	ResourceVPCEndpoint                = resourceVPCEndpoint
 
 	FindApplicationByID                        = findApplicationByID
-	FindDomainReplicationByDomainName          = findDomainReplicationByDomainName
+	FindDomainReplicationByTwoPartKey          = findDomainReplicationByTwoPartKey
 	FindAuthorizeVPCEndpointAccessByTwoPartKey = findAuthorizeVPCEndpointAccessByTwoPartKey
 	FindDomainByName                           = findDomainByName
 	FindPackageByID                            = findPackageByID
 	FindPackageAssociationByTwoPartKey         = findPackageAssociationByTwoPartKey
 	FindVPCEndpointByID                        = findVPCEndpointByID
 
+	DomainReplicationParseResourceID    = domainReplicationParseResourceID
 	EBSVolumeTypePermitsIopsInput       = ebsVolumeTypePermitsIopsInput
 	EBSVolumeTypePermitsThroughputInput = ebsVolumeTypePermitsThroughputInput
 	ExpandServerlessVectorAcceleration  = expandServerlessVectorAcceleration
