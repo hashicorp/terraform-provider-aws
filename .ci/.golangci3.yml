@@ -30,7 +30,6 @@ linters:
         - opinionated
         - style
       disabled-checks:
-        - appendCombine
         - hugeParam
         - rangeValCopy
     godox:
