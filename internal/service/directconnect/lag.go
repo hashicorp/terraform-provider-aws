@@ -156,12 +156,6 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		}
 	}
 
-	if v, ok := d.GetOk("encryption_mode"); ok {
-		if err := updateLagEncryptionMode(ctx, conn, d.Id(), v.(string)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Direct Connect LAG (%s) encryption mode after create: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceLagRead(ctx, d, meta)...)
 }
 

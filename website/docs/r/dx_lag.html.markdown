@@ -48,6 +48,8 @@ resource "aws_dx_connection_association" "example" {
 }
 ```
 
+-> **NOTE:** You can only specify the `encryption_mode` argument once the LAG is in an `available` state.
+
 ~> *NOTE:* When associating a MACsec-capable [`aws_dx_connection`](/docs/providers/aws/r/dx_connection.html) to a LAG, both resources must have `request_macsec = true` set at creation. MACsec cannot be enabled on an existing LAG.
 
 ## Argument Reference

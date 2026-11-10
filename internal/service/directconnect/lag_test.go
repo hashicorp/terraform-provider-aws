@@ -389,7 +389,6 @@ resource "aws_dx_lag" "test" {
   connections_bandwidth = "10Gbps"
   location              = data.aws_dx_location.test.location_code
   request_macsec        = true
-  encryption_mode       = "no_encrypt"
 
   provider_name = data.aws_dx_location.test.available_providers[0]
 }
