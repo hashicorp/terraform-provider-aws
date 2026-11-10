@@ -100,6 +100,30 @@ func dataSourceInfrastructureConfiguration() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"parent_instance": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_scaling_group": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"capacity_wait_timeout_seconds": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				"placement": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -139,6 +163,10 @@ func dataSourceInfrastructureConfiguration() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags: tftags.TagsSchemaComputed(),
+				"terminate_instance_on_completion": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
 				"terminate_instance_on_failure": {
 					Type:     schema.TypeBool,
 					Computed: true,
@@ -182,6 +210,13 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 		d.Set("logging", nil)
 	}
 	d.Set(names.AttrName, infrastructureConfiguration.Name)
+	if infrastructureConfiguration.ParentInstance != nil {
+		if err := d.Set("parent_instance", []any{flattenParentInstanceConfiguration(infrastructureConfiguration.ParentInstance)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting parent_instance: %s", err)
+		}
+	} else {
+		d.Set("parent_instance", nil)
+	}
 	if infrastructureConfiguration.Placement != nil {
 		if err := d.Set("placement", []any{flattenPlacement(infrastructureConfiguration.Placement)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting placement: %s", err)
@@ -193,6 +228,7 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 	d.Set(names.AttrSecurityGroupIDs, infrastructureConfiguration.SecurityGroupIds)
 	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
 	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
+	d.Set("terminate_instance_on_completion", infrastructureConfiguration.TerminateInstanceOnCompletion)
 	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
 
 	setTagsOut(ctx, infrastructureConfiguration.Tags)

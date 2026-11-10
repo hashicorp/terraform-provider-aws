@@ -128,6 +128,34 @@ func resourceInfrastructureConfiguration() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
+				"parent_instance": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_scaling_group": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"capacity_wait_timeout_seconds": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IntBetween(0, 3600),
+										},
+										names.AttrName: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringLenBetween(1, 1024),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				"placement": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -181,6 +209,11 @@ func resourceInfrastructureConfiguration() *schema.Resource {
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"terminate_instance_on_completion": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
 				"terminate_instance_on_failure": {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -229,6 +262,10 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.Logging = expandLogging(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("parent_instance"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ParentInstance = expandParentInstanceConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("placement"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.Placement = expandPlacement(v.([]any)[0].(map[string]any))
 	}
@@ -247,6 +284,10 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 
 	if v, ok := d.GetOk(names.AttrSubnetID); ok {
 		input.SubnetId = aws.String(v.(string))
+	}
+
+	if v := d.GetRawConfig().GetAttr("terminate_instance_on_completion"); v.IsKnown() && !v.IsNull() {
+		input.TerminateInstanceOnCompletion = aws.Bool(v.True())
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
@@ -309,6 +350,13 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 		d.Set("logging", nil)
 	}
 	d.Set(names.AttrName, infrastructureConfiguration.Name)
+	if infrastructureConfiguration.ParentInstance != nil {
+		if err := d.Set("parent_instance", []any{flattenParentInstanceConfiguration(infrastructureConfiguration.ParentInstance)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting parent_instance: %s", err)
+		}
+	} else {
+		d.Set("parent_instance", nil)
+	}
 	if infrastructureConfiguration.Placement != nil {
 		if err := d.Set("placement", []any{flattenPlacement(infrastructureConfiguration.Placement)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting placement: %s", err)
@@ -320,6 +368,7 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	d.Set(names.AttrSecurityGroupIDs, infrastructureConfiguration.SecurityGroupIds)
 	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
 	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
+	d.Set("terminate_instance_on_completion", infrastructureConfiguration.TerminateInstanceOnCompletion)
 	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
 
 	setTagsOut(ctx, infrastructureConfiguration.Tags)
@@ -338,11 +387,13 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 		"instance_types",
 		"key_pair",
 		"logging",
+		"parent_instance",
 		"placement",
 		names.AttrResourceTags,
 		names.AttrSecurityGroupIDs,
 		names.AttrSNSTopicARN,
 		names.AttrSubnetID,
+		"terminate_instance_on_completion",
 		"terminate_instance_on_failure",
 	) {
 		input := &imagebuilder.UpdateInfrastructureConfigurationInput{
@@ -374,6 +425,10 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.Logging = expandLogging(v.([]any)[0].(map[string]any))
 		}
 
+		if v, ok := d.GetOk("parent_instance"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ParentInstance = expandParentInstanceConfiguration(v.([]any)[0].(map[string]any))
+		}
+
 		if v, ok := d.GetOk("placement"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.Placement = expandPlacement(v.([]any)[0].(map[string]any))
 		}
@@ -392,6 +447,10 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 
 		if v, ok := d.GetOk(names.AttrSubnetID); ok {
 			input.SubnetId = aws.String(v.(string))
+		}
+
+		if v := d.GetRawConfig().GetAttr("terminate_instance_on_completion"); v.IsKnown() && !v.IsNull() {
+			input.TerminateInstanceOnCompletion = aws.Bool(v.True())
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
@@ -509,6 +568,38 @@ func expandS3Logs(tfMap map[string]any) *awstypes.S3Logs {
 	return apiObject
 }
 
+func expandParentInstanceConfiguration(tfMap map[string]any) *awstypes.ParentInstanceConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ParentInstanceConfiguration{}
+
+	if v, ok := tfMap["auto_scaling_group"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AutoScalingGroup = expandAutoScalingGroupConfiguration(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandAutoScalingGroupConfiguration(tfMap map[string]any) *awstypes.AutoScalingGroupConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AutoScalingGroupConfiguration{}
+
+	if v, ok := tfMap["capacity_wait_timeout_seconds"].(int); ok && v != 0 {
+		apiObject.CapacityWaitTimeoutSeconds = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandPlacement(tfMap map[string]any) *awstypes.Placement {
 	if tfMap == nil {
 		return nil
@@ -580,6 +671,38 @@ func flattenS3Logs(apiObject *awstypes.S3Logs) map[string]any {
 
 	if v := apiObject.S3KeyPrefix; v != nil {
 		tfMap[names.AttrS3KeyPrefix] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenParentInstanceConfiguration(apiObject *awstypes.ParentInstanceConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.AutoScalingGroup; v != nil {
+		tfMap["auto_scaling_group"] = []any{flattenAutoScalingGroupConfiguration(v)}
+	}
+
+	return tfMap
+}
+
+func flattenAutoScalingGroupConfiguration(apiObject *awstypes.AutoScalingGroupConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CapacityWaitTimeoutSeconds; v != nil {
+		tfMap["capacity_wait_timeout_seconds"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.Name; v != nil {
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
