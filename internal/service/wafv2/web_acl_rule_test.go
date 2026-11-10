@@ -281,12 +281,13 @@ func TestAccWAFV2WebACLRule_managedRuleGroupBotControl(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLRuleConfig_managedRuleGroupBotControl(rName),
+				Config: testAccWebACLRuleConfig_managedRuleGroupBotControl(rName, "COMMON", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.name", "AWSManagedRulesBotControlRuleSet"),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.vendor_name", "AWS"),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.inspection_level", "COMMON"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.enable_machine_learning", acctest.CtFalse),
 				),
 			},
 			{
@@ -295,6 +296,14 @@ func TestAccWAFV2WebACLRule_managedRuleGroupBotControl(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+			{
+				Config: testAccWebACLRuleConfig_managedRuleGroupBotControl(rName, "TARGETED", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.inspection_level", "TARGETED"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.enable_machine_learning", acctest.CtTrue),
+				),
 			},
 		},
 	})
@@ -2280,7 +2289,7 @@ resource "aws_wafv2_web_acl_rule" "test" {
 `, rName)
 }
 
-func testAccWebACLRuleConfig_managedRuleGroupBotControl(rName string) string {
+func testAccWebACLRuleConfig_managedRuleGroupBotControl(rName, inspectionLevel string, enableMachineLearning bool) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name  = %[1]q
@@ -2317,7 +2326,8 @@ resource "aws_wafv2_web_acl_rule" "test" {
 
       managed_rule_group_configs {
         aws_managed_rules_bot_control_rule_set {
-          inspection_level = "COMMON"
+          inspection_level        = %[2]q
+          enable_machine_learning = %[3]t
         }
       }
     }
@@ -2329,7 +2339,7 @@ resource "aws_wafv2_web_acl_rule" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, rName)
+`, rName, inspectionLevel, enableMachineLearning)
 }
 
 func testAccWebACLRuleConfig_asnMatchStatement(rName string) string {
