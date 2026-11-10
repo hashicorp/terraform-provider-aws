@@ -1,0 +1,3 @@
+```release-note:bug
+provider: Fix `net/http: TLS handshake timeout` errors when making AWS API calls from networks where TLS traffic is inspected by middleboxes such as AWS Network Firewall, corporate proxies and firewalls. **v6.71.0** and **v6.72.0** were built with Go `1.27.3`, which advertises the post-quantum ML-DSA signature algorithms in the TLS 1.3 `ClientHello` `signature_algorithms_cert` extension, and such middleboxes are known to drop those `ClientHello` messages silently. The provider is now built with Go `1.27.4`, which omits ML-DSA from `signature_algorithms_cert`, and a regression test guards the `ClientHello` against future toolchain changes
+```
