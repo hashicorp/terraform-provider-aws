@@ -56,7 +56,17 @@ Resource docs, in this order:
 5. `## Timeouts` *(only if the resource exposes timeouts)*
 6. `## Import` *(only for resources)*
 
-Data source and list resource docs have only Example Usage, Argument Reference, and Attribute Reference.
+Other types, after the title and Example Usage (`types` in `.ci/swissshepherd-weak.hcl` are authoritative):
+
+| Doc type | Sections, in order |
+| --- | --- |
+| Data source | Argument Reference, Attribute Reference, Timeouts *(only if the schema has timeouts)*. No Import. |
+| Ephemeral resource | Argument Reference, Attribute Reference, Usage Notes *(optional)*. |
+| List resource | Argument Reference. No Attribute Reference. |
+| Action | Dependency Management *(optional)*, Argument Reference. |
+| Function | Signature, Arguments. |
+
+Any other `##` heading is an error.
 
 ## Argument Reference
 
