@@ -6,7 +6,7 @@ applyTo: "website/docs/**/*.markdown"
 
 # User-Facing Documentation
 
-Scope: resource docs (`r/`), data source docs (`d/`), list resource docs (`list/`). Renders at `https://registry.terraform.io/providers/hashicorp/aws/latest/docs`.
+Scope: resource docs (`r/`), data source docs (`d/`), list resource docs (`list-resources/`). Renders at `https://registry.terraform.io/providers/hashicorp/aws/latest/docs`.
 
 Precedence when sources disagree: `swissshepherd` (`make swissshepherd`, configured in `.ci/swissshepherd-weak.hcl`) wins, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then `docs/end-user-documentation.md`, then these instructions.
 

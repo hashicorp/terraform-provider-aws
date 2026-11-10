@@ -12,7 +12,7 @@ All end user documentation is found in the `/website` folder of the repository.
 │   ├── actions/               # Documentation for actions
 │   ├── d/                     # Documentation for data sources
 │   ├── ephemeral-resources/   # Documentation for ephemeral resources
-│   ├── function/              # Documentation for provider functions
+│   ├── functions/             # Documentation for provider functions
 │   ├── guides/                # Long format guides for provider level configuration or provider upgrades
 │   ├── index.html.markdown    # Home page and all provider level documentation, including provider configuration
 │   ├── list-resources/        # Documentation for list resources

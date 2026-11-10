@@ -8,7 +8,7 @@ description: "Review a Terraform AWS Provider PR's end-user documentation (websi
 
 # Review: End-User Documentation
 
-Assume the `@maintainer` persona. Scope: resource docs (`r/`), data source docs (`d/`), list resource docs (`list/`) under `website/docs/`, rendered at the Terraform Registry. Loaded from `review-pr`.
+Assume the `@maintainer` persona. Scope: resource docs (`r/`), data source docs (`d/`), list resource docs (`list-resources/`) under `website/docs/`, rendered at the Terraform Registry. Loaded from `review-pr`.
 
 Precedence when sources disagree: `swissshepherd` (`make swissshepherd`, configured in `.ci/swissshepherd-weak.hcl`) wins, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then [docs/end-user-documentation.md](../../../docs/end-user-documentation.md), then this skill. Do not review CHANGELOG updates.
 
