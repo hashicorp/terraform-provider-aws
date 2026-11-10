@@ -512,9 +512,11 @@ func newWrappedResource(ctx context.Context, spec *inttypes.ServicePackageFramew
 		if v.IsValidateOverrideInPartition {
 			interceptors = append(interceptors, resourceValidateRegion())
 		}
-		interceptors = append(interceptors, resourceDefaultRegion())
-		interceptors = append(interceptors, resourceForceNewIfRegionChanges())
-		interceptors = append(interceptors, resourceSetRegionInState())
+		interceptors = append(interceptors,
+			resourceDefaultRegion(),
+			resourceForceNewIfRegionChanges(),
+			resourceSetRegionInState(),
+		)
 		if spec.Identity.HasInherentRegion() {
 			interceptors = append(interceptors, resourceImportRegionNoDefault())
 		} else {
@@ -523,8 +525,10 @@ func newWrappedResource(ctx context.Context, spec *inttypes.ServicePackageFramew
 	}
 
 	if spec.Tags.Enabled() {
-		interceptors = append(interceptors, resourceTransparentTagging(spec.Tags))
-		interceptors = append(interceptors, resourceValidateRequiredTags())
+		interceptors = append(interceptors,
+			resourceTransparentTagging(spec.Tags),
+			resourceValidateRequiredTags(),
+		)
 	}
 
 	inner, _ := spec.Factory(ctx)
