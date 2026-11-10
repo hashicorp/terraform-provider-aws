@@ -83,7 +83,7 @@ Open the doc file (path is in the ss output) and apply fixes:
 
 When adding or editing documentation:
 - Arguments: `* \`name\` - (Required) Description.` or `* \`name\` - (Optional) Description.`
-- Attributes: `* \`name\` - Description.` (no Required/Optional label)
+- Attributes: `* \`name\` - Description.` (no label, not even `(Read-Only)`)
 - Descriptions start with a verb or noun — never "A ", "An ", "The ", "Specifies ", "Indicates "
 - Don't spell out common abbreviations (e.g. ARN, KMS, VPC) — `swissshepherd`'s `banned_glosses` check enforces this; see [Abbreviations](../../../docs/end-user-documentation.md#abbreviations)
 - Boolean arguments: start with "Whether to..."

@@ -31,7 +31,7 @@ Flag openings like "This resource…", "Use this resource…", "Allows you to…
 - ✓ `(Optional) Whether to enable logging.`
 - ✗ `(Optional) Enables logging.` / `(Optional) If true, enables logging.`
 
-**`(Required)` / `(Optional)` / `(Read-Only)`** are the only valid markers, capitalized in parentheses, immediately after the hyphen.
+**Labels** come in parentheses immediately after the hyphen. In Argument Reference, the first label is `(Required)`, `(Optional)`, or `(Read-Only)`, matching the schema: `(Optional)` for Optional+Computed fields and `(Read-Only)` only for computed-only fields. Trailing traits are allowed, for example `(Optional, Forces new resource)` or `(Optional, **Deprecated**)`. Attribute Reference entries carry no label, including no `(Read-Only)`.
 
 **Examples use `example`, not `test`.** Flag any HCL block in docs that uses `"test"` as a resource label or `name = "test"` etc.
 
