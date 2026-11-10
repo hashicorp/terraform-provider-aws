@@ -69,12 +69,12 @@ func (r *guardrailResourcePolicyResource) Create(ctx context.Context, request re
 	conn := r.Meta().BedrockClient(ctx)
 
 	resourceARN := data.ResourceARN.ValueString()
-	input := &bedrock.PutResourcePolicyInput{
+	input := bedrock.PutResourcePolicyInput{
 		ResourceArn:    aws.String(resourceARN),
 		ResourcePolicy: data.Policy.ValueStringPointer(),
 	}
 
-	_, err := conn.PutResourcePolicy(ctx, input)
+	_, err := conn.PutResourcePolicy(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, resourceARN)
 		return
@@ -124,12 +124,12 @@ func (r *guardrailResourcePolicyResource) Update(ctx context.Context, request re
 	conn := r.Meta().BedrockClient(ctx)
 
 	resourceARN := data.ResourceARN.ValueString()
-	input := &bedrock.PutResourcePolicyInput{
+	input := bedrock.PutResourcePolicyInput{
 		ResourceArn:    aws.String(resourceARN),
 		ResourcePolicy: data.Policy.ValueStringPointer(),
 	}
 
-	_, err := conn.PutResourcePolicy(ctx, input)
+	_, err := conn.PutResourcePolicy(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, resourceARN)
 		return
@@ -147,9 +147,10 @@ func (r *guardrailResourcePolicyResource) Delete(ctx context.Context, request re
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	_, err := conn.DeleteResourcePolicy(ctx, &bedrock.DeleteResourcePolicyInput{
+	input := bedrock.DeleteResourcePolicyInput{
 		ResourceArn: data.ResourceARN.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -168,11 +169,11 @@ type guardrailResourcePolicyResourceModel struct {
 }
 
 func findGuardrailResourcePolicyByARN(ctx context.Context, conn *bedrock.Client, arn string) (*string, error) {
-	input := &bedrock.GetResourcePolicyInput{
+	input := bedrock.GetResourcePolicyInput{
 		ResourceArn: aws.String(arn),
 	}
 
-	output, err := conn.GetResourcePolicy(ctx, input)
+	output, err := conn.GetResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{LastError: err})
