@@ -7,11 +7,6 @@ resource "aws_ebs_encryption_by_default" "test" {
   enabled = true
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "region" {
   description = "Region to deploy resource in"

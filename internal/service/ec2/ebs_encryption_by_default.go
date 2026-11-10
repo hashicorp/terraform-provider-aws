@@ -18,7 +18,7 @@ import (
 )
 
 // @SingletonIdentity
-// @Testing(preIdentityVersion="v6.72.0")
+// @Testing(preIdentityVersion="v6.72.0", generator=false)
 // @SDKResource("aws_ebs_encryption_by_default", name="EBS Encryption By Default")
 func resourceEBSEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
