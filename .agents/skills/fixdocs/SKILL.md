@@ -83,17 +83,19 @@ Open the doc file (path is in the ss output) and apply fixes:
 
 When adding or editing documentation:
 - Arguments: `* \`name\` - (Required) Description.` or `* \`name\` - (Optional) Description.`
-- Attributes: `* \`name\` - Description.` (no label, not even `(Read-Only)`)
+- Attributes: `* \`name\` - Description.` (no label)
+- `(Read-Only)`: only for read-only fields in a block subsection that also has arguments; everything else read-only goes in Attribute Reference
 - Descriptions start with a verb or noun — never "A ", "An ", "The ", "Specifies ", "Indicates "
 - Don't spell out common abbreviations (e.g. ARN, KMS, VPC) — `swissshepherd`'s `banned_glosses` check enforces this; see [Abbreviations](../../../docs/end-user-documentation.md#abbreviations)
 - Boolean arguments: start with "Whether to..."
-- Keep alphabetical order: the whole list, or each list when required and optional arguments are split
+- Alphabetize. With 5+ arguments, including at least 2 required and 2 optional, split into required and optional lists; otherwise use one list
 - Block sections use heading: `` ### `block_name` Block ``
-- Byline for arguments: "This resource supports the following arguments:" for one list, or "The following arguments are required:" / "The following arguments are optional:" for split lists
+- Byline for one list: "This resource supports the following arguments:"
+- Bylines for split lists: "The following arguments are required:" / "The following arguments are optional:"
 - Byline for attributes: "This resource exports the following attributes in addition to the arguments above:"
-- Replace "resource" in bylines with the documentation type ("data source", "ephemeral resource", etc.); `arguments_bylines` and `attributes_bylines` in `.ci/swissshepherd-weak.hcl` list every accepted byline
+- In bylines, replace "resource" with the documentation type
 
-Precedence when sources disagree: `swissshepherd` findings and `.ci/swissshepherd-weak.hcl` win, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then [docs/end-user-documentation.md](../../../docs/end-user-documentation.md), then this skill.
+Precedence: `swissshepherd` wins, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then [docs/end-user-documentation.md](../../../docs/end-user-documentation.md), then this skill.
 
 ### Phase 5: Verify fix
 
@@ -130,7 +132,7 @@ Use the resource name without the `aws_` prefix in the commit message scope when
 - **Check both check blocks.** A target may appear in `ignore_targets` under `check "schema_docs"` AND `check "import_section"` (or others). Remove from all.
 - **Don't touch `ignore_contents_check`** unless the user explicitly asks — those are structural exceptions.
 - **Preserve file structure.** Don't rewrite entire doc files. Make minimal, targeted edits.
-- **Nested blocks.** When ss reports "block X.Y is not documented", add a subsection for it after the parent block's section. Default to `` ### `y` Block `` (just the child name). One bare heading may document same-named blocks at several paths if their fields are identical; swissshepherd reports any path where it doesn't fit. When the fields differ, qualify the heading with an ancestor, e.g. `` ### `x.y` Block ``. A dotted heading that is itself another schema path documents only that path, and a dotted heading of four or more segments that isn't the full path matches nothing. A heading that doesn't name the block, or a link to another section, documents nothing. Update in-page links after renaming a heading.
+- **Nested blocks.** For "block X.Y is not documented", add `` ### `y` Block `` after the parent's section. If another `y` block has different fields, use `` ### `x.y` Block ``. Same-named blocks with identical fields share one heading. Update in-page links after renaming a heading.
 
 ## Example session
 

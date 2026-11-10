@@ -24,13 +24,7 @@ All end user documentation is found in the `/website` folder of the repository.
 
 Follow these guidelines to keep [provider documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) consistent. Unless noted otherwise, _resource_ refers to resources, data sources, list resources, ephemeral resources and provider functions.
 
-CI enforces these conventions with [`swissshepherd`](https://github.com/YakDriver/swissshepherd), configured in `.ci/swissshepherd-weak.hcl`. Run `make swissshepherd` to check your changes. The [`swissshepherd` documentation](https://github.com/YakDriver/swissshepherd/tree/main/docs) explains what each configuration setting means. This document covers the main conventions; it does not repeat every rule `swissshepherd` checks.
-
-When sources disagree, follow them in this order:
-
-1. `swissshepherd` findings and its configuration.
-1. The `skaff` documentation templates (`skaff/*/websitedoc.gtpl`).
-1. This document and the other contributor guides.
+CI checks documentation with [`swissshepherd`](https://github.com/YakDriver/swissshepherd). Run `make swissshepherd` before opening a PR. When sources conflict, `swissshepherd` wins, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then this guide.
 
 ### Examples
 
@@ -49,19 +43,20 @@ Each resource must include at least one example Terraform configuration.
 
 Every argument must be documented.
 
-#### Ordering
+#### Lists and Bylines
 
-Sort arguments alphabetically. If required and optional arguments are in one list, sort the whole list. If they are split into required and optional lists, sort each list.
+Sort arguments alphabetically.
 
-#### Bylines
+With 5 or more arguments, including at least 2 required and 2 optional, split them into two lists:
 
-Valid bylines are:
+- "The following arguments are required:"
+- "The following arguments are optional:"
 
-- "This resource supports the following arguments:" if required and optional arguments are in one list,
-- "The following arguments are required:" and "The following arguments are optional:" if required and optional arguments are split into separate lists, or
-- "This resource does not support any arguments." if there are no arguments.
+Otherwise, use one list: "This resource supports the following arguments:".
 
-Replace "resource" with "data source", "ephemeral resource", "list resource", or "action" to match the documentation type.
+With no arguments: "This resource does not support any arguments."
+
+In bylines, replace "resource" with the documentation type, such as "data source".
 
 #### Description
 
@@ -86,9 +81,9 @@ Each block argument must have two entries in the documentation:
 
 Within the subsection, arguments follow the ordering rules above.
 
-Title each subsection with a block heading such as `` ### `ip_rule` Block ``. A block's fields are documented only by a heading that names the block; a link to another section, or a sentence such as "The `ip_rule` object supports:", does not count. If blocks with the same name at different paths have different fields, qualify the heading with an ancestor, for example `` ### `rule.ip_rule` Block ``. See the [`swissshepherd` `schema_docs` rule](https://github.com/YakDriver/swissshepherd/blob/main/docs/rules/schema_docs.md#coverage-which-section-documents-a-block) for how headings resolve to blocks.
+Title each subsection `` ### `ip_rule` Block ``. If two blocks named `ip_rule` have different fields, qualify the heading with an ancestor: `` ### `rule.ip_rule` Block ``.
 
-If the block also has read-only (computed-only) attributes, document them inline in the block's subsection with the `(Read-Only)` label, in alphabetical order with the arguments. This keeps everything about a block in one place. Read-only attributes at the top level, and blocks with no configurable arguments, belong in [Attribute Reference](#attributes) instead.
+Use `(Read-Only)` only for read-only fields in a block subsection that also has arguments. Document all other read-only fields in [Attribute Reference](#attributes).
 
 For example:
 
@@ -111,18 +106,13 @@ The `ip_rule` block supports:
 
 Every attribute must be documented.
 
-#### Ordering
+#### Lists and Bylines
 
 Sort attributes alphabetically, including `id`.
 
-#### Bylines
+Use "This resource exports the following attributes in addition to the arguments above:", or "This resource exports no additional attributes." In bylines, replace "resource" with the documentation type.
 
-Valid bylines are:
-
-- "This resource exports the following attributes in addition to the arguments above:", or
-- "This resource exports no additional attributes." if no attributes are exported.
-
-Replace "resource" with "data source" or "ephemeral resource" to match the documentation type. List resources and actions have no Attribute Reference.
+List resources and actions have no Attribute Reference.
 
 #### Description
 
