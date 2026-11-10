@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_bedrock_guardrail_resource_policy", name="Guardrail Resource Policy")
@@ -41,11 +42,11 @@ type guardrailResourcePolicyResource struct {
 func (r *guardrailResourcePolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"policy": schema.StringAttribute{
+			names.AttrPolicy: schema.StringAttribute{
 				CustomType: fwtypes.IAMPolicyType,
 				Required:   true,
 			},
-			"resource_arn": schema.StringAttribute{
+			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -68,7 +69,7 @@ func (r *guardrailResourcePolicyResource) Create(ctx context.Context, request re
 	resourceARN := data.ResourceARN.ValueString()
 	input := &bedrock.PutResourcePolicyInput{
 		ResourceArn:    aws.String(resourceARN),
-		ResourcePolicy: aws.String(data.Policy.ValueString()),
+		ResourcePolicy: data.Policy.ValueStringPointer(),
 	}
 
 	_, err := conn.PutResourcePolicy(ctx, input)
@@ -123,7 +124,7 @@ func (r *guardrailResourcePolicyResource) Update(ctx context.Context, request re
 	resourceARN := data.ResourceARN.ValueString()
 	input := &bedrock.PutResourcePolicyInput{
 		ResourceArn:    aws.String(resourceARN),
-		ResourcePolicy: aws.String(data.Policy.ValueString()),
+		ResourcePolicy: data.Policy.ValueStringPointer(),
 	}
 
 	_, err := conn.PutResourcePolicy(ctx, input)
@@ -159,7 +160,7 @@ func (r *guardrailResourcePolicyResource) Delete(ctx context.Context, request re
 }
 
 func (r *guardrailResourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("resource_arn"), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrResourceARN), request, response)
 }
 
 type guardrailResourcePolicyResourceModel struct {

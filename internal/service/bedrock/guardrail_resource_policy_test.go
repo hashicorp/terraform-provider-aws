@@ -39,8 +39,8 @@ func TestAccBedrockGuardrailResourcePolicy_basic(t *testing.T) {
 				Config: testAccGuardrailResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailResourcePolicyExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_bedrock_guardrail.test", "guardrail_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_bedrock_guardrail.test", "guardrail_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
@@ -124,7 +124,7 @@ func testAccGuardrailResourcePolicyImportStateIDFunc(resourceName string) resour
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["resource_arn"], nil
+		return rs.Primary.Attributes[names.AttrResourceARN], nil
 	}
 }
 
@@ -137,7 +137,7 @@ func testAccCheckGuardrailResourcePolicyDestroy(ctx context.Context, t *testing.
 				continue
 			}
 
-			arn := rs.Primary.Attributes["resource_arn"]
+			arn := rs.Primary.Attributes[names.AttrResourceARN]
 
 			_, err := tfbedrock.FindGuardrailResourcePolicyByARN(ctx, conn, arn)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -161,7 +161,7 @@ func testAccCheckGuardrailResourcePolicyExists(ctx context.Context, t *testing.T
 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrailResourcePolicy, name, errors.New("not found"))
 		}
 
-		arn := rs.Primary.Attributes["resource_arn"]
+		arn := rs.Primary.Attributes[names.AttrResourceARN]
 		if arn == "" {
 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameGuardrailResourcePolicy, name, errors.New("resource_arn not set"))
 		}
