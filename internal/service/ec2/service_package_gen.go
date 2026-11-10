@@ -1104,7 +1104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingletonIdentity(),
 			Import: inttypes.SDKv2Import{
-				WrappedImport: true,
+				CustomImport: true,
 			},
 		},
 		{
