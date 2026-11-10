@@ -9,7 +9,7 @@ description: |-
 
 Manages a resource-based policy (RBP) on an Amazon Bedrock guardrail or system-defined guardrail profile.
 
-Resource-based policies are required for organization-level enforced guardrails (`BEDROCK_POLICY` in AWS Organizations Service Control Policies). Member accounts must be granted `bedrock:ApplyGuardrail` on the guardrail (and, when Cross-Region Inference is enabled, on the associated guardrail profile) that lives in the management account.
+Resource-based policies are required for organization-level enforced guardrails (an AWS Organizations policy of type `BEDROCK_POLICY`). Member accounts must be granted `bedrock:ApplyGuardrail` on the guardrail (and, when Cross-Region Inference is enabled, on the associated guardrail profile) that lives in the management account.
 
 ## Example Usage
 
@@ -75,8 +75,8 @@ resource "aws_bedrock_guardrail_resource_policy" "profile" {
 
 The following arguments are required:
 
-* `resource_arn` - (Required, Forces new resource) ARN of the Bedrock resource to attach the policy to. This can be a guardrail ARN or a system-defined guardrail profile ARN.
 * `policy` - (Required) JSON policy document. This is a resource-based policy granting other principals (e.g., all principals in an AWS Organization) permission to call Bedrock APIs on this resource.
+* `resource_arn` - (Required, Forces new resource) ARN of the Bedrock resource to attach the policy to. This can be a guardrail ARN or a system-defined guardrail profile ARN.
 
 The following arguments are optional:
 
@@ -84,7 +84,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports no additional attributes beyond the arguments above.
+This resource exports no additional attributes.
 
 ## Import
 
