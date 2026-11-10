@@ -293,8 +293,6 @@ terraform {
   }
 }
 
-provider "aws" {}
-
 resource "aws_ebs_encryption_by_default" "test" {
   region  = %[2]q
   enabled = true
