@@ -89,8 +89,9 @@ When adding or editing documentation:
 - Boolean arguments: start with "Whether to..."
 - Keep alphabetical order: the whole list, or each list when required and optional arguments are split
 - Block sections use heading: `` ### `block_name` Block ``
-- Byline for arguments: "The following arguments are required:" / "The following arguments are optional:"
-- Byline for attributes: "In addition to all arguments above, the following attributes are exported:"
+- Byline for arguments: "This resource supports the following arguments:" for one list, or "The following arguments are required:" / "The following arguments are optional:" for split lists
+- Byline for attributes: "This resource exports the following attributes in addition to the arguments above:"
+- Replace "resource" in bylines with the documentation type ("data source", "ephemeral resource", etc.); `arguments_bylines` and `attributes_bylines` in `.ci/swissshepherd-weak.hcl` list every accepted byline
 
 Precedence when sources disagree: `swissshepherd` findings and `.ci/swissshepherd-weak.hcl` win, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then [docs/end-user-documentation.md](../../../docs/end-user-documentation.md), then this skill.
 

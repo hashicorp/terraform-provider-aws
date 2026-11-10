@@ -60,7 +60,16 @@ Data source and list resource docs have only Example Usage, Argument Reference, 
 
 ## Argument Reference
 
-Required arguments come first, separated from optional by a header line. Alphabetize. Use these exact lead-ins:
+Alphabetize. Use one of these lead-ins (substitute "data source", "ephemeral resource", "list resource", or "action" for "resource"):
+
+```
+This resource supports the following arguments:
+
+* `opt_arg` - (Optional) ...
+* `req_arg` - (Required) ...
+```
+
+or, with required and optional arguments split into separate lists, each alphabetized:
 
 ```
 The following arguments are required:
@@ -72,7 +81,7 @@ The following arguments are optional:
 * `opt_arg` - (Optional) ...
 ```
 
-If there are no required arguments, drop the "required" subsection — don't write "There are no required arguments."
+If there are no required arguments, drop the "required" list; don't write "There are no required arguments."
 
 For tagged resources, `tags` lives under optional arguments with this exact wording:
 
@@ -82,7 +91,7 @@ For tagged resources, `tags` lives under optional arguments with this exact word
 
 ## Attribute Reference
 
-Open with `This resource exports the following attributes in addition to the arguments above:` (substitute "data source" / "list resource"). Flag pages that re-document arguments here — only computed attributes belong. Alphabetize.
+Open with `This resource exports the following attributes in addition to the arguments above:` (substitute "data source" / "ephemeral resource"; list resources and actions have no Attribute Reference). Flag pages that re-document arguments here — only computed attributes belong. Alphabetize.
 
 For tagged resources, `tags_all` has this exact wording:
 

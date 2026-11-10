@@ -57,8 +57,11 @@ Sort arguments alphabetically. If required and optional arguments are in one lis
 
 Valid bylines are:
 
-- "This resource supports the following arguments:" if required and optional arguments are in one list, or
-- "The following arguments are required:" and "The following arguments are optional:" if required and optional arguments are split into separate lists.
+- "This resource supports the following arguments:" if required and optional arguments are in one list,
+- "The following arguments are required:" and "The following arguments are optional:" if required and optional arguments are split into separate lists, or
+- "This resource does not support any arguments." if there are no arguments.
+
+Replace "resource" with "data source", "ephemeral resource", "list resource", or "action" to match the documentation type.
 
 #### Description
 
@@ -114,8 +117,10 @@ Sort attributes alphabetically, including `id`.
 
 Valid bylines are:
 
-- "In addition to all arguments above, the following attributes are exported:", or
+- "This resource exports the following attributes in addition to the arguments above:", or
 - "This resource exports no additional attributes." if no attributes are exported.
+
+Replace "resource" with "data source" or "ephemeral resource" to match the documentation type. List resources and actions have no Attribute Reference.
 
 #### Description
 
