@@ -13,9 +13,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @CustomImport
 // @SingletonIdentity
 // @Testing(preIdentityVersion="v6.72.0", generator=false)
 // @SDKResource("aws_ebs_encryption_by_default", name="EBS Encryption By Default")
@@ -25,6 +28,20 @@ func resourceEBSEncryptionByDefault() *schema.Resource {
 		ReadWithoutTimeout:   resourceEBSEncryptionByDefaultRead,
 		UpdateWithoutTimeout: resourceEBSEncryptionByDefaultUpdate,
 		DeleteWithoutTimeout: resourceEBSEncryptionByDefaultDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if id := d.Id(); id != "" && !inttypes.IsAWSRegion(id) {
+					d.SetId(meta.(*conns.AWSClient).Region(ctx))
+				}
+
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
