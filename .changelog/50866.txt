@@ -1,3 +1,11 @@
 ```release-note:new-list-resource
 aws_ebs_encryption_by_default
 ```
+
+```release-note:enhancement
+resource/aws_ebs_encryption_by_default: Add resource identity support
+```
+
+```release-note:breaking-change
+resource/aws_ebs_encryption_by_default: Newly created resources now use the AWS Region as the `id` attribute value instead of a generated identifier. Existing resources retain their previous `id`. Imports using legacy identifiers now normalize the `id` to the AWS region.
+```
