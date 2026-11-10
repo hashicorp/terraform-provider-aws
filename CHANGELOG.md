@@ -1,5 +1,15 @@
 ## 6.73.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_wafv2_web_acl_rule: Removes `and_statement` from `statement` blocks nested in `and_statement`, and `or_statement` from `statement` blocks nested in `or_statement`. These values are rejected by AWS. ([#50604](https://github.com/hashicorp/terraform-provider-aws/issues/50604))
+* resource/aws_wafv2_web_acl_rule: Removes `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement` from `statement` blocks nested in `and_statement`, `not_statement` and `or_statement`. These values are rejected by AWS. ([#50604](https://github.com/hashicorp/terraform-provider-aws/issues/50604))
+* resource/aws_wafv2_web_acl_rule: Removes `or_statement` from `statement` blocks nested in `or_statement`. These values are rejected by AWS. ([#50604](https://github.com/hashicorp/terraform-provider-aws/issues/50604))
+
+NOTES:
+
+* resource/aws_efs_file_system: Until AWS roll out the service change supporting the new default encryption setting, changing `encrypted = true` to `encrypted = false` will seem to have succeeded without modifying anything on the AWS side. In this scenario you will need to manually recreate the file system via `terraform destroy` and `terraform apply` ([#49999](https://github.com/hashicorp/terraform-provider-aws/issues/49999))
+
 FEATURES:
 
 * **New List Resource:** `aws_dsql_stream` ([#50813](https://github.com/hashicorp/terraform-provider-aws/issues/50813))
@@ -16,7 +26,10 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_efs_file_system: Support new default of `encrypted = true` for new file systems. `kms_key_id` no longer requires `encrypted` to be set explicitly to `true`, and setting `encrypted = false` no longer forces resource replacement ([#49999](https://github.com/hashicorp/terraform-provider-aws/issues/49999))
 * resource/aws_securityhub_connector_v2: Add `azure` configuration block to `connector_provider` for Microsoft Azure multi-cloud coverage ([#49560](https://github.com/hashicorp/terraform-provider-aws/issues/49560))
+* resource/aws_synthetics_canary: Add additional validation to `memory_in_mb` ([#49826](https://github.com/hashicorp/terraform-provider-aws/issues/49826))
+* resource/aws_vpn_connection: Support in-place updates for `tunnel_bandwidth` argument ([#47843](https://github.com/hashicorp/terraform-provider-aws/issues/47843))
 
 BUG FIXES:
 
@@ -25,6 +38,7 @@ BUG FIXES:
 * resource/aws_networksecuritymanager_rule: Fix the first apply of more than one rule in an account that has never used AWS Network Security Manager failing with `ConflictException: Account or org is already onboarded` ([#50807](https://github.com/hashicorp/terraform-provider-aws/issues/50807))
 * resource/aws_organizations_policy: Fix infinite drift in `content` when AWS returns policy statement elements in a different order ([#47190](https://github.com/hashicorp/terraform-provider-aws/issues/47190))
 * resource/aws_ssm_document: Fix `InvalidDocumentOperation` exceptions during Read when sharing is managed through AWS RAM ([#50416](https://github.com/hashicorp/terraform-provider-aws/issues/50416))
+* resource/aws_vpc_endpoint: Fix `private_dns_only_for_inbound_resolver_endpoint` being forced to `true` and not configurable for S3 interface endpoints that use the `s3-fips` service name ([#50857](https://github.com/hashicorp/terraform-provider-aws/issues/50857))
 * resource/aws_wafv2_web_acl: Preserve concurrent rule changes when retrying an optimistic lock conflict if neither `rule` nor `rule_json` has a planned change ([#50790](https://github.com/hashicorp/terraform-provider-aws/issues/50790))
 
 ## 6.72.0 (November 4, 2026)
