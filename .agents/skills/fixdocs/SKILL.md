@@ -92,7 +92,7 @@ When adding or editing documentation:
 - Byline for arguments: "The following arguments are required:" / "The following arguments are optional:"
 - Byline for attributes: "In addition to all arguments above, the following attributes are exported:"
 
-Authoritative reference: [docs/end-user-documentation.md](../../../docs/end-user-documentation.md). When this skill and that document disagree, the document wins.
+Precedence when sources disagree: `swissshepherd` findings and `.ci/swissshepherd-weak.hcl` win, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then [docs/end-user-documentation.md](../../../docs/end-user-documentation.md), then this skill.
 
 ### Phase 5: Verify fix
 

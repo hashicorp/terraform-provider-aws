@@ -8,6 +8,8 @@ applyTo: "website/docs/**/*.markdown"
 
 Scope: resource docs (`r/`), data source docs (`d/`), list resource docs (`list/`). Renders at `https://registry.terraform.io/providers/hashicorp/aws/latest/docs`.
 
+Precedence when sources disagree: `swissshepherd` (`make swissshepherd`, configured in `.ci/swissshepherd-weak.hcl`) wins, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then `docs/end-user-documentation.md`, then these instructions.
+
 ## Description openings
 
 The single-line `description:` in frontmatter and the first paragraph after the H1 must use the verb for the doc type:

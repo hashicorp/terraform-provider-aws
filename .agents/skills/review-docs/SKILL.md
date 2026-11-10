@@ -10,7 +10,7 @@ description: "Review a Terraform AWS Provider PR's end-user documentation (websi
 
 Assume the `@maintainer` persona. Scope: resource docs (`r/`), data source docs (`d/`), list resource docs (`list/`) under `website/docs/`, rendered at the Terraform Registry. Loaded from `review-pr`.
 
-Authoritative reference: [docs/end-user-documentation.md](../../../docs/end-user-documentation.md). When this skill and that document disagree, the document wins. Do not review CHANGELOG updates.
+Precedence when sources disagree: `swissshepherd` (`make swissshepherd`, configured in `.ci/swissshepherd-weak.hcl`) wins, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then [docs/end-user-documentation.md](../../../docs/end-user-documentation.md), then this skill. Do not review CHANGELOG updates.
 
 ## Should the PR include docs?
 

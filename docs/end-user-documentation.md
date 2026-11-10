@@ -24,6 +24,14 @@ All end user documentation is found in the `/website` folder of the repository.
 
 Follow these guidelines to keep [provider documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) consistent. Unless noted otherwise, _resource_ refers to resources, data sources, list resources, ephemeral resources and provider functions.
 
+CI enforces these conventions with [`swissshepherd`](https://github.com/YakDriver/swissshepherd), configured in `.ci/swissshepherd-weak.hcl`. Run `make swissshepherd` to check your changes. The [`swissshepherd` documentation](https://github.com/YakDriver/swissshepherd/tree/main/docs) explains what each configuration setting means. This document covers the main conventions; it does not repeat every rule `swissshepherd` checks.
+
+When sources disagree, follow them in this order:
+
+1. `swissshepherd` findings and its configuration.
+1. The `skaff` documentation templates (`skaff/*/websitedoc.gtpl`).
+1. This document and the other contributor guides.
+
 ### Examples
 
 Each resource must include at least one example Terraform configuration.
