@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -26,7 +25,8 @@ import (
 )
 
 // @FrameworkResource("aws_bedrock_guardrail_resource_policy", name="Guardrail Resource Policy")
-// @Testing(tagsTest=false)
+// @ArnIdentity("resource_arn")
+// @Testing(hasNoPreExistingResource=true)
 func newGuardrailResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &guardrailResourcePolicyResource{}, nil
 }
@@ -37,6 +37,7 @@ const (
 
 type guardrailResourcePolicyResource struct {
 	framework.ResourceWithModel[guardrailResourcePolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *guardrailResourcePolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -157,10 +158,6 @@ func (r *guardrailResourcePolicyResource) Delete(ctx context.Context, request re
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Guardrail Resource Policy (%s)", data.ResourceARN.ValueString()), err.Error())
 		return
 	}
-}
-
-func (r *guardrailResourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrResourceARN), request, response)
 }
 
 type guardrailResourcePolicyResourceModel struct {
