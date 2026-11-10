@@ -111,6 +111,11 @@ func TestAccBedrockGuardrailResourcePolicy_update(t *testing.T) {
 			},
 			{
 				Config: testAccGuardrailResourcePolicyConfig_updated(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailResourcePolicyExists(ctx, t, resourceName),
 				),
