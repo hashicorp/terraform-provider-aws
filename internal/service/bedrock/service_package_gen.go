@@ -203,6 +203,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
 		},
 		{
+			Factory:  newGuardrailResourcePolicyResourceAsListResource,
+			TypeName: "aws_bedrock_guardrail_resource_policy",
+			Name:     "Guardrail Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+		},
+		{
 			Factory:  newModelInvocationJobResourceAsListResource,
 			TypeName: "aws_bedrock_model_invocation_job",
 			Name:     "Model Invocation Job",
