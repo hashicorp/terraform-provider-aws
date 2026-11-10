@@ -37,7 +37,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = aws_ebs_encryption_by_default.example
+  to       = aws_ebs_encryption_by_default.example
   identity = {}
 }
 
