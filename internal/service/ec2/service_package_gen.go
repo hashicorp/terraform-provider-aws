@@ -1102,6 +1102,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ebs_encryption_by_default",
 			Name:     "EBS Encryption By Default",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceEBSSnapshot,
@@ -2011,6 +2015,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Region:   inttypes.ResourceRegionDefault(),
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newEbsEncryptionByDefaultResourceAsListResource,
+			TypeName: "aws_ebs_encryption_by_default",
+			Name:     "EBS Encryption By Default",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(),
 		},
 		{
 			Factory:  newEBSVolumeResourceAsListResource,
