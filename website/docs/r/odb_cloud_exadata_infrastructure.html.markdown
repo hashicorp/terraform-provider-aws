@@ -62,17 +62,17 @@ resource "aws_odb_cloud_exadata_infrastructure" "example" {
 The following arguments are required:
 
 * `availability_zone_id` - (Required) AZ ID of the AZ where the Exadata infrastructure is located. Changing this will force terraform to create new resource.
-* `compute_count` - (Required) Number of compute instances that the Exadata infrastructure is located. Changing this will force terraform to create new resource.
 * `display_name` - (Required) User-friendly name for the Exadata infrastructure. Changing this will force terraform to create a new resource.
 * `shape` - (Required) Model name of the Exadata infrastructure. Changing this will force terraform to create new resource.
-* `storage_count` - (Required) Number of storage servers that are activated for the Exadata infrastructure. Changing this will force terraform to create new resource.
 
 The following arguments are optional:
 
 * `availability_zone` - (Optional) Name of the Availability Zone (AZ) where the Exadata infrastructure is located. Changing this will force terraform to create new resource.
+* `compute_count` - (Optional) Number of compute instances that the Exadata infrastructure is located. Changing this will force terraform to create new resource.
 * `customer_contacts_to_send_to_oci` - (Optional) Email addresses of contacts to receive notification from Oracle about maintenance updates for the Exadata infrastructure. Changing this will force terraform to create new resource. See [`customer_contacts_to_send_to_oci` Block](#customer_contacts_to_send_to_oci-block) below.
 * `database_server_type` - (Optional) Database server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation. This is a mandatory parameter for Exadata.X11M system shape. Changing this will force terraform to create new resource.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `storage_count` - (Optional) Number of storage servers that are activated for the Exadata infrastructure. Changing this will force terraform to create new resource.
 * `storage_server_type` - (Optional) Storage server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation. This is a mandatory parameter for Exadata.X11M system shape. Changing this will force terraform to create new resource.
 * `tags` - (Optional) Map of tags to assign to the exadata infrastructure. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

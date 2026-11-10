@@ -31,7 +31,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A hash of the EC2 Route Table and VPC Endpoint identifiers.
+* `id` - Hash of the EC2 Route Table and VPC Endpoint identifiers.
 
 ## Import
 

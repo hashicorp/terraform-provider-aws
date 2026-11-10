@@ -83,7 +83,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1.3"),
+					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1.4"),
 					resource.TestCheckNoResourceAttr(resourceName, "neptune_instance_parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "neptune_subnet_group_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8182"),
@@ -96,6 +96,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
@@ -1073,6 +1074,145 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context, t *testing
 
 		return nil
 	}
+}
+
+// TestAccNeptuneCluster_networkType verifies that network_type can be set on
+// cluster creation and updated in place, including idempotency and rollback.
+func TestAccNeptuneCluster_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBCluster
+	resourceName := "aws_neptune_cluster.test"
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Create with IPV4.
+			{
+				Config: testAccClusterConfig_networkType(rName, "IPV4"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "neptune"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8182"),
+					resource.TestCheckResourceAttrSet(resourceName, "neptune_subnet_group_name"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
+				),
+			},
+			// Step 2: In-place update IPV4 → DUAL.
+			{
+				Config: testAccClusterConfig_networkType(rName, "DUAL"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "neptune"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8182"),
+					resource.TestCheckResourceAttrSet(resourceName, "neptune_subnet_group_name"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
+				),
+			},
+			// Step 3: Re-apply DUAL unchanged — no diff expected.
+			{
+				Config: testAccClusterConfig_networkType(rName, "DUAL"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			// Step 4: Update back DUAL → IPV4.
+			{
+				Config: testAccClusterConfig_networkType(rName, "IPV4"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "neptune"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8182"),
+					resource.TestCheckResourceAttrSet(resourceName, "neptune_subnet_group_name"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccNeptuneCluster_networkType_dual verifies that a dual-stack Neptune
+// cluster can be created and that import correctly hydrates network_type in state.
+func TestAccNeptuneCluster_networkType_dual(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBCluster
+	resourceName := "aws_neptune_cluster.test"
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_networkType(rName, "DUAL"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "neptune"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8182"),
+					resource.TestCheckResourceAttrSet(resourceName, "neptune_subnet_group_name"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
+func testAccClusterConfig_networkTypeBase(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
+resource "aws_neptune_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccClusterConfig_networkType(rName, networkType string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_networkTypeBase(rName), fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier        = %[1]q
+  engine                    = "neptune"
+  neptune_subnet_group_name = aws_neptune_subnet_group.test.name
+  network_type              = %[2]q
+  skip_final_snapshot       = true
+  apply_immediately         = true
+}
+`, rName, networkType))
 }
 
 func testAccClusterConfig_base() string {

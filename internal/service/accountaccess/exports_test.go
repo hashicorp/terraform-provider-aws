@@ -3,8 +3,11 @@
 
 package accountaccess
 
+// Exports for use in tests only.
 var (
 	ResourceApplication = newApplicationResource
+	ResourceEntitlement = newEntitlementResource
 
-	FindApplicationByARN = findApplicationByARN
+	FindApplicationByARN        = findApplicationByARN
+	FindEntitlementByTwoPartKey = findEntitlementByTwoPartKey
 )

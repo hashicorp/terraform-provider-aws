@@ -23,7 +23,7 @@ See the [AWS documentation on tag policies](https://docs.aws.amazon.com/organiza
 - [Additional Considerations](#additional-considerations)
     - [Validation Timing](#validation-timing)
     - [Warning Diagnostics with Plugin SDKV2 Resources](#warning-diagnostics-with-plugin-sdkv2-resources)
-- [Resource Type Cross Reference](#resource-types-cross-reference)
+- [Resource Type Cross Reference](#resource-type-cross-reference)
 
 <!-- /TOC -->
 

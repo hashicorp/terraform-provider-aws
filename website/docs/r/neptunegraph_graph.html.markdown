@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `endpoint` (String) The connection endpoint for the graph. For example: `g-12a3bcdef4.us-east-1.neptune-graph.amazonaws.com`
 - `arn` (String) Graph resource ARN
-- `id` (String) The auto-generated id assigned by the service.
+- `id` (String) The auto-generated ID assigned by the service.
 - `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

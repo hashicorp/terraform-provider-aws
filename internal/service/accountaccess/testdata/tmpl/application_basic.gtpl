@@ -1,7 +1,3 @@
-data "aws_ssoadmin_instances" "test" {
-{{- template "region" }}
-}
-
 resource "aws_accountaccess_application" "test" {
 {{- template "region" }}
   identity_source {
@@ -11,4 +7,8 @@ resource "aws_accountaccess_application" "test" {
   }
 
 {{- template "tags" . }}
+}
+
+data "aws_ssoadmin_instances" "test" {
+{{- template "region" }}
 }

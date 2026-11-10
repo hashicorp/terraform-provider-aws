@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_lambdacore_network_connector
 
-Manages an AWS Lambda Network Connector. A network connector provisions elastic network interfaces (ENIs) in the subnets you specify, routing outbound traffic from [Lambda MicroVMs](https://docs.aws.amazon.com/lambda/latest/dg/microvms-networking.html) through your VPC — for example to reach private resources, or to give MicroVM traffic a stable source IP by exiting through your NAT gateway.
+Manages an AWS Lambda Network Connector. A network connector provisions elastic network interfaces (ENIs) in the subnets you specify, routing outbound traffic from [Lambda MicroVMs](https://docs.aws.amazon.com/lambda/latest/dg/microvms-networking.html) or [Lambda Web Functions](https://docs.aws.amazon.com/lambda/latest/dg/web-functions-networking.html) through your VPC — for example to reach private resources, or to give MicroVM traffic a stable source IP by exiting through your NAT gateway.
 
 ## Example Usage
 
@@ -83,7 +83,7 @@ The following arguments are required:
 
 * `configuration` - (Required) Network configuration of the connector. See [`configuration` Block](#configuration-block) below.
 * `name` - (Required) Name of the network connector, unique within the account and Region. Changing this forces a new resource.
-* `operator_role` - (Optional) ARN of the IAM role that the network connector service assumes to manage elastic network interfaces in your VPC.
+* `operator_role` - (Required) ARN of the IAM role that the network connector service assumes to manage elastic network interfaces in your VPC.
 
 The following arguments are optional:
 
@@ -100,7 +100,7 @@ The `configuration` block supports the following:
 The `vpc_egress_configuration` block supports the following:
 
 * `associated_compute_resource_types` - (Required) Compute resource types that may use this connector. Valid values: `MicroVm`.
-* `network_protocol` - (Required) Network protocol. Valid values: `IPv4`, `DualStack`.
+* `network_protocol` - (Optional) Network protocol. Valid values: `IPv4`, `DualStack`.
 * `security_group_ids` - (Required) Set of security group IDs applied to the connector's ENIs.
 * `subnet_ids` - (Required) Set of subnet IDs where the connector provisions its ENIs.
 
@@ -109,6 +109,8 @@ The `vpc_egress_configuration` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the network connector.
+* `latest_version` - Number of the connector's latest version. Each configuration change creates a new immutable version.
+* `latest_version_arn` - Version-qualified ARN of the connector's latest version. Use it for `service_config.egress_network_connector_arn` on an `aws_lambdaweb_function_revision` resource.
 
 ## Timeouts
 

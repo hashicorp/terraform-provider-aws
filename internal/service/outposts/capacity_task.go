@@ -258,12 +258,6 @@ func (r *capacityTaskResource) Create(ctx context.Context, req resource.CreateRe
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	finalOut, err := waitCapacityTaskCreated(ctx, conn, outpostID, taskID, createTimeout)
 	if err != nil {
-		// Per BR-No-State-On-Failed-Create: on terminal FAILED state, do NOT persist state.
-		var failureErr *capacityTaskFailureError
-		if errors.As(err, &failureErr) {
-			smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("waiting for Outposts Capacity Task (%s/%s): %w", outpostID, taskID, failureErr), smerr.ID, taskID)
-			return
-		}
 		smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("waiting for Outposts Capacity Task (%s/%s): %w", outpostID, taskID, err), smerr.ID, taskID)
 		return
 	}

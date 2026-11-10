@@ -8,13 +8,13 @@ description: |-
 
 # Data Source: aws_vpcs
 
-This resource can be useful for getting back a list of VPC Ids for a region.
+This resource can be useful for getting back a list of VPC IDs for a region.
 
-The following example retrieves a list of VPC Ids with a custom tag of `service` set to a value of "production".
+The following example retrieves a list of VPC IDs with a custom tag of `service` set to a value of "production".
 
 ## Example Usage
 
-The following shows outputting all VPC Ids.
+The following shows outputting all VPC IDs.
 
 ```terraform
 data "aws_vpcs" "foo" {
@@ -56,26 +56,23 @@ output "foo" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `tags` - (Optional) Map of tags, each pair of which must exactly match
-  a pair on the desired vpcs.
 * `filter` - (Optional) Custom filter block as described below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired vpcs.
 
-### `filter`
+### `filter` Block
 
 More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
-* `name` - (Required) Name of the field to filter by, as defined by
-  [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcs.html).
-* `values` - (Required) Set of values that are accepted for the given field.
-  A VPC will be selected if any one of the given values matches.
+* `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcs.html).
+* `values` - (Required) Set of values that are accepted for the given field. A VPC will be selected if any one of the given values matches.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `ids` - List of all the VPC Ids found.
+* `ids` - List of all the VPC IDs found.
 
 ## Timeouts
 

@@ -269,7 +269,7 @@ The following arguments are available:
 * `action` (Required) - Action to take for the chosen segment. Valid values: `create-route`, `share`, `send-via`, `send-to`, and `associate-routing-policy` (available in policy version `2025.11` and later).
 * `description` (Optional) - A user-defined string describing the segment action.
 * `destination_cidr_blocks` (Optional) - List of strings containing CIDRs. You can define the IPv4 and IPv6 CIDR notation for each AWS Region. For example, `10.1.0.0/16` or `2001:db8::/56`. This is an array of CIDR notation strings.
-* `destinations` (Optional) - A list of strings. Valid values include `["blackhole"]` or a list of attachment ids.
+* `destinations` (Optional) - A list of strings. Valid values include `["blackhole"]` or a list of attachment IDs.
 * `edge_location_association` (Optional) - Associates routing policies with specific edge location pairs. Available in policy version `2025.11` and later. Detailed below.
 * `mode` (Optional) - String. When `action` is `share`, a `mode` value of `attachment-route` places the attachment and return routes in each of the `share_with` segments. When `action` is `send-via`, indicates the mode used for packets. Valid values: `attachment-route`, `single-hop`, `dual-hop`.
 * `routing_policy_names` (Optional) - A list of routing policy names to apply to segment sharing. The routing policies control how routes are propagated between the shared segments. Only applicable when `action` is `share`. Available in policy version `2025.11` and later.

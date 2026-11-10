@@ -37,14 +37,6 @@ type listResourceConfiguredTable struct {
 func (l *listResourceConfiguredTable) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().CleanRoomsClient(ctx)
 
-	var query listConfiguredTableModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Clean Rooms Configured Table")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input cleanrooms.ListConfiguredTablesInput
@@ -87,10 +79,6 @@ func (l *listResourceConfiguredTable) List(ctx context.Context, request list.Lis
 			}
 		}
 	}
-}
-
-type listConfiguredTableModel struct {
-	framework.WithRegionModel
 }
 
 func listConfiguredTables(ctx context.Context, conn *cleanrooms.Client, input *cleanrooms.ListConfiguredTablesInput) iter.Seq2[awstypes.ConfiguredTableSummary, error] {

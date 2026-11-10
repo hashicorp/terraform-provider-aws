@@ -71,7 +71,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active for device authentication.
-* `allow_auto_registration` - (Required)  Boolean flag to indicate if the certificate should be active for device regisration.
+* `allow_auto_registration` - (Required)  Boolean flag to indicate if the certificate should be active for device registration.
 * `ca_certificate_pem` - (Required)  PEM encoded CA certificate.
 * `certificate_mode` - (Optional)  The certificate mode in which the CA will be registered. Valid values: `DEFAULT` and `SNI_ONLY`. Default: `DEFAULT`.
 * `registration_config` - (Optional) Information about the registration configuration. See below.

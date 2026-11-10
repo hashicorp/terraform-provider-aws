@@ -58,6 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `hub_content_status` - Status of the hub content reference. Valid values include `Available`, `Importing`, `Deleting`, `ImportFailed`, `DeleteFailed`.
 * `hub_content_version` - Version of the hub content reference.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `versioned_hub_content_arn` - ARN of the hub content reference, including the version suffix. Use this for `hub_access_config.hub_content_arn` in [`aws_sagemaker_model`](sagemaker_model.html).
 
 ## Timeouts
 

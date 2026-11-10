@@ -26,7 +26,7 @@ func TestAccBedrockAgentCoreHarness_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_bedrockagentcore_harness.test[0]"
 	resourceName2 := "aws_bedrockagentcore_harness.test[1]"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 
@@ -80,7 +80,7 @@ func TestAccBedrockAgentCoreHarness_List_basic(t *testing.T) {
 func TestAccBedrockAgentCoreHarness_List_includeResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_bedrockagentcore_harness.test[0]"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	identity1 := tfstatecheck.Identity()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -153,7 +153,7 @@ func TestAccBedrockAgentCoreHarness_List_includeResource(t *testing.T) {
 							}),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("environment_artifact"), knownvalue.ListSizeExact(0)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("environment_variables"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("environment_variables"), knownvalue.MapSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrExecutionRoleARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("harness_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("harness_name"), knownvalue.StringExact(rName+"_0")),
@@ -200,7 +200,7 @@ func TestAccBedrockAgentCoreHarness_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName1 := "aws_bedrockagentcore_harness.test[0]"
 	resourceName2 := "aws_bedrockagentcore_harness.test[1]"
-	rName := testAccRandomHarnessName(t)
+	rName := randomWithPrefixAndUnderscore(t)
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
 

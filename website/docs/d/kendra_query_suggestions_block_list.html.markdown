@@ -23,9 +23,9 @@ data "aws_kendra_query_suggestions_block_list" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `index_id` - (Required) Identifier of the index that contains the block list.
 * `query_suggestions_block_list_id` - (Required) Identifier of the block list.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -42,10 +42,12 @@ This data source exports the following attributes in addition to the arguments a
 * `role_arn` - ARN of a role with permission to access the S3 bucket that contains the block list. For more information, see [IAM Roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 * `source_s3_path` - S3 location of the block list input data. Detailed below.
 * `status` - Current status of the block list. When the value is `ACTIVE`, the block list is ready for use.
-* `updated_at` - Date and time that the block list was last updated.
 * `tags` - Metadata that helps organize the block list you create.
+* `updated_at` - Date and time that the block list was last updated.
 
-The `source_s3_path` configuration block supports the following attributes:
+### `source_s3_path` Block
+
+The `source_s3_path` configuration block exports the following attributes:
 
 * `bucket` - Name of the S3 bucket that contains the file.
 * `key` - Name of the file.

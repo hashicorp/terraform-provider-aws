@@ -11,7 +11,7 @@ resource "aws_kms_replica_external_key" "test" {
 
 # ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
 resource "aws_kms_external_key" "test" {
-  provider = awsalternate
+  region = var.secondary_region
 
   description  = "${var.rName}-source"
   multi_region = true

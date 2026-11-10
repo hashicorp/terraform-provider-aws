@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_nat_gateways
 
-This resource can be useful for getting back a list of NAT gateway ids to be referenced elsewhere.
+This resource can be useful for getting back a list of NAT gateway IDs to be referenced elsewhere.
 
 ## Example Usage
 
@@ -54,7 +54,7 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `ids` - List of all the NAT gateway ids found.
+* `ids` - List of all the NAT gateway IDs found.
 
 ## Timeouts
 

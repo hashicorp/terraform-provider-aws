@@ -24,6 +24,7 @@ import (
 
 // @FrameworkDataSource("aws_odb_cloud_vm_cluster", name="Cloud Vm Cluster")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newDataSourceCloudVmCluster(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceCloudVmCluster{}, nil
 }

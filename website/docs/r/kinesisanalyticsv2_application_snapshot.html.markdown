@@ -24,17 +24,17 @@ resource "aws_kinesisanalyticsv2_application_snapshot" "example" {
 
 This resource supports the following arguments:
 
+* `application_name` - (Required) Name of an existing [Kinesis Analytics v2 Application](/docs/providers/aws/r/kinesisanalyticsv2_application.html). Note that the application must be running for a snapshot to be created.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `application_name` - (Required) The name of an existing  [Kinesis Analytics v2 Application](/docs/providers/aws/r/kinesisanalyticsv2_application.html). Note that the application must be running for a snapshot to be created.
-* `snapshot_name` - (Required) The name of the application snapshot.
+* `snapshot_name` - (Required) Name of the application snapshot.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The application snapshot identifier.
-* `application_version_id` - The current application version ID when the snapshot was created.
-* `snapshot_creation_timestamp` - The timestamp of the application snapshot.
+* `application_version_id` - Current application version ID when the snapshot was created.
+* `id` - Application snapshot identifier.
+* `snapshot_creation_timestamp` - Timestamp of the application snapshot.
 
 ## Timeouts
 

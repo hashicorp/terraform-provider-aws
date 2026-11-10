@@ -38,14 +38,6 @@ func (l *hyperParameterTuningJobListResource) List(ctx context.Context, request 
 	awsClient := l.Meta()
 	conn := awsClient.SageMakerClient(ctx)
 
-	var query listHyperParameterTuningJobModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing SageMaker Hyper Parameter Tuning Job resources")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -102,10 +94,6 @@ func (l *hyperParameterTuningJobListResource) List(ctx context.Context, request 
 			}
 		}
 	}
-}
-
-type listHyperParameterTuningJobModel struct {
-	framework.WithRegionModel
 }
 
 func listHyperParameterTuningJobs(ctx context.Context, conn *sagemaker.Client, input *sagemaker.ListHyperParameterTuningJobsInput) iter.Seq2[awstypes.HyperParameterTuningJobSummary, error] {

@@ -128,7 +128,7 @@ This resource supports the following arguments:
 
 * `field_to_match` - (Required) Set of configuration blocks for fields to redact. Detailed below.
 
-##### `field_to_match` Configuration Block
+#### `field_to_match` Configuration Block
 
 -> Additional information about this configuration can be found in the [AWS WAF Regional API Reference](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_FieldToMatch.html).
 
@@ -160,7 +160,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Web ACL using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Web ACL using the ID. For example:
 
 ```terraform
 import {
@@ -169,7 +169,7 @@ import {
 }
 ```
 
-Using `terraform import`, import WAF Regional Web ACL using the id. For example:
+Using `terraform import`, import WAF Regional Web ACL using the ID. For example:
 
 ```console
 % terraform import aws_wafregional_web_acl.wafacl a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

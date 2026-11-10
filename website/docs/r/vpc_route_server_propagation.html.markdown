@@ -24,8 +24,8 @@ resource "aws_vpc_route_server_propagation" "example" {
 
 The following arguments are required:
 
-* `route_server_id` - (Required) The unique identifier for the route server to be associated.
-* `route_table_id` - (Required) The ID of the route table to which route server will propagate routes.
+* `route_server_id` - (Required) Unique identifier for the route server to be associated.
+* `route_table_id` - (Required) ID of the route table to which route server will propagate routes.
 
 The following arguments are optional:
 

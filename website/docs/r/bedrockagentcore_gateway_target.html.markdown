@@ -55,9 +55,24 @@ resource "aws_lambda_function" "example" {
   runtime       = "nodejs24.x"
 }
 
+data "aws_iam_policy_document" "gateway_lambda_invoke" {
+  statement {
+    effect    = "Allow"
+    actions   = ["lambda:InvokeFunction"]
+    resources = [aws_lambda_function.example.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "gateway_lambda_invoke" {
+  name   = "example-gateway-lambda-invoke"
+  role   = aws_iam_role.gateway_role.id
+  policy = data.aws_iam_policy_document.gateway_lambda_invoke.json
+}
+
 resource "aws_bedrockagentcore_gateway" "example" {
-  name     = "example-gateway"
-  role_arn = aws_iam_role.gateway_role.arn
+  name            = "example-gateway"
+  role_arn        = aws_iam_role.gateway_role.arn
+  authorizer_type = "CUSTOM_JWT"
 
   authorizer_configuration {
     custom_jwt_authorizer {
@@ -106,12 +121,9 @@ resource "aws_bedrockagentcore_gateway_target" "example" {
                 }
 
                 property {
-                  name = "tags"
-                  type = "array"
-
-                  items {
-                    type = "string"
-                  }
+                  name       = "tags"
+                  type       = "array"
+                  items_json = jsonencode({ type = "string" })
                 }
               }
             }
@@ -148,7 +160,7 @@ resource "aws_bedrockagentcore_gateway_target" "api_key_example" {
 
   credential_provider_configuration {
     api_key {
-      provider_arn              = "arn:aws:iam::123456789012:oidc-provider/example.com"
+      provider_arn              = aws_bedrockagentcore_api_key_credential_provider.example.credential_provider_arn
       credential_location       = "HEADER"
       credential_parameter_name = "X-API-Key"
       credential_prefix         = "Bearer"
@@ -157,19 +169,9 @@ resource "aws_bedrockagentcore_gateway_target" "api_key_example" {
 
   target_configuration {
     mcp {
-      lambda {
-        lambda_arn = aws_lambda_function.example.arn
-
-        tool_schema {
-          inline_payload {
-            name        = "api_tool"
-            description = "External API integration tool"
-
-            input_schema {
-              type        = "string"
-              description = "Simple string input for API calls"
-            }
-          }
+      open_api_schema {
+        inline_payload {
+          payload = file("${path.module}/openapi.json")
         }
       }
     }
@@ -186,9 +188,9 @@ resource "aws_bedrockagentcore_gateway_target" "oauth_example" {
 
   credential_provider_configuration {
     oauth {
-      provider_arn       = "arn:aws:iam::123456789012:oidc-provider/oauth.example.com"
+      provider_arn       = aws_bedrockagentcore_oauth2_credential_provider.example.credential_provider_arn
       scopes             = ["read", "write"]
-      grant_type         = "authorization_code"
+      grant_type         = "AUTHORIZATION_CODE"
       default_return_url = "https://myapp.example.com/callback"
 
       custom_parameters = {
@@ -199,33 +201,9 @@ resource "aws_bedrockagentcore_gateway_target" "oauth_example" {
 
   target_configuration {
     mcp {
-      lambda {
-        lambda_arn = aws_lambda_function.example.arn
-
-        tool_schema {
-          inline_payload {
-            name        = "oauth_tool"
-            description = "OAuth-authenticated service"
-
-            input_schema {
-              type = "array"
-
-              items {
-                type = "object"
-
-                property {
-                  name     = "id"
-                  type     = "string"
-                  required = true
-                }
-
-                property {
-                  name = "value"
-                  type = "number"
-                }
-              }
-            }
-          }
+      open_api_schema {
+        inline_payload {
+          payload = file("${path.module}/openapi.json")
         }
       }
     }
@@ -345,7 +323,7 @@ Routes gateway traffic directly to an AgentCore Runtime agent over HTTP, without
 
 ```terraform
 resource "aws_bedrockagentcore_agent_runtime" "example" {
-  agent_runtime_name = "example-runtime"
+  agent_runtime_name = "example_runtime"
   role_arn           = aws_iam_role.runtime_role.arn
 
   agent_runtime_artifact {
@@ -501,7 +479,7 @@ The `api_key` block supports the following:
 * `credential_location` - (Optional) Location where the API key credential is provided. Valid values: `HEADER`, `QUERY_PARAMETER`.
 * `credential_parameter_name` - (Optional) Name of the parameter containing the API key credential.
 * `credential_prefix` - (Optional) Prefix to add to the API key credential value.
-* `provider_arn` - (Required) ARN of the OIDC provider for API key authentication.
+* `provider_arn` - (Required) ARN of the API key credential provider.
 
 ### `caller_iam_credentials` Block
 
@@ -516,15 +494,15 @@ The `oauth` block supports the following:
 
 * `custom_parameters` - (Optional) Map of custom parameters to include in OAuth requests.
 * `default_return_url` - (Optional) URL where the end user's browser is redirected after obtaining the authorization code. Required when `grant_type` is `AUTHORIZATION_CODE`.
-* `grant_type` - (Optional) OAuth grant type. Valid values: `CLIENT_CREDENTIALS` (machine-to-machine authentication), `AUTHORIZATION_CODE` (user-delegated access).
-* `provider_arn` - (Required) ARN of the Oauth credential provider for OAuth authentication.
-* `scopes` - (Optional) Set of OAuth scopes to request.
+* `grant_type` - (Optional) OAuth grant type. Valid values: `CLIENT_CREDENTIALS` (machine-to-machine authentication), `AUTHORIZATION_CODE` (user-delegated access), `TOKEN_EXCHANGE` (on-behalf-of token exchange).
+* `provider_arn` - (Required) ARN of the OAuth credential provider.
+* `scopes` - (Required) Set of OAuth scopes to request.
 
 ### `gateway_iam_role` Block
 
 The `gateway_iam_role` block supports the following:
 
-* `region` - (Optional) AWS Region used for SigV4 signing of upstream requests. Defaults to the gateway's Region when omitted. Only meaningful when `service` is set.
+* `region` - (Optional) AWS Region used for SigV4 signing of upstream requests. Defaults to the gateway's Region when omitted. Can only be set when `service` is set.
 * `service` - (Optional) Target AWS service name used for SigV4 signing of upstream requests. Required when calling SigV4-protected endpoints such as another Bedrock AgentCore Runtime (use `bedrock-agentcore`). Omit for non-SigV4 IAM-role-based authentication, in which case the block can be empty (`gateway_iam_role {}`).
 
 ### `metadata_configuration` Block
@@ -543,7 +521,7 @@ The optional `private_endpoint` block configures private connectivity from Agent
 
 Exactly one of `managed_vpc_resource` or `self_managed_lattice_resource` must be specified.
 
-~> **Note:** Gateway targets configured with `private_endpoint` cannot use `NO_AUTH` as the inbound authorizer type on the parent gateway unless an interceptor Lambda is also configured.
+~> **Note:** Gateway targets configured with `private_endpoint` cannot use `NONE` as the `authorizer_type` of the parent gateway unless an interceptor Lambda is also configured.
 
 * `managed_vpc_resource` - (Optional) AWS creates and manages the VPC Lattice resource gateway and resource configuration on your behalf using a service-linked role. See [`managed_vpc_resource` Block](#managed_vpc_resource-block) below.
 * `self_managed_lattice_resource` - (Optional) Use an existing VPC Lattice resource configuration that you manage yourself. Useful for cross-account setups or advanced Lattice configurations. See [`self_managed_lattice_resource` Block](#self_managed_lattice_resource-block) below.
@@ -563,13 +541,13 @@ The `managed_vpc_resource` block supports the following:
 
 The `self_managed_lattice_resource` block supports the following:
 
-* `resource_configuration_identifier` - (Required) ARN or ID of the VPC Lattice resource configuration.
+* `resource_configuration_identifier` - (Optional) ARN or ID of the VPC Lattice resource configuration.
 
 ### `target_configuration` Block
 
 The `target_configuration` block supports exactly one of the following:
 
-* `http` - (Optional) HTTP target configuration for routing requests directly to an AgentCore Runtime agent. See [`http` Block](#http-block) below.
+* `http` - (Optional) HTTP target configuration for routing requests directly to an AgentCore Runtime agent or to an external HTTPS endpoint. See [`http` Block](#http-block) below.
 * `inference` - (Optional) Inference target configuration for routing requests to a large language model (LLM) provider, either through a built-in connector or an explicitly configured provider. See [`inference` Block](#inference-block) below.
 * `mcp` - (Optional) Model Context Protocol (MCP) configuration. See [`mcp` Block](#mcp-block) below.
 
@@ -594,7 +572,7 @@ The `agentcore_runtime` block supports:
 
 The `schema` block supports the following:
 
-* `source` - (Required) Configuration for API schema. See [`api_schema_configuration` Block](#api_schema_configuration-block) below.
+* `source` - (Required) Configuration for the API schema. Supports exactly one of `inline_payload` or `s3`. For HTTP targets, these blocks are documented under their full paths (for example, [`target_configuration.http.agentcore_runtime.schema.source.inline_payload` Block](#target_configurationhttpagentcore_runtimeschemasourceinline_payload-block) and [`target_configuration.http.agentcore_runtime.schema.source.s3` Block](#target_configurationhttpagentcore_runtimeschemasources3-block)).
 
 ### `passthrough` Block
 
@@ -602,10 +580,10 @@ The `passthrough` block supports:
 
 * `endpoint` - (Required) HTTPS endpoint that the gateway forwards requests to for this passthrough target. Must start with `https://`.
 * `protocol_type` - (Required) Application protocol the passthrough target implements. Valid values: `MCP`, `A2A`, `INFERENCE`, `CUSTOM`.
-* `schema` - (Optional) API schema configuration that defines the structure of the passthrough target's API. Supports the same `inline_payload` and `s3` blocks as [`api_schema_configuration`](#api_schema_configuration).
+* `schema` - (Optional) API schema configuration that defines the structure of the passthrough target's API. See [`schema` Block](#schema-block) below.
 * `static_query_parameter_conflict_resolution` - (Optional) Controls precedence when a client request supplies a query parameter whose name matches a configured static query parameter. Valid values: `CLIENT_OVERRIDE`, `STATIC_OVERRIDE`.
 * `static_query_parameters` - (Optional) Map of static query parameters that the gateway always appends to the outbound URL when forwarding requests to the target.
-* `stickiness_configuration` - (Optional) Session stickiness configuration routing requests within the same session to the same target. See [`stickiness_configuration`](#stickiness_configuration) below.
+* `stickiness_configuration` - (Optional) Session stickiness configuration routing requests within the same session to the same target. See [`stickiness_configuration`](#stickiness_configuration-block) below.
 
 ### `stickiness_configuration` Block
 
@@ -619,16 +597,16 @@ The `stickiness_configuration` block supports the following:
 
 The `inference` block supports exactly one of the following:
 
-* `connector` - (Optional) Connector-based inference configuration that routes requests to an LLM provider through a built-in connector with predefined provider rules. See [`connector` Block](#connector-block) below.
+* `connector` - (Optional) Connector-based inference configuration that routes requests to an LLM provider through a built-in connector with predefined provider rules. See [`target_configuration.inference.connector` Block](#target_configurationinferenceconnector-block) below.
 * `provider` - (Optional) Provider-based inference configuration that explicitly defines the endpoint, model mapping, and operations used to route requests to an LLM provider. See [`provider` Block](#provider-block) below.
 
-### `connector` Block
+### `target_configuration.inference.connector` Block
 
 The `connector` block supports the following:
 
-* `source` - (Required) Source configuration identifying which inference connector to use. See [`source` Block](#source-block) below.
+* `source` - (Required) Source configuration identifying which inference connector to use. See [`target_configuration.inference.connector.source` Block](#target_configurationinferenceconnectorsource-block) below.
 
-### `source` Block
+### `target_configuration.inference.connector.source` Block
 
 The `source` block supports the following:
 
@@ -653,19 +631,19 @@ The `model_mapping` block supports the following:
 The `provider_prefix` block supports the following:
 
 * `separator` - (Optional) Single character that separates the provider prefix from the model name (for example, `.`). Defaults to `.`.
-* `strip` - (Optional) Whether clients can omit the provider prefix from model IDs. If `true`, the gateway accepts model IDs without the prefix and restores the full prefixed form before forwarding to the provider. Defaults to `false`.
+* `strip` - (Optional) Whether to allow clients to omit the provider prefix from model IDs. If `true`, the gateway accepts model IDs without the prefix and restores the full prefixed form before forwarding to the provider. Defaults to `false`.
 
 ### `operation` Block
 
 The `operation` block supports the following:
 
+* `model` - (Optional) List of models supported for this operation. See [`model` Block](#model-block) below.
 * `path` - (Required) Request path for this operation (for example, `/v1/messages` or `/v1/responses`).
 * `provider_path` - (Optional) Provider path to forward requests to, if it differs from the request path. For example, `/anthropic/v1/messages` when the provider expects a different path than the client-facing `/v1/messages`.
-* `model` - (Optional) List of models supported for this operation. See [`model` Block](#model) below.
 
 ### `model` Block
 
-The `models` block supports the following:
+The `model` block supports the following:
 
 * `model` - (Required) Model ID or glob pattern that identifies the model (for example, `anthropic.claude-opus-*` or `openai.gpt-oss-*`).
 
@@ -674,11 +652,11 @@ The `models` block supports the following:
 The `mcp` block supports exactly one of the following:
 
 * `api_gateway` - (Optional) API Gateway target configuration. See [`api_gateway` Block](#api_gateway-block) below.
-* `connector` - (Optional) Connector integration target configuration. Connectors provide pre-built integrations with AWS services and third-party tools. See [`connector` Block](#connector-block) below.
+* `connector` - (Optional) Connector integration target configuration. Connectors provide pre-built integrations with AWS services and third-party tools. See [`target_configuration.mcp.connector` Block](#target_configurationmcpconnector-block) below.
 * `lambda` - (Optional) Lambda function target configuration. See [`lambda` Block](#lambda-block) below.
 * `mcp_server` - (Optional) MCP server target configuration. See [`mcp_server` Block](#mcp_server-block) below.
-* `open_api_schema` - (Optional) OpenAPI schema-based target configuration. See [`api_schema_configuration` Block](#api_schema_configuration-block) below.
-* `smithy_model` - (Optional) Smithy model-based target configuration. See [`api_schema_configuration` Block](#api_schema_configuration-block) below.
+* `open_api_schema` - (Optional) OpenAPI schema-based target configuration. Supports exactly one of `inline_payload` (see [`target_configuration.mcp.open_api_schema.inline_payload` Block](#target_configurationmcpopen_api_schemainline_payload-block)) or `s3` (see [`target_configuration.mcp.open_api_schema.s3` Block](#target_configurationmcpopen_api_schemas3-block)).
+* `smithy_model` - (Optional) Smithy model-based target configuration. Supports exactly one of `inline_payload` (see [`target_configuration.mcp.smithy_model.inline_payload` Block](#target_configurationmcpsmithy_modelinline_payload-block)) or `s3` (see [`target_configuration.mcp.smithy_model.s3` Block](#target_configurationmcpsmithy_models3-block)).
 
 ### `api_gateway` Block
 
@@ -693,7 +671,7 @@ The `api_gateway` block supports the following:
 The `api_gateway_tool_configuration` block supports the following:
 
 * `tool_filter` - (Required) Repeatable block of path and method patterns to expose as tools. See [`tool_filter` Block](#tool_filter-block) below.
-* `tool_override` - (Required) Repeatable block of explicit tool definitions with optional custom names and descriptions. See [`tool_override` Block](#tool_override-block) below.
+* `tool_override` - (Optional) Repeatable block of explicit tool definitions with optional custom names and descriptions. See [`tool_override` Block](#tool_override-block) below.
 
 ### `tool_filter` Block
 
@@ -708,16 +686,16 @@ The `tool_override` block supports the following:
 
 * `description` - (Optional) Description of the tool. Provides information about the purpose and usage of the tool. If not provided, uses the description from the API's OpenAPI specification.
 * `method` - (Required) HTTP method to expose for the specified path. Valid values: `GET`, `DELETE`, `HEAD`, `OPTIONS`, `PATCH`, `PUT` and `POST`.
-* `name` - (Optional) Name of tool. Identifies the tool in the Model Context Protocol.
+* `name` - (Required) Name of tool. Identifies the tool in the Model Context Protocol.
 * `path` - (Required) Resource path in the REST API (e.g., `/pets`). Must explicitly match an existing path in the REST API.
 
-### `connector` Block
+### `target_configuration.mcp.connector` Block
 
 The `connector` block supports the following:
 
 * `configuration` - (Required) Per-tool configurations for the connector. See [`configuration` Block](#configuration-block) below.
 * `enabled` - (Optional) List of tool names to enable from this connector. If omitted, all tools provided by the connector are enabled.
-* `source` - (Required) Source configuration identifying which connector to use. See [`source` Block](#source-block) below.
+* `source` - (Required) Source configuration identifying which connector to use. See [`target_configuration.mcp.connector.source` Block](#target_configurationmcpconnectorsource-block) below.
 
 ### `configuration` Block
 
@@ -730,13 +708,13 @@ The `configuration` block supports the following:
 
 ### `parameter_override` Block
 
-The `parameter_overrides` block supports the following:
+The `parameter_override` block supports the following:
 
-* `path` - (Required) JSON Pointer path identifying the parameter (for example, `/numberOfResults` or `/filter`).
 * `description` - (Optional) Agent-facing description override for this parameter.
-* `visible` - (Optional) Whether this parameter is visible to the agent. If not specified, uses the service default.
+* `path` - (Required) JSON Pointer path identifying the parameter (for example, `/numberOfResults` or `/filter`).
+* `visible` - (Optional) Whether to make this parameter visible to the agent. If not specified, uses the service default.
 
-### `source` Block
+### `target_configuration.mcp.connector.source` Block
 
 The `source` block supports the following:
 
@@ -754,24 +732,17 @@ The `lambda` block supports the following:
 
 The `tool_schema` block supports exactly one of the following:
 
-* `inline_payload` - (Optional) Inline tool definition. See [`inline_payload` Block](#inline_payload-block) below.
-* `s3` - (Optional) S3-based tool definition. See [`s3` Block](#s3-block) below.
+* `inline_payload` - (Optional) Inline tool definition. See [`target_configuration.mcp.lambda.tool_schema.inline_payload` Block](#target_configurationmcplambdatool_schemainline_payload-block) below.
+* `s3` - (Optional) S3-based tool definition. See [`target_configuration.mcp.lambda.tool_schema.s3` Block](#target_configurationmcplambdatool_schemas3-block) below.
 
-### `inline_payload` Block
+### `target_configuration.mcp.lambda.tool_schema.inline_payload` Block
 
 The `inline_payload` block supports the following:
 
 * `description` - (Required) Description of what the tool does.
-* `input_schema` - (Required) Schema for the tool's input. See [`schema_definition` Block](#schema_definition-block) below.
+* `input_schema` - (Required) Schema for the tool's input. See [`input_schema` Block](#input_schema-block) below.
 * `name` - (Required) Name of the tool.
-* `output_schema` - (Optional) Schema for the tool's output. See [`schema_definition` Block](#schema_definition-block) below.
-
-### `s3` Block
-
-The `s3` block supports the following:
-
-* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
-* `uri` - (Optional) S3 URI where the tool schema is stored.
+* `output_schema` - (Optional) Schema for the tool's output. See [`output_schema` Block](#output_schema-block) below.
 
 ### `mcp_server` Block
 
@@ -779,7 +750,7 @@ The `mcp_server` block supports the following:
 
 * `endpoint` - (Required) Endpoint for the MCP server target configuration.
 * `listing_mode` - (Optional) Listing mode for the MCP server target. Valid values are `DEFAULT` and `DYNAMIC`. MCP resources for `DEFAULT` targets are cached at the control plane for faster access, while resources for `DYNAMIC` targets are retrieved dynamically when listing tools.
-* `mcp_tool_schema` - (Optional) Tool schema configuration for the MCP server target. Supported only when the credential provider is configured with an authorization code grant type. When set, dynamic tool discovery and synchronization are disabled. See [`mcp_tool_schema` Block](#mcp_tool_schema-block) below.
+* `mcp_tool_schema` - (Optional) Tool schema configuration for the MCP server target. When set, dynamic tool discovery and synchronization are disabled. See [`mcp_tool_schema` Block](#mcp_tool_schema-block) below.
 * `resource_priority` - (Optional) Priority for resolving MCP server targets with shared resource URIs. Lower values take precedence. Defaults to `1000` when not set.
 
 ### `mcp_tool_schema` Block
@@ -787,57 +758,256 @@ The `mcp_server` block supports the following:
 The `mcp_tool_schema` block supports exactly one of the following:
 
 * `inline_payload` - (Optional) Inline tool schema payload. The `inline_payload` block requires a `payload` (string) containing the MCP tool schema definition.
-* `s3` - (Optional) S3 location of the tool schema. See [`s3` Block](#s3-block) below.
+* `s3` - (Optional) S3 location of the tool schema. See [`target_configuration.mcp.mcp_server.mcp_tool_schema.s3` Block](#target_configurationmcpmcp_servermcp_tool_schemas3-block) below.
 
-### `api_schema_configuration` Block
-
-The `api_schema_configuration` block supports exactly one of the following:
-
-* `inline_payload` - (Optional) Inline schema payload. See [`inline_payload` Block](#inline_payload-block) below.
-* `s3` - (Optional) S3-based schema configuration. See [`s3` Block](#s3-block) below.
-
-### `inline_payload` Block
+### `target_configuration.http.agentcore_runtime.schema.source.inline_payload` Block
 
 The `inline_payload` block supports the following:
 
 * `payload` - (Required) Inline schema payload content.
 
-### `s3` Block
+### `target_configuration.http.passthrough.schema.source.inline_payload` Block
+
+The `inline_payload` block supports the following:
+
+* `payload` - (Required) Inline schema payload content.
+
+### `target_configuration.mcp.mcp_server.mcp_tool_schema.inline_payload` Block
+
+The `inline_payload` block supports the following:
+
+* `payload` - (Required) Inline schema payload content.
+
+### `target_configuration.mcp.open_api_schema.inline_payload` Block
+
+The `inline_payload` block supports the following:
+
+* `payload` - (Required) Inline schema payload content.
+
+### `target_configuration.mcp.smithy_model.inline_payload` Block
+
+The `inline_payload` block supports the following:
+
+* `payload` - (Required) Inline schema payload content.
+
+### `target_configuration.http.agentcore_runtime.schema.source.s3` Block
 
 The `s3` block supports the following:
 
 * `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
 * `uri` - (Optional) S3 URI where the schema is stored.
 
-### `schema_definition` Block
+### `target_configuration.http.passthrough.schema.source.s3` Block
 
-The `schema_definition` block supports the following:
+The `s3` block supports the following:
+
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Optional) S3 URI where the schema is stored.
+
+### `target_configuration.mcp.lambda.tool_schema.s3` Block
+
+The `s3` block supports the following:
+
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Optional) S3 URI where the schema is stored.
+
+### `target_configuration.mcp.mcp_server.mcp_tool_schema.s3` Block
+
+The `s3` block supports the following:
+
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Required) S3 URI where the schema is stored.
+
+### `target_configuration.mcp.open_api_schema.s3` Block
+
+The `s3` block supports the following:
+
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Optional) S3 URI where the schema is stored.
+
+### `target_configuration.mcp.smithy_model.s3` Block
+
+The `s3` block supports the following:
+
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `uri` - (Optional) S3 URI where the schema is stored.
+
+### `input_schema` Block
+
+The `input_schema` block supports the following:
 
 * `description` - (Optional) Description of the schema element.
-* `items` - (Optional) Schema definition for array items. Can only be used when `type` is `array`. See [`items` Block](#items-block) below.
-* `property` - (Optional) Set of property definitions for object types. Can only be used when `type` is `object`. See [`property` Block](#property-block) below.
+* `items` - (Optional) Schema definition for array items. Can only be used when `type` is `array`. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.items` Block](#target_configurationmcplambdatool_schemainline_payloadinput_schemaitems-block) below.
+* `property` - (Optional) Set of property definitions for object types. Can only be used when `type` is `object`. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.property` Block](#target_configurationmcplambdatool_schemainline_payloadinput_schemaproperty-block) below.
 * `type` - (Required) Data type of the schema. Valid values: `string`, `number`, `integer`, `boolean`, `array`, `object`.
 
-### `items` Block
+### `output_schema` Block
+
+The `output_schema` block supports the following:
+
+* `description` - (Optional) Description of the schema element.
+* `items` - (Optional) Schema definition for array items. Can only be used when `type` is `array`. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.items` Block](#target_configurationmcplambdatool_schemainline_payloadoutput_schemaitems-block) below.
+* `property` - (Optional) Set of property definitions for object types. Can only be used when `type` is `object`. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.property` Block](#target_configurationmcplambdatool_schemainline_payloadoutput_schemaproperty-block) below.
+* `type` - (Required) Data type of the schema. Valid values: `string`, `number`, `integer`, `boolean`, `array`, `object`.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.items` Block
 
 The `items` block supports the following:
 
 * `description` - (Optional) Description of the array items.
-* `items` - (Optional) Nested items definition for arrays of arrays.
-* `property` - (Optional) Set of property definitions for arrays of objects. See [`property` Block](#property-block) below.
+* `items` - (Optional) Nested items definition for arrays of arrays. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.items.items` Block](#target_configurationmcplambdatool_schemainline_payloadinput_schemaitemsitems-block) below.
+* `property` - (Optional) Set of property definitions for arrays of objects. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.items.property` Block](#target_configurationmcplambdatool_schemainline_payloadinput_schemaitemsproperty-block) below.
 * `type` - (Required) Data type of the array items.
 
-### `property` Block
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.items.items` Block
+
+The `items` block supports the following:
+
+* `description` - (Optional) Description of the array items.
+* `items_json` - (Optional) JSON-encoded schema definition for array items. Used for complex nested structures. Cannot be used with `properties_json`.
+* `properties_json` - (Optional) JSON-encoded schema definition for object properties. Used for complex nested structures. Cannot be used with `items_json`.
+* `type` - (Required) Data type of the array items.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.items.property` Block
 
 The `property` block supports the following:
 
 * `description` - (Optional) Description of the property.
-* `required` - (Optional) Whether this property is required. Defaults to `false`.
-* `items` - (Optional) Items definition for array properties. See [`items` Block](#items-block) above.
 * `items_json` - (Optional) JSON-encoded schema definition for array items. Used for complex nested structures. Cannot be used with `properties_json`.
 * `name` - (Required) Name of the property.
 * `properties_json` - (Optional) JSON-encoded schema definition for object properties. Used for complex nested structures. Cannot be used with `items_json`.
-* `property` - (Optional) Set of nested property definitions for object properties.
+* `required` - (Optional) Whether to mark this property as required. Defaults to `false`.
+* `type` - (Required) Data type of the property.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.property` Block
+
+The `property` block supports the following:
+
+* `description` - (Optional) Description of the property.
+* `items` - (Optional) Items definition for array properties. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.property.items` Block](#target_configurationmcplambdatool_schemainline_payloadinput_schemapropertyitems-block) below.
+* `name` - (Required) Name of the property.
+* `property` - (Optional) Set of nested property definitions for object properties. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.property.property` Block](#target_configurationmcplambdatool_schemainline_payloadinput_schemapropertyproperty-block) below.
+* `required` - (Optional) Whether to mark this property as required. Defaults to `false`.
+* `type` - (Required) Data type of the property.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.property.items` Block
+
+The `items` block supports the following:
+
+* `description` - (Optional) Description of the array items.
+* `items` - (Optional) Nested items definition for arrays of arrays. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.property.items.items` Block](#target_configurationmcplambdatool_schemainline_payloadinput_schemapropertyitemsitems-block) below.
+* `property` - (Optional) Set of property definitions for arrays of objects. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.property.items.property` Block](#target_configurationmcplambdatool_schemainline_payloadinput_schemapropertyitemsproperty-block) below.
+* `type` - (Required) Data type of the array items.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.property.items.items` Block
+
+The `items` block supports the following:
+
+* `description` - (Optional) Description of the array items.
+* `items_json` - (Optional) JSON-encoded schema definition for array items. Used for complex nested structures. Cannot be used with `properties_json`.
+* `properties_json` - (Optional) JSON-encoded schema definition for object properties. Used for complex nested structures. Cannot be used with `items_json`.
+* `type` - (Required) Data type of the array items.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.property.items.property` Block
+
+The `property` block supports the following:
+
+* `description` - (Optional) Description of the property.
+* `items_json` - (Optional) JSON-encoded schema definition for array items. Used for complex nested structures. Cannot be used with `properties_json`.
+* `name` - (Required) Name of the property.
+* `properties_json` - (Optional) JSON-encoded schema definition for object properties. Used for complex nested structures. Cannot be used with `items_json`.
+* `required` - (Optional) Whether to mark this property as required. Defaults to `false`.
+* `type` - (Required) Data type of the property.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.input_schema.property.property` Block
+
+The `property` block supports the following:
+
+* `description` - (Optional) Description of the property.
+* `items_json` - (Optional) JSON-encoded schema definition for array items. Used for complex nested structures. Cannot be used with `properties_json`.
+* `name` - (Required) Name of the property.
+* `properties_json` - (Optional) JSON-encoded schema definition for object properties. Used for complex nested structures. Cannot be used with `items_json`.
+* `required` - (Optional) Whether to mark this property as required. Defaults to `false`.
+* `type` - (Required) Data type of the property.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.items` Block
+
+The `items` block supports the following:
+
+* `description` - (Optional) Description of the array items.
+* `items` - (Optional) Nested items definition for arrays of arrays. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.items.items` Block](#target_configurationmcplambdatool_schemainline_payloadoutput_schemaitemsitems-block) below.
+* `property` - (Optional) Set of property definitions for arrays of objects. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.items.property` Block](#target_configurationmcplambdatool_schemainline_payloadoutput_schemaitemsproperty-block) below.
+* `type` - (Required) Data type of the array items.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.items.items` Block
+
+The `items` block supports the following:
+
+* `description` - (Optional) Description of the array items.
+* `items_json` - (Optional) JSON-encoded schema definition for array items. Used for complex nested structures. Cannot be used with `properties_json`.
+* `properties_json` - (Optional) JSON-encoded schema definition for object properties. Used for complex nested structures. Cannot be used with `items_json`.
+* `type` - (Required) Data type of the array items.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.items.property` Block
+
+The `property` block supports the following:
+
+* `description` - (Optional) Description of the property.
+* `items_json` - (Optional) JSON-encoded schema definition for array items. Used for complex nested structures. Cannot be used with `properties_json`.
+* `name` - (Required) Name of the property.
+* `properties_json` - (Optional) JSON-encoded schema definition for object properties. Used for complex nested structures. Cannot be used with `items_json`.
+* `required` - (Optional) Whether to mark this property as required. Defaults to `false`.
+* `type` - (Required) Data type of the property.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.property` Block
+
+The `property` block supports the following:
+
+* `description` - (Optional) Description of the property.
+* `items` - (Optional) Items definition for array properties. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.property.items` Block](#target_configurationmcplambdatool_schemainline_payloadoutput_schemapropertyitems-block) below.
+* `name` - (Required) Name of the property.
+* `property` - (Optional) Set of nested property definitions for object properties. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.property.property` Block](#target_configurationmcplambdatool_schemainline_payloadoutput_schemapropertyproperty-block) below.
+* `required` - (Optional) Whether to mark this property as required. Defaults to `false`.
+* `type` - (Required) Data type of the property.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.property.items` Block
+
+The `items` block supports the following:
+
+* `description` - (Optional) Description of the array items.
+* `items` - (Optional) Nested items definition for arrays of arrays. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.property.items.items` Block](#target_configurationmcplambdatool_schemainline_payloadoutput_schemapropertyitemsitems-block) below.
+* `property` - (Optional) Set of property definitions for arrays of objects. See [`target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.property.items.property` Block](#target_configurationmcplambdatool_schemainline_payloadoutput_schemapropertyitemsproperty-block) below.
+* `type` - (Required) Data type of the array items.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.property.items.items` Block
+
+The `items` block supports the following:
+
+* `description` - (Optional) Description of the array items.
+* `items_json` - (Optional) JSON-encoded schema definition for array items. Used for complex nested structures. Cannot be used with `properties_json`.
+* `properties_json` - (Optional) JSON-encoded schema definition for object properties. Used for complex nested structures. Cannot be used with `items_json`.
+* `type` - (Required) Data type of the array items.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.property.items.property` Block
+
+The `property` block supports the following:
+
+* `description` - (Optional) Description of the property.
+* `items_json` - (Optional) JSON-encoded schema definition for array items. Used for complex nested structures. Cannot be used with `properties_json`.
+* `name` - (Required) Name of the property.
+* `properties_json` - (Optional) JSON-encoded schema definition for object properties. Used for complex nested structures. Cannot be used with `items_json`.
+* `required` - (Optional) Whether to mark this property as required. Defaults to `false`.
+* `type` - (Required) Data type of the property.
+
+### `target_configuration.mcp.lambda.tool_schema.inline_payload.output_schema.property.property` Block
+
+The `property` block supports the following:
+
+* `description` - (Optional) Description of the property.
+* `items_json` - (Optional) JSON-encoded schema definition for array items. Used for complex nested structures. Cannot be used with `properties_json`.
+* `name` - (Required) Name of the property.
+* `properties_json` - (Optional) JSON-encoded schema definition for object properties. Used for complex nested structures. Cannot be used with `items_json`.
+* `required` - (Optional) Whether to mark this property as required. Defaults to `false`.
 * `type` - (Required) Data type of the property.
 
 ## Attribute Reference
@@ -881,7 +1051,7 @@ resource "aws_bedrockagentcore_gateway_target" "example" {
 
 #### Optional
 
-* `account_id` (String) Account ID where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import gateway targets using `gateway_identifier` and `target_id` separated by a comma (`,`). For example:

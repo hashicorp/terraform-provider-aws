@@ -167,14 +167,14 @@ The `filters` configuration block supports the following arguments:
 * `malware_state` - (Optional) The state of the malware that was observed. See [String Filter](#string-filter-argument-reference) below for more details.
 * `malware_type` - (Optional) The type of the malware that was observed. See [String Filter](#string-filter-argument-reference) below for more details.
 * `network_destination_domain` - (Optional) The destination domain of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-* `network_destination_ipv4` - (Optional) The destination IPv4 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-* `network_destination_ipv6` - (Optional) The destination IPv6 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
+* `network_destination_ipv4` - (Optional) The destination IPv4 address of network-related information about a finding. See [IP Filter](#ip-filter-argument-reference) below for more details.
+* `network_destination_ipv6` - (Optional) The destination IPv6 address of network-related information about a finding. See [IP Filter](#ip-filter-argument-reference) below for more details.
 * `network_destination_port` - (Optional) The destination port of network-related information about a finding. See [Number Filter](#number-filter-argument-reference) below for more details.
 * `network_direction` - (Optional) Indicates the direction of network traffic associated with a finding. See [String Filter](#string-filter-argument-reference) below for more details.
 * `network_protocol` - (Optional) The protocol of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
 * `network_source_domain` - (Optional) The source domain of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-* `network_source_ipv4` - (Optional) The source IPv4 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-* `network_source_ipv6` - (Optional) The source IPv6 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
+* `network_source_ipv4` - (Optional) The source IPv4 address of network-related information about a finding. See [IP Filter](#ip-filter-argument-reference) below for more details.
+* `network_source_ipv6` - (Optional) The source IPv6 address of network-related information about a finding. See [IP Filter](#ip-filter-argument-reference) below for more details.
 * `network_source_mac` - (Optional) The source media access control (MAC) address of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
 * `network_source_port` - (Optional) The source port of network-related information about a finding. See [Number Filter](#number-filter-argument-reference) below for more details.
 * `note_text` - (Optional) The text of a note. See [String Filter](#string-filter-argument-reference) below for more details.
@@ -195,8 +195,8 @@ The `filters` configuration block supports the following arguments:
 * `related_findings_product_arn` - (Optional) The ARN of the solution that generated a related finding. See [String Filter](#string-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_iam_instance_profile_arn` - (Optional) The IAM profile ARN of the instance. See [String Filter](#string-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_image_id` - (Optional) AMI ID of the instance. See [String Filter](#string-filter-argument-reference) below for more details.
-* `resource_aws_ec2_instance_ipv4_addresses` - (Optional) The IPv4 addresses associated with the instance. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-* `resource_aws_ec2_instance_ipv6_addresses` - (Optional) The IPv6 addresses associated with the instance. See [Ip Filter](#ip-filter-argument-reference) below for more details.
+* `resource_aws_ec2_instance_ipv4_addresses` - (Optional) The IPv4 addresses associated with the instance. See [IP Filter](#ip-filter-argument-reference) below for more details.
+* `resource_aws_ec2_instance_ipv6_addresses` - (Optional) The IPv6 addresses associated with the instance. See [IP Filter](#ip-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_key_name` - (Optional) The key name associated with the instance. See [String Filter](#string-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_launched_at` - (Optional) The date and time the instance was launched. See [Date Filter](#date-filter-argument-reference) below for more details.
 * `resource_aws_ec2_instance_subnet_id` - (Optional) The identifier of the subnet that the instance was launched in. See [String Filter](#string-filter-argument-reference) below for more details.
@@ -247,9 +247,9 @@ The `date_range` configuration block supports the following arguments:
 * `unit` - (Required) A date range unit for the date filter. Valid values: `DAYS`.
 * `value` - (Required) A date range value for the date filter, provided as an Integer.
 
-### Ip Filter Argument Reference
+### IP Filter Argument Reference
 
-The Ip filter configuration block supports the following arguments:
+The IP filter configuration block supports the following arguments:
 
 * `cidr` - (Required) A finding's CIDR value.
 

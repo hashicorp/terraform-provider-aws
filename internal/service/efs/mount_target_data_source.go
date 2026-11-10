@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -114,7 +113,7 @@ func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta
 		inputDMT.MountTargetId = aws.String(v.(string))
 	}
 
-	mt, err := findMountTarget(ctx, conn, &inputDMT, tfslices.PredicateTrue[awstypes.MountTargetDescription]())
+	mt, err := findMountTarget(ctx, conn, &inputDMT)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target: %s", err)

@@ -40,7 +40,7 @@ This resource supports the following arguments:
 * `description` - (Optional, Forces new) A description of the traffic mirror session.
 * `network_interface_id` - (Optional, Forces new) The network interface ID that is associated with the target.
 * `network_load_balancer_arn` - (Optional, Forces new) ARN of the Network Load Balancer that is associated with the target.
-* `gateway_load_balancer_endpoint_id` - (Optional, Forces new) The VPC Endpoint Id of the Gateway Load Balancer that is associated with the target.
+* `gateway_load_balancer_endpoint_id` - (Optional, Forces new) The VPC Endpoint ID of the Gateway Load Balancer that is associated with the target.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 **NOTE:** Either `network_interface_id` or `network_load_balancer_arn` should be specified and both should not be specified together

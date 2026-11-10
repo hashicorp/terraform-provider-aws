@@ -67,7 +67,7 @@ This resource supports the following arguments:
 
 The `media_concurrencies` block supports the following arguments:
 
-* `channel` - (Required) Specifies the channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`.
+* `channel` - (Required) Channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`, and `EMAIL`.
 * `concurrency` - (Required) Specifies the number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of `1`. Maximum value of `1`. Valid Range for `CHAT`: Minimum value of `1`. Maximum value of `10`. Valid Range for `TASK`: Minimum value of `1`. Maximum value of `10`.
 * `cross_channel_behavior` - (Optional) Defines the cross-channel routing behavior for each traffic type. **Out-of-band changes are only detected when this argument is explicitly configured in your Terraform configuration.** Documented below.
 
@@ -81,7 +81,7 @@ The `cross_channel_behavior` block supports the following arguments:
 
 The `queue_configs` block supports the following arguments:
 
-* `channel` - (Required) Specifies the channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `VOICE`, `CHAT`, `TASK`.
+* `channel` - (Required) Channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `VOICE`, `CHAT`, `TASK`, and `EMAIL`.
 * `delay` - (Required) Specifies the delay, in seconds, that a contact should be in the queue before they are routed to an available agent
 * `priority` - (Required) Specifies the order in which contacts are to be handled for the queue.
 * `queue_id` - (Required) Specifies the identifier for the queue.

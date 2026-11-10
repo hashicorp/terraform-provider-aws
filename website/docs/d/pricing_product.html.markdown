@@ -74,13 +74,13 @@ data "aws_pricing_product" "example" {
 
 This data source supports the following arguments:
 
-* `service_code` - (Required) Code of the service. Available service codes can be fetched using the DescribeServices pricing API call.
 * `filters` - (Required) List of filters. Passed directly to the API (see GetProducts API reference). These filters must describe a single product, this resource will fail if more than one product is returned by the API.
+* `service_code` - (Required) Code of the service. Available service codes can be fetched using the DescribeServices pricing API call.
 
-### filters
+### `filters` Block
 
-* `field` (Required) Product attribute name that you want to filter on.
-* `value` (Required) Product attribute value that you want to filter on.
+* `field` - (Required) Product attribute name that you want to filter on.
+* `value` - (Required) Product attribute value that you want to filter on.
 
 ## Attribute Reference
 
