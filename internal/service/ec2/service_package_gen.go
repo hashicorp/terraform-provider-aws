@@ -2017,7 +2017,7 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
-			Factory:  newEbsEncryptionByDefaultResourceAsListResource,
+			Factory:  newEBSEncryptionByDefaultResourceAsListResource,
 			TypeName: "aws_ebs_encryption_by_default",
 			Name:     "EBS Encryption By Default",
 			Region:   inttypes.ResourceRegionDefault(),
