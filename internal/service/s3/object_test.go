@@ -1447,12 +1447,12 @@ func TestAccS3Object_objectLockEventHoldRetainUntilDrift(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, t, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_event_hold", "ON"),
+					acctest.CheckSleep(t, 4*time.Minute),
 				),
 			},
 			// The reported date is now past the configured minimum.
 			{
-				PreConfig: func() { time.Sleep(240 * time.Second) },
-				Config:    testAccObjectConfig_lockEventHold(rName, "stuff", retainUntilDate),
+				Config: testAccObjectConfig_lockEventHold(rName, "stuff", retainUntilDate),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
