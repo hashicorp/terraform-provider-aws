@@ -54,7 +54,7 @@ func (l *ebsEncryptionByDefaultListResource) List(ctx context.Context, request l
 		rd.Set(names.AttrEnabled, resp.EbsEncryptionByDefault)
 
 		if request.IncludeResource {
-			if err := resourceEBSEncryptionByDefaultFlatten(ctx, resp, rd); err != nil {
+			if err := resourceEBSEncryptionByDefaultFlatten(resp, rd); err != nil {
 				yield(fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("including EBS Encryption By Default: %w", err)))
 				return
 			}

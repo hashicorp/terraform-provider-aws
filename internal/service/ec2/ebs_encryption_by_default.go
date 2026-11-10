@@ -64,8 +64,8 @@ func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EBS encryption by default: %s", err)
 	}
 
-	if err := resourceEBSEncryptionByDefaultFlatten(ctx, resp, d); err != nil {
-		return sdkdiag.AppendErrorf(diags, "flattening EBS encryption by default: %w", err)
+	if err := resourceEBSEncryptionByDefaultFlatten(resp, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening EBS encryption by default: %s", err)
 	}
 
 	return diags
@@ -109,6 +109,6 @@ func setEBSEncryptionByDefault(ctx context.Context, conn *ec2.Client, enabled bo
 	return err
 }
 
-func resourceEBSEncryptionByDefaultFlatten(ctx context.Context, resp *ec2.GetEbsEncryptionByDefaultOutput, d *schema.ResourceData) error {
+func resourceEBSEncryptionByDefaultFlatten(resp *ec2.GetEbsEncryptionByDefaultOutput, d *schema.ResourceData) error {
 	return d.Set(names.AttrEnabled, resp.EbsEncryptionByDefault)
 }
