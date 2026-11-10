@@ -51,11 +51,7 @@ Every argument must be documented.
 
 #### Ordering
 
-In documentation, the order of arguments is:
-
-1. Any arguments that make up the resource's identity.
-1. Required arguments, sorted alphabetically.
-1. Optional arguments, sorted alphabetically.
+Sort arguments alphabetically. If required and optional arguments are in one list, sort the whole list. If they are split into required and optional lists, sort each list.
 
 #### Bylines
 
@@ -94,8 +90,8 @@ For example:
 ```
 ## Argument Reference
 
-* `name` - (Required) Name of the thing.
 * `ip_rule` - (Optional) IP rules. See [`ip_rule` Block](#ip_rule-block) below.
+* `name` - (Required) Name of the thing.
 
 ### `ip_rule` Block
 
@@ -112,10 +108,7 @@ Every attribute must be documented.
 
 #### Ordering
 
-In documentation, the order of attributes is:
-
-1. Any `id` attribute
-1. The remaining attributes, sorted alphabetically.
+Sort attributes alphabetically, including `id`.
 
 #### Bylines
 
@@ -148,8 +141,8 @@ For example:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the thing.
 * `health` - Health status. See [`health`](#health) below.
+* `id` - ID of the thing.
 
 ### `health`
 

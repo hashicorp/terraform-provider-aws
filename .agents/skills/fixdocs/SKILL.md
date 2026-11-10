@@ -87,7 +87,7 @@ When adding or editing documentation:
 - Descriptions start with a verb or noun — never "A ", "An ", "The ", "Specifies ", "Indicates "
 - Don't spell out common abbreviations (e.g. ARN, KMS, VPC) — `swissshepherd`'s `banned_glosses` check enforces this; see [Abbreviations](../../../docs/end-user-documentation.md#abbreviations)
 - Boolean arguments: start with "Whether to..."
-- Keep alphabetical order within required/optional groups
+- Keep alphabetical order: the whole list, or each list when required and optional arguments are split
 - Block sections use heading: `` ### `block_name` Block ``
 - Byline for arguments: "The following arguments are required:" / "The following arguments are optional:"
 - Byline for attributes: "In addition to all arguments above, the following attributes are exported:"
