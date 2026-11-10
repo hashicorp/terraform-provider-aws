@@ -40,7 +40,7 @@ func testAccEC2EBSEncryptionByDefault_List_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/EbsEncryptionByDefault/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EBSEncryptionByDefault/list_basic/"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnabled), knownvalue.Bool(true)),
@@ -50,7 +50,7 @@ func testAccEC2EBSEncryptionByDefault_List_basic(t *testing.T) {
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/EbsEncryptionByDefault/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EBSEncryptionByDefault/list_basic/"),
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_ebs_encryption_by_default.test", identity.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_ebs_encryption_by_default.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringExact(
@@ -81,7 +81,7 @@ func testAccEC2EBSEncryptionByDefault_List_includeResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/EbsEncryptionByDefault/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EBSEncryptionByDefault/list_include_resource/"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity.GetIdentity(resourceName),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnabled), knownvalue.Bool(true)),
@@ -91,7 +91,7 @@ func testAccEC2EBSEncryptionByDefault_List_includeResource(t *testing.T) {
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/EbsEncryptionByDefault/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EBSEncryptionByDefault/list_include_resource/"),
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_ebs_encryption_by_default.test", identity.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_ebs_encryption_by_default.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringExact(fmt.Sprintf("EBS Encryption By Default (%s, enabled)", acctest.Region()))),
@@ -126,7 +126,7 @@ func testAccEC2EBSEncryptionByDefault_List_regionOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/EbsEncryptionByDefault/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EBSEncryptionByDefault/list_region_override/"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
@@ -139,7 +139,7 @@ func testAccEC2EBSEncryptionByDefault_List_regionOverride(t *testing.T) {
 			// Step 2: Query
 			{
 				Query:           true,
-				ConfigDirectory: config.StaticDirectory("testdata/EbsEncryptionByDefault/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EBSEncryptionByDefault/list_region_override/"),
 				ConfigVariables: config.Variables{
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
