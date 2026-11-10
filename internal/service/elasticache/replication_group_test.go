@@ -1928,6 +1928,71 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nodeGroupConfiguration_avail
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_ClusterMode_nodeGroupConfiguration_replicasPerNodeGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_nodeGroupConfigurationReplicasPerNodeGroup(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "4"),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "node_group_configuration.*", map[string]string{
+						"node_group_id": "0001",
+						"slots":         "0-8191",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "node_group_configuration.*", map[string]string{
+						"node_group_id": "0002",
+						"slots":         "8192-16383",
+					}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+			{
+				Config: testAccReplicationGroupConfig_nodeGroupConfigurationReplicasPerNodeGroup(rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "2"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "6"),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "6"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -6936,6 +7001,31 @@ resource "aws_elasticache_replication_group" "test" {
 }
 `, rName),
 	)
+}
+
+func testAccReplicationGroupConfig_nodeGroupConfigurationReplicasPerNodeGroup(rName string, replicasPerNodeGroup int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.micro"
+  port                       = 6379
+  parameter_group_name       = "default.redis7.cluster.on"
+  automatic_failover_enabled = true
+  num_node_groups            = 2
+  replicas_per_node_group    = %[2]d
+
+  node_group_configuration {
+    node_group_id = "0001"
+    slots         = "0-8191"
+  }
+
+  node_group_configuration {
+    node_group_id = "0002"
+    slots         = "8192-16383"
+  }
+}
+`, rName, replicasPerNodeGroup)
 }
 
 func testAccReplicationGroupConfig_globalIDAssociated(rName, engine, engineVersion, parameterGroupName string) string {
