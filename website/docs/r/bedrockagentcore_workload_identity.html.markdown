@@ -76,12 +76,12 @@ resource "aws_bedrockagentcore_workload_identity" "example" {
 
 #### Required
 
-* `name` - (String) Name of the workload identity.
+* `name` (String) Name of the workload identity.
 
 #### Optional
 
-* `account_id` - (String) AWS Account where this resource is managed.
-* `region` - (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Workload Identity using the workload identity name. For example:
 

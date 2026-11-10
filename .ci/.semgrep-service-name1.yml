@@ -109,6 +109,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)ConnectCases"
     severity: WARNING
+  - id: continuum-in-func-name
+    languages:
+      - go
+    message: Do not use "Continuum" in func name inside continuum package
+    paths:
+      include:
+        - "/internal/service/continuum"
+      exclude:
+        - "/internal/service/continuum/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Continuum"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: continuum-in-test-name
+    languages:
+      - go
+    message: Include "Continuum" in test name
+    paths:
+      include:
+        - "/internal/service/continuum/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccContinuum"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: continuum-in-const-name
+    languages:
+      - go
+    message: Do not use "Continuum" in const name inside continuum package
+    paths:
+      include:
+        - "/internal/service/continuum"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Continuum"
+    severity: WARNING
+  - id: continuum-in-var-name
+    languages:
+      - go
+    message: Do not use "Continuum" in var name inside continuum package
+    paths:
+      include:
+        - "/internal/service/continuum"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Continuum"
+    severity: WARNING
   - id: controltower-in-func-name
     languages:
       - go
@@ -2948,6 +3009,67 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)eventbridge"
+    severity: WARNING
+  - id: eventbridgev2-in-func-name
+    languages:
+      - go
+    message: Do not use "EventBridgeV2" in func name inside eventbridgev2 package
+    paths:
+      include:
+        - "/internal/service/eventbridgev2"
+      exclude:
+        - "/internal/service/eventbridgev2/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)EventBridgeV2"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: eventbridgev2-in-test-name
+    languages:
+      - go
+    message: Include "EventBridgeV2" in test name
+    paths:
+      include:
+        - "/internal/service/eventbridgev2/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccEventBridgeV2"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: eventbridgev2-in-const-name
+    languages:
+      - go
+    message: Do not use "EventBridgeV2" in const name inside eventbridgev2 package
+    paths:
+      include:
+        - "/internal/service/eventbridgev2"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)EventBridgeV2"
+    severity: WARNING
+  - id: eventbridgev2-in-var-name
+    languages:
+      - go
+    message: Do not use "EventBridgeV2" in var name inside eventbridgev2 package
+    paths:
+      include:
+        - "/internal/service/eventbridgev2"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)EventBridgeV2"
     severity: WARNING
   - id: events-in-func-name
     languages:

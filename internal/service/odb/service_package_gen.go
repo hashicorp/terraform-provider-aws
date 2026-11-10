@@ -22,6 +22,13 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newDataSourceAutonomousDatabase,
+			TypeName: "aws_odb_autonomous_database",
+			Name:     "Autonomous Database",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newDataSourceCloudAutonomousVmCluster,
 			TypeName: "aws_odb_cloud_autonomous_vm_cluster",
 			Name:     "Cloud Autonomous Vm Cluster",
@@ -132,6 +139,27 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourceAutonomousDatabase,
+			TypeName: "aws_odb_autonomous_database",
+			Name:     "Autonomous Database",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newResourceAutonomousDatabaseSecretsManagerIntegration,
+			TypeName: "aws_odb_autonomous_database_secrets_manager_integration",
+			Name:     "Autonomous Database Secrets Manager Integration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 		{
 			Factory:  newResourceCloudAutonomousVmCluster,
 			TypeName: "aws_odb_cloud_autonomous_vm_cluster",

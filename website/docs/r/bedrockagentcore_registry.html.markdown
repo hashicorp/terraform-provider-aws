@@ -26,9 +26,12 @@ resource "aws_bedrockagentcore_registry" "example" {
 
 ```terraform
 resource "aws_bedrockagentcore_registry" "example" {
-  name          = "example_registry"
-  description   = "MCP servers and tools for the platform team"
-  auto_approval = true
+  name        = "example_registry"
+  description = "MCP servers and tools for the platform team"
+
+  approval_configuration {
+    auto_approval = true
+  }
 }
 ```
 
@@ -53,7 +56,7 @@ resource "aws_bedrockagentcore_registry" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the registry. Must be unique within your account and contain only letters, numbers, hyphens, and underscores. Maximum length of 64 characters.
+* `name` - (Required) Name of the registry. Must be unique within your account, start with a letter or number, and contain only letters, numbers, underscores, hyphens, periods, and forward slashes. Maximum length of 64 characters.
 
 The following arguments are optional:
 
@@ -67,13 +70,13 @@ The following arguments are optional:
 
 The `approval_configuration` configuration block supports the following arguments:
 
-* `auto_approval` - (Optional) Whether registry records are auto-approved. When set to `true`, records are automatically approved upon creation. When set to `false` (the default), records require explicit approval.
+* `auto_approval` - (Optional) Whether to auto-approve registry records. When set to `true`, records are automatically approved upon creation. When set to `false` (the default), records require explicit approval.
 
 ### `authorizer_configuration` Block
 
 The `authorizer_configuration` block supports the following:
 
-* `custom_jwt_authorizer` - (Optional) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer-block) below.
+* `custom_jwt_authorizer` - (Required) JWT-based authorization configuration block. See [`custom_jwt_authorizer`](#custom_jwt_authorizer-block) below.
 
 ### `custom_jwt_authorizer` Block
 
@@ -120,7 +123,7 @@ Exactly one of the following must be specified:
 
 ### `self_managed_lattice_resource` Block
 
-* `resource_configuration_identifier` - (Required) Identifier of the VPC Lattice resource configuration.
+* `resource_configuration_identifier` - (Optional) Identifier of the VPC Lattice resource configuration.
 
 ### `custom_claim` Block
 
@@ -161,7 +164,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.12.0 and later, you can use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
@@ -180,12 +183,12 @@ resource "aws_bedrockagentcore_registry" "example" {
 
 #### Required
 
-- `registry_id` (String) Registry ID.
+* `registry_id` (String) Registry ID.
 
 #### Optional
 
-* `account_id` (String) AWS account ID for this resource.
-* `region` (String) AWS Region for this resource.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Bedrock AgentCore Registry by registry ID. For example:
 

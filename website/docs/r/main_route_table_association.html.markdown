@@ -27,16 +27,15 @@ resource "aws_main_route_table_association" "a" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `vpc_id` - (Required) The ID of the VPC whose main route table should be set
-* `route_table_id` - (Required) The ID of the Route Table to set as the new
-  main route table for the target VPC
+* `route_table_id` - (Required) ID of the Route Table to set as the new main route table for the target VPC
+* `vpc_id` - (Required) ID of the VPC whose main route table should be set
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the Route Table Association
-* `original_route_table_id` - Used internally, see __Notes__ below
+* `id` - ID of the Route Table Association
+* `original_route_table_id` - Original route table ID, used internally; see __Notes__ below
 
 ~> **Note:** On VPC creation, the AWS API always creates an initial Main Route Table. This resource records the ID of that Route Table under `original_route_table_id`. The "Delete" action for a `main_route_table_association` consists of resetting this original table as the Main Route Table for the VPC. You'll see this additional Route Table in the AWS console; it must remain intact in order for the `main_route_table_association` delete to work properly.
 

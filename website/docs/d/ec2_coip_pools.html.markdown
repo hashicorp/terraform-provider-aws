@@ -12,7 +12,7 @@ Provides information for multiple EC2 Customer-Owned IP Pools, such as their ide
 
 ## Example Usage
 
-The following shows outputting all COIP Pool Ids.
+The following shows outputting all CoIP Pool IDs.
 
 ```terraform
 data "aws_ec2_coip_pools" "foo" {}
@@ -37,14 +37,14 @@ which take the following arguments:
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeCoipPools.html).
 * `values` - (Required) Set of values that are accepted for the given field.
-  A COIP Pool will be selected if any one of the given values matches.
+  A CoIP Pool will be selected if any one of the given values matches.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `pool_ids` - Set of COIP Pool Identifiers
+* `pool_ids` - Set of CoIP Pool Identifiers
 
 ## Timeouts
 

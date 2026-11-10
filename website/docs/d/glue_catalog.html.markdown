@@ -35,24 +35,24 @@ This data source exports the following attributes in addition to the arguments a
 * `allow_full_table_external_data_access` - Whether third-party engines can access data in Amazon S3 locations that are registered with Lake Formation.
 * `arn` - ARN of the Glue Catalog.
 * `catalog_id` - ID of the parent catalog.
-* `catalog_properties` - Catalog properties. See [`catalog_properties`](#catalog_properties) below.
-* `create_database_default_permissions` - Default permissions on databases for principals. See [`create_database_default_permissions`](#create_database_default_permissions) below.
-* `create_table_default_permissions` - Default permissions on tables for principals. See [`create_table_default_permissions`](#create_table_default_permissions) below.
+* `catalog_properties` - Catalog properties. See [`catalog_properties` Block](#catalog_properties-block) below.
+* `create_database_default_permissions` - Default permissions on databases for principals. See [`create_database_default_permissions` Block](#create_database_default_permissions-block) below.
+* `create_table_default_permissions` - Default permissions on tables for principals. See [`create_table_default_permissions` Block](#create_table_default_permissions-block) below.
 * `create_time` - Time at which the catalog was created.
 * `description` - Description of the catalog.
-* `federated_catalog` - Federated catalog configuration. See [`federated_catalog`](#federated_catalog) below.
+* `federated_catalog` - Federated catalog configuration. See [`federated_catalog` Block](#federated_catalog-block) below.
 * `parameters` - Map of key-value pairs that define parameters and properties of the catalog.
 * `tags` - Key-value map of resource tags.
-* `target_redshift_catalog` - Target Redshift catalog configuration. See [`target_redshift_catalog`](#target_redshift_catalog) below.
+* `target_redshift_catalog` - Target Redshift catalog configuration. See [`target_redshift_catalog` Block](#target_redshift_catalog-block) below.
 * `update_time` - Time at which the catalog was last updated.
 
-### catalog_properties
+### `catalog_properties` Block
 
 * `custom_properties` - Map of custom key-value pairs for the catalog properties.
-* `data_lake_access_properties` - Data lake access properties. See [`data_lake_access_properties`](#data_lake_access_properties) below.
-* `iceberg_optimization_properties` - Iceberg optimization properties. See [`iceberg_optimization_properties`](#iceberg_optimization_properties) below.
+* `data_lake_access_properties` - Data lake access properties. See [`data_lake_access_properties` Block](#data_lake_access_properties-block) below.
+* `iceberg_optimization_properties` - Iceberg optimization properties. See [`iceberg_optimization_properties` Block](#iceberg_optimization_properties-block) below.
 
-#### data_lake_access_properties
+#### `data_lake_access_properties` Block
 
 * `catalog_type` - Type of the catalog.
 * `data_lake_access` - Whether data lake access is enabled.
@@ -63,31 +63,33 @@ This data source exports the following attributes in addition to the arguments a
 * `redshift_database_name` - Redshift database name.
 * `status_message` - Status message.
 
-#### iceberg_optimization_properties
+#### `iceberg_optimization_properties` Block
 
-* `iceberg_retention_policy_enabled` - Whether Iceberg retention policy optimization is enabled.
-* `iceberg_unreferenced_file_removal_enabled` - Whether Iceberg unreferenced file removal optimization is enabled.
+* `compaction` - Map of key-value pairs for compaction settings.
+* `orphan_file_deletion` - Map of key-value pairs for orphan file deletion settings.
+* `retention` - Map of key-value pairs for retention settings.
+* `role_arn` - ARN of the IAM role for Iceberg optimization.
 
-### federated_catalog
+### `federated_catalog` Block
 
 * `connection_name` - Name of the connection to the external metastore.
 * `connection_type` - Type of connection used to access the federated catalog.
 * `identifier` - Unique identifier for the federated catalog.
 
-### target_redshift_catalog
+### `target_redshift_catalog` Block
 
 * `catalog_arn` - ARN of the target Redshift catalog.
 
-### create_database_default_permissions
+### `create_database_default_permissions` Block
 
 * `permissions` - Permissions that are granted to the principal.
-* `principal` - Principal who is granted permissions. See [`principal`](#principal) below.
+* `principal` - Principal who is granted permissions. See [`principal` Block](#principal-block) below.
 
-### create_table_default_permissions
+### `create_table_default_permissions` Block
 
 * `permissions` - Permissions that are granted to the principal.
-* `principal` - Principal who is granted permissions. See [`principal`](#principal) below.
+* `principal` - Principal who is granted permissions. See [`principal` Block](#principal-block) below.
 
-#### principal
+#### `principal` Block
 
 * `data_lake_principal_identifier` - Identifier for the Lake Formation principal.

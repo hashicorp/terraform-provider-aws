@@ -40,7 +40,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Region-unique name for the AMI.
-* `source_ami_id` - (Required) Id of the AMI to copy. This id must be valid in the region
+* `source_ami_id` - (Required) ID of the AMI to copy. This ID must be valid in the region
   given by `source_ami_region`.
 * `source_ami_region` - (Required) Region from which the AMI will be copied. This may be the
   same as the AWS provider region in order to create a copy within the same region.

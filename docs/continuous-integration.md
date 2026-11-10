@@ -363,6 +363,17 @@ make golangci-lint5
 PKG=rds make golangci-lint2
 ```
 
+#### govulncheck
+
+Use the target `govulncheck` to report known vulnerabilities that affect Go code:
+
+```console
+make govulncheck
+```
+
+!!! note
+    Install [tools](#before-running-tests) before running this check.
+
 ### GoReleaser CI / build-32-bit
 
 GoReleaser CI build-32-bit ensures that GoReleaser can build a 32-bit binary. This check catches rare but important edge cases. Currently, we do not offer a `make` target to run this check locally.
@@ -379,21 +390,33 @@ Use the `makefile-lint` target to run the check:
 make makefile-lint
 ```
 
-### Modern Go Check
+### Go Fix Check
 
-This check ensures that code uses current idiomatic Go. Currently, the check is only run on a subset of services. To determine which services must have modern Go, check the `.github/workflows/modern_go.yml` file.
+This check ensures that code uses current idiomatic Go. It runs `go fix -diff ./...`, which uses the fixers built into the Go toolchain (`go tool fix help` lists them) and fails if any fixes apply.
 
-Use the `modern-check` target to run the check:
-
-```console
-make modern-check
-```
-
-Use the `modern-fix` target to automatically apply fixes:
+Use the `fix-check` target to run the check on all packages, or limit it to a service package with `PKG`:
 
 ```console
-make modern-fix
+make fix-check
+make fix-check PKG=ec2
 ```
+
+In CI, the check is split across parallel jobs using round-robin sharding by package. To reproduce a specific shard locally, use the `go-fix-check-shard` target:
+
+```console
+make go-fix-check-shard SHARD=0 TOTAL_SHARDS=4
+```
+
+Use the `fix` target to automatically apply fixes to all packages, or limit it to a service package with `PKG`:
+
+```console
+make fix
+make fix PKG=ec2
+```
+
+The legacy `modern-check`, `modern-fix`, and `modern-fix-core` targets are aliases for `fix-check`, `fix`, and `fix-core`.
+
+Temporarily, CI also runs the standalone [`modernize`](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/modernize) command for analyzers that the current Go release's `go fix` doesn't include yet (`importcomment`, `reflecttypeassert`, `slicesclip`). The step only runs analyzers that `go tool fix help` doesn't list, and it skips itself once `go fix` includes all of them. If it fails, the error message shows the command to apply the fixes.
 
 ### PR Target Check
 
@@ -515,17 +538,6 @@ make provider-markdown-lint
 
 !!! note
     Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
-
-#### misspell
-
-Use `go-misspell` to check the provider code for misspellings:
-
-```console
-make go-misspell
-```
-
-!!! note
-    Install [tools](#before-running-tests) before running this check.
 
 #### Swiss Shepherd
 

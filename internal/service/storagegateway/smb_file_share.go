@@ -222,7 +222,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		ClientToken:            aws.String(create.UniqueId(ctx)),
 		GatewayARN:             aws.String(d.Get("gateway_arn").(string)),
 		GuessMIMETypeEnabled:   aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-		KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),
+		KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)), //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 		LocationARN:            aws.String(d.Get("location_arn").(string)),
 		ReadOnly:               aws.Bool(d.Get("read_only").(bool)),
 		RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
@@ -370,7 +370,7 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 			AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
 			FileShareARN:           aws.String(d.Id()),
 			GuessMIMETypeEnabled:   aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-			KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),
+			KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)), //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 			ReadOnly:               aws.Bool(d.Get("read_only").(bool)),
 			RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
 			SMBACLEnabled:          aws.Bool(d.Get("smb_acl_enabled").(bool)),

@@ -8,8 +8,15 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   role_arn           = aws_iam_role.test.arn
 
   agent_runtime_artifact {
-    container_configuration {
-      container_uri = var.rImageUri
+    code_configuration {
+      entry_point = ["main.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
     }
   }
 
@@ -17,12 +24,19 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
     network_mode = "PUBLIC"
   }
 
-  depends_on = [aws_iam_role_policy.test]
+  depends_on = [aws_iam_role_policy.bucket]
 
   tags = {
     (var.unknownTagKey) = null_resource.test.id
     (var.knownTagKey)   = var.knownTagValue
   }
+}
+
+# testAccAgentRuntimeConfig_baseIAMRole
+
+resource "aws_iam_role" "test" {
+  name               = var.rName
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -36,27 +50,30 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-data "aws_iam_policy_document" "test" {
-  statement {
-    actions = [
-      "ecr:GetAuthorizationToken",
-      "ecr:BatchGetImage",
-      "ecr:GetDownloadUrlForLayer",
-    ]
-    effect    = "Allow"
-    resources = ["*"]
-  }
+# testAccAgentRuntimeConfig_baseS3Bucket
+
+resource "aws_s3_bucket" "test" {
+  bucket        = replace(var.rName, "_", "-")
+  force_destroy = true
 }
 
-resource "aws_iam_role" "test" {
-  name               = var.rName
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "agent-runtime-codezip.zip"
+  source = "${path.module}/test-fixtures/agent-runtime-codezip.zip"
 }
 
-resource "aws_iam_role_policy" "test" {
-  name   = var.rName
-  role   = aws_iam_role.test.id
-  policy = data.aws_iam_policy_document.test.json
+resource "aws_iam_role_policy" "bucket" {
+  name = var.rName
+  role = aws_iam_role.test.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:GetObjectVersion"]
+      Resource = "${aws_s3_bucket.test.arn}/*"
+    }]
+  })
 }
 
 resource "null_resource" "test" {}

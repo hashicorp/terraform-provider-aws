@@ -86,11 +86,11 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The user pool ID or the user pool ID and Client Id separated by a `:` if the configuration is client specific.
+* `id` - The user pool ID or the user pool ID and Client ID separated by a `:` if the configuration is client specific.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito Risk Configurations using the user pool ID or the user pool ID and Client Id separated by a `:`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito Risk Configurations using the user pool ID or the user pool ID and Client ID separated by a `:`. For example:
 
 Import using the user pool ID:
 
@@ -110,7 +110,7 @@ import {
 }
 ```
 
-**Using `terraform import` to import** Cognito Risk Configurations using the user pool ID or the user pool ID and Client Id separated by a `:`. For example:
+**Using `terraform import` to import** Cognito Risk Configurations using the user pool ID or the user pool ID and Client ID separated by a `:`. For example:
 
 Import using the user pool ID:
 

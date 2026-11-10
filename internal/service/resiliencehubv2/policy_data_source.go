@@ -47,6 +47,9 @@ func (d *policyDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 			names.AttrName: fwschema.StringAttribute{
 				Computed: true,
 			},
+			"sharing_enabled": fwschema.BoolAttribute{
+				Computed: true,
+			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
@@ -88,5 +91,6 @@ type policyDataSourceModel struct {
 	MultiRegion     fwtypes.ListNestedObjectValueOf[multiRegionTargetsModel]  `tfsdk:"multi_region"`
 	Name            types.String                                              `tfsdk:"name"`
 	PolicyARN       fwtypes.ARN                                               `tfsdk:"arn"`
+	SharingEnabled  types.Bool                                                `tfsdk:"sharing_enabled"`
 	Tags            tftags.Map                                                `tfsdk:"tags"`
 }

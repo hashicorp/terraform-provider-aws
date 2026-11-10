@@ -15,6 +15,30 @@ For more details, see the [Amazon Kinesis Documentation](https://aws.amazon.com/
 
 ## Example Usage
 
+### On-Demand Mode
+
+```terraform
+resource "aws_kinesis_stream" "test_stream" {
+  name             = "terraform-kinesis-test"
+  retention_period = 48
+
+  shard_level_metrics = [
+    "IncomingBytes",
+    "OutgoingBytes",
+  ]
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
+
+  tags = {
+    Environment = "test"
+  }
+}
+```
+
+### Provisioned Mode
+
 ```terraform
 resource "aws_kinesis_stream" "test_stream" {
   name             = "terraform-kinesis-test"

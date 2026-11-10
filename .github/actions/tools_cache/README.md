@@ -12,7 +12,7 @@ This is the reader side of the tools cache lane; see the [workflows README](../.
 
 | Input | Required | Description |
 | ----- | -------- | ----------- |
-| `tools` | true | Space- or newline-separated list of `.ci/tools` import paths to install as a fallback on a cache miss (e.g. `github.com/terraform-linters/tflint`). |
+| `tools` | true | Space- or newline-separated list of `.ci/tools` import paths to install unless the cache matches `.ci/tools` exactly (e.g. `github.com/terraform-linters/tflint`). |
 
 ### Example
 
@@ -47,11 +47,18 @@ The action runs these steps in order:
   These are resolved at runtime because they differ between runner images.
 
 1. **Restore the cache read-only** with [`actions/cache/restore`](https://github.com/actions/cache/tree/main/restore) for `[$GOBIN_PATH, $GOCACHE]`.
-  The key is set to `nonexistent` with `restore-keys: ${{ runner.os }}-tools-go-`, which forces a prefix match against the writer's key so this action always falls back to the most recent entry the writer saved and never writes to the cache itself.
+  The key is the writer's key for the current `.ci/tools` (`${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum', '.ci/tools/main.go') }}`), with `restore-keys: ${{ runner.os }}-tools-go-` falling back to the most recent entry the writer saved.
+  `.ci/tools/main.go` is part of the key because it defines the toolset; adding or removing a tool there produces a new key.
+  `actions/cache/restore` never writes to the cache.
 
-1. **Fallback install** (`go install <tools>` from `.ci/tools`), run only on a true cache miss.
-  Because `restore-keys` partial hits leave the `cache-hit` output `false` while still populating `cache-matched-key`, the miss is detected with `cache-matched-key == ''` rather than `cache-hit != 'true'`.
+1. **Verify restored tools** on an exact hit: check that `$GOBIN_PATH/<last element of each import path>` exists for every requested tool.
+  If any binary is missing, the install step runs anyway, so a bad cache entry slows the job instead of failing it.
 
-The cache is written by the `tools_cache` job in [`provider.yml`](../../workflows/provider.yml), which runs only on `refs/heads/main` and installs the full `.ci/tools` toolset before saving under `${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum') }}`.
+1. **Install** (`go install <tools>` from `.ci/tools`) unless the exact key hit and every requested binary is present.
+  A partial hit restores an entry saved for a different `.ci/tools`, so its binaries may be older versions.
+  This happens on a PR that bumps a tool, since PRs can only restore caches saved on `main`, and on the push that merges it, which races the writer.
+  The restored build cache still makes the install fast.
+
+The cache is written by the `tools_cache` job in [`provider.yml`](../../workflows/provider.yml), which runs only on `refs/heads/main` and installs every tool imported by [`.ci/tools/main.go`](../../../.ci/tools/main.go) before saving under `${{ runner.os }}-tools-go-${{ hashFiles('.ci/tools/go.mod', '.ci/tools/go.sum', '.ci/tools/main.go') }}`.
 
 > **Note:** `golangci-lint` is cached separately by `golangci-lint-action`'s own internal cache and is not part of the tools lane.

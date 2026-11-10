@@ -71,6 +71,22 @@ resource "aws_resiliencehubv2_policy" "example" {
 }
 ```
 
+### With Organization Sharing Enabled
+
+Sharing is only available when the policy owner is the organization's management account or a delegated administrator.
+
+```terraform
+resource "aws_resiliencehubv2_policy" "example" {
+  name            = "example-shared-policy"
+  description     = "Baseline policy shared with member accounts"
+  sharing_enabled = true
+
+  availability_slo {
+    target = 99.9
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -86,6 +102,7 @@ The following arguments are optional:
 * `multi_az` - (Optional) Multi-AZ disaster recovery configuration. See [`multi_az` Block](#multi_az-block) below.
 * `multi_region` - (Optional) Multi-region disaster recovery configuration. See [`multi_region` Block](#multi_region-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `sharing_enabled` - (Optional) Whether the policy is shared with other member accounts of the organization. Only applicable if the policy owner is a management account or delegated administrator. Defaults to `false`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `availability_slo` Block

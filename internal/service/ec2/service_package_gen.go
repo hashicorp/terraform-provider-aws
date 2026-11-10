@@ -146,6 +146,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newCapacityManagerResource,
+			TypeName: "aws_ec2_capacity_manager",
+			Name:     "Capacity Manager",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newDefaultCreditSpecificationResource,
 			TypeName: "aws_ec2_default_credit_specification",
 			Name:     "Default Credit Specification",
@@ -1401,6 +1411,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ec2_transit_gateway_route",
 			Name:     "Transit Gateway Route",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("transit_gateway_route_table_id", true),
+				inttypes.StringIdentityAttribute("destination_cidr_block", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      transitGatewayRouteImportID{},
+			},
 		},
 		{
 			Factory:  resourceTransitGatewayRouteTable,
@@ -2011,6 +2029,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Region:   inttypes.ResourceRegionDefault(),
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newTransitGatewayRouteResourceAsListResource,
+			TypeName: "aws_ec2_transit_gateway_route",
+			Name:     "Transit Gateway Route",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("transit_gateway_route_table_id", true),
+				inttypes.StringIdentityAttribute("destination_cidr_block", true),
+			}),
 		},
 		{
 			Factory:  newTransitGatewayRouteTablePropagationResourceAsListResource,

@@ -27,8 +27,8 @@ resource "aws_vpc_endpoint_private_dns" "example" {
 
 This resource supports the following arguments:
 
+* `private_dns_enabled` - (Required) Whether to associate a private hosted zone with the VPC. Only applicable for `Interface` endpoints.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `private_dns_enabled` - (Required) Indicates whether a private hosted zone is associated with the VPC. Only applicable for `Interface` endpoints.
 * `vpc_endpoint_id` - (Required) VPC endpoint identifier.
 
 ## Attribute Reference

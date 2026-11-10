@@ -239,6 +239,28 @@ resource "aws_cloudwatch_metric_alarm" "example" {
 }
 ```
 
+### With a Wall Clock Evaluation Window
+
+```terraform
+resource "aws_cloudwatch_metric_alarm" "example" {
+  alarm_name          = "example-daily-errors"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Errors"
+  namespace           = "ExampleApp"
+  period              = 86400
+  statistic           = "Sum"
+  threshold           = 0
+  alarm_actions       = [aws_sns_topic.example.arn]
+
+  evaluation_window {
+    wall_clock_window {
+      timezone = "America/New_York"
+    }
+  }
+}
+```
+
 ~> **NOTE:**  You cannot create a metric alarm consisting of both `statistic` and `extended_statistic` parameters.
 You must choose one or the other.
 
@@ -252,6 +274,7 @@ This resource supports the following arguments:
 * `evaluation_criteria` - (Optional) The evaluation criteria for PromQL alarms. Cannot be used with traditional metric alarm parameters.
 * `evaluation_interval` - (Optional) The frequency, in seconds, at which the alarm is evaluated. Valid values are `10`, `20`, `30`, and any multiple of `60`. Required when using `evaluation_criteria`.
 * `evaluation_periods` - (Optional) The number of periods over which data is compared to the specified threshold. Required for traditional metric alarms.
+* `evaluation_window` - (Optional) Configures the alarm to use a wall clock evaluation window instead of the default sliding window. Not supported for alarms that use `evaluation_criteria`. See [`evaluation_window`](#evaluation_window) below.
 * `metric_name` - (Optional) The name for the alarm's associated metric.
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `namespace` - (Optional) The namespace for the alarm's associated metric. See docs for the [list of namespaces](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/aws-namespaces.html).
@@ -310,6 +333,14 @@ for details about valid values.
 * `query` - (Required) The PromQL query that the alarm evaluates. The query must return a result of vector type. Each entry in the vector result represents an alarm contributor.
 * `pending_period` - (Optional) The duration, in seconds, that a contributor must be continuously breaching before it transitions to the ALARM state. Valid range: 0-86400.
 * `recovery_period` - (Optional) The duration, in seconds, that a contributor must continuously not be breaching before it transitions back to the OK state. Valid range: 0-86400.
+
+#### `evaluation_window`
+
+* `wall_clock_window` - (Required) Aligns the evaluated range to fixed clock boundaries that match the alarm's `period` (for example the top of the hour, midnight, or the start of the calendar week), instead of the default rolling sliding window. Only alarms with a `period` of `60`, `300`, `3600`, `86400`, or `604800` seconds support a wall clock window. See [`wall_clock_window`](#wall_clock_window) below.
+
+#### `wall_clock_window`
+
+* `timezone` - (Optional) Time zone to align the window to. Accepts an IANA time zone name (for example `America/New_York`), a fixed UTC offset (for example `+05:30`), or an offset-prefixed identifier (for example `UTC+05:30`). The offset must be a multiple of 5 minutes. Defaults to UTC. Only IANA time zone names observe daylight saving time.
 
 #### `metric`
 

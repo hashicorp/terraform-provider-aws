@@ -50,6 +50,30 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ec2_transit_gateway_route.example
+  identity = {
+    transit_gateway_route_table_id = "tgw-rtb-12345678"
+    destination_cidr_block         = "0.0.0.0/0"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `destination_cidr_block` (String) IPv4 or IPv6 CIDR block used for destination matches.
+* `transit_gateway_route_table_id` (String) Identifier of EC2 Transit Gateway Route Table.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_route` using the EC2 Transit Gateway Route Table, an underscore, and the destination. For example:
 
 ```terraform

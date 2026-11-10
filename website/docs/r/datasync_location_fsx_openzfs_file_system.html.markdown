@@ -42,13 +42,13 @@ This resource supports the following arguments:
 
 * `nfs` - (Required) Represents the Network File System (NFS) protocol that DataSync uses to access your FSx for OpenZFS file system. See below.
 
-### nfs
+### NFS
 
 * `mount_options` - (Required) Represents the mount options that are available for DataSync to access an NFS location. See below.
 
 ### mount_options
 
-* `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `AUTOMATIC`, `NFS3`, `NFS4_0` and `NFS4_1`. Default: `AUTOMATIC`
+* `version` - (Optional) NFS version that DataSync uses to mount the NFS share. Valid values: `AUTOMATIC`, `NFS3`, `NFS4_0`, `NFS4_1`, and `NFS4_2`. `NFS4_2` requires an Enhanced mode task. Default: `AUTOMATIC`.
 
 ## Attribute Reference
 
