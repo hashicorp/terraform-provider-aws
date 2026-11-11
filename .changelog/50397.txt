@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_bedrockagentcore_gateway_target: Add `certificate_configuration` configuration block
 ```
+
+```release-note:bug
+resource/aws_bedrockagentcore_gateway_target: Include `UPDATE_UNSUCCESSFUL` as a pending state while a target is deleting
+```

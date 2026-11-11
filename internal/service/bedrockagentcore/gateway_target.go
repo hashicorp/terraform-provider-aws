@@ -1554,10 +1554,10 @@ func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol
 
 func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, gatewayIdentifier, targetID string, timeout time.Duration) (*bedrockagentcorecontrol.GetGatewayTargetOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		// FAILED and SYNCHRONIZING can appear until AWS moves the target to DELETING.
+		// FAILED, SYNCHRONIZING and UPDATE_UNSUCCESSFUL can appear until AWS moves the target to DELETING.
 		// The *_PENDING_AUTH states (OAuth 3LO awaiting consent) also block delete until
 		// the auth window resolves, so treat them as pending rather than unexpected.
-		Pending: enum.Slice(awstypes.TargetStatusDeleting, awstypes.TargetStatusReady, awstypes.TargetStatusFailed, awstypes.TargetStatusSynchronizing, awstypes.TargetStatusCreatePendingAuth, awstypes.TargetStatusUpdatePendingAuth, awstypes.TargetStatusSynchronizePendingAuth),
+		Pending: enum.Slice(awstypes.TargetStatusDeleting, awstypes.TargetStatusReady, awstypes.TargetStatusFailed, awstypes.TargetStatusSynchronizing, awstypes.TargetStatusUpdateUnsuccessful, awstypes.TargetStatusCreatePendingAuth, awstypes.TargetStatusUpdatePendingAuth, awstypes.TargetStatusSynchronizePendingAuth),
 		Target:  []string{},
 		Refresh: statusGatewayTarget(conn, gatewayIdentifier, targetID),
 		Timeout: timeout,
