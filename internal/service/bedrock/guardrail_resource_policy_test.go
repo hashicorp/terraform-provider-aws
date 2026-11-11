@@ -9,10 +9,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
@@ -108,6 +112,53 @@ func TestAccBedrockGuardrailResourcePolicy_update(t *testing.T) {
 			},
 			{
 				Config: testAccGuardrailResourcePolicyConfig_updated(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailResourcePolicyExists(ctx, t, resourceName),
+				),
+			},
+		},
+	})
+}
+
+// Guardrail profiles are system-defined and shared across the account and Region, so this test is serialized.
+func testAccGuardrailResourcePolicy_guardrailProfile(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_bedrock_guardrail_resource_policy.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			// The "us" guardrail profile is only available in US Regions.
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.UsEast2RegionID, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailResourcePolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailResourcePolicyConfig_guardrailProfile("test1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailResourcePolicyExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), tfknownvalue.RegionalARNExact("bedrock", "guardrail-profile/us.guardrail.v1:0")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+			},
+			{
+				Config: testAccGuardrailResourcePolicyConfig_guardrailProfile("test2"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -229,4 +280,33 @@ resource "aws_bedrock_guardrail_resource_policy" "test" {
   })
 }
 `)
+}
+
+func testAccGuardrailResourcePolicyConfig_guardrailProfile(sid string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+locals {
+  guardrail_profile_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:guardrail-profile/us.guardrail.v1:0"
+}
+
+resource "aws_bedrock_guardrail_resource_policy" "test" {
+  resource_arn = local.guardrail_profile_arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = %[1]q
+      Effect    = "Allow"
+      Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
+      Action    = ["bedrock:ApplyGuardrail"]
+      Resource  = local.guardrail_profile_arn
+    }]
+  })
+}
+`, sid)
 }
