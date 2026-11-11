@@ -65,6 +65,64 @@ func testAccScope_basic(t *testing.T) {
 	})
 }
 
+func testAccScope_updateTargets(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkflowmonitor_scope.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFlowMonitorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScopeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScopeConfig_basic(acctest.Region()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScopeExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTarget), knownvalue.SetSizeExact(1)),
+				},
+			},
+			{
+				// Only adding a target: UpdateScope must not be sent an empty ResourcesToDelete.
+				Config: testAccScopeConfig_basic(acctest.Region(), acctest.AlternateRegion()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScopeExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTarget), knownvalue.SetSizeExact(2)),
+				},
+			},
+			{
+				// Only removing a target: UpdateScope must not be sent an empty ResourcesToAdd.
+				Config: testAccScopeConfig_basic(acctest.Region()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScopeExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTarget), knownvalue.SetSizeExact(1)),
+				},
+			},
+		},
+	})
+}
+
 func testAccScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkflowmonitor_scope.test"
