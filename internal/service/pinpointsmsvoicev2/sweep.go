@@ -231,7 +231,7 @@ func (s protectConfigurationSweeper) Delete(ctx context.Context, optFns ...tfres
 			ProtectConfigurationId: aws.String(id),
 		}
 		_, err := s.conn.DisassociateProtectConfiguration(ctx, &input)
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "NOT_ASSOCIATED") {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || isProtectConfigurationNotAssociatedError(err) {
 			continue
 		}
 		if err != nil {
