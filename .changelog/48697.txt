@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_bedrock_guardrail_resource_policy
+```
+
+```release-note:new-list-resource
+aws_bedrock_guardrail_resource_policy
+```
