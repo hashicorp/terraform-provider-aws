@@ -47,6 +47,7 @@ func TestAccFSxS3AccessPointAttachment_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ontap_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("openzfs_configuration"), knownvalue.ListSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_access_point"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_access_point_alias"), knownvalue.NotNull()),
@@ -162,6 +163,64 @@ func TestAccFSxS3AccessPointAttachment_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccFSxS3AccessPointAttachment_ontapBasic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.S3AccessPointAttachment
+	resourceName := "aws_fsx_s3_access_point_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccS3AccessPointAttachmentConfig_ontapBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckS3AccessPointAttachmentExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ontap_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"file_system_identity": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									names.AttrType: tfknownvalue.StringExact(awstypes.OntapFileSystemUserTypeUnix),
+									"unix_user": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											names.AttrName: knownvalue.StringExact("root"),
+										}),
+									}),
+									"windows_user": knownvalue.ListSizeExact(0),
+								}),
+							}),
+							"volume_id": knownvalue.NotNull(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("openzfs_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_access_point"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_access_point_alias"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_access_point_arn"), tfknownvalue.RegionalARNRegexp("s3", regexache.MustCompile(`accesspoint/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), tfknownvalue.StringExact(awstypes.S3AccessPointAttachmentTypeOntap)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -321,6 +380,58 @@ resource "aws_fsx_s3_access_point_attachment" "test" {
   s3_access_point {
     vpc_configuration {
       vpc_id = aws_vpc.test.id
+    }
+  }
+}
+`, rName))
+}
+
+func testAccS3AccessPointAttachmentConfig_ontapBasic(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity    = 1024
+  subnet_ids          = aws_subnet.test[*].id
+  deployment_type     = "SINGLE_AZ_1"
+  throughput_capacity = 128
+  preferred_subnet_id = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
+}
+
+resource "aws_fsx_ontap_volume" "test" {
+  name                       = local.volume_name
+  junction_path              = "/${local.volume_name}"
+  security_style             = "UNIX"
+  size_in_megabytes          = 1024
+  skip_final_backup          = true
+  storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+}
+
+locals {
+  # ONTAP volume names may contain only alphanumerics and underscores.
+  volume_name = replace(%[1]q, "-", "_")
+}
+
+resource "aws_fsx_s3_access_point_attachment" "test" {
+  name = %[1]q
+  type = "ONTAP"
+
+  ontap_configuration {
+    volume_id = aws_fsx_ontap_volume.test.id
+
+    file_system_identity {
+      type = "UNIX"
+
+      unix_user {
+        name = "root"
+      }
     }
   }
 }
