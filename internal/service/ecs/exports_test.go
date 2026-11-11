@@ -29,12 +29,14 @@ var (
 	FindExpressGatewayServiceByARN            = findExpressGatewayServiceByARN
 	FindGatewayByARN                          = findGatewayByARN
 	FindGatewayClusterAssociationByTwoPartKey = findGatewayClusterAssociationByTwoPartKey
+	FindServiceGatewayConnectors              = findServiceGatewayConnectors
 	FindServiceNoTagsByTwoPartKey             = findServiceNoTagsByTwoPartKey
 	FindTag                                   = findTag
 	FindTaskDefinitionByFamilyOrARN           = findTaskDefinitionByFamilyOrARN
 	FindTaskSetNoTagsByThreePartKey           = findTaskSetNoTagsByThreePartKey
 	FlattenServiceVolumeConfigurations        = flattenServiceVolumeConfigurations
 	GatewayStatusError                        = gatewayStatusError
+	NewestServiceRevisionGatewayConnectors    = newestServiceRevisionGatewayConnectors
 	RoleNameFromARN                           = roleNameFromARN
 	ServiceNameFromARN                        = serviceNameFromARN
 	TaskDefinitionARNStripRevision            = taskDefinitionARNStripRevision

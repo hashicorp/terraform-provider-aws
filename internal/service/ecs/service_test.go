@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"os/exec"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -60,6 +61,57 @@ func TestFlattenServiceVolumeConfigurations(t *testing.T) {
 	}
 	if _, ok := configuration["managed_ebs_volume"]; !ok {
 		t.Error("expected managed EBS volume configuration")
+	}
+}
+
+func TestNewestServiceRevisionGatewayConnectors(t *testing.T) {
+	t.Parallel()
+
+	older := time.Date(2026, time.November, 1, 0, 0, 0, 0, time.UTC)
+	newer := older.Add(time.Hour)
+	revision := func(createdAt time.Time, portNames ...string) awstypes.ServiceRevision {
+		v := awstypes.ServiceRevision{CreatedAt: aws.Time(createdAt)}
+		for _, portName := range portNames {
+			v.GatewayConnectors = append(v.GatewayConnectors, awstypes.GatewayConnector{PortName: aws.String(portName)})
+		}
+		return v
+	}
+
+	testCases := map[string]struct {
+		revisions []awstypes.ServiceRevision
+		want      []string
+	}{
+		"no revisions": {},
+		"one revision": {
+			revisions: []awstypes.ServiceRevision{revision(older, "web")},
+			want:      []string{"web"},
+		},
+		"newest revision first": {
+			revisions: []awstypes.ServiceRevision{revision(newer, "new"), revision(older, "old")},
+			want:      []string{"new"},
+		},
+		"newest revision last": {
+			revisions: []awstypes.ServiceRevision{revision(older, "old"), revision(newer, "new")},
+			want:      []string{"new"},
+		},
+		"newest revision without a connector": {
+			revisions: []awstypes.ServiceRevision{revision(older, "old"), revision(newer)},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			var got []string
+			for _, v := range tfecs.NewestServiceRevisionGatewayConnectors(testCase.revisions) {
+				got = append(got, aws.ToString(v.PortName))
+			}
+
+			if !slices.Equal(got, testCase.want) {
+				t.Errorf("got port names %v, want %v", got, testCase.want)
+			}
+		})
 	}
 }
 
@@ -2580,6 +2632,211 @@ func TestAccECSService_ServiceConnect_accessLogConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccECSService_GatewayConnector_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_gatewayConnectorBasic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					testAccCheckServiceGatewayConnectorPortNames(ctx, t, &service, "web"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("gateway_connector"), knownvalue.ListSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorPath("port_name"), knownvalue.StringExact("web")),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateId:           fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
+			},
+		},
+	})
+}
+
+func TestAccECSService_GatewayConnector_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_gatewayConnectorHealthCheck(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					testAccCheckServiceGatewayConnectorPortNames(ctx, t, &service, "web"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorHealthCheckPath("healthy_threshold_count"), knownvalue.Int64Exact(2)),
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorHealthCheckPath("interval_seconds"), knownvalue.Int64Exact(15)),
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorHealthCheckPath("matcher").AtSliceIndex(0).AtMapKey("http_code"), knownvalue.StringExact("200-299")),
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorHealthCheckPath(names.AttrPath), knownvalue.StringExact("/index.html")),
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorHealthCheckPath(names.AttrProtocol), tfknownvalue.StringExact(awstypes.GatewayConnectorHealthCheckProtocolHttp)),
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorHealthCheckPath("timeout_seconds"), knownvalue.Int64Exact(10)),
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorHealthCheckPath("unhealthy_threshold_count"), knownvalue.Int64Exact(3)),
+				},
+			},
+			{
+				Config: testAccServiceConfig_gatewayConnectorHealthCheck(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccServiceConfig_gatewayConnectorFilters(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					testAccCheckServiceGatewayConnectorPortNames(ctx, t, &service, "web"),
+					testAccCheckServiceGatewayConnectorAccessTypes(ctx, t, &service, awstypes.AccessTypePublic),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorPath("filters").AtSliceIndex(0).AtMapKey("access_types"), knownvalue.SetExact([]knownvalue.Check{
+						tfknownvalue.StringExact(awstypes.AccessTypePublic),
+					})),
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorHealthCheckPath(names.AttrPath), knownvalue.StringExact("/index.html")),
+				},
+			},
+			{
+				Config: testAccServiceConfig_gatewayConnectorFilters(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccServiceConfig_gatewayConnectorHealthCheck(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					testAccCheckServiceGatewayConnectorPortNames(ctx, t, &service, "web"),
+					testAccCheckServiceGatewayConnectorAccessTypes(ctx, t, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorPath("filters"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, testAccServiceGatewayConnectorHealthCheckPath(names.AttrPath), knownvalue.StringExact("/index.html")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccECSService_GatewayConnector_removal(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_gatewayConnectorBasic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					testAccCheckServiceGatewayConnectorPortNames(ctx, t, &service, "web"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("gateway_connector"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				Config: testAccServiceConfig_gatewayConnectorRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					testAccCheckServiceGatewayConnectorPortNames(ctx, t, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("gateway_connector"), knownvalue.ListSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
 func TestAccECSService_Tags_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -3438,6 +3695,60 @@ func testAccCheckServiceExists(ctx context.Context, t *testing.T, name string, s
 
 		return nil
 	}
+}
+
+func testAccCheckServiceGatewayConnectorPortNames(ctx context.Context, t *testing.T, service *awstypes.Service, want ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
+
+		connectors, err := tfecs.FindServiceGatewayConnectors(ctx, conn, service)
+		if err != nil {
+			return err
+		}
+
+		var got []string
+		for _, v := range connectors {
+			got = append(got, aws.ToString(v.PortName))
+		}
+
+		if !slices.Equal(got, want) {
+			return fmt.Errorf("ECS Service (%s) gateway connector port names: got %v, want %v", aws.ToString(service.ServiceArn), got, want)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckServiceGatewayConnectorAccessTypes(ctx context.Context, t *testing.T, service *awstypes.Service, want ...awstypes.AccessType) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
+
+		connectors, err := tfecs.FindServiceGatewayConnectors(ctx, conn, service)
+		if err != nil {
+			return err
+		}
+
+		var got []awstypes.AccessType
+		for _, v := range connectors {
+			if v.Filters != nil {
+				got = append(got, v.Filters.AccessTypes...)
+			}
+		}
+
+		if !slices.Equal(got, want) {
+			return fmt.Errorf("ECS Service (%s) gateway connector access types: got %v, want %v", aws.ToString(service.ServiceArn), got, want)
+		}
+
+		return nil
+	}
+}
+
+func testAccServiceGatewayConnectorPath(key string) tfjsonpath.Path {
+	return tfjsonpath.New("gateway_connector").AtSliceIndex(0).AtMapKey(key)
+}
+
+func testAccServiceGatewayConnectorHealthCheckPath(key string) tfjsonpath.Path {
+	return testAccServiceGatewayConnectorPath(names.AttrHealthCheck).AtSliceIndex(0).AtMapKey(key)
 }
 
 func testAccCheckServiceDisableServiceConnect(ctx context.Context, t *testing.T, service *awstypes.Service) resource.TestCheckFunc {
@@ -8878,4 +9189,236 @@ resource "aws_ecs_service" "test" {
 
 data "aws_region" "current" {}
 `, rName, format, includeQueryParams))
+}
+
+func testAccServiceConfig_gatewayConnectorBase(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_base(rName), fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ecs_gateway" "test" {
+  name                    = %[1]q
+  infrastructure_role_arn = aws_iam_role.test.arn
+  deletion_protection     = false
+
+  configuration {
+    host_shared_alb {
+      network_configuration {
+        subnets = aws_subnet.test[*].id
+      }
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.test,
+    aws_route_table_association.test,
+  ]
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_gateway_cluster_association" "test" {
+  gateway_arn = aws_ecs_gateway.test.arn
+  cluster_arn = aws_ecs_cluster.test.arn
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = 256
+  memory                   = 512
+
+  container_definitions = jsonencode([
+    {
+      name      = "web"
+      image     = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+      essential = true
+      portMappings = [
+        {
+          name          = "web"
+          containerPort = 80
+          protocol      = "tcp"
+        }
+      ]
+    }
+  ])
+}
+`, rName))
+}
+
+func testAccServiceConfig_gatewayConnectorBasic(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_gatewayConnectorBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name                  = %[1]q
+  cluster               = aws_ecs_cluster.test.arn
+  task_definition       = aws_ecs_task_definition.test.arn
+  desired_count         = 1
+  launch_type           = "FARGATE"
+  wait_for_steady_state = true
+
+  network_configuration {
+    subnets          = aws_subnet.test[*].id
+    security_groups  = [aws_security_group.test.id]
+    assign_public_ip = true
+  }
+
+  gateway_connector {
+    port_name = "web"
+  }
+
+  depends_on = [aws_ecs_gateway_cluster_association.test]
+}
+`, rName))
+}
+
+func testAccServiceConfig_gatewayConnectorHealthCheck(rName string, waitForSteadyState bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_gatewayConnectorBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name                  = %[1]q
+  cluster               = aws_ecs_cluster.test.arn
+  task_definition       = aws_ecs_task_definition.test.arn
+  desired_count         = 1
+  launch_type           = "FARGATE"
+  wait_for_steady_state = %[2]t
+
+  network_configuration {
+    subnets          = aws_subnet.test[*].id
+    security_groups  = [aws_security_group.test.id]
+    assign_public_ip = true
+  }
+
+  gateway_connector {
+    port_name = "web"
+
+    health_check {
+      healthy_threshold_count   = 2
+      interval_seconds          = 15
+      path                      = "/index.html"
+      protocol                  = "HTTP"
+      timeout_seconds           = 10
+      unhealthy_threshold_count = 3
+
+      matcher {
+        http_code = "200-299"
+      }
+    }
+  }
+
+  depends_on = [aws_ecs_gateway_cluster_association.test]
+}
+`, rName, waitForSteadyState))
+}
+
+func testAccServiceConfig_gatewayConnectorFilters(rName string, waitForSteadyState bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_gatewayConnectorBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name                  = %[1]q
+  cluster               = aws_ecs_cluster.test.arn
+  task_definition       = aws_ecs_task_definition.test.arn
+  desired_count         = 1
+  launch_type           = "FARGATE"
+  wait_for_steady_state = %[2]t
+
+  network_configuration {
+    subnets          = aws_subnet.test[*].id
+    security_groups  = [aws_security_group.test.id]
+    assign_public_ip = true
+  }
+
+  gateway_connector {
+    port_name = "web"
+
+    filters {
+      access_types = [aws_ecs_gateway.test.access_type]
+    }
+
+    health_check {
+      healthy_threshold_count   = 2
+      interval_seconds          = 15
+      path                      = "/index.html"
+      protocol                  = "HTTP"
+      timeout_seconds           = 10
+      unhealthy_threshold_count = 3
+
+      matcher {
+        http_code = "200-299"
+      }
+    }
+  }
+
+  depends_on = [aws_ecs_gateway_cluster_association.test]
+}
+`, rName, waitForSteadyState))
+}
+
+func testAccServiceConfig_gatewayConnectorRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_gatewayConnectorBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name                  = %[1]q
+  cluster               = aws_ecs_cluster.test.arn
+  task_definition       = aws_ecs_task_definition.test.arn
+  desired_count         = 1
+  launch_type           = "FARGATE"
+  wait_for_steady_state = true
+
+  network_configuration {
+    subnets          = aws_subnet.test[*].id
+    security_groups  = [aws_security_group.test.id]
+    assign_public_ip = true
+  }
+
+  depends_on = [aws_ecs_gateway_cluster_association.test]
+}
+`, rName))
 }
