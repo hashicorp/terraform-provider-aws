@@ -1,0 +1,10 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: use-lazyvalidation-string-match-diag
+    languages: [go]
+    message: Prefer `lazyvalidation.StringMatchDiag` to `validation.ToDiagFunc(validation.StringMatch(...))`
+    pattern: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile($PATTERN), $MESSAGE))
+    fix: lazyvalidation.StringMatchDiag($PATTERN, $MESSAGE)
+    severity: WARNING
