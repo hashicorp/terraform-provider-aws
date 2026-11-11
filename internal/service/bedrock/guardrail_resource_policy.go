@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -71,12 +72,18 @@ func (r *guardrailResourcePolicyResource) Create(ctx context.Context, request re
 	conn := r.Meta().BedrockClient(ctx)
 
 	resourceARN := data.ResourceARN.ValueString()
+	// PutResourcePolicy rejects whitespace characters such as newlines, which aws_iam_policy_document output contains.
+	policy, err := tfjson.CompactString(data.Policy.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, resourceARN)
+		return
+	}
 	input := bedrock.PutResourcePolicyInput{
 		ResourceArn:    aws.String(resourceARN),
-		ResourcePolicy: data.Policy.ValueStringPointer(),
+		ResourcePolicy: aws.String(policy),
 	}
 
-	_, err := conn.PutResourcePolicy(ctx, &input)
+	_, err = conn.PutResourcePolicy(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, resourceARN)
 		return
@@ -126,12 +133,18 @@ func (r *guardrailResourcePolicyResource) Update(ctx context.Context, request re
 	conn := r.Meta().BedrockClient(ctx)
 
 	resourceARN := data.ResourceARN.ValueString()
+	// PutResourcePolicy rejects whitespace characters such as newlines, which aws_iam_policy_document output contains.
+	policy, err := tfjson.CompactString(data.Policy.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, resourceARN)
+		return
+	}
 	input := bedrock.PutResourcePolicyInput{
 		ResourceArn:    aws.String(resourceARN),
-		ResourcePolicy: data.Policy.ValueStringPointer(),
+		ResourcePolicy: aws.String(policy),
 	}
 
-	_, err := conn.PutResourcePolicy(ctx, &input)
+	_, err = conn.PutResourcePolicy(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, resourceARN)
 		return
