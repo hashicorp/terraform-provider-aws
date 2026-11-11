@@ -26,8 +26,10 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_elasticache_serverless_cache: Add `connection_type` attribute ([#50454](https://github.com/hashicorp/terraform-provider-aws/issues/50454))
 * resource/aws_backup_restore_testing_selection: Allow `validation_window_hours` to be `0` ([#50272](https://github.com/hashicorp/terraform-provider-aws/issues/50272))
 * resource/aws_efs_file_system: Support new default of `encrypted = true` for new file systems. `kms_key_id` no longer requires `encrypted` to be set explicitly to `true`, and setting `encrypted = false` no longer forces resource replacement ([#49999](https://github.com/hashicorp/terraform-provider-aws/issues/49999))
+* resource/aws_elasticache_serverless_cache: Add `connection_type` argument to support public endpoints ([#50454](https://github.com/hashicorp/terraform-provider-aws/issues/50454))
 * resource/aws_securityhub_connector_v2: Add `azure` configuration block to `connector_provider` for Microsoft Azure multi-cloud coverage ([#49560](https://github.com/hashicorp/terraform-provider-aws/issues/49560))
 * resource/aws_synthetics_canary: Add additional validation to `memory_in_mb` ([#49826](https://github.com/hashicorp/terraform-provider-aws/issues/49826))
 * resource/aws_vpn_connection: Support in-place updates for `tunnel_bandwidth` argument ([#47843](https://github.com/hashicorp/terraform-provider-aws/issues/47843))
