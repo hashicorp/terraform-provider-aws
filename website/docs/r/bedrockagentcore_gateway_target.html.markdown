@@ -395,26 +395,12 @@ resource "aws_bedrockagentcore_gateway_target" "example" {
 
 ### Self-hosted MCP server with a private certificate authority
 
-Use `certificate_configuration` when the MCP server presents a TLS certificate issued by a private certificate authority (CA). The gateway reads the PEM-encoded CA certificate with its execution role and trusts that CA for TLS connections to the target.
+Use `certificate_configuration` when the MCP server presents a TLS certificate issued by a private certificate authority (CA). The gateway reads the PEM-encoded CA certificate with its execution role and trusts that CA for TLS connections to the target. The execution role must be able to read the certificate before the target is created. See the note in the [`certificate_configuration` Block](#certificate_configuration-block) section.
 
 ```terraform
-data "aws_iam_policy_document" "private_ca" {
-  statement {
-    effect    = "Allow"
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.example.arn}/private-ca.pem"]
-  }
-}
-
-resource "aws_iam_role_policy" "private_ca" {
-  name   = "example-private-ca"
-  role   = aws_iam_role.gateway_role.id
-  policy = data.aws_iam_policy_document.private_ca.json
-}
-
 resource "aws_bedrockagentcore_gateway_target" "example" {
   gateway_identifier = aws_bedrockagentcore_gateway.example.gateway_id
-  name               = "my-private-mcp-with-private-ca"
+  name               = "example-private-ca"
 
   target_configuration {
     mcp {
@@ -429,24 +415,21 @@ resource "aws_bedrockagentcore_gateway_target" "example" {
       vpc_identifier           = aws_vpc.example.id
       subnet_ids               = aws_subnet.example[*].id
       endpoint_ip_address_type = "IPV4"
-      security_group_ids       = [aws_security_group.mcp_lattice.id]
+      security_group_ids       = [aws_security_group.example.id]
     }
   }
 
   certificate_configuration {
     s3 {
-      uri = "s3://${aws_s3_bucket.example.bucket}/private-ca.pem"
+      uri = "s3://${aws_s3_object.example.bucket}/${aws_s3_object.example.key}"
     }
   }
-
-  # The gateway reads the certificate when it creates or updates the target, so grant access first.
-  depends_on = [aws_iam_role_policy.private_ca]
 }
 ```
 
 ### Self-hosted MCP server with routing through an internal ALB
 
-Alternatively, when the MCP server has a private TLS certificate, place an internal ALB with a public ACM certificate in front of the server and set `routing_domain` to the ALB DNS name.
+Use `routing_domain` as an alternative to `certificate_configuration` when the MCP server has a private TLS certificate. Place an internal ALB with a public ACM certificate in front of the server and set `routing_domain` to the ALB DNS name.
 
 ```terraform
 resource "aws_bedrockagentcore_gateway_target" "example" {
@@ -521,18 +504,18 @@ The certificate must be a PEM-encoded X.509 CA certificate. For the full require
 The `certificate_configuration` block supports exactly one of the following:
 
 * `s3` - (Optional) CA certificate stored as an object in Amazon S3. See [`certificate_configuration.s3` Block](#certificate_configurations3-block) below.
-* `secrets_manager` - (Optional) CA certificate stored as a secret in AWS Secrets Manager. See [`certificate_configuration.secrets_manager` Block](#certificate_configurationsecrets_manager-block) below.
+* `secrets_manager` - (Optional) CA certificate stored as a secret in AWS Secrets Manager. See [`secrets_manager` Block](#secrets_manager-block) below.
 
-~> **Note:** The gateway reads the CA certificate with its execution role when the target is created or updated, and the apply fails if the gateway can't read or validate it. Grant that role `s3:GetObject` on the object or `secretsmanager:GetSecretValue` on the secret, plus permission to decrypt with the AWS KMS customer managed key that encrypts it, if any. IAM changes take time to propagate, so granting the permission in the same apply can still cause a failure. To rotate the certificate, reference a new S3 object or secret.
+~> **Note:** The gateway reads the CA certificate with its execution role whenever the target is created or updated, including updates that change only other arguments, and the apply fails if the gateway can't read or validate it. If the target is created but the gateway can't read the certificate, Terraform marks the target as tainted and replaces it on the next apply. If an update fails, the target keeps its previous certificate configuration, and the AWS API and console report the `UPDATE_UNSUCCESSFUL` status until a later update succeeds. Keep the certificate readable and valid for as long as the target uses it. Grant that role `s3:GetObject` on the object or `secretsmanager:GetSecretValue` on the secret, plus permission to decrypt with the AWS KMS customer managed key that encrypts it, if any. IAM changes take time to propagate, so granting the permission in the same apply can still cause a failure. To rotate the certificate, reference a new S3 object or secret.
 
 ### `certificate_configuration.s3` Block
 
 The `s3` block supports the following:
 
-* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner.
+* `bucket_owner_account_id` - (Optional) Account ID of the S3 bucket owner. For a bucket in another account, the bucket policy must also allow the gateway's execution role to read the object.
 * `uri` - (Required) S3 URI of the PEM-encoded CA certificate, for example `s3://example-bucket/private-ca.pem`. The object must be in the same Region as the gateway.
 
-### `certificate_configuration.secrets_manager` Block
+### `secrets_manager` Block
 
 The `secrets_manager` block supports the following:
 
@@ -607,7 +590,7 @@ Exactly one of `managed_vpc_resource` or `self_managed_lattice_resource` must be
 The `managed_vpc_resource` block supports the following:
 
 * `endpoint_ip_address_type` - (Required) IP address type for the resource configuration endpoint. Valid values: `IPV4`, `IPV6`.
-* `routing_domain` - (Optional) Intermediate domain (e.g. a VPCE or ALB DNS name) to use instead of the actual target domain. Useful when the MCP server uses a private TLS certificate — place an ALB with a public ACM cert in front and set this to the ALB DNS name.
+* `routing_domain` - (Optional) Intermediate domain (e.g. a VPCE or ALB DNS name) to use instead of the actual target domain. Useful when the MCP server uses a private TLS certificate — place an ALB with a public ACM cert in front and set this to the ALB DNS name. Alternatively, use `certificate_configuration` to trust the private certificate authority directly.
 * `security_group_ids` - (Optional) Set of security group IDs (up to 5) to associate with the Lattice resource gateway. Defaults to the VPC default security group.
 * `subnet_ids` - (Required) Set of subnet IDs inside the VPC where Lattice ENIs are placed.
 * `tags` - (Optional) Map of tags to apply to the managed Lattice resource gateway.
