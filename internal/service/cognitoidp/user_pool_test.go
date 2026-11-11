@@ -1871,8 +1871,26 @@ func TestAccCognitoIDPUserPool_webAuthnConfiguration(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.factor_configuration", string(awstypes.WebAuthnFactorConfigurationTypeSingleFactor)),
 					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.relying_party_id", relyingPartyID),
 					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.user_verification", string(userVerification)),
+				),
+			},
+			{
+				Config: testAccUserPoolConfig_webAuthnConfiguration_factorConfiguration(rName, relyingPartyID, userVerification, awstypes.WebAuthnFactorConfigurationTypeMultiFactorWithUserVerification),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.factor_configuration", string(awstypes.WebAuthnFactorConfigurationTypeMultiFactorWithUserVerification)),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.relying_party_id", relyingPartyID),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.user_verification", string(userVerification)),
+				),
+			},
+			{
+				Config: testAccUserPoolConfig_webAuthnConfiguration_factorConfiguration(rName, relyingPartyID, userVerification, awstypes.WebAuthnFactorConfigurationTypeSingleFactor),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_configuration.0.factor_configuration", string(awstypes.WebAuthnFactorConfigurationTypeSingleFactor)),
 				),
 			},
 		},
@@ -3229,6 +3247,20 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, rName, relyingPartyID, userVerification)
+}
+
+func testAccUserPoolConfig_webAuthnConfiguration_factorConfiguration(rName, relyingPartyID string, userVerification awstypes.UserVerificationType, factorConfiguration awstypes.WebAuthnFactorConfigurationType) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  web_authn_configuration {
+    factor_configuration = %[4]q
+    relying_party_id     = %[2]q
+    user_verification    = %[3]q
+  }
+}
+`, rName, relyingPartyID, userVerification, factorConfiguration)
 }
 
 func testAccUserPoolConfig_update(name string, mfaconfig, smsAuthMsg string) string {

@@ -718,6 +718,12 @@ func resourceUserPool() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"factor_configuration": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.WebAuthnFactorConfigurationType](),
+							},
 							"relying_party_id": {
 								Type:     schema.TypeString,
 								Optional: true,
@@ -1427,6 +1433,10 @@ func expandWebAuthnConfigurationConfigType(tfList []any) *awstypes.WebAuthnConfi
 
 	apiObject := &awstypes.WebAuthnConfigurationType{}
 
+	if v, ok := tfMap["factor_configuration"].(string); ok && v != "" {
+		apiObject.FactorConfiguration = awstypes.WebAuthnFactorConfigurationType(v)
+	}
+
 	if v, ok := tfMap["relying_party_id"].(string); ok && v != "" {
 		apiObject.RelyingPartyId = aws.String(v)
 	}
@@ -1496,7 +1506,8 @@ func flattenWebAuthnConfigType(apiObject *awstypes.WebAuthnConfigurationType) []
 	}
 
 	tfMap := map[string]any{
-		"user_verification": apiObject.UserVerification,
+		"factor_configuration": apiObject.FactorConfiguration,
+		"user_verification":    apiObject.UserVerification,
 	}
 
 	if v := apiObject.RelyingPartyId; v != nil {

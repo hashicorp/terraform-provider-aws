@@ -180,6 +180,7 @@ This resource supports the following arguments:
 
 ### web_authn_configuration
 
+* `factor_configuration` - (Optional) Whether passkey sign-in with user verification satisfies the user pool's multi-factor authentication requirement. Valid values: `SINGLE_FACTOR`, `MULTI_FACTOR_WITH_USER_VERIFICATION`. Defaults to `SINGLE_FACTOR`.
 * `relying_party_id` - (Optional) The authentication domain that passkeys providers use as a relying party.
 * `user_verification` - (Optional) If your user pool should require a passkey. Must be one of `required` or `preferred`.
 
