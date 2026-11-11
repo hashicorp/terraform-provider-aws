@@ -114,10 +114,10 @@ type fileSystemsDataSourceModel struct {
 }
 
 type fileSystemsDataSourceFileSystemModel struct {
-	ARN           types.String      `tfsdk:"arn"`
+	FileSystemARN types.String      `tfsdk:"arn"`
 	Bucket        types.String      `tfsdk:"bucket"`
 	CreationTime  timetypes.RFC3339 `tfsdk:"creation_time"`
-	ID            types.String      `tfsdk:"id"`
+	FileSystemID  types.String      `tfsdk:"id"`
 	KmsKeyId      fwtypes.ARN       `tfsdk:"kms_key_id"`
 	Name          types.String      `tfsdk:"name"`
 	OwnerID       types.String      `tfsdk:"owner_id"`
