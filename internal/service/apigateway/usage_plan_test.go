@@ -484,6 +484,60 @@ func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 	})
 }
 
+// TestAccAPIGatewayUsagePlan_APIStages_additive verifies that adding a new
+// api_stages block does not remove and re-add existing, unchanged stages.
+// See https://github.com/hashicorp/terraform-provider-aws/issues/50330.
+func TestAccAPIGatewayUsagePlan_APIStages_additive(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetUsagePlanOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_usage_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUsagePlanConfig_apiStages(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUsagePlanExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+						names.AttrStage: "test",
+					}),
+				),
+			},
+			// Additive change: add "foo" while keeping "test".
+			{
+				Config: testAccUsagePlanConfig_apiStagesMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUsagePlanExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+						names.AttrStage: "test",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+						names.AttrStage: "foo",
+					}),
+				),
+			},
+			// Subtractive change: remove "test", keep "foo".
+			{
+				Config: testAccUsagePlanConfig_apiStagesModified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUsagePlanExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+						names.AttrStage: "foo",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayUsagePlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetUsagePlanOutput
