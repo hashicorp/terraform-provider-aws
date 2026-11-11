@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -66,7 +67,14 @@ func (l *guardrailResourcePolicyListResource) List(ctx context.Context, request 
 			var data guardrailResourcePolicyResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				data.ResourceARN = fwtypes.ARNValue(resourceARN)
-				data.Policy = fwtypes.IAMPolicyValue(aws.ToString(policy))
+
+				// Normalize the policy the same way Read does when there is no prior state.
+				policyToSet, err := verify.PolicyToSet("", aws.ToString(policy))
+				if err != nil {
+					smerr.AddError(ctx, &result.Diagnostics, err, smerr.ID, resourceARN)
+					return
+				}
+				data.Policy = fwtypes.IAMPolicyValue(policyToSet)
 
 				result.DisplayName = aws.ToString(item.Name)
 			})
