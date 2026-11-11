@@ -89,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ~> **Note:** AWS doesn't allow deleting a protect configuration while it is associated with a configuration set, is the account default, or has deletion protection enabled.
 
-~> **Note:** AWS doesn't store a default status. After import, the `*_default_status` arguments are unset, and every country whose status isn't `ALLOW` appears in the `*_country_rules` maps. If the configuration sets a default status, the first plan after import shows a difference, and applying it doesn't change any country.
+~> **Note:** AWS doesn't store a default status. After import, the `*_default_status` arguments are unset, and every country whose status isn't `ALLOW` appears in the `*_country_rules` maps. If the configuration sets a default status, the first plan after import shows a difference. Applying it changes no country only if the configured default status and country rules describe the imported rules. Otherwise, Terraform updates the countries to match the configuration.
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
