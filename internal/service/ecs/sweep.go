@@ -39,13 +39,16 @@ func RegisterSweepers() {
 		F:    sweepClusters,
 		Dependencies: []string{
 			"aws_ecs_express_gateway_service",
+			"aws_ecs_gateway_cluster_association",
 			"aws_ecs_service",
 		},
 	})
 
 	awsv2.Register("aws_ecs_express_gateway_service", sweepExpressGatewayServices)
 
-	awsv2.Register("aws_ecs_gateway", sweepGateways)
+	awsv2.Register("aws_ecs_gateway", sweepGateways, "aws_ecs_gateway_cluster_association")
+
+	awsv2.Register("aws_ecs_gateway_cluster_association", sweepGatewayClusterAssociations, "aws_ecs_service")
 
 	resource.AddTestSweepers("aws_ecs_service", &resource.Sweeper{
 		Name: "aws_ecs_service",
@@ -183,6 +186,29 @@ func sweepExpressGatewayServices(ctx context.Context, client *conns.AWSClient) (
 					)
 				}
 			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepGatewayClusterAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ECSClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	var input ecs.ListGatewayClusterAssociationsInput
+	for page, err := range listGatewayClusterAssociationPages(ctx, conn, &input) {
+		if errs.IsA[*awstypes.UnsupportedFeatureException](err) {
+			return nil, nil
+		}
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newGatewayClusterAssociationResource, client,
+				framework.NewAttribute("cluster_arn", aws.ToString(v.ClusterArn)),
+				framework.NewAttribute("gateway_arn", aws.ToString(v.GatewayArn))))
 		}
 	}
 
