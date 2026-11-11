@@ -29,6 +29,7 @@ func TestAccIAMGroupMembership_basic(t *testing.T) {
 	userName2 := fmt.Sprintf("tf-acc-user-gm-basic-two-%s", rString)
 	userName3 := fmt.Sprintf("tf-acc-user-gm-basic-three-%s", rString)
 	membershipName := fmt.Sprintf("tf-acc-membership-gm-basic-%s", rString)
+	resourceName := "aws_iam_group_membership.team"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -39,15 +40,21 @@ func TestAccIAMGroupMembership_basic(t *testing.T) {
 			{
 				Config: testAccGroupMembershipConfig_member(groupName, userName, membershipName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupMembershipExists(ctx, t, "aws_iam_group_membership.team", &group),
+					testAccCheckGroupMembershipExists(ctx, t, resourceName, &group),
 					testAccCheckGroupMembershipAttributes(&group, groupName, []string{userName}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccGroupMembershipImportStateIdFunc(resourceName),
 			},
 
 			{
 				Config: testAccGroupMembershipConfig_memberUpdate(groupName, userName, userName2, userName3, membershipName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupMembershipExists(ctx, t, "aws_iam_group_membership.team", &group),
+					testAccCheckGroupMembershipExists(ctx, t, resourceName, &group),
 					testAccCheckGroupMembershipAttributes(&group, groupName, []string{userName2, userName3}),
 				),
 			},
@@ -55,7 +62,7 @@ func TestAccIAMGroupMembership_basic(t *testing.T) {
 			{
 				Config: testAccGroupMembershipConfig_memberUpdateDown(groupName, userName3, membershipName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupMembershipExists(ctx, t, "aws_iam_group_membership.team", &group),
+					testAccCheckGroupMembershipExists(ctx, t, resourceName, &group),
 					testAccCheckGroupMembershipAttributes(&group, groupName, []string{userName3}),
 				),
 			},
@@ -167,6 +174,17 @@ func testAccCheckGroupMembershipAttributes(group *iam.GetGroupOutput, groupName 
 			return fmt.Errorf("Bad group membership count, expected (%d), but only (%d) found", len(users), uc)
 		}
 		return nil
+	}
+}
+
+func testAccGroupMembershipImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["group"]), nil
 	}
 }
 
