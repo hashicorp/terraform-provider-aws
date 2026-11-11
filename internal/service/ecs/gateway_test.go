@@ -445,7 +445,7 @@ func TestAccECSGateway_Configuration_full(t *testing.T) {
 				names.AttrHeader: knownvalue.ListExact([]knownvalue.Check{
 					knownvalue.ObjectExact(map[string]knownvalue.Check{
 						names.AttrName:   knownvalue.StringExact("x-canary"),
-						names.AttrValues: knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact("true")}),
+						names.AttrValues: knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact(acctest.CtTrue)}),
 					}),
 				}),
 			}),
