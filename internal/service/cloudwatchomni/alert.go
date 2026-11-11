@@ -223,7 +223,7 @@ func (r *alertResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 												"interval_seconds": schema.Int32Attribute{
 													Required: true,
 													Validators: []validator.Int32{
-														int32validator.AtLeast(1),
+														int32validator.OneOf(30, 60, 120, 300, 600, 900, 1800, 3600),
 													},
 												},
 												"pending_duration_seconds": schema.Int32Attribute{
