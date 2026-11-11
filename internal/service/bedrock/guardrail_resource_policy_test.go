@@ -297,13 +297,14 @@ locals {
 resource "aws_bedrock_guardrail_resource_policy" "test" {
   resource_arn = local.guardrail_profile_arn
 
+  # AWS returns a single action as a string, so use a string to keep import verification exact.
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Sid       = %[1]q
       Effect    = "Allow"
       Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
-      Action    = ["bedrock:ApplyGuardrail"]
+      Action    = "bedrock:ApplyGuardrail"
       Resource  = local.guardrail_profile_arn
     }]
   })
