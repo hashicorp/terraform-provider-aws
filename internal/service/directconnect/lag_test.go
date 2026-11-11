@@ -71,7 +71,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "request_macsec"},
 			},
 		},
 	})
@@ -143,7 +143,7 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrConnectionID, names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{names.AttrConnectionID, names.AttrForceDestroy, "request_macsec"},
 			},
 		},
 	})
@@ -182,7 +182,51 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "request_macsec"},
+			},
+		},
+	})
+}
+
+func TestAccDirectConnectLag_requestMACSec(t *testing.T) {
+	ctx := acctest.Context(t)
+	// The location must support 10Gbps MACsec.
+	location := acctest.SkipIfEnvVarNotSet(t, "DX_MACSEC_LOCATION")
+	var lag awstypes.Lag
+	resourceName := "aws_dx_lag.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLagDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLagConfig_requestMACSec(rName, location),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLagExists(ctx, t, resourceName, &lag),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrConnectionID),
+					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "10Gbps"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "no_encrypt"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
+					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLocation, location),
+					resource.TestCheckResourceAttr(resourceName, "macsec_capable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrProviderName),
+					resource.TestCheckResourceAttr(resourceName, "request_macsec", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "request_macsec"},
 			},
 		},
 	})
@@ -213,7 +257,7 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "request_macsec"},
 			},
 			{
 				Config: testAccLagConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -332,6 +376,23 @@ resource "aws_dx_lag" "test" {
   provider_name = data.aws_dx_location.test.available_providers[0]
 }
 `, rName)
+}
+
+func testAccLagConfig_requestMACSec(rName, location string) string {
+	return fmt.Sprintf(`
+data "aws_dx_location" "test" {
+  location_code = %[2]q
+}
+
+resource "aws_dx_lag" "test" {
+  name                  = %[1]q
+  connections_bandwidth = "10Gbps"
+  location              = data.aws_dx_location.test.location_code
+  request_macsec        = true
+
+  provider_name = data.aws_dx_location.test.available_providers[0]
+}
+`, rName, location)
 }
 
 func testAccLagConfig_tags1(rName, tagKey1, tagValue1 string) string {
