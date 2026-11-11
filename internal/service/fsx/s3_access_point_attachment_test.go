@@ -411,6 +411,7 @@ resource "aws_fsx_ontap_volume" "test" {
   security_style             = "UNIX"
   size_in_megabytes          = 1024
   skip_final_backup          = true
+  storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
 
