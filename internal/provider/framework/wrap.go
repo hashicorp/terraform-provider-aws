@@ -370,7 +370,7 @@ func newWrappedAction(ctx context.Context, spec *inttypes.ServicePackageAction, 
 
 	// Pre-size to the maximum number of interceptors added below to avoid
 	// reallocating the backing array as interceptors are appended.
-	var interceptors interceptorInvocations = make(interceptorInvocations, 0, 2)
+	interceptors := make(interceptorInvocations, 0, 2)
 
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
