@@ -23,8 +23,9 @@ var (
 	FindResourcePolicyByARN          = findResourcePolicyByARN
 	FindSenderIDByTwoPartKey         = findSenderIDByTwoPartKey
 
-	ValidatePhoneIdentity  = validatePhoneIdentity
-	ValidateSenderIdentity = validateSenderIdentity
+	ValidatePhoneIdentity             = validatePhoneIdentity
+	ValidateSenderIdentity            = validateSenderIdentity
+	OriginationIdentityISOCountryCode = originationIdentityISOCountryCode
 )
 
 type IntendedIdentityConfig = intendedIdentityConfig

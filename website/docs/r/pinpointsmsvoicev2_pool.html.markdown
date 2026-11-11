@@ -33,6 +33,35 @@ resource "aws_pinpointsmsvoicev2_pool" "example" {
 }
 ```
 
+### Multiple Countries
+
+`iso_country_code` is single-valued and cannot be changed after creation, so a pool whose
+origination identities span more than one country must leave it unset. Sender IDs are the
+only origination identity type usable this way, since each Sender ID ARN carries its own
+country code.
+
+```terraform
+resource "aws_pinpointsmsvoicev2_sender_id" "germany" {
+  sender_id        = "EXAMPLE"
+  iso_country_code = "DE"
+  message_types    = ["TRANSACTIONAL"]
+}
+
+resource "aws_pinpointsmsvoicev2_sender_id" "switzerland" {
+  sender_id        = "EXAMPLE"
+  iso_country_code = "CH"
+  message_types    = ["TRANSACTIONAL"]
+}
+
+resource "aws_pinpointsmsvoicev2_pool" "example" {
+  message_type = "TRANSACTIONAL"
+  origination_identities = [
+    aws_pinpointsmsvoicev2_sender_id.germany.arn,
+    aws_pinpointsmsvoicev2_sender_id.switzerland.arn,
+  ]
+}
+```
+
 ### Two-Way Channel
 
 ```terraform
@@ -84,7 +113,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled. When `true`, the pool cannot be deleted.
-* `iso_country_code` - (Optional) Two-character code, in ISO 3166-1 alpha-2 format, for the country or region of the pool. Cannot be changed after creation.
+* `iso_country_code` - (Optional) Two-character code, in ISO 3166-1 alpha-2 format, for the country or region of the pool. Cannot be changed after creation. Must be omitted when `origination_identities` spans more than one country, since this attribute is single-valued.
 * `opt_out_list_name` - (Optional) Name of the opt-out list associated with the pool.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-options.html#cli-configure-options-region). Defaults to the region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `self_managed_opt_outs_enabled` - (Optional) Whether the pool relies on self-managed opt-out handling. When `false`, AWS auto-replies to HELP/STOP requests and manages the opt-out list.
