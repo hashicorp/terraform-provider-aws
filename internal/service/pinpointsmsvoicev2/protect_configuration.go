@@ -107,6 +107,7 @@ func protectConfigurationCountryRulesAttribute(statuses ...awstypes.ProtectStatu
 		Optional:    true,
 		Validators: []validator.Map{
 			mapvalidator.SizeAtLeast(1),
+			mapvalidator.NoNullValues(),
 			mapvalidator.KeysAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Z]{2}$`), "must be a two-character ISO 3166-1 alpha-2 country code in upper case")),
 			mapvalidator.ValueStringsAre(stringvalidator.OneOf(enum.Slice(statuses...)...)),
 		},
@@ -129,6 +130,11 @@ func (r *protectConfigurationResource) Create(ctx context.Context, req resource.
 	}
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
+
+	// Deletion protection is enabled only after the country rules are set. If setting them fails,
+	// the tainted configuration must stay deletable so that Terraform can replace it.
+	deletionProtectionEnabled := aws.ToBool(input.DeletionProtectionEnabled)
+	input.DeletionProtectionEnabled = nil
 
 	out, err := conn.CreateProtectConfiguration(ctx, &input)
 	if err != nil {
@@ -155,6 +161,18 @@ func (r *protectConfigurationResource) Create(ctx context.Context, req resource.
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 			return
 		}
+	}
+
+	if deletionProtectionEnabled {
+		input := pinpointsmsvoicev2.UpdateProtectConfigurationInput{
+			DeletionProtectionEnabled: aws.Bool(true),
+			ProtectConfigurationId:    aws.String(id),
+		}
+		if _, err := conn.UpdateProtectConfiguration(ctx, &input); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+			return
+		}
+		plan.DeletionProtectionEnabled = types.BoolValue(true)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))

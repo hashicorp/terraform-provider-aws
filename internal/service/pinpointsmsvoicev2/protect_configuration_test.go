@@ -320,19 +320,27 @@ func TestAccPinpointSMSVoiceV2ProtectConfiguration_invalidCountryRules(t *testin
 `),
 				ExpectError: regexache.MustCompile(`map must contain at least 1 elements`),
 			},
+			{
+				Config: testAccProtectConfigurationConfig_countryRules(`
+  sms_country_rules = {
+    US = null
+  }
+`),
+				ExpectError: regexache.MustCompile(`null value`),
+			},
 		},
 	})
 }
 
 func testAccCheckProtectConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpointsmsvoicev2_protect_configuration" {
 				continue
 			}
 
+			ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 			_, err := tfpinpointsmsvoicev2.FindProtectConfigurationByID(ctx, conn, rs.Primary.ID)
 
 			if retry.NotFound(err) {
@@ -357,6 +365,7 @@ func testAccCheckProtectConfigurationExists(ctx context.Context, t *testing.T, n
 			return fmt.Errorf("Not found: %s", n)
 		}
 
+		ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 		output, err := tfpinpointsmsvoicev2.FindProtectConfigurationByID(ctx, conn, rs.Primary.ID)
@@ -378,6 +387,7 @@ func testAccCheckProtectConfigurationCountryRules(ctx context.Context, t *testin
 			return fmt.Errorf("Not found: %s", n)
 		}
 
+		ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 		got, err := tfpinpointsmsvoicev2.FindProtectConfigurationCountryRules(ctx, conn, rs.Primary.ID, capability)
