@@ -841,9 +841,6 @@ Use the `test-naming` target to run the same check CI runs:
 make test-naming
 ```
 
-!!! note
-    Requires `ripgrep` to be installed (`brew install ripgrep` on macOS).
-
 ### YAML Linting / yamllint
 
 YAMLlint checks the validity of YAML files.
