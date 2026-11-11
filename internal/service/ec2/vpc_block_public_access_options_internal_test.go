@@ -25,10 +25,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// These unit tests use a mock transport and require distinct, fixed Regions to
+// verify that failed creates cannot fall back to the provider's default Region.
+const (
+	vpcBPATestRegion         = "us-west-2" //lintignore:AWSAT003
+	vpcBPATestProviderRegion = "us-east-1" //lintignore:AWSAT003
+)
+
 func TestVPCBlockPublicAccessOptions_failedCreateRegion(t *testing.T) {
 	t.Parallel()
 
-	for _, region := range []string{"us-west-2", "us-east-1"} {
+	for _, region := range []string{vpcBPATestRegion, vpcBPATestProviderRegion} {
 		t.Run(region, func(t *testing.T) {
 			t.Parallel()
 
@@ -117,12 +124,12 @@ func TestVPCBlockPublicAccessOptions_unsafeRegion(t *testing.T) {
 	t.Parallel()
 
 	for name, attributes := range map[string]map[string]types.String{
-		"partial state":     {names.AttrID: types.StringValue("us-west-2")},
-		"mismatched region": {names.AttrID: types.StringValue("us-west-2"), names.AttrRegion: types.StringValue("us-east-1")},
-		"empty region":      {names.AttrID: types.StringValue("us-west-2"), names.AttrRegion: types.StringValue("")},
-		"unknown region":    {names.AttrID: types.StringValue("us-west-2"), names.AttrRegion: types.StringUnknown()},
-		"missing ID":        {names.AttrRegion: types.StringValue("us-west-2")},
-		"unknown ID":        {names.AttrID: types.StringUnknown(), names.AttrRegion: types.StringValue("us-west-2")},
+		"partial state":     {names.AttrID: types.StringValue(vpcBPATestRegion)},
+		"mismatched region": {names.AttrID: types.StringValue(vpcBPATestRegion), names.AttrRegion: types.StringValue(vpcBPATestProviderRegion)},
+		"empty region":      {names.AttrID: types.StringValue(vpcBPATestRegion), names.AttrRegion: types.StringValue("")},
+		"unknown region":    {names.AttrID: types.StringValue(vpcBPATestRegion), names.AttrRegion: types.StringUnknown()},
+		"missing ID":        {names.AttrRegion: types.StringValue(vpcBPATestRegion)},
+		"unknown ID":        {names.AttrID: types.StringUnknown(), names.AttrRegion: types.StringValue(vpcBPATestRegion)},
 		"null state":        nil,
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -163,7 +170,7 @@ func TestVPCBlockPublicAccessOptions_unsafeRegion(t *testing.T) {
 func TestVPCBlockPublicAccessOptions_lifecycle(t *testing.T) {
 	t.Parallel()
 
-	for _, region := range []string{"us-west-2", "us-east-1"} {
+	for _, region := range []string{vpcBPATestRegion, vpcBPATestProviderRegion} {
 		t.Run(region, func(t *testing.T) {
 			t.Parallel()
 
@@ -183,7 +190,7 @@ func TestVPCBlockPublicAccessOptions_lifecycle(t *testing.T) {
 				return testVPCBPAResponse(req.Form.Get("Action"), selected), nil
 			})
 			attributes := map[string]types.String{"internet_gateway_block_mode": types.StringValue("block-bidirectional")}
-			if region != "us-east-1" {
+			if region != vpcBPATestProviderRegion {
 				attributes[names.AttrRegion] = types.StringValue(region)
 			}
 			config := testVPCBPAState(t, s, attributes)
@@ -233,7 +240,7 @@ func TestVPCBlockPublicAccessOptions_createAPIError(t *testing.T) {
 	r, s := testVPCBPAResource(t, func(req *http.Request) (*http.Response, error) {
 		return nil, fmt.Errorf("test modify failure")
 	})
-	plan := testVPCBPAState(t, s, map[string]types.String{names.AttrRegion: types.StringValue("us-west-2"), "internet_gateway_block_mode": types.StringValue("block-bidirectional")})
+	plan := testVPCBPAState(t, s, map[string]types.String{names.AttrRegion: types.StringValue(vpcBPATestRegion), "internet_gateway_block_mode": types.StringValue("block-bidirectional")})
 	response := resource.CreateResponse{State: testVPCBPAState(t, s, nil)}
 	r.Create(ctx, resource.CreateRequest{Plan: tfsdk.Plan{Raw: plan.Raw, Schema: s}, ProviderMeta: testVPCBPAMeta(ctx)}, &response)
 	if !response.Diagnostics.HasError() || !response.State.Raw.IsNull() {
@@ -244,7 +251,7 @@ func TestVPCBlockPublicAccessOptions_createAPIError(t *testing.T) {
 func TestVPCBlockPublicAccessOptions_importAndLegacyState(t *testing.T) {
 	t.Parallel()
 
-	for _, importID := range []string{"us-east-1", "us-west-2@us-west-2", "legacy"} {
+	for _, importID := range []string{vpcBPATestProviderRegion, vpcBPATestRegion + "@" + vpcBPATestRegion, "legacy"} {
 		t.Run(importID, func(t *testing.T) {
 			t.Parallel()
 
@@ -257,7 +264,7 @@ func TestVPCBlockPublicAccessOptions_importAndLegacyState(t *testing.T) {
 			})
 			state := testVPCBPAState(t, s, nil)
 			if importID == "legacy" {
-				state = testVPCBPAState(t, s, map[string]types.String{names.AttrID: types.StringValue("us-east-1")})
+				state = testVPCBPAState(t, s, map[string]types.String{names.AttrID: types.StringValue(vpcBPATestProviderRegion)})
 			} else {
 				imported := resource.ImportStateResponse{State: state}
 				r.(resource.ResourceWithImportState).ImportState(ctx, resource.ImportStateRequest{ID: importID}, &imported)
@@ -292,7 +299,7 @@ func TestVPCBlockPublicAccessOptions_readRemoved(t *testing.T) {
 	r, s := testVPCBPAResource(t, func(req *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": {"text/xml"}}, Body: io.NopCloser(strings.NewReader(`<DescribeVpcBlockPublicAccessOptionsResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/"/>`))}, nil
 	})
-	state := testVPCBPAState(t, s, map[string]types.String{names.AttrID: types.StringValue("us-west-2"), names.AttrRegion: types.StringValue("us-west-2")})
+	state := testVPCBPAState(t, s, map[string]types.String{names.AttrID: types.StringValue(vpcBPATestRegion), names.AttrRegion: types.StringValue(vpcBPATestRegion)})
 	response := resource.ReadResponse{State: state}
 	r.Read(ctx, resource.ReadRequest{State: state, ProviderMeta: testVPCBPAMeta(ctx)}, &response)
 	if response.Diagnostics.HasError() || !response.State.Raw.IsNull() {
@@ -316,7 +323,7 @@ func TestVPCBlockPublicAccessOptions_regionalIsolation(t *testing.T) {
 		return testVPCBPAResponse(req.Form.Get("Action"), selected), nil
 	})
 	states := map[string]tfsdk.State{}
-	for _, region := range []string{"us-west-2", "us-east-1"} {
+	for _, region := range []string{vpcBPATestRegion, vpcBPATestProviderRegion} {
 		expectedRegion = region
 		plan := testVPCBPAState(t, s, map[string]types.String{names.AttrRegion: types.StringValue(region), "internet_gateway_block_mode": types.StringValue("block-bidirectional")})
 		response := resource.CreateResponse{State: testVPCBPAState(t, s, nil)}
@@ -327,7 +334,7 @@ func TestVPCBlockPublicAccessOptions_regionalIsolation(t *testing.T) {
 		states[region] = response.State
 	}
 	// Both regional clients now exist in the same provider's client cache.
-	for _, region := range []string{"us-west-2", "us-east-1"} {
+	for _, region := range []string{vpcBPATestRegion, vpcBPATestProviderRegion} {
 		expectedRegion = region
 		response := resource.DeleteResponse{State: states[region]}
 		r.Delete(ctx, resource.DeleteRequest{State: states[region], ProviderMeta: testVPCBPAMeta(ctx)}, &response)
@@ -364,7 +371,7 @@ func testVPCBPAResource(t *testing.T, transport vpcBPATransport) (resource.Resou
 	if err := os.WriteFile(configFile, nil, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	cfg := conns.Config{AccessKey: "test", SecretKey: "test", Region: "us-east-1", SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{configFile}, SharedCredentialsFiles: []string{configFile}}
+	cfg := conns.Config{AccessKey: "test", SecretKey: "test", Region: vpcBPATestProviderRegion, SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{configFile}, SharedCredentialsFiles: []string{configFile}}
 	client, diags := cfg.ConfigureProvider(ctx, client)
 	if diags.HasError() {
 		t.Fatal(diags)
