@@ -4,6 +4,7 @@
 package bedrock_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -19,6 +20,7 @@ import (
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -129,7 +131,12 @@ func TestAccBedrockGuardrailResourcePolicy_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_bedrock_guardrail_resource_policy.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_bedrock_guardrail_resource_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_bedrock_guardrail_resource_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), policy1.ValueCheck()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), knownvalue.StringFunc(func(v string) error {
+							if !verify.PolicyStringsEquivalent(policy1.Value(), v) {
+								return fmt.Errorf("listed policy %s is not equivalent to state policy %s", v, policy1.Value())
+							}
+							return nil
+						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrResourceARN), tfknownvalue.RegionalARNRegexp("bedrock", regexache.MustCompile(`guardrail/.+`))),
 					}),

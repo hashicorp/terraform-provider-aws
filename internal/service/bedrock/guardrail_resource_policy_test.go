@@ -51,6 +51,8 @@ func TestAccBedrockGuardrailResourcePolicy_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+				// JSON is not normalized during attribute comparison.
+				ImportStateVerifyIgnore: []string{names.AttrPolicy},
 			},
 		},
 	})
@@ -156,6 +158,8 @@ func testAccGuardrailResourcePolicy_guardrailProfile(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+				// JSON is not normalized during attribute comparison.
+				ImportStateVerifyIgnore: []string{names.AttrPolicy},
 			},
 			{
 				Config: testAccGuardrailResourcePolicyConfig_guardrailProfile("test2"),
@@ -251,15 +255,20 @@ func testAccGuardrailResourcePolicyConfig_basic(rName string) string {
 resource "aws_bedrock_guardrail_resource_policy" "test" {
   resource_arn = aws_bedrock_guardrail.test.guardrail_arn
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
-      Action    = ["bedrock:GetGuardrail", "bedrock:ApplyGuardrail"]
-      Resource  = aws_bedrock_guardrail.test.guardrail_arn
-    }]
-  })
+  policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect    = "Allow"
+    actions   = ["bedrock:GetGuardrail", "bedrock:ApplyGuardrail"]
+    resources = [aws_bedrock_guardrail.test.guardrail_arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
 }
 `)
 }
@@ -269,15 +278,20 @@ func testAccGuardrailResourcePolicyConfig_updated(rName string) string {
 resource "aws_bedrock_guardrail_resource_policy" "test" {
   resource_arn = aws_bedrock_guardrail.test.guardrail_arn
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
-      Action    = ["bedrock:ApplyGuardrail"]
-      Resource  = aws_bedrock_guardrail.test.guardrail_arn
-    }]
-  })
+  policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect    = "Allow"
+    actions   = ["bedrock:ApplyGuardrail"]
+    resources = [aws_bedrock_guardrail.test.guardrail_arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
 }
 `)
 }
@@ -297,17 +311,21 @@ locals {
 resource "aws_bedrock_guardrail_resource_policy" "test" {
   resource_arn = local.guardrail_profile_arn
 
-  # AWS returns a single action as a string, so use a string to keep import verification exact.
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Sid       = %[1]q
-      Effect    = "Allow"
-      Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
-      Action    = "bedrock:ApplyGuardrail"
-      Resource  = local.guardrail_profile_arn
-    }]
-  })
+  policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid       = %[1]q
+    effect    = "Allow"
+    actions   = ["bedrock:ApplyGuardrail"]
+    resources = [local.guardrail_profile_arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
 }
 `, sid)
 }

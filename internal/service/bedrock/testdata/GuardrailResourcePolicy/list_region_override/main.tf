@@ -7,15 +7,22 @@ resource "aws_bedrock_guardrail_resource_policy" "test" {
 
   resource_arn = aws_bedrock_guardrail.test[count.index].guardrail_arn
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
-      Action    = ["bedrock:ApplyGuardrail", "bedrock:GetGuardrail"]
-      Resource  = aws_bedrock_guardrail.test[count.index].guardrail_arn
-    }]
-  })
+  policy = data.aws_iam_policy_document.test[count.index].json
+}
+
+data "aws_iam_policy_document" "test" {
+  count = var.resource_count
+
+  statement {
+    effect    = "Allow"
+    actions   = ["bedrock:ApplyGuardrail", "bedrock:GetGuardrail"]
+    resources = [aws_bedrock_guardrail.test[count.index].guardrail_arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
 }
 
 data "aws_caller_identity" "current" {}

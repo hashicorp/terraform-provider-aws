@@ -64,6 +64,9 @@ func TestAccBedrockGuardrailResourcePolicy_Identity_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+				ImportStateVerifyIgnore: []string{
+					names.AttrPolicy,
+				},
 			},
 
 			// Step 3: Import block with Import ID
@@ -78,10 +81,12 @@ func TestAccBedrockGuardrailResourcePolicy_Identity_basic(t *testing.T) {
 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -95,10 +100,12 @@ func TestAccBedrockGuardrailResourcePolicy_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -148,6 +155,9 @@ func TestAccBedrockGuardrailResourcePolicy_Identity_regionOverride(t *testing.T)
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+				ImportStateVerifyIgnore: []string{
+					names.AttrPolicy,
+				},
 			},
 
 			// Step 3: Import command without appended "@<region>"
@@ -163,6 +173,9 @@ func TestAccBedrockGuardrailResourcePolicy_Identity_regionOverride(t *testing.T)
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+				ImportStateVerifyIgnore: []string{
+					names.AttrPolicy,
+				},
 			},
 
 			// Step 4: Import block with Import ID and appended "@<region>"
@@ -178,10 +191,12 @@ func TestAccBedrockGuardrailResourcePolicy_Identity_regionOverride(t *testing.T)
 				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 5: Import block with Import ID and no appended "@<region>"
@@ -197,10 +212,12 @@ func TestAccBedrockGuardrailResourcePolicy_Identity_regionOverride(t *testing.T)
 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 6: Import block with Resource Identity
@@ -215,10 +232,12 @@ func TestAccBedrockGuardrailResourcePolicy_Identity_regionOverride(t *testing.T)
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

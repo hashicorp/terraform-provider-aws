@@ -28,6 +28,8 @@ import (
 // @FrameworkResource("aws_bedrock_guardrail_resource_policy", name="Guardrail Resource Policy")
 // @ArnIdentity("resource_arn")
 // @Testing(hasNoPreExistingResource=true)
+// Ignore `policy` because JSON is not normalized during attribute comparison.
+// @Testing(importIgnore="policy")
 func newGuardrailResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &guardrailResourcePolicyResource{}, nil
 }
