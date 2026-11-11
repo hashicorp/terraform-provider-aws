@@ -13,6 +13,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -208,6 +210,32 @@ func (s protectConfigurationSweeper) Delete(ctx context.Context, optFns ...tfres
 		}
 		if _, err := s.conn.UpdateProtectConfiguration(ctx, &input); err != nil {
 			return fmt.Errorf("disabling deletion protection for End User Messaging SMS Protect Configuration (%s): %w", id, err)
+		}
+	}
+
+	input := pinpointsmsvoicev2.DescribeConfigurationSetsInput{
+		Filters: []awstypes.ConfigurationSetFilter{
+			{
+				Name:   awstypes.ConfigurationSetFilterNameProtectConfigurationId,
+				Values: []string{id},
+			},
+		},
+	}
+	configurationSets, err := findConfigurationSets(ctx, s.conn, &input)
+	if err != nil && !retry.NotFound(err) {
+		return fmt.Errorf("listing End User Messaging SMS Configuration Sets for Protect Configuration (%s): %w", id, err)
+	}
+	for _, v := range configurationSets {
+		input := pinpointsmsvoicev2.DisassociateProtectConfigurationInput{
+			ConfigurationSetName:   v.ConfigurationSetName,
+			ProtectConfigurationId: aws.String(id),
+		}
+		_, err := s.conn.DisassociateProtectConfiguration(ctx, &input)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "NOT_ASSOCIATED") {
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("disassociating End User Messaging SMS Protect Configuration (%s) from Configuration Set (%s): %w", id, aws.ToString(v.ConfigurationSetName), err)
 		}
 	}
 
