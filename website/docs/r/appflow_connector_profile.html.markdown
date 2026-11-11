@@ -428,7 +428,7 @@ resource "aws_appflow_connector_profile" "example" {
 
 #### Required
 
-* `name` (String) Name of the Appflow connector profile.
+* `name` (String) Name of the AppFlow connector profile.
 
 #### Optional
 

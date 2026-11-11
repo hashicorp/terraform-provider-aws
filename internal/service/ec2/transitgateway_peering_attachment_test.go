@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,6 +19,52 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestFlattenTransitGatewayPeeringAttachmentOptions(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		apiObject *awstypes.TransitGatewayPeeringAttachmentOptions
+		want      []any
+	}{
+		"nil": {
+			apiObject: nil,
+			want:      nil,
+		},
+		"empty": {
+			// The API can return a present-but-empty Options object (for example when a field is in the wire response but not yet modeled in the SDK).
+			// This must flatten to no block, otherwise the provider would detect drift against a configuration with no options block and force a replacement.
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{},
+			want:      nil,
+		},
+		"empty dynamic_routing": {
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
+				DynamicRouting: "",
+			},
+			want: nil,
+		},
+		"dynamic_routing enable": {
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
+				DynamicRouting: awstypes.DynamicRoutingValueEnable,
+			},
+			want: []any{map[string]any{
+				"dynamic_routing": awstypes.DynamicRoutingValueEnable,
+			}},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfec2.FlattenTransitGatewayPeeringAttachmentOptions(testCase.apiObject)
+
+			if diff := cmp.Diff(got, testCase.want); diff != "" {
+				t.Errorf("unexpected diff (+want, -got):\n%s", diff)
+			}
+		})
+	}
+}
 
 func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
@@ -86,7 +133,7 @@ func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsy
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, t, resourceName, &transitGatewayPeeringAttachment),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "options.dynamic_routing", "enable"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.dynamic_routing", "enable"),
 				),
 			},
 			{

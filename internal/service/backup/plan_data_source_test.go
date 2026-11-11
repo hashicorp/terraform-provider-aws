@@ -5,8 +5,10 @@ package backup_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,6 +35,9 @@ func TestAccBackupPlanDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtRulePound, resourceName, acctest.CtRulePound),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrRule, resourceName, names.AttrRule),
 					resource.TestCheckResourceAttrPair(datasourceName, "scan_setting", resourceName, "scan_setting"),
+					resource.TestMatchTypeSetElemNestedAttrs(datasourceName, "rule.*", map[string]*regexp.Regexp{
+						"rule_id": regexache.MustCompile(`^[a-f0-9-]+$`),
+					}),
 				),
 			},
 		},

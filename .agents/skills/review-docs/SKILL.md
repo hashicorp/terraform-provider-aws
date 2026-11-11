@@ -8,9 +8,9 @@ description: "Review a Terraform AWS Provider PR's end-user documentation (websi
 
 # Review: End-User Documentation
 
-Assume the `@maintainer` persona. Scope: resource docs (`r/`), data source docs (`d/`), list resource docs (`list/`) under `website/docs/`, rendered at the Terraform Registry. Loaded from `review-pr`.
+Assume the `@maintainer` persona. Scope: resource docs (`r/`), data source docs (`d/`), list resource docs (`list-resources/`) under `website/docs/`, rendered at the Terraform Registry. Loaded from `review-pr`.
 
-Authoritative reference: [docs/end-user-documentation.md](../../../docs/end-user-documentation.md). When this skill and that document disagree, the document wins. Do not review CHANGELOG updates.
+Precedence: `swissshepherd` wins, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then [docs/end-user-documentation.md](../../../docs/end-user-documentation.md), then this skill. Do not review CHANGELOG updates.
 
 ## Should the PR include docs?
 
@@ -41,7 +41,7 @@ Flag openings like "This resource…", "Use this resource…", "Allows you to…
 - ✓ `(Optional) Whether to enable logging.`
 - ✗ `(Optional) Enables logging.` / `(Optional) If true, enables logging.`
 
-**`(Required)` / `(Optional)` / `(Read-Only)`** are the only valid markers, capitalized in parentheses, immediately after the hyphen.
+**Labels**: every argument gets `(Required)` or `(Optional)` right after the hyphen. Optional+Computed is `(Optional)`. Traits follow the label: `(Optional, Forces new resource)`, `(Optional, **Deprecated**)`. Attribute Reference entries get no label. Use `(Read-Only)` only for read-only fields in a block subsection that also has arguments; flag it anywhere else.
 
 **Examples use `example`, not `test`.** Flag any HCL block in docs that uses `"test"` as a resource label or `name = "test"`.
 
@@ -56,11 +56,21 @@ Resource docs, in this order:
 5. `## Timeouts` *(only if the resource exposes timeouts)*
 6. `## Import` *(only for resources)*
 
-Data source and list resource docs have only Example Usage, Argument Reference, and Attribute Reference.
+Other types, after the title and Example Usage:
+
+| Doc type | Sections, in order |
+| --- | --- |
+| Data source | Argument Reference, Attribute Reference, Timeouts *(only if the schema has timeouts)*. No Import. |
+| Ephemeral resource | Argument Reference, Attribute Reference, Usage Notes *(optional)*. |
+| List resource | Argument Reference. No Attribute Reference. |
+| Action | Dependency Management *(optional)*, Argument Reference. |
+| Function | Signature, Arguments. |
+
+Any other `##` heading is an error.
 
 ## Argument Reference
 
-Required arguments come first, separated from optional by a header line. Alphabetize. Use these exact lead-ins:
+Alphabetize. With 5 or more arguments, including at least 2 required and 2 optional, split them:
 
 ```
 The following arguments are required:
@@ -72,7 +82,7 @@ The following arguments are optional:
 * `opt_arg` - (Optional) ...
 ```
 
-If there are no required arguments, drop the "required" subsection — don't write "There are no required arguments."
+Otherwise use one list under `This resource supports the following arguments:`. In bylines, replace "resource" with the documentation type.
 
 For tagged resources, `tags` lives under optional arguments with this exact wording:
 
@@ -82,7 +92,7 @@ For tagged resources, `tags` lives under optional arguments with this exact word
 
 ## Attribute Reference
 
-Open with `This resource exports the following attributes in addition to the arguments above:` (substitute "data source" / "list resource"). Flag pages that re-document arguments here — only computed attributes belong. Alphabetize.
+Open with `This resource exports the following attributes in addition to the arguments above:`, replacing "resource" with the documentation type. Flag pages that re-document arguments here — only computed attributes belong. Alphabetize.
 
 For tagged resources, `tags_all` has this exact wording:
 

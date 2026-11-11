@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_observabilityadmin_telemetry_evaluation: Add `all_regions` and `regions` attributes
+```

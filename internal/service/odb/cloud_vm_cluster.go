@@ -774,7 +774,7 @@ func getMajorGiVersion(ctx context.Context, conn *odb.Client, arn *string, giVer
 		return inputGiVersion, nil
 	} else {
 		// This regexp based approach is for backward compatibility
-		giVersionMajor := strings.Split(*giVersionComputed, ".")[0]
+		giVersionMajor, _, _ := strings.Cut(*giVersionComputed, ".")
 		giVersionMajor = giVersionMajor + ".0.0.0"
 		regxGiVersionMajor := regexache.MustCompile(MajorGiVersionPattern)
 		if !regxGiVersionMajor.MatchString(giVersionMajor) {

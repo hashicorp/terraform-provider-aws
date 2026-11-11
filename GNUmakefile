@@ -5,6 +5,7 @@ ACCTEST_TIMEOUT              ?= 360m
 BASE_REF                     ?= main
 GOFMT                        ?= $(shell $(GO_VER) env GOROOT 2>/dev/null)/bin/gofmt
 GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
+GOVULNCHECK_ARGS             ?=
 P                            ?= 20
 PKG_NAME                     ?= internal
 SEMGREP_ARGS                 ?= --error
@@ -178,9 +179,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep shellcheck skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint govulncheck import-lint makefile-lint provider-lint provider-markdown-lint semgrep shellcheck skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae shellcheck website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 govulncheck import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae shellcheck website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -358,7 +359,20 @@ examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
 	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
 		--disable-rule=terraform_typed_variables
 
+fix: prereq-go ## Apply go fix (all packages, or scoped to a service with PKG/K)
+	@echo "make: Applying go fix..."
+	@$(GO_VER) fix $(TEST)
+
+fix-check: prereq-go ## [CI] Go Fix Check / go fix (all packages, or scoped to a service with PKG/K)
+	@echo "make: Checking go fix..."
+	@$(GO_VER) fix -diff $(TEST)
+
 fix-constants: semgrep-fix-constants fmt ## Use Semgrep to fix constants
+
+fix-core: prereq-go ## Apply go fix in core directories (non-internal/service)
+	@echo "make: Applying go fix in core directories..."
+	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/'); \
+	$(GO_VER) fix $$core_pkgs
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
@@ -435,6 +449,30 @@ go-build: ## [CI] Provider Checks / go-build
 	echo "make: Provider Checks / go-build ($$os_arch)..." ; \
 	go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
 
+go-fix-check-shard: prereq-go ## [CI] Go Fix Check / go fix for a specific shard (SHARD=0 TOTAL_SHARDS=4)
+	@if [ -z "$(SHARD)" ] || [ -z "$(TOTAL_SHARDS)" ]; then \
+		echo "Error: SHARD and TOTAL_SHARDS must be set"; \
+		echo "Example: make go-fix-check-shard SHARD=0 TOTAL_SHARDS=4"; \
+		exit 1; \
+	fi
+	@echo "make: Checking go fix for shard $(SHARD) of $(TOTAL_SHARDS)..."
+	@packages=$$($(GO_VER) list ./...) || { echo "make: go list failed"; exit 1; }; \
+	packages=$$(echo "$$packages" | sort); \
+	count=0; \
+	shard_packages=""; \
+	for pkg in $$packages; do \
+		if [ $$((count % $(TOTAL_SHARDS))) -eq $(SHARD) ]; then \
+			shard_packages="$$shard_packages $$pkg"; \
+		fi; \
+		count=$$((count + 1)); \
+	done; \
+	if [ -z "$$shard_packages" ]; then \
+		echo "No packages assigned to shard $(SHARD)"; \
+		exit 0; \
+	fi; \
+	echo "Checking $$(echo $$shard_packages | wc -w | xargs) packages..."; \
+	$(GO_VER) fix -diff $$shard_packages
+
 golangci-lint: golangci-lint1 golangci-lint2 golangci-lint3 golangci-lint4 golangci-lint5 ## [CI] All golangci-lint Checks
 
 golangci-lint1: ## [CI] golangci-lint Checks / 1 of 5
@@ -467,6 +505,10 @@ golangci-lint5: ## [CI] golangci-lint Checks / 5 of 5
 		--config .ci/.golangci5.yml \
 		$(TEST)
 
+govulncheck: ## Run govulncheck
+	@echo "make: Running govulncheck..."
+	@govulncheck $(GOVULNCHECK_ARGS) ./...
+
 help: ## Display this help
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -v '## \[internal\]' | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-27s\033[0m %s\n", $$1, $$2}'
 
@@ -486,18 +528,11 @@ makefile-lint: prereq-go ## [CI] Makefile Linting / alignment check
 
 misspell: changelog-misspell docs-misspell website-misspell ## [CI] Run all CI misspell checks
 
-modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
-	@echo "make: Checking for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -test $(TEST)
+modern-check: fix-check ## Legacy alias to fix-check
 
-modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
-	@echo "make: Fixing checks for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $(TEST)
+modern-fix: fix ## Legacy alias to fix
 
-modern-fix-core: prereq-go ## Fix checks for modern Go code in core directories
-	@echo "make: Fixing checks for modern Go code in core directories..."
-	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/'); \
-	$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $$core_pkgs
+modern-fix-core: fix-core ## Legacy alias to fix-core
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
@@ -547,17 +582,20 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
 
+provider-memory: prereq-go ## Run provider memory benchmarks (SAMPLES=N)
+	@GO="$(GO_VER)" .ci/scripts/provider-memory.sh
+
 quick-fix-core-heading: ## [internal] Just a heading for quick-fix-core
 	@echo "make: Quick fixes for core (non-service) directories..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core modern-fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
+quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
 
 quick-fix-heading: ## [internal] Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports modern-fix semgrep-fix terraform-fmt website-terrafmt-fix ## Some quick fixes
+quick-fix: quick-fix-heading copyright-fix fmt testacc-lint-fix fix-imports fix semgrep-fix terraform-fmt website-terrafmt-fix ## Some quick fixes
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
@@ -899,7 +937,7 @@ skaff-check-compile: ## [CI] Skaff Checks / Compile skaff
 	@cd skaff ; \
 	go build
 
-smoke: sane ## Smoke tests (alias of sane)
+smoke: smoke-core-services smoke-identity smoke-logging ## Run smoke tests
 
 smoke-core-services: prereq-go ## Run core-service smoke tests
 	@cores=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8); \
@@ -1134,16 +1172,17 @@ tflint-init: ## Initialize tflint
 tools: prereq-go ## Install tools
 	@echo "make: Installing tools..."
 	cd .ci/providerlint && $(GO_VER) install .
+	cd .ci/tools && $(GO_VER) install github.com/YakDriver/copyplop
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/swissshepherd
 	cd .ci/tools && $(GO_VER) install github.com/golangci/misspell/cmd/misspell
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
-	cd .ci/tools && $(GO_VER) install github.com/YakDriver/copyplop
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/tools && $(GO_VER) install github.com/katbyte/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
-	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
 	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
+	cd .ci/tools && $(GO_VER) install golang.org/x/vuln/cmd/govulncheck
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
 ts: testacc-short ## Alias to testacc-short
@@ -1325,7 +1364,10 @@ yamllint: ## [CI] YAML Linting / yamllint
 	docs-markdown-lint \
 	docs-misspell \
 	examples-tflint \
+	fix \
+	fix-check \
 	fix-constants \
+	fix-core \
 	fix-imports \
 	fix-imports-core \
 	fmt \
@@ -1338,12 +1380,14 @@ yamllint: ## [CI] YAML Linting / yamllint
 	generate-changelog \
 	gh-workflow-lint \
 	go-build \
+	go-fix-check-shard \
 	golangci-lint \
 	golangci-lint1 \
 	golangci-lint2 \
 	golangci-lint3 \
 	golangci-lint4 \
 	golangci-lint5 \
+	govulncheck \
 	help \
 	import-lint \
 	install \
@@ -1358,6 +1402,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
+	provider-memory \
 	quick-fix \
 	quick-fix-core \
 	quick-fix-core-heading \
@@ -1384,7 +1429,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	smoke-core-services \
 	smoke-identity \
 	smoke-logging \
-	$(SMOKE_LOGGING_TARGETS) \
 	sweep \
 	sweeper \
 	sweeper-check \

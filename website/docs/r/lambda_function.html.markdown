@@ -608,6 +608,58 @@ resource "aws_lambda_function" "example" {
 }
 ```
 
+### Function with Durable Configuration and Customer Managed KMS Key
+
+Durable execution state can be encrypted with a customer managed KMS key via `durable_config.kms_key_arn`. The key policy must grant the Lambda service (`lambda.amazonaws.com`) permission to use the key.
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "example" {
+  description = "Durable function execution state encryption"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "EnableIAMUserPermissions"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root" }
+        Action    = "kms:*"
+        Resource  = "*"
+      },
+      {
+        Sid       = "AllowLambdaDurableService"
+        Effect    = "Allow"
+        Principal = { Service = "lambda.amazonaws.com" }
+        Action    = ["kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"]
+        Resource  = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example_durable_function"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs24.x"
+
+  durable_config {
+    execution_timeout = 3600
+    retention_period  = 7
+    kms_key_arn       = aws_kms_key.example.arn
+  }
+
+  timeouts {
+    delete = "60m"
+  }
+}
+```
+
 ### Capacity Provider Configuration
 
 ```terraform
@@ -719,7 +771,10 @@ The following arguments are optional:
 `durable_config` may only be available in [limited regions](https://builder.aws.com/build/capabilities), including `us-east-2`.
 
 * `execution_timeout` - (Required) Maximum execution time in seconds for the durable function. Valid value between 1 and 31622400 (366 days).
+* `kms_key_arn` - (Optional) ARN of the KMS customer managed key used to encrypt the durable function's execution state (input, output, and error payloads). If not specified, the execution state is encrypted with an AWS managed key. Changing this value applies the new key to executions that start after the change; executions already in progress continue to use the key they started with. Note that the top-level `kms_key_arn` argument is not used for durable function state encryption.
 * `retention_period` - (Optional) Number of days to retain the function's execution state. Valid value between 1 and 90. If not specified, the function's execution state is not retained. Defaults to 14.
+
+~> **NOTE:** When `kms_key_arn` is set, the KMS key policy must grant the Lambda service (`lambda.amazonaws.com`) permission to use the key (`kms:Decrypt`, `kms:GenerateDataKey`, and `kms:DescribeKey`); otherwise function creation fails with a KMS `AccessDeniedException`. The key must be a symmetric encryption key in the same region as the function. The key can be changed in place after creation: the new key applies only to executions that start after the change, while executions already in progress continue to use the key they started with.
 
 ### `environment` Block
 

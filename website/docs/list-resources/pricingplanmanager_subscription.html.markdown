@@ -20,4 +20,4 @@ list "aws_pricingplanmanager_subscription" "example" {
 
 ## Argument Reference
 
-This list resource has no arguments.
+This list resource does not support any arguments.

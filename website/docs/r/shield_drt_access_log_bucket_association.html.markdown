@@ -31,7 +31,7 @@ resource "aws_shield_drt_access_log_bucket_association" "test" {
 The following arguments are required:
 
 * `log_bucket` - (Required) The Amazon S3 bucket that contains the logs that you want to share.
-* `role_arn_association_id` - (Required) The ID of the Role Arn association used for allowing Shield DRT Access.
+* `role_arn_association_id` - (Required) The ID of the Role ARN association used for allowing Shield DRT Access.
 
 ## Attribute Reference
 

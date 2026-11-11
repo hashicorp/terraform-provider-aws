@@ -569,5 +569,5 @@ In the resource documentation (e.g., `website/docs/r/service_example.html.markdo
 In the resource documentation (e.g., `website/docs/r/service_example.html.markdown`), add the following to the attribute reference:
 
 ```markdown
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 ```

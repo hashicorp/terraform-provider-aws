@@ -64,6 +64,15 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"connection_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ConnectionType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrCreateTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -707,6 +716,7 @@ type serverlessCacheResourceModel struct {
 	framework.WithRegionModel
 	ARN                    types.String                                           `tfsdk:"arn"`
 	CacheUsageLimits       fwtypes.ListNestedObjectValueOf[cacheUsageLimitsModel] `tfsdk:"cache_usage_limits"`
+	ConnectionType         fwtypes.StringEnum[awstypes.ConnectionType]            `tfsdk:"connection_type"`
 	CreateTime             timetypes.RFC3339                                      `tfsdk:"create_time"`
 	DailySnapshotTime      types.String                                           `tfsdk:"daily_snapshot_time"`
 	Description            types.String                                           `tfsdk:"description"`

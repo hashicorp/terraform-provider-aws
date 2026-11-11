@@ -11,7 +11,7 @@ description: |-
 Provides an AutoScaling Scaling Policy resource.
 
 ~> **NOTE:** You may want to omit `desired_capacity` attribute from attached `aws_autoscaling_group`
-when using autoscaling policies. It's good practice to pick either
+when using Auto Scaling policies. It's good practice to pick either
 [manual](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/as-manual-scaling.html)
 or [dynamic](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/as-scale-based-on-demand.html)
 (policy-based) scaling.
@@ -180,7 +180,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the policy.
-* `autoscaling_group_name` - (Required) Name of the autoscaling group.
+* `autoscaling_group_name` - (Required) Name of the Auto Scaling group.
 * `adjustment_type` - (Optional) Whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
 * `policy_type` - (Optional) Policy type, either "SimpleScaling", "StepScaling", "TargetTrackingScaling", or "PredictiveScaling". If this value isn't provided, AWS will default to "SimpleScaling."
 * `predictive_scaling_configuration` - (Optional) Predictive scaling policy configuration to use with Amazon EC2 Auto Scaling.

@@ -57,34 +57,34 @@ resource "aws_medialive_multiplex_program" "example" {
 The following arguments are required:
 
 * `multiplex_id` - (Required) Multiplex ID.
+* `multiplex_program_settings` - (Required) MultiplexProgram settings. See [`multiplex_program_settings` Block](#multiplex_program_settings-block) for more details.
 * `program_name` - (Required) Unique program name.
-* `multiplex_program_settings` - (Required) MultiplexProgram settings. See [Multiplex Program Settings](#multiple-program-settings) for more details.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### Multiple Program Settings
+### `multiplex_program_settings` Block
 
-* `program_number` - (Required) Unique program number.
 * `preferred_channel_pipeline` - (Required) Enum for preferred channel pipeline. Options are `CURRENTLY_ACTIVE`, `PIPELINE_0`, or `PIPELINE_1`.
-* `service_descriptor` - (Optional) Service Descriptor. See [Service Descriptor](#service-descriptor) for more details.
-* `video_settings` - (Optional) Video settings. See [Video Settings](#video-settings) for more details.
+* `program_number` - (Required) Unique program number.
+* `service_descriptor` - (Optional) Service Descriptor. See [`service_descriptor` Block](#service_descriptor-block) for more details.
+* `video_settings` - (Optional) Video settings. See [`video_settings` Block](#video_settings-block) for more details.
 
-### Service Descriptor
+### `service_descriptor` Block
 
 * `provider_name` - (Required) Unique provider name.
 * `service_name` - (Required) Unique service name.
 
-### Video Settings
+### `video_settings` Block
 
 * `constant_bitrate` - (Optional) Constant bitrate value.
-* `statmux_settings` - (Optional) Statmux settings. See [Statmux Settings](#statmux-settings) for more details.
+* `statmux_settings` - (Optional) Statmux settings. See [`statmux_settings` Block](#statmux_settings-block) for more details.
 
-### Statmux Settings
+### `statmux_settings` Block
 
-* `minimum_bitrate` - (Optional) Minimum bitrate.
 * `maximum_bitrate` - (Optional) Maximum bitrate.
+* `minimum_bitrate` - (Optional) Minimum bitrate.
 * `priority` - (Optional) Priority value.
 
 ## Attribute Reference

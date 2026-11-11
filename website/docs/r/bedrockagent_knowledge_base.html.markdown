@@ -3,12 +3,12 @@ subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_knowledge_base"
 description: |-
-  Terraform resource for managing an AWS Agents for Amazon Bedrock Knowledge Base.
+  Manages an AWS Agents for Amazon Bedrock Knowledge Base.
 ---
 
 # Resource: aws_bedrockagent_knowledge_base
 
-Terraform resource for managing an AWS Agents for Amazon Bedrock Knowledge Base.
+Manages an AWS Agents for Amazon Bedrock Knowledge Base.
 
 ## Example Usage
 
@@ -312,13 +312,13 @@ The `server_side_encryption_configuration` configuration block supports the foll
 
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the managed knowledge base.
 
-~> **NOTE:** `storage_configuration` is not required when `knowledge_base_configuration.type` is `MANAGED`. Amazon Bedrock manages the vector store automatically for managed knowledge bases.
+~> **Note:** `storage_configuration` is not required when `knowledge_base_configuration.type` is `MANAGED`. Amazon Bedrock manages the vector store automatically for managed knowledge bases.
 
 ### `sql_knowledge_base_configuration` Block
 
 The `sql_knowledge_base_configuration` configuration block supports the following arguments:
 
-* `redshift_configuration` - (Optional) Configurations for a knowledge base connected to an Amazon Redshift database. See [`knowledge_base_configuration.sql_knowledge_base_configuration.redshift_configuration` Block](#knowledge_base_configurationsql_knowledge_base_configurationredshift_configuration-block) for details.
+* `redshift_configuration` - (Required) Configurations for a knowledge base connected to an Amazon Redshift database. See [`knowledge_base_configuration.sql_knowledge_base_configuration.redshift_configuration` Block](#knowledge_base_configurationsql_knowledge_base_configurationredshift_configuration-block) for details.
 * `type` - (Required) Type of SQL database to connect to the knowledge base. Valid values: `REDSHIFT`.
 
 ### `knowledge_base_configuration.sql_knowledge_base_configuration.redshift_configuration` Block
@@ -356,7 +356,7 @@ The `auth_configuration` configuration block supports the following arguments:
 
 The `serverless_configuration` configuration block supports the following arguments:
 
-* `auth_configuration` - (Required) Configurations for authentication to a Redshift Serverless. See [`knowledge_base_configuration.sql_knowledge_base_configuration.redshift_configuration.query_engine_configuration.serverless_configuration.auth_configuration` Block](#knowledge_base_configurationsql_knowledge_base_configurationredshift_configurationquery_engine_configurationserverless_configurationauth_configuration-block) for details.
+* `auth_configuration` - (Required) Configurations for authentication to Amazon Redshift Serverless. See [`knowledge_base_configuration.sql_knowledge_base_configuration.redshift_configuration.query_engine_configuration.serverless_configuration.auth_configuration` Block](#knowledge_base_configurationsql_knowledge_base_configurationredshift_configurationquery_engine_configurationserverless_configurationauth_configuration-block) for details.
 * `workgroup_arn` - (Required) ARN of the Amazon Redshift workgroup.
 
 ### `knowledge_base_configuration.sql_knowledge_base_configuration.redshift_configuration.query_engine_configuration.serverless_configuration.auth_configuration` Block
@@ -475,7 +475,7 @@ The `supplemental_data_storage_configuration` configuration block supports the f
 
 The `storage_location` configuration block supports the following arguments:
 
-* `s3_location` - (Optional) Information about the Amazon S3 location for the extracted images. See [`s3_location` Block](#s3_location-block) for details.
+* `s3_location` - (Required) Information about the Amazon S3 location for the extracted images. See [`s3_location` Block](#s3_location-block) for details.
 * `type` - (Required) Storage service used for this location. `S3` is the only valid value.
 
 ### `s3_location` Block
@@ -506,9 +506,9 @@ The `mongo_db_atlas_configuration` configuration block supports the following ar
 * `credentials_secret_arn` - (Required) ARN of the secret that you created in AWS Secrets Manager that is linked to your MongoDB Atlas database.
 * `database_name` - (Required) Name of the database in the MongoDB Atlas database.
 * `endpoint` - (Required) Endpoint URL of the MongoDB Atlas database.
-* `endpoint_service_name` - (Optional) Name of the service that hosts the MongoDB Atlas database.
+* `endpoint_service_name` - (Optional) Name of the VPC endpoint service in your account that is connected to your MongoDB Atlas cluster.
 * `field_mapping` - (Required) Names of the fields to which to map information about the vector store. See [`storage_configuration.mongo_db_atlas_configuration.field_mapping` Block](#storage_configurationmongo_db_atlas_configurationfield_mapping-block) for details.
-* `text_index_name` - (Optional) Name of the vector index.
+* `text_index_name` - (Optional) Name of the text search index in the MongoDB collection. Required for hybrid search.
 * `vector_index_name` - (Required) Name of the vector index.
 
 ### `storage_configuration.mongo_db_atlas_configuration.field_mapping` Block

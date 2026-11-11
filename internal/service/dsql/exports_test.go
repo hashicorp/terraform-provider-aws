@@ -7,7 +7,9 @@ package dsql
 var (
 	ResourceCluster       = newClusterResource
 	ResourceClusterPolicy = newClusterPolicyResource
+	ResourceStream        = newStreamResource
 
-	FindClusterByID       = findClusterByID
-	FindClusterPolicyByID = findClusterPolicyByID
+	FindClusterByID        = findClusterByID
+	FindClusterPolicyByID  = findClusterPolicyByID
+	FindStreamByTwoPartKey = findStreamByTwoPartKey
 )

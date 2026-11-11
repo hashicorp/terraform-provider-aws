@@ -32,6 +32,10 @@ This data source supports the following arguments:
 * `endpoint` - (Optional) EC2 endpoint of the region to select.
 * `name` - (Optional, **Deprecated**) Full name of the region to select. Use `region` instead.
 
+### Regions Not Yet Known to the Provider
+
+When the provider is configured with `skip_region_validation = true`, a Region name that is not in this provider version's Region list, but matches the naming pattern of a known partition (for example, a newly launched Region), is still resolved. In that case `description` is empty and a warning is returned. Upgrade the provider for full support of the Region. Lookup by `endpoint` requires the Region to be in the provider's Region list.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
