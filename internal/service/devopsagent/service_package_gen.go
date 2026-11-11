@@ -90,6 +90,17 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				inttypes.StringIdentityAttribute("asset_id", true),
 			}),
 		},
+		{
+			Factory:  newAssetFileResourceAsListResource,
+			TypeName: "aws_devopsagent_asset_file",
+			Name:     "Asset File",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("agent_space_id", true),
+				inttypes.StringIdentityAttribute("asset_id", true),
+				inttypes.StringIdentityAttribute(names.AttrPath, true),
+			}),
+		},
 	})
 }
 

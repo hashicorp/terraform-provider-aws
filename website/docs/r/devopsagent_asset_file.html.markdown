@@ -12,6 +12,8 @@ Manages a file within an AWS DevOps Agent Asset.
 
 ~> **Note:** `metadata` is an input retained in Terraform state. Terraform does not detect out-of-band changes to it. `metadata_actual` exposes the current metadata returned by AWS. Import cannot recover the original metadata input.
 
+~> **Note:** Terraform serializes its own writes to files in the same asset. Concurrent writes to the same asset from outside a single Terraform run can cause AWS to drop a file from the asset's latest version.
+
 ## Example Usage
 
 ### Basic Usage

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -37,6 +39,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	// Writes to files in the same asset use optimistic concurrency and can fail with
+	// ConflictException when another client writes to the asset concurrently.
+	assetFileConflictTimeout    = 2 * time.Minute
+	assetFilePropagationTimeout = 2 * time.Minute
 )
 
 // @FrameworkResource("aws_devopsagent_asset_file", name="Asset File")
@@ -145,13 +154,23 @@ func (r *assetFileResource) Create(ctx context.Context, req resource.CreateReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	_, err := conn.CreateAssetFile(ctx, &input)
+	key := assetFileMutexKey(plan.AgentSpaceID.ValueString(), plan.AssetID.ValueString())
+	conns.GlobalMutexKV.Lock(key)
+	defer conns.GlobalMutexKV.Unlock(key)
+
+	_, err := tfresource.RetryWhenIsA[*devopsagent.CreateAssetFileOutput, *awstypes.ConflictException](ctx, assetFileConflictTimeout, func(ctx context.Context) (*devopsagent.CreateAssetFileOutput, error) {
+		// The SDK sets ClientToken on input; reusing it replays the cached ConflictException.
+		input.ClientToken = nil
+		return conn.CreateAssetFile(ctx, &input)
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Path.ValueString())
 		return
 	}
 
-	file, err := findAssetFileByThreePartKey(ctx, conn, plan.AgentSpaceID.ValueString(), plan.AssetID.ValueString(), plan.Path.ValueString())
+	file, err := tfresource.RetryWhenNotFound(ctx, assetFilePropagationTimeout, func(ctx context.Context) (*awstypes.AssetFile, error) {
+		return findAssetFileByThreePartKey(ctx, conn, plan.AgentSpaceID.ValueString(), plan.AssetID.ValueString(), plan.Path.ValueString())
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Path.ValueString())
 		return
@@ -220,7 +239,15 @@ func (r *assetFileResource) Update(ctx context.Context, req resource.UpdateReque
 	input.AgentSpaceId = state.AgentSpaceID.ValueStringPointer()
 	input.AssetId = state.AssetID.ValueStringPointer()
 	input.Path = state.Path.ValueStringPointer()
-	_, err := conn.UpdateAssetFile(ctx, &input)
+	key := assetFileMutexKey(state.AgentSpaceID.ValueString(), state.AssetID.ValueString())
+	conns.GlobalMutexKV.Lock(key)
+	defer conns.GlobalMutexKV.Unlock(key)
+
+	_, err := tfresource.RetryWhenIsA[*devopsagent.UpdateAssetFileOutput, *awstypes.ConflictException](ctx, assetFileConflictTimeout, func(ctx context.Context) (*devopsagent.UpdateAssetFileOutput, error) {
+		// The SDK sets ClientToken on input; reusing it replays the cached ConflictException.
+		input.ClientToken = nil
+		return conn.UpdateAssetFile(ctx, &input)
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Path.ValueString())
 		return
@@ -250,7 +277,13 @@ func (r *assetFileResource) Delete(ctx context.Context, req resource.DeleteReque
 		AssetId:      state.AssetID.ValueStringPointer(),
 		Path:         state.Path.ValueStringPointer(),
 	}
-	_, err := conn.DeleteAssetFile(ctx, &input)
+	key := assetFileMutexKey(state.AgentSpaceID.ValueString(), state.AssetID.ValueString())
+	conns.GlobalMutexKV.Lock(key)
+	defer conns.GlobalMutexKV.Unlock(key)
+
+	_, err := tfresource.RetryWhenIsA[*devopsagent.DeleteAssetFileOutput, *awstypes.ConflictException](ctx, assetFileConflictTimeout, func(ctx context.Context) (*devopsagent.DeleteAssetFileOutput, error) {
+		return conn.DeleteAssetFile(ctx, &input)
+	})
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
@@ -313,6 +346,13 @@ func (r *assetFileResource) flatten(ctx context.Context, file *awstypes.AssetFil
 	}
 	data.MetadataActual = fwtypes.NewSmithyJSONValue(metadata, document.NewLazyDocument)
 	return diags
+}
+
+// assetFileMutexKey serializes this provider's writes to files in one asset.
+// Concurrent writes to the same asset can succeed while silently dropping a file
+// from the asset's latest version.
+func assetFileMutexKey(agentSpaceID, assetID string) string {
+	return "devopsagent-asset-" + agentSpaceID + "-" + assetID
 }
 
 var _ inttypes.ImportIDParser = assetFileImportID{}
