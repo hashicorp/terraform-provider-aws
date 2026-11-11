@@ -1,0 +1,11 @@
+```release-note:breaking-change
+resource/aws_wafv2_web_acl_rule: Removes `managed_rule_group_statement`, `rate_based_statement` and `rule_group_reference_statement` from `statement` blocks nested in `and_statement`, `not_statement` and `or_statement`. These values are rejected by AWS.
+```
+
+```release-note:breaking-change
+resource/aws_wafv2_web_acl_rule: Removes `and_statement` from `statement` blocks nested in `and_statement`, and `or_statement` from `statement` blocks nested in `or_statement`. These values are rejected by AWS.
+```
+
+```release-note:breaking-change
+resource/aws_wafv2_web_acl_rule: Removes `or_statement` from `statement` blocks nested in `or_statement`. These values are rejected by AWS.
+```

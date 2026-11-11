@@ -232,7 +232,7 @@ func resourceWebACL() *schema.Resource {
 								Required: true,
 							},
 							"rule_label":        ruleLabelsSchema(),
-							"statement":         webACLRootStatementSchema(webACLRootStatementSchemaLevel),
+							"statement":         webACLRootStatementSchema(ruleStatementSchemaLevel),
 							"visibility_config": visibilityConfigSchema(),
 						},
 					},
@@ -489,8 +489,18 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 
 			if newLockToken := aws.ToString(output.LockToken); newLockToken != aclLockToken {
-				// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
+				// Retrieved a new lock token, retry due to other processes modifying the web ACL
+				// concurrently (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
 				input.LockToken = aws.String(newLockToken)
+
+				// Rules may be managed separately from this resource.
+				//
+				// When no rule changes are planned send the most current rule set instead of
+				// the originally planned values from state, which may now be stale.
+				if !d.HasChanges(names.AttrRule, "rule_json") {
+					input.Rules = output.WebACL.Rules
+				}
+
 				_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 					return conn.UpdateWebACL(ctx, input)
 				})

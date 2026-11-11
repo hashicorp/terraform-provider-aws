@@ -1,0 +1,28 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_networksecuritymanager_scope" "test" {
+  name = var.rName
+
+  scope_configuration {
+    resource_scope {
+      resource_type = "AWS::ElasticLoadBalancingV2::LoadBalancer::application"
+      include_all   = true
+    }
+  }
+
+  tags = var.resource_tags
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
+}

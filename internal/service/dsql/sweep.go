@@ -16,7 +16,8 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_dsql_cluster", sweepClusters)
+	awsv2.Register("aws_dsql_cluster", sweepClusters, "aws_dsql_stream")
+	awsv2.Register("aws_dsql_stream", sweepStreams)
 }
 
 func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -37,6 +38,40 @@ func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 				framework.NewAttribute(names.AttrIdentifier, aws.ToString(v.Identifier)),
 				framework.NewAttribute(names.AttrForceDestroy, true),
 			))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+// sweepStreams deletes every aws_dsql_stream in the Region, under every parent ListClusters returns, not only the
+// acceptance tests' own.
+func sweepStreams(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.DSQLClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	var parentInput dsql.ListClustersInput
+	parentPages := dsql.NewListClustersPaginator(conn, &parentInput)
+	for parentPages.HasMorePages() {
+		parentPage, err := parentPages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, parent := range parentPage.Clusters {
+			input := dsql.ListStreamsInput{
+				ClusterIdentifier: parent.Identifier,
+			}
+			for v, err := range listStreams(ctx, conn, &input) {
+				if err != nil {
+					return nil, err
+				}
+
+				sweepResources = append(sweepResources, framework.NewSweepResource(newStreamResource, client,
+					framework.NewAttribute(names.AttrClusterIdentifier, aws.ToString(v.ClusterIdentifier)),
+					framework.NewAttribute("stream_identifier", aws.ToString(v.StreamIdentifier))))
+			}
 		}
 	}
 
