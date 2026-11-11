@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -90,5 +91,5 @@ var validPolicyPath = validation.AllDiag(
 		}
 		return nil
 	},
-	validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9\.,\+@=_/-]*$`), "must contain uppercase or lowercase alphanumeric characters or any of the following: / , . + @ = _ -")),
+	lazyvalidation.StringMatchDiag(`^[A-Za-z0-9\.,\+@=_/-]*$`, "must contain uppercase or lowercase alphanumeric characters or any of the following: / , . + @ = _ -"),
 )
