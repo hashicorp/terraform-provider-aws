@@ -89,6 +89,7 @@ func TestAccBedrockGuardrailResourcePolicy_List_includeResource(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
+	policy1 := tfstatecheck.StateValue()
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -111,6 +112,7 @@ func TestAccBedrockGuardrailResourcePolicy_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
+					policy1.GetStateValue(resourceName1, tfjsonpath.New(names.AttrPolicy)),
 					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrResourceARN), tfknownvalue.RegionalARNRegexp("bedrock", regexache.MustCompile(`guardrail/.+`))),
 				},
 			},
@@ -127,7 +129,7 @@ func TestAccBedrockGuardrailResourcePolicy_List_includeResource(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_bedrock_guardrail_resource_policy.test", identity1.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_bedrock_guardrail_resource_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_bedrock_guardrail_resource_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPolicy), policy1.ValueCheck()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrResourceARN), tfknownvalue.RegionalARNRegexp("bedrock", regexache.MustCompile(`guardrail/.+`))),
 					}),
