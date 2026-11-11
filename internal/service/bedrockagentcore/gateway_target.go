@@ -1730,11 +1730,11 @@ func (m *certificateConfigurationModel) Flatten(ctx context.Context, v any) diag
 		m.SecretsManager, d = fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
 		smerr.AddEnrich(ctx, &diags, d)
 
+	case awstypes.UnknownUnionMember:
+		fwflex.HandleFlattenUnknownUnionMember(ctx, t.Tag, &diags)
+
 	default:
-		diags.AddError(
-			"Unsupported Type",
-			fmt.Sprintf("certificateConfigurationModel.Flatten: %T", v),
-		)
+		smerr.AddError(ctx, &diags, fmt.Errorf("certificateConfigurationModel.Flatten: unsupported type: %T", v))
 	}
 
 	return diags

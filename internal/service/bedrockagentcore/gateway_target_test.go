@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfplancheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/plancheck"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -382,7 +383,7 @@ func TestBedrockAgentCoreGatewayTargetCertificateConfigurationAutoFlexExpand(t *
 	t.Parallel()
 
 	ctx := t.Context()
-	ignoreExportedOpts := cmpopts.IgnoreUnexported(
+	ignoreUnexportedOpts := cmpopts.IgnoreUnexported(
 		awstypes.CertificateConfigurationMemberS3{},
 		awstypes.S3CertificateConfiguration{},
 		awstypes.CertificateConfigurationMemberSecretsManager{},
@@ -461,9 +462,9 @@ func TestBedrockAgentCoreGatewayTargetCertificateConfigurationAutoFlexExpand(t *
 			var got bedrockagentcorecontrol.UpdateGatewayTargetInput
 			diags := fwflex.Expand(ctx, testCase.model, &got)
 			if diags.HasError() {
-				t.Fatalf("unexpected error: %s", diags[0].Summary())
+				t.Fatalf("unexpected error: %s", fwdiag.DiagnosticsError(diags))
 			}
-			if diff := cmp.Diff(got.CertificateConfigurations, testCase.expected, ignoreExportedOpts); diff != "" {
+			if diff := cmp.Diff(got.CertificateConfigurations, testCase.expected, ignoreUnexportedOpts); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
@@ -475,8 +476,9 @@ func TestBedrockAgentCoreGatewayTargetCertificateConfigurationAutoFlexFlatten(t 
 
 	ctx := t.Context()
 	testCases := map[string]struct {
-		apiObjects []awstypes.CertificateConfiguration
-		expected   certificateConfigurationResourceModel
+		apiObjects      []awstypes.CertificateConfiguration
+		expected        certificateConfigurationResourceModel
+		expectedWarning bool
 	}{
 		"Omitted field": {
 			apiObjects: nil,
@@ -520,6 +522,20 @@ func TestBedrockAgentCoreGatewayTargetCertificateConfigurationAutoFlexFlatten(t 
 				}),
 			},
 		},
+		"Unknown union member": {
+			apiObjects: []awstypes.CertificateConfiguration{
+				&awstypes.UnknownUnionMember{
+					Tag: "acmPca",
+				},
+			},
+			expected: certificateConfigurationResourceModel{
+				CertificateConfiguration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CertificateConfigurationModel{
+					S3:             fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.S3ConfigurationModel](ctx),
+					SecretsManager: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SecretsManagerCertificateConfigurationModel](ctx),
+				}),
+			},
+			expectedWarning: true,
+		},
 	}
 
 	for name, testCase := range testCases {
@@ -532,7 +548,10 @@ func TestBedrockAgentCoreGatewayTargetCertificateConfigurationAutoFlexFlatten(t 
 			var got certificateConfigurationResourceModel
 			diags := fwflex.Flatten(ctx, &apiObject, &got)
 			if diags.HasError() {
-				t.Fatalf("unexpected error: %s", diags[0].Summary())
+				t.Fatalf("unexpected error: %s", fwdiag.DiagnosticsError(diags))
+			}
+			if gotWarning := diags.WarningsCount() > 0; gotWarning != testCase.expectedWarning {
+				t.Errorf("warning reported = %t, want %t", gotWarning, testCase.expectedWarning)
 			}
 			if diff := cmp.Diff(got, testCase.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
