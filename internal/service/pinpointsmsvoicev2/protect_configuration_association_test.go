@@ -10,9 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpointsmsvoicev2 "github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
@@ -39,9 +42,11 @@ func TestAccPinpointSMSVoiceV2ProtectConfigurationAssociation_basic(t *testing.T
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProtectConfigurationAssociationExists(ctx, t, resourceName, &v),
 					testAccCheckProtectConfigurationAssociationProtectConfigurationID(&v, "aws_pinpointsmsvoicev2_protect_configuration.test.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_set_name", "aws_pinpointsmsvoicev2_configuration_set.test", names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "protect_configuration_id", "aws_pinpointsmsvoicev2_protect_configuration.test.0", names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("configuration_set_name"), "aws_pinpointsmsvoicev2_configuration_set.test", tfjsonpath.New(names.AttrName), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("protect_configuration_id"), "aws_pinpointsmsvoicev2_protect_configuration.test[0]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -151,8 +156,10 @@ func TestAccPinpointSMSVoiceV2ProtectConfigurationAssociation_update(t *testing.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProtectConfigurationAssociationExists(ctx, t, resourceName, &v),
 					testAccCheckProtectConfigurationAssociationProtectConfigurationID(&v, "aws_pinpointsmsvoicev2_protect_configuration.test.1"),
-					resource.TestCheckResourceAttrPair(resourceName, "protect_configuration_id", "aws_pinpointsmsvoicev2_protect_configuration.test.1", names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("protect_configuration_id"), "aws_pinpointsmsvoicev2_protect_configuration.test[1]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),

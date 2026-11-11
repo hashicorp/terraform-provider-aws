@@ -22,6 +22,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_protect_configuration_association", name="Protect Configuration Association")
@@ -67,7 +68,13 @@ func (r *protectConfigurationAssociationResource) Create(ctx context.Context, re
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, plan.ConfigurationSetName)
-	if err := associateProtectConfiguration(ctx, conn, plan); err != nil {
+	var input pinpointsmsvoicev2.AssociateProtectConfigurationInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if _, err := conn.AssociateProtectConfiguration(ctx, &input); err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
@@ -115,7 +122,13 @@ func (r *protectConfigurationAssociationResource) Update(ctx context.Context, re
 
 	// Only protect_configuration_id can change.
 	name := fwflex.StringValueFromFramework(ctx, plan.ConfigurationSetName)
-	if err := associateProtectConfiguration(ctx, conn, plan); err != nil {
+	var input pinpointsmsvoicev2.AssociateProtectConfigurationInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if _, err := conn.AssociateProtectConfiguration(ctx, &input); err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
@@ -133,10 +146,12 @@ func (r *protectConfigurationAssociationResource) Delete(ctx context.Context, re
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, state.ConfigurationSetName)
-	input := pinpointsmsvoicev2.DisassociateProtectConfigurationInput{
-		ConfigurationSetName:   aws.String(name),
-		ProtectConfigurationId: fwflex.StringFromFramework(ctx, state.ProtectConfigurationID),
+	var input pinpointsmsvoicev2.DisassociateProtectConfigurationInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, state, &input))
+	if resp.Diagnostics.HasError() {
+		return
 	}
+
 	_, err := conn.DisassociateProtectConfiguration(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || isProtectConfigurationNotAssociatedError(err) {
 		return
@@ -145,16 +160,6 @@ func (r *protectConfigurationAssociationResource) Delete(ctx context.Context, re
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
 	}
-}
-
-func associateProtectConfiguration(ctx context.Context, conn *pinpointsmsvoicev2.Client, data protectConfigurationAssociationResourceModel) error {
-	input := pinpointsmsvoicev2.AssociateProtectConfigurationInput{
-		ConfigurationSetName:   fwflex.StringFromFramework(ctx, data.ConfigurationSetName),
-		ProtectConfigurationId: fwflex.StringFromFramework(ctx, data.ProtectConfigurationID),
-	}
-	_, err := conn.AssociateProtectConfiguration(ctx, &input)
-
-	return smarterr.NewError(err)
 }
 
 // isProtectConfigurationNotAssociatedError reports whether err is the conflict AWS returns when
@@ -176,7 +181,7 @@ func findProtectConfigurationAssociationByConfigurationSetName(ctx context.Conte
 	}
 
 	if aws.ToString(out.ProtectConfigurationId) == "" {
-		return nil, smarterr.NewError(&retry.NotFoundError{})
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil

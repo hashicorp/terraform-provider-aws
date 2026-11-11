@@ -33,7 +33,7 @@ resource "aws_pinpointsmsvoicev2_protect_configuration_association" "example" {
 
 The following arguments are required:
 
-* `configuration_set_name` - (Required) Name of the configuration set.
+* `configuration_set_name` - (Required, Forces new resource) Name of the configuration set.
 * `protect_configuration_id` - (Required) ID of the protect configuration.
 
 The following arguments are optional:
