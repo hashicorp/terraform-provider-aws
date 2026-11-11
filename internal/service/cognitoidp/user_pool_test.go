@@ -232,6 +232,68 @@ func TestAccCognitoIDPUserPool_withAdminCreateUser(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/49203
+func TestAccCognitoIDPUserPool_withAdminCreateUserEmailOnlyInviteMessageTemplate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_adminCreateConfigurationEmailOnly(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.sms_message", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/49203
+func TestAccCognitoIDPUserPool_withAdminCreateUserSMSOnlyInviteMessageTemplate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_adminCreateConfigurationSMSOnly(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, t, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", ""),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", ""),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and temporary password is {####}."),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11858
 func TestAccCognitoIDPUserPool_withAdminCreateUserAndPasswordPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2298,6 +2360,35 @@ resource "aws_cognito_user_pool" "test" {
       email_message = "Your username is {username} and temporary password is {####}. "
       email_subject = "FooBar {####}"
       sms_message   = "Your username is {username} and temporary password is {####}."
+    }
+  }
+}
+`, rName)
+}
+
+func testAccUserPoolConfig_adminCreateConfigurationEmailOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  admin_create_user_config {
+    invite_message_template {
+      email_message = "Your username is {username} and temporary password is {####}. "
+      email_subject = "FooBar {####}"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccUserPoolConfig_adminCreateConfigurationSMSOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  admin_create_user_config {
+    invite_message_template {
+      sms_message = "Your username is {username} and temporary password is {####}."
     }
   }
 }
