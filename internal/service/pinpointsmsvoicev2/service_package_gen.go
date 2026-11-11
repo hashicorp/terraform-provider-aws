@@ -88,6 +88,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newProtectConfigurationResource,
+			TypeName: "aws_pinpointsmsvoicev2_protect_configuration",
+			Name:     "Protect Configuration",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newResourcePolicyResource,
 			TypeName: "aws_pinpointsmsvoicev2_resource_policy",
 			Name:     "Resource Policy",
@@ -141,6 +152,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Factory:  newPoolResourceAsListResource,
 			TypeName: "aws_pinpointsmsvoicev2_pool",
 			Name:     "Pool",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newProtectConfigurationResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_protect_configuration",
+			Name:     "Protect Configuration",
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
