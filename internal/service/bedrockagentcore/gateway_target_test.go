@@ -589,6 +589,7 @@ func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_configuration"), knownvalue.ListSizeExact(0)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("credential_provider_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"api_key":                knownvalue.ListSizeExact(0),
 						"caller_iam_credentials": knownvalue.ListSizeExact(0),
@@ -1659,6 +1660,7 @@ func TestAccBedrockAgentCoreGatewayTarget_certificateConfiguration(t *testing.T)
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1666,12 +1668,12 @@ func TestAccBedrockAgentCoreGatewayTarget_certificateConfiguration(t *testing.T)
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"time": {
 				Source:            "hashicorp/time",
-				VersionConstraint: "0.12.1",
+				VersionConstraint: "0.14.0",
 			},
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test", testAccCertificateConfiguration_s3()),
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test", testAccGatewayTargetCertificateConfiguration_s3()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 				),
@@ -1700,7 +1702,7 @@ func TestAccBedrockAgentCoreGatewayTarget_certificateConfiguration(t *testing.T)
 			{
 				// UpdateGatewayTarget removes a certificate that is omitted from the request,
 				// so changing another argument must send it again.
-				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccCertificateConfiguration_s3()),
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccGatewayTargetCertificateConfiguration_s3()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					testAccCheckGatewayTargetCertificateConfigurationCount(&gatewayTarget, 1),
@@ -1722,7 +1724,7 @@ func TestAccBedrockAgentCoreGatewayTarget_certificateConfiguration(t *testing.T)
 				},
 			},
 			{
-				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccCertificateConfiguration_s3BucketOwner()),
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccGatewayTargetCertificateConfiguration_s3BucketOwner()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 				),
@@ -1742,7 +1744,7 @@ func TestAccBedrockAgentCoreGatewayTarget_certificateConfiguration(t *testing.T)
 				},
 			},
 			{
-				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccCertificateConfiguration_secretsManager()),
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccGatewayTargetCertificateConfiguration_secretsManager()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 				),
@@ -1773,6 +1775,104 @@ func TestAccBedrockAgentCoreGatewayTarget_certificateConfiguration(t *testing.T)
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_configuration"), knownvalue.ListSizeExact(0)),
 				},
+			},
+			{
+				// The previous step removed the certificate, so this adds one to a target that has none.
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccGatewayTargetCertificateConfiguration_s3()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetCertificateConfigurationCount(&gatewayTarget, 1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("certificate_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"s3": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"bucket_owner_account_id": knownvalue.Null(),
+							names.AttrURI:             knownvalue.StringExact("s3://" + rName + "/private-ca.pem"),
+						})}),
+						"secrets_manager": knownvalue.ListSizeExact(0),
+					})})),
+				},
+			},
+			{
+				// The gateway reads the certificate after UpdateGatewayTarget returns,
+				// so a missing object fails the update asynchronously.
+				Config:      testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccGatewayTargetCertificateConfiguration_s3MissingObject()),
+				ExpectError: regexache.MustCompile(`UPDATE_UNSUCCESSFUL[\s\S]*Unable\s+to\s+access\s+S3\s+object`),
+			},
+			{
+				// A failed update leaves the target on its previous certificate, so the previous
+				// configuration plans no changes. The target stays UPDATE_UNSUCCESSFUL.
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test updated", testAccGatewayTargetCertificateConfiguration_s3()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetStatus(&gatewayTarget, awstypes.TargetStatusUpdateUnsuccessful),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				// The next successful update returns the target to READY.
+				Config: testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test recovered", testAccGatewayTargetCertificateConfiguration_s3()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetStatus(&gatewayTarget, awstypes.TargetStatusReady),
+					testAccCheckGatewayTargetCertificateConfigurationCount(&gatewayTarget, 1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_certificateConfigurationValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.14.0",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test", testAccGatewayTargetCertificateConfiguration_empty()),
+				ExpectError: regexache.MustCompile(`No\s+attribute\s+configured`),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test", testAccGatewayTargetCertificateConfiguration_s3AndSecretsManager()),
+				ExpectError: regexache.MustCompile(`2\s+attributes\s+configured`),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test", testAccGatewayTargetCertificateConfiguration_s3()+"\n"+testAccGatewayTargetCertificateConfiguration_secretsManager()),
+				ExpectError: regexache.MustCompile(`must\s+contain\s+at\s+most\s+1\s+elements`),
+			},
+			{
+				Config:      testAccGatewayTargetConfig_certificateConfiguration(rName, caCertificate, "test", testAccGatewayTargetCertificateConfiguration_s3NoURI()),
+				ExpectError: regexache.MustCompile(`The\s+argument\s+"uri"\s+is\s+required`),
 			},
 		},
 	})
@@ -2837,6 +2937,16 @@ func testAccCheckGatewayTargetCertificateConfigurationCount(v *bedrockagentcorec
 	return func(*terraform.State) error {
 		if got := len(v.CertificateConfigurations); got != expected {
 			return fmt.Errorf("expected %d certificate configurations, got %d", expected, got)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckGatewayTargetStatus(v *bedrockagentcorecontrol.GetGatewayTargetOutput, expected awstypes.TargetStatus) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		if got := v.Status; got != expected {
+			return fmt.Errorf("expected status %s, got %s (reasons: %v)", expected, got, v.StatusReasons)
 		}
 
 		return nil
@@ -3985,7 +4095,7 @@ resource "aws_bedrockagentcore_gateway_target" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(caCertificate), description, certificateConfiguration))
 }
 
-func testAccCertificateConfiguration_s3() string {
+func testAccGatewayTargetCertificateConfiguration_s3() string {
 	return `  certificate_configuration {
     s3 {
       uri = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
@@ -3993,7 +4103,7 @@ func testAccCertificateConfiguration_s3() string {
   }`
 }
 
-func testAccCertificateConfiguration_s3BucketOwner() string {
+func testAccGatewayTargetCertificateConfiguration_s3BucketOwner() string {
 	return `  certificate_configuration {
     s3 {
       uri                     = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
@@ -4002,8 +4112,40 @@ func testAccCertificateConfiguration_s3BucketOwner() string {
   }`
 }
 
-func testAccCertificateConfiguration_secretsManager() string {
+func testAccGatewayTargetCertificateConfiguration_secretsManager() string {
 	return `  certificate_configuration {
+    secrets_manager {
+      secret_arn = aws_secretsmanager_secret.test.arn
+    }
+  }`
+}
+
+func testAccGatewayTargetCertificateConfiguration_s3MissingObject() string {
+	return `  certificate_configuration {
+    s3 {
+      uri = "s3://${aws_s3_object.test.bucket}/missing.pem"
+    }
+  }`
+}
+
+func testAccGatewayTargetCertificateConfiguration_s3NoURI() string {
+	return `  certificate_configuration {
+    s3 {
+      bucket_owner_account_id = data.aws_caller_identity.current.account_id
+    }
+  }`
+}
+
+func testAccGatewayTargetCertificateConfiguration_empty() string {
+	return `  certificate_configuration {}`
+}
+
+func testAccGatewayTargetCertificateConfiguration_s3AndSecretsManager() string {
+	return `  certificate_configuration {
+    s3 {
+      uri = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+    }
+
     secrets_manager {
       secret_arn = aws_secretsmanager_secret.test.arn
     }
