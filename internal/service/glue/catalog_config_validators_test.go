@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,7 +49,7 @@ func TestCatalogConfigValidators(t *testing.T) {
 	}{
 		"no blocks": {
 			spec: map[string]any{
-				names.AttrName: "123456789012",
+				names.AttrName: acctest.Ct12Digit,
 			},
 			wantErr: true,
 		},
@@ -62,7 +63,7 @@ func TestCatalogConfigValidators(t *testing.T) {
 		},
 		"data lake access properties only": {
 			spec: map[string]any{
-				names.AttrName: "123456789012",
+				names.AttrName: acctest.Ct12Digit,
 				"catalog_properties": []any{
 					map[string]any{
 						"data_lake_access_properties": []any{
@@ -74,7 +75,7 @@ func TestCatalogConfigValidators(t *testing.T) {
 		},
 		"iceberg optimization properties only": {
 			spec: map[string]any{
-				names.AttrName: "123456789012",
+				names.AttrName: acctest.Ct12Digit,
 				"catalog_properties": []any{
 					map[string]any{
 						"iceberg_optimization_properties": []any{
