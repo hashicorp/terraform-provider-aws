@@ -222,46 +222,42 @@ func (r *assetFileResource) Update(ctx context.Context, req resource.UpdateReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if !diff.HasChanges() {
-		plan.MetadataActual = state.MetadataActual
-		plan.UpdatedAt = state.UpdatedAt
-		plan.Version = state.Version
-		smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
-		return
+
+	if diff.HasChanges() {
+		// UpdateAssetFile requires content on every update, including metadata-only changes.
+		var input devopsagent.UpdateAssetFileInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		input.AgentSpaceId = state.AgentSpaceID.ValueStringPointer()
+		input.AssetId = state.AssetID.ValueStringPointer()
+		input.Path = state.Path.ValueStringPointer()
+		key := assetFileMutexKey(state.AgentSpaceID.ValueString(), state.AssetID.ValueString())
+		conns.GlobalMutexKV.Lock(key)
+		defer conns.GlobalMutexKV.Unlock(key)
+
+		_, err := tfresource.RetryWhenIsA[*devopsagent.UpdateAssetFileOutput, *awstypes.ConflictException](ctx, assetFileConflictTimeout, func(ctx context.Context) (*devopsagent.UpdateAssetFileOutput, error) {
+			// The SDK sets ClientToken on input; reusing it replays the cached ConflictException.
+			input.ClientToken = nil
+			return conn.UpdateAssetFile(ctx, &input)
+		})
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Path.ValueString())
+			return
+		}
+
+		file, err := findAssetFileByThreePartKey(ctx, conn, state.AgentSpaceID.ValueString(), state.AssetID.ValueString(), state.Path.ValueString())
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Path.ValueString())
+			return
+		}
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, file, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
-	// UpdateAssetFile requires content on every update, including metadata-only changes.
-	var input devopsagent.UpdateAssetFileInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	input.AgentSpaceId = state.AgentSpaceID.ValueStringPointer()
-	input.AssetId = state.AssetID.ValueStringPointer()
-	input.Path = state.Path.ValueStringPointer()
-	key := assetFileMutexKey(state.AgentSpaceID.ValueString(), state.AssetID.ValueString())
-	conns.GlobalMutexKV.Lock(key)
-	defer conns.GlobalMutexKV.Unlock(key)
-
-	_, err := tfresource.RetryWhenIsA[*devopsagent.UpdateAssetFileOutput, *awstypes.ConflictException](ctx, assetFileConflictTimeout, func(ctx context.Context) (*devopsagent.UpdateAssetFileOutput, error) {
-		// The SDK sets ClientToken on input; reusing it replays the cached ConflictException.
-		input.ClientToken = nil
-		return conn.UpdateAssetFile(ctx, &input)
-	})
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Path.ValueString())
-		return
-	}
-
-	file, err := findAssetFileByThreePartKey(ctx, conn, state.AgentSpaceID.ValueString(), state.AssetID.ValueString(), state.Path.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Path.ValueString())
-		return
-	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, file, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
