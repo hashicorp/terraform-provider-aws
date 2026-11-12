@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,13 +22,13 @@ var validRolePolicyName = validResourceName(rolePolicyNameMaxLen)
 func validResourceName(max int) schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(1, max),
-		validation.StringMatch(regexache.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+		lazyvalidation.StringMatch(`^[\w+=,.@-]*$`, "must match [\\w+=,.@-]"),
 	)
 }
 
 var validAccountAlias = validation.All(
 	validation.StringLenBetween(3, 63),
-	validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`), "must start with an alphanumeric character and only contain lowercase alphanumeric characters and hyphens"),
+	lazyvalidation.StringMatch(`^[0-9a-z][0-9a-z-]+$`, "must start with an alphanumeric character and only contain lowercase alphanumeric characters and hyphens"),
 	func(v any, k string) (ws []string, es []error) {
 		val := v.(string)
 		if strings.Contains(val, "--") {
@@ -60,7 +59,7 @@ var validOpenIDURL = validation.All(
 
 var validRolePolicyRole = validation.All(
 	validation.StringLenBetween(1, 128),
-	validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), ""),
+	lazyvalidation.StringMatch(`[\w+=,.@-]+`, ""),
 	func(v any, k string) (ws []string, es []error) {
 		if _, errs := verify.ValidARN(v, k); len(errs) == 0 {
 			es = append(es, fmt.Errorf("%q must be the role's name not its ARN", k))
