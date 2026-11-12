@@ -1715,6 +1715,39 @@ func TestAccEMRCluster_unhealthyNodeReplacement(t *testing.T) {
 	})
 }
 
+func TestAccEMRCluster_sessionEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster awstypes.Cluster
+
+	resourceName := "aws_emr_cluster.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_sessionEnabled(rName, acctest.CtTrue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "session_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+		},
+	})
+}
+
 func TestAccEMRCluster_osReleaseLabel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 awstypes.Cluster
@@ -4515,6 +4548,48 @@ resource "aws_emr_cluster" "test" {
   ]
 }
 `, rName, unhealthyNodeReplacement))
+}
+
+func testAccClusterConfig_sessionEnabled(rName, sessionEnabled string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_emr_cluster" "test" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-spark-8.0.0"
+  service_role                      = aws_iam_role.emr_service.arn
+  session_enabled                   = %[2]s
+
+  ec2_attributes {
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+  }
+
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
+
+  lifecycle {
+    # emr-spark-8.0.0 is AL2023-based; AWS auto-assigns os_release_label even
+    # when unset, which otherwise forces replacement on every subsequent plan.
+    ignore_changes = [os_release_label]
+  }
+}
+`, rName, sessionEnabled))
 }
 
 func testAccClusterConfig_osReleaseLabel(rName, releaseLabel, osReleaseLabel string) string {
