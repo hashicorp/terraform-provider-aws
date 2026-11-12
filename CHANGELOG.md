@@ -1,3 +1,10 @@
+## 6.74.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_fsx_s3_access_point_attachment: Add `ontap_configuration` argument to support Amazon FSx for NetApp ONTAP volumes ([#50917](https://github.com/hashicorp/terraform-provider-aws/issues/50917))
+* resource/aws_pinpointsmsvoicev2_protect_configuration: Add `mms_default_status`, `rcs_default_status`, `sms_default_status`, and `voice_default_status` arguments ([#50923](https://github.com/hashicorp/terraform-provider-aws/issues/50923))
+
 ## 6.73.0 (November 11, 2026)
 
 BREAKING CHANGES:

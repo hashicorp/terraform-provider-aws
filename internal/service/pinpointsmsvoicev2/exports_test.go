@@ -24,12 +24,13 @@ var (
 	FindPoolByID                                              = findPoolByID
 	FindProtectConfigurationAssociationByConfigurationSetName = findProtectConfigurationAssociationByConfigurationSetName
 	FindProtectConfigurationByID                              = findProtectConfigurationByID
-	FindProtectConfigurationCountryRules                      = findProtectConfigurationCountryRules
+	FindProtectConfigurationCountryRuleSet                    = findProtectConfigurationCountryRuleSet
 	FindResourcePolicyByARN                                   = findResourcePolicyByARN
 	FindSenderIDByTwoPartKey                                  = findSenderIDByTwoPartKey
 
-	ValidatePhoneIdentity  = validatePhoneIdentity
-	ValidateSenderIdentity = validateSenderIdentity
+	ProtectConfigurationCountryRuleSetUpdates = protectConfigurationCountryRuleSetUpdates
+	ValidatePhoneIdentity                     = validatePhoneIdentity
+	ValidateSenderIdentity                    = validateSenderIdentity
 )
 
 type IntendedIdentityConfig = intendedIdentityConfig
