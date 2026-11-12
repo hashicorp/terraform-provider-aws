@@ -4,13 +4,13 @@
 package pipes
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -185,7 +185,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexache.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
+									lazyvalidation.StringMatch(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`, ""),
 								),
 							},
 						},
@@ -276,7 +276,7 @@ func targetParametersSchema() *schema.Schema {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(1, 1024),
-																validation.StringMatch(regexache.MustCompile(`^sg-[0-9A-Za-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+																lazyvalidation.StringMatch(`^sg-[0-9A-Za-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`, ""),
 															),
 														},
 													},
@@ -288,7 +288,7 @@ func targetParametersSchema() *schema.Schema {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(1, 1024),
-																validation.StringMatch(regexache.MustCompile(`^subnet-[0-9a-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+																lazyvalidation.StringMatch(`^subnet-[0-9a-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`, ""),
 															),
 														},
 													},
@@ -530,7 +530,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 50),
-									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+[\.][0-9A-Za-z-]+$`), ""),
+									lazyvalidation.StringMatch(`^[0-9A-Za-z-]+[\.][0-9A-Za-z-]+$`, ""),
 								),
 							},
 							names.AttrResources: {
@@ -554,7 +554,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexache.MustCompile(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`), ""),
+									lazyvalidation.StringMatch(`^\$(\.[\w/_-]+(\[(\d+|\*)\])*)*$`, ""),
 								),
 							},
 						},
@@ -738,7 +738,7 @@ func targetParametersSchema() *schema.Schema {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 256),
-												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+												lazyvalidation.StringMatch(`^[0-9A-Za-z](-*[0-9A-Za-z])*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`, ""),
 											),
 										},
 										names.AttrValue: {

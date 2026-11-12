@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pipes/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -92,7 +92,7 @@ func resourcePipe() *schema.Resource {
 					ConflictsWith: []string{names.AttrNamePrefix},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 64),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, ""),
 					),
 				},
 				names.AttrNamePrefix: {
@@ -103,7 +103,7 @@ func resourcePipe() *schema.Resource {
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 64-sdkid.UniqueIDSuffixLength),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, ""),
 					),
 				},
 				names.AttrRoleARN: {
@@ -117,7 +117,7 @@ func resourcePipe() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.Any(
 						verify.ValidARN,
-						validation.StringMatch(regexache.MustCompile(smkOrARNPattern), ""),
+						lazyvalidation.StringMatch(smkOrARNPattern, ""),
 					),
 				},
 				"source_parameters": sourceParametersSchema(),
