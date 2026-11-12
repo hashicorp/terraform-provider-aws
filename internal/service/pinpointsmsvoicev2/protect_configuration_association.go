@@ -112,28 +112,38 @@ func (r *protectConfigurationAssociationResource) Read(ctx context.Context, req 
 }
 
 func (r *protectConfigurationAssociationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan protectConfigurationAssociationResourceModel
+	var plan, state protectConfigurationAssociationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	// Only protect_configuration_id can change.
-	name := fwflex.StringValueFromFramework(ctx, plan.ConfigurationSetName)
-	var input pinpointsmsvoicev2.AssociateProtectConfigurationInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if _, err := conn.AssociateProtectConfiguration(ctx, &input); err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
-		return
+	// Only protect_configuration_id can change. Associating the protect configuration that is already
+	// associated fails with a ConflictException, so the API is called only when it changes.
+	if diff.HasChanges() {
+		name := fwflex.StringValueFromFramework(ctx, plan.ConfigurationSetName)
+		var input pinpointsmsvoicev2.AssociateProtectConfigurationInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if _, err := conn.AssociateProtectConfiguration(ctx, &input); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
+			return
+		}
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *protectConfigurationAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
