@@ -69,6 +69,7 @@ This resource supports the following arguments:
   Conflicts w/ `policy_url`.
 * `policy_url` - (Optional) Location of a file containing the stack policy.
   Conflicts w/ `policy_body`.
+* `retain_except_on_create` - (Optional) Whether to delete newly created resources when a stack operation rolls back, including resources marked with a `Retain` deletion policy. Defaults to `false`.
 * `tags` - (Optional) Map of resource tags to associate with this stack. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `iam_role_arn` - (Optional) The ARN of an IAM role that AWS CloudFormation assumes to create the stack. If you don't specify a value, AWS CloudFormation uses the role that was previously associated with the stack. If no role is available, AWS CloudFormation uses a temporary session that is generated from your user credentials.
 * `timeout_in_minutes` - (Optional) The amount of time that can pass before the stack status becomes `CREATE_FAILED`.

@@ -9,7 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,6 +22,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestResourceStack_retainExceptOnCreate(t *testing.T) {
+	t.Parallel()
+
+	s := tfcloudformation.ResourceStack().SchemaFunc()["retain_except_on_create"]
+	if s == nil {
+		t.Fatal("expected retain_except_on_create schema")
+	}
+	if got, want := s.Type, schema.TypeBool; got != want {
+		t.Errorf("Type = %v, want %v", got, want)
+	}
+	if !s.Optional {
+		t.Error("expected retain_except_on_create to be optional")
+	}
+	if s.ForceNew {
+		t.Error("expected retain_except_on_create to be updateable")
+	}
+}
 func TestAccCloudFormationStack_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stack awstypes.Stack
@@ -65,6 +84,44 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStack_retainExceptOnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stack awstypes.Stack
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_retainExceptOnCreate(rName, true, "first"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "retain_except_on_create", acctest.CtTrue),
+					testAccCheckStackRetainExceptOnCreate(ctx, t, resourceName, false),
+				),
+			},
+			{
+				Config: testAccStackConfig_retainExceptOnCreate(rName, false, "second"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "retain_except_on_create", acctest.CtFalse),
+					testAccCheckStackRetainExceptOnCreate(ctx, t, resourceName, false),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retain_except_on_create"},
 			},
 		},
 	})
@@ -265,6 +322,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", "10.0.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "policy_body", expectedPolicyBody),
+					resource.TestCheckResourceAttr(resourceName, "retain_except_on_create", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.First", "Mickey"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Second", "Mouse"),
@@ -275,7 +333,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"on_failure", names.AttrParameters, "policy_body"},
+				ImportStateVerifyIgnore: []string{"on_failure", names.AttrParameters, "policy_body", "retain_except_on_create"},
 			},
 			{
 				Config: testAccStackConfig_allAttributesBodiesModified(rName),
@@ -289,6 +347,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", "10.0.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "policy_body", expectedPolicyBody),
+					resource.TestCheckResourceAttr(resourceName, "retain_except_on_create", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.First", "Mickey"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Second", "Mouse"),
@@ -604,6 +663,27 @@ func testAccCheckStackExists(ctx context.Context, t *testing.T, n string, v *aws
 	}
 }
 
+func testAccCheckStackRetainExceptOnCreate(ctx context.Context, t *testing.T, n string, expected bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).CloudFormationClient(ctx)
+		stack, err := tfcloudformation.FindStackByName(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		if got := aws.ToBool(stack.RetainExceptOnCreate); got != expected {
+			return fmt.Errorf("expected CloudFormation Stack (%s) retain except on create %t, got %t", rs.Primary.ID, expected, got)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckStackDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).CloudFormationClient(ctx)
@@ -662,6 +742,30 @@ resource "aws_cloudformation_stack" "test" {
 STACK
 }
 `, rName)
+}
+
+func testAccStackConfig_retainExceptOnCreate(rName string, retainExceptOnCreate bool, description string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack" "test" {
+  name                    = %[1]q
+  retain_except_on_create = %[2]t
+
+  template_body = <<STACK
+{
+  "Resources": {
+    "Handle": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    }
+  },
+  "Outputs": {
+    "Marker": {
+      "Value": %[3]q
+    }
+  }
+}
+STACK
+}
+`, rName, retainExceptOnCreate, description)
 }
 
 func testAccStackConfig_creationFailure(rName, onFailure string) string {
@@ -849,13 +953,14 @@ STACK
     VpcCIDR = "10.0.0.0/16"
   }
 
-  policy_body        = <<POLICY
+  policy_body             = <<POLICY
 %[2]s
 POLICY
-  capabilities       = ["CAPABILITY_IAM"]
-  notification_arns  = [aws_sns_topic.test.arn]
-  on_failure         = "DELETE"
-  timeout_in_minutes = 10
+  capabilities            = ["CAPABILITY_IAM"]
+  notification_arns       = [aws_sns_topic.test.arn]
+  retain_except_on_create = %[3]t
+  on_failure              = "DELETE"
+  timeout_in_minutes      = 10
   tags = {
     First  = "Mickey"
     Second = "Mouse"
@@ -890,14 +995,16 @@ func testAccStackConfig_allAttributesBodies(rName string) string {
 	return fmt.Sprintf(
 		testAccStackConfig_allAttributesWithBodies_tpl,
 		rName,
-		policyBody)
+		policyBody,
+		true)
 }
 
 func testAccStackConfig_allAttributesBodiesModified(rName string) string {
 	return fmt.Sprintf(
 		testAccStackConfig_allAttributesWithBodies_tpl,
 		rName,
-		policyBody)
+		policyBody,
+		false)
 }
 
 func testAccStackConfig_params(rName, cidr string) string {
