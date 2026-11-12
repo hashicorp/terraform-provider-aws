@@ -11,7 +11,6 @@ import (
 	"log"
 	"math"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -260,12 +260,9 @@ func resourceConfigurationPolicy() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`[A-Za-z0-9\-\.!*/]+`),
-						"Only alphanumeric characters and the following ASCII characters are permitted: -, ., !, *, /",
-					),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`[A-Za-z0-9\-\.!*/]+`, "Only alphanumeric characters and the following ASCII characters are permitted: -, ., !, *, /"),
 				},
 			}
 		},
