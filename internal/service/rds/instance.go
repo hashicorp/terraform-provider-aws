@@ -335,8 +335,8 @@ func resourceInstance() *schema.Resource {
 					ValidateFunc: validation.All(
 						lazyvalidation.StringMatch(`^[A-Za-z]`, "must begin with alphabetic character"),
 						lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "must only contain alphanumeric characters and hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+						lazyvalidation.StringDoesNotMatch(`--`, "cannot contain two consecutive hyphens"),
+						lazyvalidation.StringDoesNotMatch(`-$`, "cannot end in a hyphen"),
 					),
 				},
 				names.AttrHostedZoneID: {
