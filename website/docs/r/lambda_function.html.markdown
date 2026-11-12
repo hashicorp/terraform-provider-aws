@@ -745,7 +745,7 @@ The following arguments are optional:
 * `source_kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tenancy_config` - (Optional) Configuration block for Tenancy. [See below](#tenancy_config-block).
-* `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
+* `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to `3`. Valid values are between `1` and `5400`. Standard Lambda functions support up to `900` seconds; Lambda Managed Instances support up to `5400` seconds.
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-block).
 * `use_resource_timeout_for_propagation` - (Optional) Whether to apply resource level timeout values while retrying eventually consistent API operations. By default the provider uses a 5 minute timeout to allow for propagation in the Lambda service. When set to `true`, this default value is replaced with the configurable [resource timeouts](#timeouts). Increased timeout values may be useful in highly active accounts, or regions where propagation delays are inconsistent.
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-block).
