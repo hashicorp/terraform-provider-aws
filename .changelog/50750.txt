@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_osis_pipeline: Add `vpc_options.vpc_attachment_options` configuration block
+```
