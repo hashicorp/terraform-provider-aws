@@ -1861,7 +1861,23 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 			return fmt.Errorf("waiting until test connection succeeds: %w", err)
 		}
 
-		if err := startReplicationTask(ctx, conn, aws.ToString(task.ReplicationTaskIdentifier)); err != nil {
+		// Updates of other endpoints of the same task (e.g. its source and target) can run
+		// concurrently and also restart it. StartReplicationTask fails while another endpoint's
+		// connection is being tested, or if another update started the task first.
+		rtID := aws.ToString(task.ReplicationTaskIdentifier)
+		_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidResourceStateFault](ctx, maxConnTestWaitTime, func(ctx context.Context) (any, error) {
+			err := startReplicationTask(ctx, conn, rtID)
+
+			if errs.IsAErrorMessageContains[*awstypes.InvalidResourceStateFault](err, "cannot be started") {
+				if _, waitErr := waitReplicationTaskRunning(ctx, conn, rtID); waitErr == nil {
+					return nil, nil
+				}
+			}
+
+			return nil, err
+		}, "should be successful for starting the replication task")
+
+		if err != nil {
 			return fmt.Errorf("starting replication task: %w", err)
 		}
 	}
