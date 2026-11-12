@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -213,7 +214,7 @@ func resourceInstance() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+					ValidateFunc: lazyvalidation.StringMatch(`^AWSRDSCustom.*$`, "must begin with AWSRDSCustom"),
 				},
 				"customer_owned_ip_enabled": {
 					Type:     schema.TypeBool,
@@ -332,8 +333,8 @@ func resourceInstance() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
+						lazyvalidation.StringMatch(`^[A-Za-z]`, "must begin with alphabetic character"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "must only contain alphanumeric characters and hyphens"),
 						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
 						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
 					),
