@@ -9,7 +9,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -56,7 +56,7 @@ func dataSourcePermissionSet() *schema.Resource {
 					Computed: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 32),
-						validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
+						lazyvalidation.StringMatch(`[\w+=,.@-]+`, "must match [\\w+=,.@-]"),
 					),
 					ExactlyOneOf: []string{names.AttrName, names.AttrARN},
 				},
