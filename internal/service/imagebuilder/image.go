@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -255,7 +255,7 @@ func resourceImage() *schema.Resource {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ForceNew:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-_+#]{0,99}$`), "valid parallel group string must be provider"),
+								ValidateFunc: lazyvalidation.StringMatch(`^[A-Za-z0-9][A-Za-z0-9-_+#]{0,99}$`, "valid parallel group string must be provider"),
 							},
 							names.AttrParameter: {
 								Type:     schema.TypeSet,

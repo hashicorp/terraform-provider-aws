@@ -9,7 +9,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -111,7 +111,7 @@ func resourceContainerRecipe() *schema.Resource {
 					Optional:     true,
 					ForceNew:     true,
 					ExactlyOneOf: []string{"dockerfile_template_data", "dockerfile_template_uri"},
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
+					ValidateFunc: lazyvalidation.StringMatch(`^s3://`, "must begin with s3://"),
 				},
 				names.AttrEncrypted: {
 					Type:     schema.TypeBool,

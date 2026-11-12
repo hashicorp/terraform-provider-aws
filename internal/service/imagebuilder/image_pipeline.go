@@ -9,7 +9,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,7 +49,7 @@ func resourceImagePipeline() *schema.Resource {
 				"container_recipe_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
+					ValidateFunc: lazyvalidation.StringMatch(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`, "valid container recipe ARN must be provided"),
 					ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 				},
 				"date_created": {
@@ -76,7 +76,7 @@ func resourceImagePipeline() *schema.Resource {
 				"distribution_configuration_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):distribution-configuration/[0-9a-z_-]+$`), "valid distribution configuration ARN must be provided"),
+					ValidateFunc: lazyvalidation.StringMatch(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):distribution-configuration/[0-9a-z_-]+$`, "valid distribution configuration ARN must be provided"),
 				},
 				"enhanced_image_metadata_enabled": {
 					Type:     schema.TypeBool,
@@ -91,7 +91,7 @@ func resourceImagePipeline() *schema.Resource {
 				"image_recipe_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
+					ValidateFunc: lazyvalidation.StringMatch(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`, "valid image recipe ARN must be provided"),
 					ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 				},
 				"image_scanning_configuration": {
@@ -154,7 +154,7 @@ func resourceImagePipeline() *schema.Resource {
 				"infrastructure_configuration_arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):infrastructure-configuration/[0-9a-z_-]+$`), "valid infrastructure configuration ARN must be provided"),
+					ValidateFunc: lazyvalidation.StringMatch(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):infrastructure-configuration/[0-9a-z_-]+$`, "valid infrastructure configuration ARN must be provided"),
 				},
 				names.AttrLoggingConfiguration: {
 					Type:     schema.TypeList,
@@ -177,7 +177,7 @@ func resourceImagePipeline() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_-][0-9A-Za-z_ -]{1,126}[0-9A-Za-z_-]$"), "valid name must be provided"),
+					ValidateFunc: lazyvalidation.StringMatch("^[0-9A-Za-z_-][0-9A-Za-z_ -]{1,126}[0-9A-Za-z_-]$", "valid name must be provided"),
 				},
 				"platform": {
 					Type:     schema.TypeString,
@@ -206,7 +206,7 @@ func resourceImagePipeline() *schema.Resource {
 								Computed: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(3, 100),
-									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]{2,}(?:\/[0-9a-zA-z_+-]+)*`), "")),
+									lazyvalidation.StringMatch(`^[0-9A-Za-z]{2,}(?:\/[0-9a-zA-z_+-]+)*`, "")),
 							},
 						},
 					},
