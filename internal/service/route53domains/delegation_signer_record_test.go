@@ -163,6 +163,52 @@ func testAccDelegationSignerRecord_disappears(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/50781.
+func testAccDelegationSignerRecord_upgradeFromV6_69_1(t *testing.T) {
+	ctx := acctest.Context(t)
+	domainName := acctest.SkipIfEnvVarNotSet(t, "ROUTE53DOMAINS_DOMAIN_NAME")
+	resourceName := "aws_route53domains_delegation_signer_record.test"
+	publicKey := "M1jizbcdK5IBt7d4lRIiFTx+N06BJzaeScK215EOfa8efd2akkUWmxD5OhodZCIiRMvL5ZnStUP5UReIeUmBeA=="
+	configVariables := config.Variables{
+		"domain_name": config.StringVariable(domainName),
+		"public_key":  config.StringVariable(publicKey),
+	}
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.Route53DomainsServiceID),
+		CheckDestroy: testAccCheckDelegationSignerAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.69.1",
+					},
+				},
+				ConfigDirectory: config.StaticDirectory("testdata/DelegationSignerRecord/ignore_changes/"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDelegationSignerAssociationExists(ctx, t, resourceName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/DelegationSignerRecord/ignore_changes/"),
+				ConfigVariables:          configVariables,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dnssec_key_id"), knownvalue.NotNull()),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDelegationSignerAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).Route53DomainsClient(ctx)
