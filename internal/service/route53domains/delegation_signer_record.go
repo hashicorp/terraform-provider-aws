@@ -252,6 +252,10 @@ func (r *delegationSignerRecordResource) Delete(ctx context.Context, request res
 		Id:         fwflex.StringFromFramework(ctx, data.DNSSECKeyID),
 	}
 	output, err := conn.DisassociateDelegationSignerFromDomain(ctx, &input)
+	// The API reports a key that is no longer associated as an invalid ID.
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInput](err, "Invalid DNSSEC ID") {
+		return
+	}
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Domains Delegation Signer Record (%s)", data.ID.ValueString()), err.Error())
 		return
