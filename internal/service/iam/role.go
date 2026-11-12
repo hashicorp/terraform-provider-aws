@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -100,7 +99,7 @@ func resourceRole() *schema.Resource {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 1000),
-						validation.StringDoesNotMatch(regexache.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
+						lazyvalidation.StringDoesNotMatch("[“‘]", "cannot contain specially formatted single or double quotes: [“‘]"),
 						lazyvalidation.StringMatch(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`, `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
 					),
 				},
