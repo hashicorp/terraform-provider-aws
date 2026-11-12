@@ -16,6 +16,7 @@ var (
 	ResourcePodIdentityAssociation  = newPodIdentityAssociationResource
 
 	ClusterStateUpgradeV0                      = clusterStateUpgradeV0
+	ConfigurationValuesEqual                   = configurationValuesEqual
 	FindAccessEntryByTwoPartKey                = findAccessEntryByTwoPartKey
 	FindAccessPolicyAssociationByThreePartKey  = findAccessPolicyAssociationByThreePartKey
 	FindAddonByTwoPartKey                      = findAddonByTwoPartKey
