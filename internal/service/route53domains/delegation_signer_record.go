@@ -182,19 +182,47 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 	if response.Diagnostics.HasError() {
 		return
 	}
-	digest := signingAttributes.digest(ctx, domainName)
+	// v6.69.1 and earlier set signing_attributes from the API response, which
+	// some registries return without Flags and PublicKey. A digest can't be
+	// computed from that state, so fall back to the stored key ID.
+	incomplete := signingAttributes == nil || signingAttributes.Flags.IsNull() || signingAttributes.PublicKey.IsNull()
 
-	// Look up DNSSEC key by digest (deterministic across registrars).
-	// Ensures stable state tracking regardless of registry (Gandi vs Amazon Registrar, etc).
-	dnssecKey, err := findDNSSECKeyByDomainNameAndDigest(ctx, conn, domainName, digest)
+	var (
+		dnssecKey *awstypes.DnssecKey
+		err       error
+		lookupKey string
+	)
+	if incomplete {
+		lookupKey = fwflex.StringValueFromFramework(ctx, data.DNSSECKeyID)
+		dnssecKey, err = findDNSSECKeyByDomainNameAndKeyID(ctx, conn, domainName, lookupKey)
+	} else {
+		// Look up DNSSEC key by digest (deterministic across registrars).
+		// Ensures stable state tracking regardless of registry (Gandi vs Amazon Registrar, etc).
+		lookupKey = signingAttributes.digest(ctx, domainName)
+		dnssecKey, err = findDNSSECKeyByDomainNameAndDigest(ctx, conn, domainName, lookupKey)
+	}
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key (%s)", domainName, digest), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key (%s)", domainName, lookupKey), err.Error())
 		return
+	}
+
+	if incomplete && signingAttributes != nil {
+		if signingAttributes.Flags.IsNull() {
+			signingAttributes.Flags = fwflex.Int32ToFrameworkInt64(ctx, dnssecKey.Flags)
+		}
+		if signingAttributes.PublicKey.IsNull() {
+			signingAttributes.PublicKey = fwflex.StringToFramework(ctx, dnssecKey.PublicKey)
+		}
+		data.SigningAttributes, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, signingAttributes)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	keyID := aws.ToString(dnssecKey.Id)
