@@ -37,10 +37,7 @@ var validNameForDataSource = lazyvalidation.StringMatch(
 )
 
 var validNameForResource = validation.All(
-	validation.StringDoesNotMatch(
-		regexache.MustCompile(`^`+cmkAliasPrefix),
-		"cannot begin with reserved AWS CMK prefix '"+cmkAliasPrefix+"'",
-	),
+	lazyvalidation.StringDoesNotMatch(`^`+cmkAliasPrefix, "cannot begin with reserved AWS CMK prefix '"+cmkAliasPrefix+"'"),
 	lazyvalidation.StringMatch(
 		aliasNamePattern,
 		"must begin with 'alias/' and only contain "+aliasNameCharPattern,
