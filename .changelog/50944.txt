@@ -1,5 +1,5 @@
 ```release-note:bug
-resource/aws_route53domains_delegation_signer_record: Fix resources created before v6.70.0 being removed from state on refresh when the registry doesn't return `flags` or `public_key`
+resource/aws_route53domains_delegation_signer_record: Fix resources created before v6.70.0 being removed from state on refresh
 ```
 
 ```release-note:bug
