@@ -218,6 +218,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ssoadmin_managed_policy_attachment",
 			Name:     "Managed Policy Attachment",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("instance_arn", true),
+				inttypes.StringIdentityAttribute("permission_set_arn", true),
+				inttypes.StringIdentityAttribute("managed_policy_arn", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      managedPolicyAttachmentImportID{},
+			},
 		},
 		{
 			Factory:  resourcePermissionSet,
