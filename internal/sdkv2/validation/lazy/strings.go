@@ -153,7 +153,7 @@ func matchString(pattern, v string) (re *regexp.Regexp, matched bool, err error)
 }
 
 // regexacheCompile compiles `pattern` using `regexache`, which caches compiled expressions.
-// `regeaxache` does not provide a `Compile` function that returns an error, so similate it here.
+// `regexache` does not provide a `Compile` function that returns an error, so simulate it here.
 // `regexache.MustCompile` panics on an invalid pattern, so the panic is recovered and converted to an error.
 // It never returns a nil `*regexp.Regexp` without a non-nil error.
 func regexacheCompile(pattern string) (re *regexp.Regexp, err error) {
