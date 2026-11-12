@@ -85,7 +85,7 @@ func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-var validateKeyAliasName = validation.StringMatch(aliasNameRegex(), "must be a KMS Key Alias")
+var validateKeyAliasName = lazyvalidation.StringMatch(`^`+aliasNamePattern+`$`, "must be a KMS Key Alias")
 
 func validateKeyAliasARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)
