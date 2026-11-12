@@ -19,6 +19,7 @@ func TestValidGrantName(t *testing.T) {
 		"Abc",
 		"grant_1",
 		"grant:/-",
+		strings.Repeat("w", 256),
 	}
 
 	for _, s := range validValues {
