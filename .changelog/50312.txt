@@ -1,0 +1,11 @@
+```release-note:new-action
+aws_odb_start_db_node
+```
+
+```release-note:new-action
+aws_odb_stop_db_node
+```
+
+```release-note:new-action
+aws_odb_reboot_db_node
+```
