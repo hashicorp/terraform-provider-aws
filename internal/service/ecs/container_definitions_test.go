@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
-	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 func TestFlattenContainerDefinitions(t *testing.T) {
@@ -100,6 +100,16 @@ func TestFlattenContainerDefinitions(t *testing.T) {
 		"unknown enums retained": {
 			input: `[{"versionConsistency":"FUTURE","dependsOn":[{"condition":"FUTURE"}],"environmentFiles":[{"type":"FUTURE"}],"firelensConfiguration":{"type":"FUTURE"},"logConfiguration":{"logDriver":"FUTURE"},"portMappings":[{"appProtocol":"FUTURE","protocol":"FUTURE"}],"resourceRequirements":[{"type":"FUTURE"}],"ulimits":[{"name":"FUTURE","hardLimit":0,"softLimit":0}]}]`,
 		},
+		"gpu sharing": {
+			input: `[{"name":"model","resourceRequirements":[{"sharingStrategy":{"nvidiaMps":{"maxComputePercent":50,"memory":4096}},"type":"GPU"}]}]`,
+		},
+		"gpu sharing without max compute percent": {
+			input: `[{"name":"model","resourceRequirements":[{"sharingStrategy":{"nvidiaMps":{"memory":4096}},"type":"GPU"}]}]`,
+		},
+		"gpu sharing empty strategy omitted": {
+			input: `[{"name":"model","resourceRequirements":[{"sharingStrategy":{},"type":"GPU","value":"1"}]}]`,
+			want:  `[{"name":"model","resourceRequirements":[{"type":"GPU","value":"1"}]}]`,
+		},
 		"nil fields omitted": {
 			input: `[{"command":null,"environment":null,"essential":null,"dockerLabels":null,"linuxParameters":null,"healthCheck":null,"restartPolicy":null}]`,
 			want:  `[{}]`,
@@ -110,8 +120,8 @@ func TestFlattenContainerDefinitions(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			var input []awstypes.ContainerDefinition
-			if err := tfjson.DecodeFromString(tc.input, &input); err != nil {
+			input, err := decodeContainerDefinitions(tc.input)
+			if err != nil {
 				t.Fatal(err)
 			}
 			got, err := flattenContainerDefinitions(input)
@@ -851,5 +861,122 @@ func TestExpandContainerDefinitions_InvalidVersionConsistency(t *testing.T) {
 	expectedErr := "invalid version consistency value (invalid) for container definition supplied at index (0)"
 	if err.Error() != expectedErr {
 		t.Fatalf("Expected message '%[1]s', got '%[2]s'", expectedErr, err.Error())
+	}
+}
+
+func TestExpandContainerDefinitions_gpuSharing(t *testing.T) {
+	t.Parallel()
+
+	got, err := expandContainerDefinitions(`[{"name":"model","resourceRequirements":[{"type":"GPU","sharingStrategy":{"nvidiaMps":{"memory":4096,"maxComputePercent":50}}}]}]`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(got) != 1 || len(got[0].ResourceRequirements) != 1 {
+		t.Fatalf("unexpected container definitions: %#v", got)
+	}
+
+	rr := got[0].ResourceRequirements[0]
+	if rr.Type != awstypes.ResourceTypeGpu {
+		t.Errorf("Type = %q, want %q", rr.Type, awstypes.ResourceTypeGpu)
+	}
+	if rr.Value != nil {
+		t.Errorf("Value = %q, want nil", aws.ToString(rr.Value))
+	}
+
+	mps, ok := rr.SharingStrategy.(*awstypes.SharingStrategyMemberNvidiaMps)
+	if !ok {
+		t.Fatalf("SharingStrategy = %#v, want *types.SharingStrategyMemberNvidiaMps", rr.SharingStrategy)
+	}
+	if got, want := aws.ToInt32(mps.Value.Memory), int32(4096); got != want {
+		t.Errorf("Memory = %d, want %d", got, want)
+	}
+	if got, want := aws.ToInt32(mps.Value.MaxComputePercent), int32(50); got != want {
+		t.Errorf("MaxComputePercent = %d, want %d", got, want)
+	}
+}
+
+func TestContainerDefinitionsAreEquivalent_gpuSharing(t *testing.T) {
+	t.Parallel()
+
+	cfgRepresentation := `
+[
+    {
+      "name": "model",
+      "image": "model",
+      "essential": true,
+      "memory": 8192,
+      "resourceRequirements": [
+        {
+          "type": "GPU",
+          "sharingStrategy": {
+            "nvidiaMps": {
+              "memory": 4096,
+              "maxComputePercent": 50
+            }
+          }
+        }
+      ]
+    }
+]`
+
+	apiRepresentation := `
+[
+    {
+      "essential": true,
+      "image": "model",
+      "memory": 8192,
+      "mountPoints": [],
+      "name": "model",
+      "resourceRequirements": [
+        {
+          "sharingStrategy": {
+            "nvidiaMps": {
+              "maxComputePercent": 50,
+              "memory": 4096
+            }
+          },
+          "type": "GPU"
+        }
+      ],
+      "volumesFrom": []
+    }
+]`
+
+	changedRepresentation := `
+[
+    {
+      "name": "model",
+      "image": "model",
+      "essential": true,
+      "memory": 8192,
+      "resourceRequirements": [
+        {
+          "type": "GPU",
+          "sharingStrategy": {
+            "nvidiaMps": {
+              "memory": 2048,
+              "maxComputePercent": 50
+            }
+          }
+        }
+      ]
+    }
+]`
+
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !equal {
+		t.Fatal("Expected definitions to be equal.")
+	}
+
+	equal, err = containerDefinitionsAreEquivalent(changedRepresentation, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if equal {
+		t.Fatal("Expected definitions to differ.")
 	}
 }
