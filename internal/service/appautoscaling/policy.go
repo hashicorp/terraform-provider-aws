@@ -560,9 +560,9 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-	output, err := tfresource.RetryWhenIsA[*awstypes.ScalingPolicy, *awstypes.FailedResourceAccessException](ctx, propagationTimeout, func(ctx context.Context) (*awstypes.ScalingPolicy, error) {
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.ScalingPolicy, error) {
 		return findScalingPolicyByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get(names.AttrResourceID).(string), d.Get("scalable_dimension").(string))
-	})
+	}, policyReadRetryable(d.IsNewResource()))
 
 	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Application Auto Scaling Scaling Policy (%s) not found, removing from state", d.Id())
@@ -605,6 +605,21 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return diags
+}
+
+// policyReadRetryable retries a scaling policy read while the policy is being created.
+func policyReadRetryable(isNewResource bool) tfresource.Retryable {
+	return func(err error) (bool, error) {
+		if errs.IsA[*awstypes.FailedResourceAccessException](err) {
+			return true, err
+		}
+
+		if isNewResource && retry.NotFound(err) {
+			return true, err
+		}
+
+		return false, err
+	}
 }
 
 func findScalingPolicyByFourPartKey(ctx context.Context, conn *applicationautoscaling.Client, name, serviceNamespace, resourceID, scalableDimension string) (*awstypes.ScalingPolicy, error) {
