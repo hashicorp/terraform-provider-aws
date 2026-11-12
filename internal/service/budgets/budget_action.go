@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -105,7 +105,7 @@ func resourceBudgetAction() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 100),
-						validation.StringMatch(regexache.MustCompile(`[^:\\]+`), "The ':' and '\\' characters aren't allowed."),
+						lazyvalidation.StringMatch(`[^:\\]+`, "The ':' and '\\' characters aren't allowed."),
 					),
 				},
 				"definition": {
@@ -217,7 +217,7 @@ func resourceBudgetAction() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 2147483647),
-									validation.StringMatch(regexache.MustCompile(`(.*[\n\r\t\f\ ]?)*`), "Can't contain line breaks."),
+									lazyvalidation.StringMatch(`(.*[\n\r\t\f\ ]?)*`, "Can't contain line breaks."),
 								)},
 							"subscription_type": {
 								Type:             schema.TypeString,
