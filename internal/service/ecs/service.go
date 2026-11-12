@@ -18,7 +18,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -1354,7 +1353,7 @@ func resourceService() *schema.Resource {
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 64),
 									lazyvalidation.StringMatch(`^[0-9a-z_-]+$`, "must contain only lowercase letters, numbers, underscores and hyphens"),
-									validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot begin with a hyphen"),
+									lazyvalidation.StringDoesNotMatch(`^-`, "cannot begin with a hyphen"),
 								),
 							},
 						},
