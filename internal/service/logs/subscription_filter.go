@@ -78,6 +78,11 @@ func resourceSubscriptionFilter() *schema.Resource {
 						ValidateFunc: validation.StringInSlice([]string{"@aws.account", "@aws.region", "@source.log"}, false),
 					},
 				},
+				"field_selection_criteria": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2000),
+				},
 				"filter_pattern": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -128,6 +133,10 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("emit_system_fields"); ok {
 		input.EmitSystemFields = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("field_selection_criteria"); ok {
+		input.FieldSelectionCriteria = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrRoleARN); ok {
@@ -222,6 +231,7 @@ func resourceSubscriptionFilterFlatten(_ context.Context, subscriptionFilter *aw
 	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
 	d.Set("distribution", subscriptionFilter.Distribution)
 	d.Set("emit_system_fields", subscriptionFilter.EmitSystemFields)
+	d.Set("field_selection_criteria", subscriptionFilter.FieldSelectionCriteria)
 	d.Set("filter_pattern", subscriptionFilter.FilterPattern)
 	d.Set(names.AttrLogGroupName, subscriptionFilter.LogGroupName)
 	d.Set(names.AttrName, subscriptionFilter.FilterName)

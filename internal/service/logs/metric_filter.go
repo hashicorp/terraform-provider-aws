@@ -54,6 +54,19 @@ func resourceMetricFilter() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				"emit_system_field_dimensions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice([]string{"@aws.account", "@aws.region"}, false),
+					},
+				},
+				"field_selection_criteria": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2000),
+				},
 				names.AttrLogGroupName: {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -134,6 +147,14 @@ func resourceMetricFilterPut(ctx context.Context, d *schema.ResourceData, meta a
 		input.ApplyOnTransformedLogs = v.(bool)
 	}
 
+	if v, ok := d.GetOk("emit_system_field_dimensions"); ok && v.(*schema.Set).Len() > 0 {
+		input.EmitSystemFieldDimensions = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("field_selection_criteria"); ok {
+		input.FieldSelectionCriteria = aws.String(v.(string))
+	}
+
 	// Creating multiple filters on the same log group can sometimes cause
 	// clashes, so use a mutex here (and on deletion) to serialise actions on
 	// log groups.
@@ -208,6 +229,8 @@ func resourceMetricFilterDelete(ctx context.Context, d *schema.ResourceData, met
 
 func resourceMetricFilterFlatten(_ context.Context, mf *awstypes.MetricFilter, d *schema.ResourceData) error {
 	d.Set("apply_on_transformed_logs", mf.ApplyOnTransformedLogs)
+	d.Set("emit_system_field_dimensions", mf.EmitSystemFieldDimensions)
+	d.Set("field_selection_criteria", mf.FieldSelectionCriteria)
 	d.Set(names.AttrLogGroupName, mf.LogGroupName)
 	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
 		return fmt.Errorf("setting metric_transformation: %w", err)
