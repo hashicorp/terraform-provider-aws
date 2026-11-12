@@ -287,7 +287,10 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrARN, branch.BranchArn)
 	d.Set("associated_resources", branch.AssociatedResources)
 	d.Set("backend_environment_arn", branch.BackendEnvironmentArn)
-	d.Set("basic_auth_credentials", branch.BasicAuthCredentials)
+	// The API may return basic auth credentials in an obfuscated form, so retain the configured value.
+	if branch.BasicAuthCredentials == nil || d.Get("basic_auth_credentials").(string) == "" {
+		d.Set("basic_auth_credentials", branch.BasicAuthCredentials)
+	}
 	d.Set("branch_name", branch.BranchName)
 	d.Set("custom_domains", branch.CustomDomains)
 	d.Set(names.AttrDescription, branch.Description)

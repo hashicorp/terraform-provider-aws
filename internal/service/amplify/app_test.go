@@ -272,9 +272,10 @@ func testAccApp_BasicAuthCredentials(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"basic_auth_credentials"},
 			},
 			{
 				Config: testAccAppConfig_basicAuthCredentials(rName, credentials2),

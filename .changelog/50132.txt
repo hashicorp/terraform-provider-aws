@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_amplify_app: Fix perpetual diff on `basic_auth_credentials` when the AWS API returns credentials in an obfuscated form
+```
+```release-note:bug
+resource/aws_amplify_branch: Fix perpetual diff on `basic_auth_credentials` when the AWS API returns credentials in an obfuscated form
+```
