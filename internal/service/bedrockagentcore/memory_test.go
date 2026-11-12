@@ -42,7 +42,7 @@ func TestMemoryNamespaceKeysAutoFlex(t *testing.T) {
 
 	model := fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*tfbedrockagentcore.NamespaceKeyModel{
 		{
-			Key: types.StringValue("environment"),
+			Key: types.StringValue(names.AttrEnvironment),
 			Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.NamespaceKeyValidationModel{
 				AllowedValues: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"development", "production"}),
 				RegexPattern:  types.StringValue("^[a-z]+$"),
@@ -55,7 +55,7 @@ func TestMemoryNamespaceKeysAutoFlex(t *testing.T) {
 	})
 	apiObjects := []awstypes.NamespaceKeyEntry{
 		{
-			Key: aws.String("environment"),
+			Key: aws.String(names.AttrEnvironment),
 			Validation: &awstypes.NamespaceKeyValidation{
 				AllowedValues: []string{"development", "production"},
 				RegexPattern:  aws.String("^[a-z]+$"),
@@ -490,7 +490,7 @@ func TestAccBedrockAgentCoreMemory_namespaceKeys(t *testing.T) {
 							}),
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrKey: knownvalue.StringExact("environment"),
+							names.AttrKey: knownvalue.StringExact(names.AttrEnvironment),
 							"validation": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"allowed_values": knownvalue.SetExact([]knownvalue.Check{
@@ -523,7 +523,7 @@ func TestAccBedrockAgentCoreMemory_namespaceKeys(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_key"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrKey: knownvalue.StringExact("environment"),
+							names.AttrKey: knownvalue.StringExact(names.AttrEnvironment),
 							"validation": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"allowed_values": knownvalue.SetExact([]knownvalue.Check{
