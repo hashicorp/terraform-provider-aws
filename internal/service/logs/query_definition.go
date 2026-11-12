@@ -258,7 +258,11 @@ func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.C
 			continue
 		}
 
-		return output, err
+		if err != nil {
+			return nil, err
+		}
+
+		return output, nil
 	}
 
 	return nil, lastErr
