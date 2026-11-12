@@ -173,6 +173,13 @@ func TestAccRDSProxyDefaultTargetGroup_initQuery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.init_query", "SET a=2, b=1"),
 				),
 			},
+			{
+				Config: testAccProxyDefaultTargetGroupConfig_emptyConnectionPoolConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProxyTargetGroupExists(ctx, t, resourceName, &dbProxyTargetGroup),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.init_query", ""),
+				),
+			},
 		},
 	})
 }
