@@ -287,7 +287,7 @@ The `volume_configuration` configuration block supports the following:
 `vpc_lattice_configurations` supports the following:
 
 * `port_name` - (Required) Name of the port for a target group associated with the VPC Lattice configuration.
-* `role_arn` - (Required) ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
+* `role_arn` - (Required) ARN of the IAM role to associate with this VPC Lattice configuration. This is the Amazon ECS infrastructure IAM role that is used to manage your VPC Lattice infrastructure.
 * `target_group_arn` - (Required) Full ARN of the target group or groups associated with the VPC Lattice configuration.
 
 ### `managed_ebs_volume` Block
