@@ -8,15 +8,14 @@ package networkfirewall
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -203,7 +202,7 @@ func dataSourceFirewall() *schema.Resource {
 					Optional:     true,
 					Computed:     true,
 					AtLeastOneOf: []string{names.AttrARN, names.AttrName},
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z-]{1,128}$`, "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 				},
 				"subnet_change_protection": {
 					Type:     schema.TypeBool,

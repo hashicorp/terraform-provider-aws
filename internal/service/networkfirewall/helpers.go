@@ -4,13 +4,12 @@
 package networkfirewall
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -111,7 +110,7 @@ func customActionSchema() *schema.Schema {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z]+$`, "must contain only alphanumeric characters"),
 				},
 			},
 		},
