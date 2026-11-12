@@ -36,19 +36,16 @@ var validNameForDataSource = lazyvalidation.StringMatch(
 	"must begin with 'alias/' and only contain "+aliasNameCharPattern,
 )
 
-func validNameForResource(v any, k string) (ws []string, es []error) {
-	value := v.(string)
-
-	if regexache.MustCompile(`^(` + cmkAliasPrefix + `)`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q cannot begin with reserved AWS CMK prefix 'alias/aws/'", k))
-	}
-
-	if !aliasNameRegex().MatchString(value) {
-		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
-	}
-	return
-}
+var validNameForResource = validation.All(
+	validation.StringDoesNotMatch(
+		regexache.MustCompile(`^`+cmkAliasPrefix),
+		"cannot begin with reserved AWS CMK prefix '"+cmkAliasPrefix+"'",
+	),
+	lazyvalidation.StringMatch(
+		`^`+aliasNamePattern+`$`,
+		"must begin with 'alias/' and only contain "+aliasNameCharPattern,
+	),
+)
 
 var validateKey = validation.Any(
 	validateKeyID,
