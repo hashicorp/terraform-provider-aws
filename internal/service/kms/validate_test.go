@@ -63,7 +63,19 @@ func TestValidNameForDataSource(t *testing.T) {
 			ErrCount: 0,
 		},
 		{
+			Value:    "alias/hyphenated-service-name/nested",
+			ErrCount: 0,
+		},
+		{
+			Value:    "alias/",
+			ErrCount: 1,
+		},
+		{
 			Value:    "alias/Service:Test",
+			ErrCount: 1,
+		},
+		{
+			Value:    "alias/white space",
 			ErrCount: 1,
 		},
 		{
@@ -92,19 +104,31 @@ func TestValidNameForResource(t *testing.T) {
 		ErrCount int
 	}{
 		{
-			Value:    "alias/hashicorp",
-			ErrCount: 0,
+			Value:    "alias/aws/s3",
+			ErrCount: 1,
 		},
 		{
 			Value:    "alias/aws-service-test",
 			ErrCount: 0,
 		},
 		{
-			Value:    "alias/aws/s3",
+			Value:    "alias/hashicorp",
+			ErrCount: 0,
+		},
+		{
+			Value:    "alias/hyphenated-service-name/nested",
+			ErrCount: 0,
+		},
+		{
+			Value:    "alias/",
 			ErrCount: 1,
 		},
 		{
 			Value:    "alias/Service:Test",
+			ErrCount: 1,
+		},
+		{
+			Value:    "alias/white space",
 			ErrCount: 1,
 		},
 		{
