@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -59,7 +60,7 @@ func resourceInstance() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 64),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_/:.@-]+$`), ""),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_/:.@-]+$`, ""),
 					),
 				},
 				"service_id": {
