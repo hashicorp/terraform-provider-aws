@@ -9,6 +9,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -51,7 +52,7 @@ func validateTargetID(v any, k string) (ws []string, errors []error) {
 
 var validArchiveName = validation.All(
 	validation.StringLenBetween(1, 48),
-	validation.StringMatch(regexache.MustCompile(`^`+validNameCharClass+`$`), ""),
+	lazyvalidation.StringMatch(`^`+validNameCharClass+`$`, ""),
 )
 
 var validBusName = validation.All(
@@ -67,7 +68,7 @@ var validBusNameOrARN = validation.All(
 	),
 )
 
-var validBusNameFormat = validation.StringMatch(regexache.MustCompile(`^`+validBusNameCharClass+`$`), "")
+var validBusNameFormat = lazyvalidation.StringMatch(`^`+validBusNameCharClass+`$`, "")
 
 func eventBusARNCheck(v any, k string, arn arn.ARN) (ws []string, errors []error) {
 	if !isEventBusARN(arn) {
@@ -78,7 +79,7 @@ func eventBusARNCheck(v any, k string, arn arn.ARN) (ws []string, errors []error
 
 var validSourceName = validation.All(
 	validation.StringLenBetween(1, 256),
-	validation.StringMatch(regexache.MustCompile(`^aws\.partner(/`+validNameCharClass+`){2,}$`), ""),
+	lazyvalidation.StringMatch(`^aws\.partner(/`+validNameCharClass+`){2,}$`, ""),
 )
 
 var validCustomEventBusName = validation.All(
