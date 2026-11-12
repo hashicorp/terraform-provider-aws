@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_pinpointsmsvoicev2_account_default_protect_configuration
 
-Manages the AWS End User Messaging SMS account default protect configuration. The account default applies a protect configuration's country rules to messages sent without a configuration set that has its own protect configuration.
+Manages the AWS End User Messaging SMS account default protect configuration. AWS applies the account default's country rules to every message that doesn't specify another protect configuration, including messages sent through Amazon SNS and Amazon Cognito.
 
 ~> **Note:** An account has one default protect configuration per Region. Creating this resource replaces any existing account default, and destroying it leaves the account without one.
 
