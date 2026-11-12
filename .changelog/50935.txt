@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ecs_service: Add `service_connect_configuration.container_configuration` argument to configure the Service Connect proxy `log_level`
+```

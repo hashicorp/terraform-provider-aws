@@ -28,7 +28,9 @@ var (
 	FindServiceNoTagsByTwoPartKey           = findServiceNoTagsByTwoPartKey
 	FindTag                                 = findTag
 	FindTaskDefinitionByFamilyOrARN         = findTaskDefinitionByFamilyOrARN
+	ExpandServiceConnectConfiguration       = expandServiceConnectConfiguration
 	FindTaskSetNoTagsByThreePartKey         = findTaskSetNoTagsByThreePartKey
+	FlattenServiceConnectConfiguration      = flattenServiceConnectConfiguration
 	FlattenServiceVolumeConfigurations      = flattenServiceVolumeConfigurations
 	RoleNameFromARN                         = roleNameFromARN
 	ServiceNameFromARN                      = serviceNameFromARN
