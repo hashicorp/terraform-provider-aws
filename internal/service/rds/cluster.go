@@ -1672,6 +1672,29 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
+		// When a cluster is a member of a global database and engine_version has
+		// changed, the major version upgrade is performed by ModifyGlobalCluster
+		// on the aws_rds_global_cluster resource. Sending that same version change
+		// through ModifyDBCluster on individual members fails with:
+		//   InvalidParameterCombination: Major Version Upgrade isn't supported in
+		//   a single member of a global cluster.
+		// To handle this, read the cluster's actual current EngineVersion from AWS.
+		// If the global upgrade already propagated the version, omit EngineVersion
+		// and AllowMajorVersionUpgrade from the input so ModifyDBCluster can still
+		// carry other field changes (e.g. parameter group) without the engine error.
+		// See: https://github.com/hashicorp/terraform-provider-aws/issues/50557
+		if input.EngineVersion != nil && d.Get("global_cluster_identifier").(string) != "" {
+			dbc, err := findDBClusterByID(ctx, conn, d.Id())
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s) for engine version check: %s", d.Id(), err)
+			}
+
+			if aws.ToString(dbc.EngineVersion) == aws.ToString(input.EngineVersion) {
+				input.EngineVersion = nil
+				input.AllowMajorVersionUpgrade = nil
+			}
+		}
+
 		if d.HasChange("iam_database_authentication_enabled") {
 			input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		}
