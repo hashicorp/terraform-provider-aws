@@ -473,8 +473,10 @@ parameterLoop:
 	for _, dependencyBin := range dependencyBins {
 		chunks = append(chunks, slices.Chunk(dependencyBin, maxChunkSize))
 	}
-	chunks = append(chunks, slices.Chunk(immediate, maxChunkSize))
-	chunks = append(chunks, slices.Chunk(pendingReboot, maxChunkSize))
+	chunks = append(chunks,
+		slices.Chunk(immediate, maxChunkSize),
+		slices.Chunk(pendingReboot, maxChunkSize),
+	)
 
 	return tfiter.Concat(chunks...)
 }
