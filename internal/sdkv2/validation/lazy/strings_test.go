@@ -21,24 +21,24 @@ func TestValidationStringMatch(t *testing.T) {
 		{
 			val:         "bar",
 			f:           StringMatch(".*foo.*", ""),
-			expectedErr: regexp.MustCompile(`^expected value of test_property to match regular expression ` + regexp.QuoteMeta(`".*foo.*"`) + `, got "bar"$`),
+			expectedErr: regexache.MustCompile(`^expected value of test_property to match regular expression ` + regexp.QuoteMeta(`".*foo.*"`) + `, got "bar"$`),
 		},
 		{
 			val:         "bar",
 			f:           StringMatch(".*foo.*", "value must contain foo"),
-			expectedErr: regexp.MustCompile(`^invalid value for test_property \(value must contain foo\)$`),
+			expectedErr: regexache.MustCompile(`^invalid value for test_property \(value must contain foo\)$`),
 		},
 		// Wrong input type
 		{
 			val:         42,
 			f:           StringMatch(".*foo.*", ""),
-			expectedErr: regexp.MustCompile(`^expected type of test_property to be string$`),
+			expectedErr: regexache.MustCompile(`^expected type of test_property to be string$`),
 		},
 		// Invalid regexp
 		{
 			val:         "bar",
 			f:           StringMatch("(", ""),
-			expectedErr: regexp.MustCompile(`^failed to compile regex pattern "\(": ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }()) + `$`),
+			expectedErr: regexache.MustCompile(`^failed to compile regex pattern "\(": ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }()) + `$`),
 		},
 	})
 }
@@ -54,24 +54,24 @@ func TestValidationStringMatchDiag(t *testing.T) {
 		{
 			val:                "bar",
 			f:                  StringMatchDiag(".*foo.*", ""),
-			expectedDiagDetail: regexp.MustCompile(`^Expected value to match regular expression ` + regexp.QuoteMeta(`".*foo.*"`) + `, got "bar"$`),
+			expectedDiagDetail: regexache.MustCompile(`^Expected value to match regular expression ` + regexp.QuoteMeta(`".*foo.*"`) + `, got "bar"$`),
 		},
 		{
 			val:                "bar",
 			f:                  StringMatchDiag(".*foo.*", "value must contain foo"),
-			expectedDiagDetail: regexp.MustCompile(`^Value is invalid: value must contain foo$`),
+			expectedDiagDetail: regexache.MustCompile(`^Value is invalid: value must contain foo$`),
 		},
 		// Wrong input type
 		{
 			val:                42,
 			f:                  StringMatchDiag(".*foo.*", ""),
-			expectedDiagDetail: regexp.MustCompile(`^Expected type to be string$`),
+			expectedDiagDetail: regexache.MustCompile(`^Expected type to be string$`),
 		},
 		// Invalid regexp
 		{
 			val:                "bar",
 			f:                  StringMatchDiag("(", ""),
-			expectedDiagDetail: regexp.MustCompile(`(?s)An unexpected error occurred while validating the attribute value\..+The regex pattern "\(" failed to compile: ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }())),
+			expectedDiagDetail: regexache.MustCompile(`(?s)An unexpected error occurred while validating the attribute value\..+The regex pattern "\(" failed to compile: ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }())),
 		},
 	})
 }
@@ -85,24 +85,24 @@ func TestValidationStringDoesNotMatch(t *testing.T) {
 		{
 			val:         "bar",
 			f:           StringDoesNotMatch(".*bar.*", ""),
-			expectedErr: regexp.MustCompile(`^expected value of test_property to not match regular expression ` + regexp.QuoteMeta(`".*bar.*"`) + `, got "bar"$`),
+			expectedErr: regexache.MustCompile(`^expected value of test_property to not match regular expression ` + regexp.QuoteMeta(`".*bar.*"`) + `, got "bar"$`),
 		},
 		{
 			val:         "bar",
 			f:           StringDoesNotMatch(".*bar.*", "value must not contain foo"),
-			expectedErr: regexp.MustCompile(`^invalid value for test_property \(value must not contain foo\)$`),
+			expectedErr: regexache.MustCompile(`^invalid value for test_property \(value must not contain foo\)$`),
 		},
 		// Wrong input type
 		{
 			val:         42,
 			f:           StringDoesNotMatch(".*bar.*", ""),
-			expectedErr: regexp.MustCompile(`^expected type of test_property to be string$`),
+			expectedErr: regexache.MustCompile(`^expected type of test_property to be string$`),
 		},
 		// Invalid regexp
 		{
 			val:         "bar",
 			f:           StringDoesNotMatch("(", ""),
-			expectedErr: regexp.MustCompile(`^failed to compile regex pattern "\(": ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }()) + `$`),
+			expectedErr: regexache.MustCompile(`^failed to compile regex pattern "\(": ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }()) + `$`),
 		},
 	})
 }
@@ -118,24 +118,24 @@ func TestValidationStringDoesNotMatchDiag(t *testing.T) {
 		{
 			val:                "bar",
 			f:                  StringDoesNotMatchDiag(".*bar.*", ""),
-			expectedDiagDetail: regexp.MustCompile(`^Expected value to not match regular expression ` + regexp.QuoteMeta(`".*bar.*"`) + `, got "bar"$`),
+			expectedDiagDetail: regexache.MustCompile(`^Expected value to not match regular expression ` + regexp.QuoteMeta(`".*bar.*"`) + `, got "bar"$`),
 		},
 		{
 			val:                "bar",
 			f:                  StringDoesNotMatchDiag(".*bar.*", "value must not contain foo"),
-			expectedDiagDetail: regexp.MustCompile(`^Value is invalid: value must not contain foo$`),
+			expectedDiagDetail: regexache.MustCompile(`^Value is invalid: value must not contain foo$`),
 		},
 		// Wrong input type
 		{
 			val:                42,
 			f:                  StringDoesNotMatchDiag(".*bar.*", ""),
-			expectedDiagDetail: regexp.MustCompile(`^Expected type to be string$`),
+			expectedDiagDetail: regexache.MustCompile(`^Expected type to be string$`),
 		},
 		// Invalid regexp
 		{
 			val:                "bar",
 			f:                  StringDoesNotMatchDiag("(", ""),
-			expectedDiagDetail: regexp.MustCompile(`(?s)An unexpected error occurred while validating the attribute value\..+The regex pattern "\(" failed to compile: ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }())),
+			expectedDiagDetail: regexache.MustCompile(`(?s)An unexpected error occurred while validating the attribute value\..+The regex pattern "\(" failed to compile: ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }())),
 		},
 	})
 }
