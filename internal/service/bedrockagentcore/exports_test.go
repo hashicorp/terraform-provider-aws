@@ -47,6 +47,7 @@ var (
 	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 	NormalizeGatewayTargetOutputForState = normalizeGatewayTargetOutputForState
+	NamespaceKeyValidationNotEmpty       = namespaceKeyValidationNotEmpty{}
 )
 
 type (

@@ -62,6 +62,42 @@ var validNamespaceAllowedValue validator.String = stringvalidator.RegexMatches(
 	`must start with a lowercase letter or digit, contain only lowercase letters, digits, hyphens and underscores, and be between 1 and 64 characters`,
 )
 
+var _ validator.Object = namespaceKeyValidationNotEmpty{}
+
+// namespaceKeyValidationNotEmpty requires at least one of allowed_values or regex_pattern in a
+// namespace_key validation block. An empty block sets no rule, and the API may omit an empty
+// validation object from GetMemory, which would show as a perpetual diff.
+// It reads the object's own attributes instead of resolving path expressions, because
+// path expressions below a set element (namespace_key) do not resolve to the configured values.
+type namespaceKeyValidationNotEmpty struct{}
+
+func (v namespaceKeyValidationNotEmpty) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (namespaceKeyValidationNotEmpty) MarkdownDescription(context.Context) string {
+	return "at least one of allowed_values or regex_pattern must be configured"
+}
+
+func (v namespaceKeyValidationNotEmpty) ValidateObject(ctx context.Context, request validator.ObjectRequest, response *validator.ObjectResponse) {
+	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+		return
+	}
+
+	attributes := request.ConfigValue.Attributes()
+	for _, name := range []string{"allowed_values", "regex_pattern"} {
+		if value, ok := attributes[name]; ok && !value.IsNull() {
+			return
+		}
+	}
+
+	response.Diagnostics.AddAttributeError(
+		request.Path,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("At least one of allowed_values or regex_pattern must be configured, got: %s", request.ConfigValue),
+	)
+}
+
 // @FrameworkResource("aws_bedrockagentcore_memory", name="Memory")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
@@ -169,13 +205,8 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
-								// An empty validation block sets no rule, and the API may omit an empty
-								// validation object from GetMemory, which would show as a perpetual diff.
 								Validators: []validator.Object{
-									tfobjectvalidator.AtLeastOneOfChildren(
-										path.MatchRelative().AtName("allowed_values"),
-										path.MatchRelative().AtName("regex_pattern"),
-									),
+									namespaceKeyValidationNotEmpty{},
 								},
 								Attributes: map[string]schema.Attribute{
 									"allowed_values": schema.SetAttribute{

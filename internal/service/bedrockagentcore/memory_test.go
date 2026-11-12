@@ -14,6 +14,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -77,6 +80,70 @@ func TestMemoryNamespaceKeysAutoFlex(t *testing.T) {
 	}
 	if !flattened.Equal(model) {
 		t.Errorf("unexpected Flatten result: got %s, want %s", flattened, model)
+	}
+}
+
+func TestNamespaceKeyValidationNotEmpty(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	attrTypes := map[string]attr.Type{
+		"allowed_values": types.SetType{ElemType: types.StringType},
+		"regex_pattern":  types.StringType,
+	}
+
+	testCases := map[string]struct {
+		value     types.Object
+		expectErr bool
+	}{
+		"null object": {
+			value: types.ObjectNull(attrTypes),
+		},
+		"unknown object": {
+			value: types.ObjectUnknown(attrTypes),
+		},
+		"regex_pattern only": {
+			value: types.ObjectValueMust(attrTypes, map[string]attr.Value{
+				"allowed_values": types.SetNull(types.StringType),
+				"regex_pattern":  types.StringValue("^[a-z0-9-]+$"),
+			}),
+		},
+		"allowed_values only": {
+			value: types.ObjectValueMust(attrTypes, map[string]attr.Value{
+				"allowed_values": types.SetValueMust(types.StringType, []attr.Value{types.StringValue("production")}),
+				"regex_pattern":  types.StringNull(),
+			}),
+		},
+		"unknown regex_pattern": {
+			value: types.ObjectValueMust(attrTypes, map[string]attr.Value{
+				"allowed_values": types.SetNull(types.StringType),
+				"regex_pattern":  types.StringUnknown(),
+			}),
+		},
+		"empty": {
+			value: types.ObjectValueMust(attrTypes, map[string]attr.Value{
+				"allowed_values": types.SetNull(types.StringType),
+				"regex_pattern":  types.StringNull(),
+			}),
+			expectErr: true,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			request := validator.ObjectRequest{
+				Path:        path.Root("namespace_key").AtSetValue(types.StringValue("x")).AtName("validation").AtListIndex(0),
+				ConfigValue: testCase.value,
+			}
+			var response validator.ObjectResponse
+			tfbedrockagentcore.NamespaceKeyValidationNotEmpty.ValidateObject(ctx, request, &response)
+
+			if got := response.Diagnostics.HasError(); got != testCase.expectErr {
+				t.Errorf("HasError = %t, want %t: %v", got, testCase.expectErr, response.Diagnostics)
+			}
+		})
 	}
 }
 
