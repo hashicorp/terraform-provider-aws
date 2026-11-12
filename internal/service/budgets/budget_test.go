@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -460,6 +462,62 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "notification.*.subscriber_email_addresses.*", emailAddress3),
 					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "ANNUALLY"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBudgetsBudget_notificationsDrift(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_budgets_budget.test"
+	config := testAccBudgetConfig_notificationsUpdated(rName, acctest.RandomEmailAddress(acctest.RandomDomainName(t)))
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBudgetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check:  resource.TestCheckResourceAttr(resourceName, "notification.#", "1"),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.ProviderMeta(ctx, t).BudgetsClient(ctx)
+					_, err := conn.DeleteNotification(ctx, &budgets.DeleteNotificationInput{
+						AccountId:  aws.String(acctest.AccountID(ctx)),
+						BudgetName: aws.String(rName),
+						Notification: &awstypes.Notification{
+							ComparisonOperator: awstypes.ComparisonOperatorLessThan,
+							NotificationType:   awstypes.NotificationTypeActual,
+							Threshold:          123.45,
+							ThresholdType:      awstypes.ThresholdTypeAbsoluteValue,
+						},
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+				},
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "1"),
+					func(s *terraform.State) error {
+						conn := acctest.ProviderMeta(ctx, t).BudgetsClient(ctx)
+						output, err := conn.DescribeNotificationsForBudget(ctx, &budgets.DescribeNotificationsForBudgetInput{
+							AccountId:  aws.String(acctest.AccountID(ctx)),
+							BudgetName: aws.String(rName),
+						})
+						if err != nil {
+							return err
+						}
+						if len(output.Notifications) != 1 {
+							return fmt.Errorf("expected 1 Budget notification, got %d", len(output.Notifications))
+						}
+						return nil
+					},
 				),
 			},
 		},
