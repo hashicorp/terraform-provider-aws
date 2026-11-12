@@ -315,6 +315,10 @@ resource "aws_lambda_function" "example" {
   file_system_config {
     arn              = aws_s3files_access_point.for_lambda.arn
     local_mount_path = "/mnt/s3files"
+
+    s3_files_config {
+      direct_s3_read = "ENABLED"
+    }
   }
   depends_on = [aws_s3files_mount_target.for_lambda]
 }
@@ -788,6 +792,13 @@ The following arguments are optional:
 
 * `arn` - (Required) ARN of the Amazon EFS Access Point, or the Amazon S3 Files access point.
 * `local_mount_path` - (Required) Path where the function can access the file system. Must start with `/mnt/`.
+* `s3_files_config` - (Optional) Configuration block for how the function reads data from an Amazon S3 Files file system. Valid only when `arn` is an Amazon S3 Files access point, which is checked at plan time. [See below](#s3_files_config-block).
+
+#### `s3_files_config` Block
+
+* `direct_s3_read` - (Optional) Whether reads go directly to the S3 bucket. Valid values are `AUTO` (direct reads for functions with 512 MB of memory or more), `ENABLED` (all reads go directly to the bucket) and `DISABLED` (all reads go through the file system). Defaults to `AUTO` on the AWS side. Direct reads need `s3:GetObject` and `s3:GetObjectVersion` on the execution role.
+
+~> **NOTE:** Removing the `s3_files_config` block does not change the setting in AWS. To go back to the default, set `direct_s3_read = "AUTO"`.
 
 ### `image_config` Block
 

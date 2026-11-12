@@ -150,6 +150,18 @@ func dataSourceFunction() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
+							"s3_files_config": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"direct_s3_read": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
 						},
 					},
 				},

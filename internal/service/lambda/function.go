@@ -7,12 +7,14 @@ package lambda
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -237,6 +239,23 @@ func resourceFunction() *schema.Resource {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/mnt/[0-9A-Za-z_.-]+$`), "must start with '/mnt/'"),
+							},
+							// Only valid with an Amazon S3 Files access point.
+							"s3_files_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"direct_s3_read": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.DirectS3Read](),
+										},
+									},
+								},
 							},
 						},
 					},
@@ -588,6 +607,7 @@ func resourceFunction() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			checkHandlerRuntimeForZipFunction,
+			checkS3FilesConfigAccessPoint,
 			updateComputedAttributesOnPublish,
 			customdiff.ForceNewIfChange("durable_config", func(_ context.Context, old, new, meta any) bool {
 				// Force new when durable_config is being added (from empty to non-empty) or removed (from non-empty to empty)
@@ -1633,6 +1653,42 @@ func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff
 	return nil
 }
 
+// checkS3FilesConfigAccessPoint rejects a configured s3_files_config when the
+// file system access point is not an Amazon S3 Files access point.
+func checkS3FilesConfigAccessPoint(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	if !d.NewValueKnown("file_system_config.0.arn") {
+		return nil
+	}
+
+	accessPointARN, ok := d.GetOk("file_system_config.0.arn")
+	if !ok || isS3FilesAccessPointARN(accessPointARN.(string)) {
+		return nil
+	}
+
+	fileSystemConfigs := d.GetRawConfig().GetAttr("file_system_config")
+	if !fileSystemConfigs.IsKnown() || fileSystemConfigs.IsNull() || fileSystemConfigs.LengthInt() == 0 {
+		return nil
+	}
+
+	for _, fileSystemConfig := range fileSystemConfigs.AsValueSlice() {
+		if !fileSystemConfig.IsKnown() || fileSystemConfig.IsNull() {
+			continue
+		}
+
+		if v := fileSystemConfig.GetAttr("s3_files_config"); v.IsKnown() && !v.IsNull() && v.LengthInt() > 0 {
+			return errors.New("file_system_config.0.s3_files_config can only be set when file_system_config.0.arn is an Amazon S3 Files access point")
+		}
+	}
+
+	return nil
+}
+
+func isS3FilesAccessPointARN(s string) bool {
+	v, err := arn.Parse(s)
+
+	return err == nil && v.Service == "s3files"
+}
+
 func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	configChanged := needsFunctionConfigUpdate(d)
 	codeChanged := needsFunctionCodeUpdate(d)
@@ -1817,6 +1873,9 @@ func flattenFileSystemConfigs(apiObjects []awstypes.FileSystemConfig) []any {
 		tfMap := make(map[string]any)
 		tfMap[names.AttrARN] = aws.ToString(apiObject.Arn)
 		tfMap["local_mount_path"] = aws.ToString(apiObject.LocalMountPath)
+		if v := apiObject.S3FilesConfig; v != nil {
+			tfMap["s3_files_config"] = flattenS3FilesConfig(v)
+		}
 
 		tfList = append(tfList, tfMap)
 	}
@@ -1829,13 +1888,43 @@ func expandFileSystemConfigs(tfList []any) []awstypes.FileSystemConfig {
 
 	for _, tfMapRaw := range tfList {
 		tfMap := tfMapRaw.(map[string]any)
-		apiObjects = append(apiObjects, awstypes.FileSystemConfig{
+		apiObject := awstypes.FileSystemConfig{
 			Arn:            aws.String(tfMap[names.AttrARN].(string)),
 			LocalMountPath: aws.String(tfMap["local_mount_path"].(string)),
-		})
+		}
+
+		// S3FilesConfig is only valid with an S3 Files access point. The check on the ARN
+		// drops a value kept in state (the block is Computed) after a switch to EFS.
+		if v, ok := tfMap["s3_files_config"].([]any); ok && len(v) > 0 && v[0] != nil && isS3FilesAccessPointARN(aws.ToString(apiObject.Arn)) {
+			apiObject.S3FilesConfig = expandS3FilesConfig(v[0].(map[string]any))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
+}
+
+func expandS3FilesConfig(tfMap map[string]any) *awstypes.S3FilesConfig {
+	apiObject := &awstypes.S3FilesConfig{}
+
+	if v, ok := tfMap["direct_s3_read"].(string); ok && v != "" {
+		apiObject.DirectS3Read = awstypes.DirectS3Read(v)
+	}
+
+	return apiObject
+}
+
+func flattenS3FilesConfig(apiObject *awstypes.S3FilesConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"direct_s3_read": string(apiObject.DirectS3Read),
+	}
+
+	return []any{tfMap}
 }
 
 func expandDurableConfigs(tfList []any) *awstypes.DurableConfig {

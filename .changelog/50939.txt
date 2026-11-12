@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add `s3_files_config` argument to the `file_system_config` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function: Add `s3_files_config` attribute to the `file_system_config` block
+```
