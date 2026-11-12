@@ -12,7 +12,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -118,7 +118,7 @@ func resourceStateMachine() *schema.Resource {
 								Optional: true,
 								ValidateFunc: validation.All(
 									verify.ValidARN,
-									validation.StringMatch(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
+									lazyvalidation.StringMatch(`:\*$`, "ARN must end with `:*`"),
 								),
 							},
 						},
@@ -133,7 +133,7 @@ func resourceStateMachine() *schema.Resource {
 					ConflictsWith: []string{names.AttrNamePrefix},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 80),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, "the name should only contain 0-9, A-Z, a-z, - and _"),
 					),
 				},
 				names.AttrNamePrefix: {
@@ -144,7 +144,7 @@ func resourceStateMachine() *schema.Resource {
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 80-sdkid.UniqueIDSuffixLength),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, "the name should only contain 0-9, A-Z, a-z, - and _"),
 					),
 				},
 				"publish": {
