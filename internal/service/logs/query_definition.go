@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -49,6 +50,8 @@ func resourceQueryDefinition() *schema.Resource {
 			StateContext: resourceQueryDefinitionImport,
 		},
 
+		CustomizeDiff: resourceQueryDefinitionCustomizeDiff,
+
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrARN: {
@@ -74,9 +77,36 @@ func resourceQueryDefinition() *schema.Resource {
 						validation.StringMatch(regexache.MustCompile(`^([^:*\/]+\/?)*[^:*\/]+$`), "cannot contain a colon or asterisk and cannot start or end with a slash"),
 					),
 				},
+				names.AttrParameter: {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDefaultValue: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrDescription: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z_][0-9A-Za-z_]*$`), "must start with a letter or underscore and contain only letters, digits, and underscores"),
+							},
+						},
+					},
+				},
 				"query_definition_id": {
 					Type:     schema.TypeString,
 					Computed: true,
+				},
+				"query_language": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.QueryLanguage](),
 				},
 				"query_string": {
 					Type:     schema.TypeString,
@@ -99,6 +129,14 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("log_group_names"); ok && len(v.([]any)) > 0 {
 		input.LogGroupNames = flex.ExpandStringValueList(v.([]any))
+	}
+
+	if v, ok := d.GetOk(names.AttrParameter); ok && len(v.([]any)) > 0 {
+		input.Parameters = expandQueryParameters(v.([]any))
+	}
+
+	if v, ok := d.GetOk("query_language"); ok {
+		input.QueryLanguage = awstypes.QueryLanguage(v.(string))
 	}
 
 	if !d.IsNewResource() {
@@ -138,7 +176,11 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrARN, queryDefinitionARN(ctx, c, d.Id()))
 	d.Set("log_group_names", result.LogGroupNames)
 	d.Set(names.AttrName, result.Name)
+	if err := d.Set(names.AttrParameter, flattenQueryParameters(result.Parameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
+	}
 	d.Set("query_definition_id", result.QueryDefinitionId)
+	d.Set("query_language", result.QueryLanguage)
 	d.Set("query_string", result.QueryString)
 
 	return diags
@@ -194,14 +236,32 @@ func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, 
 }
 
 func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, name, queryDefinitionID string) (*awstypes.QueryDefinition, error) {
-	var input cloudwatchlogs.DescribeQueryDefinitionsInput
-	if name != "" {
-		input.QueryDefinitionNamePrefix = aws.String(name)
+	// DescribeQueryDefinitions can filter on query language. Look up the definition
+	// without that filter first and, if it isn't found, with each query language,
+	// so that definitions in any language are found even if the API applies a
+	// default language filter.
+	var lastErr error
+	for _, queryLanguage := range append([]awstypes.QueryLanguage{""}, enum.EnumValues[awstypes.QueryLanguage]()...) {
+		input := cloudwatchlogs.DescribeQueryDefinitionsInput{
+			QueryLanguage: queryLanguage,
+		}
+		if name != "" {
+			input.QueryDefinitionNamePrefix = aws.String(name)
+		}
+
+		output, err := findQueryDefinition(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.QueryDefinition) bool {
+			return aws.ToString(v.QueryDefinitionId) == queryDefinitionID
+		}), tfslices.WithReturnFirstMatch[awstypes.QueryDefinition]())
+
+		if retry.NotFound(err) {
+			lastErr = err
+			continue
+		}
+
+		return output, err
 	}
 
-	return findQueryDefinition(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.QueryDefinition) bool {
-		return aws.ToString(v.QueryDefinitionId) == queryDefinitionID
-	}), tfslices.WithReturnFirstMatch[awstypes.QueryDefinition]())
+	return nil, lastErr
 }
 
 func findQueryDefinition(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.QueryDefinition]) (*awstypes.QueryDefinition, error) {
@@ -237,6 +297,61 @@ func listQueryDefinitionPages(ctx context.Context, conn *cloudwatchlogs.Client, 
 			return
 		}
 	}
+}
+
+func resourceQueryDefinitionCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	// Query parameters are supported only for Logs Insights QL queries.
+	switch queryLanguage := awstypes.QueryLanguage(d.Get("query_language").(string)); queryLanguage {
+	case awstypes.QueryLanguageSql, awstypes.QueryLanguagePpl:
+		if v, ok := d.GetOk(names.AttrParameter); ok && len(v.([]any)) > 0 {
+			return fmt.Errorf(`"parameter" is not supported when "query_language" is %q`, queryLanguage)
+		}
+	}
+
+	return nil
+}
+
+func expandQueryParameters(tfList []any) []awstypes.QueryParameter {
+	apiObjects := make([]awstypes.QueryParameter, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.QueryParameter{
+			Name: aws.String(tfMap[names.AttrName].(string)),
+		}
+
+		// An empty default_value is treated as no default. SDKv2 can't tell an
+		// empty string apart from an unset argument, so it isn't sent.
+		if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
+			apiObject.DefaultValue = aws.String(v)
+		}
+
+		if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+			apiObject.Description = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenQueryParameters(apiObjects []awstypes.QueryParameter) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]any{
+			names.AttrDefaultValue: aws.ToString(apiObject.DefaultValue),
+			names.AttrDescription:  aws.ToString(apiObject.Description),
+			names.AttrName:         aws.ToString(apiObject.Name),
+		})
+	}
+
+	return tfList
 }
 
 func queryDefinitionARN(ctx context.Context, c *conns.AWSClient, queryDefinitionID string) string {

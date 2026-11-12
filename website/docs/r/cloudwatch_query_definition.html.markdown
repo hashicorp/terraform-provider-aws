@@ -29,14 +29,64 @@ EOF
 }
 ```
 
+### Query Parameters
+
+```terraform
+resource "aws_cloudwatch_query_definition" "example" {
+  name           = "errors_by_status"
+  query_language = "CWLI"
+
+  log_group_names = [
+    "/aws/logGroup1",
+  ]
+
+  query_string = <<EOF
+fields @timestamp, @message
+| filter status = {{status}}
+| sort @timestamp desc
+| limit 50
+EOF
+
+  parameter {
+    name          = "status"
+    default_value = "500"
+    description   = "HTTP status code to filter on"
+  }
+}
+```
+
+### OpenSearch SQL
+
+```terraform
+resource "aws_cloudwatch_query_definition" "example" {
+  name           = "recent_messages_sql"
+  query_language = "SQL"
+
+  query_string = "SELECT `@timestamp`, `@message` FROM `/aws/logGroup1` LIMIT 25"
+}
+```
+
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the query.
 * `query_string` - (Required) The query to save. You can read more about CloudWatch Logs Query Syntax in the [documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
-* `log_group_names` - (Optional) Specific log groups to use with the query.
+
+The following arguments are optional:
+
+* `log_group_names` - (Optional) Specific log groups to use with the query. For OpenSearch SQL queries, specify the log groups in `query_string` instead.
+* `parameter` - (Optional) Query parameters that define placeholder variables for the query string. Reference a parameter in `query_string` as `{{name}}`. Query parameters are supported only for Logs Insights QL (`CWLI`) queries. See [`parameter` Block](#parameter-block) below.
+* `query_language` - (Optional) Query language of the query. Valid values are `CWLI` (Logs Insights QL), `PPL` (OpenSearch PPL) and `SQL` (OpenSearch SQL). If not set, the language reported by AWS is used. See [Supported query languages](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_AnalyzeLogData_Languages.html).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `parameter` Block
+
+The `parameter` block supports the following arguments:
+
+* `default_value` - (Optional) Value to use for the parameter if no value is supplied when the query runs. An empty string means no default value.
+* `description` - (Optional) Description of the parameter.
+* `name` - (Required) Name of the parameter. Must start with a letter or underscore and contain only letters, digits, and underscores.
 
 ## Attribute Reference
 
