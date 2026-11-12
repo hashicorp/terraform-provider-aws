@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_crawler: Retry `CreateCrawler`/`UpdateCrawler` on `InvalidInputException: Error trying to retrieve security config...` to handle IAM/KMS/security-configuration eventual consistency
+```
