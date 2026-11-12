@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
@@ -130,8 +129,8 @@ func resourceAccelerator() *schema.Resource {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 255),
 						lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "only alphanumeric characters and hyphens are allowed"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot start with a hyphen"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
+						lazyvalidation.StringDoesNotMatch(`^-`, "cannot start with a hyphen"),
+						lazyvalidation.StringDoesNotMatch(`-$`, "cannot end with a hyphen"),
 					),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
