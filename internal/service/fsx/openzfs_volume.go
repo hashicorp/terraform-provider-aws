@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -102,7 +102,7 @@ func resourceOpenZFSVolume() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 128),
-												validation.StringMatch(regexache.MustCompile(`^[ -~]{1,128}$`), "must be either IP Address or CIDR"),
+												lazyvalidation.StringMatch(`^[ -~]{1,128}$`, "must be either IP Address or CIDR"),
 											),
 										},
 										"options": {
@@ -137,7 +137,7 @@ func resourceOpenZFSVolume() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(8, 512),
-									validation.StringMatch(regexache.MustCompile(`^arn:.*`), "must specify the full ARN of the snapshot"),
+									lazyvalidation.StringMatch(`^arn:.*`, "must specify the full ARN of the snapshot"),
 								),
 							},
 						},
@@ -148,7 +148,7 @@ func resourceOpenZFSVolume() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(23, 23),
-						validation.StringMatch(regexache.MustCompile(`^(fsvol-[0-9a-f]{17,})$`), "must specify a filesystem id i.e. fs-12345678"),
+						lazyvalidation.StringMatch(`^(fsvol-[0-9a-f]{17,})$`, "must specify a filesystem id i.e. fs-12345678"),
 					),
 				},
 				"read_only": {

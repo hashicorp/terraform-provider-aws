@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -72,7 +72,7 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 900),
-						validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
+						lazyvalidation.StringMatch(`^s3://`, "must begin with s3://"),
 					),
 				},
 				"delete_data_in_filesystem": {
@@ -86,7 +86,7 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(11, 21),
-						validation.StringMatch(regexache.MustCompile(`^fs-[0-9a-f]*`), "must begin with fs-"),
+						lazyvalidation.StringMatch(`^fs-[0-9a-f]*`, "must begin with fs-"),
 					),
 				},
 				"file_system_path": {
@@ -95,7 +95,7 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 4096),
-						validation.StringMatch(regexache.MustCompile(`^/.*`), "path must begin with /"),
+						lazyvalidation.StringMatch(`^/.*`, "path must begin with /"),
 					),
 				},
 				"imported_file_chunk_size": {
