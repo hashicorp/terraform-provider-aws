@@ -39,6 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -1352,7 +1353,7 @@ func resourceService() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 64),
-									validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase letters, numbers, underscores and hyphens"),
+									lazyvalidation.StringMatch(`^[0-9a-z_-]+$`, "must contain only lowercase letters, numbers, underscores and hyphens"),
 									validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot begin with a hyphen"),
 								),
 							},
