@@ -22,6 +22,11 @@ test/
 tests/
 # *_test.go
 
+# tools/sdkmap test fixtures are mock provider code written to exercise the
+# sdkmap analyzer, including deprecated patterns. Other testdata directories,
+# such as internal/service/*/testdata, are still scanned.
+/tools/sdkmap/testdata/
+
 # Semgrep rules folder
 .semgrep
 
