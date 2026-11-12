@@ -17,6 +17,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -91,10 +92,101 @@ func (r *s3AccessPointAttachmentResource) Schema(ctx context.Context, request re
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"ontap_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[s3AccessPointONTAPConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"volume_id": schema.StringAttribute{
+							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"file_system_identity": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[ontapFileSystemIdentityModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrType: schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.OntapFileSystemUserType](),
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"unix_user": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[ontapFileSystemUserModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+											listvalidator.ExactlyOneOf(
+												path.MatchRelative().AtParent().AtName("windows_user"),
+											),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrName: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 256),
+													},
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+									"windows_user": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[ontapFileSystemUserModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrName: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 256),
+													},
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"openzfs_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[s3AccessPointOpenZFSConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				PlanModifiers: []planmodifier.List{
@@ -219,6 +311,15 @@ func (r *s3AccessPointAttachmentResource) Schema(ctx context.Context, request re
 				Delete: true,
 			}),
 		},
+	}
+}
+
+func (r *s3AccessPointAttachmentResource) ConfigValidators(context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("ontap_configuration"),
+			path.MatchRoot("openzfs_configuration"),
+		),
 	}
 }
 
@@ -489,12 +590,28 @@ func waitS3AccessPointAttachmentDeleted(ctx context.Context, conn *fsx.Client, n
 type s3AccessPointAttachmentResourceModel struct {
 	framework.WithRegionModel
 	Name                 types.String                                                            `tfsdk:"name"`
+	ONTAPConfiguration   fwtypes.ListNestedObjectValueOf[s3AccessPointONTAPConfigurationModel]   `tfsdk:"ontap_configuration"`
 	OpenZFSConfiguration fwtypes.ListNestedObjectValueOf[s3AccessPointOpenZFSConfigurationModel] `tfsdk:"openzfs_configuration"`
 	S3AccessPoint        fwtypes.ListNestedObjectValueOf[s3AccessPointModel]                     `tfsdk:"s3_access_point"`
 	S3AccessPointAlias   types.String                                                            `tfsdk:"s3_access_point_alias"`
 	S3AccessPointARN     types.String                                                            `tfsdk:"s3_access_point_arn"`
 	Timeouts             timeouts.Value                                                          `tfsdk:"timeouts"`
 	Type                 fwtypes.StringEnum[awstypes.S3AccessPointAttachmentType]                `tfsdk:"type"`
+}
+
+type s3AccessPointONTAPConfigurationModel struct {
+	FileSystemIdentity fwtypes.ListNestedObjectValueOf[ontapFileSystemIdentityModel] `tfsdk:"file_system_identity"`
+	VolumeID           types.String                                                  `tfsdk:"volume_id"`
+}
+
+type ontapFileSystemIdentityModel struct {
+	Type        fwtypes.StringEnum[awstypes.OntapFileSystemUserType]      `tfsdk:"type"`
+	UnixUser    fwtypes.ListNestedObjectValueOf[ontapFileSystemUserModel] `tfsdk:"unix_user"`
+	WindowsUser fwtypes.ListNestedObjectValueOf[ontapFileSystemUserModel] `tfsdk:"windows_user"`
+}
+
+type ontapFileSystemUserModel struct {
+	Name types.String `tfsdk:"name"`
 }
 
 type s3AccessPointOpenZFSConfigurationModel struct {
