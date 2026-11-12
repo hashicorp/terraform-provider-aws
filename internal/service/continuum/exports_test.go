@@ -5,9 +5,13 @@ package continuum
 
 // Exports for use in tests only.
 var (
-	ResourceIntegration = newIntegrationResource
-	ResourceEnvironment = newEnvironmentResource
+	ResourceIntegration          = newIntegrationResource
+	ResourceCollector            = newCollectorResource
+	ResourceEnvironment          = newEnvironmentResource
+	ResourceCollectorAssociation = newCollectorAssociationResource
 
-	FindIntegrationByID = findIntegrationByID
-	FindEnvironmentByID = findEnvironmentByID
+	FindIntegrationByID     = findIntegrationByID
+	FindCollectorByID       = findCollectorByID
+	FindEnvironmentByID     = findEnvironmentByID
+	FindAssociatedCollector = findAssociatedCollector
 )

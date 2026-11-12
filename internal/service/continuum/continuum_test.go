@@ -22,10 +22,18 @@ func TestAccContinuum_serial(t *testing.T) {
 			acctest.CtDisappears: testAccIntegration_disappears,
 			"updateRole":         testAccIntegration_updateRole,
 		},
+		"Collector": {
+			acctest.CtBasic:      testAccCollector_basic,
+			acctest.CtDisappears: testAccCollector_disappears,
+		},
 		"Environment": {
 			acctest.CtBasic:      testAccEnvironment_basic,
 			acctest.CtDisappears: testAccEnvironment_disappears,
 			"update":             testAccEnvironment_update,
+		},
+		"CollectorAssociation": {
+			acctest.CtBasic:      testAccCollectorAssociation_basic,
+			acctest.CtDisappears: testAccCollectorAssociation_disappears,
 		},
 	}
 
