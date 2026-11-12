@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -148,7 +149,7 @@ func resourceDomain() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z]([0-9a-z-]){2,27}$`), "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
+					ValidateFunc: lazyvalidation.StringMatch(`^[a-z]([0-9a-z-]){2,27}$`, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
 				},
 				"scaling_parameters": {
 					Type:     schema.TypeList,
