@@ -157,19 +157,19 @@ The `telemetry_rule` configuration block supports the following arguments:
 
 ### `condition` Block
 
-The `condition` configuration block supports the following arguments:
+The `condition` configuration block supports the following arguments. At least one of `critical_threshold` or `warning_threshold` must be set.
 
-* `comparator` - (Optional) Comparison operator applied to the thresholds. Valid values: `GT`, `LT`, `GTE`, `LTE`.
+* `comparator` - (Required) Comparison operator applied to the thresholds. Valid values: `GT`, `LT`, `GTE`, `LTE`.
 * `critical_threshold` - (Optional) Value at which the alert enters the `CRITICAL` state.
 * `threshold_field` - (Optional) Field of the query results that the thresholds are compared with.
-* `threshold_mode` - (Optional) How the thresholds are applied to query results. Valid values: `COUNT_OF_RESULTS`, `FIELD_VALUE`.
+* `threshold_mode` - (Required) How the thresholds are applied to query results. Valid values: `COUNT_OF_RESULTS`, `FIELD_VALUE`.
 * `warning_threshold` - (Optional) Value at which the alert enters the `WARNING` state.
 
 ### `evaluation` Block
 
 The `evaluation` configuration block supports the following arguments:
 
-* `interval_seconds` - (Required) Interval between evaluations, in seconds.
+* `interval_seconds` - (Required) Interval between evaluations, in seconds. Valid values: `30`, `60`, `120`, `300`, `600`, `900`, `1800`, `3600`.
 * `pending_duration_seconds` - (Optional) How long a breach must last before the alert fires, in seconds. Must be a multiple of `interval_seconds`.
 * `recovery_duration_seconds` - (Optional) How long a recovery must last before the alert clears, in seconds. Must be a multiple of `interval_seconds`.
 

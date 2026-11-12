@@ -46,6 +46,7 @@ func TestAccCloudWatchOmni_serial(t *testing.T) {
 			acctest.CtDisappears:   testAccAlert_disappears,
 			"disappearsSpace":      testAccAlert_disappearsSpace,
 			"update":               testAccAlert_update,
+			"validation":           testAccAlert_validation,
 			"Identity":             testAccCloudWatchOmniAlert_identitySerial,
 			"tags":                 testAccCloudWatchOmniAlert_tagsSerial,
 			"List_basic":           testAccAlert_List_basic,

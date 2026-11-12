@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -34,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -183,14 +185,17 @@ func (r *alertResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
+											Validators: []validator.Object{
+												// A condition must keep at least one firing tier.
+												tfobjectvalidator.AtLeastOneOfChildren(
+													path.MatchRelative().AtName("critical_threshold"),
+													path.MatchRelative().AtName("warning_threshold"),
+												),
+											},
 											Attributes: map[string]schema.Attribute{
 												"comparator": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.Comparator](),
-													Optional:   true,
-													Computed:   true,
-													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.UseStateForUnknown(),
-													},
+													Required:   true,
 												},
 												"critical_threshold": schema.Float64Attribute{
 													Optional: true,
@@ -200,11 +205,7 @@ func (r *alertResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 												},
 												"threshold_mode": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.ThresholdMode](),
-													Optional:   true,
-													Computed:   true,
-													PlanModifiers: []planmodifier.String{
-														stringplanmodifier.UseStateForUnknown(),
-													},
+													Required:   true,
 												},
 												"warning_threshold": schema.Float64Attribute{
 													Optional: true,
