@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	aliasNamePattern        = aliasNamePrefix + `[0-9A-Za-z_/-]+`
+	aliasNameCharPattern    = `[0-9A-Za-z_/-]+`
+	aliasNamePattern        = aliasNamePrefix + aliasNameCharPattern
 	multiRegionKeyIDPattern = `mrk-[0-9a-f]{32}`
 )
 
@@ -37,15 +38,10 @@ func validGrantName(v any, k string) (ws []string, es []error) {
 	return
 }
 
-func validNameForDataSource(v any, k string) (ws []string, es []error) {
-	value := v.(string)
-
-	if !aliasNameRegex().MatchString(value) {
-		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
-	}
-	return
-}
+var validNameForDataSource = lazyvalidation.StringMatch(
+	`^`+aliasNamePattern+`$`,
+	"must begin with 'alias/' and only contain "+aliasNameCharPattern,
+)
 
 func validNameForResource(v any, k string) (ws []string, es []error) {
 	value := v.(string)
