@@ -571,6 +571,93 @@ func TestAccECSDaemonTaskDefinition_Volume_withoutHostPath(t *testing.T) {
 	})
 }
 
+func TestAccECSDaemonTaskDefinition_Volume_logDriverVolumeConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_daemon_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDaemonTaskDefinitionConfig_volumeLogDriverVolumeConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						names.AttrName:                      "container-logs",
+						"host.#":                            "0",
+						"log_driver_volume_configuration.#": "1",
+						"log_driver_volume_configuration.0.driver": "json-file",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccDaemonTaskDefinitionConfig_volumeLogDriverVolumeConfigurationReplacedByHost(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						names.AttrName:                      "container-logs",
+						"host.#":                            "1",
+						"log_driver_volume_configuration.#": "0",
+					}),
+				),
+			},
+			{
+				Config: testAccDaemonTaskDefinitionConfig_volumeLogDriverVolumeConfiguration(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDaemonTaskDefinitionExists(ctx, t, resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						names.AttrName:                      "container-logs",
+						"host.#":                            "0",
+						"log_driver_volume_configuration.#": "1",
+						"log_driver_volume_configuration.0.driver": "json-file",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSDaemonTaskDefinition_Volume_logDriverVolumeConfigurationConflictsWithHost(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDaemonTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDaemonTaskDefinitionConfig_volumeLogDriverVolumeConfigurationAndHost(rName),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
+			},
+		},
+	})
+}
+
 func TestAccECSDaemonTaskDefinition_noCPUMemory(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1187,6 +1274,102 @@ resource "aws_ecs_daemon_task_definition" "test" {
 
   volume {
     name = "scratch"
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_volumeLogDriverVolumeConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "log-reader"
+    image     = "public.ecr.aws/docker/library/busybox:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+    command   = ["sh", "-c", "sleep 3600"]
+
+    mount_point {
+      source_volume  = "container-logs"
+      container_path = "/var/log/ecs/json-file"
+      read_only      = true
+    }
+  }
+
+  volume {
+    name = "container-logs"
+
+    log_driver_volume_configuration {
+      driver = "json-file"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_volumeLogDriverVolumeConfigurationReplacedByHost(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "log-reader"
+    image     = "public.ecr.aws/docker/library/busybox:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+    command   = ["sh", "-c", "sleep 3600"]
+
+    mount_point {
+      source_volume  = "container-logs"
+      container_path = "/var/log/ecs/json-file"
+      read_only      = true
+    }
+  }
+
+  volume {
+    name = "container-logs"
+
+    host {
+      source_path = "/var/log"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccDaemonTaskDefinitionConfig_volumeLogDriverVolumeConfigurationAndHost(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_daemon_task_definition" "test" {
+  family = %[1]q
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "log-reader"
+    image     = "public.ecr.aws/docker/library/busybox:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+  }
+
+  volume {
+    name = "container-logs"
+
+    host {
+      source_path = "/var/log"
+    }
+
+    log_driver_volume_configuration {
+      driver = "json-file"
+    }
   }
 }
 `, rName)
