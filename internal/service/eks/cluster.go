@@ -763,33 +763,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		func(ctx context.Context) (*eks.CreateClusterOutput, error) {
 			return conn.CreateCluster(ctx, &input)
 		},
-		func(err error) (bool, error) {
-			// InvalidParameterException: roleArn, arn:aws:iam::123456789012:role/XXX, does not exist
-			if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "does not exist") {
-				return true, err
-			}
-
-			// InvalidParameterException: Error in role params
-			if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "Error in role params") {
-				return true, err
-			}
-
-			if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "Role could not be assumed because the trusted entity is not correct") {
-				return true, err
-			}
-
-			// InvalidParameterException: The provided role doesn't have the Amazon EKS Managed Policies associated with it. Please ensure the following policy is attached: arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
-			if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "The provided role doesn't have the Amazon EKS Managed Policies associated with it") {
-				return true, err
-			}
-
-			// InvalidParameterException: IAM role's policy must include the `ec2:DescribeSubnets` action
-			if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "IAM role's policy must include") {
-				return true, err
-			}
-
-			return false, err
-		},
+		isClusterCreateErrorRetryable,
 	)
 
 	if err != nil {
@@ -803,6 +777,39 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
+}
+
+func isClusterCreateErrorRetryable(err error) (bool, error) {
+	// InvalidParameterException: roleArn, arn:aws:iam::123456789012:role/XXX, does not exist
+	if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "does not exist") {
+		return true, err
+	}
+
+	// InvalidParameterException: Error in role params
+	if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "Error in role params") {
+		return true, err
+	}
+
+	if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "Role could not be assumed because the trusted entity is not correct") {
+		return true, err
+	}
+
+	// InvalidParameterException: The provided role doesn't have the Amazon EKS Managed Policies associated with it. Please ensure the following policy is attached: arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+	if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "The provided role doesn't have the Amazon EKS Managed Policies associated with it") {
+		return true, err
+	}
+
+	// InvalidParameterException: IAM role's policy must include the `ec2:DescribeSubnets` action
+	if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "IAM role's policy must include") {
+		return true, err
+	}
+
+	// InvalidParameterException: Access denied to KMS key arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab due to explicit deny policy or revoked grant
+	if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "due to explicit deny policy or revoked grant") {
+		return true, err
+	}
+
+	return false, err
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
