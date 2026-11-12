@@ -33,7 +33,8 @@ func RegisterSweepers() {
 		F:    sweepPools,
 	})
 	awsv2.Register("aws_pinpointsmsvoicev2_account_default_protect_configuration", sweepAccountDefaultProtectConfigurations)
-	awsv2.Register("aws_pinpointsmsvoicev2_protect_configuration", sweepProtectConfigurations, "aws_pinpointsmsvoicev2_account_default_protect_configuration")
+	awsv2.Register("aws_pinpointsmsvoicev2_protect_configuration", sweepProtectConfigurations, "aws_pinpointsmsvoicev2_account_default_protect_configuration", "aws_pinpointsmsvoicev2_protect_configuration_association")
+	awsv2.Register("aws_pinpointsmsvoicev2_protect_configuration_association", sweepProtectConfigurationAssociations)
 	resource.AddTestSweepers("aws_pinpointsmsvoicev2_sender_id", &resource.Sweeper{
 		Name:         "aws_pinpointsmsvoicev2_sender_id",
 		F:            sweepSenderIDs,
@@ -190,6 +191,28 @@ func sweepAccountDefaultProtectConfigurations(ctx context.Context, client *conns
 	}, nil
 }
 
+func sweepProtectConfigurationAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input pinpointsmsvoicev2.DescribeConfigurationSetsInput
+	conn := client.PinpointSMSVoiceV2Client(ctx)
+	var sweepResources []sweep.Sweepable
+
+	for v, err := range listConfigurationSets(ctx, conn, &input) {
+		if err != nil {
+			return nil, err
+		}
+
+		if aws.ToString(v.ProtectConfigurationId) == "" {
+			continue
+		}
+
+		sweepResources = append(sweepResources, framework.NewSweepResource(newProtectConfigurationAssociationResource, client,
+			framework.NewAttribute("configuration_set_name", aws.ToString(v.ConfigurationSetName)),
+			framework.NewAttribute("protect_configuration_id", aws.ToString(v.ProtectConfigurationId))))
+	}
+
+	return sweepResources, nil
+}
+
 func sweepProtectConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	var input pinpointsmsvoicev2.DescribeProtectConfigurationsInput
 	conn := client.PinpointSMSVoiceV2Client(ctx)
@@ -249,7 +272,7 @@ func (s protectConfigurationSweeper) Delete(ctx context.Context, optFns ...tfres
 			ProtectConfigurationId: aws.String(id),
 		}
 		_, err := s.conn.DisassociateProtectConfiguration(ctx, &input)
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "NOT_ASSOCIATED") {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || isProtectConfigurationNotAssociatedError(err) {
 			continue
 		}
 		if err != nil {

@@ -13,20 +13,22 @@ var (
 	ResourcePhoneNumber                        = newPhoneNumberResource
 	ResourcePool                               = newPoolResource
 	ResourceProtectConfiguration               = newProtectConfigurationResource
+	ResourceProtectConfigurationAssociation    = newProtectConfigurationAssociationResource
 	ResourceResourcePolicy                     = newResourcePolicyResource
 	ResourceSenderID                           = newSenderIDResource
 
-	FindAccountDefaultProtectConfiguration = findAccountDefaultProtectConfiguration
-	FindConfigurationSetByID               = findConfigurationSetByID
-	FindEventDestinationByTwoPartKey       = findEventDestinationByTwoPartKey
-	FindKeywordByTwoPartKey                = findKeywordByTwoPartKey
-	FindOptOutListByID                     = findOptOutListByID
-	FindPhoneNumberByID                    = findPhoneNumberByID
-	FindPoolByID                           = findPoolByID
-	FindProtectConfigurationByID           = findProtectConfigurationByID
-	FindProtectConfigurationCountryRuleSet = findProtectConfigurationCountryRuleSet
-	FindResourcePolicyByARN                = findResourcePolicyByARN
-	FindSenderIDByTwoPartKey               = findSenderIDByTwoPartKey
+	FindAccountDefaultProtectConfiguration                    = findAccountDefaultProtectConfiguration
+	FindConfigurationSetByID                                  = findConfigurationSetByID
+	FindEventDestinationByTwoPartKey                          = findEventDestinationByTwoPartKey
+	FindKeywordByTwoPartKey                                   = findKeywordByTwoPartKey
+	FindOptOutListByID                                        = findOptOutListByID
+	FindPhoneNumberByID                                       = findPhoneNumberByID
+	FindPoolByID                                              = findPoolByID
+	FindProtectConfigurationAssociationByConfigurationSetName = findProtectConfigurationAssociationByConfigurationSetName
+	FindProtectConfigurationByID                              = findProtectConfigurationByID
+	FindProtectConfigurationCountryRuleSet                    = findProtectConfigurationCountryRuleSet
+	FindResourcePolicyByARN                                   = findResourcePolicyByARN
+	FindSenderIDByTwoPartKey                                  = findSenderIDByTwoPartKey
 
 	ProtectConfigurationCountryRuleSetUpdates = protectConfigurationCountryRuleSetUpdates
 	ValidatePhoneIdentity                     = validatePhoneIdentity
