@@ -5,6 +5,7 @@ FEATURES:
 * **New List Resource:** `aws_devopsagent_asset_file` ([#50903](https://github.com/hashicorp/terraform-provider-aws/issues/50903))
 * **New List Resource:** `aws_pinpointsmsvoicev2_protect_configuration_association` ([#50915](https://github.com/hashicorp/terraform-provider-aws/issues/50915))
 * **New Resource:** `aws_devopsagent_asset_file` ([#50903](https://github.com/hashicorp/terraform-provider-aws/issues/50903))
+* **New Resource:** `aws_pinpointsmsvoicev2_account_default_protect_configuration` ([#50934](https://github.com/hashicorp/terraform-provider-aws/issues/50934))
 * **New Resource:** `aws_pinpointsmsvoicev2_protect_configuration_association` ([#50915](https://github.com/hashicorp/terraform-provider-aws/issues/50915))
 
 ENHANCEMENTS:
