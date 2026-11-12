@@ -180,13 +180,7 @@ func testAccDelegationSignerRecord_upgradeFromV6_69_1(t *testing.T) {
 		CheckDestroy: testAccCheckDelegationSignerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.69.1",
-					},
-				},
-				ConfigDirectory: config.StaticDirectory("testdata/DelegationSignerRecord/ignore_changes/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DelegationSignerRecord/ignore_changes_v6.69.1/"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegationSignerAssociationExists(ctx, t, resourceName),
