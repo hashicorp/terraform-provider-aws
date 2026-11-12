@@ -553,7 +553,7 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	if d.HasChange("primary_replication_group_id") {
-		member, err := findGlobalReplicationGroupMemberByID(ctx, conn, d.Id(), d.Get("primary_replication_group_id").(string), "")
+		member, err := findGlobalReplicationGroupMemberByID(ctx, conn, d.Id(), d.Get("primary_replication_group_id").(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -836,9 +836,17 @@ func waitGlobalReplicationGroupDeleted(ctx context.Context, conn *elasticache.Cl
 	return nil, err
 }
 
-// findGlobalReplicationGroupMemberByID returns the member with the given replication group ID.
-// Replication group IDs are only unique within a Region, so a non-empty replicationGroupRegion also has to match.
-func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID, replicationGroupRegion string) (*awstypes.GlobalReplicationGroupMember, error) {
+func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string) (*awstypes.GlobalReplicationGroupMember, error) {
+	return findGlobalReplicationGroupMember(ctx, conn, globalReplicationGroupID, replicationGroupID, tfslices.PredicateTrue[*awstypes.GlobalReplicationGroupMember]())
+}
+
+func findGlobalReplicationGroupMemberByIDAndRegion(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID, replicationGroupRegion string) (*awstypes.GlobalReplicationGroupMember, error) {
+	return findGlobalReplicationGroupMember(ctx, conn, globalReplicationGroupID, replicationGroupID, func(v *awstypes.GlobalReplicationGroupMember) bool {
+		return aws.ToString(v.ReplicationGroupRegion) == replicationGroupRegion
+	})
+}
+
+func findGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string, filter tfslices.Predicate[*awstypes.GlobalReplicationGroupMember]) (*awstypes.GlobalReplicationGroupMember, error) {
 	globalReplicationGroup, err := findGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 
 	if err != nil {
@@ -850,7 +858,7 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 
 	for _, v := range globalReplicationGroup.Members {
-		if aws.ToString(v.ReplicationGroupId) == replicationGroupID && (replicationGroupRegion == "" || aws.ToString(v.ReplicationGroupRegion) == replicationGroupRegion) {
+		if aws.ToString(v.ReplicationGroupId) == replicationGroupID && filter(&v) {
 			return &v, nil
 		}
 	}
@@ -862,7 +870,7 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 
 func statusGlobalReplicationGroupMember(conn *elasticache.Client, globalReplicationGroupID, replicationGroupID, replicationGroupRegion string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		output, err := findGlobalReplicationGroupMemberByID(ctx, conn, globalReplicationGroupID, replicationGroupID, replicationGroupRegion)
+		output, err := findGlobalReplicationGroupMemberByIDAndRegion(ctx, conn, globalReplicationGroupID, replicationGroupID, replicationGroupRegion)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
