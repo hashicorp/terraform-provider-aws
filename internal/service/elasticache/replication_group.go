@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
@@ -1804,8 +1803,8 @@ var validateReplicationGroupID schema.SchemaValidateFunc = validation.All(
 	validation.StringLenBetween(1, 40),
 	lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "must contain only alphanumeric characters and hyphens"),
 	lazyvalidation.StringMatch(`^[A-Za-z]`, "must begin with a letter"),
-	validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-	validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
+	lazyvalidation.StringDoesNotMatch(`--`, "cannot contain two consecutive hyphens"),
+	lazyvalidation.StringDoesNotMatch(`-$`, "cannot end with a hyphen"),
 )
 
 // replicationGroupValidateMultiAZAutomaticFailover validates that `automatic_failover_enabled` is set when `multi_az_enabled` is true
