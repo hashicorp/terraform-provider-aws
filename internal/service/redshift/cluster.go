@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
@@ -112,8 +111,8 @@ func resourceCluster() *schema.Resource {
 					ValidateFunc: validation.All(
 						lazyvalidation.StringMatch(`^[0-9a-z-]+$`, "must contain only lowercase alphanumeric characters and hyphens"),
 						lazyvalidation.StringMatch(`(?i)^[a-z]`, "first character must be a letter"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
+						lazyvalidation.StringDoesNotMatch(`--`, "cannot contain two consecutive hyphens"),
+						lazyvalidation.StringDoesNotMatch(`-$`, "cannot end with a hyphen"),
 					),
 				},
 				"cluster_namespace_arn": {
@@ -214,8 +213,8 @@ func resourceCluster() *schema.Resource {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 255),
 						lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "must only contain alphanumeric characters and hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+						lazyvalidation.StringDoesNotMatch(`--`, "cannot contain two consecutive hyphens"),
+						lazyvalidation.StringDoesNotMatch(`-$`, "cannot end in a hyphen"),
 					),
 				},
 				"iam_roles": {

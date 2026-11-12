@@ -12,7 +12,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
@@ -68,8 +67,8 @@ func resourceParameterGroup() *schema.Resource {
 						validation.StringLenBetween(1, 255),
 						lazyvalidation.StringMatch(`^[0-9a-z-]+$`, "must contain only lowercase alphanumeric characters and hyphens"),
 						lazyvalidation.StringMatch(`(?i)^[a-z]`, "first character must be a letter"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
+						lazyvalidation.StringDoesNotMatch(`--`, "cannot contain two consecutive hyphens"),
+						lazyvalidation.StringDoesNotMatch(`-$`, "cannot end with a hyphen"),
 					),
 				},
 				names.AttrParameter: {
