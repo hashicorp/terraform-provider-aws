@@ -22,6 +22,11 @@ func TestAccContinuum_serial(t *testing.T) {
 			acctest.CtDisappears: testAccIntegration_disappears,
 			"updateRole":         testAccIntegration_updateRole,
 		},
+		"Environment": {
+			acctest.CtBasic:      testAccEnvironment_basic,
+			acctest.CtDisappears: testAccEnvironment_disappears,
+			"update":             testAccEnvironment_update,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

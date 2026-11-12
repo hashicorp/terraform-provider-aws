@@ -6,6 +6,8 @@ package continuum
 // Exports for use in tests only.
 var (
 	ResourceIntegration = newIntegrationResource
+	ResourceEnvironment = newEnvironmentResource
 
 	FindIntegrationByID = findIntegrationByID
+	FindEnvironmentByID = findEnvironmentByID
 )
