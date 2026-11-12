@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -100,7 +100,7 @@ func resourceStackInstances() *schema.Resource {
 								Type:          schema.TypeString,
 								Optional:      true,
 								ConflictsWith: []string{AttrAccounts},
-								ValidateFunc:  validation.StringMatch(regexache.MustCompile(`(s3://|http(s?)://).+`), ""),
+								ValidateFunc:  lazyvalidation.StringMatch(`(s3://|http(s?)://).+`, ""),
 							},
 							"organizational_unit_ids": { // create input
 								Type:          schema.TypeSet,
@@ -109,7 +109,7 @@ func resourceStackInstances() *schema.Resource {
 								ConflictsWith: []string{AttrAccounts},
 								Elem: &schema.Schema{
 									Type:         schema.TypeString,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`), ""),
+									ValidateFunc: lazyvalidation.StringMatch(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`, ""),
 								},
 							},
 						},
@@ -162,7 +162,7 @@ func resourceStackInstances() *schema.Resource {
 								MinItems: 1,
 								Elem: &schema.Schema{
 									Type:         schema.TypeString,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
+									ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z-]{1,128}$`, ""),
 								},
 							},
 						},

@@ -8,7 +8,6 @@ package cloudformation
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -101,7 +101,7 @@ func dataSourceType() *schema.Resource {
 					Computed: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(10, 204),
-						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
+						lazyvalidation.StringMatch(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}(::MODULE){0,1}`, "three alphanumeric character sections separated by double colons (::)"),
 					),
 				},
 				"version_id": {
