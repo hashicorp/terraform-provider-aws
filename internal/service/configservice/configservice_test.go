@@ -75,10 +75,11 @@ func TestAccConfigService_serial(t *testing.T) {
 			"tags":               testAccConnector_tags,
 		},
 		"DeliveryChannel": {
-			acctest.CtBasic:      testAccDeliveryChannel_basic,
-			"allParams":          testAccDeliveryChannel_allParams,
-			acctest.CtDisappears: testAccDeliveryChannel_disappears,
-			"Identity":           testAccConfigServiceDeliveryChannel_identitySerial,
+			acctest.CtBasic:                     testAccDeliveryChannel_basic,
+			"allParams":                         testAccDeliveryChannel_allParams,
+			acctest.CtDisappears:                testAccDeliveryChannel_disappears,
+			"snapshotDeliveryPropertiesRemoved": testAccDeliveryChannel_snapshotDeliveryPropertiesRemoved,
+			"Identity":                          testAccConfigServiceDeliveryChannel_identitySerial,
 		},
 		"OrganizationConformancePack": {
 			acctest.CtBasic:          testAccOrganizationConformancePack_basic,
