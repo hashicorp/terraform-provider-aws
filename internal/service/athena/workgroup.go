@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -76,7 +76,7 @@ func resourceWorkGroup() *schema.Resource {
 										names.AttrKMSKey: {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
+											ValidateFunc: lazyvalidation.StringMatch(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`, "must be a valid KMS Key ARN or Alias"),
 										},
 									},
 								},
@@ -224,7 +224,7 @@ func resourceWorkGroup() *schema.Resource {
 														Optional:         true,
 														DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging,
 														ValidateFunc: validation.All(
-															validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._/-]+$`), "must contain only alphanumeric characters, periods, underscores, hyphens, and slashes"),
+															lazyvalidation.StringMatch(`^[a-zA-Z0-9._/-]+$`, "must contain only alphanumeric characters, periods, underscores, hyphens, and slashes"),
 															validation.StringLenBetween(1, 512),
 														),
 													},
@@ -233,7 +233,7 @@ func resourceWorkGroup() *schema.Resource {
 														Optional:         true,
 														DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringCloudWatchLogging,
 														ValidateFunc: validation.All(
-															validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._/-]+$`), "must contain only alphanumeric characters, periods, underscores, hyphens, and slashes"),
+															lazyvalidation.StringMatch(`^[a-zA-Z0-9._/-]+$`, "must contain only alphanumeric characters, periods, underscores, hyphens, and slashes"),
 															validation.StringLenBetween(1, 512),
 														),
 													},
@@ -295,7 +295,7 @@ func resourceWorkGroup() *schema.Resource {
 														Type:             schema.TypeString,
 														Optional:         true,
 														DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringManagedLogging,
-														ValidateFunc:     validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
+														ValidateFunc:     lazyvalidation.StringMatch(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`, "must be a valid KMS Key ARN or Alias"),
 													},
 												},
 											},
@@ -335,7 +335,7 @@ func resourceWorkGroup() *schema.Resource {
 														Type:             schema.TypeString,
 														Optional:         true,
 														DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringS3Logging,
-														ValidateFunc:     validation.StringMatch(regexache.MustCompile(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`), "must be a valid KMS Key ARN or Alias"),
+														ValidateFunc:     lazyvalidation.StringMatch(`^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:key/?[a-zA-Z_0-9+=,.@\-_/]+$|^arn:aws[a-z\-]*:kms:([a-z0-9\-]+):\d{12}:alias/?[a-zA-Z_0-9+=,.@\-_/]+$|^alias/[a-zA-Z0-9/_-]+$|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`, "must be a valid KMS Key ARN or Alias"),
 													},
 													"log_location": {
 														Type:             schema.TypeString,
@@ -343,7 +343,7 @@ func resourceWorkGroup() *schema.Resource {
 														DiffSuppressFunc: diffSuppressWorkGroupConfigurationMonitoringS3Logging,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 1024),
-															validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][a-z0-9\-]*[a-z0-9](/.*)?$`), "must be a valid S3 URI starting with s3://"),
+															lazyvalidation.StringMatch(`^s3://[a-z0-9][a-z0-9\-]*[a-z0-9](/.*)?$`, "must be a valid S3 URI starting with s3://"),
 														),
 													},
 												},
@@ -431,7 +431,7 @@ func resourceWorkGroup() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+$`, "must contain only alphanumeric characters, periods, underscores, and hyphens"),
 					),
 				},
 				names.AttrState: {

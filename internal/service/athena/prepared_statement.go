@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -56,7 +56,7 @@ func resourcePreparedStatement() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_@:]{1,256}$`), ""),
+					ValidateFunc: lazyvalidation.StringMatch(`^[a-zA-Z_][a-zA-Z0-9_@:]{1,256}$`, ""),
 				},
 				"query_statement": {
 					Type:         schema.TypeString,
@@ -67,7 +67,7 @@ func resourcePreparedStatement() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9._-]{1,128}$`), ""),
+					ValidateFunc: lazyvalidation.StringMatch(`^[a-zA-Z0-9._-]{1,128}$`, ""),
 				},
 			}
 		},
