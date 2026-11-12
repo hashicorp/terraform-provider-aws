@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -59,7 +58,7 @@ func ResourceCertificate() *schema.Resource {
 					Optional:     true,
 					Computed:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+					ValidateFunc: lazyvalidation.StringDoesNotMatch(`\.$`, "cannot end with a period"),
 				},
 				"domain_validation_options": {
 					Type:     schema.TypeSet,
@@ -105,7 +104,7 @@ func ResourceCertificate() *schema.Resource {
 						Type: schema.TypeString,
 						ValidateFunc: validation.All(
 							validation.StringLenBetween(1, 253),
-							validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+							lazyvalidation.StringDoesNotMatch(`\.$`, "cannot end with a period"),
 						),
 					},
 					Set: schema.HashString,
