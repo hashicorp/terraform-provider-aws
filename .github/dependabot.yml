@@ -20,44 +20,6 @@ updates:
       aws-sdk-go-v1:
         patterns:
           - "github.com/aws/aws-sdk-go"
-      aws-sdk-go-v2-services-a-c:
-        patterns:
-          - "github.com/aws/aws-sdk-go-v2/service/a*"
-          - "github.com/aws/aws-sdk-go-v2/service/b*"
-          - "github.com/aws/aws-sdk-go-v2/service/c*"
-      aws-sdk-go-v2-services-d-i:
-        patterns:
-          - "github.com/aws/aws-sdk-go-v2/service/d*"
-          - "github.com/aws/aws-sdk-go-v2/service/e*"
-          - "github.com/aws/aws-sdk-go-v2/service/f*"
-          - "github.com/aws/aws-sdk-go-v2/service/g*"
-          - "github.com/aws/aws-sdk-go-v2/service/h*"
-          - "github.com/aws/aws-sdk-go-v2/service/i*"
-      aws-sdk-go-v2-services-j-q:
-        patterns:
-          - "github.com/aws/aws-sdk-go-v2/service/j*"
-          - "github.com/aws/aws-sdk-go-v2/service/k*"
-          - "github.com/aws/aws-sdk-go-v2/service/l*"
-          - "github.com/aws/aws-sdk-go-v2/service/m*"
-          - "github.com/aws/aws-sdk-go-v2/service/n*"
-          - "github.com/aws/aws-sdk-go-v2/service/o*"
-          - "github.com/aws/aws-sdk-go-v2/service/p*"
-          - "github.com/aws/aws-sdk-go-v2/service/q*"
-      aws-sdk-go-v2-services-r-z:
-        patterns:
-          - "github.com/aws/aws-sdk-go-v2/service/r*"
-          - "github.com/aws/aws-sdk-go-v2/service/s*"
-          - "github.com/aws/aws-sdk-go-v2/service/t*"
-          - "github.com/aws/aws-sdk-go-v2/service/u*"
-          - "github.com/aws/aws-sdk-go-v2/service/v*"
-          - "github.com/aws/aws-sdk-go-v2/service/w*"
-          - "github.com/aws/aws-sdk-go-v2/service/x*"
-          - "github.com/aws/aws-sdk-go-v2/service/y*"
-          - "github.com/aws/aws-sdk-go-v2/service/z*"
-      aws-sdk-go-v2-other:
-        patterns:
-          - "github.com/aws/aws-sdk-go-v2"
-          - "github.com/aws/aws-sdk-go-v2/*"
       aws-sdk-go-base:
         patterns:
           - "github.com/hashicorp/aws-sdk-go-base/v2"
@@ -66,6 +28,9 @@ updates:
         patterns:
           - "github.com/hashicorp/terraform-plugin-*"
     ignore:
+      # AWS SDK for Go v2 is updated by a dedicated workflow.
+      - dependency-name: "github.com/aws/aws-sdk-go-v2"
+      - dependency-name: "github.com/aws/aws-sdk-go-v2/*"
       # aws/smithy-go should only be updated via aws/aws-sdk-go-v2
       - dependency-name: "github.com/aws/smithy-go"
       # go-cty should only be updated via terraform-plugin-sdk
