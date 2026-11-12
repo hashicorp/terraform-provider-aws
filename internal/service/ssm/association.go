@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -68,7 +68,7 @@ func resourceAssociation() *schema.Resource {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 128),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]{3,128}$`, "must contain only alphanumeric, underscore, hyphen, or period characters"),
 					),
 				},
 				"automation_target_parameter_name": {
@@ -92,17 +92,17 @@ func resourceAssociation() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)$`), ""),
+					ValidateFunc: lazyvalidation.StringMatch(`^([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)$`, ""),
 				},
 				"max_concurrency": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a valid number (e.g. 10) or percentage including the percent sign (e.g. 10%)"),
+					ValidateFunc: lazyvalidation.StringMatch(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`, "must be a valid number (e.g. 10) or percentage including the percent sign (e.g. 10%)"),
 				},
 				"max_errors": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be a valid number (e.g. 10) or percentage including the percent sign (e.g. 10%)"),
+					ValidateFunc: lazyvalidation.StringMatch(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`, "must be a valid number (e.g. 10) or percentage including the percent sign (e.g. 10%)"),
 				},
 				names.AttrName: {
 					Type:     schema.TypeString,
