@@ -10,19 +10,18 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -54,13 +53,10 @@ func resourceKeyspace() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					ForceNew: true,
-					Required: true,
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z_]{0,47}$`),
-						"The name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
-					),
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z][0-9A-Za-z_]{0,47}$`, "The name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores."),
 				},
 				"replication_specification": {
 					Type:     schema.TypeList,
