@@ -215,6 +215,22 @@ func resourceServer() *schema.Resource {
 								Computed:     true,
 								ValidateFunc: validation.StringLenBetween(0, 15),
 							},
+							"proxy_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"sftp_mode": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ProxyMode](),
+										},
+									},
+								},
+							},
 							"set_stat_option": {
 								Type:             schema.TypeString,
 								Optional:         true,
@@ -1114,6 +1130,17 @@ func expandProtocolDetails(tfList []any) *awstypes.ProtocolDetails {
 		apiObject.PassiveIp = aws.String(v)
 	}
 
+	if v, ok := tfMap["proxy_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMapProxyConfig := v[0].(map[string]any)
+		proxyConfig := &awstypes.ProxyConfig{}
+
+		if v, ok := tfMapProxyConfig["sftp_mode"].(string); ok && len(v) > 0 {
+			proxyConfig.SftpMode = awstypes.ProxyMode(v)
+		}
+
+		apiObject.ProxyConfig = proxyConfig
+	}
+
 	if v, ok := tfMap["set_stat_option"].(string); ok && len(v) > 0 {
 		apiObject.SetStatOption = awstypes.SetStatOption(v)
 	}
@@ -1141,6 +1168,12 @@ func flattenProtocolDetails(apiObject *awstypes.ProtocolDetails) []any {
 
 	if v := apiObject.PassiveIp; v != nil {
 		tfMap["passive_ip"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ProxyConfig; v != nil {
+		tfMap["proxy_config"] = []any{map[string]any{
+			"sftp_mode": v.SftpMode,
+		}}
 	}
 
 	return []any{tfMap}
