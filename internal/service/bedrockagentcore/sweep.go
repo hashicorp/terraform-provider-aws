@@ -20,6 +20,7 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_bedrockagentcore_capacity_provider", sweepCapacityProviders, "aws_bedrockagentcore_agent_runtime")
 	awsv2.Register("aws_bedrockagentcore_agent_runtime", sweepAgentRuntimes, "aws_bedrockagentcore_agent_runtime_endpoint")
 	awsv2.Register("aws_bedrockagentcore_agent_runtime_endpoint", sweepAgentRuntimeEndpoints, "aws_bedrockagentcore_harness")
 	awsv2.Register("aws_bedrockagentcore_workload_identity", sweepWorkloadIdentities)
