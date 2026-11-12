@@ -6,6 +6,7 @@
 package rds
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -2159,6 +2160,28 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 		}
 	} else {
 		d.Set("listener_endpoint", nil)
+	}
+
+	// When modifications are pending (e.g., scheduled for the next maintenance
+	// window because apply_immediately is false), the API returns the current
+	// (pre-modification) values for the instance attributes. Terraform has already
+	// recorded the requested values in state, so reading back the old values causes
+	// a perpetual diff on the next plan. Override affected attributes with their
+	// pending values so that state reflects what was requested.
+	// Engine version is handled separately by dbSetResourceDataEngineVersionFromInstance.
+	if p := v.PendingModifiedValues; p != nil {
+		d.Set(names.AttrAllocatedStorage, cmp.Or(p.AllocatedStorage, v.AllocatedStorage))
+		d.Set("backup_retention_period", cmp.Or(p.BackupRetentionPeriod, v.BackupRetentionPeriod))
+		d.Set("ca_cert_identifier", cmp.Or(p.CACertificateIdentifier, v.CACertificateIdentifier))
+		d.Set("instance_class", cmp.Or(p.DBInstanceClass, v.DBInstanceClass))
+		d.Set("db_subnet_group_name", cmp.Or(p.DBSubnetGroupName, v.DBSubnetGroup.DBSubnetGroupName))
+		d.Set("dedicated_log_volume", cmp.Or(p.DedicatedLogVolume, v.DedicatedLogVolume))
+		d.Set("iam_database_authentication_enabled", cmp.Or(p.IAMDatabaseAuthenticationEnabled, v.IAMDatabaseAuthenticationEnabled))
+		d.Set(names.AttrIOPS, cmp.Or(p.Iops, v.Iops))
+		d.Set("license_model", cmp.Or(p.LicenseModel, v.LicenseModel))
+		d.Set("multi_az", cmp.Or(p.MultiAZ, v.MultiAZ))
+		d.Set("storage_throughput", cmp.Or(p.StorageThroughput, v.StorageThroughput))
+		d.Set(names.AttrStorageType, cmp.Or(p.StorageType, v.StorageType))
 	}
 
 	dbSetResourceDataEngineVersionFromInstance(d, v)
