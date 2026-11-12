@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -154,7 +154,7 @@ func resourceEventSourceMapping() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.Any(
 												verify.ValidARN,
-												validation.StringMatch(regexache.MustCompile(kafkaOrARNPattern), "must be a valid ARN or kafka://broker/topic format"),
+												lazyvalidation.StringMatch(kafkaOrARNPattern, "must be a valid ARN or kafka://broker/topic format"),
 											),
 										},
 									},
@@ -503,7 +503,7 @@ func kafkaSchemaRegistryConfigSchema() *schema.Schema {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 10000),
-						validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9-/*:_+=.@-]*`), "must be ARN or URL of the registry"),
+						lazyvalidation.StringMatch(`[a-zA-Z0-9-/*:_+=.@-]*`, "must be ARN or URL of the registry"),
 					),
 				},
 				"schema_validation_config": {

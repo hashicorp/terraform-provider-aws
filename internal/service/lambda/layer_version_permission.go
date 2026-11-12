@@ -12,7 +12,6 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,7 +57,7 @@ func resourceLayerVersionPermission() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 					ValidateFunc: validation.Any(
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, ""),
 						verify.ValidARN,
 					),
 				},
