@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -509,6 +510,24 @@ func TestAccDMSReplicationInstance_kerberosAuthenticationSettings(t *testing.T) 
 	})
 }
 
+func TestAccDMSReplicationInstance_createTimeout(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccReplicationInstanceConfig_createTimeout(rName),
+				ExpectError: regexache.MustCompile(`waiting\s+for\s+DMS\s+Replication\s+Instance\s+\(\S+\)\s+create:\s+timeout\s+while\s+waiting\s+for\s+state\s+to\s+become\s+'available'`),
+			},
+		},
+	})
+}
+
 func testAccCheckReplicationInstanceExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -740,6 +759,21 @@ resource "aws_dms_replication_instance" "test" {
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
   vpc_security_group_ids      = [aws_security_group.test.id]
+}
+`, rName))
+}
+
+func testAccReplicationInstanceConfig_createTimeout(rName string) string {
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+resource "aws_dms_replication_instance" "test" {
+  apply_immediately           = true
+  replication_instance_class  = "dms.t3.medium"
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
+
+  timeouts {
+    create = "1m"
+  }
 }
 `, rName))
 }
