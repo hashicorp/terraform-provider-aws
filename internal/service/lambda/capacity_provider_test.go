@@ -208,6 +208,125 @@ func TestAccLambdaCapacityProvider_scalingConfig(t *testing.T) {
 	})
 }
 
+func TestAccLambdaCapacityProvider_propagateTags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var capacityprovider awstypes.CapacityProvider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_capacity_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_propagateTagsExplicit1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.0.mode", "Explicit"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.0.explicit_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.0.explicit_tags.key1", acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccCheckCapacityProviderImportStateID(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+			{
+				Config: testAccCapacityProviderConfig_propagateTagsExplicit2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.0.mode", "Explicit"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.0.explicit_tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.0.explicit_tags.key1", acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.0.explicit_tags.key2", acctest.CtValue2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccCapacityProviderConfig_propagateTagsNone(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.0.mode", "None"),
+					resource.TestCheckNoResourceAttr(resourceName, "propagate_tags.0.explicit_tags.%"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Removing the block keeps the current setting and does not cause drift.
+				Config: testAccCapacityProviderConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags.0.mode", "None"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaCapacityProvider_propagateTagsInvalid(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_propagateTagsInvalid(rName, `mode = "None"
+    explicit_tags = {
+      key1 = "value1"
+    }`),
+				ExpectError: regexache.MustCompile(`explicit_tags can only be specified when mode is "Explicit"`),
+			},
+			{
+				Config:      testAccCapacityProviderConfig_propagateTagsInvalid(rName, `mode = "Explicit"`),
+				ExpectError: regexache.MustCompile(`explicit_tags must be specified when mode is "Explicit"`),
+			},
+			{
+				Config: testAccCapacityProviderConfig_propagateTagsInvalid(rName, `mode = "Explicit"
+    explicit_tags = {}`),
+				ExpectError: regexache.MustCompile(`explicit_tags must contain between 1 and 40 tags`),
+			},
+			{
+				Config:      testAccCapacityProviderConfig_propagateTagsInvalid(rName, `mode = "All"`),
+				ExpectError: regexache.MustCompile(`mode must be one of`),
+			},
+		},
+	})
+}
+
 func testAccCheckCapacityProviderImportStateID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		return acctest.AttrImportStateIdFunc(n, names.AttrName)(s)
@@ -496,4 +615,116 @@ resource "aws_lambda_capacity_provider" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccCapacityProviderConfig_propagateTagsExplicit1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_capacity_provider" "test" {
+  name = %[1]q
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
+  }
+
+  propagate_tags {
+    mode = "Explicit"
+    explicit_tags = {
+      %[2]q = %[3]q
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccCapacityProviderConfig_propagateTagsExplicit2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_capacity_provider" "test" {
+  name = %[1]q
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
+  }
+
+  propagate_tags {
+    mode = "Explicit"
+    explicit_tags = {
+      %[2]q = %[3]q
+      %[4]q = %[5]q
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccCapacityProviderConfig_propagateTagsNone(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_capacity_provider" "test" {
+  name = %[1]q
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
+  }
+
+  propagate_tags {
+    mode = "None"
+  }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
+}
+`, rName))
+}
+
+// testAccCapacityProviderConfig_propagateTagsInvalid fails validation before any resource is created.
+func testAccCapacityProviderConfig_propagateTagsInvalid(rName, propagateTags string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_capacity_provider" "test" {
+  name = %[1]q
+
+  vpc_config {
+    subnet_ids         = ["subnet-00000000000000000"]
+    security_group_ids = ["sg-00000000000000000"]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = "arn:${data.aws_partition.current.partition}:iam::123456789012:role/%[1]s"
+  }
+
+  propagate_tags {
+    %[2]s
+  }
+}
+
+data "aws_partition" "current" {}
+`, rName, propagateTags)
 }
