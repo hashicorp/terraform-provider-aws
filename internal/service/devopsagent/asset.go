@@ -399,9 +399,10 @@ type assetZipContentModel struct {
 }
 
 var (
-	_ flex.Expander = assetContentModel{}
-	_ flex.Expander = assetFileBodyModel{}
-	_ flex.Expander = assetZipContentModel{}
+	_ flex.Expander  = assetContentModel{}
+	_ flex.Expander  = assetFileBodyModel{}
+	_ flex.Flattener = &assetFileBodyModel{}
+	_ flex.Expander  = assetZipContentModel{}
 )
 
 func (m assetContentModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
@@ -440,6 +441,19 @@ func (m assetFileBodyModel) Expand(ctx context.Context) (any, diag.Diagnostics) 
 	}
 	smerr.AddError(ctx, &diags, fmt.Errorf("exactly one of bytes or text must be configured"))
 	return nil, diags
+}
+
+// Flatten is used by aws_devopsagent_asset_file. aws_devopsagent_asset does not
+// flatten its content, so this is never called for that resource.
+func (m *assetFileBodyModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch t := v.(type) {
+	case awstypes.AssetFileBodyMemberText:
+		m.Text = types.StringValue(t.Value)
+	case awstypes.AssetFileBodyMemberBytes:
+		m.Bytes = types.StringValue(base64.StdEncoding.EncodeToString(t.Value))
+	}
+	return diags
 }
 
 func (m assetZipContentModel) Expand(ctx context.Context) (any, diag.Diagnostics) {

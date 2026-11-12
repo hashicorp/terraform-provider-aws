@@ -5,7 +5,6 @@ package devopsagent
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"slices"
 	"strings"
@@ -115,7 +114,7 @@ func (r *assetFileResource) Schema(ctx context.Context, req resource.SchemaReque
 		Blocks: map[string]schema.Block{
 			names.AttrContent: schema.ListNestedBlock{
 				Description: "File content. Exactly one block is required.",
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[assetFileContentBodyModel](ctx),
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[assetFileBodyModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
@@ -256,6 +255,10 @@ func (r *assetFileResource) Update(ctx context.Context, req resource.UpdateReque
 		if resp.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		plan.MetadataActual = state.MetadataActual
+		plan.UpdatedAt = state.UpdatedAt
+		plan.Version = state.Version
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -365,51 +368,13 @@ func (assetFileImportID) Parse(id string) (string, map[string]any, error) {
 
 type assetFileResourceModel struct {
 	framework.WithRegionModel
-	AgentSpaceID   types.String                                               `tfsdk:"agent_space_id"`
-	AssetID        types.String                                               `tfsdk:"asset_id"`
-	Content        fwtypes.ListNestedObjectValueOf[assetFileContentBodyModel] `tfsdk:"content"`
-	CreatedAt      timetypes.RFC3339                                          `tfsdk:"created_at"`
-	Metadata       fwtypes.SmithyJSON[document.Interface]                     `tfsdk:"metadata" autoflex:",noflatten"`
-	MetadataActual fwtypes.SmithyJSON[document.Interface]                     `tfsdk:"metadata_actual" autoflex:"-"`
-	Path           types.String                                               `tfsdk:"path"`
-	UpdatedAt      timetypes.RFC3339                                          `tfsdk:"updated_at"`
-	Version        types.Int32                                                `tfsdk:"version"`
-}
-
-type assetFileContentBodyModel struct {
-	Bytes types.String `tfsdk:"bytes"`
-	Text  types.String `tfsdk:"text"`
-}
-
-var (
-	_ flex.Expander  = assetFileContentBodyModel{}
-	_ flex.Flattener = &assetFileContentBodyModel{}
-)
-
-func (m assetFileContentBodyModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	if !m.Text.IsNull() {
-		return &awstypes.AssetFileBodyMemberText{Value: m.Text.ValueString()}, diags
-	}
-	if !m.Bytes.IsNull() {
-		value, err := base64.StdEncoding.DecodeString(m.Bytes.ValueString())
-		if err != nil {
-			smerr.AddError(ctx, &diags, fmt.Errorf("decoding content bytes: %w", err))
-			return nil, diags
-		}
-		return &awstypes.AssetFileBodyMemberBytes{Value: value}, diags
-	}
-	smerr.AddError(ctx, &diags, fmt.Errorf("exactly one of bytes or text must be configured"))
-	return nil, diags
-}
-
-func (m *assetFileContentBodyModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
-	var diags diag.Diagnostics
-	switch t := v.(type) {
-	case awstypes.AssetFileBodyMemberText:
-		m.Text = types.StringValue(t.Value)
-	case awstypes.AssetFileBodyMemberBytes:
-		m.Bytes = types.StringValue(base64.StdEncoding.EncodeToString(t.Value))
-	}
-	return diags
+	AgentSpaceID   types.String                                        `tfsdk:"agent_space_id"`
+	AssetID        types.String                                        `tfsdk:"asset_id"`
+	Content        fwtypes.ListNestedObjectValueOf[assetFileBodyModel] `tfsdk:"content"`
+	CreatedAt      timetypes.RFC3339                                   `tfsdk:"created_at"`
+	Metadata       fwtypes.SmithyJSON[document.Interface]              `tfsdk:"metadata" autoflex:",noflatten"`
+	MetadataActual fwtypes.SmithyJSON[document.Interface]              `tfsdk:"metadata_actual" autoflex:"-"`
+	Path           types.String                                        `tfsdk:"path"`
+	UpdatedAt      timetypes.RFC3339                                   `tfsdk:"updated_at"`
+	Version        types.Int32                                         `tfsdk:"version"`
 }

@@ -29,7 +29,7 @@ func TestAccDevOpsAgentAssetFile_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssetFileDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -69,7 +69,7 @@ func TestAccDevOpsAgentAssetFile_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssetFileDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -97,7 +97,7 @@ func TestAccDevOpsAgentAssetFile_Disappears_asset(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssetFileDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -125,7 +125,7 @@ func TestAccDevOpsAgentAssetFile_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssetFileDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -174,7 +174,7 @@ func TestAccDevOpsAgentAssetFile_metadata(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssetFileDestroy(ctx, t),
 		Steps: []resource.TestStep{
