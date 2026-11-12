@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -130,7 +129,7 @@ func resourceDomain() *schema.Resource {
 							"source_fields": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`score`), "Cannot be set to reserved field score"),
+								ValidateFunc: lazyvalidation.StringDoesNotMatch(`score`, "Cannot be set to reserved field score"),
 							},
 							names.AttrType: {
 								Type:             schema.TypeString,
