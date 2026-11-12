@@ -42,6 +42,10 @@ const (
 // @FrameworkResource("aws_pinpointsmsvoicev2_opt_out_list", name="Opt-out List")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
+// @IdentityAttribute("name", identityDuplicateAttributes="id")
+// @Testing(preIdentityVersion="v6.68.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types;awstypes;awstypes.OptOutListInformation")
+// @Testing(preCheck="testAccPreCheckOptOutList")
 func newOptOutListResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &optOutListResource{}
 
@@ -50,7 +54,7 @@ func newOptOutListResource(context.Context) (resource.ResourceWithConfigure, err
 
 type optOutListResource struct {
 	framework.ResourceWithModel[optOutListResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *optOutListResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
