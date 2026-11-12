@@ -1,0 +1,6 @@
+```release-note:new-list-resource
+aws_pinpointsmsvoicev2_phone_number
+```
+```release-note:enhancement
+resource/aws_pinpointsmsvoicev2_phone_number: Add resource identity support
+```
