@@ -43,6 +43,10 @@ func resourceReplicaKey() *schema.Resource {
 		UpdateWithoutTimeout: resourceReplicaKeyUpdate,
 		DeleteWithoutTimeout: resourceReplicaKeyDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(replicaKeyCreatedTimeout),
+		},
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -147,7 +151,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
-	if _, err := waitReplicaKeyCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitReplicaKeyCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) create: %s", d.Id(), err)
 	}
 
@@ -294,10 +298,7 @@ func resourceReplicaKeyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func waitReplicaKeyCreated(ctx context.Context, conn *kms.Client, id string) (*awstypes.KeyMetadata, error) {
-	const (
-		timeout = 2 * time.Minute
-	)
+func waitReplicaKeyCreated(ctx context.Context, conn *kms.Client, id string, timeout time.Duration) (*awstypes.KeyMetadata, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateCreating),
 		Target:  enum.Slice(awstypes.KeyStateEnabled),
