@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_event_archive: Retry `ValidationException` errors when KMS denies EventBridge access to `kms_key_identifier` because the key policy hasn't propagated yet
+```
