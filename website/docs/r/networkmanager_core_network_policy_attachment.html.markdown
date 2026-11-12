@@ -12,7 +12,9 @@ Manages a Network Manager Core Network Policy Attachment.
 
 Use this resource to attach a Core Network Policy to an existing Core Network and execute the change set, which deploys changes globally based on the policy submitted (sets the policy to `LIVE`).
 
-~> **NOTE:** Deleting this resource will not delete the current policy defined in this resource. Deleting this resource will also not revert the current `LIVE` policy to the previous version.
+~> **Note:** Use this resource when the policy references attachment IDs or [prefix list associations](networkmanager_prefix_list_association.html), typically alongside `create_base_policy` on the [`aws_networkmanager_core_network` resource](networkmanager_core_network.html). Otherwise, set the policy directly with that resource's `policy_document` argument. Do not manage the same core network's policy with both.
+
+~> **Note:** Deleting this resource will not delete the current policy defined in this resource. Deleting this resource will also not revert the current `LIVE` policy to the previous version.
 
 ## Example Usage
 
