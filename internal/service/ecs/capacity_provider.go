@@ -759,10 +759,16 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ECS Capacity Provider: %s", d.Id())
+	const (
+		timeout = 20 * time.Minute
+	)
 	input := ecs.DeleteCapacityProviderInput{
 		CapacityProvider: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteCapacityProvider(ctx, &input)
+	// A managed instances capacity provider can still be processing an update shortly after it is created or updated.
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.UpdateInProgressException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteCapacityProvider(ctx, &input)
+	})
 
 	// "An error occurred (ClientException) when calling the DeleteCapacityProvider operation: The specified capacity provider does not exist. Specify a valid name or ARN and try again."
 	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "capacity provider does not exist") {
@@ -773,9 +779,6 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Capacity Provider (%s): %s", d.Id(), err)
 	}
 
-	const (
-		timeout = 20 * time.Minute
-	)
 	if _, err := waitCapacityProviderDeleted(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Capacity Provider (%s) delete: %s", d.Id(), err)
 	}
