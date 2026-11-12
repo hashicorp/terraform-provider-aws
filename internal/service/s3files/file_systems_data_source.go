@@ -105,6 +105,19 @@ func (d *fileSystemsDataSource) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
+	// AutoFlex cannot map FileSystemArn and FileSystemId onto arn and id.
+	fileSystems, diags := data.FileSystems.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	for i, apiObject := range output.FileSystems {
+		fileSystems[i].ARN = types.StringPointerValue(apiObject.FileSystemArn)
+		fileSystems[i].ID = types.StringPointerValue(apiObject.FileSystemId)
+	}
+	data.FileSystems = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, fileSystems)
+
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 

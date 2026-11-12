@@ -40,4 +40,3 @@ This data source exports the following attributes in addition to the arguments a
 * `role_arn` - IAM role ARN for S3 access.
 * `status` - File system status.
 * `status_message` - Status message.
-* `tags` - Map of tags assigned to the resource.
