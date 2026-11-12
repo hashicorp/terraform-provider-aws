@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
@@ -119,7 +118,7 @@ func resourceInstance() *schema.Resource {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 64),
 						lazyvalidation.StringMatch(`^([0-9A-Za-z]+)([0-9A-Za-z-]+)$`, "must contain only alphanumeric or hyphen characters"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`^(d-).+$`), "can not start with d-"),
+						lazyvalidation.StringDoesNotMatch(`^(d-).+$`, "can not start with d-"),
 					),
 				},
 				"multi_party_conference_enabled": {
