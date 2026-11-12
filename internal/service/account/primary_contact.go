@@ -9,7 +9,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -81,7 +81,7 @@ func resourcePrimaryContact() *schema.Resource {
 				"phone_number": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[+][0-9\s()-]+$`), "must be a valid phone number"),
+					ValidateFunc: lazyvalidation.StringMatch(`^[+][0-9\s()-]+$`, "must be a valid phone number"),
 				},
 				"postal_code": {
 					Type:     schema.TypeString,

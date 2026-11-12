@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -64,7 +64,7 @@ func resourceAlternateContact() *schema.Resource {
 				"email_address": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\w+=,.-]+@[\w.-]+\.[\w]+`), "must be a valid email address"),
+					ValidateFunc: lazyvalidation.StringMatch(`[\w+=,.-]+@[\w.-]+\.[\w]+`, "must be a valid email address"),
 				},
 				names.AttrName: {
 					Type:         schema.TypeString,
@@ -74,7 +74,7 @@ func resourceAlternateContact() *schema.Resource {
 				"phone_number": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9\s()+-]+$`), "must be a valid phone number"),
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9\s()+-]+$`, "must be a valid phone number"),
 				},
 				"title": {
 					Type:         schema.TypeString,
