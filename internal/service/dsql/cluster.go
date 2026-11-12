@@ -77,6 +77,12 @@ func (r *clusterResource) Schema(ctx context.Context, request resource.SchemaReq
 				Default:  booldefault.StaticBool(false),
 			},
 			"encryption_details": framework.ResourceComputedListOfObjectsAttribute[encryptionDetailsModel](ctx),
+			"endpoint": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrForceDestroy: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -194,7 +200,8 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	data.VPCEndpointServiceName = fwflex.StringToFramework(ctx, vpcEndpointServiceName)
+	data.Endpoint = fwflex.StringToFramework(ctx, vpcEndpointServiceName.ClusterVpcEndpoint)
+	data.VPCEndpointServiceName = fwflex.StringToFramework(ctx, vpcEndpointServiceName.ServiceName)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -371,7 +378,8 @@ func (r *clusterResource) flatten(ctx context.Context, conn *dsql.Client, output
 		return diags
 	}
 
-	data.VPCEndpointServiceName = fwflex.StringToFramework(ctx, vpcEndpointServiceName)
+	data.Endpoint = fwflex.StringToFramework(ctx, vpcEndpointServiceName.ClusterVpcEndpoint)
+	data.VPCEndpointServiceName = fwflex.StringToFramework(ctx, vpcEndpointServiceName.ServiceName)
 	return diags
 }
 
@@ -405,7 +413,7 @@ func findClusterByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.G
 	return output, nil
 }
 
-func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id string) (*string, error) {
+func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.GetVpcEndpointServiceNameOutput, error) {
 	input := dsql.GetVpcEndpointServiceNameInput{
 		Identifier: aws.String(id),
 	}
@@ -425,7 +433,7 @@ func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id s
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.ServiceName, nil
+	return output, nil
 }
 
 func statusCluster(conn *dsql.Client, id string) retry.StateRefreshFunc {
@@ -564,6 +572,7 @@ type clusterResourceModel struct {
 	ARN                       types.String                                                `tfsdk:"arn"`
 	DeletionProtectionEnabled types.Bool                                                  `tfsdk:"deletion_protection_enabled"`
 	EncryptionDetails         fwtypes.ListNestedObjectValueOf[encryptionDetailsModel]     `tfsdk:"encryption_details"`
+	Endpoint                  types.String                                                `tfsdk:"endpoint"`
 	ForceDestroy              types.Bool                                                  `tfsdk:"force_destroy"`
 	Identifier                types.String                                                `tfsdk:"identifier"`
 	KMSEncryptionKey          types.String                                                `tfsdk:"kms_encryption_key"`
