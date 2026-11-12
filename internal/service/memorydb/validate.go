@@ -7,6 +7,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 )
 
 const (
@@ -40,8 +41,6 @@ func validateResourceNamePrefix(maxLength int) schema.SchemaValidateFunc {
 		validation.StringDoesNotMatch(
 			regexache.MustCompile(`[-][-]`),
 			"The name may not contain two consecutive hyphens."),
-		validation.StringMatch(
-			regexache.MustCompile(`^[0-9a-z-]+$`),
-			"Only lowercase alphanumeric characters and hyphens are allowed."),
+		lazyvalidation.StringMatch(`^[0-9a-z-]+$`, "Only lowercase alphanumeric characters and hyphens are allowed."),
 	)
 }
