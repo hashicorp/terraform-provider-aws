@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_neptunegraph_graph_snapshot
+```
+
+```release-note:new-data-source
+aws_neptunegraph_graph_snapshots
+```
