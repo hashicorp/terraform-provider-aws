@@ -55,13 +55,12 @@ Add the AWS Go SDK service name (e.g., `rds`) to `sliceServiceNames` in `interna
 - In the resource's equivalent data source documentation (e.g., `website/docs/d/internet_gateway.html.markdown`), add the following to the arguments reference:
 
 ```markdown
-* `filter` - (Optional) Custom filter block as described below.
+* `filter` - (Optional) One or more configuration blocks for filtering. See [`filter` Block](#filter-block) below.
 
-More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
+### `filter` Block
 
-* `name` - (Required) Name of the field to filter by, as defined by
-  [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInternetGateways.html).
+The `filter` block supports the following arguments:
 
-* `values` - (Required) Set of values that are accepted for the given field.
-  An Internet Gateway will be selected if any one of the given values matches.
+* `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInternetGateways.html).
+* `values` - (Required) Set of values that are accepted for the given field. An Internet Gateway will be selected if any one of the given values matches.
 ```

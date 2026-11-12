@@ -40,6 +40,10 @@ func (d *serverlessCacheDataSource) Schema(ctx context.Context, request datasour
 				CustomType: fwtypes.NewObjectTypeOf[dsCacheUsageLimits](ctx),
 				Computed:   true,
 			},
+			"connection_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ConnectionType](),
+				Computed:   true,
+			},
 			names.AttrCreateTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -123,23 +127,24 @@ func (d *serverlessCacheDataSource) Read(ctx context.Context, request datasource
 
 type serverlessCacheDataSourceModel struct {
 	framework.WithRegionModel
-	ARN                    fwtypes.ARN                               `tfsdk:"arn"`
-	CacheUsageLimits       fwtypes.ObjectValueOf[dsCacheUsageLimits] `tfsdk:"cache_usage_limits"`
-	CreateTime             timetypes.RFC3339                         `tfsdk:"create_time"`
-	DailySnapshotTime      types.String                              `tfsdk:"daily_snapshot_time"`
-	Description            types.String                              `tfsdk:"description"`
-	Endpoint               fwtypes.ObjectValueOf[dsEndpoint]         `tfsdk:"endpoint"`
-	Engine                 types.String                              `tfsdk:"engine"`
-	FullEngineVersion      types.String                              `tfsdk:"full_engine_version"`
-	KmsKeyID               types.String                              `tfsdk:"kms_key_id"`
-	MajorEngineVersion     types.String                              `tfsdk:"major_engine_version"`
-	Name                   types.String                              `tfsdk:"name"`
-	ReaderEndpoint         fwtypes.ObjectValueOf[dsEndpoint]         `tfsdk:"reader_endpoint"`
-	SecurityGroupIDs       fwtypes.ListValueOf[types.String]         `tfsdk:"security_group_ids"`
-	SnapshotRetentionLimit types.Int64                               `tfsdk:"snapshot_retention_limit"`
-	Status                 types.String                              `tfsdk:"status"`
-	SubnetIDs              fwtypes.ListValueOf[types.String]         `tfsdk:"subnet_ids"`
-	UserGroupID            types.String                              `tfsdk:"user_group_id"`
+	ARN                    fwtypes.ARN                                 `tfsdk:"arn"`
+	CacheUsageLimits       fwtypes.ObjectValueOf[dsCacheUsageLimits]   `tfsdk:"cache_usage_limits"`
+	ConnectionType         fwtypes.StringEnum[awstypes.ConnectionType] `tfsdk:"connection_type"`
+	CreateTime             timetypes.RFC3339                           `tfsdk:"create_time"`
+	DailySnapshotTime      types.String                                `tfsdk:"daily_snapshot_time"`
+	Description            types.String                                `tfsdk:"description"`
+	Endpoint               fwtypes.ObjectValueOf[dsEndpoint]           `tfsdk:"endpoint"`
+	Engine                 types.String                                `tfsdk:"engine"`
+	FullEngineVersion      types.String                                `tfsdk:"full_engine_version"`
+	KmsKeyID               types.String                                `tfsdk:"kms_key_id"`
+	MajorEngineVersion     types.String                                `tfsdk:"major_engine_version"`
+	Name                   types.String                                `tfsdk:"name"`
+	ReaderEndpoint         fwtypes.ObjectValueOf[dsEndpoint]           `tfsdk:"reader_endpoint"`
+	SecurityGroupIDs       fwtypes.ListValueOf[types.String]           `tfsdk:"security_group_ids"`
+	SnapshotRetentionLimit types.Int64                                 `tfsdk:"snapshot_retention_limit"`
+	Status                 types.String                                `tfsdk:"status"`
+	SubnetIDs              fwtypes.ListValueOf[types.String]           `tfsdk:"subnet_ids"`
+	UserGroupID            types.String                                `tfsdk:"user_group_id"`
 }
 
 type dsCacheUsageLimits struct {

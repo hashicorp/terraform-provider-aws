@@ -54,6 +54,10 @@ func TestAccBedrock_serial(t *testing.T) {
 			acctest.CtDisappears: testAccBedrockFoundationModelAgreement_disappears,
 			"Identity":           testAccBedrockFoundationModelAgreement_identitySerial,
 		},
+		// Guardrail profiles are system-defined and shared across the account and Region.
+		"GuardrailResourcePolicy": {
+			"guardrailProfile": testAccGuardrailResourcePolicy_guardrailProfile,
+		},
 		"UseCaseForModelAccess": {
 			acctest.CtBasic: testAccBedrockUseCaseForModelAccess_basic,
 			"createImport":  testAccBedrockUseCaseForModelAccess_createImport,

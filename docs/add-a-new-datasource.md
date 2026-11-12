@@ -90,7 +90,7 @@ If additional optional arguments are supported (e.g. filters), a test should be 
 
 ### Fill Out the Documentation
 
-`skaff` will generate documentation for the new data source in `website/docs/d/<service>_<name>.md`.
+`skaff` will generate documentation for the new data source in `website/docs/d/<service>_<name>.html.markdown`.
 If the data source is particularly complex or relies on resources in another service, additional examples may be added.
 The argument and attribute references should match the Schema definition.
 It is fine to link out to AWS Documentation where appropriate, particularly for values which are likely to change.
