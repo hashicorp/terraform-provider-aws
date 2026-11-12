@@ -1262,6 +1262,123 @@ func TestAccECSTaskDefinition_enableFaultInjection(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_trustedExecutionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_trustedExecutionConfiguration(rName, string(awstypes.IsolationModeIsolatedSandbox)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.0.isolation_mode", string(awstypes.IsolationModeIsolatedSandbox)),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.0.attestation_policy", ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+			{
+				Config: testAccTaskDefinitionConfig_trustedExecutionConfiguration(rName, string(awstypes.IsolationModeShared)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.0.isolation_mode", string(awstypes.IsolationModeShared)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+			{
+				// Removing a SHARED block is not a change.
+				Config: testAccTaskDefinitionConfig_trustedExecutionConfigurationNone(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccTaskDefinitionConfig_trustedExecutionConfiguration(rName, string(awstypes.IsolationModeIsolatedSandbox)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "trusted_execution_configuration.0.isolation_mode", string(awstypes.IsolationModeIsolatedSandbox)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				Config: testAccTaskDefinitionConfig_trustedExecutionConfigurationNone(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				// Adding an explicit SHARED block to a task definition without one is not a change.
+				Config: testAccTaskDefinitionConfig_trustedExecutionConfiguration(rName, string(awstypes.IsolationModeShared)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_trustedExecutionConfigurationInvalid(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTaskDefinitionConfig_trustedExecutionConfiguration(rName, string(awstypes.IsolationModeConfidentialSandbox)),
+				ExpectError: regexache.MustCompile(`attestation_policy is required when isolation_mode is CONFIDENTIAL_SANDBOX`),
+			},
+			{
+				Config:      testAccTaskDefinitionConfig_trustedExecutionConfiguration(rName, "EXCLUSIVE"),
+				ExpectError: regexache.MustCompile(`expected isolation_mode to be one of`),
+			},
+		},
+	})
+}
+
 func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var def awstypes.TaskDefinition
@@ -4251,6 +4368,40 @@ TASK_DEFINITION
   }
 }
 `, rName, configureAtLaunch)
+}
+
+func testAccTaskDefinitionConfig_trustedExecutionConfigurationBase(rName, block string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["MANAGED_INSTANCES"]
+  cpu                      = "1024"
+  memory                   = "2048"
+
+  container_definitions = jsonencode([
+    {
+      name      = "app"
+      image     = "public.ecr.aws/docker/library/busybox:latest"
+      essential = true
+      command   = ["sleep", "360"]
+    }
+  ])
+%[2]s
+}
+`, rName, block)
+}
+
+func testAccTaskDefinitionConfig_trustedExecutionConfiguration(rName, isolationMode string) string {
+	return testAccTaskDefinitionConfig_trustedExecutionConfigurationBase(rName, fmt.Sprintf(`
+  trusted_execution_configuration {
+    isolation_mode = %[1]q
+  }
+`, isolationMode))
+}
+
+func testAccTaskDefinitionConfig_trustedExecutionConfigurationNone(rName string) string {
+	return testAccTaskDefinitionConfig_trustedExecutionConfigurationBase(rName, "")
 }
 
 func testAccTaskDefinitionConfig_enableFaultInjection(rName string, enableFaultInjection bool) string {
