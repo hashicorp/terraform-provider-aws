@@ -177,6 +177,7 @@ func TestAccCloudTrailEventDataStore_kmsKeyId(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 	kmsKeyResourceName := "aws_kms_key.test"
+	kmsKeyResourceName2 := "aws_kms_key.test2"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -193,6 +194,13 @@ func TestAccCloudTrailEventDataStore_kmsKeyId(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccEventDataStoreConfig_kmsKeyIdUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEventDataStoreExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName2, names.AttrARN),
 				),
 			},
 			{
@@ -526,6 +534,52 @@ resource "aws_kms_key" "test" {
 resource "aws_cloudtrail_event_data_store" "test" {
   name                           = %[1]q
   kms_key_id                     = aws_kms_key.test.arn
+  termination_protection_enabled = false # For ease of deletion.
+}
+`, rName)
+}
+
+func testAccEventDataStoreConfig_kmsKeyIdUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  multi_region        = true
+  enable_key_rotation = true
+  policy = jsonencode({
+    Id = %[1]q
+    Statement = [{
+      Sid    = "Enable IAM User Permissions"
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action   = "kms:*"
+      Resource = "*"
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_kms_key" "test2" {
+  multi_region        = true
+  enable_key_rotation = true
+  policy = jsonencode({
+    Id = %[1]q
+    Statement = [{
+      Sid    = "Enable IAM User Permissions"
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action   = "kms:*"
+      Resource = "*"
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_cloudtrail_event_data_store" "test" {
+  name                           = %[1]q
+  kms_key_id                     = aws_kms_key.test2.arn
   termination_protection_enabled = false # For ease of deletion.
 }
 `, rName)
