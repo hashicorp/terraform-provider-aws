@@ -35,6 +35,9 @@ func TestAccContinuum_serial(t *testing.T) {
 			acctest.CtBasic:      testAccCollectorAssociation_basic,
 			acctest.CtDisappears: testAccCollectorAssociation_disappears,
 		},
+		"DataSource": {
+			acctest.CtBasic: testAccDataSource_basic,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

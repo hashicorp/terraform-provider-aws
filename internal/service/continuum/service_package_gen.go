@@ -20,7 +20,44 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newCodeFindingsDataSource,
+			TypeName: "aws_continuum_code_findings",
+			Name:     "Code Findings",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newCodeIssuesDataSource,
+			TypeName: "aws_continuum_code_issues",
+			Name:     "Code Issues",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newCodeScansDataSource,
+			TypeName: "aws_continuum_code_scans",
+			Name:     "Code Scans",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newCollectorDataSource,
+			TypeName: "aws_continuum_collector",
+			Name:     "Collector",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newEnvironmentDataSource,
+			TypeName: "aws_continuum_environment",
+			Name:     "Environment",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newIntegrationDataSource,
+			TypeName: "aws_continuum_integration",
+			Name:     "Integration",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
