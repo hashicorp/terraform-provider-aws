@@ -10,6 +10,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -72,10 +73,7 @@ var validateKeyOrAlias = validation.Any(
 	validateKeyAliasARN,
 )
 
-var validateKeyID = validation.StringMatch(
-	regexache.MustCompile(`^`+verify.UUIDRegexPattern+`|`+multiRegionKeyIDPattern+`$`),
-	"must be a KMS Key ID",
-)
+var validateKeyID = lazyvalidation.StringMatch(`^`+verify.UUIDRegexPattern+`|`+multiRegionKeyIDPattern+`$`, "must be a KMS Key ID")
 
 func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)
