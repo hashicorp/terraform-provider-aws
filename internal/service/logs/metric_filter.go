@@ -230,7 +230,7 @@ func resourceMetricFilterDelete(ctx context.Context, d *schema.ResourceData, met
 func resourceMetricFilterFlatten(_ context.Context, mf *awstypes.MetricFilter, d *schema.ResourceData) error {
 	d.Set("apply_on_transformed_logs", mf.ApplyOnTransformedLogs)
 	d.Set("emit_system_field_dimensions", mf.EmitSystemFieldDimensions)
-	d.Set("field_selection_criteria", mf.FieldSelectionCriteria)
+	setFieldSelectionCriteria(d, mf.FieldSelectionCriteria)
 	d.Set(names.AttrLogGroupName, mf.LogGroupName)
 	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
 		return fmt.Errorf("setting metric_transformation: %w", err)

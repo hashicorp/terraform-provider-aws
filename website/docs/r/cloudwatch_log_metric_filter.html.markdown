@@ -42,7 +42,7 @@ This resource supports the following arguments:
 * `metric_transformation` - (Required) A block defining collection of information needed to define how metric data gets emitted. See below.
 * `apply_on_transformed_logs` - (Optional) Whether the metric filter will be applied on the transformed version of the log events instead of the original ingested log events. Defaults to `false`. Valid only for log groups that have an active log transformer.
 * `emit_system_field_dimensions` - (Optional) System fields to emit as additional dimensions in the generated metrics. These dimensions help identify the source of centralized log data and count toward the dimension limit for metric filters. Valid values: `"@aws.account"`, `"@aws.region"`.
-* `field_selection_criteria` - (Optional) Expression on system fields, such as the source account and source Region, that selects which log events the metric filter processes. Supports the `=`, `!=`, `AND`, `OR`, `IN` and `NOT IN` operators, for example `@aws.region = "us-east-1"`. Up to 2000 characters.
+* `field_selection_criteria` - (Optional) Expression on system fields, such as the source account and source Region, that selects which log events the metric filter processes. Supports the `=`, `!=`, `AND`, `OR`, `IN` and `NOT IN` operators, for example `@aws.region = "us-east-1"`. Up to 2000 characters. The expression is validated by AWS when the filter is created or updated.
 
 The `metric_transformation` block supports the following arguments:
 

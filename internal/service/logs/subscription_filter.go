@@ -226,12 +226,23 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
+// setFieldSelectionCriteria leaves field_selection_criteria unset when the API
+// returns no value or an empty one, so that imported resources match ones created without
+// the argument. A value removed outside Terraform is still cleared.
+func setFieldSelectionCriteria(d *schema.ResourceData, v *string) {
+	if aws.ToString(v) != "" {
+		d.Set("field_selection_criteria", v)
+	} else if d.Get("field_selection_criteria").(string) != "" {
+		d.Set("field_selection_criteria", "")
+	}
+}
+
 func resourceSubscriptionFilterFlatten(_ context.Context, subscriptionFilter *awstypes.SubscriptionFilter, d *schema.ResourceData) error { //nolint:unparam
 	d.Set("apply_on_transformed_logs", subscriptionFilter.ApplyOnTransformedLogs)
 	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
 	d.Set("distribution", subscriptionFilter.Distribution)
 	d.Set("emit_system_fields", subscriptionFilter.EmitSystemFields)
-	d.Set("field_selection_criteria", subscriptionFilter.FieldSelectionCriteria)
+	setFieldSelectionCriteria(d, subscriptionFilter.FieldSelectionCriteria)
 	d.Set("filter_pattern", subscriptionFilter.FilterPattern)
 	d.Set(names.AttrLogGroupName, subscriptionFilter.LogGroupName)
 	d.Set(names.AttrName, subscriptionFilter.FilterName)

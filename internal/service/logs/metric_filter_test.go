@@ -344,13 +344,13 @@ func TestAccLogsMetricFilter_systemFields(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMetricFilterConfig_systemFields(rName, `@aws.account IN [\"123456789012\", \"210987654321\"]`, `["@aws.account", "@aws.region"]`),
+				Config: testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-west-2\"`, `["@aws.account", "@aws.region"]`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
 					resource.TestCheckResourceAttr(resourceName, "emit_system_field_dimensions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "emit_system_field_dimensions.*", "@aws.account"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "emit_system_field_dimensions.*", "@aws.region"),
-					resource.TestCheckResourceAttr(resourceName, "field_selection_criteria", `@aws.account IN ["123456789012", "210987654321"]`),
+					resource.TestCheckResourceAttr(resourceName, "field_selection_criteria", `@aws.region = "us-west-2"`),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

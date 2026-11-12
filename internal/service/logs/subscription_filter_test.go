@@ -375,7 +375,7 @@ func TestAccLogsSubscriptionFilter_fieldSelectionCriteria(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrRoleARN, "apply_on_transformed_logs"},
 			},
 			{
-				Config: testAccSubscriptionFilterConfig_fieldSelectionCriteria(rName, `@aws.region NOT IN [\"cn-north-1\"] AND @aws.account != \"123456789012\"`),
+				Config: testAccSubscriptionFilterConfig_fieldSelectionCriteria(rName, `@aws.region = \"us-west-2\"`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 				),
@@ -388,7 +388,7 @@ func TestAccLogsSubscriptionFilter_fieldSelectionCriteria(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_selection_criteria"), knownvalue.StringExact(`@aws.region NOT IN ["cn-north-1"] AND @aws.account != "123456789012"`)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_selection_criteria"), knownvalue.StringExact(`@aws.region = "us-west-2"`)),
 				},
 			},
 			{
