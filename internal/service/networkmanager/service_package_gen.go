@@ -28,6 +28,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
+		{
+			Factory:  newCoreNetworksDataSource,
+			TypeName: "aws_networkmanager_core_networks",
+			Name:     "Core Networks",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
 	}
 }
 
