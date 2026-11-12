@@ -2,6 +2,15 @@
 # "SPDX-License-Identifier: MPL-2.0"
 
 rules:
+  - id: use-lazyvalidation-string-match
+    languages: [go]
+    message: Prefer `lazyvalidation.StringMatch` to `validation.StringMatch(regexache.MustCompile(...), ...)`
+    patterns:
+      - pattern: validation.StringMatch(regexache.MustCompile($PATTERN), $MESSAGE)
+      - pattern-not-inside: validation.ToDiagFunc(validation.StringMatch(...))
+    fix: lazyvalidation.StringMatch($PATTERN, $MESSAGE)
+    severity: WARNING
+
   - id: use-lazyvalidation-string-match-diag
     languages: [go]
     message: Prefer `lazyvalidation.StringMatchDiag` to `validation.ToDiagFunc(validation.StringMatch(...))`

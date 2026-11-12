@@ -19,12 +19,21 @@ func stringMatchDiag(pattern string) {
 		"must contain lowercase letters",
 	))
 
-	// ok: use-lazyvalidation-string-match-diag
+	// ruleid: use-lazyvalidation-string-match
 	validation.StringMatch(regexache.MustCompile(pattern), "must match pattern")
+
+	// ruleid: use-lazyvalidation-string-match
+	validation.StringMatch(
+		regexache.MustCompile(`^[0-9]+$`),
+		"must contain digits",
+	)
 
 	// ok: use-lazyvalidation-string-match-diag
 	validation.ToDiagFunc(validation.StringLenBetween(1, 128))
 
 	// ok: use-lazyvalidation-string-match-diag
 	lazyvalidation.StringMatchDiag(pattern, "must match pattern")
+
+	// ok: use-lazyvalidation-string-match
+	lazyvalidation.StringMatch(pattern, "must match pattern")
 }
