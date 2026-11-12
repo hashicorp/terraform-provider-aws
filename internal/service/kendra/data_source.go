@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -117,10 +117,7 @@ func ResourceDataSource() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(3, 63),
-												validation.StringMatch(
-													regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
-													"Must be a valid bucket name",
-												),
+												lazyvalidation.StringMatch(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`, "Must be a valid bucket name"),
 											),
 										},
 										"documents_metadata_configuration": {
@@ -310,7 +307,7 @@ func ResourceDataSource() *schema.Resource {
 																		Type: schema.TypeString,
 																		ValidateFunc: validation.All(
 																			validation.StringLenBetween(1, 2048),
-																			validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																			lazyvalidation.StringMatch(`^(https?):\/\/([^\s]*)`, "must provide a valid url"),
 																		),
 																	},
 																},
@@ -337,7 +334,7 @@ func ResourceDataSource() *schema.Resource {
 																		Type: schema.TypeString,
 																		ValidateFunc: validation.All(
 																			validation.StringLenBetween(1, 2048),
-																			validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																			lazyvalidation.StringMatch(`^(https?):\/\/([^\s]*)`, "must provide a valid url"),
 																		),
 																	},
 																},
@@ -385,10 +382,7 @@ func ResourceDataSource() *schema.Resource {
 														Optional: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 200),
-															validation.StringMatch(
-																regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
-																"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
-															),
+															lazyvalidation.StringMatch(`[0-9A-Za-z_][0-9A-Za-z_-]*`, "Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens."),
 														),
 													},
 													"target_document_attribute_value": func() *schema.Schema {
@@ -439,13 +433,10 @@ func ResourceDataSource() *schema.Resource {
 					Computed: true,
 				},
 				"index_id": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
-						"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
-					),
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z-]{35}`, "Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36."),
 				},
 				names.AttrLanguageCode: {
 					Type:     schema.TypeString,
@@ -453,10 +444,7 @@ func ResourceDataSource() *schema.Resource {
 					Computed: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 10),
-						validation.StringMatch(
-							regexache.MustCompile(`[A-Za-z-]*`),
-							"Must have alphanumeric characters or hyphens.",
-						),
+						lazyvalidation.StringMatch(`[A-Za-z-]*`, "Must have alphanumeric characters or hyphens."),
 					),
 				},
 				names.AttrName: {
@@ -464,10 +452,7 @@ func ResourceDataSource() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 1000),
-						validation.StringMatch(
-							regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
-							"Starts with an alphanumeric character. Subsequently, the name must consist of alphanumerics, hyphens or underscores.",
-						),
+						lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z_-]*`, "Starts with an alphanumeric character. Subsequently, the name must consist of alphanumerics, hyphens or underscores."),
 					),
 				},
 				names.AttrRoleARN: {
@@ -522,10 +507,7 @@ func hookConfigurationSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 63),
-						validation.StringMatch(
-							regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
-							"Must be a valid bucket name",
-						),
+						lazyvalidation.StringMatch(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`, "Must be a valid bucket name"),
 					),
 				},
 			},
@@ -545,10 +527,7 @@ func documentAttributeConditionSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 200),
-						validation.StringMatch(
-							regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
-							"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
-						),
+						lazyvalidation.StringMatch(`[0-9A-Za-z_][0-9A-Za-z_-]*`, "Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens."),
 					),
 				},
 				"condition_on_value": func() *schema.Schema {
