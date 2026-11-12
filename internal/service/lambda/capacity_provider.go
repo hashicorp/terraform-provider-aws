@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -414,8 +413,6 @@ func validateCapacityProviderTelemetryConfig(ctx context.Context, tc *capacityPr
 
 	if lc.SystemLogLevel.IsNull() {
 		diags.AddAttributeError(path.Root("telemetry_config"), "Missing Attribute Configuration", "system_log_level must be specified in logging_config")
-	} else if !lc.SystemLogLevel.IsUnknown() && !slices.Contains(enum.Values[awstypes.SystemLogLevel](), lc.SystemLogLevel.ValueString()) {
-		diags.AddAttributeError(path.Root("telemetry_config"), "Invalid Attribute Value", fmt.Sprintf("system_log_level must be one of %q, got: %q", enum.Values[awstypes.SystemLogLevel](), lc.SystemLogLevel.ValueString()))
 	}
 
 	return diags
