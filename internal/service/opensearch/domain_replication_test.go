@@ -50,11 +50,12 @@ func TestAccOpenSearchDomainReplication_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrDomainName, "peer_domain_arn"),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrTimeouts},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrDomainName, "peer_domain_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrDomainName,
+				ImportStateVerifyIgnore:              []string{names.AttrTimeouts},
 			},
 		},
 	})
@@ -285,7 +286,7 @@ func testAccCheckDomainReplicationLogState(t *testing.T, n string) resource.Test
 		}
 
 		a := rs.Primary.Attributes
-		t.Logf("%s state: id=%s role=%s peer_role=%s status=%s status_message=%q", n, rs.Primary.ID, a[names.AttrRole], a["peer_role"], a[names.AttrStatus], a[names.AttrStatusMessage])
+		t.Logf("%s state: domain_name=%s peer_domain_arn=%s role=%s peer_role=%s status=%s status_message=%q", n, a[names.AttrDomainName], a["peer_domain_arn"], a[names.AttrRole], a["peer_role"], a[names.AttrStatus], a[names.AttrStatusMessage])
 
 		return nil
 	}
@@ -300,12 +301,7 @@ func testAccCheckDomainReplicationExists(ctx context.Context, t *testing.T, n st
 
 		conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 
-		domainName, peerDomainARN, err := tfopensearch.DomainReplicationParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		output, err := tfopensearch.FindDomainReplicationByTwoPartKey(ctx, conn, domainName, peerDomainARN)
+		output, err := tfopensearch.FindDomainReplicationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["peer_domain_arn"])
 		if err != nil {
 			return err
 		}
@@ -325,12 +321,8 @@ func testAccCheckDomainReplicationDestroy(ctx context.Context, t *testing.T) res
 				continue
 			}
 
-			domainName, peerDomainARN, err := tfopensearch.DomainReplicationParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfopensearch.FindDomainReplicationByTwoPartKey(ctx, conn, domainName, peerDomainARN)
+			domainName, peerDomainARN := rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["peer_domain_arn"]
+			_, err := tfopensearch.FindDomainReplicationByTwoPartKey(ctx, conn, domainName, peerDomainARN)
 			if retry.NotFound(err) {
 				continue
 			}
@@ -338,7 +330,7 @@ func testAccCheckDomainReplicationDestroy(ctx context.Context, t *testing.T) res
 				return err
 			}
 
-			return fmt.Errorf("OpenSearch Domain Replication %s still exists", rs.Primary.ID)
+			return fmt.Errorf("OpenSearch Domain Replication %s,%s still exists", domainName, peerDomainARN)
 		}
 
 		return nil

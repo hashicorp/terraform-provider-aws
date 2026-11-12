@@ -15,9 +15,11 @@ Switchover and failover are not managed by this resource. Run them with the AWS 
 * After a switchover, the next refresh shows `role = SECONDARY`, `peer_role = PRIMARY` and `status = ACTIVE`. Replication continues in the reverse direction.
 * After a failover, the next refresh shows `role = SECONDARY`, `peer_role = PRIMARY` and `status = EJECTED`. Replication has stopped. `terraform destroy` still removes the relationship. To protect the data again, destroy this resource and create a new one with the new primary as `domain_name`. The new secondary must hold no non-system indices.
 
-~> **NOTE:** The secondary must hold no non-system indices when the relationship is created, because it is re-seeded from the primary. Both domains must have fine-grained access control, node-to-node encryption, encryption at rest and HTTPS enforced, and run the same engine version, OpenSearch 3.7 or later. Both domains must be in the same account. The caller needs `es:AddReplicationPeer` on both domains.
+~> **Note:** The secondary must hold no non-system indices when the relationship is created, because it is re-seeded from the primary. Both domains must have fine-grained access control, node-to-node encryption, encryption at rest and HTTPS enforced, and run the same engine version, OpenSearch 3.7 or later. Both domains must be in the same account. The caller needs `es:AddReplicationPeer` on both domains.
 
 ## Example Usage
+
+### Basic Usage
 
 ```terraform
 resource "aws_opensearch_domain_replication" "example" {
@@ -39,9 +41,8 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `domain_arn` - ARN of the domain named in `domain_name`.
-* `id` - `domain_name` and `peer_domain_arn` separated by a comma (`,`).
-* `peer_role` - Current role of the domain in `peer_domain_arn`: `PRIMARY` or `SECONDARY`.
-* `role` - Current role of the domain named in `domain_name`: `PRIMARY` or `SECONDARY`.
+* `peer_role` - Current role of the domain in `peer_domain_arn`.
+* `role` - Current role of the domain named in `domain_name`.
 * `status` - Status of the relationship between the two domains. `ACTIVE` means the relationship is established. It does not mean the first copy of the primary's data has finished. After a failover, the status is `EJECTED` and replication has stopped.
 * `status_message` - Additional detail about `status`, when the service provides it.
 

@@ -6,13 +6,13 @@ package opensearch
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -44,7 +44,6 @@ func newDomainReplicationResource(_ context.Context) (resource.ResourceWithConfi
 // them, are modelled as multiple resources.
 type domainReplicationResource struct {
 	framework.ResourceWithModel[domainReplicationResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }
@@ -59,7 +58,6 @@ func (r *domainReplicationResource) Schema(ctx context.Context, req resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"peer_domain_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -68,13 +66,16 @@ func (r *domainReplicationResource) Schema(ctx context.Context, req resource.Sch
 				},
 			},
 			"peer_role": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.StringEnumType[awstypes.ReplicationRole](),
+				Computed:   true,
 			},
 			names.AttrRole: schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.StringEnumType[awstypes.ReplicationRole](),
+				Computed:   true,
 			},
 			names.AttrStatus: schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.StringEnumType[awstypes.ReplicationStatus](),
+				Computed:   true,
 			},
 			names.AttrStatusMessage: schema.StringAttribute{
 				Computed: true,
@@ -99,7 +100,6 @@ func (r *domainReplicationResource) Create(ctx context.Context, req resource.Cre
 	conn := r.Meta().OpenSearchClient(ctx)
 
 	domainName, peerDomainARN := fwflex.StringValueFromFramework(ctx, plan.DomainName), fwflex.StringValueFromFramework(ctx, plan.PeerDomainARN)
-	id := domainReplicationCreateResourceID(domainName, peerDomainARN)
 	input := opensearch.AddReplicationPeerInput{
 		DomainName:    aws.String(domainName),
 		PeerDomainArn: aws.String(peerDomainARN),
@@ -109,17 +109,16 @@ func (r *domainReplicationResource) Create(ctx context.Context, req resource.Cre
 	// ValidationException: non-empty secondary, cross-account peer, or malformed ARN; the
 	// service message names the cause, so it is passed through unchanged.
 	if _, err := conn.AddReplicationPeer(ctx, &input); err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("creating OpenSearch Domain Replication (%s)", id), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("creating OpenSearch Domain Replication (%s,%s)", domainName, peerDomainARN), err.Error())
 		return
 	}
 
 	out, err := waitDomainReplicationActive(ctx, conn, domainName, peerDomainARN, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Domain Replication (%s) create", id), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Domain Replication (%s,%s) create", domainName, peerDomainARN), err.Error())
 		return
 	}
 
-	plan.ID = fwflex.StringValueToFramework(ctx, id)
 	plan.setFromDescribe(ctx, out)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -134,12 +133,7 @@ func (r *domainReplicationResource) Read(ctx context.Context, req resource.ReadR
 
 	conn := r.Meta().OpenSearchClient(ctx)
 
-	domainName, peerDomainARN, err := domainReplicationParseResourceID(fwflex.StringValueFromFramework(ctx, state.ID))
-	if err != nil {
-		resp.Diagnostics.AddError("parsing resource ID", err.Error())
-		return
-	}
-
+	domainName, peerDomainARN := fwflex.StringValueFromFramework(ctx, state.DomainName), fwflex.StringValueFromFramework(ctx, state.PeerDomainARN)
 	out, err := findDomainReplicationByTwoPartKey(ctx, conn, domainName, peerDomainARN)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -147,13 +141,10 @@ func (r *domainReplicationResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("reading OpenSearch Domain Replication (%s)", state.ID.ValueString()), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("reading OpenSearch Domain Replication (%s,%s)", domainName, peerDomainARN), err.Error())
 		return
 	}
 
-	// Set the identifying arguments for import.
-	state.DomainName = fwflex.StringValueToFramework(ctx, domainName)
-	state.PeerDomainARN = fwtypes.ARNValue(peerDomainARN)
 	state.setFromDescribe(ctx, out)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
@@ -178,14 +169,28 @@ func (r *domainReplicationResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Domain Replication (%s)", state.ID.ValueString()), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Domain Replication (%s,%s)", domainName, peerDomainARN), err.Error())
 		return
 	}
 
 	if _, err := waitDomainReplicationRemoved(ctx, conn, domainName, peerDomainARN, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Domain Replication (%s) delete", state.ID.ValueString()), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Domain Replication (%s,%s) delete", domainName, peerDomainARN), err.Error())
 		return
 	}
+}
+
+func (r *domainReplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	parts, err := intflex.ExpandResourceId(req.ID, domainReplicationResourceIDPartCount, false)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: domain_name,peer_domain_arn. Got: %q", req.ID),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrDomainName), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("peer_domain_arn"), parts[1])...)
 }
 
 // ACTIVE means the relationship is established on both clusters; the first copy may still be
@@ -237,10 +242,7 @@ func statusDomainReplication(conn *opensearch.Client, domainName, peerDomainARN 
 		}
 
 		peer := findReplicationPeerByARN(out, peerDomainARN)
-		switch peer.Status {
-		case awstypes.ReplicationStatusDetached:
-			return nil, "", nil
-		case awstypes.ReplicationStatusFailed:
+		if peer.Status == awstypes.ReplicationStatusFailed {
 			return out, string(peer.Status), fmt.Errorf("replication peer status %s: %s", peer.Status, aws.ToString(peer.StatusMessage))
 		}
 
@@ -249,8 +251,9 @@ func statusDomainReplication(conn *opensearch.Client, domainName, peerDomainARN 
 }
 
 // The returned output is guaranteed to list peerDomainARN among its peers. A domain that is not
-// replicating returns ResourceNotFoundException; an empty peer list, or one without this peer, is
-// treated the same way. EJECTED peers (after a failover) are still a relationship.
+// replicating returns ResourceNotFoundException; an empty peer list, one without this peer, or one
+// where this peer is DETACHED is treated the same way, even if other peers remain. EJECTED peers
+// (after a failover) are still a relationship.
 func findDomainReplicationByTwoPartKey(ctx context.Context, conn *opensearch.Client, domainName, peerDomainARN string) (*opensearch.DescribeDomainReplicationOutput, error) {
 	input := opensearch.DescribeDomainReplicationInput{
 		DomainName: aws.String(domainName),
@@ -262,7 +265,7 @@ func findDomainReplicationByTwoPartKey(ctx context.Context, conn *opensearch.Cli
 		return nil, err
 	}
 
-	if findReplicationPeerByARN(output, peerDomainARN) == nil {
+	if peer := findReplicationPeerByARN(output, peerDomainARN); peer == nil || peer.Status == awstypes.ReplicationStatusDetached {
 		return nil, &retry.NotFoundError{
 			Message: fmt.Sprintf("OpenSearch Domain Replication: domain %s has no replication peer %s", domainName, peerDomainARN),
 		}
@@ -311,38 +314,24 @@ func findReplicationPeerByARN(out *opensearch.DescribeDomainReplicationOutput, p
 // findDomainReplicationByTwoPartKey for the model's peer_domain_arn.
 func (data *domainReplicationResourceModel) setFromDescribe(ctx context.Context, out *opensearch.DescribeDomainReplicationOutput) {
 	data.DomainARN = fwflex.StringToFramework(ctx, out.DomainArn)
-	data.Role = fwflex.StringValueToFramework(ctx, string(out.Role))
+	data.Role = fwtypes.StringEnumValue(out.Role)
 
 	peer := findReplicationPeerByARN(out, fwflex.StringValueFromFramework(ctx, data.PeerDomainARN))
-	data.PeerRole = fwflex.StringValueToFramework(ctx, string(peer.PeerRole))
-	data.Status = fwflex.StringValueToFramework(ctx, string(peer.Status))
+	data.PeerRole = fwtypes.StringEnumValue(peer.PeerRole)
+	data.Status = fwtypes.StringEnumValue(peer.Status)
 	data.StatusMessage = fwflex.StringToFramework(ctx, peer.StatusMessage)
 }
 
 type domainReplicationResourceModel struct {
 	framework.WithRegionModel
-	DomainARN     types.String   `tfsdk:"domain_arn"`
-	DomainName    types.String   `tfsdk:"domain_name"`
-	ID            types.String   `tfsdk:"id"`
-	PeerDomainARN fwtypes.ARN    `tfsdk:"peer_domain_arn"`
-	PeerRole      types.String   `tfsdk:"peer_role"`
-	Role          types.String   `tfsdk:"role"`
-	Status        types.String   `tfsdk:"status"`
-	StatusMessage types.String   `tfsdk:"status_message"`
-	Timeouts      timeouts.Value `tfsdk:"timeouts"`
+	DomainARN     types.String                                   `tfsdk:"domain_arn"`
+	DomainName    types.String                                   `tfsdk:"domain_name"`
+	PeerDomainARN fwtypes.ARN                                    `tfsdk:"peer_domain_arn"`
+	PeerRole      fwtypes.StringEnum[awstypes.ReplicationRole]   `tfsdk:"peer_role"`
+	Role          fwtypes.StringEnum[awstypes.ReplicationRole]   `tfsdk:"role"`
+	Status        fwtypes.StringEnum[awstypes.ReplicationStatus] `tfsdk:"status"`
+	StatusMessage types.String                                   `tfsdk:"status_message"`
+	Timeouts      timeouts.Value                                 `tfsdk:"timeouts"`
 }
 
 const domainReplicationResourceIDPartCount = 2
-
-func domainReplicationCreateResourceID(domainName, peerDomainARN string) string {
-	return strings.Join([]string{domainName, peerDomainARN}, intflex.ResourceIdSeparator)
-}
-
-func domainReplicationParseResourceID(id string) (string, string, error) {
-	parts, err := intflex.ExpandResourceId(id, domainReplicationResourceIDPartCount, false)
-	if err != nil {
-		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected domain-name%[2]speer-domain-arn: %w", id, intflex.ResourceIdSeparator, err)
-	}
-
-	return parts[0], parts[1], nil
-}
