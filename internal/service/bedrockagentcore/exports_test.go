@@ -62,6 +62,8 @@ type (
 	MemoryStrategyResourceModel            = memoryStrategyResourceModel
 	MessageBasedTriggerModel               = messageBasedTriggerModel
 	MetadataSchemaEntryModel               = metadataSchemaEntryModel
+	NamespaceKeyModel                      = namespaceKeyModel
+	NamespaceKeyValidationModel            = namespaceKeyValidationModel
 	NumberValidationModel                  = numberValidationModel
 	OverrideDetailsModel                   = overrideDetailsModel
 	PrivateEndpointModel                   = privateEndpointModel

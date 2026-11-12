@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory: Add `namespace_key` configuration block
+```

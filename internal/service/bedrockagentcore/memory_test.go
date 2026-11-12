@@ -9,8 +9,12 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -21,10 +25,60 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestMemoryNamespaceKeysAutoFlex(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	model := fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*tfbedrockagentcore.NamespaceKeyModel{
+		{
+			Key: types.StringValue("environment"),
+			Validation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.NamespaceKeyValidationModel{
+				AllowedValues: fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"development", "production"}),
+				RegexPattern:  types.StringValue("^[a-z]+$"),
+			}),
+		},
+		{
+			Key:        types.StringValue("tenant"),
+			Validation: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.NamespaceKeyValidationModel](ctx),
+		},
+	})
+	apiObjects := []awstypes.NamespaceKeyEntry{
+		{
+			Key: aws.String("environment"),
+			Validation: &awstypes.NamespaceKeyValidation{
+				AllowedValues: []string{"development", "production"},
+				RegexPattern:  aws.String("^[a-z]+$"),
+			},
+		},
+		{
+			Key: aws.String("tenant"),
+		},
+	}
+
+	var expanded []awstypes.NamespaceKeyEntry
+	if diags := fwflex.Expand(ctx, model, &expanded); diags.HasError() {
+		t.Fatalf("unexpected Expand error: %v", diags)
+	}
+	if diff := cmp.Diff(apiObjects, expanded, cmpopts.IgnoreUnexported(awstypes.NamespaceKeyEntry{}, awstypes.NamespaceKeyValidation{}), cmpopts.SortSlices(func(a, b string) bool { return a < b })); diff != "" {
+		t.Errorf("unexpected Expand diff (+got, -want): %s", diff)
+	}
+
+	flattened := fwtypes.NewSetNestedObjectValueOfNull[tfbedrockagentcore.NamespaceKeyModel](ctx)
+	if diags := fwflex.Flatten(ctx, apiObjects, &flattened); diags.HasError() {
+		t.Fatalf("unexpected Flatten error: %v", diags)
+	}
+	if !flattened.Equal(model) {
+		t.Errorf("unexpected Flatten result: got %s, want %s", flattened, model)
+	}
+}
 
 func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -331,6 +385,150 @@ func TestAccBedrockAgentCoreMemory_indexedKeys(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreMemory_namespaceKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.Memory
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryConfig_namespaceKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_key"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey: knownvalue.StringExact("tenant"),
+							"validation": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_values": knownvalue.Null(),
+									"regex_pattern":  knownvalue.StringExact("^[a-z0-9-]+$"),
+								}),
+							}),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey: knownvalue.StringExact("environment"),
+							"validation": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_values": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("development"),
+										knownvalue.StringExact("production"),
+									}),
+									"regex_pattern": knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Changing a key's validation and adding a key without validation is an in-place update.
+				Config: testAccMemoryConfig_namespaceKeysUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_key"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey: knownvalue.StringExact("environment"),
+							"validation": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"allowed_values": knownvalue.SetExact([]knownvalue.Check{
+										knownvalue.StringExact("development"),
+										knownvalue.StringExact("production"),
+										knownvalue.StringExact("staging"),
+									}),
+									"regex_pattern": knownvalue.StringExact("^[a-z]+$"),
+								}),
+							}),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey: knownvalue.StringExact("region1"),
+							"validation":  knownvalue.ListSizeExact(0),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Removing every namespace_key block clears the keys in place.
+				Config: testAccMemoryConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("namespace_key"), knownvalue.SetSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemory_namespaceKeysValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomWithPrefixAndUnderscore(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMemoryConfig_namespaceKey(rName, "tenantId", `regex_pattern = "^[a-z]+$"`),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Value Match`),
+			},
+			{
+				Config:      testAccMemoryConfig_namespaceKey(rName, "tenant", `allowed_values = ["Production"]`),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Value Match`),
+			},
+			{
+				Config:      testAccMemoryConfig_namespaceKey(rName, "tenant", ""),
+				ExpectError: regexache.MustCompile(`Invalid Attribute Combination`),
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreMemory_streamDeliveryResources(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
@@ -540,4 +738,68 @@ resource "aws_bedrockagentcore_memory" "test" {
   }
 }
 `, rName))
+}
+
+func testAccMemoryConfig_namespaceKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory" "test" {
+  name                  = %[1]q
+  event_expiry_duration = 7
+
+  namespace_key {
+    key = "tenant"
+
+    validation {
+      regex_pattern = "^[a-z0-9-]+$"
+    }
+  }
+
+  namespace_key {
+    key = "environment"
+
+    validation {
+      allowed_values = ["development", "production"]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccMemoryConfig_namespaceKeysUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory" "test" {
+  name                  = %[1]q
+  event_expiry_duration = 7
+
+  namespace_key {
+    key = "environment"
+
+    validation {
+      allowed_values = ["development", "staging", "production"]
+      regex_pattern  = "^[a-z]+$"
+    }
+  }
+
+  namespace_key {
+    key = "region1"
+  }
+}
+`, rName)
+}
+
+func testAccMemoryConfig_namespaceKey(rName, key, validation string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory" "test" {
+  name                  = %[1]q
+  event_expiry_duration = 7
+
+  namespace_key {
+    key = %[2]q
+
+    validation {
+      %[3]s
+    }
+  }
+}
+`, rName, key, validation)
 }

@@ -58,6 +58,31 @@ resource "aws_bedrockagentcore_memory" "example" {
 }
 ```
 
+### Memory with Namespace Keys
+
+```terraform
+resource "aws_bedrockagentcore_memory" "example" {
+  name                  = "example_memory"
+  event_expiry_duration = 30
+
+  namespace_key {
+    key = "tenant"
+
+    validation {
+      regex_pattern = "^[a-z0-9-]+$"
+    }
+  }
+
+  namespace_key {
+    key = "environment"
+
+    validation {
+      allowed_values = ["development", "staging", "production"]
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -71,6 +96,7 @@ The following arguments are optional:
 * `encryption_key_arn` - (Optional) ARN of the KMS key used to encrypt the memory. If not provided, AWS managed encryption is used.
 * `indexed_key` - (Optional) Metadata keys to index for filtering. Up to 10 entries. Additional keys can be added in place; removing or changing an existing key forces a new resource to be created, because previously indexed keys cannot be removed. See [`indexed_key` Block](#indexed_key-block) below.
 * `memory_execution_role_arn` - (Optional) ARN of the IAM role that the memory service assumes to perform operations. Required when using custom memory strategies with model processing.
+* `namespace_key` - (Optional) Custom namespace variable keys that memory strategy `namespace_templates` can reference. Up to 5 entries. Changes are applied in place, and the full set of keys is replaced on every change, so removing a block removes that key from the memory. A key that a memory strategy still references cannot be removed. See [`namespace_key` Block](#namespace_key-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `stream_delivery_resources` - (Optional) Configuration for streaming memory record data to external resources. See [`stream_delivery_resources` Block](#stream_delivery_resources-block) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -81,6 +107,20 @@ The `indexed_key` configuration block supports the following arguments:
 
 * `key` - (Required) Metadata key name to index.
 * `type` - (Required) Data type of the indexed key. Valid values are `STRING`, `STRINGLIST`, and `NUMBER`.
+
+### `namespace_key` Block
+
+The `namespace_key` configuration block supports the following arguments:
+
+* `key` - (Required) Name of the namespace variable. Must start with a lowercase letter, contain only lowercase letters and digits, and be at most 32 characters. The built-in variables `actorId`, `sessionId`, and `memoryStrategyId` cannot be used.
+* `validation` - (Optional) Rules that values supplied for this variable at runtime (`CreateEvent`) must satisfy. See [`validation` Block](#validation-block) below.
+
+### `validation` Block
+
+The `validation` configuration block supports the following arguments. At least one must be set. When both are set, a value must satisfy both.
+
+* `allowed_values` - (Optional) Set of allowed values for the variable. Between 1 and 10 values. Each value must start with a lowercase letter or digit, contain only lowercase letters, digits, hyphens, and underscores, and be at most 64 characters.
+* `regex_pattern` - (Optional) Regular expression that values for the variable must match. Between 1 and 64 characters.
 
 ### `stream_delivery_resources` Block
 
