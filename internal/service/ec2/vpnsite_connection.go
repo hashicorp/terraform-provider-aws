@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1756,7 +1757,7 @@ func validVPNConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(8, 64),
 		validation.StringDoesNotMatch(regexache.MustCompile(`^0`), "cannot start with zero character"),
-		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
+		lazyvalidation.StringMatch(`^[0-9A-Za-z_.]+$`, "can only contain alphanumeric, period and underscore characters"),
 	)
 }
 
@@ -1775,7 +1776,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 
 	return validation.All(
 		validation.IsCIDRNetwork(30, 30),
-		validation.StringMatch(regexache.MustCompile(`^169\.254\.`), "must be within 169.254.0.0/16"),
+		lazyvalidation.StringMatch(`^169\.254\.`, "must be within 169.254.0.0/16"),
 		validation.StringNotInSlice(disallowedCidrs, false),
 	)
 }
@@ -1783,7 +1784,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.IsCIDRNetwork(126, 126),
-		validation.StringMatch(regexache.MustCompile(`^fd`), "must be within fd00::/8"),
+		lazyvalidation.StringMatch(`^fd`, "must be within fd00::/8"),
 	)
 }
 

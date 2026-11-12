@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -81,12 +82,12 @@ func resourceTransitGatewayConnectPeer() *schema.Resource {
 						ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
 							validation.All(
 								validation.IsCIDRNetwork(29, 29),
-								validation.StringMatch(regexache.MustCompile(`^169\.254\.`), "IPv4 range must be from range 169.254.0.0/16"),
+								lazyvalidation.StringMatch(`^169\.254\.`, "IPv4 range must be from range 169.254.0.0/16"),
 								validation.StringDoesNotMatch(regexache.MustCompile(`^169\.254\.([0-5]\.0|169\.248)/29`), "IPv4 range must not be 169.254.([0-5].0|169.248)/29"),
 							),
 							validation.All(
 								validation.IsCIDRNetwork(125, 125),
-								validation.StringMatch(regexache.MustCompile(`^[fF][dD]`), "IPv6 range must be from fd00::/8"),
+								lazyvalidation.StringMatch(`^[fF][dD]`, "IPv6 range must be from fd00::/8"),
 							),
 						),
 					},
