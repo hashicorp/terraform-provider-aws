@@ -257,7 +257,7 @@ func hostedConfigurationVersionARN(ctx context.Context, c *conns.AWSClient, appl
 func stripInjectedMetadata(content []byte) ([]byte, error) {
 	var data map[string]any
 	if err := json.Unmarshal(content, &data); err != nil {
-		return content, nil
+		return content, nil //nolint:nilerr // Not a JSON object (e.g. YAML or plain text freeform content), so return it unchanged
 	}
 
 	stripped := false
