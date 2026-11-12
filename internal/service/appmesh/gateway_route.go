@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -179,7 +179,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 														names.AttrValue: {
 															Type:         schema.TypeString,
 															Optional:     true,
-															ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
+															ValidateFunc: lazyvalidation.StringMatch(`^/`, "must start with /"),
 															ExactlyOneOf: []string{
 																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.default_prefix", attrName),
 																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.value", attrName),
@@ -368,7 +368,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 								names.AttrPrefix: {
 									Type:         schema.TypeString,
 									Optional:     true,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
+									ValidateFunc: lazyvalidation.StringMatch(`^/`, "must start with /"),
 									AtLeastOneOf: []string{
 										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
 										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
