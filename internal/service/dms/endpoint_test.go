@@ -1296,6 +1296,29 @@ func TestAccDMSEndpoint_MySQL_settings_source(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_MySQL_iamAuthentication(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mySQLSourceSettingsIAMAuth(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.authentication_method", "iam"),
+					resource.TestCheckResourceAttrPair(resourceName, "mysql_settings.0.service_access_role_arn", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_MySQL_settings_target(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
@@ -3537,6 +3560,49 @@ resource "aws_dms_endpoint" "test" {
   %[2]s
 }
 `, rName, mysqlSettings))
+}
+
+func testAccEndpointConfig_mySQLSourceSettingsIAMAuth(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_certificateBase(rName), fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "dms.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_dms_endpoint" "test" {
+  certificate_arn = aws_dms_certificate.dms_certificate.certificate_arn
+  endpoint_id     = %[1]q
+  endpoint_type   = "source"
+  engine_name     = "mysql"
+  server_name     = "tftest"
+  port            = 5432
+  username        = "tftest"
+  database_name   = "tftest"
+  ssl_mode        = "verify-full"
+
+  mysql_settings {
+    authentication_method   = "iam"
+    service_access_role_arn = aws_iam_role.test.arn
+  }
+}
+`, rName))
 }
 
 func testAccEndpointConfig_mySQLTargetSettingsBlock(executeTimeout int) string {
