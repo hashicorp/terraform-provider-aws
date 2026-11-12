@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrock_model_invocation_logging_configuration: Fix perpetual diff for `logging_config.video_data_delivery_enabled` in regions that do not support video modality
+```
