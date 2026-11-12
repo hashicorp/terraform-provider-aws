@@ -63,6 +63,14 @@ func stringDoesNotMatch(pattern string) {
 	lazyvalidation.StringDoesNotMatch(pattern, "must not match pattern")
 }
 
+func stringDoesNotMatchFunctionRegex() {
+	// ruleid: use-lazyvalidation-string-does-not-match-function-regex
+	validation.StringDoesNotMatch(patternRegex(), "must not match pattern")
+
+	// ruleid: use-lazyvalidation-string-does-not-match-function-regex
+	validation.StringDoesNotMatch(patternRegexWithMessage())
+}
+
 func patternRegex() *regexp.Regexp {
 	return regexache.MustCompile(`^[a-z]+$`)
 }

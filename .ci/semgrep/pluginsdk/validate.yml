@@ -33,6 +33,12 @@ rules:
     fix: lazyvalidation.StringDoesNotMatch($PATTERN, $MESSAGE)
     severity: WARNING
 
+  - id: use-lazyvalidation-string-does-not-match-function-regex
+    languages: [go]
+    message: Replace the function-returned regular expression with a pattern string and use `lazyvalidation.StringDoesNotMatch`
+    pattern: validation.StringDoesNotMatch($REGEX(), $...ARGS)
+    severity: WARNING
+
   - id: use-lazyvalidation-string-does-not-match-diag
     languages: [go]
     message: Prefer `lazyvalidation.StringDoesNotMatchDiag` to `validation.ToDiagFunc(validation.StringDoesNotMatch(...))`
