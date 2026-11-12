@@ -32,7 +32,8 @@ func RegisterSweepers() {
 		Name: "aws_pinpointsmsvoicev2_pool",
 		F:    sweepPools,
 	})
-	awsv2.Register("aws_pinpointsmsvoicev2_protect_configuration", sweepProtectConfigurations, "aws_pinpointsmsvoicev2_protect_configuration_association")
+	awsv2.Register("aws_pinpointsmsvoicev2_account_default_protect_configuration", sweepAccountDefaultProtectConfigurations)
+	awsv2.Register("aws_pinpointsmsvoicev2_protect_configuration", sweepProtectConfigurations, "aws_pinpointsmsvoicev2_account_default_protect_configuration", "aws_pinpointsmsvoicev2_protect_configuration_association")
 	awsv2.Register("aws_pinpointsmsvoicev2_protect_configuration_association", sweepProtectConfigurationAssociations)
 	resource.AddTestSweepers("aws_pinpointsmsvoicev2_sender_id", &resource.Sweeper{
 		Name:         "aws_pinpointsmsvoicev2_sender_id",
@@ -171,6 +172,23 @@ func sweepSenderIDs(region string) error {
 	}
 
 	return nil
+}
+
+func sweepAccountDefaultProtectConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.PinpointSMSVoiceV2Client(ctx)
+
+	_, err := findAccountDefaultProtectConfiguration(ctx, conn)
+	if retry.NotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return []sweep.Sweepable{
+		framework.NewSweepResource(newAccountDefaultProtectConfigurationResource, client,
+			framework.NewAttribute(names.AttrID, client.Region(ctx))),
+	}, nil
 }
 
 func sweepProtectConfigurationAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
