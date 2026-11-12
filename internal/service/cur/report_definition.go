@@ -11,7 +11,6 @@ import (
 	"log"
 	"slices"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	cur "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -87,7 +87,7 @@ func resourceReportDefinition() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 256),
-						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
+						lazyvalidation.StringMatch(`[0-9A-Za-z!\-_.*\'()]+`, "The name must be unique, is case sensitive, and can't include spaces."),
 					),
 				},
 				"report_versioning": {
@@ -106,7 +106,7 @@ func resourceReportDefinition() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 256),
-						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*'()]*`), ""),
+						lazyvalidation.StringMatch(`[0-9A-Za-z!\-_.*'()]*`, ""),
 					),
 				},
 				"s3_region": {
