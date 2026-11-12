@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -130,7 +130,7 @@ func resourceConnectPeer() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 50),
-						validation.StringMatch(regexache.MustCompile(`^attachment-([0-9a-f]{8,17})$`), "Must start with attachment and then have 8 to 17 characters"),
+						lazyvalidation.StringMatch(`^attachment-([0-9a-f]{8,17})$`, "Must start with attachment and then have 8 to 17 characters"),
 					),
 				},
 				"connect_peer_id": {
@@ -143,7 +143,7 @@ func resourceConnectPeer() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 50),
-						validation.StringMatch(regexache.MustCompile(`[\s\S]*`), "Anything but whitespace"),
+						lazyvalidation.StringMatch(`[\s\S]*`, "Anything but whitespace"),
 					),
 				},
 				"core_network_id": {
@@ -174,7 +174,7 @@ func resourceConnectPeer() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 50),
-						validation.StringMatch(regexache.MustCompile(`[\s\S]*`), "Anything but whitespace"),
+						lazyvalidation.StringMatch(`[\s\S]*`, "Anything but whitespace"),
 					),
 				},
 				"subnet_arn": {
@@ -182,7 +182,7 @@ func resourceConnectPeer() *schema.Resource {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 500),
-						validation.StringMatch(regexache.MustCompile(`^arn:[^:]{1,63}:ec2:[^:]{0,63}:[^:]{0,63}:subnet\/subnet-[0-9a-f]{8,17}$|^$`), "Must be a valid subnet ARN"),
+						lazyvalidation.StringMatch(`^arn:[^:]{1,63}:ec2:[^:]{0,63}:[^:]{0,63}:subnet\/subnet-[0-9a-f]{8,17}$|^$`, "Must be a valid subnet ARN"),
 					),
 				},
 				names.AttrState: {

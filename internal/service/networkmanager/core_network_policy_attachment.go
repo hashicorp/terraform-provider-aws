@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,7 +47,7 @@ func resourceCoreNetworkPolicyAttachment() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 50),
-						validation.StringMatch(regexache.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "must be a valid Core Network ID"),
+						lazyvalidation.StringMatch(`^core-network-([0-9a-f]{8,17})$`, "must be a valid Core Network ID"),
 					),
 				},
 				"policy_document": {
