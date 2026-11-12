@@ -33,6 +33,7 @@ func resourceUser() *schema.Resource {
 		ReadWithoutTimeout:   resourceUserRead,
 		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
+		CustomizeDiff:        resourceUserCustomizeDiff,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -222,6 +223,10 @@ func resourceUser() *schema.Resource {
 					Optional:         true,
 					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 				},
+				"revision": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"timezone": {
 					Type:             schema.TypeString,
 					Optional:         true,
@@ -365,6 +370,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 	d.Set("preferred_language", out.PreferredLanguage)
 	d.Set("profile_url", out.ProfileUrl)
+	d.Set("revision", out.Revision)
 	d.Set("timezone", out.Timezone)
 	d.Set("title", out.Title)
 	d.Set("user_id", out.UserId)
@@ -373,6 +379,28 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set("user_type", out.UserType)
 
 	return diags
+}
+
+// Identity Store revisions change whenever the resource is updated.
+func resourceUserCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.Id() == "" || !d.HasChanges(
+		"addresses",
+		names.AttrDisplayName,
+		"emails",
+		"locale",
+		names.AttrName,
+		"nickname",
+		"phone_numbers",
+		"preferred_language",
+		"profile_url",
+		"timezone",
+		"title",
+		"user_type",
+	) {
+		return nil
+	}
+
+	return d.SetNewComputed("revision")
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -386,6 +414,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	input := &identitystore.UpdateUserInput{
 		IdentityStoreId: aws.String(identityStoreID),
+		Revision:        identityStoreRevisionFromState(d),
 		UserId:          aws.String(userID),
 	}
 
@@ -606,6 +635,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 		_, err := conn.UpdateUser(ctx, input)
 
 		if err != nil {
+			d.Partial(true)
 			return sdkdiag.AppendErrorf(diags, "updating IdentityStore User (%s): %s", d.Id(), err)
 		}
 	}
@@ -625,6 +655,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	log.Printf("[INFO] Deleting IdentityStore User: %s", d.Id())
 	_, err = conn.DeleteUser(ctx, &identitystore.DeleteUserInput{
 		IdentityStoreId: aws.String(identityStoreID),
+		Revision:        identityStoreRevisionFromState(d),
 		UserId:          aws.String(userID),
 	})
 
