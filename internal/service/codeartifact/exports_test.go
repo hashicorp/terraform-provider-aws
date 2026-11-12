@@ -11,6 +11,7 @@ var (
 	ResourceRepositoryPermissionsPolicy = resourceRepositoryPermissionsPolicy
 
 	FindDomainByTwoPartKey                        = findDomainByTwoPartKey
+	FindPackageOriginConfiguration                = findPackageOriginConfiguration
 	FindDomainPermissionsPolicyByTwoPartKey       = findDomainPermissionsPolicyByTwoPartKey
 	FindRepositoryByThreePartKey                  = findRepositoryByThreePartKey
 	FindRepositoryPermissionsPolicyByThreePartKey = findRepositoryPermissionsPolicyByThreePartKey
