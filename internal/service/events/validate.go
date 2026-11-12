@@ -84,7 +84,7 @@ var validSourceName = validation.All(
 
 var validCustomEventBusName = validation.All(
 	validation.StringLenBetween(1, 256),
-	validation.StringDoesNotMatch(regexache.MustCompile(`^default$`), "cannot be 'default'"),
+	lazyvalidation.StringDoesNotMatch(`^default$`, "cannot be 'default'"),
 )
 
 func isEventBusARN(arn arn.ARN) bool {
