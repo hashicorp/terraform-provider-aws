@@ -37,3 +37,48 @@ func stringMatchDiag(pattern string) {
 	// ok: use-lazyvalidation-string-match
 	lazyvalidation.StringMatch(pattern, "must match pattern")
 }
+
+func stringMatchFunctionRegex() {
+	// ruleid: use-lazyvalidation-string-match-function-regex
+	validation.StringMatch(patternRegex(), "must match pattern")
+
+	// ruleid: use-lazyvalidation-string-match-function-regex
+	validation.StringMatch(patternRegexWithMessage())
+}
+
+func stringDoesNotMatch(pattern string) {
+	// ruleid: use-lazyvalidation-string-does-not-match-diag
+	validation.ToDiagFunc(validation.StringDoesNotMatch(regexache.MustCompile(pattern), "must not match pattern"))
+
+	// ruleid: use-lazyvalidation-string-does-not-match-diag
+	validation.ToDiagFunc(validation.StringDoesNotMatch(
+		regexache.MustCompile(`^aws/`),
+		"must not begin with aws/",
+	))
+
+	// ruleid: use-lazyvalidation-string-does-not-match
+	validation.StringDoesNotMatch(regexache.MustCompile(pattern), "must not match pattern")
+
+	// ruleid: use-lazyvalidation-string-does-not-match
+	validation.StringDoesNotMatch(
+		regexache.MustCompile(`^aws/`),
+		"must not begin with aws/",
+	)
+
+	// ok: use-lazyvalidation-string-does-not-match-diag
+	validation.ToDiagFunc(validation.StringLenBetween(1, 128))
+
+	// ok: use-lazyvalidation-string-does-not-match-diag
+	lazyvalidation.StringDoesNotMatchDiag(pattern, "must not match pattern")
+
+	// ok: use-lazyvalidation-string-does-not-match
+	lazyvalidation.StringDoesNotMatch(pattern, "must not match pattern")
+}
+
+func patternRegex() *regexp.Regexp {
+	return regexache.MustCompile(`^[a-z]+$`)
+}
+
+func patternRegexWithMessage() (*regexp.Regexp, string) {
+	return regexache.MustCompile(`^[a-z]+$`), "must match pattern"
+}
