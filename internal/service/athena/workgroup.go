@@ -33,6 +33,7 @@ import (
 
 // @SDKResource("aws_athena_workgroup", name="WorkGroup")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceWorkGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkGroupCreate,
