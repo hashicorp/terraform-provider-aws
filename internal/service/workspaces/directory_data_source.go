@@ -85,10 +85,42 @@ func dataSourceDirectory() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"idc_config": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"application_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"instance_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
 				"ip_group_ids": {
 					Type:     schema.TypeSet,
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"microsoft_entra_config": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"application_config_secret_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"tenant_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
 				},
 				"registration_code": {
 					Type:     schema.TypeString,
@@ -297,8 +329,13 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
 	d.Set("dns_ip_addresses", directory.DnsIpAddresses)
+	d.Set("idc_application_arn", directory.IDCConfig.ApplicationArn)
+	d.Set("idc_instance_arn", directory.IDCConfig.InstanceArn)
 	d.Set("iam_role_id", directory.IamRoleId)
 	d.Set("ip_group_ids", directory.IpGroupIds)
+	if err := d.Set("microsoft_entra_config", flattenMicrosoftEntraConfig(directory.MicrosoftEntraConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting microsoft_entra_config: %s", err)
+	}
 	d.Set("registration_code", directory.RegistrationCode)
 	if err := d.Set("self_service_permissions", flattenSelfservicePermissions(directory.SelfservicePermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)

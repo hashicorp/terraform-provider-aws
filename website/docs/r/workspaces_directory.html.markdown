@@ -279,7 +279,7 @@ This resource supports the following arguments:
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
 * `ip_group_ids` - (Optional) The identifiers of the IP access control groups associated with the directory.
 * `tags` - (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tenancy` - (Optional) Tenancy of the WorkSpaces directory. Valid values are `DEDICATED` or `SHARED`.
+* `tenancy` - (Optional) Tenancy of the WorkSpaces directory. Valid values are `DEDICATED` or `SHARED`. Default is `SHARED`, must be set to `DEDICATED` with `microsoft_entra_config`.
 * `certificate_based_auth_properties` - (Optional) Configuration of certificate-based authentication (CBA) integration. Requires SAML authentication to be enabled. Defined below.
 * `saml_properties` - (Optional) Configuration of SAML authentication integration. Defined below.
 * `self_service_permissions` - (Optional) Permissions to enable or disable self-service capabilities when `workspace_type` is set to `PERSONAL`.. Defined below.
@@ -287,11 +287,13 @@ This resource supports the following arguments:
 * `workspace_creation_properties` - (Optional) Default properties that are used for creating WorkSpaces. Defined below.
 * `workspace_type` - (Optional) Specifies the type of WorkSpaces directory. Valid values are `PERSONAL` and `POOLS`. Default is `PERSONAL`.
 * `active_directory_config` - (Optional) Configuration for Active Directory integration when `workspace_type` is set to `POOLS`. Defined below.
-* `workspace_directory_name` - (Required for `POOLS`) The name of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
-* `workspace_directory_description` - (Required for `POOLS`) The description of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
+* `workspace_directory_name` - (Required for `POOLS` and `microsoft_entra_config`) The name of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
+* `workspace_directory_description` - (Required for `POOLS` and `microsoft_entra_config`) The description of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
 * `user_identity_type` - (Required for `POOLS`) Specifies the user identity type for the WorkSpaces directory. Valid values are `CUSTOMER_MANAGED`, `AWS_DIRECTORY_SERVICE`, `AWS_IAM_IDENTITY_CENTER`.
+* `microsoft_entra_config` - (Optional) Configuration for Microsoft Entra integration when `workspace_type` is set to `PERSONAL`. Defined below.
+* `idc_instance_arn` - (Required for `PERSONAL` with `microsoft_entra_config`) Identity Center Instance ARN.
 
--> **Note:** When `workspace_type` is set to `POOLS`, the `directory_id` is automatically generated and cannot be manually set.
+-> **Note:** When `workspace_type` is set to `POOLS` or when `microsoft_entra_config` is set, the `directory_id` is automatically generated and cannot be manually set.
 
 ### certificate_based_auth_properties
 
@@ -351,6 +353,15 @@ This resource supports the following arguments:
 * `domain_name` - Fully qualified domain name of the AWS Directory Service directory.
 * `service_account_secret_arn` - ARN of the Secrets Manager secret that contains the credentials for the service account. For more information, see [Service Account Details](https://docs.aws.amazon.com/workspaces/latest/adminguide/pools-service-account-details.html).
 
+### microsoft_entra_config
+
+-> **Note:** `microsoft_entra_config` is only valid if `workspaces_type` is set to `PERSONAL`.
+
+For configuration information see [Create a dedicated Microsoft Entra ID directory with WorkSpaces Personal](https://docs.aws.amazon.com/workspaces/latest/adminguide/launch-entra-id.html)
+
+* `service_account_secret_arn` - ARN of the Secrets Manager secret that contains the for Entra App credentials.
+* `tenant_id` - The identifier of the tenant.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -366,6 +377,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `registration_code` - The registration code for the directory. This is the code that users enter in their Amazon WorkSpaces client application to connect to the directory.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `workspace_security_group_id` - The identifier of the security group that is assigned to new WorkSpaces.
+* `idc_application_arn` - The ARN of the application registered in Identity Center
 
 ## Import
 
