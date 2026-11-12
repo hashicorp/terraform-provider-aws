@@ -122,6 +122,7 @@ The following arguments are optional:
 
 * `authorizer_configuration` - (Optional) Configuration for request authorization. Required when `authorizer_type` is set to `CUSTOM_JWT`. See [`authorizer_configuration`](#authorizer_configuration-block) below.
 * `description` - (Optional) Description of the gateway.
+* `domain_override` - (Optional) Public domain names that the gateway advertises in its OAuth discovery URLs, such as the protected resource metadata and the `WWW-Authenticate` challenge, instead of the inbound `Host` header. Use this when clients reach the gateway through your own proxy or custom domain. See [`domain_override`](#domain_override-block) below.
 * `exception_level` - (Optional) Exception level for the gateway. Valid values: `DEBUG`.
 * `interceptor_configuration` - (Optional) List of interceptor configurations for the gateway. Minimum of 1, maximum of 2. See [`interceptor_configuration`](#interceptor_configuration-block) below.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the gateway data.
@@ -205,6 +206,13 @@ The `claim_match_value` block supports the following:
 
 * `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 * `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
+
+### `domain_override` Block
+
+The `domain_override` block supports the following:
+
+* `alternate_domains` - (Optional) Set of additional public domain names for the gateway. Between 1 and 10 entries. Must not include `default_domain`. A request selects one of these domains, or the default domain, with the `x-amzn-bedrock-agentcore-gateway-domain` header.
+* `default_domain` - (Required) Public domain name that the gateway advertises when a request doesn't select a specific domain.
 
 ### `interceptor_configuration` Block
 
