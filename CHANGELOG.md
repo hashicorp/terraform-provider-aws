@@ -1,5 +1,10 @@
 ## 6.74.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_devopsagent_asset_file` ([#50903](https://github.com/hashicorp/terraform-provider-aws/issues/50903))
+* **New Resource:** `aws_devopsagent_asset_file` ([#50903](https://github.com/hashicorp/terraform-provider-aws/issues/50903))
+
 ENHANCEMENTS:
 
 * resource/aws_fsx_s3_access_point_attachment: Add `ontap_configuration` argument to support Amazon FSx for NetApp ONTAP volumes ([#50917](https://github.com/hashicorp/terraform-provider-aws/issues/50917))
