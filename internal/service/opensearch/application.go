@@ -126,6 +126,10 @@ func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaReq
 								stringvalidator.LengthAtMost(1000),
 							},
 						},
+						"iam_role_for_data_source_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
+						},
 					},
 				},
 			},
@@ -430,8 +434,9 @@ type appConfigModel struct {
 }
 
 type dataSourceModel struct {
-	DataSourceARN         fwtypes.ARN  `tfsdk:"data_source_arn"`
-	DataSourceDescription types.String `tfsdk:"data_source_description"`
+	DataSourceARN           fwtypes.ARN  `tfsdk:"data_source_arn"`
+	DataSourceDescription   types.String `tfsdk:"data_source_description"`
+	IAMRoleForDataSourceARN fwtypes.ARN  `tfsdk:"iam_role_for_data_source_arn"`
 }
 
 type iamIdentityCenterOptionsModel struct {
