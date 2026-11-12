@@ -656,8 +656,17 @@ func evaluationDatasetMetricConfigNestedObject(ctx context.Context) schema.Neste
 				},
 			},
 			"task_type": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.EvaluationTaskType](),
-				Required:   true,
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(
+						string(awstypes.EvaluationTaskTypeSummarization),
+						string(awstypes.EvaluationTaskTypeClassification),
+						string(awstypes.EvaluationTaskTypeQuestionAndAnswer),
+						string(awstypes.EvaluationTaskTypeGeneration),
+						string(awstypes.EvaluationTaskTypeCustom),
+						evaluationTaskTypeGeneral,
+					),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -1010,7 +1019,7 @@ type automatedEvaluationConfigModel struct {
 type evaluationDatasetMetricConfigModel struct {
 	Dataset     fwtypes.ListNestedObjectValueOf[evaluationDatasetModel] `tfsdk:"dataset"`
 	MetricNames fwtypes.ListOfString                                    `tfsdk:"metric_names"`
-	TaskType    fwtypes.StringEnum[awstypes.EvaluationTaskType]         `tfsdk:"task_type"`
+	TaskType    types.String                                            `tfsdk:"task_type"`
 }
 
 type evaluationDatasetModel struct {

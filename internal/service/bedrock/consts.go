@@ -9,4 +9,8 @@ import (
 
 const (
 	propagationTimeout = 2 * time.Minute
+
+	// evaluationTaskTypeGeneral is not yet in the AWS SDK but is required by the
+	// API for model-as-judge evaluations.
+	evaluationTaskTypeGeneral = "General"
 )
