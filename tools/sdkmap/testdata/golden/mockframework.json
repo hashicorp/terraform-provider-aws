@@ -1,0 +1,197 @@
+{
+  "resources": [
+    {
+      "service": "mockframework",
+      "resource_type": "aws_mockframework_bar",
+      "plugin_type": "Framework",
+      "expr": "newBarResource",
+      "location": "internal/service/mockframework/bar.go:26",
+      "create": {
+        "expr": "(*barResource).Create",
+        "location": "internal/service/mockframework/bar.go:35",
+        "sdk_calls": [
+          "mockframework.CreateBar"
+        ]
+      },
+      "read": {
+        "expr": "barResource.Read",
+        "location": "internal/service/mockframework/bar.go:59",
+        "sdk_calls": [
+          "mockframework.GetBar"
+        ]
+      },
+      "delete": {
+        "expr": "(*barResource).Delete",
+        "location": "internal/service/mockframework/bar.go:84",
+        "sdk_calls": [
+          "mockframework.DeleteBar"
+        ]
+      },
+      "import": {
+        "expr": "(*barResource).ImportState",
+        "location": "internal/service/mockframework/bar.go:98",
+        "sdk_calls": [
+          "mockframework.ListBars"
+        ]
+      }
+    },
+    {
+      "service": "mockframework",
+      "resource_type": "aws_mockframework_baz",
+      "plugin_type": "Framework",
+      "expr": "newBazResource",
+      "location": "internal/service/mockframework/baz.go:18",
+      "create": {
+        "expr": "(*bazQuxResource).Create",
+        "location": "internal/service/mockframework/baz_qux.go:33",
+        "sdk_calls": [
+          "mockframework.CreateBaz",
+          "mockframework.CreateQux"
+        ]
+      },
+      "read": {
+        "expr": "(*bazQuxResource).Read",
+        "location": "internal/service/mockframework/baz_qux.go:51",
+        "sdk_calls": [
+          "mockframework.DescribeBaz",
+          "mockframework.DescribeQux"
+        ]
+      },
+      "delete": {
+        "expr": "(*bazQuxResource).Delete",
+        "location": "internal/service/mockframework/baz_qux.go:72",
+        "sdk_calls": [
+          "mockframework.DeleteBaz",
+          "mockframework.DeleteQux"
+        ]
+      },
+      "modify_plan": {
+        "expr": "(*bazQuxResource).ModifyPlan",
+        "location": "internal/service/mockframework/baz_qux.go:86",
+        "sdk_calls": []
+      }
+    },
+    {
+      "service": "mockframework",
+      "resource_type": "aws_mockframework_foo",
+      "plugin_type": "Framework",
+      "expr": "newFooResource",
+      "location": "internal/service/mockframework/foo.go:29",
+      "create": {
+        "expr": "(*fooResource).Create",
+        "location": "internal/service/mockframework/foo.go:43",
+        "sdk_calls": [
+          "mockframework.CreateFoo",
+          "mockframework.DescribeFoo"
+        ]
+      },
+      "read": {
+        "expr": "(*fooResource).Read",
+        "location": "internal/service/mockframework/foo.go:80",
+        "sdk_calls": [
+          "mockframework.DescribeFoo"
+        ]
+      },
+      "update": {
+        "expr": "(*fooResource).Update",
+        "location": "internal/service/mockframework/foo.go:108",
+        "sdk_calls": [
+          "mockframework.UpdateFoo"
+        ]
+      },
+      "delete": {
+        "expr": "(*fooResource).Delete",
+        "location": "internal/service/mockframework/foo.go:137",
+        "sdk_calls": [
+          "mockframework.DeleteFoo",
+          "mockframework.DescribeFoo"
+        ]
+      },
+      "modify_plan": {
+        "expr": "(*fooResource).ModifyPlan",
+        "location": "internal/service/mockframework/foo.go:166",
+        "sdk_calls": [
+          "mockframework.GetQuota"
+        ]
+      },
+      "tags": {
+        "list": {
+          "expr": "(*servicePackage).ListTags",
+          "location": "internal/service/mockframework/tags_gen.go:36",
+          "sdk_calls": [
+            "mockframework.ListTagsForResource"
+          ]
+        },
+        "update": {
+          "expr": "(*servicePackage).UpdateTags",
+          "location": "internal/service/mockframework/tags_gen.go:87",
+          "sdk_calls": [
+            "mockframework.TagResource",
+            "mockframework.UntagResource"
+          ]
+        }
+      }
+    },
+    {
+      "service": "mockframework",
+      "resource_type": "aws_mockframework_qux",
+      "plugin_type": "Framework",
+      "expr": "newQuxResource",
+      "location": "internal/service/mockframework/qux.go:18",
+      "create": {
+        "expr": "(*bazQuxResource).Create",
+        "location": "internal/service/mockframework/baz_qux.go:33",
+        "sdk_calls": [
+          "mockframework.CreateBaz",
+          "mockframework.CreateQux"
+        ]
+      },
+      "read": {
+        "expr": "(*bazQuxResource).Read",
+        "location": "internal/service/mockframework/baz_qux.go:51",
+        "sdk_calls": [
+          "mockframework.DescribeBaz",
+          "mockframework.DescribeQux"
+        ]
+      },
+      "delete": {
+        "expr": "(*bazQuxResource).Delete",
+        "location": "internal/service/mockframework/baz_qux.go:72",
+        "sdk_calls": [
+          "mockframework.DeleteBaz",
+          "mockframework.DeleteQux"
+        ]
+      },
+      "modify_plan": {
+        "expr": "(*bazQuxResource).ModifyPlan",
+        "location": "internal/service/mockframework/baz_qux.go:86",
+        "sdk_calls": []
+      }
+    }
+  ],
+  "dataSources": [
+    {
+      "service": "mockframework",
+      "data_source_type": "aws_mockframework_foo",
+      "plugin_type": "Framework",
+      "expr": "newFooDataSource",
+      "location": "internal/service/mockframework/foo_data_source.go:20",
+      "read": {
+        "expr": "(*fooDataSource).Read",
+        "location": "internal/service/mockframework/foo_data_source.go:28",
+        "sdk_calls": [
+          "mockframework.DescribeFoo"
+        ]
+      },
+      "tags": {
+        "list": {
+          "expr": "(*servicePackage).ListTags",
+          "location": "internal/service/mockframework/tags_gen.go:36",
+          "sdk_calls": [
+            "mockframework.ListTagsForResource"
+          ]
+        }
+      }
+    }
+  ]
+}
