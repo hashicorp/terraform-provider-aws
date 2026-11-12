@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance: Prevent changes to only `apply_immediately` from triggering a Blue/Green deployment
+```
