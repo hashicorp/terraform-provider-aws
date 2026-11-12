@@ -133,12 +133,31 @@ func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading SSO Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("instance_arn", instanceARN)
-	d.Set("managed_policy_arn", policy.Arn)
-	d.Set("managed_policy_name", policy.Name)
-	d.Set("permission_set_arn", permissionSetARN)
+	if err := resourceManagedPolicyAttachmentFlatten(d, policy, instanceARN, permissionSetARN); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
+}
+
+func resourceManagedPolicyAttachmentFlatten(d *schema.ResourceData, policy *awstypes.AttachedManagedPolicy, instanceARN, permissionSetARN string) error {
+	if err := d.Set("instance_arn", instanceARN); err != nil {
+		return fmt.Errorf("setting instance_arn: %w", err)
+	}
+
+	if err := d.Set("managed_policy_arn", policy.Arn); err != nil {
+		return fmt.Errorf("setting managed_policy_arn: %w", err)
+	}
+
+	if err := d.Set("managed_policy_name", policy.Name); err != nil {
+		return fmt.Errorf("setting managed_policy_name: %w", err)
+	}
+
+	if err := d.Set("permission_set_arn", permissionSetARN); err != nil {
+		return fmt.Errorf("setting permission_set_arn: %w", err)
+	}
+
+	return nil
 }
 
 func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
