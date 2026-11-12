@@ -347,13 +347,9 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
-	getInstanceUEFIDataInput := ec2.GetInstanceUefiDataInput{
-		InstanceId: aws.String(d.Id()),
-	}
-	instanceData, err := conn.GetInstanceUefiData(ctx, &getInstanceUEFIDataInput)
-	if err == nil {
-		d.Set("uefi_data", instanceData.UefiData)
-	}
+	// NOTE: GetInstanceUefiData is an EC2 instance API and cannot be called
+	// with an AMI ID. Calling it here always results in
+	// Client.InvalidInstanceID.Malformed, generating CloudTrail noise.
 
 	setTagsOut(ctx, image.Tags)
 
