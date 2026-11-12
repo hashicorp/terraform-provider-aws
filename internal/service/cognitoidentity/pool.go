@@ -43,7 +43,6 @@ func resourcePool() *schema.Resource {
 				"identity_pool_name": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ForceNew:     true,
 					ValidateFunc: validIdentityPoolName,
 				},
 
