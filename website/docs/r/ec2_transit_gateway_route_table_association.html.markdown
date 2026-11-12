@@ -109,6 +109,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `resource_id` - Identifier of the resource
 * `resource_type` - Type of the resource
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `delete` - (Default `10m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_route_table_association` using the EC2 Transit Gateway Route Table identifier, an underscore, and the EC2 Transit Gateway Attachment identifier. For example:
