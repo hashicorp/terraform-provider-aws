@@ -24,7 +24,7 @@ func TestAccDevOpsAgentAgentSpace_basic(t *testing.T) {
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -57,7 +57,7 @@ func TestAccDevOpsAgentAgentSpace_disappears(t *testing.T) {
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func TestAccDevOpsAgentAgentSpace_description(t *testing.T) {
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -123,7 +123,7 @@ func TestAccDevOpsAgentAgentSpace_kmsKeyARN(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -153,7 +153,7 @@ func TestAccDevOpsAgentAgentSpace_locale(t *testing.T) {
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentSpaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
