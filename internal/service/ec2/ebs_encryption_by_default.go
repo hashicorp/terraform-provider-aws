@@ -12,11 +12,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @CustomImport
+// @SingletonIdentity
+// @Testing(preIdentityVersion="v6.72.0", generator=false)
 // @SDKResource("aws_ebs_encryption_by_default", name="EBS Encryption By Default")
 func resourceEBSEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
@@ -26,7 +30,17 @@ func resourceEBSEncryptionByDefault() *schema.Resource {
 		DeleteWithoutTimeout: resourceEBSEncryptionByDefaultDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if id := d.Id(); id != "" && !inttypes.IsAWSRegion(id) {
+					d.SetId(meta.(*conns.AWSClient).Region(ctx))
+				}
+
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -50,8 +64,7 @@ func resourceEBSEncryptionByDefaultCreate(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "creating EBS encryption by default (%t): %s", enabled, err)
 	}
 
-	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
-	d.SetId(create.UniqueId(ctx))
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	return append(diags, resourceEBSEncryptionByDefaultRead(ctx, d, meta)...)
 }
@@ -66,7 +79,9 @@ func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EBS encryption by default: %s", err)
 	}
 
-	d.Set(names.AttrEnabled, resp.EbsEncryptionByDefault)
+	if err := resourceEBSEncryptionByDefaultFlatten(resp, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening EBS encryption by default: %s", err)
+	}
 
 	return diags
 }
@@ -107,4 +122,8 @@ func setEBSEncryptionByDefault(ctx context.Context, conn *ec2.Client, enabled bo
 	}
 
 	return err
+}
+
+func resourceEBSEncryptionByDefaultFlatten(resp *ec2.GetEbsEncryptionByDefaultOutput, d *schema.ResourceData) error {
+	return d.Set(names.AttrEnabled, resp.EbsEncryptionByDefault)
 }
