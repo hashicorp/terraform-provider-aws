@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -296,7 +297,7 @@ func resourceReplicationGroup() *schema.Resource {
 							"node_group_id": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{1,4}$`), "must be 1-4 digits"),
+								ValidateFunc: lazyvalidation.StringMatch(`^\d{1,4}$`, "must be 1-4 digits"),
 							},
 							"primary_availability_zone": {
 								Type:     schema.TypeString,
@@ -329,7 +330,7 @@ func resourceReplicationGroup() *schema.Resource {
 							"slots": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\d,-]+$`), "must contain only digits, commas, and hyphens"),
+								ValidateFunc: lazyvalidation.StringMatch(`^[\d,-]+$`, "must contain only digits, commas, and hyphens"),
 							},
 						},
 					},
@@ -1801,8 +1802,8 @@ func waitReplicationGroupMemberClustersAvailable(ctx context.Context, conn *elas
 
 var validateReplicationGroupID schema.SchemaValidateFunc = validation.All(
 	validation.StringLenBetween(1, 40),
-	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric characters and hyphens"),
-	validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with a letter"),
+	lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "must contain only alphanumeric characters and hyphens"),
+	lazyvalidation.StringMatch(`^[A-Za-z]`, "must begin with a letter"),
 	validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
 	validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 )
