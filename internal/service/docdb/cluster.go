@@ -115,6 +115,11 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"copy_tags_to_snapshot": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
 				"db_cluster_parameter_group_name": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -442,6 +447,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		input := docdb.RestoreDBClusterFromSnapshotInput{
+			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
@@ -534,6 +540,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		tfMap := v.([]any)[0].(map[string]any)
 		input := docdb.RestoreDBClusterToPointInTimeInput{
+			CopyTagsToSnapshot:        aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier:       aws.String(identifier),
 			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
 			DeletionProtection:        aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
@@ -614,6 +621,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		input := docdb.CreateDBClusterInput{
+			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
@@ -766,6 +774,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	d.Set("cluster_members", clusterMembers)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 	d.Set(names.AttrDeletionProtection, dbc.DeletionProtection)
@@ -821,6 +830,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange("backup_retention_period") {
 			input.BackupRetentionPeriod = aws.Int32(int32(d.Get("backup_retention_period").(int)))
+		}
+
+		if d.HasChange("copy_tags_to_snapshot") {
+			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
 		}
 
 		if d.HasChange("db_cluster_parameter_group_name") {
