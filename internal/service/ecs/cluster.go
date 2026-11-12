@@ -379,10 +379,10 @@ func findClusters(ctx context.Context, conn *ecs.Client, input *ecs.DescribeClus
 	return output.Clusters, nil
 }
 
-func findClusterByNameOrARN(ctx context.Context, conn *ecs.Client, nameOrARN string) (*awstypes.Cluster, error) {
+func findClusterByNameOrARN(ctx context.Context, conn *ecs.Client, nameOrARN string, extraFields ...awstypes.ClusterField) (*awstypes.Cluster, error) {
 	input := &ecs.DescribeClustersInput{
 		Clusters: []string{nameOrARN},
-		Include:  []awstypes.ClusterField{awstypes.ClusterFieldTags, awstypes.ClusterFieldConfigurations, awstypes.ClusterFieldSettings},
+		Include:  append([]awstypes.ClusterField{awstypes.ClusterFieldTags, awstypes.ClusterFieldConfigurations, awstypes.ClusterFieldSettings}, extraFields...),
 	}
 
 	output, err := findCluster(ctx, conn, input)
@@ -390,14 +390,14 @@ func findClusterByNameOrARN(ctx context.Context, conn *ecs.Client, nameOrARN str
 	// Some partitions (e.g. ISO) may not support tagging.
 	partition := partitionFromConn(conn)
 	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
-		input.Include = []awstypes.ClusterField{awstypes.ClusterFieldConfigurations, awstypes.ClusterFieldSettings}
+		input.Include = append([]awstypes.ClusterField{awstypes.ClusterFieldConfigurations, awstypes.ClusterFieldSettings}, extraFields...)
 
 		output, err = findCluster(ctx, conn, input)
 	}
 
 	// Some partitions (e.g. ISO) may not support describe including configuration.
 	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
-		input.Include = []awstypes.ClusterField{awstypes.ClusterFieldSettings}
+		input.Include = append([]awstypes.ClusterField{awstypes.ClusterFieldSettings}, extraFields...)
 
 		output, err = findCluster(ctx, conn, input)
 	}
