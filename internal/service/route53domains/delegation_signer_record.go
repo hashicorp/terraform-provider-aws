@@ -183,16 +183,14 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 		return
 	}
 	// v6.69.1 and earlier set signing_attributes from the API response, which
-	// some registries return without Flags and PublicKey. A digest can't be
-	// computed from that state, so fall back to the stored key ID.
-	incomplete := signingAttributes == nil || signingAttributes.Flags.IsNull() || signingAttributes.PublicKey.IsNull()
-
+	// no longer includes Flags or PublicKey. A digest can't be computed from
+	// that state, so fall back to the stored key ID.
 	var (
 		dnssecKey *awstypes.DnssecKey
 		err       error
 		lookupKey string
 	)
-	if incomplete {
+	if signingAttributes == nil || signingAttributes.Flags.IsNull() || signingAttributes.PublicKey.IsNull() {
 		lookupKey = fwflex.StringValueFromFramework(ctx, data.DNSSECKeyID)
 		dnssecKey, err = findDNSSECKeyByDomainNameAndKeyID(ctx, conn, domainName, lookupKey)
 	} else {
@@ -209,20 +207,6 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key (%s)", domainName, lookupKey), err.Error())
 		return
-	}
-
-	if incomplete && signingAttributes != nil {
-		if signingAttributes.Flags.IsNull() {
-			signingAttributes.Flags = fwflex.Int32ToFrameworkInt64(ctx, dnssecKey.Flags)
-		}
-		if signingAttributes.PublicKey.IsNull() {
-			signingAttributes.PublicKey = fwflex.StringToFramework(ctx, dnssecKey.PublicKey)
-		}
-		data.SigningAttributes, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, signingAttributes)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
 	}
 
 	keyID := aws.ToString(dnssecKey.Id)
