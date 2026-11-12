@@ -1111,8 +1111,10 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	// Set API fields for client credentials.
 	clientCredentials := oauth2ClientCredentialsCtxKey.FromContext(ctx)
-	if !clientCredentials.ClientIDWO.IsNull() && !clientCredentials.ClientSecretWO.IsNull() {
+	if !clientCredentials.ClientIDWO.IsNull() {
 		clientCredentials.ClientID = clientCredentials.ClientIDWO
+	}
+	if !clientCredentials.ClientSecretWO.IsNull() {
 		clientCredentials.ClientSecret = clientCredentials.ClientSecretWO
 	}
 
