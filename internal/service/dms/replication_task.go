@@ -46,6 +46,12 @@ func resourceReplicationTask() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
+
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				"cdc_start_position": {
@@ -143,6 +149,10 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	taskID := d.Get("replication_task_id").(string)
+	timeout := d.Timeout(schema.TimeoutCreate)
+	createCtx, cancel := context.WithTimeoutCause(ctx, timeout, fmt.Errorf("creating DMS Replication Task (%s): exceeded create timeout (%s)", taskID, timeout))
+	defer cancel()
+
 	input := &dms.CreateReplicationTaskInput{
 		MigrationType:             awstypes.MigrationTypeValue(d.Get("migration_type").(string)),
 		ReplicationInstanceArn:    aws.String(d.Get("replication_instance_arn").(string)),
@@ -174,7 +184,7 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 		input.ResourceIdentifier = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateReplicationTask(ctx, input)
+	_, err := conn.CreateReplicationTask(createCtx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Task (%s): %s", taskID, err)
@@ -182,12 +192,12 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(taskID)
 
-	if _, err := waitReplicationTaskReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitReplicationTaskReady(createCtx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) create: %s", d.Id(), err)
 	}
 
 	if d.Get("start_replication_task").(bool) {
-		if err := startReplicationTask(ctx, conn, d.Id()); err != nil {
+		if err := startReplicationTask(createCtx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -229,8 +239,12 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
+	timeout := d.Timeout(schema.TimeoutUpdate)
+	updateCtx, cancel := context.WithTimeoutCause(ctx, timeout, fmt.Errorf("updating DMS Replication Task (%s): exceeded update timeout (%s)", d.Id(), timeout))
+	defer cancel()
+
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "replication_instance_arn", "start_replication_task") {
-		if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
+		if err := stopReplicationTask(updateCtx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
@@ -265,25 +279,25 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 
-		_, err := conn.ModifyReplicationTask(ctx, input)
+		_, err := conn.ModifyReplicationTask(updateCtx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Task (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitReplicationTaskModified(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitReplicationTaskModified(updateCtx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) update: %s", d.Id(), err)
 		}
 
 		if d.Get("start_replication_task").(bool) {
-			if err := startReplicationTask(ctx, conn, d.Id()); err != nil {
+			if err := startReplicationTask(updateCtx, conn, d.Id()); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
 
 	if d.HasChange("replication_instance_arn") {
-		if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
+		if err := stopReplicationTask(updateCtx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
@@ -292,18 +306,18 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 			TargetReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
 		}
 
-		_, err := conn.MoveReplicationTask(ctx, input)
+		_, err := conn.MoveReplicationTask(updateCtx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "moving DMS Replication Task (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitReplicationTaskMoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitReplicationTaskMoved(updateCtx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) update: %s", d.Id(), err)
 		}
 
 		if d.Get("start_replication_task").(bool) {
-			if err := startReplicationTask(ctx, conn, d.Id()); err != nil {
+			if err := startReplicationTask(updateCtx, conn, d.Id()); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -316,7 +330,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 		} else {
 			f = stopReplicationTask
 		}
-		if err := f(ctx, conn, d.Id()); err != nil {
+		if err := f(updateCtx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -328,7 +342,11 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
+	timeout := d.Timeout(schema.TimeoutDelete)
+	deleteCtx, cancel := context.WithTimeoutCause(ctx, timeout, fmt.Errorf("deleting DMS Replication Task (%s): exceeded delete timeout (%s)", d.Id(), timeout))
+	defer cancel()
+
+	if err := stopReplicationTask(deleteCtx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -336,7 +354,7 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 	input := dms.DeleteReplicationTaskInput{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
 	}
-	_, err := conn.DeleteReplicationTask(ctx, &input)
+	_, err := conn.DeleteReplicationTask(deleteCtx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
@@ -346,7 +364,7 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Task (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitReplicationTaskDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitReplicationTaskDeleted(deleteCtx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) delete: %s", d.Id(), err)
 	}
 
@@ -428,12 +446,17 @@ func setLastReplicationTaskError(err error, replication *awstypes.ReplicationTas
 	retry.SetLastError(err, errors.Join(errs...))
 }
 
-func waitReplicationTaskDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
+// The replication task waiters set StateChangeConf.Timeout, which must be
+// positive, from ctx's deadline, so every caller must pass a context with a
+// deadline.
+
+func waitReplicationTaskDeleted(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusReplicationTask(conn, id),
-		Timeout:    timeout,
+		Timeout:    time.Until(deadline),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -448,12 +471,13 @@ func waitReplicationTaskDeleted(ctx context.Context, conn *dms.Client, id string
 	return nil, err
 }
 
-func waitReplicationTaskModified(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
+func waitReplicationTaskModified(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
 		Refresh:    statusReplicationTask(conn, id),
-		Timeout:    timeout,
+		Timeout:    time.Until(deadline),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -468,12 +492,13 @@ func waitReplicationTaskModified(ctx context.Context, conn *dms.Client, id strin
 	return nil, err
 }
 
-func waitReplicationTaskMoved(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
+func waitReplicationTaskMoved(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying, replicationTaskStatusMoving},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
 		Refresh:    statusReplicationTask(conn, id),
-		Timeout:    timeout,
+		Timeout:    time.Until(deadline),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -488,12 +513,13 @@ func waitReplicationTaskMoved(ctx context.Context, conn *dms.Client, id string, 
 	return nil, err
 }
 
-func waitReplicationTaskReady(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
+func waitReplicationTaskReady(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusCreating},
 		Target:     []string{replicationTaskStatusReady},
 		Refresh:    statusReplicationTask(conn, id),
-		Timeout:    timeout,
+		Timeout:    time.Until(deadline),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -509,14 +535,12 @@ func waitReplicationTaskReady(ctx context.Context, conn *dms.Client, id string, 
 }
 
 func waitReplicationTaskRunning(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
-	const (
-		timeout = 5 * time.Minute
-	)
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusStarting},
 		Target:     []string{replicationTaskStatusRunning},
 		Refresh:    statusReplicationTask(conn, id),
-		Timeout:    timeout,
+		Timeout:    time.Until(deadline),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -532,14 +556,12 @@ func waitReplicationTaskRunning(ctx context.Context, conn *dms.Client, id string
 }
 
 func waitReplicationTaskStopped(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
-	const (
-		timeout = 5 * time.Minute
-	)
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusStopping, replicationTaskStatusRunning},
 		Target:                    []string{replicationTaskStatusStopped},
 		Refresh:                   statusReplicationTask(conn, id),
-		Timeout:                   timeout,
+		Timeout:                   time.Until(deadline),
 		MinTimeout:                10 * time.Second,
 		Delay:                     60 * time.Second,
 		ContinuousTargetOccurence: 2,
@@ -556,14 +578,12 @@ func waitReplicationTaskStopped(ctx context.Context, conn *dms.Client, id string
 }
 
 func waitReplicationTaskSteady(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
-	const (
-		timeout = 5 * time.Minute
-	)
+	deadline, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusCreating, replicationTaskStatusDeleting, replicationTaskStatusModifying, replicationTaskStatusStopping, replicationTaskStatusStarting},
 		Target:                    []string{replicationTaskStatusFailed, replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusRunning},
 		Refresh:                   statusReplicationTask(conn, id),
-		Timeout:                   timeout,
+		Timeout:                   time.Until(deadline),
 		MinTimeout:                10 * time.Second,
 		Delay:                     60 * time.Second,
 		ContinuousTargetOccurence: 2,
