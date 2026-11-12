@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -54,7 +54,7 @@ func resourceSigningProfile() *schema.Resource {
 					Computed:      true,
 					ForceNew:      true,
 					ConflictsWith: []string{names.AttrNamePrefix},
-					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,64}$`), "must be alphanumeric with max length of 64 characters"),
+					ValidateFunc:  lazyvalidation.StringMatch(`^[0-9A-Za-z_]{0,64}$`, "must be alphanumeric with max length of 64 characters"),
 				},
 				names.AttrNamePrefix: {
 					Type:          schema.TypeString,
@@ -62,7 +62,7 @@ func resourceSigningProfile() *schema.Resource {
 					Computed:      true,
 					ForceNew:      true,
 					ConflictsWith: []string{names.AttrName},
-					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
+					ValidateFunc:  lazyvalidation.StringMatch(`^[0-9A-Za-z_]{0,38}$`, "must be alphanumeric with max length of 38 characters"),
 				},
 				"platform_display_name": {
 					Type:     schema.TypeString,
