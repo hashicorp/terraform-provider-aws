@@ -48,6 +48,11 @@ func dataSourceRepository() *schema.Resource {
 						},
 					},
 				},
+				"fetch_most_recent_image_tags": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
 				"image_scanning_configuration": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -139,6 +144,14 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrName, repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
+
+	// Populating most_recent_image_tags requires paginating DescribeImages over every image in the
+	// repository, which can take minutes for large repositories. Skip it when the caller opts out.
+	if !d.Get("fetch_most_recent_image_tags").(bool) {
+		d.Set("most_recent_image_tags", nil)
+
+		return diags
+	}
 
 	imageDetails, err := findImageDetails(ctx, conn, &ecr.DescribeImagesInput{
 		RepositoryName: repository.RepositoryName,
