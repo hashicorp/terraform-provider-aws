@@ -3292,6 +3292,45 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 	})
 }
 
+// Regression test to ensure primary and secondary replication groups with the same
+// name in different regions do not cause the destory operation to fail.
+//
+// Ref: internal/service/elasticache/replication_group_test.go
+func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_sameIDAsPrimary(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+	primaryGroupResourceName := "aws_elasticache_replication_group.primary"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_globalIDSameIDAsPrimary(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttrPair(resourceName, "global_replication_group_id", "aws_elasticache_global_replication_group.test", "global_replication_group_id"),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrID, rName),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrRegion, acctest.AlternateRegion()),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -6591,6 +6630,104 @@ resource "aws_elasticache_replication_group" "primary" {
 }
 `, rName),
 	)
+}
+
+func testAccReplicationGroupConfig_globalIDSameIDAsPrimary(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  region = %[2]q
+
+  replication_group_id        = %[1]q
+  description                 = "secondary"
+  global_replication_group_id = aws_elasticache_global_replication_group.test.global_replication_group_id
+  subnet_group_name           = aws_elasticache_subnet_group.test.name
+  num_cache_clusters          = 1
+}
+
+resource "aws_elasticache_global_replication_group" "test" {
+  region = %[3]q
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  region = %[3]q
+
+  replication_group_id = %[1]q
+  description          = "primary"
+  subnet_group_name    = aws_elasticache_subnet_group.primary.name
+  node_type            = "cache.m5.large"
+  engine               = "valkey"
+  engine_version       = "7.2"
+  parameter_group_name = "default.valkey7"
+  num_cache_clusters   = 1
+}
+
+data "aws_availability_zones" "test" {
+  region = %[2]q
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  region = %[2]q
+
+  cidr_block = "192.168.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  region = %[2]q
+
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.0.0/24"
+  availability_zone = data.aws_availability_zones.test.names[0]
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  region = %[2]q
+
+  name       = %[1]q
+  subnet_ids = [aws_subnet.test.id]
+}
+
+data "aws_availability_zones" "primary" {
+  region = %[3]q
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "primary" {
+  region = %[3]q
+
+  cidr_block = "192.168.0.0/16"
+}
+
+resource "aws_subnet" "primary" {
+  region = %[3]q
+
+  vpc_id            = aws_vpc.primary.id
+  cidr_block        = "192.168.0.0/24"
+  availability_zone = data.aws_availability_zones.primary.names[0]
+}
+
+resource "aws_elasticache_subnet_group" "primary" {
+  region = %[3]q
+
+  name       = %[1]q
+  subnet_ids = [aws_subnet.primary.id]
+}
+`, rName, acctest.Region(), acctest.AlternateRegion())
 }
 
 func testAccReplicationGroupConfig_globalIDFull(rName string, numCacheClusters int) string {
