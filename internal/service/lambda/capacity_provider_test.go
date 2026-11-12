@@ -321,7 +321,7 @@ func TestAccLambdaCapacityProvider_propagateTagsInvalid(t *testing.T) {
 			},
 			{
 				Config:      testAccCapacityProviderConfig_propagateTagsInvalid(rName, `mode = "All"`),
-				ExpectError: regexache.MustCompile(`mode must be one of`),
+				ExpectError: regexache.MustCompile(`Invalid String Enum Value`),
 			},
 		},
 	})
