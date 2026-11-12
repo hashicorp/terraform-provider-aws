@@ -179,12 +179,25 @@ func testAccDelegationSignerRecord_upgradeFromV6_69_1(t *testing.T) {
 		ErrorCheck:   acctest.ErrorCheck(t, names.Route53DomainsServiceID),
 		CheckDestroy: testAccCheckDelegationSignerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
+			// v6.69.1 can't create the record on registries that omit Flags and
+			// PublicKey (#47928), so create it with the current provider.
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DelegationSignerRecord/ignore_changes_v6.69.1/"),
-				ConfigVariables: configVariables,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/DelegationSignerRecord/ignore_changes/"),
+				ConfigVariables:          configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegationSignerAssociationExists(ctx, t, resourceName),
 				),
+			},
+			// Refreshing with v6.69.1 copies the API's signing attributes into state.
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/DelegationSignerRecord/ignore_changes_v6.69.1/"),
+				ConfigVariables: configVariables,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
