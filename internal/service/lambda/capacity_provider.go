@@ -451,8 +451,6 @@ func validatePropagateTags(pt *propagateTagsModel) diag.Diagnostics {
 		if !pt.ExplicitTags.IsNull() && !pt.ExplicitTags.IsUnknown() {
 			diags.AddAttributeError(path.Root(names.AttrPropagateTags), "Invalid Attribute Combination", fmt.Sprintf(`explicit_tags can only be specified when mode is "Explicit", got mode: %q`, pt.Mode.ValueString()))
 		}
-	default:
-		diags.AddAttributeError(path.Root(names.AttrPropagateTags), "Invalid Attribute Value", fmt.Sprintf("mode must be one of %q, got: %q", enum.Values[awstypes.PropagateTagsMode](), pt.Mode.ValueString()))
 	}
 
 	return diags
