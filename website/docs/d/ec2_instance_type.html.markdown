@@ -92,9 +92,13 @@ This data source exports the following attributes in addition to the arguments a
     * `media_accelerators.#.name` - The name of the media accelerator.
 * `memory_size` - Size of the instance memory, in MiB.
 * `network_cards` - Describes the network cards for the instance type.
+    * `network_cards.#.additional_flexible_network_interfaces` - Number of additional network interfaces supported when using flexible ENA queue allocation.
     * `network_cards.#.baseline_bandwidth` - The baseline network performance (in Gbps) of the network card.
+    * `network_cards.#.default_ena_queue_count_per_interface` - Default number of ENA queues allocated to each network interface.
     * `network_cards.#.index` - The index of the network card.
-    * `network_cards.#.maximum_interfaces` - The maximum number of network interfaces for the /network card.
+    * `network_cards.#.maximum_ena_queue_count` - Maximum total number of ENA queues supported by the network card.
+    * `network_cards.#.maximum_ena_queue_count_per_interface` - Maximum number of ENA queues supported by each network interface.
+    * `network_cards.#.maximum_interfaces` - The maximum number of network interfaces for the network card.
     * `network_cards.#.performance` - Describes the network performance of the network card.
     * `network_cards.#.peak_bandwidth` - The peak (burst) network performance (in Gbps) of the network card.
 * `network_performance` - Describes the network performance.
