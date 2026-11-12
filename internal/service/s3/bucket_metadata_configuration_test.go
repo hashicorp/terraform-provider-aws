@@ -50,6 +50,13 @@ func TestAccS3BucketMetadataConfiguration_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"annotation_table_arn": knownvalue.Null(),
+							"annotation_table_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"configuration_state": tfknownvalue.StringExact(awstypes.AnnotationConfigurationStateDisabled),
+								}),
+							}),
+							"annotation_table_name": knownvalue.Null(),
 							names.AttrDestination: knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"table_bucket_arn":  tfknownvalue.RegionalARNExact("s3tables", "bucket/aws-s3"),
@@ -188,6 +195,79 @@ func TestAccS3BucketMetadataConfiguration_update(t *testing.T) {
 									names.AttrTableName: knownvalue.NotNull(),
 								}),
 							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccS3BucketMetadataConfiguration_annotationTable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.MetadataConfigurationResult
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_metadata_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketMetadataConfigurationConfig_annotationTable(rName, "DISABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketMetadataConfigurationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"annotation_table_arn": knownvalue.Null(),
+							"annotation_table_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"configuration_state":             tfknownvalue.StringExact(awstypes.AnnotationConfigurationStateDisabled),
+									names.AttrEncryptionConfiguration: knownvalue.Null(),
+									names.AttrRole:                    knownvalue.Null(),
+								}),
+							}),
+							"annotation_table_name": knownvalue.Null(),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrBucket),
+				ImportStateVerifyIdentifierAttribute: names.AttrBucket,
+			},
+			{
+				Config: testAccBucketMetadataConfigurationConfig_annotationTable(rName, "ENABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketMetadataConfigurationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"annotation_table_arn": tfknownvalue.RegionalARNRegexp("s3tables", regexache.MustCompile(`bucket/aws-s3/table/`+verify.UUIDRegexPattern)),
+							"annotation_table_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"configuration_state": tfknownvalue.StringExact(awstypes.AnnotationConfigurationStateEnabled),
+								}),
+							}),
+							"annotation_table_name": knownvalue.NotNull(),
 						}),
 					})),
 				},
@@ -424,6 +504,78 @@ resource "aws_s3_bucket_metadata_configuration" "test" {
   }
 }
 `, rName)
+}
+
+func testAccBucketMetadataConfigurationConfig_annotationTable(rName, configurationState string) string {
+	// Amazon S3 requires role when enabling the annotation table, and forbids it
+	// when disabling: "When you're disabling an annotation table, you can't
+	// change its role configuration."
+	role := "null"
+	if configurationState == "ENABLED" {
+		role = "aws_iam_role.test.arn"
+	}
+
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "metadata.s3.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+
+  inline_policy {
+    name = %[1]q
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [{
+        Effect = "Allow"
+        Action = [
+          "s3:GetObjectAnnotation",
+          "s3:GetObjectVersionAnnotation",
+          "s3:ListBucket",
+          "s3:ListBucketVersions",
+        ]
+        Resource = [aws_s3_bucket.test.arn, "${aws_s3_bucket.test.arn}/*"]
+      }]
+    })
+  }
+}
+
+resource "aws_s3_bucket_metadata_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  metadata_configuration {
+    annotation_table_configuration = [{
+      configuration_state      = %[2]q
+      role                     = %[3]s
+      encryption_configuration = null
+    }]
+
+    inventory_table_configuration {
+      configuration_state = "DISABLED"
+    }
+
+    journal_table_configuration {
+      record_expiration {
+        days       = 7
+        expiration = "ENABLED"
+      }
+    }
+  }
+}
+`, rName, configurationState, role)
 }
 
 func testAccBucketMetadataConfigurationConfig_expectedBucketOwner(rName string) string {
