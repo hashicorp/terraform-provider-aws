@@ -12,7 +12,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
@@ -101,8 +100,8 @@ func resourceReplicationTask() *schema.Resource {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 31),
 						lazyvalidation.StringMatch("^[A-Za-z][0-9A-Za-z-]+$", "must start with a letter, only contain alphanumeric characters and hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+						lazyvalidation.StringDoesNotMatch(`--`, "cannot contain two consecutive hyphens"),
+						lazyvalidation.StringDoesNotMatch(`-$`, "cannot end in a hyphen"),
 					),
 				},
 				"source_endpoint_arn": {

@@ -8,7 +8,6 @@ package dms
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,8 +42,8 @@ func dataSourceCertificate() *schema.Resource {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 255),
 						lazyvalidation.StringMatch("^[A-Za-z][0-9A-Za-z-]+$", "must start with a letter, only contain alphanumeric characters and hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+						lazyvalidation.StringDoesNotMatch(`--`, "cannot contain two consecutive hyphens"),
+						lazyvalidation.StringDoesNotMatch(`-$`, "cannot end in a hyphen"),
 					),
 				},
 				"certificate_owner": {
