@@ -15,19 +15,20 @@ var (
 	ResourceResourcePolicy       = newResourcePolicyResource
 	ResourceSenderID             = newSenderIDResource
 
-	FindConfigurationSetByID             = findConfigurationSetByID
-	FindEventDestinationByTwoPartKey     = findEventDestinationByTwoPartKey
-	FindKeywordByTwoPartKey              = findKeywordByTwoPartKey
-	FindOptOutListByID                   = findOptOutListByID
-	FindPhoneNumberByID                  = findPhoneNumberByID
-	FindPoolByID                         = findPoolByID
-	FindProtectConfigurationByID         = findProtectConfigurationByID
-	FindProtectConfigurationCountryRules = findProtectConfigurationCountryRules
-	FindResourcePolicyByARN              = findResourcePolicyByARN
-	FindSenderIDByTwoPartKey             = findSenderIDByTwoPartKey
+	FindConfigurationSetByID               = findConfigurationSetByID
+	FindEventDestinationByTwoPartKey       = findEventDestinationByTwoPartKey
+	FindKeywordByTwoPartKey                = findKeywordByTwoPartKey
+	FindOptOutListByID                     = findOptOutListByID
+	FindPhoneNumberByID                    = findPhoneNumberByID
+	FindPoolByID                           = findPoolByID
+	FindProtectConfigurationByID           = findProtectConfigurationByID
+	FindProtectConfigurationCountryRuleSet = findProtectConfigurationCountryRuleSet
+	FindResourcePolicyByARN                = findResourcePolicyByARN
+	FindSenderIDByTwoPartKey               = findSenderIDByTwoPartKey
 
-	ValidatePhoneIdentity  = validatePhoneIdentity
-	ValidateSenderIdentity = validateSenderIdentity
+	ProtectConfigurationCountryRuleSetUpdates = protectConfigurationCountryRuleSetUpdates
+	ValidatePhoneIdentity                     = validatePhoneIdentity
+	ValidateSenderIdentity                    = validateSenderIdentity
 )
 
 type IntendedIdentityConfig = intendedIdentityConfig

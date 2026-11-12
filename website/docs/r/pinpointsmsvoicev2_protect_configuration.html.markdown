@@ -40,19 +40,38 @@ resource "aws_pinpointsmsvoicev2_protect_configuration" "example" {
 }
 ```
 
+### Default Status
+
+Block SMS messages to every country except the United States and Canada:
+
+```terraform
+resource "aws_pinpointsmsvoicev2_protect_configuration" "example" {
+  sms_default_status = "BLOCK"
+
+  sms_country_rules = {
+    CA = "ALLOW"
+    US = "ALLOW"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
 
 * `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled. When `true`, the protect configuration can't be deleted.
-* `mms_country_rules` - (Optional) Map of two-character ISO 3166-1 alpha-2 country codes to protect status for MMS messages. Valid value is `BLOCK`.
-* `rcs_country_rules` - (Optional) Map of two-character ISO 3166-1 alpha-2 country codes to protect status for RCS messages. Valid value is `BLOCK`.
+* `mms_country_rules` - (Optional) Map of two-character ISO 3166-1 alpha-2 country codes to protect status for MMS messages. Overrides `mms_default_status` for the listed countries. Valid values are `ALLOW` and `BLOCK`.
+* `mms_default_status` - (Optional) Protect status for every country not listed in `mms_country_rules`. Valid values are `ALLOW` and `BLOCK`. Defaults to `ALLOW`.
+* `rcs_country_rules` - (Optional) Map of two-character ISO 3166-1 alpha-2 country codes to protect status for RCS messages. Overrides `rcs_default_status` for the listed countries. Valid values are `ALLOW` and `BLOCK`.
+* `rcs_default_status` - (Optional) Protect status for every country not listed in `rcs_country_rules`. Valid values are `ALLOW` and `BLOCK`. Defaults to `ALLOW`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `sms_country_rules` - (Optional) Map of two-character ISO 3166-1 alpha-2 country codes to protect status for SMS messages. Valid values are `BLOCK`, `FILTER`, and `MONITOR`.
+* `sms_country_rules` - (Optional) Map of two-character ISO 3166-1 alpha-2 country codes to protect status for SMS messages. Overrides `sms_default_status` for the listed countries. Valid values are `ALLOW`, `BLOCK`, `FILTER`, and `MONITOR`.
+* `sms_default_status` - (Optional) Protect status for every country not listed in `sms_country_rules`. Valid values are `ALLOW`, `BLOCK`, `FILTER`, and `MONITOR`. Defaults to `ALLOW`.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `voice_country_rules` - (Optional) Map of two-character ISO 3166-1 alpha-2 country codes to protect status for voice messages. Valid value is `BLOCK`.
+* `voice_country_rules` - (Optional) Map of two-character ISO 3166-1 alpha-2 country codes to protect status for voice messages. Overrides `voice_default_status` for the listed countries. Valid values are `ALLOW` and `BLOCK`.
+* `voice_default_status` - (Optional) Protect status for every country not listed in `voice_country_rules`. Valid values are `ALLOW` and `BLOCK`. Defaults to `ALLOW`.
 
-~> **Note:** AWS allows messages to every country by default. Each `*_country_rules` map lists only the countries that differ from that default, so `ALLOW` is not a valid value. Removing a country from a map resets it to `ALLOW`. Removing a map resets every country for that message type to `ALLOW`.
+~> **Note:** Terraform manages the status of every country. Each `*_country_rules` map lists only the countries whose status differs from the default status, so a status equal to the default is not valid. Removing a country from a map resets it to the default status.
 
 -> **Note:** The countries each message type supports differ and are validated by AWS. See [Supported countries and regions](https://docs.aws.amazon.com/sms-voice/latest/userguide/phone-numbers-sms-by-country.html) in the AWS End User Messaging SMS User Guide. `FILTER` and `MONITOR` incur additional charges for AIT risk evaluation. See [Country rule modes](https://docs.aws.amazon.com/sms-voice/latest/userguide/filter-and-monitor-messages.html) for details.
 
@@ -69,6 +88,8 @@ This resource exports the following attributes in addition to the arguments abov
 ## Import
 
 ~> **Note:** AWS doesn't allow deleting a protect configuration while it is associated with a configuration set, is the account default, or has deletion protection enabled.
+
+~> **Note:** AWS doesn't store a default status. After import, the `*_default_status` arguments are unset, and every country whose status isn't `ALLOW` appears in the `*_country_rules` maps. If the configuration sets a default status, the first plan after import shows a difference. Applying it changes no country only if the configured default status and country rules describe the imported rules. Otherwise, Terraform updates the countries to match the configuration.
 
 In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 

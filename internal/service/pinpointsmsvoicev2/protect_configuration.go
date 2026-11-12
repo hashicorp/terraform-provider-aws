@@ -5,6 +5,8 @@ package pinpointsmsvoicev2
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -57,9 +59,43 @@ var protectConfigurationNumberCapabilities = []awstypes.NumberCapability{
 	awstypes.NumberCapabilityRcs,
 }
 
+// SMS supports every protect status. VOICE, MMS, and RCS support only ALLOW and BLOCK.
+var (
+	protectConfigurationSMSStatuses    = enum.EnumValues[awstypes.ProtectStatus]()
+	protectConfigurationNonSMSStatuses = []awstypes.ProtectStatus{awstypes.ProtectStatusAllow, awstypes.ProtectStatusBlock}
+)
+
+var _ resource.ResourceWithValidateConfig = &protectConfigurationResource{}
+
 type protectConfigurationResource struct {
 	framework.ResourceWithModel[protectConfigurationResourceModel]
 	framework.WithImportByIdentity
+}
+
+func (r *protectConfigurationResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data protectConfigurationResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	for _, capability := range protectConfigurationNumberCapabilities {
+		defaultStatus, rules := data.defaultStatus(capability), *data.countryRules(capability)
+		if defaultStatus.IsUnknown() || rules.IsNull() || rules.IsUnknown() {
+			continue
+		}
+
+		want := protectConfigurationEffectiveDefaultStatus(defaultStatus)
+		for country, status := range rules.Elements() {
+			if v, ok := status.(types.String); ok && !v.IsUnknown() && v.ValueString() == want {
+				resp.Diagnostics.AddAttributeError(
+					path.Root(protectConfigurationCountryRulesAttributeName(capability)).AtMapKey(country),
+					"Invalid Country Rule",
+					fmt.Sprintf("Status %q is the default status for %s. Remove the country instead.", want, capability),
+				)
+			}
+		}
+	}
 }
 
 func (r *protectConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -86,20 +122,37 @@ func (r *protectConfigurationResource) Schema(ctx context.Context, req resource.
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID:          framework.IDAttribute(),
-			"mms_country_rules":   protectConfigurationCountryRulesAttribute(awstypes.ProtectStatusBlock),
-			"rcs_country_rules":   protectConfigurationCountryRulesAttribute(awstypes.ProtectStatusBlock),
-			"sms_country_rules":   protectConfigurationCountryRulesAttribute(awstypes.ProtectStatusBlock, awstypes.ProtectStatusMonitor, awstypes.ProtectStatusFilter),
-			names.AttrTags:        tftags.TagsAttribute(),
-			names.AttrTagsAll:     tftags.TagsAttributeComputedOnly(),
-			"voice_country_rules": protectConfigurationCountryRulesAttribute(awstypes.ProtectStatusBlock),
+			names.AttrID:           framework.IDAttribute(),
+			"mms_country_rules":    protectConfigurationCountryRulesAttribute(protectConfigurationNonSMSStatuses...),
+			"mms_default_status":   protectConfigurationDefaultStatusAttribute(protectConfigurationNonSMSStatuses...),
+			"rcs_country_rules":    protectConfigurationCountryRulesAttribute(protectConfigurationNonSMSStatuses...),
+			"rcs_default_status":   protectConfigurationDefaultStatusAttribute(protectConfigurationNonSMSStatuses...),
+			"sms_country_rules":    protectConfigurationCountryRulesAttribute(protectConfigurationSMSStatuses...),
+			"sms_default_status":   protectConfigurationDefaultStatusAttribute(protectConfigurationSMSStatuses...),
+			names.AttrTags:         tftags.TagsAttribute(),
+			names.AttrTagsAll:      tftags.TagsAttributeComputedOnly(),
+			"voice_country_rules":  protectConfigurationCountryRulesAttribute(protectConfigurationNonSMSStatuses...),
+			"voice_default_status": protectConfigurationDefaultStatusAttribute(protectConfigurationNonSMSStatuses...),
+		},
+	}
+}
+
+// protectConfigurationDefaultStatusAttribute returns the protect status for every country of a number
+// capability that isn't listed in its country rules. Null means ALLOW, the service default. It is
+// Optional rather than Optional+Computed with a default so that state from earlier provider versions
+// doesn't show a diff.
+func protectConfigurationDefaultStatusAttribute(statuses ...awstypes.ProtectStatus) schema.StringAttribute {
+	return schema.StringAttribute{
+		Optional: true,
+		Validators: []validator.String{
+			stringvalidator.OneOf(enum.Slice(statuses...)...),
 		},
 	}
 }
 
 // protectConfigurationCountryRulesAttribute returns a map of ISO country code to protect status.
-// ALLOW is the service default for every country and is represented by omitting the country,
-// so it isn't an accepted value. An empty map would read back as null, so at least one entry is required.
+// Each country listed overrides the default status. A status equal to the default would read back as
+// absent, so ValidateConfig rejects it. An empty map would read back as null, so at least one entry is required.
 func protectConfigurationCountryRulesAttribute(statuses ...awstypes.ProtectStatus) schema.MapAttribute {
 	return schema.MapAttribute{
 		CustomType:  fwtypes.MapOfStringType,
@@ -156,8 +209,7 @@ func (r *protectConfigurationResource) Create(ctx context.Context, req resource.
 	}
 
 	for _, capability := range protectConfigurationNumberCapabilities {
-		updates := protectConfigurationCountryRuleSetUpdates(ctx, fwtypes.NewMapValueOfNull[types.String](ctx), *plan.countryRules(capability))
-		if err := updateProtectConfigurationCountryRuleSet(ctx, conn, id, capability, updates); err != nil {
+		if err := syncProtectConfigurationCountryRuleSet(ctx, conn, id, capability, &plan); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 			return
 		}
@@ -232,8 +284,11 @@ func (r *protectConfigurationResource) Update(ctx context.Context, req resource.
 	}
 
 	for _, capability := range protectConfigurationNumberCapabilities {
-		updates := protectConfigurationCountryRuleSetUpdates(ctx, *state.countryRules(capability), *plan.countryRules(capability))
-		if err := updateProtectConfigurationCountryRuleSet(ctx, conn, id, capability, updates); err != nil {
+		if plan.defaultStatus(capability).Equal(state.defaultStatus(capability)) && plan.countryRules(capability).Equal(*state.countryRules(capability)) {
+			continue
+		}
+
+		if err := syncProtectConfigurationCountryRuleSet(ctx, conn, id, capability, &plan); err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 			return
 		}
@@ -269,29 +324,59 @@ func (r *protectConfigurationResource) Delete(ctx context.Context, req resource.
 	}
 }
 
-// protectConfigurationCountryRuleSetUpdates returns the changes that turn the old rules into the new ones.
-// The update API merges, so a country removed from the rules is reset to ALLOW.
-func protectConfigurationCountryRuleSetUpdates(ctx context.Context, old, new fwtypes.MapOfString) map[string]awstypes.ProtectConfigurationCountryRuleSetInformation {
-	oldRules := fwflex.ExpandFrameworkStringValueMap(ctx, old)
-	newRules := fwflex.ExpandFrameworkStringValueMap(ctx, new)
+// syncProtectConfigurationCountryRuleSet makes the country rule set for the number capability match the
+// model: every country listed in the country rules gets its status, and every other country gets the
+// default status. Only countries whose status differs are sent.
+func syncProtectConfigurationCountryRuleSet(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, capability awstypes.NumberCapability, data *protectConfigurationResourceModel) error {
+	current, err := findProtectConfigurationCountryRuleSet(ctx, conn, id, capability)
+	if err != nil {
+		return smarterr.NewError(err)
+	}
 
+	defaultStatus := protectConfigurationEffectiveDefaultStatus(data.defaultStatus(capability))
+	rules := fwflex.ExpandFrameworkStringValueMap(ctx, *data.countryRules(capability))
+
+	return updateProtectConfigurationCountryRuleSet(ctx, conn, id, capability, protectConfigurationCountryRuleSetUpdates(current, defaultStatus, rules))
+}
+
+// protectConfigurationCountryRuleSetUpdates returns the changes that turn the current country rule set
+// into the desired one. Countries in rules that aren't in the current set are sent as is, so that AWS
+// rejects countries the number capability doesn't support.
+func protectConfigurationCountryRuleSetUpdates(current map[string]string, defaultStatus string, rules map[string]string) map[string]awstypes.ProtectConfigurationCountryRuleSetInformation {
 	updates := make(map[string]awstypes.ProtectConfigurationCountryRuleSetInformation)
-	for country, status := range newRules {
-		if oldRules[country] != status {
+	for country, status := range current {
+		want, ok := rules[country]
+		if !ok {
+			want = defaultStatus
+		}
+		if status != want {
+			updates[country] = awstypes.ProtectConfigurationCountryRuleSetInformation{
+				ProtectStatus: awstypes.ProtectStatus(want),
+			}
+		}
+	}
+	for country, status := range rules {
+		if _, ok := current[country]; !ok {
 			updates[country] = awstypes.ProtectConfigurationCountryRuleSetInformation{
 				ProtectStatus: awstypes.ProtectStatus(status),
 			}
 		}
 	}
-	for country := range oldRules {
-		if _, ok := newRules[country]; !ok {
-			updates[country] = awstypes.ProtectConfigurationCountryRuleSetInformation{
-				ProtectStatus: awstypes.ProtectStatusAllow,
-			}
-		}
-	}
 
 	return updates
+}
+
+// protectConfigurationEffectiveDefaultStatus returns the default status, treating null as ALLOW.
+func protectConfigurationEffectiveDefaultStatus(v types.String) string {
+	if v.IsNull() {
+		return string(awstypes.ProtectStatusAllow)
+	}
+
+	return v.ValueString()
+}
+
+func protectConfigurationCountryRulesAttributeName(capability awstypes.NumberCapability) string {
+	return strings.ToLower(string(capability)) + "_country_rules"
 }
 
 func updateProtectConfigurationCountryRuleSet(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, capability awstypes.NumberCapability, updates map[string]awstypes.ProtectConfigurationCountryRuleSetInformation) error {
@@ -338,9 +423,8 @@ func findProtectConfiguration(ctx context.Context, conn *pinpointsmsvoicev2.Clie
 	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
-// findProtectConfigurationCountryRules returns the countries whose protect status for the number
-// capability is not ALLOW, the default.
-func findProtectConfigurationCountryRules(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, capability awstypes.NumberCapability) (map[string]string, error) {
+// findProtectConfigurationCountryRuleSet returns the protect status of every country for the number capability.
+func findProtectConfigurationCountryRuleSet(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, capability awstypes.NumberCapability) (map[string]string, error) {
 	input := pinpointsmsvoicev2.GetProtectConfigurationCountryRuleSetInput{
 		NumberCapability:       capability,
 		ProtectConfigurationId: aws.String(id),
@@ -360,14 +444,12 @@ func findProtectConfigurationCountryRules(ctx context.Context, conn *pinpointsms
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
-	rules := make(map[string]string)
+	ruleSet := make(map[string]string, len(out.CountryRuleSet))
 	for country, v := range out.CountryRuleSet {
-		if v.ProtectStatus != awstypes.ProtectStatusAllow {
-			rules[country] = string(v.ProtectStatus)
-		}
+		ruleSet[country] = string(v.ProtectStatus)
 	}
 
-	return rules, nil
+	return ruleSet, nil
 }
 
 type protectConfigurationResourceModel struct {
@@ -378,11 +460,15 @@ type protectConfigurationResourceModel struct {
 	DeletionProtectionEnabled types.Bool          `tfsdk:"deletion_protection_enabled"`
 	ID                        types.String        `tfsdk:"id"`
 	MMSCountryRules           fwtypes.MapOfString `tfsdk:"mms_country_rules" autoflex:"-"`
+	MMSDefaultStatus          types.String        `tfsdk:"mms_default_status" autoflex:"-"`
 	RCSCountryRules           fwtypes.MapOfString `tfsdk:"rcs_country_rules" autoflex:"-"`
+	RCSDefaultStatus          types.String        `tfsdk:"rcs_default_status" autoflex:"-"`
 	SMSCountryRules           fwtypes.MapOfString `tfsdk:"sms_country_rules" autoflex:"-"`
+	SMSDefaultStatus          types.String        `tfsdk:"sms_default_status" autoflex:"-"`
 	Tags                      tftags.Map          `tfsdk:"tags"`
 	TagsAll                   tftags.Map          `tfsdk:"tags_all"`
 	VoiceCountryRules         fwtypes.MapOfString `tfsdk:"voice_country_rules" autoflex:"-"`
+	VoiceDefaultStatus        types.String        `tfsdk:"voice_default_status" autoflex:"-"`
 }
 
 func (m *protectConfigurationResourceModel) countryRules(capability awstypes.NumberCapability) *fwtypes.MapOfString {
@@ -400,6 +486,23 @@ func (m *protectConfigurationResourceModel) countryRules(capability awstypes.Num
 	}
 }
 
+func (m *protectConfigurationResourceModel) defaultStatus(capability awstypes.NumberCapability) types.String {
+	switch capability {
+	case awstypes.NumberCapabilityMms:
+		return m.MMSDefaultStatus
+	case awstypes.NumberCapabilityRcs:
+		return m.RCSDefaultStatus
+	case awstypes.NumberCapabilitySms:
+		return m.SMSDefaultStatus
+	case awstypes.NumberCapabilityVoice:
+		return m.VoiceDefaultStatus
+	default:
+		return types.StringNull()
+	}
+}
+
+// flatten sets the country rules to the countries whose status differs from the default status.
+// AWS doesn't store a default status, so the default status in the model is kept as is.
 func (m *protectConfigurationResourceModel) flatten(ctx context.Context, conn *pinpointsmsvoicev2.Client, out *awstypes.ProtectConfigurationInformation) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -410,10 +513,18 @@ func (m *protectConfigurationResourceModel) flatten(ctx context.Context, conn *p
 
 	id := aws.ToString(out.ProtectConfigurationId)
 	for _, capability := range protectConfigurationNumberCapabilities {
-		rules, err := findProtectConfigurationCountryRules(ctx, conn, id, capability)
+		ruleSet, err := findProtectConfigurationCountryRuleSet(ctx, conn, id, capability)
 		if err != nil {
 			smerr.AddError(ctx, &diags, err, smerr.ID, id)
 			return diags
+		}
+
+		defaultStatus := protectConfigurationEffectiveDefaultStatus(m.defaultStatus(capability))
+		rules := make(map[string]string)
+		for country, status := range ruleSet {
+			if status != defaultStatus {
+				rules[country] = status
+			}
 		}
 
 		*m.countryRules(capability) = fwflex.FlattenFrameworkStringValueMapOfString(ctx, rules)

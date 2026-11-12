@@ -25,6 +25,62 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestProtectConfigurationCountryRuleSetUpdates(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		testName      string
+		current       map[string]string
+		defaultStatus string
+		rules         map[string]string
+		want          map[string]awstypes.ProtectStatus
+	}{
+		{
+			testName:      "no changes",
+			current:       map[string]string{"CA": "ALLOW", "US": "BLOCK"},
+			defaultStatus: "ALLOW",
+			rules:         map[string]string{"US": "BLOCK"},
+			want:          map[string]awstypes.ProtectStatus{},
+		},
+		{
+			testName:      "removed country resets to default",
+			current:       map[string]string{"CA": "BLOCK", "US": "BLOCK"},
+			defaultStatus: "ALLOW",
+			rules:         map[string]string{"US": "BLOCK"},
+			want:          map[string]awstypes.ProtectStatus{"CA": "ALLOW"},
+		},
+		{
+			testName:      "new default",
+			current:       map[string]string{"CA": "ALLOW", "DE": "ALLOW", "US": "ALLOW"},
+			defaultStatus: "BLOCK",
+			rules:         map[string]string{"US": "ALLOW"},
+			want:          map[string]awstypes.ProtectStatus{"CA": "BLOCK", "DE": "BLOCK"},
+		},
+		{
+			testName:      "unsupported country is sent",
+			current:       map[string]string{"US": "ALLOW"},
+			defaultStatus: "ALLOW",
+			rules:         map[string]string{"ZZ": "BLOCK"},
+			want:          map[string]awstypes.ProtectStatus{"ZZ": "BLOCK"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			got := make(map[string]awstypes.ProtectStatus)
+			for country, v := range tfpinpointsmsvoicev2.ProtectConfigurationCountryRuleSetUpdates(testCase.current, testCase.defaultStatus, testCase.rules) {
+				got[country] = v.ProtectStatus
+			}
+
+			if !maps.Equal(got, testCase.want) {
+				t.Errorf("got %v, want %v", got, testCase.want)
+			}
+		})
+	}
+}
+
 func TestAccPinpointSMSVoiceV2ProtectConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ProtectConfigurationInformation
@@ -60,6 +116,10 @@ func TestAccPinpointSMSVoiceV2ProtectConfiguration_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sms_country_rules"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("voice_country_rules"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mms_default_status"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rcs_default_status"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sms_default_status"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("voice_default_status"), knownvalue.Null()),
 				},
 			},
 			{
@@ -135,10 +195,10 @@ func TestAccPinpointSMSVoiceV2ProtectConfiguration_countryRules(t *testing.T) {
 `),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProtectConfigurationExists(ctx, t, resourceName, &v),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilitySms, map[string]string{"US": "BLOCK", "CA": "FILTER", "DE": "MONITOR"}),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityVoice, map[string]string{"US": "BLOCK"}),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityMms, map[string]string{"CA": "BLOCK"}),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityRcs, map[string]string{"DE": "BLOCK"}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilitySms, awstypes.ProtectStatusAllow, map[string]string{"US": "BLOCK", "CA": "FILTER", "DE": "MONITOR"}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityVoice, awstypes.ProtectStatusAllow, map[string]string{"US": "BLOCK"}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityMms, awstypes.ProtectStatusAllow, map[string]string{"CA": "BLOCK"}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityRcs, awstypes.ProtectStatusAllow, map[string]string{"DE": "BLOCK"}),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sms_country_rules"), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -180,10 +240,10 @@ func TestAccPinpointSMSVoiceV2ProtectConfiguration_countryRules(t *testing.T) {
 `),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProtectConfigurationExists(ctx, t, resourceName, &v),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilitySms, map[string]string{"US": "MONITOR", "DE": "MONITOR", "GB": "BLOCK"}),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityVoice, map[string]string{}),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityMms, map[string]string{"CA": "BLOCK"}),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityRcs, map[string]string{"DE": "BLOCK", "FR": "BLOCK"}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilitySms, awstypes.ProtectStatusAllow, map[string]string{"US": "MONITOR", "DE": "MONITOR", "GB": "BLOCK"}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityVoice, awstypes.ProtectStatusAllow, map[string]string{}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityMms, awstypes.ProtectStatusAllow, map[string]string{"CA": "BLOCK"}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityRcs, awstypes.ProtectStatusAllow, map[string]string{"DE": "BLOCK", "FR": "BLOCK"}),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -210,10 +270,10 @@ func TestAccPinpointSMSVoiceV2ProtectConfiguration_countryRules(t *testing.T) {
 				Config: testAccProtectConfigurationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProtectConfigurationExists(ctx, t, resourceName, &v),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilitySms, map[string]string{}),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityVoice, map[string]string{}),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityMms, map[string]string{}),
-					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityRcs, map[string]string{}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilitySms, awstypes.ProtectStatusAllow, map[string]string{}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityVoice, awstypes.ProtectStatusAllow, map[string]string{}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityMms, awstypes.ProtectStatusAllow, map[string]string{}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityRcs, awstypes.ProtectStatusAllow, map[string]string{}),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -225,6 +285,100 @@ func TestAccPinpointSMSVoiceV2ProtectConfiguration_countryRules(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rcs_country_rules"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sms_country_rules"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("voice_country_rules"), knownvalue.Null()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccPinpointSMSVoiceV2ProtectConfiguration_defaultStatus(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ProtectConfigurationInformation
+	resourceName := "aws_pinpointsmsvoicev2_protect_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckProtectConfiguration(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProtectConfigurationConfig_countryRules(`
+  sms_default_status = "BLOCK"
+  sms_country_rules = {
+    US = "ALLOW"
+    CA = "FILTER"
+  }
+  voice_default_status = "BLOCK"
+`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProtectConfigurationExists(ctx, t, resourceName, &v),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilitySms, awstypes.ProtectStatusBlock, map[string]string{"US": "ALLOW", "CA": "FILTER"}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityVoice, awstypes.ProtectStatusBlock, map[string]string{}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityMms, awstypes.ProtectStatusAllow, map[string]string{}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityRcs, awstypes.ProtectStatusAllow, map[string]string{}),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sms_country_rules"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"CA": knownvalue.StringExact("FILTER"),
+						"US": knownvalue.StringExact("ALLOW"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sms_default_status"), knownvalue.StringExact("BLOCK")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("voice_country_rules"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("voice_default_status"), knownvalue.StringExact("BLOCK")),
+				},
+			},
+			{
+				// AWS doesn't store a default status, so import reads every country that isn't ALLOW as a country rule.
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"sms_country_rules", "sms_default_status", "voice_country_rules", "voice_default_status"},
+			},
+			{
+				// Change the default, remove the default, and add a default.
+				Config: testAccProtectConfigurationConfig_countryRules(`
+  sms_default_status = "MONITOR"
+  sms_country_rules = {
+    US = "ALLOW"
+  }
+  mms_default_status = "BLOCK"
+`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProtectConfigurationExists(ctx, t, resourceName, &v),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilitySms, awstypes.ProtectStatusMonitor, map[string]string{"US": "ALLOW"}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityVoice, awstypes.ProtectStatusAllow, map[string]string{}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityMms, awstypes.ProtectStatusBlock, map[string]string{}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityRcs, awstypes.ProtectStatusAllow, map[string]string{}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mms_default_status"), knownvalue.StringExact("BLOCK")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sms_country_rules"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"US": knownvalue.StringExact("ALLOW"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sms_default_status"), knownvalue.StringExact("MONITOR")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("voice_default_status"), knownvalue.Null()),
+				},
+			},
+			{
+				Config: testAccProtectConfigurationConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProtectConfigurationExists(ctx, t, resourceName, &v),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilitySms, awstypes.ProtectStatusAllow, map[string]string{}),
+					testAccCheckProtectConfigurationCountryRules(ctx, t, resourceName, awstypes.NumberCapabilityMms, awstypes.ProtectStatusAllow, map[string]string{}),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("mms_default_status"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sms_country_rules"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("sms_default_status"), knownvalue.Null()),
 				},
 			},
 		},
@@ -289,16 +443,31 @@ func TestAccPinpointSMSVoiceV2ProtectConfiguration_invalidCountryRules(t *testin
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				// ALLOW is the default and is expressed by omitting the country.
+				// ALLOW is the default when no default status is set, so it is expressed by omitting the country.
 				Config: testAccProtectConfigurationConfig_countryRules(`
   sms_country_rules = {
     US = "ALLOW"
   }
 `),
+				ExpectError: regexache.MustCompile(`Invalid Country Rule`),
+			},
+			{
+				Config: testAccProtectConfigurationConfig_countryRules(`
+  voice_default_status = "BLOCK"
+  voice_country_rules = {
+    US = "BLOCK"
+  }
+`),
+				ExpectError: regexache.MustCompile(`Invalid Country Rule`),
+			},
+			{
+				// VOICE, MMS, and RCS only support ALLOW and BLOCK.
+				Config: testAccProtectConfigurationConfig_countryRules(`
+  mms_default_status = "MONITOR"
+`),
 				ExpectError: regexache.MustCompile(`value must be one of`),
 			},
 			{
-				// VOICE, MMS, and RCS only support BLOCK.
 				Config: testAccProtectConfigurationConfig_countryRules(`
   voice_country_rules = {
     US = "FILTER"
@@ -380,7 +549,8 @@ func testAccCheckProtectConfigurationExists(ctx context.Context, t *testing.T, n
 }
 
 // testAccCheckProtectConfigurationCountryRules checks the rules stored by AWS, independent of state.
-func testAccCheckProtectConfigurationCountryRules(ctx context.Context, t *testing.T, n string, capability awstypes.NumberCapability, want map[string]string) resource.TestCheckFunc {
+// want lists the countries whose status differs from defaultStatus.
+func testAccCheckProtectConfigurationCountryRules(ctx context.Context, t *testing.T, n string, capability awstypes.NumberCapability, defaultStatus awstypes.ProtectStatus, want map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -390,9 +560,16 @@ func testAccCheckProtectConfigurationCountryRules(ctx context.Context, t *testin
 		ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
-		got, err := tfpinpointsmsvoicev2.FindProtectConfigurationCountryRules(ctx, conn, rs.Primary.ID, capability)
+		ruleSet, err := tfpinpointsmsvoicev2.FindProtectConfigurationCountryRuleSet(ctx, conn, rs.Primary.ID, capability)
 		if err != nil {
 			return err
+		}
+
+		got := make(map[string]string)
+		for country, status := range ruleSet {
+			if status != string(defaultStatus) {
+				got[country] = status
+			}
 		}
 
 		if !maps.Equal(got, want) {
