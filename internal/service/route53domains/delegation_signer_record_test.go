@@ -193,6 +193,16 @@ func testAccDelegationSignerRecord_upgradeFromV6_69_1(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DelegationSignerRecord/ignore_changes_v6.69.1/"),
 				ConfigVariables: configVariables,
+				Check: func(s *terraform.State) error {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return fmt.Errorf("not found: %s", resourceName)
+					}
+					if rs.Primary.Attributes["signing_attributes.0.flags"] != "" && rs.Primary.Attributes["signing_attributes.0.public_key"] != "" {
+						t.Skipf("registry for %s returns flags and public_key, so the fallback can't be tested", domainName)
+					}
+					return nil
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
