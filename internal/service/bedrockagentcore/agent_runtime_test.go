@@ -921,11 +921,13 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
-									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
-									"custom_claim":                   knownvalue.SetSizeExact(0),
-									"discovery_url":                  knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
-									"private_endpoint":               knownvalue.ListSizeExact(0),
-									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
+									"allowed_workload_configuration":       knownvalue.ListSizeExact(0),
+									"custom_claim":                         knownvalue.SetSizeExact(0),
+									"custom_claim_match_values_wo":         knownvalue.Null(),
+									"custom_claim_match_values_wo_version": knownvalue.Null(),
+									"discovery_url":                        knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":                     knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":           knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -966,11 +968,13 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrProfile),
 									}),
-									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
-									"custom_claim":                   knownvalue.SetSizeExact(0),
-									"discovery_url":                  knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
-									"private_endpoint":               knownvalue.ListSizeExact(0),
-									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
+									"allowed_workload_configuration":       knownvalue.ListSizeExact(0),
+									"custom_claim":                         knownvalue.SetSizeExact(0),
+									"custom_claim_match_values_wo":         knownvalue.Null(),
+									"custom_claim_match_values_wo_version": knownvalue.Null(),
+									"discovery_url":                        knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"private_endpoint":                     knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":           knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -1052,9 +1056,11 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url":              knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
-									"private_endpoint":           knownvalue.ListSizeExact(0),
-									"private_endpoint_overrides": knownvalue.ListSizeExact(0),
+									"custom_claim_match_values_wo":         knownvalue.Null(),
+									"custom_claim_match_values_wo_version": knownvalue.Null(),
+									"discovery_url":                        knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":                     knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":           knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -1123,9 +1129,11 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url":              knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
-									"private_endpoint":           knownvalue.ListSizeExact(0),
-									"private_endpoint_overrides": knownvalue.ListSizeExact(0),
+									"custom_claim_match_values_wo":         knownvalue.Null(),
+									"custom_claim_match_values_wo_version": knownvalue.Null(),
+									"discovery_url":                        knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":                     knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":           knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -1188,9 +1196,11 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 											}),
 										}),
 									}),
-									"discovery_url":              knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
-									"private_endpoint":           knownvalue.ListSizeExact(0),
-									"private_endpoint_overrides": knownvalue.ListSizeExact(0),
+									"custom_claim_match_values_wo":         knownvalue.Null(),
+									"custom_claim_match_values_wo_version": knownvalue.Null(),
+									"discovery_url":                        knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"private_endpoint":                     knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":           knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -1203,6 +1213,141 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaim(t *t
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_authorizerConfigurationCustomClaimWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimWriteOnly(rName, rBucketName, "description1", "value-v1", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+					testAccCheckAuthorizerCustomClaimMatchValue(func() awstypes.AuthorizerConfiguration { return agentRuntime.AuthorizerConfiguration }, "tenant_id", "value-v1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration").AtSliceIndex(0).AtMapKey("custom_jwt_authorizer").AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"inbound_token_claim_name": knownvalue.StringExact("tenant_id"),
+								"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeEquals)),
+										"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+											knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"match_value_string":      knownvalue.Null(),
+												"match_value_string_list": knownvalue.Null(),
+											}),
+										}),
+									}),
+								}),
+							}),
+						}),
+						"custom_claim_match_values_wo":         knownvalue.Null(),
+						"custom_claim_match_values_wo_version": knownvalue.Int64Exact(1),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+				// After import, match_value_string holds the value returned by the service.
+				ImportStateVerifyIgnore: []string{
+					"authorizer_configuration.0.custom_jwt_authorizer.0.custom_claim",
+					"authorizer_configuration.0.custom_jwt_authorizer.0.custom_claim_match_values_wo_version",
+				},
+			},
+			{
+				Config: testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimWriteOnly(rName, rBucketName, "description1", "value-v2", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+					testAccCheckAuthorizerCustomClaimMatchValue(func() awstypes.AuthorizerConfiguration { return agentRuntime.AuthorizerConfiguration }, "tenant_id", "value-v2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration").AtSliceIndex(0).AtMapKey("custom_jwt_authorizer").AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"inbound_token_claim_name": knownvalue.StringExact("tenant_id"),
+								"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeEquals)),
+										"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+											knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"match_value_string":      knownvalue.Null(),
+												"match_value_string_list": knownvalue.Null(),
+											}),
+										}),
+									}),
+								}),
+							}),
+						}),
+						"custom_claim_match_values_wo":         knownvalue.Null(),
+						"custom_claim_match_values_wo_version": knownvalue.Int64Exact(2),
+					})),
+				},
+			},
+			{
+				Config: testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimWriteOnly(rName, rBucketName, "description2", "value-v2", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+					testAccCheckAuthorizerCustomClaimMatchValue(func() awstypes.AuthorizerConfiguration { return agentRuntime.AuthorizerConfiguration }, "tenant_id", "value-v2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration").AtSliceIndex(0).AtMapKey("custom_jwt_authorizer").AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"inbound_token_claim_name": knownvalue.StringExact("tenant_id"),
+								"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeEquals)),
+										"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+											knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"match_value_string":      knownvalue.Null(),
+												"match_value_string_list": knownvalue.Null(),
+											}),
+										}),
+									}),
+								}),
+							}),
+						}),
+						"custom_claim_match_values_wo":         knownvalue.Null(),
+						"custom_claim_match_values_wo_version": knownvalue.Int64Exact(2),
+					})),
+				},
 			},
 		},
 	})
@@ -1622,6 +1767,36 @@ func testAccCheckAgentRuntimeExists(ctx context.Context, t *testing.T, n string,
 		*v = *resp
 
 		return nil
+	}
+}
+
+// testAccCheckAuthorizerCustomClaimMatchValue checks the match value that the service holds for a custom claim.
+// It is how tests confirm that a write-only value was sent, since the value is never in state.
+func testAccCheckAuthorizerCustomClaimMatchValue(authorizerConfiguration func() awstypes.AuthorizerConfiguration, claimName, want string) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		jwt, ok := authorizerConfiguration().(*awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer)
+		if !ok {
+			return fmt.Errorf("authorizer configuration is %T, want custom JWT authorizer", authorizerConfiguration())
+		}
+
+		for _, claim := range jwt.Value.CustomClaims {
+			if aws.ToString(claim.InboundTokenClaimName) != claimName {
+				continue
+			}
+			if claim.AuthorizingClaimMatchValue == nil {
+				return fmt.Errorf("custom claim %q has no authorizing claim match value", claimName)
+			}
+			v, ok := claim.AuthorizingClaimMatchValue.ClaimMatchValue.(*awstypes.ClaimMatchValueTypeMemberMatchValueString)
+			if !ok {
+				return fmt.Errorf("custom claim %q match value is %T, want string", claimName, claim.AuthorizingClaimMatchValue.ClaimMatchValue)
+			}
+			if v.Value != want {
+				return fmt.Errorf("custom claim %q match value = %q, want %q", claimName, v.Value, want)
+			}
+			return nil
+		}
+
+		return fmt.Errorf("custom claim %q not found", claimName)
 	}
 }
 
@@ -2119,6 +2294,57 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2))
+}
+
+func testAccAgentRuntimeConfig_authorizerConfigurationCustomClaimWriteOnly(rName, rBucketName, description, matchValue string, matchValueVersion int) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  description        = %[2]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    code_configuration {
+      entry_point = ["main.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
+    }
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url   = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_clients = ["client-999"]
+
+      custom_claim_match_values_wo = {
+        tenant_id = %[3]q
+      }
+      custom_claim_match_values_wo_version = %[4]d
+
+      custom_claim {
+        inbound_token_claim_name       = "tenant_id"
+        inbound_token_claim_value_type = "STRING"
+        authorizing_claim_match_value {
+          claim_match_operator = "EQUALS"
+          claim_match_value {}
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+}
+`, rName, description, matchValue, matchValueVersion))
 }
 
 func testAccAgentRuntimeConfig_protocolConfiguration(rName, rBucketName, serverProtocol string) string {

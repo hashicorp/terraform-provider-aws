@@ -19,8 +19,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -32,7 +33,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -336,6 +339,9 @@ func authorizerConfigurationBlock(ctx context.Context, extraValidators ...valida
 						listvalidator.SizeAtMost(1),
 					},
 					NestedObject: schema.NestedBlockObject{
+						Validators: []validator.Object{
+							customClaimMatchValueSourcesValidator{},
+						},
 						Attributes: map[string]schema.Attribute{
 							"allowed_audience": schema.SetAttribute{
 								CustomType: fwtypes.SetOfStringType,
@@ -348,6 +354,23 @@ func authorizerConfigurationBlock(ctx context.Context, extraValidators ...valida
 							"allowed_scopes": schema.SetAttribute{
 								CustomType: fwtypes.SetOfStringType,
 								Optional:   true,
+							},
+							// custom_claim is a set nested block, which can't contain write-only attributes,
+							// so write-only claim match values are keyed by claim name at this level.
+							"custom_claim_match_values_wo": schema.MapAttribute{
+								CustomType: fwtypes.MapOfStringType,
+								Optional:   true,
+								WriteOnly:  true,
+								Sensitive:  true,
+								Validators: []validator.Map{
+									mapvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("custom_claim_match_values_wo_version")),
+								},
+							},
+							"custom_claim_match_values_wo_version": schema.Int64Attribute{
+								Optional: true,
+								Validators: []validator.Int64{
+									int64validator.AlsoRequires(path.MatchRelative().AtParent().AtName("custom_claim_match_values_wo")),
+								},
 							},
 							"discovery_url": schema.StringAttribute{
 								Required: true,
@@ -424,13 +447,9 @@ func authorizerConfigurationBlock(ctx context.Context, extraValidators ...valida
 															listvalidator.IsRequired(),
 															listvalidator.SizeAtMost(1),
 														},
+														// customClaimMatchValueSourcesValidator on custom_jwt_authorizer requires exactly
+														// one of match_value_string, match_value_string_list, or a custom_claim_match_values_wo entry.
 														NestedObject: schema.NestedBlockObject{
-															Validators: []validator.Object{
-																objectvalidator.ExactlyOneOf(
-																	path.MatchRelative().AtName("match_value_string"),
-																	path.MatchRelative().AtName("match_value_string_list"),
-																),
-															},
 															Attributes: map[string]schema.Attribute{
 																"match_value_string": schema.StringAttribute{
 																	Optional: true,
@@ -653,8 +672,16 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
+	inputAuthorizerConfiguration, d := withCustomClaimMatchValuesWO(ctx, request.Config, data.AuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	inputData := data
+	inputData.AuthorizerConfiguration = inputAuthorizerConfiguration
+
 	var input bedrockagentcorecontrol.CreateAgentRuntimeInput
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input, fwflex.WithFieldNamePrefix("AgentRuntime")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, inputData, &input, fwflex.WithFieldNamePrefix("AgentRuntime")))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -718,7 +745,7 @@ func (r *agentRuntimeResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+	authorizerConfiguration, d := preserveAuthorizerConfiguration(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -755,7 +782,7 @@ func (r *agentRuntimeResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
-	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
+	authorizerConfiguration, d := preserveAuthorizerConfiguration(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -783,8 +810,16 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 
 	if diff.HasChanges() {
 		agentRuntimeID := fwflex.StringValueFromFramework(ctx, new.AgentRuntimeID)
+		inputAuthorizerConfiguration, inputDiags := withCustomClaimMatchValuesWO(ctx, request.Config, new.AuthorizerConfiguration)
+		smerr.AddEnrich(ctx, &response.Diagnostics, inputDiags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		inputData := new
+		inputData.AuthorizerConfiguration = inputAuthorizerConfiguration
+
 		var input bedrockagentcorecontrol.UpdateAgentRuntimeInput
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input, fwflex.WithFieldNamePrefix("AgentRuntime")))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, inputData, &input, fwflex.WithFieldNamePrefix("AgentRuntime")))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -810,7 +845,7 @@ func (r *agentRuntimeResource) Update(ctx context.Context, request resource.Upda
 			return
 		}
 
-		authorizerConfiguration, authDiags := preserveAuthorizerPrivateEndpoints(ctx, new.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+		authorizerConfiguration, authDiags := preserveAuthorizerConfiguration(ctx, new.AuthorizerConfiguration, plannedAuthorizerConfiguration)
 		smerr.AddEnrich(ctx, &response.Diagnostics, authDiags)
 		if response.Diagnostics.HasError() {
 			return
@@ -1246,6 +1281,7 @@ func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) diag.
 		if diags.HasError() {
 			return diags
 		}
+		data.CustomClaimMatchValuesWO = fwtypes.NewMapValueOfNull[types.String](ctx)
 		m.CustomJWTAuthorizer = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 
 	default:
@@ -1301,13 +1337,19 @@ func (m authorizerConfigurationModel) expandToUpdatedAuthorizerConfiguration(ctx
 	return &awstypes.UpdatedAuthorizerConfiguration{}, diags
 }
 
-// preserveAuthorizerPrivateEndpoints copies the configured private_endpoint and
-// private_endpoint_overrides from src (the prior plan or state) into dst (the value just
-// flattened from the API response). The service omits both from Get responses, so without this
-// the configured blocks would be cleared on refresh, producing "Provider produced inconsistent
-// result after apply: block count changed from 1 to 0" and a perpetual replace. It is shared by
-// every resource that embeds authorizerConfigurationModel (agent_runtime, gateway, harness, registry).
-func preserveAuthorizerPrivateEndpoints(ctx context.Context, dst, src fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]) (fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel], diag.Diagnostics) {
+// preserveAuthorizerConfiguration restores the parts of the authorizer configuration that the
+// service doesn't return, copying them from src (the prior plan or state) into dst (the value just
+// flattened from the API response). It is shared by every resource that embeds
+// authorizerConfigurationModel (agent_runtime, gateway, harness, registry).
+//
+// The service omits private_endpoint and private_endpoint_overrides from Get responses, so without
+// this the configured blocks would be cleared on refresh, producing "Provider produced inconsistent
+// result after apply: block count changed from 1 to 0" and a perpetual replace.
+//
+// The service does return custom claim match values that were sent from custom_claim_match_values_wo.
+// A claim with no match value in src gets its value from that write-only attribute, so its returned
+// value is removed to keep the secret out of state.
+func preserveAuthorizerConfiguration(ctx context.Context, dst, src fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]) (fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel], diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if dst.IsNull() || src.IsNull() {
@@ -1336,20 +1378,252 @@ func preserveAuthorizerPrivateEndpoints(ctx context.Context, dst, src fwtypes.Li
 
 	dstJWT.PrivateEndpoint = srcJWT.PrivateEndpoint
 	dstJWT.PrivateEndpointOverrides = srcJWT.PrivateEndpointOverrides
+	dstJWT.CustomClaimMatchValuesWOVersion = srcJWT.CustomClaimMatchValuesWOVersion
+
+	writeOnlyClaims := make(map[string]bool)
+	smerr.AddEnrich(ctx, &diags, walkCustomClaimMatchValues(ctx, srcJWT, func(name string, v *customJWTAuthorizerClaimMatchValueModel) {
+		if v.MatchValueString.IsNull() && v.MatchValueStringList.IsNull() {
+			writeOnlyClaims[name] = true
+		}
+	}))
+	smerr.AddEnrich(ctx, &diags, walkCustomClaimMatchValues(ctx, dstJWT, func(name string, v *customJWTAuthorizerClaimMatchValueModel) {
+		if writeOnlyClaims[name] {
+			v.MatchValueString = types.StringNull()
+			v.MatchValueStringList = fwtypes.NewSetValueOfNull[types.String](ctx)
+		}
+	}))
+	if diags.HasError() {
+		return dst, diags
+	}
+
 	dstAuth.CustomJWTAuthorizer = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dstJWT)
 
 	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, dstAuth), diags
 }
 
+// withCustomClaimMatchValuesWO returns a copy of planned, for use only in API requests, with each
+// value from custom_claim_match_values_wo in config set as the match_value_string of the custom_claim
+// it names. Write-only values are always null in the plan, and the Create and Update APIs replace the
+// whole authorizer configuration, so every request that sends it must include these values.
+func withCustomClaimMatchValuesWO(ctx context.Context, config tfsdk.Config, planned fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]) (fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	var configured fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]
+	smerr.AddEnrich(ctx, &diags, config.GetAttribute(ctx, path.Root("authorizer_configuration"), &configured))
+	if diags.HasError() {
+		return planned, diags
+	}
+
+	configuredAuth, d := configured.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || configuredAuth == nil {
+		return planned, diags
+	}
+	configuredJWT, d := configuredAuth.CustomJWTAuthorizer.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || configuredJWT == nil || configuredJWT.CustomClaimMatchValuesWO.IsNull() {
+		return planned, diags
+	}
+
+	var values map[string]string
+	smerr.AddEnrich(ctx, &diags, configuredJWT.CustomClaimMatchValuesWO.ElementsAs(ctx, &values, false))
+	if diags.HasError() || len(values) == 0 {
+		return planned, diags
+	}
+
+	auth, d := planned.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || auth == nil {
+		return planned, diags
+	}
+	jwt, d := auth.CustomJWTAuthorizer.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() || jwt == nil {
+		return planned, diags
+	}
+
+	smerr.AddEnrich(ctx, &diags, walkCustomClaimMatchValues(ctx, jwt, func(name string, v *customJWTAuthorizerClaimMatchValueModel) {
+		if value, ok := values[name]; ok && v.MatchValueString.IsNull() && v.MatchValueStringList.IsNull() {
+			v.MatchValueString = types.StringValue(value)
+		}
+	}))
+	if diags.HasError() {
+		return planned, diags
+	}
+
+	auth.CustomJWTAuthorizer = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, jwt)
+
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, auth), diags
+}
+
+// walkCustomClaimMatchValues calls f with the claim name and claim_match_value of each custom_claim
+// in m, and stores any changes f makes back in m.
+func walkCustomClaimMatchValues(ctx context.Context, m *customJWTAuthorizerConfigurationModel, f func(string, *customJWTAuthorizerClaimMatchValueModel)) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if m.CustomClaim.IsNull() || m.CustomClaim.IsUnknown() {
+		return diags
+	}
+
+	claims, d := m.CustomClaim.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
+	if diags.HasError() {
+		return diags
+	}
+
+	for _, claim := range claims {
+		authorizingClaimMatchValue, d := claim.AuthorizingClaimMatchValue.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return diags
+		}
+		if authorizingClaimMatchValue == nil {
+			continue
+		}
+
+		claimMatchValue, d := authorizingClaimMatchValue.ClaimMatchValue.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return diags
+		}
+		if claimMatchValue == nil {
+			continue
+		}
+
+		f(claim.InboundTokenClaimName.ValueString(), claimMatchValue)
+
+		authorizingClaimMatchValue.ClaimMatchValue = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, claimMatchValue)
+		claim.AuthorizingClaimMatchValue = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, authorizingClaimMatchValue)
+	}
+
+	m.CustomClaim = fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, claims)
+
+	return diags
+}
+
+var claimMatchValueRegex = regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`)
+
+// customClaimMatchValueSourcesValidator checks that each custom_claim gets its match value from
+// exactly one of match_value_string, match_value_string_list, or a custom_claim_match_values_wo entry,
+// and that each custom_claim_match_values_wo key names a custom_claim. It also checks the write-only
+// values itself because stringvalidator.RegexMatches includes the offending value in its diagnostic.
+type customClaimMatchValueSourcesValidator struct{}
+
+func (v customClaimMatchValueSourcesValidator) Description(context.Context) string {
+	return "each custom_claim must have exactly one of match_value_string, match_value_string_list, or a custom_claim_match_values_wo entry"
+}
+
+func (v customClaimMatchValueSourcesValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (v customClaimMatchValueSourcesValidator) ValidateObject(ctx context.Context, request validator.ObjectRequest, response *validator.ObjectResponse) {
+	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+		return
+	}
+
+	var data customJWTAuthorizerConfigurationModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.ConfigValue.As(ctx, &data, basetypes.ObjectAsOptions{}))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if data.CustomClaimMatchValuesWO.IsUnknown() || data.CustomClaim.IsUnknown() {
+		return
+	}
+
+	writeOnlyPath := request.Path.AtName("custom_claim_match_values_wo")
+	writeOnlyValues := data.CustomClaimMatchValuesWO.Elements()
+	for name, value := range writeOnlyValues {
+		s, ok := value.(types.String)
+		if !ok || s.IsUnknown() {
+			continue
+		}
+		if s.IsNull() {
+			response.Diagnostics.AddAttributeError(writeOnlyPath.AtMapKey(name), "Invalid Attribute Value", "Value must not be null.")
+			continue
+		}
+		// Don't include the value in diagnostics.
+		if n := len(s.ValueString()); n < 1 || n > 255 {
+			response.Diagnostics.AddAttributeError(writeOnlyPath.AtMapKey(name), "Invalid Attribute Value Length", fmt.Sprintf("Value length must be between 1 and 255, got: %d.", n))
+		}
+		if !claimMatchValueRegex.MatchString(s.ValueString()) {
+			response.Diagnostics.AddAttributeError(writeOnlyPath.AtMapKey(name), "Invalid Attribute Value Match", "Value must contain only letters, numbers, and the characters _ . - :")
+		}
+	}
+
+	claimNames := make(map[string]bool)
+	claimNamesKnown := true
+	claims, d := data.CustomClaim.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	for _, claim := range claims {
+		if claim.InboundTokenClaimName.IsUnknown() {
+			claimNamesKnown = false
+			continue
+		}
+		name := claim.InboundTokenClaimName.ValueString()
+		claimNames[name] = true
+
+		authorizingClaimMatchValue, d := claim.AuthorizingClaimMatchValue.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if authorizingClaimMatchValue == nil {
+			continue
+		}
+		claimMatchValue, d := authorizingClaimMatchValue.ClaimMatchValue.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if claimMatchValue == nil {
+			continue
+		}
+
+		var n int
+		if !claimMatchValue.MatchValueString.IsNull() {
+			n++
+		}
+		if !claimMatchValue.MatchValueStringList.IsNull() {
+			n++
+		}
+		if _, ok := writeOnlyValues[name]; ok {
+			n++
+		}
+		if n != 1 {
+			response.Diagnostics.AddAttributeError(
+				request.Path.AtName("custom_claim"),
+				"Invalid Attribute Combination",
+				fmt.Sprintf("custom_claim %q: exactly one of authorizing_claim_match_value.claim_match_value.match_value_string, authorizing_claim_match_value.claim_match_value.match_value_string_list, or a custom_claim_match_values_wo entry must be specified.", name),
+			)
+		}
+	}
+
+	if !claimNamesKnown {
+		return
+	}
+	for name := range writeOnlyValues {
+		if !claimNames[name] {
+			response.Diagnostics.AddAttributeError(writeOnlyPath.AtMapKey(name), "Invalid Attribute Value", fmt.Sprintf("Key %q does not match the inbound_token_claim_name of any custom_claim.", name))
+		}
+	}
+}
+
 type customJWTAuthorizerConfigurationModel struct {
-	AllowedAudience              fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
-	AllowedClients               fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
-	AllowedScopes                fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
-	AllowedWorkloadConfiguration fwtypes.ListNestedObjectValueOf[allowedWorkloadConfigurationModel]  `tfsdk:"allowed_workload_configuration"`
-	CustomClaim                  fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
-	DiscoveryURL                 types.String                                                        `tfsdk:"discovery_url"`
-	PrivateEndpoint              fwtypes.ListNestedObjectValueOf[privateEndpointModel]               `tfsdk:"private_endpoint"`
-	PrivateEndpointOverrides     fwtypes.ListNestedObjectValueOf[privateEndpointOverrideModel]       `tfsdk:"private_endpoint_overrides"`
+	AllowedAudience                 fwtypes.SetOfString                                                 `tfsdk:"allowed_audience"`
+	AllowedClients                  fwtypes.SetOfString                                                 `tfsdk:"allowed_clients"`
+	AllowedScopes                   fwtypes.SetOfString                                                 `tfsdk:"allowed_scopes"`
+	AllowedWorkloadConfiguration    fwtypes.ListNestedObjectValueOf[allowedWorkloadConfigurationModel]  `tfsdk:"allowed_workload_configuration"`
+	CustomClaim                     fwtypes.SetNestedObjectValueOf[customJWTAuthorizerCustomClaimModel] `tfsdk:"custom_claim"`
+	CustomClaimMatchValuesWO        fwtypes.MapOfString                                                 `tfsdk:"custom_claim_match_values_wo" autoflex:"-"`
+	CustomClaimMatchValuesWOVersion types.Int64                                                         `tfsdk:"custom_claim_match_values_wo_version" autoflex:"-"`
+	DiscoveryURL                    types.String                                                        `tfsdk:"discovery_url"`
+	PrivateEndpoint                 fwtypes.ListNestedObjectValueOf[privateEndpointModel]               `tfsdk:"private_endpoint"`
+	PrivateEndpointOverrides        fwtypes.ListNestedObjectValueOf[privateEndpointOverrideModel]       `tfsdk:"private_endpoint_overrides"`
 }
 
 type allowedWorkloadConfigurationModel struct {

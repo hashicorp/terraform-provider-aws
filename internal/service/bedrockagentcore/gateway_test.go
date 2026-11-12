@@ -554,11 +554,13 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizer(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrEmail),
 									}),
-									"custom_claim":                   knownvalue.SetSizeExact(0),
-									"discovery_url":                  knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
-									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
-									"private_endpoint":               knownvalue.ListSizeExact(0),
-									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
+									"custom_claim":                         knownvalue.SetSizeExact(0),
+									"custom_claim_match_values_wo":         knownvalue.Null(),
+									"custom_claim_match_values_wo_version": knownvalue.Null(),
+									"discovery_url":                        knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"allowed_workload_configuration":       knownvalue.ListSizeExact(0),
+									"private_endpoint":                     knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":           knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -605,11 +607,13 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizer(t *testing.T) {
 										knownvalue.StringExact("openid"),
 										knownvalue.StringExact(names.AttrProfile),
 									}),
-									"custom_claim":                   knownvalue.SetSizeExact(0),
-									"discovery_url":                  knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
-									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
-									"private_endpoint":               knownvalue.ListSizeExact(0),
-									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
+									"custom_claim":                         knownvalue.SetSizeExact(0),
+									"custom_claim_match_values_wo":         knownvalue.Null(),
+									"custom_claim_match_values_wo_version": knownvalue.Null(),
+									"discovery_url":                        knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"allowed_workload_configuration":       knownvalue.ListSizeExact(0),
+									"private_endpoint":                     knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":           knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -688,10 +692,12 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 											}),
 										}),
 									}),
-									"discovery_url":                  knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
-									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
-									"private_endpoint":               knownvalue.ListSizeExact(0),
-									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
+									"custom_claim_match_values_wo":         knownvalue.Null(),
+									"custom_claim_match_values_wo_version": knownvalue.Null(),
+									"discovery_url":                        knownvalue.StringExact("https://accounts.google.com/.well-known/openid-configuration"),
+									"allowed_workload_configuration":       knownvalue.ListSizeExact(0),
+									"private_endpoint":                     knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":           knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -758,10 +764,12 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 											}),
 										}),
 									}),
-									"discovery_url":                  knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
-									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
-									"private_endpoint":               knownvalue.ListSizeExact(0),
-									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
+									"custom_claim_match_values_wo":         knownvalue.Null(),
+									"custom_claim_match_values_wo_version": knownvalue.Null(),
+									"discovery_url":                        knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"allowed_workload_configuration":       knownvalue.ListSizeExact(0),
+									"private_endpoint":                     knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":           knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -822,10 +830,12 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 											}),
 										}),
 									}),
-									"discovery_url":                  knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
-									"allowed_workload_configuration": knownvalue.ListSizeExact(0),
-									"private_endpoint":               knownvalue.ListSizeExact(0),
-									"private_endpoint_overrides":     knownvalue.ListSizeExact(0),
+									"custom_claim_match_values_wo":         knownvalue.Null(),
+									"custom_claim_match_values_wo_version": knownvalue.Null(),
+									"discovery_url":                        knownvalue.StringExact("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"),
+									"allowed_workload_configuration":       knownvalue.ListSizeExact(0),
+									"private_endpoint":                     knownvalue.ListSizeExact(0),
+									"private_endpoint_overrides":           knownvalue.ListSizeExact(0),
 								}),
 							}),
 						}),
@@ -838,6 +848,140 @@ func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaim(t *testing.T)
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "gateway_id",
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGateway_customJWTAuthorizerCustomClaimWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway bedrockagentcorecontrol.GetGatewayOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckGateways(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizerCustomClaimWriteOnly(rName, "description1", "value-v1", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+					testAccCheckAuthorizerCustomClaimMatchValue(func() awstypes.AuthorizerConfiguration { return gateway.AuthorizerConfiguration }, "tenant_id", "value-v1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration").AtSliceIndex(0).AtMapKey("custom_jwt_authorizer").AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"inbound_token_claim_name": knownvalue.StringExact("tenant_id"),
+								"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeEquals)),
+										"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+											knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"match_value_string":      knownvalue.Null(),
+												"match_value_string_list": knownvalue.Null(),
+											}),
+										}),
+									}),
+								}),
+							}),
+						}),
+						"custom_claim_match_values_wo":         knownvalue.Null(),
+						"custom_claim_match_values_wo_version": knownvalue.Int64Exact(1),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "gateway_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "gateway_id",
+				// After import, match_value_string holds the value returned by the service.
+				ImportStateVerifyIgnore: []string{
+					"authorizer_configuration.0.custom_jwt_authorizer.0.custom_claim",
+					"authorizer_configuration.0.custom_jwt_authorizer.0.custom_claim_match_values_wo_version",
+				},
+			},
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizerCustomClaimWriteOnly(rName, "description1", "value-v2", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+					testAccCheckAuthorizerCustomClaimMatchValue(func() awstypes.AuthorizerConfiguration { return gateway.AuthorizerConfiguration }, "tenant_id", "value-v2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration").AtSliceIndex(0).AtMapKey("custom_jwt_authorizer").AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"inbound_token_claim_name": knownvalue.StringExact("tenant_id"),
+								"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeEquals)),
+										"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+											knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"match_value_string":      knownvalue.Null(),
+												"match_value_string_list": knownvalue.Null(),
+											}),
+										}),
+									}),
+								}),
+							}),
+						}),
+						"custom_claim_match_values_wo":         knownvalue.Null(),
+						"custom_claim_match_values_wo_version": knownvalue.Int64Exact(2),
+					})),
+				},
+			},
+			{
+				Config: testAccGatewayConfig_customJWTAuthorizerCustomClaimWriteOnly(rName, "description2", "value-v2", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayExists(ctx, t, resourceName, &gateway),
+					testAccCheckAuthorizerCustomClaimMatchValue(func() awstypes.AuthorizerConfiguration { return gateway.AuthorizerConfiguration }, "tenant_id", "value-v2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("authorizer_configuration").AtSliceIndex(0).AtMapKey("custom_jwt_authorizer").AtSliceIndex(0), knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"custom_claim": knownvalue.SetExact([]knownvalue.Check{
+							knownvalue.ObjectPartial(map[string]knownvalue.Check{
+								"inbound_token_claim_name": knownvalue.StringExact("tenant_id"),
+								"authorizing_claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"claim_match_operator": knownvalue.StringExact(string(awstypes.ClaimMatchOperatorTypeEquals)),
+										"claim_match_value": knownvalue.ListExact([]knownvalue.Check{
+											knownvalue.ObjectExact(map[string]knownvalue.Check{
+												"match_value_string":      knownvalue.Null(),
+												"match_value_string_list": knownvalue.Null(),
+											}),
+										}),
+									}),
+								}),
+							}),
+						}),
+						"custom_claim_match_values_wo":         knownvalue.Null(),
+						"custom_claim_match_values_wo_version": knownvalue.Int64Exact(2),
+					})),
+				},
 			},
 		},
 	})
@@ -1273,6 +1417,40 @@ resource "aws_bedrockagentcore_gateway" "test" {
   protocol_type = "MCP"
 }
 `, rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2, inboundTokenClaimValueType, claimMatchOperator))
+}
+
+func testAccGatewayConfig_customJWTAuthorizerCustomClaimWriteOnly(rName, description, matchValue string, matchValueVersion int) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_iamRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway" "test" {
+  name        = %[1]q
+  description = %[2]q
+  role_arn    = aws_iam_role.test.arn
+
+  authorizer_type = "CUSTOM_JWT"
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url   = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_clients = ["client-999"]
+
+      custom_claim_match_values_wo = {
+        tenant_id = %[3]q
+      }
+      custom_claim_match_values_wo_version = %[4]d
+
+      custom_claim {
+        inbound_token_claim_name       = "tenant_id"
+        inbound_token_claim_value_type = "STRING"
+        authorizing_claim_match_value {
+          claim_match_operator = "EQUALS"
+          claim_match_value {}
+        }
+      }
+    }
+  }
+
+  protocol_type = "MCP"
+}
+`, rName, description, matchValue, matchValueVersion))
 }
 
 func testAccGatewayConfig_customJWTAuthorizerCustomClaimStringList(rName, discoveryUrl, audience1, audience2, client1, client2, scope1, scope2 string) string {
