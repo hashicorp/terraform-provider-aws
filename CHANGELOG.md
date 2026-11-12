@@ -14,17 +14,21 @@ NOTES:
 
 FEATURES:
 
+* **New List Resource:** `aws_bedrock_guardrail_resource_policy` ([#48697](https://github.com/hashicorp/terraform-provider-aws/issues/48697))
 * **New List Resource:** `aws_dsql_stream` ([#50813](https://github.com/hashicorp/terraform-provider-aws/issues/50813))
 * **New List Resource:** `aws_networksecuritymanager_admin_account` ([#50164](https://github.com/hashicorp/terraform-provider-aws/issues/50164))
 * **New List Resource:** `aws_networksecuritymanager_deployment` ([#50815](https://github.com/hashicorp/terraform-provider-aws/issues/50815))
 * **New List Resource:** `aws_networksecuritymanager_policy` ([#50789](https://github.com/hashicorp/terraform-provider-aws/issues/50789))
 * **New List Resource:** `aws_networksecuritymanager_template` ([#50799](https://github.com/hashicorp/terraform-provider-aws/issues/50799))
+* **New List Resource:** `aws_pinpointsmsvoicev2_protect_configuration` ([#50908](https://github.com/hashicorp/terraform-provider-aws/issues/50908))
+* **New Resource:** `aws_bedrock_guardrail_resource_policy` ([#48697](https://github.com/hashicorp/terraform-provider-aws/issues/48697))
 * **New Resource:** `aws_config_connector` ([#49559](https://github.com/hashicorp/terraform-provider-aws/issues/49559))
 * **New Resource:** `aws_dsql_stream` ([#50813](https://github.com/hashicorp/terraform-provider-aws/issues/50813))
 * **New Resource:** `aws_networksecuritymanager_admin_account` ([#50164](https://github.com/hashicorp/terraform-provider-aws/issues/50164))
 * **New Resource:** `aws_networksecuritymanager_deployment` ([#50815](https://github.com/hashicorp/terraform-provider-aws/issues/50815))
 * **New Resource:** `aws_networksecuritymanager_policy` ([#50789](https://github.com/hashicorp/terraform-provider-aws/issues/50789))
 * **New Resource:** `aws_networksecuritymanager_template` ([#50799](https://github.com/hashicorp/terraform-provider-aws/issues/50799))
+* **New Resource:** `aws_pinpointsmsvoicev2_protect_configuration` ([#50908](https://github.com/hashicorp/terraform-provider-aws/issues/50908))
 
 ENHANCEMENTS:
 
