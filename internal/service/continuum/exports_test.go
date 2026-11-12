@@ -5,7 +5,9 @@ package continuum
 
 // Exports for use in tests only.
 var (
-	ResourceCollector = newCollectorResource
+	ResourceCollector      = newCollectorResource
+	ResourceResourcePolicy = newResourcePolicyResource
 
-	FindCollectorByID = findCollectorByID
+	FindCollectorByID       = findCollectorByID
+	FindResourcePolicyByARN = findResourcePolicyByARN
 )

@@ -21,6 +21,9 @@ func TestAccContinuum_serial(t *testing.T) {
 			acctest.CtBasic:      testAccCollector_basic,
 			acctest.CtDisappears: testAccCollector_disappears,
 		},
+		"ResourcePolicy": {
+			acctest.CtBasic: testAccResourcePolicy_basic,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
