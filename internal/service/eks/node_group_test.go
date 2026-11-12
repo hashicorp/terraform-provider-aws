@@ -7,8 +7,11 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1108,6 +1111,46 @@ func TestAccEKSNodeGroup_ScalingZeroDesiredSize_minSize(t *testing.T) {
 	})
 }
 
+func TestAccEKSNodeGroup_Scaling_ignoreChangesDesiredSize(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup types.Nodegroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_scalingSizesIgnoreChangesDesiredSize(rName, 1, 2, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
+				),
+			},
+			{
+				// The node group is resized after the plan has read desired_size, as an external autoscaler would.
+				Config: testAccNodeGroupConfig_scalingSizesIgnoreChangesDesiredSize(rName, 1, 3, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "3"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.min_size", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						testAccNodeGroupResizeBeforeApply(t, &nodeGroup, 2),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccEKSNodeGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup types.Nodegroup
@@ -1523,6 +1566,42 @@ func testAccCheckNodeGroupDestroy(ctx context.Context, t *testing.T) resource.Te
 		}
 
 		return nil
+	}
+}
+
+// testAccNodeGroupResizeBeforeApply is a pre-apply plan check that only changes the node group's
+// desired size, so the apply runs against a size the plan did not see.
+func testAccNodeGroupResizeBeforeApply(t *testing.T, v *types.Nodegroup, desiredSize int32) plancheck.PlanCheck {
+	return nodeGroupResizeBeforeApply{t: t, nodeGroup: v, desiredSize: desiredSize}
+}
+
+type nodeGroupResizeBeforeApply struct {
+	t           *testing.T
+	nodeGroup   *types.Nodegroup
+	desiredSize int32
+}
+
+func (c nodeGroupResizeBeforeApply) CheckPlan(ctx context.Context, _ plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	conn := acctest.ProviderMeta(ctx, c.t).EKSClient(ctx)
+	clusterName, nodeGroupName := aws.ToString(c.nodeGroup.ClusterName), aws.ToString(c.nodeGroup.NodegroupName)
+
+	input := eks.UpdateNodegroupConfigInput{
+		ClusterName:   aws.String(clusterName),
+		NodegroupName: aws.String(nodeGroupName),
+		ScalingConfig: &types.NodegroupScalingConfig{
+			DesiredSize: aws.Int32(c.desiredSize),
+		},
+	}
+
+	output, err := conn.UpdateNodegroupConfig(ctx, &input)
+
+	if err != nil {
+		resp.Error = fmt.Errorf("resizing EKS Node Group (%s/%s): %w", clusterName, nodeGroupName, err)
+		return
+	}
+
+	if _, err := tfeks.WaitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, aws.ToString(output.Update.Id), 20*time.Minute); err != nil {
+		resp.Error = fmt.Errorf("waiting for EKS Node Group (%s/%s) resize: %w", clusterName, nodeGroupName, err)
 	}
 }
 
@@ -2420,6 +2499,34 @@ resource "aws_eks_node_group" "test" {
     desired_size = %[2]d
     max_size     = %[3]d
     min_size     = %[4]d
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName, desiredSize, maxSize, minSize))
+}
+
+func testAccNodeGroupConfig_scalingSizesIgnoreChangesDesiredSize(rName string, desiredSize, maxSize, minSize int) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = %[2]d
+    max_size     = %[3]d
+    min_size     = %[4]d
+  }
+
+  lifecycle {
+    ignore_changes = [scaling_config[0].desired_size]
   }
 
   depends_on = [
