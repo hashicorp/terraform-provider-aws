@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -91,6 +92,7 @@ func (r *resourceCapacityProvider) Schema(ctx context.Context, _ resource.Schema
 			names.AttrPropagateTags: framework.ResourceOptionalComputedSingleNestedObjectAttribute[propagateTagsModel](ctx),
 			names.AttrTags:          tftags.TagsAttribute(),
 			names.AttrTagsAll:       tftags.TagsAttributeComputedOnly(),
+			"telemetry_config":      framework.ResourceOptionalComputedSingleNestedObjectAttribute[capacityProviderTelemetryConfigModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			"permissions_config": schema.ListNestedBlock{
@@ -368,6 +370,55 @@ func (r *resourceCapacityProvider) ValidateConfig(ctx context.Context, request r
 			}
 		}
 	}
+
+	if !data.TelemetryConfig.IsNull() && !data.TelemetryConfig.IsUnknown() {
+		tc, d := data.TelemetryConfig.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if tc != nil {
+			smerr.AddEnrich(ctx, &response.Diagnostics, validateCapacityProviderTelemetryConfig(ctx, tc))
+			if response.Diagnostics.HasError() {
+				return
+			}
+		}
+	}
+}
+
+// validateCapacityProviderTelemetryConfig requires every nested argument to be set.
+// The API fills in defaults (such as the default log group name) for omitted values,
+// which would not match the configuration.
+func validateCapacityProviderTelemetryConfig(ctx context.Context, tc *capacityProviderTelemetryConfigModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if tc.LoggingConfig.IsUnknown() {
+		return diags
+	}
+
+	lc, d := tc.LoggingConfig.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if lc == nil {
+		diags.AddAttributeError(path.Root("telemetry_config"), "Missing Attribute Configuration", "logging_config must be specified when telemetry_config is configured")
+		return diags
+	}
+
+	if lc.LogGroup.IsNull() {
+		diags.AddAttributeError(path.Root("telemetry_config"), "Missing Attribute Configuration", "log_group must be specified in logging_config")
+	}
+
+	if lc.SystemLogLevel.IsNull() {
+		diags.AddAttributeError(path.Root("telemetry_config"), "Missing Attribute Configuration", "system_log_level must be specified in logging_config")
+	} else if !lc.SystemLogLevel.IsUnknown() && !slices.Contains(enum.Values[awstypes.SystemLogLevel](), lc.SystemLogLevel.ValueString()) {
+		diags.AddAttributeError(path.Root("telemetry_config"), "Invalid Attribute Value", fmt.Sprintf("system_log_level must be one of %q, got: %q", enum.Values[awstypes.SystemLogLevel](), lc.SystemLogLevel.ValueString()))
+	}
+
+	return diags
 }
 
 const propagateTagsExplicitTagsMaxItems = 40
@@ -506,17 +557,18 @@ func findCapacityProviderByName(ctx context.Context, conn *lambda.Client, name s
 
 type resourceCapacityProviderModel struct {
 	framework.WithRegionModel
-	ARN                           types.String                                                        `tfsdk:"arn"`
-	Name                          types.String                                                        `tfsdk:"name"`
-	KMSKeyARN                     fwtypes.ARN                                                         `tfsdk:"kms_key_arn"`
-	PermissionsConfig             fwtypes.ListNestedObjectValueOf[permissionConfigModel]              `tfsdk:"permissions_config"`
-	VpcConfig                     fwtypes.ListNestedObjectValueOf[vpcConfigModel]                     `tfsdk:"vpc_config"`
-	CapacityProviderScalingConfig fwtypes.ListNestedObjectValueOf[capacityProviderScalingConfigModel] `tfsdk:"capacity_provider_scaling_config"`
-	InstanceRequirements          fwtypes.ListNestedObjectValueOf[instanceRequirementsModel]          `tfsdk:"instance_requirements"`
-	PropagateTags                 fwtypes.ListNestedObjectValueOf[propagateTagsModel]                 `tfsdk:"propagate_tags"`
-	Tags                          tftags.Map                                                          `tfsdk:"tags"`
-	TagsAll                       tftags.Map                                                          `tfsdk:"tags_all"`
-	Timeouts                      timeouts.Value                                                      `tfsdk:"timeouts"`
+	ARN                           types.String                                                          `tfsdk:"arn"`
+	Name                          types.String                                                          `tfsdk:"name"`
+	KMSKeyARN                     fwtypes.ARN                                                           `tfsdk:"kms_key_arn"`
+	PermissionsConfig             fwtypes.ListNestedObjectValueOf[permissionConfigModel]                `tfsdk:"permissions_config"`
+	VpcConfig                     fwtypes.ListNestedObjectValueOf[vpcConfigModel]                       `tfsdk:"vpc_config"`
+	CapacityProviderScalingConfig fwtypes.ListNestedObjectValueOf[capacityProviderScalingConfigModel]   `tfsdk:"capacity_provider_scaling_config"`
+	InstanceRequirements          fwtypes.ListNestedObjectValueOf[instanceRequirementsModel]            `tfsdk:"instance_requirements"`
+	PropagateTags                 fwtypes.ListNestedObjectValueOf[propagateTagsModel]                   `tfsdk:"propagate_tags"`
+	TelemetryConfig               fwtypes.ListNestedObjectValueOf[capacityProviderTelemetryConfigModel] `tfsdk:"telemetry_config"`
+	Tags                          tftags.Map                                                            `tfsdk:"tags"`
+	TagsAll                       tftags.Map                                                            `tfsdk:"tags_all"`
+	Timeouts                      timeouts.Value                                                        `tfsdk:"timeouts"`
 }
 
 type vpcConfigModel struct {
@@ -548,4 +600,13 @@ type scalingPoliciesModel struct {
 type propagateTagsModel struct {
 	ExplicitTags fwtypes.MapOfString                            `tfsdk:"explicit_tags"`
 	Mode         fwtypes.StringEnum[awstypes.PropagateTagsMode] `tfsdk:"mode"`
+}
+
+type capacityProviderTelemetryConfigModel struct {
+	LoggingConfig fwtypes.ListNestedObjectValueOf[capacityProviderLoggingConfigModel] `tfsdk:"logging_config"`
+}
+
+type capacityProviderLoggingConfigModel struct {
+	LogGroup       types.String                                `tfsdk:"log_group"`
+	SystemLogLevel fwtypes.StringEnum[awstypes.SystemLogLevel] `tfsdk:"system_log_level"`
 }

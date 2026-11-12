@@ -327,6 +327,112 @@ func TestAccLambdaCapacityProvider_propagateTagsInvalid(t *testing.T) {
 	})
 }
 
+func TestAccLambdaCapacityProvider_telemetryConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var capacityprovider awstypes.CapacityProvider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_capacity_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_telemetryConfig(rName, "aws_cloudwatch_log_group.test1", "INFO"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
+					resource.TestCheckResourceAttr(resourceName, "telemetry_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "telemetry_config.0.logging_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "telemetry_config.0.logging_config.0.log_group", "aws_cloudwatch_log_group.test1", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "telemetry_config.0.logging_config.0.system_log_level", "INFO"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccCheckCapacityProviderImportStateID(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+			{
+				Config: testAccCapacityProviderConfig_telemetryConfig(rName, "aws_cloudwatch_log_group.test2", "WARN"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
+					resource.TestCheckResourceAttr(resourceName, "telemetry_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "telemetry_config.0.logging_config.0.log_group", "aws_cloudwatch_log_group.test2", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "telemetry_config.0.logging_config.0.system_log_level", "WARN"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Removing the block keeps the current setting and does not cause drift.
+				Config: testAccCapacityProviderConfig_telemetryConfigRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &capacityprovider),
+					resource.TestCheckResourceAttr(resourceName, "telemetry_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "telemetry_config.0.logging_config.0.system_log_level", "WARN"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaCapacityProvider_telemetryConfigInvalid(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccCapacityProviderPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCapacityProviderConfig_telemetryConfigInvalid(rName, ""),
+				ExpectError: regexache.MustCompile(`logging_config must be specified`),
+			},
+			{
+				Config: testAccCapacityProviderConfig_telemetryConfigInvalid(rName, `logging_config {
+      system_log_level = "INFO"
+    }`),
+				ExpectError: regexache.MustCompile(`log_group must be specified`),
+			},
+			{
+				Config: testAccCapacityProviderConfig_telemetryConfigInvalid(rName, `logging_config {
+      log_group = "example"
+    }`),
+				ExpectError: regexache.MustCompile(`system_log_level must be specified`),
+			},
+			{
+				Config: testAccCapacityProviderConfig_telemetryConfigInvalid(rName, `logging_config {
+      log_group        = "example"
+      system_log_level = "TRACE"
+    }`),
+				ExpectError: regexache.MustCompile(`system_log_level must be one of`),
+			},
+		},
+	})
+}
+
 func testAccCheckCapacityProviderImportStateID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		return acctest.AttrImportStateIdFunc(n, names.AttrName)(s)
@@ -727,4 +833,80 @@ resource "aws_lambda_capacity_provider" "test" {
 
 data "aws_partition" "current" {}
 `, rName, propagateTags)
+}
+
+func testAccCapacityProviderConfig_telemetryConfigLogGroups(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test1" {
+  name              = "%[1]s-1"
+  retention_in_days = 1
+}
+
+resource "aws_cloudwatch_log_group" "test2" {
+  name              = "%[1]s-2"
+  retention_in_days = 1
+}
+`, rName)
+}
+
+func testAccCapacityProviderConfig_telemetryConfig(rName, logGroupResource, systemLogLevel string) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_base(rName),
+		testAccCapacityProviderConfig_telemetryConfigLogGroups(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_capacity_provider" "test" {
+  name = %[1]q
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
+  }
+
+  telemetry_config {
+    logging_config {
+      log_group        = %[2]s.name
+      system_log_level = %[3]q
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
+}
+`, rName, logGroupResource, systemLogLevel))
+}
+
+func testAccCapacityProviderConfig_telemetryConfigRemoved(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_telemetryConfigLogGroups(rName),
+		testAccCapacityProviderConfig_basic(rName),
+	)
+}
+
+// testAccCapacityProviderConfig_telemetryConfigInvalid fails validation before any resource is created.
+func testAccCapacityProviderConfig_telemetryConfigInvalid(rName, telemetryConfig string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_capacity_provider" "test" {
+  name = %[1]q
+
+  vpc_config {
+    subnet_ids         = ["subnet-00000000000000000"]
+    security_group_ids = ["sg-00000000000000000"]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = "arn:${data.aws_partition.current.partition}:iam::123456789012:role/%[1]s"
+  }
+
+  telemetry_config {
+    %[2]s
+  }
+}
+
+data "aws_partition" "current" {}
+`, rName, telemetryConfig)
 }

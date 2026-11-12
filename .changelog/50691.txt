@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_lambda_capacity_provider: Add `propagate_tags` argument
 ```
+
+```release-note:enhancement
+resource/aws_lambda_capacity_provider: Add `telemetry_config` argument
+```
