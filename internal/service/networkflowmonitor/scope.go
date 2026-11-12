@@ -237,9 +237,14 @@ func (r *scopeResource) Update(ctx context.Context, request resource.UpdateReque
 
 		scopeID := fwflex.StringValueFromFramework(ctx, new.ScopeID)
 		input := networkflowmonitor.UpdateScopeInput{
-			ResourcesToAdd:    ns.Difference(os).Slice(),
-			ResourcesToDelete: os.Difference(ns).Slice(),
-			ScopeId:           aws.String(scopeID),
+			ScopeId: aws.String(scopeID),
+		}
+		// The API rejects empty lists, so only send the side that has changes.
+		if v := ns.Difference(os).Slice(); len(v) > 0 {
+			input.ResourcesToAdd = v
+		}
+		if v := os.Difference(ns).Slice(); len(v) > 0 {
+			input.ResourcesToDelete = v
 		}
 
 		_, err := conn.UpdateScope(ctx, &input)

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_networkflowmonitor_scope: Fix `ValidationException` on update when targets are only added or only removed, by omitting empty `resourcesToAdd` and `resourcesToDelete`
+```
