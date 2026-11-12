@@ -170,6 +170,10 @@ func TestAccFSxS3AccessPointAttachment_disappears(t *testing.T) {
 
 func TestAccFSxS3AccessPointAttachment_ontapBasic(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v awstypes.S3AccessPointAttachment
 	resourceName := "aws_fsx_s3_access_point_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
