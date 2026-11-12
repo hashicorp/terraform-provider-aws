@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer"
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -93,7 +93,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 2048),
-									validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z-]+`), ""),
+									lazyvalidation.StringMatch(`[0-9A-Za-z-]+`, ""),
 								),
 							},
 						},
@@ -135,7 +135,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 100),
-												validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
+												lazyvalidation.StringMatch(`^\S[\w.-]*$`, ""),
 											),
 										},
 										names.AttrOwner: {
@@ -143,7 +143,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 100),
-												validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
+												lazyvalidation.StringMatch(`^\S(.*\S)?$`, ""),
 											),
 										},
 									},
@@ -161,7 +161,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 100),
-												validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
+												lazyvalidation.StringMatch(`^\S[\w.-]*$`, ""),
 											),
 										},
 									},
@@ -184,7 +184,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 100),
-												validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
+												lazyvalidation.StringMatch(`^\S[\w.-]*$`, ""),
 											),
 										},
 										names.AttrOwner: {
@@ -192,7 +192,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 100),
-												validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
+												lazyvalidation.StringMatch(`^\S(.*\S)?$`, ""),
 											),
 										},
 									},
@@ -210,7 +210,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 63),
-												validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
+												lazyvalidation.StringMatch(`^\S(.*\S)?$`, ""),
 											),
 										},
 										names.AttrName: {
@@ -218,7 +218,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 100),
-												validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
+												lazyvalidation.StringMatch(`^\S[\w.-]*$`, ""),
 											),
 										},
 									},
