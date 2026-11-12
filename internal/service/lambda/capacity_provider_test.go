@@ -427,7 +427,7 @@ func TestAccLambdaCapacityProvider_telemetryConfigInvalid(t *testing.T) {
       log_group        = "example"
       system_log_level = "TRACE"
     }`),
-				ExpectError: regexache.MustCompile(`system_log_level must be one of`),
+				ExpectError: regexache.MustCompile(`Invalid String Enum Value`),
 			},
 		},
 	})
