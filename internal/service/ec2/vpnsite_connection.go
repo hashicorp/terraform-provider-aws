@@ -1756,7 +1756,7 @@ func customerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 func validVPNConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(8, 64),
-		validation.StringDoesNotMatch(regexache.MustCompile(`^0`), "cannot start with zero character"),
+		lazyvalidation.StringDoesNotMatch(`^0`, "cannot start with zero character"),
 		lazyvalidation.StringMatch(`^[0-9A-Za-z_.]+$`, "can only contain alphanumeric, period and underscore characters"),
 	)
 }

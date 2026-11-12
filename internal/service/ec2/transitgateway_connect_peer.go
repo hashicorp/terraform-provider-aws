@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -83,7 +82,7 @@ func resourceTransitGatewayConnectPeer() *schema.Resource {
 							validation.All(
 								validation.IsCIDRNetwork(29, 29),
 								lazyvalidation.StringMatch(`^169\.254\.`, "IPv4 range must be from range 169.254.0.0/16"),
-								validation.StringDoesNotMatch(regexache.MustCompile(`^169\.254\.([0-5]\.0|169\.248)/29`), "IPv4 range must not be 169.254.([0-5].0|169.248)/29"),
+								lazyvalidation.StringDoesNotMatch(`^169\.254\.([0-5]\.0|169\.248)/29`, "IPv4 range must not be 169.254.([0-5].0|169.248)/29"),
 							),
 							validation.All(
 								validation.IsCIDRNetwork(125, 125),
