@@ -255,7 +255,13 @@ func (r *capabilityResource) Create(ctx context.Context, request resource.Create
 	input.ClientRequestToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	_, err := conn.CreateCapability(ctx, &input)
+	// Retry on IAM eventual consistency. A role created moments before CreateCapability
+	// may not yet be visible to the service, which rejects the request with:
+	//   InvalidParameterException: The trust policy for the provided role is invalid. The policy must
+	//   include sts:AssumeRole and sts:TagSession actions granting access to the AWS service capabilities.eks.amazonaws.com
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.CreateCapability(ctx, &input)
+	}, "The trust policy for the provided role is invalid")
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating EKS Capability (%s,%s)", clusterName, capabilityName), err.Error())
@@ -384,7 +390,10 @@ func (r *capabilityResource) Update(ctx context.Context, request resource.Update
 			}
 		}
 
-		output, err := conn.UpdateCapability(ctx, &input)
+		// Retry on IAM eventual consistency when role_arn points at a newly created role (see Create).
+		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.UpdateCapability(ctx, &input)
+		}, "The trust policy for the provided role is invalid")
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating EKS Capability (%s,%s)", clusterName, capabilityName), err.Error())
@@ -392,6 +401,7 @@ func (r *capabilityResource) Update(ctx context.Context, request resource.Update
 			return
 		}
 
+		output := outputRaw.(*eks.UpdateCapabilityOutput)
 		updateID := aws.ToString(output.Update.Id)
 		if _, err := waitCapabilityUpdateSuccessful(ctx, conn, clusterName, capabilityName, updateID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for EKS Capability (%s,%s) update (%s)", clusterName, capabilityName, updateID), err.Error())
