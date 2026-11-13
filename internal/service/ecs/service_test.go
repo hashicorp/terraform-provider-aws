@@ -63,6 +63,88 @@ func TestFlattenServiceVolumeConfigurations(t *testing.T) {
 	}
 }
 
+func TestServiceConnectConfigurationContainerConfiguration(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		tfList   []any
+		expected []awstypes.ServiceConnectContainerConfiguration
+	}{
+		"no block": {
+			tfList: []any{map[string]any{
+				names.AttrEnabled: true,
+			}},
+		},
+		"empty block": {
+			tfList: []any{map[string]any{
+				names.AttrEnabled:         true,
+				"container_configuration": []any{map[string]any{"log_level": ""}},
+			}},
+		},
+		"log level debug": {
+			tfList: []any{map[string]any{
+				names.AttrEnabled:         true,
+				"container_configuration": []any{map[string]any{"log_level": "debug"}},
+			}},
+			expected: []awstypes.ServiceConnectContainerConfiguration{
+				&awstypes.ServiceConnectContainerConfigurationMemberLogLevel{Value: awstypes.ServiceConnectContainerLogLevelDebug},
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			apiObject := tfecs.ExpandServiceConnectConfiguration(testCase.tfList)
+
+			if got, want := len(apiObject.ContainerConfigurations), len(testCase.expected); got != want {
+				t.Fatalf("expected %d container configurations, got %d", want, got)
+			}
+			for i, want := range testCase.expected {
+				got, ok := apiObject.ContainerConfigurations[i].(*awstypes.ServiceConnectContainerConfigurationMemberLogLevel)
+				if !ok {
+					t.Fatalf("container configuration %d: unexpected type %T", i, apiObject.ContainerConfigurations[i])
+				}
+				if got.Value != want.(*awstypes.ServiceConnectContainerConfigurationMemberLogLevel).Value {
+					t.Errorf("container configuration %d: expected %q, got %q", i, want.(*awstypes.ServiceConnectContainerConfigurationMemberLogLevel).Value, got.Value)
+				}
+			}
+
+			tfMap := tfecs.FlattenServiceConnectConfiguration(apiObject)[0].(map[string]any)
+			v, ok := tfMap["container_configuration"]
+			if len(testCase.expected) == 0 {
+				if ok {
+					t.Errorf("expected no container_configuration, got %v", v)
+				}
+				return
+			}
+			if !ok {
+				t.Fatal("expected container_configuration")
+			}
+			if got, want := v.([]any)[0].(map[string]any)["log_level"], awstypes.ServiceConnectContainerLogLevelDebug; got != want {
+				t.Errorf("expected log_level %q, got %q", want, got)
+			}
+		})
+	}
+}
+
+func TestFlattenServiceConnectConfigurationUnknownContainerConfiguration(t *testing.T) {
+	t.Parallel()
+
+	apiObject := &awstypes.ServiceConnectConfiguration{
+		Enabled: true,
+		ContainerConfigurations: []awstypes.ServiceConnectContainerConfiguration{
+			&awstypes.UnknownUnionMember{Tag: "newSetting"},
+		},
+	}
+
+	tfMap := tfecs.FlattenServiceConnectConfiguration(apiObject)[0].(map[string]any)
+	if v, ok := tfMap["container_configuration"]; ok {
+		t.Errorf("expected unknown members to be ignored, got %v", v)
+	}
+}
+
 func Test_GetRoleNameFromARN(t *testing.T) {
 	t.Parallel()
 
@@ -2575,6 +2657,94 @@ func TestAccECSService_ServiceConnect_accessLogConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.access_log_configuration.0.format", "JSON"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.access_log_configuration.0.include_query_parameters", "DISABLED"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_ServiceConnect_containerConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccServiceConfig_serviceConnectContainerConfiguration(rName, "trace"),
+				ExpectError: regexache.MustCompile(`to be one of`),
+			},
+			{
+				Config: testAccServiceConfig_serviceConnectContainerConfiguration(rName, string(awstypes.ServiceConnectContainerLogLevelDebug)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_connect_configuration").AtSliceIndex(0).AtMapKey("container_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"log_level": tfknownvalue.StringExact(awstypes.ServiceConnectContainerLogLevelDebug),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateId:           fmt.Sprintf("%s/%s", rName, rName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
+			},
+			{
+				// The block is Optional and Computed: removing it from the configuration keeps the last value (debug).
+				Config: testAccServiceConfig_serviceConnectContainerConfigurationRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_connect_configuration").AtSliceIndex(0).AtMapKey("container_configuration").AtSliceIndex(0).AtMapKey("log_level"), tfknownvalue.StringExact(awstypes.ServiceConnectContainerLogLevelDebug)),
+				},
+			},
+			{
+				Config: testAccServiceConfig_serviceConnectContainerConfiguration(rName, string(awstypes.ServiceConnectContainerLogLevelInfo)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_connect_configuration").AtSliceIndex(0).AtMapKey("container_configuration").AtSliceIndex(0).AtMapKey("log_level"), tfknownvalue.StringExact(awstypes.ServiceConnectContainerLogLevelInfo)),
+				},
+			},
+			{
+				Config: testAccServiceConfig_serviceConnectContainerConfiguration(rName, string(awstypes.ServiceConnectContainerLogLevelDebug)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_connect_configuration").AtSliceIndex(0).AtMapKey("container_configuration").AtSliceIndex(0).AtMapKey("log_level"), tfknownvalue.StringExact(awstypes.ServiceConnectContainerLogLevelDebug)),
+				},
 			},
 		},
 	})
@@ -8878,4 +9048,106 @@ resource "aws_ecs_service" "test" {
 
 data "aws_region" "current" {}
 `, rName, format, includeQueryParams))
+}
+
+func testAccServiceConfig_serviceConnectContainerConfigurationBase(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_service_discovery_http_namespace" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = jsonencode([
+    {
+      name      = "test"
+      image     = "public.ecr.aws/docker/library/nginx:latest"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+          protocol      = "tcp"
+          name          = "http"
+          appProtocol   = "http"
+        }
+      ]
+    }
+  ])
+}
+`, rName))
+}
+
+func testAccServiceConfig_serviceConnectContainerConfiguration(rName, logLevel string) string {
+	return acctest.ConfigCompose(
+		testAccServiceConfig_serviceConnectContainerConfigurationBase(rName),
+		fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 0
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = aws_subnet.test[*].id
+    security_groups = [aws_security_group.test.id]
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.test.arn
+
+    container_configuration {
+      log_level = %[2]q
+    }
+  }
+}
+`, rName, logLevel))
+}
+
+func testAccServiceConfig_serviceConnectContainerConfigurationRemoved(rName string) string {
+	return acctest.ConfigCompose(
+		testAccServiceConfig_serviceConnectContainerConfigurationBase(rName),
+		fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 0
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = aws_subnet.test[*].id
+    security_groups = [aws_security_group.test.id]
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.test.arn
+  }
+}
+`, rName))
 }
