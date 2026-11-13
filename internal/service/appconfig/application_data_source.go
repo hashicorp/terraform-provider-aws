@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"iter"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,10 +49,7 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[0-9a-z]{4,7}$`),
-						"value must contain 4-7 lowercase letters or numbers",
-					),
+					lazystringvalidator.RegexMatches(`^[0-9a-z]{4,7}$`, "value must contain 4-7 lowercase letters or numbers"),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
