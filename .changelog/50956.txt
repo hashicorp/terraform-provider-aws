@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ecs_capacity_provider: Add `managed_instances_provider.instance_launch_template.fips_enabled` and `managed_instances_provider.instance_launch_template.instance_metadata_tags_propagation` arguments
+```
+
+```release-note:bug
+resource/aws_ecs_capacity_provider: Retry deletion while a previous update is still processing (`UpdateInProgressException`)
+```

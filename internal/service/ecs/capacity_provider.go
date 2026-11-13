@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -254,6 +255,17 @@ func resourceCapacityProvider() *schema.Resource {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: verify.ValidARN,
+										},
+										"fips_enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Computed: true,
+											ForceNew: true,
+										},
+										"instance_metadata_tags_propagation": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Computed: true,
 										},
 										"instance_requirements": {
 											Type:     schema.TypeList,
@@ -632,6 +644,11 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:                     getTagsIn(ctx),
 	}
 
+	if v := input.ManagedInstancesProvider; v != nil && v.InstanceLaunchTemplate != nil {
+		v.InstanceLaunchTemplate.FipsEnabled = instanceLaunchTemplateRawConfigBool(d, "fips_enabled")
+		v.InstanceLaunchTemplate.InstanceMetadataTagsPropagation = instanceLaunchTemplateRawConfigBool(d, "instance_metadata_tags_propagation")
+	}
+
 	if v, ok := d.GetOk("cluster"); ok {
 		input.Cluster = aws.String(v.(string))
 	}
@@ -710,6 +727,10 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 			Name:                     aws.String(d.Get(names.AttrName).(string)),
 		}
 
+		if v := input.ManagedInstancesProvider; v != nil && v.InstanceLaunchTemplate != nil {
+			v.InstanceLaunchTemplate.InstanceMetadataTagsPropagation = instanceLaunchTemplateRawConfigBool(d, "instance_metadata_tags_propagation")
+		}
+
 		if v, ok := d.GetOk("cluster"); ok {
 			input.Cluster = aws.String(v.(string))
 		}
@@ -738,10 +759,16 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ECS Capacity Provider: %s", d.Id())
+	const (
+		timeout = 20 * time.Minute
+	)
 	input := ecs.DeleteCapacityProviderInput{
 		CapacityProvider: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteCapacityProvider(ctx, &input)
+	// A managed instances capacity provider can still be processing an update shortly after it is created or updated.
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.UpdateInProgressException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteCapacityProvider(ctx, &input)
+	})
 
 	// "An error occurred (ClientException) when calling the DeleteCapacityProvider operation: The specified capacity provider does not exist. Specify a valid name or ARN and try again."
 	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "capacity provider does not exist") {
@@ -752,9 +779,6 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Capacity Provider (%s): %s", d.Id(), err)
 	}
 
-	const (
-		timeout = 20 * time.Minute
-	)
 	if _, err := waitCapacityProviderDeleted(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Capacity Provider (%s) delete: %s", d.Id(), err)
 	}
@@ -1177,6 +1201,21 @@ func expandInstanceLaunchTemplateUpdate(tfList []any) *awstypes.InstanceLaunchTe
 	return apiObject
 }
 
+// instanceLaunchTemplateRawConfigBool returns the configured value of a boolean
+// argument in managed_instances_provider.instance_launch_template, or nil when
+// the argument is not set in the configuration. The arguments are Optional and
+// Computed, so d.Get cannot tell an explicit false from an unset value, and
+// sending false for an unset argument would override the API default.
+func instanceLaunchTemplateRawConfigBool(d *schema.ResourceData, key string) *bool {
+	path := cty.GetAttrPath("managed_instances_provider").IndexInt(0).GetAttr("instance_launch_template").IndexInt(0).GetAttr(key)
+	v, diags := d.GetRawConfigAt(path)
+	if diags.HasError() || !v.IsKnown() || v.IsNull() {
+		return nil
+	}
+
+	return aws.Bool(v.True())
+}
+
 func expandCapacityReservationRequest(tfList []any) *awstypes.CapacityReservationRequest {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -1573,6 +1612,14 @@ func flattenInstanceLaunchTemplate(apiObject *awstypes.InstanceLaunchTemplate) [
 
 	if apiObject.CapacityReservations != nil {
 		tfMap["capacity_reservations"] = flattenCapacityReservationRequest(apiObject.CapacityReservations)
+	}
+
+	if v := apiObject.FipsEnabled; v != nil {
+		tfMap["fips_enabled"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.InstanceMetadataTagsPropagation; v != nil {
+		tfMap["instance_metadata_tags_propagation"] = aws.ToBool(v)
 	}
 
 	if apiObject.InstanceRequirements != nil {
