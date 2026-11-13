@@ -10,7 +10,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dsql"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dsql/types"
@@ -30,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -72,7 +72,7 @@ func (r *clusterPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9]{26}$`), "must be a valid Aurora DSQL cluster identifier"),
+					lazystringvalidator.RegexMatches(`^[a-z0-9]{26}$`, "must be a valid Aurora DSQL cluster identifier"),
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
