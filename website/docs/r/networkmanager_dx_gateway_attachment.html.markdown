@@ -45,6 +45,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `attachment_type` - Type of attachment.
 * `core_network_arn` - ARN of the core network for the attachment.
 * `id` - ID of the attachment.
+* `nat_gateway_support` - State of 1:1 NAT gateway support on the attachment, such as `ENABLED` or `DISABLED`. Only returned to the core network owner.
+* `nat_system_route_support` - Whether the core network installs routes for the attachment's NAT CIDR blocks. Only returned to the core network owner.
 * `owner_account_id` - ID of the attachment account owner.
 * `segment_name` - Name of the segment attachment.
 * `state` - State of the attachment.

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -98,6 +99,18 @@ func (r *directConnectGatewayAttachmentResource) Schema(ctx context.Context, req
 				ElementType: types.StringType,
 			},
 			names.AttrID: framework.IDAttribute(),
+			"nat_gateway_support": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"nat_system_route_support": schema.BoolAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -145,7 +158,8 @@ func (r *directConnectGatewayAttachmentResource) Create(ctx context.Context, req
 	conn := r.Meta().NetworkManagerClient(ctx)
 
 	var input networkmanager.CreateDirectConnectGatewayAttachmentInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	// The create input has same-named NAT request fields; these computed attributes must never be sent.
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input, fwflex.WithIgnoredFieldNamesAppend("NATGatewaySupport"), fwflex.WithIgnoredFieldNamesAppend("NATSystemRouteSupport"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -491,6 +505,8 @@ type directConnectGatewayAttachmentResourceModel struct {
 	DirectConnectGatewayARN    fwtypes.ARN          `tfsdk:"direct_connect_gateway_arn"`
 	EdgeLocations              fwtypes.ListOfString `tfsdk:"edge_locations"`
 	ID                         types.String         `tfsdk:"id"`
+	NATGatewaySupport          types.String         `tfsdk:"nat_gateway_support"`
+	NATSystemRouteSupport      types.Bool           `tfsdk:"nat_system_route_support"`
 	OwnerAccountId             types.String         `tfsdk:"owner_account_id"`
 	RoutingPolicyLabel         types.String         `tfsdk:"routing_policy_label"`
 	SegmentName                types.String         `tfsdk:"segment_name"`

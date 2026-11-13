@@ -137,6 +137,14 @@ func resourceVPCAttachment() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"nat_gateway_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"nat_system_route_support": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
 				"options": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -270,6 +278,8 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	coreNetworkID := aws.ToString(attachment.CoreNetworkId)
 	d.Set("core_network_id", coreNetworkID)
 	d.Set("edge_location", attachment.EdgeLocation)
+	d.Set("nat_gateway_support", attachment.NatGatewaySupport)
+	d.Set("nat_system_route_support", attachment.NatSystemRouteSupport)
 	if vpcAttachment.Options != nil {
 		if err := d.Set("options", []any{flattenVpcOptions(vpcAttachment.Options)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
