@@ -23,6 +23,7 @@ var (
 	FindKeyPolicyByTwoPartKey = findKeyPolicyByTwoPartKey
 	GrantParseResourceID      = grantParseResourceID
 	KeyARNOrIDEqual           = keyARNOrIDEqual
+	KeyPolicyKeyIDToSet       = keyPolicyKeyIDToSet
 	PropagationTimeout        = propagationTimeout
 	PolicyNameDefault         = policyNameDefault
 	SecretRemovedMessage      = secretRemovedMessage
