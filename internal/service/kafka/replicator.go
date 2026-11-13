@@ -608,11 +608,8 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrARN, output.ReplicatorArn)
 	d.Set("current_version", output.CurrentVersion)
 	d.Set(names.AttrDescription, output.ReplicatorDescription)
-	// DescribeReplicator does not round-trip an Apache Kafka cluster faithfully: it omits the
-	// ApacheKafkaCluster, ClientAuthentication, and EncryptionInTransit details and echoes the
-	// VpcConfig onto every entry. Reconcile the flattened response against prior state so the
-	// post-apply plan is empty (kafka_cluster is entirely ForceNew, so this preserves the
-	// configured values). On import there is no prior state, so the raw response is used.
+	// Reconcile the flattened response against prior state so the post-apply plan is empty. On
+	// import there is no prior state, so the flattened response is used as is.
 	kafkaClusters := flattenKafkaClusterDescriptions(output.KafkaClusters)
 	if old, ok := d.Get("kafka_cluster").([]any); ok && len(old) > 0 {
 		kafkaClusters = reconcileKafkaClusters(old, kafkaClusters)
@@ -656,12 +653,7 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := kafka.UpdateReplicationInfoInput{
-			CurrentVersion:        aws.String(d.Get("current_version").(string)),
-			ReplicatorArn:         aws.String(d.Id()),
-			SourceKafkaClusterArn: aws.String(d.Get("replication_info_list.0.source_kafka_cluster_arn").(string)),
-			TargetKafkaClusterArn: aws.String(d.Get("replication_info_list.0.target_kafka_cluster_arn").(string)),
-		}
+		input := newUpdateReplicationInfoInput(d)
 
 		if d.HasChanges("log_delivery") {
 			input.LogDelivery = expandLogDelivery(d.Get("log_delivery").([]any))
@@ -691,6 +683,36 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return append(diags, resourceReplicatorRead(ctx, d, meta)...)
+}
+
+// newUpdateReplicationInfoInput returns an UpdateReplicationInfo request identifying the
+// replication info to update. Each side of the replication is referenced by the identifier its
+// cluster kind uses: an Amazon MSK cluster by ARN, a self-managed Apache Kafka cluster by ID.
+// ExactlyOneOf in the schema guarantees that exactly one of each pair is set, and the unused
+// field is left unset rather than sent as an empty string, which the API cannot resolve.
+func newUpdateReplicationInfoInput(d *schema.ResourceData) kafka.UpdateReplicationInfoInput {
+	input := kafka.UpdateReplicationInfoInput{
+		CurrentVersion: aws.String(d.Get("current_version").(string)),
+		ReplicatorArn:  aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("replication_info_list.0.source_kafka_cluster_arn"); ok {
+		input.SourceKafkaClusterArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("replication_info_list.0.source_kafka_cluster_id"); ok {
+		input.SourceKafkaClusterId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("replication_info_list.0.target_kafka_cluster_arn"); ok {
+		input.TargetKafkaClusterArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("replication_info_list.0.target_kafka_cluster_id"); ok {
+		input.TargetKafkaClusterId = aws.String(v.(string))
+	}
+
+	return input
 }
 
 func resourceReplicatorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -976,10 +998,25 @@ func flattenReplicationTopicNameConfiguration(apiObject *types.ReplicationTopicN
 }
 
 // reconcileKafkaClusters overlays the flattened DescribeReplicator response onto prior state,
-// entry by entry (order is preserved by the API). It preserves the fields the response does
-// not return for Apache Kafka clusters (apache_kafka_cluster, client_authentication,
-// encryption_in_transit) and drops the vpc_config that the API echoes onto entries where the
-// configuration did not set one. amazon_msk_cluster and the computed alias come from the API.
+// entry by entry (order is preserved by the API), keeping the configured values for
+// apache_kafka_cluster, client_authentication, and encryption_in_transit, and dropping a
+// vpc_config the configuration did not set. amazon_msk_cluster and the computed alias come from
+// the API.
+//
+// This does not fill in omitted fields. DescribeReplicator returns all three blocks, and they
+// round-trip: importing a live MSK-to-Apache replicator, which takes the flattened response
+// without any reconciliation, produced an empty plan -- so apache_kafka_cluster (including
+// bootstrap_broker_string), client_authentication, and encryption_in_transit all match what the
+// configuration set. What this does instead is hold state to the configured values, which means
+// a difference between the configuration and the response is never surfaced. No API can change
+// a replicator's cluster list after creation (KafkaClusters appears only on CreateReplicator and
+// DescribeReplicator), so there is nothing to diverge from today, but a flatten defect would be
+// masked here.
+//
+// On that evidence this function looks unnecessary: the echoed vpc_config it also dropped is now
+// handled in flattenKafkaClusterDescription, which covers import as well. Removing it is a
+// behavior change that wants checking against the topologies not observed here -- mTLS
+// authentication, an Apache cluster with no custom root CA, and an entry with no vpc_config.
 func reconcileKafkaClusters(old, flattened []any) []any { // nosemgrep:ci.kafka-in-func-name
 	for i := range flattened {
 		newMap, ok := flattened[i].(map[string]any)
@@ -1041,7 +1078,12 @@ func flattenKafkaClusterDescription(apiObject types.KafkaClusterDescription) map
 		tfMap["encryption_in_transit"] = []any{flattenKafkaClusterEncryptionInTransit(v)}
 	}
 
-	if v := apiObject.VpcConfig; v != nil {
+	// DescribeReplicator echoes the same VpcConfig onto every entry, including a self-managed
+	// Apache Kafka cluster, which cannot carry one: validateKafkaClusterKind rejects vpc_config
+	// on an apache_kafka_cluster, so no configuration can match the echoed value. Letting it
+	// reach state replaces the replicator on the next plan, because vpc_config declares
+	// subnet_ids as ForceNew. Only the Amazon MSK entry configures a VPC.
+	if v := apiObject.VpcConfig; v != nil && apiObject.ApacheKafkaCluster == nil {
 		tfMap[names.AttrVPCConfig] = []any{flattenKafkaClusterClientVPCConfig(v)}
 	}
 
