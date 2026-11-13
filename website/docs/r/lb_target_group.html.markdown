@@ -126,6 +126,7 @@ This resource supports the following arguments:
   Required when `target_type` is `instance`, `ip`, or `alb`.
   Does not apply when `target_type` is `lambda`.
 * `proxy_protocol_v2` - (Optional) Whether to enable support for proxy protocol v2 on Network Load Balancers. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#proxy-protocol) for more information. Default is `false`.
+* `send_tcp_reset` - (Optional) Send TCP reset configuration block. Only applicable for Gateway Load Balancer target groups. See [send_tcp_reset](#send_tcp_reset) for more information.
 * `slow_start` - (Optional) Amount time for targets to warm up before the load balancer sends them a full share of requests. The range is 30-900 seconds or 0 to disable. The default value is 0 seconds.
 * `stickiness` - (Optional, Maximum of 1) Stickiness configuration block. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -185,6 +186,13 @@ This resource supports the following arguments:
 * `cookie_name` - (Optional) Name of the application based cookie. AWSALB, AWSALBAPP, and AWSALBTG prefixes are reserved and cannot be used. Only needed when type is `app_cookie`.
 * `enabled` - (Optional) Boolean to enable / disable `stickiness`. Default is `true`.
 * `type` - (Required) The type of sticky sessions. The only current possible values are `lb_cookie`, `app_cookie` for ALBs, `source_ip` for NLBs, and `source_ip_dest_ip`, `source_ip_dest_ip_proto` for GWLBs.
+
+### send_tcp_reset
+
+~> **NOTE:** This block is only applicable for a Gateway Load Balancer (GWLB). This feature requires 5-tuple flow stickiness, which the target group uses by default when `stickiness` is not enabled.
+
+* `on_deregistration` - (Optional) Whether the GWLB sends a TCP reset (RST) to the sender of traffic when a target is deregistered. The reset occurs after the connection drain time has elapsed. Possible values are `true` or `false`. Default: `false`. This attribute does not apply when `target_failover.on_deregistration` is set to `rebalance`.
+* `on_unhealthy` - (Optional) Whether the GWLB sends a TCP reset (RST) to the sender of traffic when a target becomes unhealthy. Possible values are `true` or `false`. Default: `false`. This attribute does not apply when `target_failover.on_unhealthy` is set to `rebalance`.
 
 ### target_failover
 
