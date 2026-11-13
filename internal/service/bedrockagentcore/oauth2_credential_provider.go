@@ -12,7 +12,6 @@ import (
 	"maps"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -38,6 +37,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -254,7 +254,7 @@ func customOAuth2ProviderConfigBlock(ctx context.Context) schema.Block {
 									Validators: []validator.List{
 										listvalidator.SizeBetween(1, 2),
 										listvalidator.ValueStringsAre(
-											stringvalidator.RegexMatches(regexache.MustCompile(`^(client_secret_post|client_secret_basic)$`), ""),
+											lazystringvalidator.RegexMatches(`^(client_secret_post|client_secret_basic)$`, ""),
 										),
 									},
 								},

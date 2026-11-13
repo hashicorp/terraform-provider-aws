@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -37,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -74,10 +74,7 @@ type gatewayRuleResource struct {
 // can't drift apart.
 func configurationBundleARNValidators() []validator.String {
 	return []validator.String{
-		stringvalidator.RegexMatches(
-			regexache.MustCompile(`^arn:aws[a-zA-Z-]*:bedrock-agentcore:[a-z0-9-]+:[0-9]{12}:configuration-bundle/[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9]{10}$`),
-			"",
-		),
+		lazystringvalidator.RegexMatches(`^arn:aws[a-zA-Z-]*:bedrock-agentcore:[a-z0-9-]+:[0-9]{12}:configuration-bundle/[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9]{10}$`, ""),
 	}
 }
 
@@ -95,10 +92,7 @@ func trafficSplitMetadataValidators() []validator.Map {
 // (a UUID), shared by static_override and traffic_split.configuration_bundle.
 func configurationBundleVersionValidators() []validator.String {
 	return []validator.String{
-		stringvalidator.RegexMatches(
-			regexache.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`),
-			"",
-		),
+		lazystringvalidator.RegexMatches(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`, ""),
 	}
 }
 
@@ -107,7 +101,7 @@ func configurationBundleVersionValidators() []validator.String {
 func trafficSplitNameValidators() []validator.String {
 	return []validator.String{
 		stringvalidator.LengthBetween(1, 64),
-		stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?$`), ""),
+		lazystringvalidator.RegexMatches(`^[a-zA-Z0-9]([a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?$`, ""),
 	}
 }
 
@@ -270,7 +264,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 												"target_name": schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][-]?){1,100}$`), ""),
+														lazystringvalidator.RegexMatches(`^([0-9a-zA-Z][-]?){1,100}$`, ""),
 													},
 												},
 											},
@@ -309,7 +303,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 															"target_name": schema.StringAttribute{
 																Required: true,
 																Validators: []validator.String{
-																	stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][-]?){1,100}$`), ""),
+																	lazystringvalidator.RegexMatches(`^([0-9a-zA-Z][-]?){1,100}$`, ""),
 																},
 															},
 															names.AttrWeight: schema.Int64Attribute{
@@ -355,7 +349,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 											listvalidator.SizeBetween(1, 10),
 											listvalidator.ValueStringsAre(
 												stringvalidator.LengthAtMost(512),
-												stringvalidator.RegexMatches(regexache.MustCompile(`^/[\w\-.]+/\*$`), ""),
+												lazystringvalidator.RegexMatches(`^/[\w\-.]+/\*$`, ""),
 											),
 										},
 									},
@@ -389,10 +383,7 @@ func (r *gatewayRuleResource) Schema(ctx context.Context, request resource.Schem
 																CustomType: fwtypes.ARNType,
 																Validators: []validator.String{
 																	stringvalidator.LengthAtMost(2048),
-																	stringvalidator.RegexMatches(
-																		regexache.MustCompile(`^(arn:aws[a-zA-Z-]*:iam::(\d{12}|\*):(user|role)/[\w+=,.@*?/-]+|arn:aws[a-zA-Z-]*:sts::(\d{12}|\*):assumed-role/[\w+=,.@*?/-]+)$`),
-																		"",
-																	),
+																	lazystringvalidator.RegexMatches(`^(arn:aws[a-zA-Z-]*:iam::(\d{12}|\*):(user|role)/[\w+=,.@*?/-]+|arn:aws[a-zA-Z-]*:sts::(\d{12}|\*):assumed-role/[\w+=,.@*?/-]+)$`, ""),
 																},
 															},
 															"operator": schema.StringAttribute{
