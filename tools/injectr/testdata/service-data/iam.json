@@ -1,0 +1,13 @@
+{
+  "Name": "iam",
+  "ServiceName": "IAM",
+  "Version": "v1.5",
+  "Operations": [
+    {
+      "Name": "CreateInstanceProfile",
+      "AuthorizedActions": [
+        {"Name": "PassRole", "Service": "iam", "Context": {"iam:PassedToService": ["ec2.amazonaws.com"]}}
+      ]
+    }
+  ]
+}
