@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_catalog: Fix validation so a catalog can set only `catalog_properties.iceberg_optimization_properties`
+```

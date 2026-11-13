@@ -63,6 +63,7 @@ func (r *catalogResource) ConfigValidators(_ context.Context) []resource.ConfigV
 	return []resource.ConfigValidator{
 		resourcevalidator.AtLeastOneOf(
 			path.MatchRoot("catalog_properties").AtListIndex(0).AtName("data_lake_access_properties"),
+			path.MatchRoot("catalog_properties").AtListIndex(0).AtName("iceberg_optimization_properties"),
 			path.MatchRoot("federated_catalog"),
 			path.MatchRoot("target_redshift_catalog"),
 		),
