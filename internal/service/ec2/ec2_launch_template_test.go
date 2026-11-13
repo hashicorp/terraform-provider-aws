@@ -3746,6 +3746,7 @@ func TestAccEC2LaunchTemplate_maxVersionsAutoScalingGroup(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("latest_version")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("default_version")),
 						plancheck.ExpectResourceAction(asgResourceName, plancheck.ResourceActionUpdate),
 					},
 				},
