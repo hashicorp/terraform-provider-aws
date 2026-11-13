@@ -99,6 +99,36 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssoadmin_managed_policy_attachment.example
+  identity = {
+    instance_arn       = "arn:aws:sso:::instance/ssoins-2938j0x8920sbj72"
+    managed_policy_arn = "arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup"
+    permission_set_arn = "arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk"
+  }
+}
+
+resource "aws_ssoadmin_managed_policy_attachment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `instance_arn` (String) ARN of the SSO Instance.
+* `managed_policy_arn` (String) ARN of the IAM Managed Policy.
+* `permission_set_arn` (String) ARN of the Permission Set.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Managed Policy Attachments using the `managed_policy_arn`, `permission_set_arn`, and `instance_arn` separated by a comma (`,`). For example:
 
 ```terraform
