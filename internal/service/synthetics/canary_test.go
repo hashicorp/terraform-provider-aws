@@ -404,8 +404,12 @@ func TestAccSyntheticsCanary_sourceCodeHash(t *testing.T) {
 			},
 			{
 				// Re-planning unchanged config and file contents must not produce a diff.
-				Config:   testAccCanaryConfig_sourceCodeHash(rName, zipFile),
-				PlanOnly: true,
+				Config: testAccCanaryConfig_sourceCodeHash(rName, zipFile),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
 				PreConfig: func() {
