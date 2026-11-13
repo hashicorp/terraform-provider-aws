@@ -142,14 +142,11 @@ jobs:
               return matched, unmatched
 
           matched, unmatched = match_versions(changed)
-          # Newly added modules have no prior version and cannot contribute to the old release endpoint.
-          prior_versions = {(path, before[path]) for path, _ in changed if path in before}
-          prior_matched, prior_unmatched = match_versions(prior_versions)
-          missing = unmatched | prior_unmatched
+          missing = unmatched
           source_ref = (temp / "sdk-source-ref").read_text().strip()
           if missing and releases and re.fullmatch(r"[0-9a-f]{40}", source_ref):
               # Highlights omit dependency-only updates; changelog headings identify their version and release date.
-              # Pin submodule reads to one commit and fetch each needed module once for both old and new versions.
+              # Pin submodule reads to one commit and fetch only modules missing from the release highlights.
               changelog_pattern = re.compile(
                   r"^# (v[0-9][0-9A-Za-z.+-]*) \((\d{4}-\d{2}-\d{2}(?:\.\d+)?)\)[ \t]*\r?$",
                   re.MULTILINE,
@@ -192,26 +189,17 @@ jobs:
               if failures:
                   print(f"::warning::Unable to read {failures} SDK module changelogs; release matching may be incomplete")
               matched, unmatched = match_versions(changed)
-              prior_matched, prior_unmatched = match_versions(prior_versions)
           # Infer an endpoint only when every relevant version is matched; a partial match could mislabel the title.
-          prior = prior_matched[0] if prior_matched and not prior_unmatched else None
           final = matched[0] if matched and not unmatched else None
 
           title = "deps: update AWS SDK for Go v2"
           notes = []
-          notes.append("Release endpoints are inferred from the newest matching releases for the modules being updated, not an exact SDK-wide snapshot.")
+          notes.append("The target release is inferred from the newest matching release for the updated module versions, not an exact SDK-wide snapshot.")
           notes.append("Module versions are matched using release highlights and, where needed, individual module changelog version/date headings.")
           notes.append("")
-          if prior:
-              notes.append(f'Prior release: [{prior["tag_name"]}]({prior["html_url"]}).')
-          else:
-              notes.append("The prior release could not be determined from the 100 most recent published releases.")
           if final:
-              notes.append(f'Final release: [{final["tag_name"]}]({final["html_url"]}).')
-              if prior:
-                  title += f' from {prior["tag_name"]} to {final["tag_name"]}'
-              else:
-                  title += f' through {final["tag_name"]}'
+              notes.append(f'Target release: [{final["tag_name"]}]({final["html_url"]}).')
+              title += f' to {final["tag_name"]}'
           notes.append("")
           if matched:
               notes.append("Published releases containing the updated SDK module versions (intermediate releases are not listed):")
