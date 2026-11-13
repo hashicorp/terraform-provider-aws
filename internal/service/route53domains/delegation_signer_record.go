@@ -182,18 +182,30 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 	if response.Diagnostics.HasError() {
 		return
 	}
-	digest := signingAttributes.digest(ctx, domainName)
-
-	// Look up DNSSEC key by digest (deterministic across registrars).
-	// Ensures stable state tracking regardless of registry (Gandi vs Amazon Registrar, etc).
-	dnssecKey, err := findDNSSECKeyByDomainNameAndDigest(ctx, conn, domainName, digest)
+	// v6.69.1 and earlier set signing_attributes from the API response, which
+	// no longer includes Flags or PublicKey. A digest can't be computed from
+	// that state, so fall back to the stored key ID.
+	var (
+		dnssecKey *awstypes.DnssecKey
+		err       error
+		lookupKey string
+	)
+	if signingAttributes == nil || signingAttributes.Flags.IsNull() || signingAttributes.PublicKey.IsNull() {
+		lookupKey = fwflex.StringValueFromFramework(ctx, data.DNSSECKeyID)
+		dnssecKey, err = findDNSSECKeyByDomainNameAndKeyID(ctx, conn, domainName, lookupKey)
+	} else {
+		// Look up DNSSEC key by digest (deterministic across registrars).
+		// Ensures stable state tracking regardless of registry (Gandi vs Amazon Registrar, etc).
+		lookupKey = signingAttributes.digest(ctx, domainName)
+		dnssecKey, err = findDNSSECKeyByDomainNameAndDigest(ctx, conn, domainName, lookupKey)
+	}
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key (%s)", domainName, digest), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key (%s)", domainName, lookupKey), err.Error())
 		return
 	}
 
@@ -224,6 +236,10 @@ func (r *delegationSignerRecordResource) Delete(ctx context.Context, request res
 		Id:         fwflex.StringFromFramework(ctx, data.DNSSECKeyID),
 	}
 	output, err := conn.DisassociateDelegationSignerFromDomain(ctx, &input)
+	// The API reports a key that is no longer associated as an invalid ID.
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInput](err, "Invalid DNSSEC ID") {
+		return
+	}
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Domains Delegation Signer Record (%s)", data.ID.ValueString()), err.Error())
 		return
