@@ -3293,7 +3293,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 }
 
 // Regression test to ensure primary and secondary replication groups with the same
-// name in different regions do not cause the destory operation to fail.
+// name in different regions do not cause the destroy operation to fail.
 //
 // Ref: https://github.com/hashicorp/terraform-provider-aws/issues/50810
 func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_sameIDAsPrimary(t *testing.T) {
