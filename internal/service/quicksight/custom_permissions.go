@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
@@ -61,7 +61,7 @@ func (r *customPermissionsResource) Schema(ctx context.Context, request resource
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9+=,.@_-]+$`), ""),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9+=,.@_-]+$`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
