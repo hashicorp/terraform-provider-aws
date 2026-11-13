@@ -112,6 +112,40 @@ resource "aws_ecs_daemon_task_definition" "example" {
 }
 ```
 
+### With a Log Driver Volume
+
+A log driver volume gives the daemon read access to the log files that the `json-file` log driver writes for the other tasks on the instance.
+
+```terraform
+resource "aws_ecs_daemon_task_definition" "example" {
+  family = "log-collector"
+  cpu    = "512"
+  memory = "1024"
+
+  container_definition {
+    name      = "log-collector"
+    image     = "public.ecr.aws/docker/library/busybox:latest"
+    cpu       = 256
+    memory    = 512
+    essential = true
+
+    mount_point {
+      source_volume  = "container-logs"
+      container_path = "/var/log/ecs/json-file"
+      read_only      = true
+    }
+  }
+
+  volume {
+    name = "container-logs"
+
+    log_driver_volume_configuration {
+      driver = "json-file"
+    }
+  }
+}
+```
+
 ### With Multiple Containers
 
 ```terraform
@@ -189,12 +223,17 @@ The following arguments are optional:
 
 ### `volume` Block
 
-* `host` - (Optional) Configuration for a host volume. Detailed below.
+* `host` - (Optional) Configuration for a host volume. Conflicts with `log_driver_volume_configuration`. Detailed below.
+* `log_driver_volume_configuration` - (Optional) Configuration for a log driver volume, which lets the daemon's containers read the log files that a log driver writes for the other tasks on the container instance. Mount the volume with a `mount_point` to read them. Conflicts with `host`. Detailed below.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume` parameter of container definition in the `mountPoints` section.
 
 ### `host` Block
 
 * `source_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a non-persistent data volume that starts empty and is deleted after the task has finished.
+
+### `log_driver_volume_configuration` Block
+
+* `driver` - (Required) Log driver whose log files the volume contains. The only supported value is `json-file`.
 
 ### `depends_on` Block
 

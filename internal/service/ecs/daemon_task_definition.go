@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
@@ -515,10 +516,63 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 								},
 							},
 						},
+						"log_driver_volume_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[logDriverVolumeConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"driver": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.LogDriver](),
+										Required:   true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 		},
+	}
+}
+
+// ValidateConfig rejects a volume that sets both host and
+// log_driver_volume_configuration. A path-based ConflictsWith validator can't
+// do this check, because it can't resolve sibling blocks inside a set element.
+func (r *daemonTaskDefinitionResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var volumes fwtypes.SetNestedObjectValueOf[volumeModel]
+	response.Diagnostics.Append(request.Config.GetAttribute(ctx, path.Root("volume"), &volumes)...)
+	if response.Diagnostics.HasError() || volumes.IsNull() || volumes.IsUnknown() {
+		return
+	}
+
+	vs, diags := volumes.ToSlice(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	for _, v := range vs {
+		if v == nil || v.Host.IsUnknown() || v.LogDriverVolumeConfiguration.IsUnknown() {
+			continue
+		}
+
+		hosts, diags := v.Host.ToSlice(ctx)
+		response.Diagnostics.Append(diags...)
+		logDriverVolumes, diags := v.LogDriverVolumeConfiguration.ToSlice(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if len(hosts) > 0 && len(logDriverVolumes) > 0 {
+			response.Diagnostics.AddAttributeError(
+				path.Root("volume"),
+				"Invalid Attribute Combination",
+				fmt.Sprintf("Volume %q cannot set both `host` and `log_driver_volume_configuration`.", v.Name.ValueString()),
+			)
+		}
 	}
 }
 
@@ -793,8 +847,13 @@ type ulimitModel struct {
 }
 
 type volumeModel struct {
-	Host fwtypes.ListNestedObjectValueOf[hostModel] `tfsdk:"host" autoflex:",omitempty"`
-	Name types.String                               `tfsdk:"name"`
+	Host                         fwtypes.ListNestedObjectValueOf[hostModel]                         `tfsdk:"host" autoflex:",omitempty"`
+	LogDriverVolumeConfiguration fwtypes.ListNestedObjectValueOf[logDriverVolumeConfigurationModel] `tfsdk:"log_driver_volume_configuration" autoflex:",omitempty"`
+	Name                         types.String                                                       `tfsdk:"name"`
+}
+
+type logDriverVolumeConfigurationModel struct {
+	Driver fwtypes.StringEnum[awstypes.LogDriver] `tfsdk:"driver"`
 }
 
 type hostModel struct {
