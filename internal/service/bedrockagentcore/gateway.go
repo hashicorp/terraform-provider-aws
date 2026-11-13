@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -131,6 +132,28 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 		},
 		Blocks: map[string]schema.Block{
 			"authorizer_configuration": authorizerConfigurationBlock(ctx),
+			"domain_override": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[domainOverrideModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"alternate_domains": schema.SetAttribute{
+							CustomType: fwtypes.SetOfStringType,
+							Optional:   true,
+							Validators: []validator.Set{
+								setvalidator.SizeBetween(1, 10),
+								setvalidator.ValueStringsAre(publicDomainNameValidators()...),
+							},
+						},
+						"default_domain": schema.StringAttribute{
+							Required:   true,
+							Validators: publicDomainNameValidators(),
+						},
+					},
+				},
+			},
 			"interceptor_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[gatewayInterceptorConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -598,6 +621,7 @@ type gatewayResourceModel struct {
 	AuthorizerConfiguration   fwtypes.ListNestedObjectValueOf[authorizerConfigurationModel]          `tfsdk:"authorizer_configuration"`
 	AuthorizerType            fwtypes.StringEnum[awstypes.AuthorizerType]                            `tfsdk:"authorizer_type"`
 	Description               types.String                                                           `tfsdk:"description"`
+	DomainOverride            fwtypes.ListNestedObjectValueOf[domainOverrideModel]                   `tfsdk:"domain_override"`
 	ExceptionLevel            fwtypes.StringEnum[awstypes.ExceptionLevel]                            `tfsdk:"exception_level"`
 	GatewayARN                types.String                                                           `tfsdk:"gateway_arn"`
 	GatewayID                 types.String                                                           `tfsdk:"gateway_id"`
@@ -613,6 +637,18 @@ type gatewayResourceModel struct {
 	TagsAll                   tftags.Map                                                             `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                         `tfsdk:"timeouts"`
 	WorkloadIdentityDetails   fwtypes.ListNestedObjectValueOf[workloadIdentityDetailsModel]          `tfsdk:"workload_identity_details"`
+}
+
+type domainOverrideModel struct {
+	AlternateDomains fwtypes.SetOfString `tfsdk:"alternate_domains"`
+	DefaultDomain    types.String        `tfsdk:"default_domain"`
+}
+
+func publicDomainNameValidators() []validator.String {
+	return []validator.String{
+		stringvalidator.LengthBetween(1, 253),
+		stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?(\.[0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?)+$`), "must be a fully qualified domain name"),
+	}
 }
 
 type gatewayPolicyEngineConfigurationModel struct {
