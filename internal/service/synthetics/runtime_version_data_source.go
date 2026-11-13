@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -69,13 +69,13 @@ func (d *runtimeVersionDataSource) Schema(ctx context.Context, req datasource.Sc
 			names.AttrPrefix: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^.*[^-]$`), "must not end with a hyphen"),
+					lazystringvalidator.RegexMatches(`^.*[^-]$`, "must not end with a hyphen"),
 				},
 			},
 			names.AttrVersion: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^\d.*$`), "must start with a digit"),
+					lazystringvalidator.RegexMatches(`^\d.*$`, "must start with a digit"),
 					stringvalidator.ExactlyOneOf(path.Expressions{
 						path.MatchRoot("latest"),
 						path.MatchRoot(names.AttrVersion),
