@@ -1697,6 +1697,64 @@ func TestAccECSTaskDefinition_containerDefinitionNullPortMapping(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_containerDefinitionGPUSharing(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionGPUSharing(rName, 4096, 50),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length([0].resourceRequirements)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].resourceRequirements[0].type", "GPU"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].resourceRequirements[0].sharingStrategy.nvidiaMps.memory", "4096"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].resourceRequirements[0].sharingStrategy.nvidiaMps.maxComputePercent", "50"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionGPUSharing(rName, 2048, 25),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].resourceRequirements[0].sharingStrategy.nvidiaMps.memory", "2048"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].resourceRequirements[0].sharingStrategy.nvidiaMps.maxComputePercent", "25"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionGPUExclusive(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].resourceRequirements[0].type", "GPU"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].resourceRequirements[0].value", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "keys([0].resourceRequirements[0]) | contains(@, 'sharingStrategy')", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccECSTaskDefinition_containerDefinitionVersionConsistency(t *testing.T) {
 	ctx := acctest.Context(t)
 	var def awstypes.TaskDefinition
@@ -4094,6 +4152,61 @@ resource "aws_ecs_task_definition" "test" {
   ])
 }
 `, rName, image)
+}
+
+func testAccTaskDefinitionConfig_containerDefinitionGPUSharing(rName string, memory, maxComputePercent int) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  requires_compatibilities = ["EC2"]
+
+  container_definitions = jsonencode([
+    {
+      name      = "model"
+      image     = "public.ecr.aws/docker/library/busybox:latest"
+      memory    = 8192
+      essential = true
+
+      resourceRequirements = [
+        {
+          type = "GPU"
+          sharingStrategy = {
+            nvidiaMps = {
+              memory            = %[2]d
+              maxComputePercent = %[3]d
+            }
+          }
+        }
+      ]
+    }
+  ])
+}
+`, rName, memory, maxComputePercent)
+}
+
+func testAccTaskDefinitionConfig_containerDefinitionGPUExclusive(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  requires_compatibilities = ["EC2"]
+
+  container_definitions = jsonencode([
+    {
+      name      = "model"
+      image     = "public.ecr.aws/docker/library/busybox:latest"
+      memory    = 8192
+      essential = true
+
+      resourceRequirements = [
+        {
+          type  = "GPU"
+          value = "1"
+        }
+      ]
+    }
+  ])
+}
+`, rName)
 }
 
 func testAccTaskDefinitionConfig_containerDefinitionDockerLabels(rName, image string) string {
