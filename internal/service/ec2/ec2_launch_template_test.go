@@ -5,6 +5,7 @@ package ec2_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -3685,23 +3687,32 @@ func TestAccEC2LaunchTemplate_maxVersionsKeepsDefault(t *testing.T) {
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.micro", 3),
+				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.micro", 3, 1),
 				Check:  testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1),
 			},
 			{
-				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.small", 3),
+				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.small", 3, 1),
 				Check:  testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1, 2),
 			},
 			{
-				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.medium", 3),
+				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.medium", 3, 1),
 				Check:  testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1, 2, 3),
 			},
 			{
-				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.large", 3),
+				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.large", 3, 1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "4"),
 					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1, 3, 4),
+				),
+			},
+			// A new version and a new default in one apply: the old default becomes deletable.
+			{
+				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.xlarge", 3, 4),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "4"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "5"),
+					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 3, 4, 5),
 				),
 			},
 		},
@@ -3781,7 +3792,7 @@ func TestAccEC2LaunchTemplate_maxVersionsManyVersions(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_maxVersions(rName, "t3.small", 3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "latest_version", strconv.Itoa(extraVersions+2)),
-					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1, extraVersions+1, extraVersions+2),
+					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, extraVersions, extraVersions+1, extraVersions+2),
 				),
 			},
 		},
@@ -3854,6 +3865,24 @@ func TestLaunchTemplateVersionsToDelete(t *testing.T) {
 				t.Errorf("got %v, want %v", got, testCase.want)
 			}
 		})
+	}
+}
+
+func TestLaunchTemplateVersionsPruneWarning(t *testing.T) {
+	t.Parallel()
+
+	d := schema.TestResourceDataRaw(t, tfec2.ResourceLaunchTemplate().SchemaMap(), map[string]any{
+		"max_versions": 5,
+	})
+	d.SetId("lt-12345678")
+
+	diags := tfec2.LaunchTemplateVersionsPruneWarning(nil, d, errors.New("UnauthorizedOperation"))
+
+	if diags.HasError() || len(diags) != 1 {
+		t.Fatalf("want one warning, got %v", diags)
+	}
+	if got := d.Get("max_versions").(int); got != 0 {
+		t.Errorf("max_versions: got %d, want 0 so that the next plan retries", got)
 	}
 }
 
@@ -5347,15 +5376,15 @@ resource "aws_launch_template" "test" {
 `, rName, instanceType)
 }
 
-func testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, instanceType string, maxVersions int) string {
+func testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, instanceType string, maxVersions, defaultVersion int) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name            = %[1]q
   instance_type   = %[2]q
   max_versions    = %[3]d
-  default_version = 1
+  default_version = %[4]d
 }
-`, rName, instanceType, maxVersions)
+`, rName, instanceType, maxVersions, defaultVersion)
 }
 
 func testAccLaunchTemplateConfig_maxVersionsASG(rName, instanceType, description string) string {
