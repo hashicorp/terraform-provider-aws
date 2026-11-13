@@ -1,0 +1,37 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Reconcile Working Board
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        type: boolean
+        description: "Log the changes that would be made without making them"
+        default: true
+
+permissions:
+  contents: read # required for checkout
+
+concurrency:
+  group: reconcile-working-board
+
+jobs:
+  reconcile:
+    name: Reconcile Working Board with Prioritized Label
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .ci
+
+      - name: Reconcile
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_SCOPED_TOKEN }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+        shell: bash
+        run: ./.ci/scripts/reconcile-working-board.sh

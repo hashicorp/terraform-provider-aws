@@ -14,6 +14,7 @@ on:
       - assigned
       - opened
       - labeled
+      - unlabeled
 
   pull_request_target:
     types:
@@ -21,6 +22,7 @@ on:
       - closed
       - opened
       - labeled
+      - unlabeled
 
   push:
     tags:
@@ -37,10 +39,11 @@ jobs:
   workboard:
     name: Team Workboard
     runs-on: ubuntu-latest
-    if: contains(fromJSON('["assigned", "labeled", "opened"]'), github.event.action)
+    if: contains(fromJSON('["assigned", "labeled", "opened", "unlabeled"]'), github.event.action)
     env:
       CURRENT_LABELS: ${{ github.event_name == 'issues' && toJSON(github.event.issue.labels.*.name) || toJSON(github.event.pull_request.labels.*.name) }}
       GH_CLI_SUBCOMMAND: ${{ github.event_name == 'pull_request_target' && 'pr' || 'issue' }}
+      ITEM_STATE: ${{ github.event.issue.state || github.event.pull_request.state }}
     steps:
       - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: token
@@ -65,6 +68,7 @@ jobs:
         if: |
           ((github.event_name == 'pull_request_target' && github.event.action == 'opened') || github.event.action == 'assigned')
           && steps.community_check.outputs.maintainer == 'true'
+          && env.ITEM_STATE == 'open'
         uses: ./.github/actions/team_working_board
         with:
           github_token: ${{ steps.token.outputs.token }}
@@ -73,15 +77,18 @@ jobs:
           view: "working-board"
 
       - name: Label Prioritized Items
+        id: label_prioritized
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # prevents an additional 'labeled' event
         if: |
-          ((steps.workboard_maintainer.outcome != 'skipped' && github.actor != 'dependabot[bot]') || contains(fromJSON('["crash", "regression"]'), github.event.label.name))
+          github.event.action != 'unlabeled'
+          && env.ITEM_STATE == 'open'
+          && ((steps.workboard_maintainer.outcome != 'skipped') || contains(fromJSON('["crash", "regression"]'), github.event.label.name))
           && !contains(fromJSON(env.CURRENT_LABELS), 'prioritized')
         run: gh $GH_CLI_SUBCOMMAND edit $ISSUE_URL --add-label prioritized
 
-      - name: Add Prioritized Items
-        if: contains(fromJSON('["crash", "prioritized", "regression"]'), github.event.label.name)
+      - name: Add Auto-Labeled Items
+        if: steps.label_prioritized.outcome == 'success'
         uses: ./.github/actions/team_working_board
         with:
           github_token: ${{ steps.token.outputs.token }}
@@ -89,18 +96,40 @@ jobs:
           view: "working-board"
           move_to_top: ${{ github.event.label.name == 'regression' }}
 
-      - name: Add Engineering Initiatives
-        if: github.event.label.name == 'engineering-initiative'
+      - name: Add Prioritized Items
+        if: |
+          github.event.action == 'labeled'
+          && github.event.label.name == 'prioritized'
+          && env.ITEM_STATE == 'open'
         uses: ./.github/actions/team_working_board
         with:
           github_token: ${{ steps.token.outputs.token }}
           item_url: ${{ env.ISSUE_URL }}
-          view: "engineering-initiative"
+          view: "working-board"
+
+      - name: Unlabel Closed Items
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # prevents an additional 'unlabeled' event
+        if: |
+          github.event.action == 'labeled'
+          && github.event.label.name == 'prioritized'
+          && env.ITEM_STATE != 'open'
+        run: gh $GH_CLI_SUBCOMMAND edit $ISSUE_URL --remove-label prioritized
+
+      - name: Remove Unprioritized Items
+        if: |
+          github.event.action == 'unlabeled'
+          && github.event.label.name == 'prioritized'
+        uses: ./.github/actions/team_working_board
+        with:
+          github_token: ${{ steps.token.outputs.token }}
+          item_url: ${{ env.ISSUE_URL }}
+          remove: true
 
   slack:
     name: Slack Feeds
     runs-on: ubuntu-latest
-    if: github.event.action != 'assigned' # the only situation without any notifications
+    if: github.event.action != 'assigned' && github.event.action != 'unlabeled' # the only situations without any notifications
     env:
       ISSUE_TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
       AUTHOR_URL: ${{ github.event.issue.user.html_url || github.event.pull_request.user.html_url }}

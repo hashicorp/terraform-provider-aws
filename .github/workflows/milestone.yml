@@ -23,8 +23,8 @@ jobs:
 
             For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/${{ github.repository }}/issues/new/choose) following the template. Thank you!
 
-  archive_and_unlabel:
-    name: 'Archive Project Items & Remove Label on Milestone Closed'
+  unlabel_and_remove:
+    name: 'Remove Prioritized Label & Delete Project Items on Milestone Closed'
     runs-on: ubuntu-latest
     env:
       MILESTONE: ${{ github.event.milestone.number }}
@@ -32,14 +32,9 @@ jobs:
       - name: 'Checkout Repo'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: 'Remove Prioritized Label'
+      - name: 'Remove Prioritized Label & Delete Project Items'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }} # prevents additional 'unlabeled' events
+          PROJECT_TOKEN: ${{ secrets.PROJECT_SCOPED_TOKEN }}
         shell: bash
         run: ./.ci/scripts/unlabel-on-milestone-closed.sh
-
-      - name: 'Archive Project Items'
-        env:
-          GH_TOKEN: ${{ secrets.PROJECT_SCOPED_TOKEN }}
-        shell: bash
-        run: ./.ci/scripts/archive-on-milestone-closed.sh

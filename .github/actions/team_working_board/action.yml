@@ -17,6 +17,10 @@ inputs:
     description: Whether to move the item to the top of the list
     required: false
 
+  remove:
+    description: Whether to delete the item from the board instead of adding it
+    required: false
+
   status:
     description: The Status the item should be set to
     required: false
@@ -28,8 +32,39 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Delete Item from Project
+      if: inputs.remove == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        ITEM_URL: ${{ inputs.item_url }}
+      run: |
+        ITEM_IDS=$(gh api graphql \
+          --field url="$ITEM_URL" \
+          --raw-field query='
+            query($url: URI!) {
+              resource(url: $url) {
+                ...on Issue {
+                  projectItems(first: 20, includeArchived: true) {
+                    nodes { id project { id } }
+                  }
+                }
+                ...on PullRequest {
+                  projectItems(first: 20, includeArchived: true) {
+                    nodes { id project { id } }
+                  }
+                }
+              }
+            }' --jq '.data.resource.projectItems.nodes[] | select(.project.id == "PVT_kwDOAAuecM4AF-7h") | .id')
+
+        for item in $ITEM_IDS; do
+          echo "Deleting $item"
+          gh project item-delete 196 --owner hashicorp --id "$item"
+        done
+
     - name: Add Item to Working Board
       id: add_to_board
+      if: inputs.remove != 'true'
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.github_token }}
@@ -133,8 +168,7 @@ runs:
       shell: bash
       run: |
         echo "desired=$(echo '{
-          "working-board": "8d366764",
-          "engineering-initiative": "a62d09b9"
+          "working-board": "8d366764"
         }' | jq --exit-status --arg desired "${{ inputs.view }}" '.[$desired]')" >> $GITHUB_OUTPUT
 
     - name: Update View
