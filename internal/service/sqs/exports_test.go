@@ -12,6 +12,10 @@ var (
 
 	FindQueueAttributesByURL = findQueueAttributesByURL
 
+	QueueContinuousTargetOccurrence                     = queueContinuousTargetOccurrence
+	QueueAttributesPropagatedContinuousTargetOccurrence = queueAttributesPropagatedContinuousTargetOccurrence
+	QueueDeletedContinuousTargetOccurrence              = queueDeletedContinuousTargetOccurrence
+
 	DefaultQueueDelaySeconds                  = defaultQueueDelaySeconds
 	DefaultQueueKMSDataKeyReusePeriodSeconds  = defaultQueueKMSDataKeyReusePeriodSeconds
 	DefaultQueueMaximumMessageSize            = defaultQueueMaximumMessageSize

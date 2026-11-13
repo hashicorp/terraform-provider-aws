@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Support the `TF_AWS_ASSUME_NO_PROPAGATION_DELAY` environment variable to speed up `aws_sqs_queue` create, update, and delete operations against local emulators (e.g. LocalStack) that have no cross-service propagation delay. Unsupported against real AWS.
+```
