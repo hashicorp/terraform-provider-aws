@@ -666,7 +666,7 @@ func resourceLaunchTemplate() *schema.Resource {
 				"max_versions": {
 					Type:         schema.TypeInt,
 					Optional:     true,
-					ValidateFunc: validation.IntBetween(3, 10000),
+					ValidateFunc: validation.IntBetween(3, launchTemplateVersionsQuota),
 				},
 				"metadata_options": {
 					Type:     schema.TypeList,
@@ -1240,17 +1240,6 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 	latestVersion := previousLatestVersion
 
 	if d.HasChanges(updateKeys...) {
-		if maxVersions > 0 {
-			// Prune before creating so a template at the version quota can take a new version.
-			protected := []int64{previousLatestVersion}
-			if !d.Get("update_default_version").(bool) && d.HasChange("default_version") {
-				protected = append(protected, int64(d.Get("default_version").(int)))
-			}
-			if err := deleteLaunchTemplateVersionsBeyond(ctx, conn, d.Id(), maxVersions-1, previousLatestVersion, 0, protected...); err != nil {
-				return launchTemplateVersionsPruneError(diags, d, err)
-			}
-		}
-
 		input := ec2.CreateLaunchTemplateVersionInput{
 			ClientToken:      aws.String(create.UniqueId(ctx)),
 			LaunchTemplateId: aws.String(d.Id()),
@@ -1264,6 +1253,17 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.LaunchTemplateData = v
 		} else {
 			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		// Only a template that may be at the version quota is pruned before the create, to make room for the new version.
+		if maxVersions > 0 && previousLatestVersion >= launchTemplateVersionsQuota {
+			protected := []int64{previousLatestVersion}
+			if !d.Get("update_default_version").(bool) && d.HasChange("default_version") {
+				protected = append(protected, int64(d.Get("default_version").(int)))
+			}
+			if err := deleteLaunchTemplateVersionsBeyond(ctx, conn, d.Id(), maxVersions-1, previousLatestVersion, 0, protected...); err != nil {
+				diags = launchTemplateVersionsPruneWarning(diags, d, err)
+			}
 		}
 
 		output, err := conn.CreateLaunchTemplateVersion(ctx, &input)
@@ -1300,18 +1300,22 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 	if maxVersions > 0 {
 		// Dependents still reference the previously latest version until they are updated later in this apply.
 		if err := deleteLaunchTemplateVersionsBeyond(ctx, conn, d.Id(), maxVersions, latestVersion, defaultVersion, latestVersion, previousLatestVersion); err != nil {
-			return launchTemplateVersionsPruneError(diags, d, err)
+			diags = launchTemplateVersionsPruneWarning(diags, d, err)
 		}
 	}
 
 	return append(diags, resourceLaunchTemplateRead(ctx, d, meta)...)
 }
 
-func launchTemplateVersionsPruneError(diags diag.Diagnostics, d *schema.ResourceData, err error) diag.Diagnostics {
+// AWS quota of versions per launch template.
+const launchTemplateVersionsQuota = 10000
+
+// A failed prune must not block the new version (a deploy), so it is a warning.
+func launchTemplateVersionsPruneWarning(diags diag.Diagnostics, d *schema.ResourceData, err error) diag.Diagnostics {
 	// max_versions is not read back from AWS; clearing it makes the next plan retry the prune.
 	d.Set("max_versions", nil)
 
-	return sdkdiag.AppendErrorf(diags, "deleting EC2 Launch Template (%s) versions: %s", d.Id(), err)
+	return sdkdiag.AppendWarningf(diags, "deleting EC2 Launch Template (%s) versions, retried on the next apply: %s", d.Id(), err)
 }
 
 // deleteLaunchTemplateVersionsBeyond deletes all but keep versions of a launch template, never a protected or the default one.
@@ -1347,32 +1351,6 @@ func deleteLaunchTemplateVersionsBeyond(ctx context.Context, conn *ec2.Client, i
 	}
 
 	return errors.Join(errs...)
-}
-
-// findLaunchTemplateVersionNumbers keeps only version numbers so that templates with many versions do not hold all their data in memory.
-func findLaunchTemplateVersionNumbers(ctx context.Context, conn *ec2.Client, id string) ([]int64, int64, error) {
-	input := ec2.DescribeLaunchTemplateVersionsInput{
-		LaunchTemplateId: aws.String(id),
-	}
-	var versions []int64
-	var defaultVersion int64
-
-	pages := ec2.NewDescribeLaunchTemplateVersionsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		for _, v := range page.LaunchTemplateVersions {
-			versions = append(versions, aws.ToInt64(v.VersionNumber))
-			if aws.ToBool(v.DefaultVersion) {
-				defaultVersion = aws.ToInt64(v.VersionNumber)
-			}
-		}
-	}
-
-	return versions, defaultVersion, nil
 }
 
 // launchTemplateVersionsToDelete returns the versions beyond the newest keep. Protected versions are never returned and count toward keep.

@@ -303,6 +303,7 @@ var (
 	KeyPairMigrateState                                         = keyPairMigrateState
 	LaunchTemplateStateUpgradeV0                                = launchTemplateStateUpgradeV0
 	LaunchTemplateVersionsDeleteErrors                          = launchTemplateVersionsDeleteErrors
+	LaunchTemplateVersionsPruneWarning                          = launchTemplateVersionsPruneWarning
 	LaunchTemplateVersionsToDelete                              = launchTemplateVersionsToDelete
 	ManagedPrefixListEntryCreateResourceID                      = managedPrefixListEntryCreateResourceID
 	ManagedPrefixListEntryParseResourceID                       = managedPrefixListEntryParseResourceID
