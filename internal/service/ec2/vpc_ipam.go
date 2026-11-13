@@ -217,7 +217,7 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "cascade") {
 		input := ec2.ModifyIpamInput{
 			IpamId: aws.String(d.Id()),
 		}
