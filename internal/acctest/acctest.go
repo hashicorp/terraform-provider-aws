@@ -33,6 +33,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
@@ -1273,6 +1274,55 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 
 	if aws.ToString(organization.MasterAccountId) == aws.ToString(callerIdentity.Account) {
 		t.Skip("this AWS account must not be the management account of an AWS Organization")
+	}
+}
+
+// PreCheckMultipleOrganizationalUnitsWithAccounts ensures that the root of the AWS Organization
+// has at least two child organizational units that each contain at least one account.
+func PreCheckMultipleOrganizationalUnitsWithAccounts(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	PreCheckMultipleOrganizationalUnitsWithAccountsWithProvider(ctx, t, DefaultProviderFunc)
+}
+
+// PreCheckMultipleOrganizationalUnitsWithAccountsWithProvider ensures that the root of the AWS Organization
+// of the provider instance returned by `providerF` has at least two child organizational units that each
+// contain at least one account.
+func PreCheckMultipleOrganizationalUnitsWithAccountsWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
+	t.Helper()
+
+	conn := providerF().Meta().(*conns.AWSClient).OrganizationsClient(ctx)
+
+	roots, err := conn.ListRoots(ctx, &organizations.ListRootsInput{})
+	if err != nil {
+		t.Fatalf("listing AWS Organizations roots: %s", err)
+	}
+	if len(roots.Roots) == 0 {
+		t.Skip("AWS Organization has no root")
+	}
+
+	ous, err := conn.ListOrganizationalUnitsForParent(ctx, &organizations.ListOrganizationalUnitsForParentInput{
+		ParentId: roots.Roots[0].Id,
+	})
+	if err != nil {
+		t.Fatalf("listing AWS Organizations organizational units: %s", err)
+	}
+
+	n := 0
+	for _, ou := range ous.OrganizationalUnits {
+		accounts, err := conn.ListAccountsForParent(ctx, &organizations.ListAccountsForParentInput{
+			ParentId: ou.Id,
+		})
+		if err != nil {
+			t.Fatalf("listing AWS Organizations accounts for organizational unit (%s): %s", aws.ToString(ou.Id), err)
+		}
+		if len(accounts.Accounts) > 0 {
+			n++
+		}
+	}
+
+	if n < 2 {
+		t.Skip("at least two organizational units under the AWS Organization root must each contain an account")
 	}
 }
 
